@@ -1,0 +1,37 @@
+{
+  "name": "santolina-web",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@paradoxui/tokens": "workspace:*",
+    "@paradoxui/ui": "workspace:*",
+    "@supabase/supabase-js": "^2.39.0",
+    "ai": "^3.0.0",
+    "framer-motion": "^11.0.0",
+    "next": "^15.0.0",
+    "openai": "^4.28.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "zustand": "^4.5.0"
+  },
+  "devDependencies": {
+    "@paradoxui/eslint-config": "workspace:*",
+    "@paradoxui/typescript-config": "workspace:*",
+    "@types/node": "^20.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "autoprefixer": "^10.4.0",
+    "eslint": "^8.57.0",
+    "eslint-config-next": "^15.0.0",
+    "postcss": "^8.4.0",
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5.4.0"
+  }
+}

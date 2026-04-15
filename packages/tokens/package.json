@@ -1,0 +1,20 @@
+{
+  "name": "@paradoxui/tokens",
+  "version": "0.0.1",
+  "private": true,
+  "license": "MIT",
+  "main": "./index.css",
+  "exports": {
+    ".": "./index.css",
+    "./index.css": "./index.css"
+  },
+  "files": [
+    "index.css"
+  ],
+  "scripts": {
+    "lint": "echo 'No lint for tokens'",
+    "typecheck": "echo 'No typecheck for tokens'",
+    "build": "echo 'No build step for tokens'",
+    "test": "echo 'No tests for tokens'"
+  }
+}
