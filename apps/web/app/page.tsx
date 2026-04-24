@@ -50,7 +50,7 @@ export default function InProgressPage() {
           <br />
         </p>
 
-        <p className={styles.label}>Progress</p>
+        <p className={styles.label}>Roadmap</p>
 
         <ul className={styles.track}>
           {items.map((item) => (
@@ -58,14 +58,13 @@ export default function InProgressPage() {
               key={item.label}
               className={`${styles.item} ${styles[item.status]}`}
             >
-              <span className={styles.dot} />
               <span className={styles.text}>{item.label}</span>
               {item.status === 'done' && (
                 <span className={`${styles.tag} ${styles.tagDone}`}>Done</span>
               )}
               {item.status === 'active' && (
                 <span className={`${styles.tag} ${styles.tagNow}`}>
-                  Forming
+                  Exploring
                 </span>
               )}
             </li>

@@ -38,7 +38,7 @@
 }
 
 .label {
-  font-size: 16px;
+  font-size: 14px;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: #000000;
@@ -57,12 +57,13 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 16px 0;
+  padding: 20px 0 4px;
   font-size: 20px;
   line-height: 1.4;
 }
 
-.item::before {
+/* Opening line above the first row */
+.item:first-child::before {
   content: '';
   position: absolute;
   top: 0;
@@ -72,7 +73,8 @@
   border-top: 1px dashed #e5e8dc;
 }
 
-.item:last-child::after {
+/* Line at the bottom of every row — text rests on it */
+.item::after {
   content: '';
   position: absolute;
   bottom: 0;
@@ -127,6 +129,7 @@
 .tagNow {
   background: #000000;
   color: #fbfcfa;
+  font-family: 'Switzer', sans-serif;
 }
 
 .footer {
