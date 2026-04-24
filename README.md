@@ -1,10 +1,12 @@
 # Santolina
 
-A modern plant care application built as a monorepo with a shared design system.
+A garden planning and management app for people who want a beautiful, well-considered outdoor space. Built as a monorepo alongside Paradox UI, an open source design system extracted from the product as it's built.
 
 ## Overview
 
-Santolina is a full-stack monorepo containing a Next.js plant app and a shared React component library (`@paradoxui/ui`) backed by a CSS design token system (`@paradoxui/tokens`).
+Santolina helps beginner to intermediate gardeners design and manage ornamental gardens. Users describe their conditions and style preferences and get a curated plant palette with seasonal guidance.
+
+The monorepo contains the Next.js web app and the Paradox UI packages (@paradoxui/ui, @paradoxui/tokens), kept deliberately separate so the design system stays extractable.
 
 ## Monorepo Structure
 
