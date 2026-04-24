@@ -1,218 +1,79 @@
-import { Button } from '@paradoxui/ui'
-import { Badge } from '@paradoxui/ui'
-import { Card, CardHeader, CardBody, CardFooter } from '@paradoxui/ui'
-import { Avatar } from '@paradoxui/ui'
-import { Spinner } from '@paradoxui/ui'
+import styles from './page.module.css'
 
-const featuredPlants = [
-  {
-    id: '1',
-    name: 'Monstera Deliciosa',
-    status: 'Healthy',
-    statusVariant: 'success' as const,
-    initials: 'MD',
-    description: 'Thrives in bright indirect light. Water when topsoil is dry.',
-  },
-  {
-    id: '2',
-    name: 'Fiddle Leaf Fig',
-    status: 'Needs water',
-    statusVariant: 'warning' as const,
-    initials: 'FL',
-    description: 'Prefers consistent watering and bright indirect light.',
-  },
-  {
-    id: '3',
-    name: 'Snake Plant',
-    status: 'Healthy',
-    statusVariant: 'success' as const,
-    initials: 'SP',
-    description: 'Very tolerant. Low light, infrequent watering.',
-  },
+type ItemStatus = 'done' | 'active' | 'pending'
+
+interface TrackItem {
+  label: string
+  status: ItemStatus
+}
+
+const items: TrackItem[] = [
+  { label: 'Product research & definition', status: 'done' },
+  { label: 'Information architecture', status: 'done' },
+  { label: 'Product name & domains', status: 'done' },
+  { label: 'Define architecture & stack', status: 'done' },
+  { label: 'Set up monorepo', status: 'done' },
+  { label: 'Define data sources', status: 'done' },
+  { label: 'User flows & states', status: 'active' },
+  { label: 'Visual direction & branding', status: 'active' },
+  { label: 'UI & interaction design', status: 'active' },
+  { label: 'Design system', status: 'active' },
+  { label: 'Landing page', status: 'pending' },
+  { label: 'Build core experience', status: 'pending' },
+  { label: 'Alpha: test & validate', status: 'pending' },
+  { label: 'Build additional features', status: 'pending' },
+  { label: 'Public launch', status: 'pending' },
 ]
 
-export default function HomePage() {
+export default function InProgressPage() {
   return (
-    <main
-      style={{
-        minHeight: '100vh',
-        background:
-          'linear-gradient(135deg, var(--color-primary-50) 0%, var(--color-neutral-50) 100%)',
-      }}
-    >
-      {/* Header */}
-      <header
-        style={{
-          borderBottom: '1px solid var(--color-neutral-200)',
-          background: 'white',
-          padding: 'var(--spacing-4) var(--spacing-6)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}
-      >
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 'var(--spacing-3)',
-          }}
-        >
-          <span
-            style={{
-              fontSize: 'var(--font-size-xl)',
-              fontWeight: 'var(--font-weight-bold)',
-              color: 'var(--color-primary-700)',
-            }}
+    <div className={styles.root}>
+      <div className={styles.inner}>
+        <h1 className={styles.headline}>Santolina</h1>
+        <p className={styles.meta}>
+          Passion project from{' '}
+          <a
+            href="https://www.anabeverin.com/"
+            target="_blank"
+            rel="noopener noreferrer"
           >
-            🌿 Santolina
-          </span>
-          <Badge variant="info">Beta</Badge>
-        </div>
-        <div style={{ display: 'flex', gap: 'var(--spacing-2)' }}>
-          <Button variant="ghost" size="sm">
-            Sign in
-          </Button>
-          <Button variant="primary" size="sm">
-            Get started
-          </Button>
-        </div>
-      </header>
-
-      {/* Hero */}
-      <section
-        style={{
-          textAlign: 'center',
-          padding: 'var(--spacing-24) var(--spacing-6)',
-          maxWidth: '720px',
-          margin: '0 auto',
-        }}
-      >
-        <h1
-          style={{
-            fontSize: 'var(--font-size-4xl)',
-            fontWeight: 'var(--font-weight-bold)',
-            color: 'var(--color-neutral-900)',
-            lineHeight: 'var(--line-height-tight)',
-            marginBottom: 'var(--spacing-4)',
-          }}
-        >
-          Care for your plants,{' '}
-          <span style={{ color: 'var(--color-primary-600)' }}>
-            effortlessly.
-          </span>
-        </h1>
-        <p
-          style={{
-            fontSize: 'var(--font-size-lg)',
-            color: 'var(--color-neutral-600)',
-            marginBottom: 'var(--spacing-8)',
-            lineHeight: 'var(--line-height-relaxed)',
-          }}
-        >
-          Santolina helps you track watering schedules, identify problems, and
-          keep your plant collection thriving — all in one place.
+            Ana,
+          </a>{' '}
+          check it out on{' '}
+          <a
+            href="https://github.com/Paradoxich/santolina"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            GitHub.
+          </a>
+          <br />
         </p>
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'center',
-            gap: 'var(--spacing-3)',
-          }}
-        >
-          <Button variant="primary" size="lg">
-            Start for free
-          </Button>
-          <Button variant="secondary" size="lg">
-            View demo
-          </Button>
-        </div>
-      </section>
 
-      {/* Plant cards */}
-      <section
-        style={{
-          maxWidth: '1080px',
-          margin: '0 auto',
-          padding: '0 var(--spacing-6) var(--spacing-24)',
-        }}
-      >
-        <h2
-          style={{
-            fontSize: 'var(--font-size-2xl)',
-            fontWeight: 'var(--font-weight-semibold)',
-            color: 'var(--color-neutral-800)',
-            marginBottom: 'var(--spacing-6)',
-            textAlign: 'center',
-          }}
-        >
-          Your garden
-        </h2>
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-            gap: 'var(--spacing-4)',
-          }}
-        >
-          {featuredPlants.map((plant) => (
-            <Card key={plant.id}>
-              <CardHeader>
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 'var(--spacing-3)',
-                  }}
-                >
-                  <Avatar initials={plant.initials} size="md" />
-                  <div>
-                    <p
-                      style={{
-                        margin: 0,
-                        fontWeight: 'var(--font-weight-semibold)',
-                        fontSize: 'var(--font-size-md)',
-                        color: 'var(--color-neutral-900)',
-                      }}
-                    >
-                      {plant.name}
-                    </p>
-                    <Badge variant={plant.statusVariant}>{plant.status}</Badge>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardBody>
-                <p
-                  style={{
-                    margin: 0,
-                    color: 'var(--color-neutral-600)',
-                    fontSize: 'var(--font-size-sm)',
-                    lineHeight: 'var(--line-height-relaxed)',
-                  }}
-                >
-                  {plant.description}
-                </p>
-              </CardBody>
-              <CardFooter>
-                <Button variant="ghost" size="sm">
-                  View details
-                </Button>
-              </CardFooter>
-            </Card>
+        <p className={styles.label}>Progress</p>
+
+        <ul className={styles.track}>
+          {items.map((item) => (
+            <li
+              key={item.label}
+              className={`${styles.item} ${styles[item.status]}`}
+            >
+              <span className={styles.dot} />
+              <span className={styles.text}>{item.label}</span>
+              {item.status === 'done' && (
+                <span className={`${styles.tag} ${styles.tagDone}`}>Done</span>
+              )}
+              {item.status === 'active' && (
+                <span className={`${styles.tag} ${styles.tagNow}`}>
+                  Forming
+                </span>
+              )}
+            </li>
           ))}
-        </div>
-      </section>
+        </ul>
 
-      {/* Loading state example */}
-      <section
-        style={{
-          display: 'flex',
-          justifyContent: 'center',
-          paddingBottom: 'var(--spacing-16)',
-        }}
-      >
-        <Spinner size="md" />
-      </section>
-    </main>
+        <p className={styles.footer}>April 2026</p>
+      </div>
+    </div>
   )
 }

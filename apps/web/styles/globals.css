@@ -1,4 +1,6 @@
 @import '@paradoxui/tokens';
+@import url('https://api.fontshare.com/v2/css?f[]=switzer@100,200,300,400,500,600,700,800,900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -20,4 +22,6 @@ body {
   color: var(--color-neutral-900);
   background-color: var(--color-neutral-50);
   margin: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
