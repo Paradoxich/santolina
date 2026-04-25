@@ -16,8 +16,8 @@ const items: TrackItem[] = [
   { label: 'Define data sources', status: 'done' },
   { label: 'User flows & states', status: 'active' },
   { label: 'Visual direction & branding', status: 'active' },
-  { label: 'UI & interaction design', status: 'active' },
-  { label: 'Design system', status: 'active' },
+  { label: 'UI & interaction design', status: 'pending' },
+  { label: 'Design system', status: 'pending' },
   { label: 'Landing page', status: 'pending' },
   { label: 'Build core experience', status: 'pending' },
   { label: 'Alpha: test & validate', status: 'pending' },
@@ -50,7 +50,7 @@ export default function InProgressPage() {
           <br />
         </p>
 
-        <p className={styles.label}>Roadmap</p>
+        <p className={styles.label}>How's it going</p>
 
         <ul className={styles.track}>
           {items.map((item) => (
@@ -59,9 +59,6 @@ export default function InProgressPage() {
               className={`${styles.item} ${styles[item.status]}`}
             >
               <span className={styles.text}>{item.label}</span>
-              {item.status === 'done' && (
-                <span className={`${styles.tag} ${styles.tagDone}`}>Done</span>
-              )}
               {item.status === 'active' && (
                 <span className={`${styles.tag} ${styles.tagNow}`}>
                   Exploring
