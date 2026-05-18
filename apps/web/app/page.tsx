@@ -15,8 +15,8 @@ const items: TrackItem[] = [
   { label: 'Set up monorepo', status: 'done' },
   { label: 'Define data sources', status: 'done' },
   { label: 'User flows & states', status: 'active' },
+  { label: 'UI & interaction design', status: 'active' },
   { label: 'Visual direction & branding', status: 'active' },
-  { label: 'UI & interaction design', status: 'pending' },
   { label: 'Design system', status: 'pending' },
   { label: 'Landing page', status: 'pending' },
   { label: 'Build core experience', status: 'pending' },
@@ -45,7 +45,15 @@ export default function InProgressPage() {
             target="_blank"
             rel="noopener noreferrer"
           >
-            GitHub.
+            GitHub,
+          </a>{' '}
+          read about it on{' '}
+          <a
+            href="https://paradoxich.substack.com"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Substack.
           </a>
           <br />
         </p>
@@ -68,7 +76,7 @@ export default function InProgressPage() {
           ))}
         </ul>
 
-        <p className={styles.footer}>April 2026</p>
+        <p className={styles.footer}>Started on April 2026</p>
       </div>
     </div>
   )
