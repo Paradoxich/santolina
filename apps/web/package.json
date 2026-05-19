@@ -13,6 +13,7 @@
     "@paradoxui/tokens": "workspace:*",
     "@paradoxui/ui": "workspace:*",
     "@supabase/supabase-js": "^2.39.0",
+    "@vercel/analytics": "^2.0.1",
     "ai": "^3.0.0",
     "framer-motion": "^11.0.0",
     "next": "^15.0.0",
