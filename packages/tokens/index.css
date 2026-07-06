@@ -132,6 +132,9 @@
   /* Fields — inferred from design, not yet Figma variables */
   --color-background-field: rgb(255 255 255 / 0.6);
 
+  /* Hover — inferred from design, not yet a Figma variable */
+  --color-background-hover: rgb(255 255 255 / 0.3);
+
   /* Text */
   --text-page-title: #111111;
   --text-page-subtitle: #555555;
@@ -153,6 +156,10 @@
   --text-stat-value: #111111;
   --text-step-label: #6b6b6b;
   --text-list-description: #111111;
+  --text-list-title: #111111;
+  --text-section-title: #111111;
+  --text-subsection-title: #111111;
+  --text-timestamp: #6b6b6b;
 
   /* =========================================================
    * TYPOGRAPHY
@@ -184,7 +191,8 @@
   --font-size-logo: 1rem; /* 16px */
   --font-size-body: 0.875rem; /* 14px */
   --font-size-body-small: 0.8125rem; /* 13px */
-  --font-size-label: 0.75rem; /* 12px */
+  --font-size-label: 0.6875rem; /* 11px */
+  --font-size-20: 1.25rem; /* 20px */
 
   /* Font weights */
   --font-weight-thin: 100;
