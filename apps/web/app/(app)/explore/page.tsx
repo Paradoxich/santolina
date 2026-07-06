@@ -1,6 +1,8 @@
 import { ExploreClient } from '@/components/ExploreClient'
 import { getExplorePlants, getPlantDetail } from '@/lib/plant-detail'
 
+export const dynamic = 'force-dynamic'
+
 export default async function ExplorePlantsPage({
   searchParams,
 }: {

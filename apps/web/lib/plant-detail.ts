@@ -1,5 +1,5 @@
 // SERVER-ONLY — fetches plant detail data for the drawer.
-import { supabase } from './supabase'
+import { getSupabase } from './supabase'
 import { DEFAULT_GARDEN } from './default-garden'
 import type { DbPlant } from './plants-db'
 import type { CatalogPlant, Garden } from '@/types/garden'
@@ -18,6 +18,7 @@ export interface PlantDetail {
 
 /** All catalog plants, shaped for the explore grid/list. */
 export async function getExplorePlants(): Promise<CatalogPlant[]> {
+  const supabase = getSupabase()
   const { data, error } = await supabase
     .from('plants')
     .select(
@@ -45,6 +46,7 @@ export async function getExplorePlants(): Promise<CatalogPlant[]> {
 export async function getPlantDetail(
   plantId: string
 ): Promise<PlantDetail | null> {
+  const supabase = getSupabase()
   const [plantRes, combosRes, gardenRes] = await Promise.all([
     supabase.from('plants').select('*').eq('id', plantId).maybeSingle(),
     supabase
