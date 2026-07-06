@@ -95,6 +95,7 @@ export const sampleGardenPlants: GardenPlant[] = [
     imageUrl: '/plants/plant-02.png',
     status: 'pre-bloom',
     note: 'Planting in early autumn',
+    caption: 'Full sun · Jun–Sep',
     planned: true,
   },
   {
@@ -103,6 +104,7 @@ export const sampleGardenPlants: GardenPlant[] = [
     imageUrl: '/plants/plant-06.png',
     status: 'pre-bloom',
     note: 'Pairs well with lavender',
+    caption: 'Full sun · May–Sep',
     planned: true,
   },
   {
@@ -111,6 +113,7 @@ export const sampleGardenPlants: GardenPlant[] = [
     imageUrl: '/plants/plant-04.png',
     status: 'pre-bloom',
     note: 'Adds movement and texture',
+    caption: 'Full sun · Jul–Oct',
     planned: true,
   },
   {
@@ -119,6 +122,7 @@ export const sampleGardenPlants: GardenPlant[] = [
     imageUrl: '/plants/plant-01.png',
     status: 'pre-bloom',
     note: 'Self-seeds generously',
+    caption: 'Part shade · Aug–Oct',
     planned: true,
   },
 ]
