@@ -151,8 +151,9 @@ Extend an existing primitive with a variant prop before creating a near
 duplicate. Create a new component when the behavior differs, not just the
 skin.
 
-Existing primitives: Button, Input, Card (+Header/Body/Footer), Badge, Chip,
-Tabs, Avatar, Spinner, Modal, Toast, Tooltip.
+Existing primitives: Button, Input, SearchField, Card (+Header/Body/Footer),
+Badge, Chip, Tabs, Avatar, Spinner, Modal, Toast, Tooltip, ChecklistItem,
+CompanionThumbnail, DetailRow, SeasonalStageRow, StatCard.
 
 ---
 

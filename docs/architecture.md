@@ -164,6 +164,7 @@ Full column list as of the current schema version:
 | `native_to`            | text                         | Trefle / AI               |
 | `description`          | text                         | Trefle / AI               |
 | `plant_type`           | text (enum check)            | AI                        |
+| `plant_type_label`     | text                         | AI                        |
 | `care_level`           | text (`low`/`medium`/`high`) | AI                        |
 | `bloom_months`         | integer[]                    | Trefle / AI               |
 | `peak_season`          | text                         | derived from bloom_months |
@@ -175,6 +176,8 @@ Full column list as of the current schema version:
 | `hardiness_zone_max`   | text                         | AI                        |
 | `sun_requirements`     | text[]                       | Trefle / AI               |
 | `water_needs`          | text                         | AI                        |
+| `water_needs_summary`  | text                         | AI                        |
+| `light_needs`          | text                         | AI                        |
 | `soil_needs`           | text                         | AI                        |
 | `maintenance_notes`    | text                         | AI                        |
 | `common_issues`        | text                         | AI                        |
@@ -216,4 +219,4 @@ Full column list as of the current schema version:
 | **Derived**                                                                                                                  | `peak_season` — follows `bloom_months`'s update rule, since it is derived from it                                                             |
 | **Monotonic**                                                                                                                | `is_curated` — stored as `plants.is_curated OR EXCLUDED.is_curated`; can only become `true`, never reverts to `false` on re-seed              |
 
-**AI-only fields are not referenced anywhere in the function body.** `plant_type`, `style_tags`, `space_types`, `bloom_color`, `foliage_color`, `spread_min_cm`, `spread_max_cm`, `water_needs`, `soil_needs`, `maintenance_notes`, `common_issues`, `best_placement`, `environment_benefits`, `seasonal_rhythm`, `garden_use_tags`, and `ai_drafted_at` cannot be overwritten via the Trefle sync path — this is a structural guarantee, not a convention.
+**AI-only fields are not referenced anywhere in the function body.** `plant_type`, `plant_type_label`, `style_tags`, `space_types`, `bloom_color`, `foliage_color`, `spread_min_cm`, `spread_max_cm`, `water_needs`, `water_needs_summary`, `light_needs`, `soil_needs`, `maintenance_notes`, `common_issues`, `best_placement`, `environment_benefits`, `seasonal_rhythm`, `garden_use_tags`, and `ai_drafted_at` cannot be overwritten via the Trefle sync path — this is a structural guarantee, not a convention.
