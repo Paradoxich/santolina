@@ -53,3 +53,6 @@ export type { SeasonalStageRowProps } from './components/SeasonalStageRow'
 
 export { CompanionThumbnail } from './components/CompanionThumbnail'
 export type { CompanionThumbnailProps } from './components/CompanionThumbnail'
+
+export { Panel } from './components/Panel'
+export type { PanelProps } from './components/Panel'

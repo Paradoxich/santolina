@@ -121,10 +121,12 @@
   --color-badge-bg: #b1d7bc;
   --color-avatar-fill: #386b41;
   --color-text-primary: #111111;
+  --color-text-faint: #afafaf;
   --color-background-inverse: #020e03;
 
   /* Borders — inferred from design, not yet Figma variables */
   --color-border-card: #ffffff;
+  --color-border-card-translucent: rgb(255 255 255 / 0.5);
   --color-border-sidebar: rgb(255 255 255 / 0.5);
   --color-border-divider: #e1e5e2;
   --color-border-divider-subtle: rgb(225 229 226 / 0.3);
@@ -160,6 +162,11 @@
   --text-section-title: #111111;
   --text-subsection-title: #111111;
   --text-timestamp: #6b6b6b;
+  --text-panel-title: #111111;
+  --text-task-label: #111111;
+  --text-insight-text: #111111;
+  --text-temperature-high: #111111;
+  --text-dimmed-value: #afafaf;
 
   /* =========================================================
    * TYPOGRAPHY
@@ -193,6 +200,9 @@
   --font-size-body-small: 0.8125rem; /* 13px */
   --font-size-label: 0.6875rem; /* 11px */
   --font-size-20: 1.25rem; /* 20px */
+  --font-size-section-title: 1.0625rem; /* 17px */
+  --font-size-stat-number: 1.5rem; /* 24px */
+  --font-size-micro: 0.5625rem; /* 9px */
 
   /* Font weights */
   --font-weight-thin: 100;
@@ -245,6 +255,7 @@
   --space-section-gap: 1.25rem; /* 20px */
   --space-card-padding: 1.5rem; /* 24px */
   --space-section-break: 2.5rem; /* 40px */
+  --space-8: 2rem; /* 32px */
 
   /* =========================================================
    * BORDER RADIUS
