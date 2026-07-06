@@ -33,6 +33,8 @@ Before placing any component, ask: **does this component know anything about gar
 
 This discipline is non-negotiable. It keeps the framework extractable.
 
+Full UI-building guidance — tokens, typography, styling patterns, component requirements, and the Figma-to-code workflow — is in `DESIGN_SYSTEM.md` at the repo root. Read it before writing any visual code.
+
 ---
 
 ## Package details
@@ -84,19 +86,20 @@ Six tables. All IDs are UUIDs. Row-level security required on all user-owned tab
 
 - `users` — extends Supabase auth.users
 - `gardens` — garden profile (location, space type, sun, style, size). One per user in v1.
-- `plants` — shared plant catalog cached from Perenual API. Public read, service role write.
+- `plants` — shared plant catalog cached from the Trefle API, enriched by an AI curation pass. Public read, service role write.
 - `palette_plants` — join table between gardens and plants. User's palette. Includes status (planned/planted/considering) and source (generated/manual/existing).
 - `plant_combinations` — which plants work well together. Public read, service role write.
 - `agent_sessions` — rolling agent context summary per garden.
 
-Full schema is documented in Notion. Never store passwords — Supabase auth handles that.
+Full schema is documented in Notion. Data-layer decisions (provider choice, curation flow, safe upsert strategy) are recorded in `docs/architecture.md`. Never store passwords — Supabase auth handles that.
 
 ---
 
 ## External APIs
 
 - **Open-Meteo** — weather and climate data. Free, no API key. City-level resolution. Used to derive climate zone, hardiness zone, frost dates, seasonal data from user's city input.
-- **Perenual API** — plant catalog. Key in environment variables. Plants are cached in the `plants` table — Perenual is the source of truth, local table is a cache.
+- **Trefle API** — plant species data (`TREFLE_API_KEY`). Plants are cached in the `plants` table; Trefle populates botanical facts only. Replaced Perenual, whose free tier returned paywalled nulls — see `docs/architecture.md` §1.
+- **Anthropic API** — AI curation pass (`ANTHROPIC_API_KEY`, model `claude-sonnet-4-5`). Fills gaps Trefle can't (care instructions, style tags, seasonal rhythm) via `scripts/curate-plants.ts`. Never overwrites existing data.
 - **Vercel AI SDK** — agent layer. Streaming responses. Model TBD (Claude or GPT-4o). Key in environment variables.
 
 ---
@@ -110,6 +113,8 @@ NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 OPENAI_API_KEY=
+TREFLE_API_KEY=
+ANTHROPIC_API_KEY=
 NEXT_PUBLIC_APP_URL=
 ```
 

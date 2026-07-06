@@ -46,9 +46,12 @@ santolina/
 # Install all dependencies
 pnpm install
 
-# Copy environment variables
-cp apps/web/.env.example apps/web/.env.local
+# Copy environment variables (only if .env.local doesn't exist yet)
+cp -n apps/web/.env.example apps/web/.env.local
 # Fill in your values in .env.local
+#
+# Warning: `cp` without -n overwrites an existing .env.local and wipes your keys.
+# To back up first: cp apps/web/.env.local apps/web/.env.local.bak
 ```
 
 ### Development
