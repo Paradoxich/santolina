@@ -14,12 +14,12 @@ const items: TrackItem[] = [
   { label: 'Define architecture & stack', status: 'done' },
   { label: 'Set up monorepo', status: 'done' },
   { label: 'Define data sources', status: 'done' },
-  { label: 'User flows & states', status: 'active' },
-  { label: 'UI & interaction design', status: 'active' },
-  { label: 'Visual direction & branding', status: 'active' },
-  { label: 'Design system', status: 'pending' },
+  { label: 'User flows & states', status: 'done' },
+  { label: 'UI & interaction design', status: 'done' },
+  { label: 'Visual direction & branding', status: 'done' },
+  { label: 'Design system', status: 'active' },
+  { label: 'Build core experience', status: 'active' },
   { label: 'Landing page', status: 'pending' },
-  { label: 'Build core experience', status: 'pending' },
   { label: 'Alpha: test & validate', status: 'pending' },
   { label: 'Build additional features', status: 'pending' },
   { label: 'Public launch', status: 'pending' },
@@ -76,7 +76,7 @@ export default function InProgressPage() {
           ))}
         </ul>
 
-        <p className={styles.footer}>Started on April 2026</p>
+        <p className={styles.footer}>Last updated July 6, 2026</p>
       </div>
     </div>
   )
