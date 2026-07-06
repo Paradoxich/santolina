@@ -73,6 +73,7 @@ const SEASONAL_KEYS: Array<keyof SeasonalRhythm> = [
 
 interface CurationResponse {
   plant_type?: PlantType | null
+  plant_type_label?: string | null
   description?: string | null
   care_level?: 'low' | 'medium' | 'high' | null
   height_min_cm?: number | null
@@ -90,6 +91,8 @@ interface CurationResponse {
   sun_requirements?: Array<(typeof SUN_VALUES)[number]>
   bloom_months?: number[]
   water_needs?: string | null
+  water_needs_summary?: string | null
+  light_needs?: string | null
   soil_needs?: string | null
   maintenance_notes?: string | null
   common_issues?: string | null
@@ -119,6 +122,7 @@ function buildPrompt(plant: DbPlant): string {
 
   // plant_type first — it gates other field decisions
   if (!knownPlantType) missing.push('plant_type')
+  if (!plant.plant_type_label) missing.push('plant_type_label')
 
   if (!plant.description) missing.push('description')
   if (!plant.care_level) missing.push('care_level')
@@ -140,6 +144,8 @@ function buildPrompt(plant: DbPlant): string {
   if (!plant.sun_requirements?.length) missing.push('sun_requirements')
   if (!plant.bloom_months?.length) missing.push('bloom_months')
   if (!plant.water_needs) missing.push('water_needs')
+  if (!plant.water_needs_summary) missing.push('water_needs_summary')
+  if (!plant.light_needs) missing.push('light_needs')
   if (!plant.soil_needs) missing.push('soil_needs')
   if (!plant.maintenance_notes) missing.push('maintenance_notes')
   if (!plant.common_issues) missing.push('common_issues')
@@ -170,6 +176,7 @@ function buildPrompt(plant: DbPlant): string {
       ? { sun_requirements: plant.sun_requirements }
       : {}),
     ...(plant.bloom_months?.length ? { bloom_months: plant.bloom_months } : {}),
+    ...(plant.water_needs ? { water_needs: plant.water_needs } : {}),
   }
 
   return `You are a botanical data assistant. Given a garden plant, provide ONLY the requested missing fields.
@@ -182,6 +189,7 @@ ${missing.map((f) => `- ${f}`).join('\n')}
 
 Field specifications:
 - plant_type: Exactly one of ${JSON.stringify(PLANT_TYPES)}. Classify the base species (not cultivars). Provide this before all other fields.
+- plant_type_label: Precise horticultural display label as a short phrase, sentence case. E.g. "Herbaceous perennial", "Deciduous shrub", "Evergreen climber", "Ornamental grass". More specific than plant_type, and must be consistent with it.
 - description: 2-3 sentences. Plain language, useful to a beginner gardener. No Latin jargon.
 - care_level: "low" | "medium" | "high". Based on overall maintenance needs.
 - height_min_cm / height_max_cm: Integers. Realistic mature height range in centimetres.
@@ -195,6 +203,8 @@ Field specifications:
 - sun_requirements: Subset of ["full_sun", "partial_sun", "shade"]. Can be multiple if the plant tolerates a range.
 - bloom_months: Array of integers 1–12 (Jan=1, Dec=12). Must be internally consistent with seasonal_rhythm if you are providing both.
 - water_needs: 1-2 short sentences. Plain second-person-adjacent language. E.g. "Moderate watering while establishing. Drought tolerant once mature."
+- water_needs_summary: Very short category phrase, max ~4 words, no trailing period. E.g. "Low to moderate", "Moderate", "Low once established". Must be consistent with water_needs.
+- light_needs: 1-2 short sentences of prose light requirements. E.g. "Performs best in full sun. Tolerates light afternoon shade." Must be consistent with sun_requirements.
 - soil_needs: 1-2 short sentences. E.g. "Prefers well-drained, slightly alkaline soil. Tolerates poor, stony ground."
 - maintenance_notes: 1-2 short sentences on key care tasks (pruning, deadheading, dividing etc.).
 - common_issues: 1-2 sentences on common pests, diseases, or cultural problems. null if the species genuinely has no notable common issues.
@@ -259,6 +269,8 @@ function buildPatch(plant: DbPlant, response: CurationResponse): PlantPatch {
 
   if (!plant.plant_type && response.plant_type != null)
     patch.plant_type = response.plant_type
+  if (!plant.plant_type_label && response.plant_type_label != null)
+    patch.plant_type_label = response.plant_type_label
 
   if (!plant.description && response.description != null)
     patch.description = response.description
@@ -301,6 +313,10 @@ function buildPatch(plant: DbPlant, response: CurationResponse): PlantPatch {
     patch.bloom_months = response.bloom_months
   if (!plant.water_needs && response.water_needs != null)
     patch.water_needs = response.water_needs
+  if (!plant.water_needs_summary && response.water_needs_summary != null)
+    patch.water_needs_summary = response.water_needs_summary
+  if (!plant.light_needs && response.light_needs != null)
+    patch.light_needs = response.light_needs
   if (!plant.soil_needs && response.soil_needs != null)
     patch.soil_needs = response.soil_needs
   if (!plant.maintenance_notes && response.maintenance_notes != null)
