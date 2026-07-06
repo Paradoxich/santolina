@@ -14,7 +14,7 @@ interface GardenPlantTileProps {
 
 export function GardenPlantTile({ plant }: GardenPlantTileProps) {
   return (
-    <article className="flex flex-col gap-[var(--space-item-gap)] rounded-[var(--component-card-dashboard-radius)] border border-[var(--color-border-card)] p-[var(--space-card-padding)]">
+    <article className="flex flex-col gap-[var(--space-item-gap)] rounded-[var(--component-card-dashboard-radius)] border border-[var(--color-border-card)] bg-[rgba(255,255,255,0.2)] p-[var(--space-card-padding)]">
       <div className="relative h-[200px] w-full overflow-hidden rounded-[var(--radius-md)]">
         <Image
           src={plant.imageUrl}

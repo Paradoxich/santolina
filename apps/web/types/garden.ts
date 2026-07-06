@@ -37,4 +37,6 @@ export interface GardenPlant {
   status: BloomStatus
   note: string
   planned?: boolean
+  /** e.g. "Part shade · Aug–Oct" — shown on planned plant cards */
+  caption?: string
 }

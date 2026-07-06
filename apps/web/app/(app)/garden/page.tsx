@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Chip, Tabs } from '@paradoxui/ui'
 import { GardenPlantTile } from '@/components/GardenPlantTile'
+import { PlannedPlantTile } from '@/components/PlannedPlantTile'
 import { sampleGardenPlants } from '@/lib/sample-garden'
 import type { BloomStatus } from '@/types/garden'
 
@@ -27,11 +28,12 @@ export default function MyGardenPage() {
 
   const growing = sampleGardenPlants.filter((p) => !p.planned)
   const planned = sampleGardenPlants.filter((p) => p.planned)
-  const activeList = tab === 'growing' ? growing : planned
   const visible =
-    filter === 'all'
-      ? activeList
-      : activeList.filter((p) => p.status === filter)
+    tab === 'growing'
+      ? filter === 'all'
+        ? growing
+        : growing.filter((p) => p.status === filter)
+      : planned
 
   const activeTabLabel = tab === 'growing' ? 'Growing' : 'Planned'
 
@@ -54,30 +56,38 @@ export default function MyGardenPage() {
       <p className="mt-3 text-[length:var(--font-size-body)] text-[var(--text-page-subtitle)]">
         {tab === 'growing'
           ? 'Plants currently in your garden. Sorted by status.'
-          : 'Plants you plan to add to your garden.'}
+          : "Plants you want to add. Move into Growing once they're in the ground."}
       </p>
 
-      <div className="mt-6 flex items-center gap-[var(--space-inline-gap)]">
-        {statusFilters.map((s) => (
-          <Chip
-            key={s.value}
-            selected={filter === s.value}
-            onClick={() => setFilter(s.value)}
-          >
-            {s.label}
-          </Chip>
-        ))}
-      </div>
+      {tab === 'growing' && (
+        <div className="mt-11 flex items-center gap-[var(--space-inline-gap)]">
+          {statusFilters.map((s) => (
+            <Chip
+              key={s.value}
+              selected={filter === s.value}
+              onClick={() => setFilter(s.value)}
+            >
+              {s.label}
+            </Chip>
+          ))}
+        </div>
+      )}
 
-      <div className="mt-11 grid grid-cols-1 gap-[var(--space-item-gap)] md:grid-cols-2 xl:grid-cols-3">
-        {visible.map((plant) => (
-          <GardenPlantTile key={plant.id} plant={plant} />
-        ))}
+      <div className="mt-6 grid grid-cols-1 gap-[var(--space-item-gap)] md:grid-cols-2 xl:grid-cols-3">
+        {visible.map((plant) =>
+          tab === 'growing' ? (
+            <GardenPlantTile key={plant.id} plant={plant} />
+          ) : (
+            <PlannedPlantTile key={plant.id} plant={plant} />
+          )
+        )}
       </div>
 
       {visible.length === 0 && (
         <p className="mt-11 text-[length:var(--font-size-body)] text-[var(--text-meta)]">
-          No plants match this filter yet.
+          {tab === 'growing'
+            ? 'No plants match this filter yet.'
+            : 'Nothing planned yet.'}
         </p>
       )}
     </div>
