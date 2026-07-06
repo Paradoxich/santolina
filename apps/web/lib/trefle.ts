@@ -317,13 +317,13 @@ function mapImages(images: TrefleImages | null | undefined): {
   let primary: string | null = null
   for (const cat of IMAGE_PRIORITY) {
     if (byCategory[cat]?.length) {
-      primary = byCategory[cat][0]
+      primary = byCategory[cat]?.[0] ?? null
       break
     }
   }
   if (!primary) {
     const firstCat = Object.keys(byCategory)[0]
-    primary = firstCat ? (byCategory[firstCat][0] ?? null) : null
+    primary = firstCat ? (byCategory[firstCat]?.[0] ?? null) : null
   }
 
   const all = Object.values(byCategory).flat()

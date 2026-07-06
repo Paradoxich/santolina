@@ -55,7 +55,14 @@ export async function lookupPlant(query: LookupQuery): Promise<LookupResult> {
           error: `No Trefle results found for "${query.name}"`,
         }
       }
-      sourceId = results[0].id
+      const match = results[0]
+      if (!match) {
+        return {
+          plant: null,
+          error: `No Trefle results found for "${query.name}"`,
+        }
+      }
+      sourceId = match.id
     }
 
     // ── 3. Fetch detail + upsert ──────────────────────────────────────────

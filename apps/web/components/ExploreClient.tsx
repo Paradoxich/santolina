@@ -25,12 +25,11 @@ export function ExploreClient({ plants, detail }: ExploreClientProps) {
   useEffect(() => {
     if (!detail) return
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') closeDrawer()
+      if (e.key === 'Escape') router.push('/explore', { scroll: false })
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [detail])
+  }, [detail, router])
 
   const q = query.trim().toLowerCase()
   const visible = q

@@ -76,6 +76,9 @@ async function resolveId(entry: number | string): Promise<number> {
     throw new Error(`No Trefle results found for name: "${entry}"`)
   }
   const match = results[0]
+  if (!match) {
+    throw new Error(`No Trefle results found for name: "${entry}"`)
+  }
   console.log(
     `  Resolved "${entry}" → source_species_id ${match.id} (${match.common_name})`
   )
@@ -101,8 +104,7 @@ async function main() {
   const failures: Array<{ entry: number | string; error: string }> = []
   let succeeded = 0
 
-  for (let i = 0; i < SEED_LIST.length; i++) {
-    const entry = SEED_LIST[i]
+  for (const [i, entry] of SEED_LIST.entries()) {
     const prefix = `[${pad(i + 1)}/${pad(SEED_LIST.length)}]`
 
     try {

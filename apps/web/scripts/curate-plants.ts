@@ -369,8 +369,7 @@ async function main() {
   const nullPlantType: string[] = []
   let succeeded = 0
 
-  for (let i = 0; i < plants.length; i++) {
-    const plant = plants[i]
+  for (const [i, plant] of plants.entries()) {
     const label = plant.scientific_name ?? plant.common_name
     const prefix = `[${pad(i + 1)}/${pad(plants.length)}]`
 
