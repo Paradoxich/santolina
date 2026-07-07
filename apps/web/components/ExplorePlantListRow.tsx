@@ -42,7 +42,7 @@ export function ExplorePlantListRow({
             {plant.botanicalName}
           </p>
         </div>
-        <p className="line-clamp-2 text-[length:var(--font-size-body-small)] leading-[1.3] tracking-[-0.01em] text-[var(--text-body-secondary)]">
+        <p className="line-clamp-1 text-[length:var(--font-size-body-small)] leading-[1.3] tracking-[-0.01em] text-[var(--text-body-secondary)]">
           {plant.description}
         </p>
       </div>

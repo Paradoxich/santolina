@@ -270,8 +270,8 @@
 
   /* Component radii — from Figma variables */
   --component-chip-radius: var(--radius-full);
-  --component-card-dashboard-radius: 1.5rem; /* 24px */
-  --component-card-explore-grid-tile-radius: 1rem; /* 16px */
+  --component-card-dashboard-radius: 1.25rem; /* 24px */
+  --component-card-explore-grid-tile-radius: 1.25rem; /* 16px */
   --component-card-explore-list-row-radius: 1rem; /* 16px */
 
   /* =========================================================

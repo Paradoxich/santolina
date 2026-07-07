@@ -51,9 +51,6 @@ export function ExploreClient({ plants, detail }: ExploreClientProps) {
         <h1 className="text-[length:var(--font-size-page-title)] font-semibold tracking-[-0.04em] text-[var(--text-page-title)]">
           What to plant next?
         </h1>
-        <p className="mt-3 text-[length:var(--font-size-body)] text-[var(--text-page-subtitle)]">
-          Find plants that fit your conditions, or learn what to avoid.
-        </p>
 
         <div className="mt-6">
           <SearchField
@@ -64,12 +61,12 @@ export function ExploreClient({ plants, detail }: ExploreClientProps) {
           />
         </div>
 
-        <p className="mt-8 text-[length:var(--font-size-body)] text-[var(--text-body-secondary)]">
+        <p className="mt-16 text-[length:var(--font-size-body)] text-[var(--text-page-subtitle)]">
           Recommended plants
         </p>
 
         {detail ? (
-          <div className="mt-2 flex flex-col gap-[var(--space-item-gap)]">
+          <div className="mt-4 flex flex-col gap-[var(--space-item-gap)]">
             {visible.map((plant) => (
               <ExplorePlantListRow
                 key={plant.id}
@@ -80,7 +77,7 @@ export function ExploreClient({ plants, detail }: ExploreClientProps) {
             ))}
           </div>
         ) : (
-          <div className="mt-2 grid grid-cols-1 gap-[var(--space-item-gap)] md:grid-cols-2 xl:grid-cols-3">
+          <div className="mt-4 grid grid-cols-1 gap-[var(--space-item-gap)] md:grid-cols-2 xl:grid-cols-3">
             {visible.map((plant) => (
               <ExplorePlantTile
                 key={plant.id}
