@@ -6,15 +6,22 @@
   "main": "./index.css",
   "exports": {
     ".": "./index.css",
-    "./index.css": "./index.css"
+    "./index.css": "./index.css",
+    "./preset": "./preset.ts"
   },
   "files": [
-    "index.css"
+    "index.css",
+    "preset.ts"
   ],
   "scripts": {
     "lint": "echo 'No lint for tokens'",
-    "typecheck": "echo 'No typecheck for tokens'",
+    "typecheck": "tsc --noEmit",
     "build": "echo 'No build step for tokens'",
     "test": "echo 'No tests for tokens'"
+  },
+  "devDependencies": {
+    "@paradoxui/typescript-config": "workspace:*",
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5.4.0"
   }
 }

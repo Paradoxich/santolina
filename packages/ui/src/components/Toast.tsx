@@ -1,40 +1,32 @@
 import React from 'react'
 
 export interface ToastProps extends React.HTMLAttributes<HTMLDivElement> {
-  variant?: 'default' | 'success' | 'warning' | 'error'
+  variant?: 'default' | 'positive' | 'warning' | 'critical'
   title?: string
   description?: string
   onClose?: () => void
 }
 
 const variantStyles: Record<NonNullable<ToastProps['variant']>, string> = {
-  default: [
-    'bg-[var(--color-neutral-800)]',
-    'text-white',
-    'border-[var(--color-neutral-700)]',
-  ].join(' '),
-  success: [
-    'bg-[var(--color-success-600)]',
-    'text-white',
-    'border-[var(--color-success-700)]',
-  ].join(' '),
-  warning: [
-    'bg-[var(--color-warning-500)]',
-    'text-white',
-    'border-[var(--color-warning-600)]',
-  ].join(' '),
-  error: [
-    'bg-[var(--color-error-600)]',
-    'text-white',
-    'border-[var(--color-error-700)]',
-  ].join(' '),
+  default: ['bg-surface-inverse', 'text-inverse', 'border-transparent'].join(
+    ' '
+  ),
+  positive: ['bg-fill-positive', 'text-on-accent', 'border-transparent'].join(
+    ' '
+  ),
+  warning: ['bg-fill-warning', 'text-on-accent', 'border-transparent'].join(
+    ' '
+  ),
+  critical: ['bg-fill-critical', 'text-on-accent', 'border-transparent'].join(
+    ' '
+  ),
 }
 
 const iconMap: Record<NonNullable<ToastProps['variant']>, string> = {
   default: 'ℹ',
-  success: '✓',
+  positive: '✓',
   warning: '⚠',
-  error: '✕',
+  critical: '✕',
 }
 
 export function Toast({
@@ -50,9 +42,9 @@ export function Toast({
       className={[
         'flex items-start gap-3',
         'px-4 py-3',
-        'rounded-[var(--radius-lg)]',
+        'rounded-lg',
         'border',
-        'shadow-[var(--shadow-lg)]',
+        'shadow-lg',
         'min-w-[280px] max-w-sm',
         variantStyles[variant],
         className,
@@ -75,7 +67,7 @@ export function Toast({
       {onClose && (
         <button
           onClick={onClose}
-          className="flex-shrink-0 opacity-80 hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white rounded"
+          className="flex-shrink-0 opacity-80 hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current rounded"
           aria-label="Dismiss notification"
         >
           <svg

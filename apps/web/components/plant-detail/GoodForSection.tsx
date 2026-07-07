@@ -10,9 +10,7 @@ export function GoodForSection({ tags }: GoodForSectionProps) {
   if (!sentence) return null
   return (
     <DrawerSection label="Good for">
-      <p className="w-full text-[length:var(--font-size-body)] leading-[1.5] text-[var(--text-body-primary)]">
-        {sentence}
-      </p>
+      <p className="w-full text-body leading-[1.5] text-primary">{sentence}</p>
     </DrawerSection>
   )
 }

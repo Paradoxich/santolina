@@ -1,176 +1,67 @@
 /**
  * @paradoxui/tokens
  * Design token definitions as CSS custom properties.
- * Semantic tokens are synced from the Santolina Figma variables.
+ *
+ * THIS FILE IS THE SOURCE OF TRUTH for the design system. Figma Variables
+ * are synced FROM this structure, not the other way around.
+ *
+ * Taxonomy: docs/token-taxonomy.md. Three tiers:
+ *   1. Primitives — hue/scale names (--color-green-600). Raw values live
+ *      ONLY here.
+ *   2. Semantic — role names (--color-text-muted). Always aliases of tier 1
+ *      (translucent compositions excepted, marked inline). Components
+ *      consume this tier ~95% of the time. Dark mode overrides this tier
+ *      and nothing else.
+ *   3. Component — component names (--chip-radius). Sparse. Must alias
+ *      tier 1/2 or encode a measured value — never introduce a new hue.
+ *
+ * Rules:
+ *   - Role names describe function, never location. "surface-card", not
+ *     "background-close-button". Location names allowed in tier 3 only.
+ *   - New semantic role: only if its usage rule fits one sentence.
+ *   - New raw value: only if design actually chose one.
  */
+
+/* Public Sans lives with the tokens so consumers outside the monorepo get
+ * the real typeface instead of a silent system-font fallback. */
+@import url('https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,100..900;1,100..900&display=swap');
 
 :root {
   /* =========================================================
-   * COLOR SYSTEM — core ramps
+   * TIER 1 — PRIMITIVES
    * ========================================================= */
 
-  /* Primary ramp */
-  --color-primary-50: #f0fdf4;
-  --color-primary-100: #dcfce7;
-  --color-primary-200: #bbf7d0;
-  --color-primary-300: #86efac;
-  --color-primary-400: #4ade80;
-  --color-primary-500: #22c55e;
-  --color-primary-600: #16a34a;
-  --color-primary-700: #15803d;
-  --color-primary-800: #166534;
-  --color-primary-900: #14532d;
-  --color-primary-950: #052e16;
+  /* Green — brand */
+  --color-green-100: #d9f0e0;
+  --color-green-200: #b1d7bc;
+  --color-green-300: #99bd9d;
+  --color-green-600: #386b41;
+  --color-green-700: #2b6e3f;
+  --color-green-950: #020e03;
 
-  /* Secondary ramp */
-  --color-secondary-50: #fafaf9;
-  --color-secondary-100: #f5f5f4;
-  --color-secondary-200: #e7e5e4;
-  --color-secondary-300: #d6d3d1;
-  --color-secondary-400: #a8a29e;
-  --color-secondary-500: #78716c;
-  --color-secondary-600: #57534e;
-  --color-secondary-700: #44403c;
-  --color-secondary-800: #292524;
-  --color-secondary-900: #1c1917;
-  --color-secondary-950: #0c0a09;
+  /* Sage — tinted neutrals for surfaces */
+  --color-sage-50: #f8f8f8;
+  --color-sage-100: #edf2ee;
+  --color-sage-150: #e1e5e2;
+  --color-sage-200: #dfe8e1;
+  --color-sage-300: #d1e0d3;
 
-  /* Neutral ramp */
-  --color-neutral-50: #fafafa;
-  --color-neutral-100: #f4f4f5;
-  --color-neutral-200: #e4e4e7;
-  --color-neutral-300: #d4d4d8;
-  --color-neutral-400: #a1a1aa;
-  --color-neutral-500: #71717a;
-  --color-neutral-600: #52525b;
-  --color-neutral-700: #3f3f46;
-  --color-neutral-800: #27272a;
-  --color-neutral-900: #18181b;
-  --color-neutral-950: #09090b;
+  /* Gold — warm family for warning tones */
+  --color-gold-100: #eee8da;
+  --color-gold-700: #9a7b2d;
 
-  /* Semantic — Success */
-  --color-success-50: #f0fdf4;
-  --color-success-100: #dcfce7;
-  --color-success-200: #bbf7d0;
-  --color-success-300: #86efac;
-  --color-success-400: #4ade80;
-  --color-success-500: #22c55e;
-  --color-success-600: #16a34a;
-  --color-success-700: #15803d;
-  --color-success-800: #166534;
-  --color-success-900: #14532d;
+  /* Gray — true neutrals for text */
+  --color-gray-0: #ffffff;
+  --color-gray-100: #afafaf;
+  --color-gray-500: #6b6b6b;
+  --color-gray-600: #555555;
+  --color-gray-900: #111111;
 
-  /* Semantic — Warning */
-  --color-warning-50: #fffbeb;
-  --color-warning-100: #fef3c7;
-  --color-warning-200: #fde68a;
-  --color-warning-300: #fcd34d;
-  --color-warning-400: #fbbf24;
-  --color-warning-500: #f59e0b;
-  --color-warning-600: #d97706;
-  --color-warning-700: #b45309;
-  --color-warning-800: #92400e;
-  --color-warning-900: #78350f;
-
-  /* Semantic — Error */
-  --color-error-50: #fef2f2;
-  --color-error-100: #fee2e2;
-  --color-error-200: #fecaca;
-  --color-error-300: #fca5a5;
-  --color-error-400: #f87171;
-  --color-error-500: #ef4444;
-  --color-error-600: #dc2626;
-  --color-error-700: #b91c1c;
-  --color-error-800: #991b1b;
-  --color-error-900: #7f1d1d;
-
-  /* Semantic — Info */
-  --color-info-50: #eff6ff;
-  --color-info-100: #dbeafe;
-  --color-info-200: #bfdbfe;
-  --color-info-300: #93c5fd;
-  --color-info-400: #60a5fa;
-  --color-info-500: #3b82f6;
-  --color-info-600: #2563eb;
-  --color-info-700: #1d4ed8;
-  --color-info-800: #1e40af;
-  --color-info-900: #1e3a8a;
-
-  /* =========================================================
-   * SEMANTIC TOKENS — synced from Figma variables
-   * ========================================================= */
-
-  /* Backgrounds */
-  --color-background-page: #dfe8e1;
-  --color-background-sidebar: rgb(178 209 184 / 0.3);
-  --color-background-overlay: rgb(255 255 255 / 0.5);
-  --color-background-subtle: rgb(255 255 255 / 0.7);
-  --color-background-active: rgb(153 189 157 / 0.5);
-  --color-background-card: #edf2ee;
-  --color-background-card-subtle: #f8f8f8;
-  --color-background-close-button: #d1e0d3;
-  --color-background-caution-card: #eee8da;
-  --color-background-benefit-card: #d9f0e0;
-
-  /* Grays */
-  --color-gray-800: #555555;
-
-  /* Accents & fills */
-  --color-accent-primary: #2b6e3f;
-  --color-accent-caution: #9a7b2d;
-  --color-badge-bg: #b1d7bc;
-  --color-avatar-fill: #386b41;
-  --color-text-primary: #111111;
-  --color-text-faint: #afafaf;
-  --color-background-inverse: #020e03;
-
-  /* Borders — inferred from design, not yet Figma variables */
-  --color-border-card: #ffffff;
-  --color-border-card-translucent: rgb(255 255 255 / 0.5);
-  --color-border-sidebar: rgb(255 255 255 / 0.5);
-  --color-border-divider: #e1e5e2;
-  --color-border-divider-subtle: rgb(225 229 226 / 0.3);
-
-  /* Fields — inferred from design, not yet Figma variables */
-  --color-background-field: rgb(255 255 255 / 0.6);
-
-  /* Hover — inferred from design, not yet a Figma variable */
-  --color-background-hover: rgb(255 255 255 / 0.3);
-
-  /* Text */
-  --text-page-title: #111111;
-  --text-page-subtitle: #555555;
-  --text-meta: #6b6b6b;
-  --text-caption: #6b6b6b;
-  --text-body-primary: #111111;
-  --text-body-secondary: #717171;
-  --text-section-label: #6b6b6b;
-  --text-button-label: #555555;
-  --text-card-title: #111111;
-  --text-card-caption: #555555;
-  --text-chip-label: #111111;
-  --text-nav-label: #111111;
-  --text-profile-name: #111111;
-  --text-image-label: #f8f8f8;
-  --text-button-primary-label: #ffffff;
-  --text-label: #6b6b6b;
-  --text-stat-label: #111111;
-  --text-stat-value: #111111;
-  --text-step-label: #6b6b6b;
-  --text-list-description: #111111;
-  --text-list-title: #111111;
-  --text-section-title: #111111;
-  --text-subsection-title: #111111;
-  --text-timestamp: #6b6b6b;
-  --text-panel-title: #111111;
-  --text-task-label: #111111;
-  --text-insight-text: #111111;
-  --text-temperature-high: #111111;
-  --text-dimmed-value: #afafaf;
-
-  /* =========================================================
-   * TYPOGRAPHY
-   * ========================================================= */
+  /* Red — critical tone (placeholder steps until a ramp is designed) */
+  --color-red-100: #fee2e2;
+  --color-red-500: #ef4444;
+  --color-red-600: #dc2626;
+  --color-red-700: #b91c1c;
 
   /* Font families */
   --font-family-sans:
@@ -182,7 +73,7 @@
     ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
     'Courier New', monospace;
 
-  /* Core font size scale */
+  /* Font size scale */
   --font-size-xs: 0.75rem; /* 12px */
   --font-size-sm: 0.875rem; /* 14px */
   --font-size-md: 1rem; /* 16px */
@@ -191,18 +82,6 @@
   --font-size-2xl: 1.5rem; /* 24px */
   --font-size-3xl: 1.875rem; /* 30px */
   --font-size-4xl: 2.25rem; /* 36px */
-
-  /* Semantic font sizes — from Figma variables */
-  --font-size-page-title: 2rem; /* 32px */
-  --font-size-card-title: 1.125rem; /* 18px */
-  --font-size-logo: 1rem; /* 16px */
-  --font-size-body: 0.875rem; /* 14px */
-  --font-size-body-small: 0.8125rem; /* 13px */
-  --font-size-label: 0.6875rem; /* 11px */
-  --font-size-20: 1.25rem; /* 20px */
-  --font-size-section-title: 1.0625rem; /* 17px */
-  --font-size-stat-number: 1.5rem; /* 24px */
-  --font-size-micro: 0.5625rem; /* 9px */
 
   /* Font weights */
   --font-weight-thin: 100;
@@ -217,16 +96,17 @@
   /* Line heights */
   --line-height-none: 1;
   --line-height-tight: 1.25;
+  --line-height-compact: 1.3; /* dense UI copy: descriptions, captions */
   --line-height-snug: 1.375;
   --line-height-normal: 1.5;
   --line-height-relaxed: 1.625;
   --line-height-loose: 2;
 
-  /* =========================================================
-   * SPACING
-   * 4px base unit
-   * ========================================================= */
+  /* Letter spacing */
+  --tracking-compact: -0.01em; /* pairs with line-height-compact */
+  --tracking-heading: -0.02em; /* section/panel headings */
 
+  /* Spacing — 4px base unit */
   --spacing-0: 0;
   --spacing-1: 0.25rem; /* 4px */
   --spacing-2: 0.5rem; /* 8px */
@@ -247,20 +127,7 @@
   --spacing-22: 5.5rem; /* 88px */
   --spacing-24: 6rem; /* 96px */
 
-  /* Semantic spacing — from Figma variables */
-  --space-tight-gap: 0.25rem; /* 4px */
-  --space-inline-gap: 0.5rem; /* 8px */
-  --space-item-gap: 0.75rem; /* 12px */
-  --space-row-gap: 1rem; /* 16px */
-  --space-section-gap: 1.25rem; /* 20px */
-  --space-card-padding: 1.5rem; /* 24px */
-  --space-section-break: 2.5rem; /* 40px */
-  --space-8: 2rem; /* 32px */
-
-  /* =========================================================
-   * BORDER RADIUS
-   * ========================================================= */
-
+  /* Border radius */
   --radius-xs: 0.25rem; /* 4px */
   --radius-sm: 0.5rem; /* 8px */
   --radius-md: 0.75rem; /* 12px */
@@ -268,47 +135,142 @@
   --radius-xl: 1.5rem; /* 24px */
   --radius-full: 9999px;
 
-  /* Component radii — from Figma variables */
-  --component-chip-radius: var(--radius-full);
-  --component-card-dashboard-radius: 1.25rem; /* 24px */
-  --component-card-explore-grid-tile-radius: 1.25rem; /* 16px */
-  --component-card-explore-list-row-radius: 1rem; /* 16px */
-
-  /* =========================================================
-   * SHADOWS
-   * ========================================================= */
-
+  /* Shadows */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   --shadow-lg:
     0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
   --shadow-soft: 0 4px 24px 0 rgb(0 0 0 / 0.05);
 
-  /* =========================================================
-   * MOTION
-   * ========================================================= */
-
-  /* Durations */
+  /* Motion */
   --duration-fast: 100ms;
   --duration-normal: 200ms;
   --duration-slow: 300ms;
-
-  /* Easing curves */
   --ease-linear: linear;
   --ease-in: cubic-bezier(0.4, 0, 1, 1);
   --ease-out: cubic-bezier(0, 0, 0.2, 1);
   --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 
-  /* =========================================================
-   * BREAKPOINTS
-   * (CSS custom properties can't be used in media queries,
-   *  but are defined here for reference and JS consumption)
-   * ========================================================= */
-
+  /* Breakpoints (reference / JS consumption — unusable in media queries) */
   --breakpoint-sm: 640px;
   --breakpoint-md: 768px;
   --breakpoint-lg: 1024px;
   --breakpoint-xl: 1280px;
   --breakpoint-2xl: 1536px;
+
+  /* =========================================================
+   * TIER 2 — SEMANTIC
+   * ========================================================= */
+
+  /* Text roles
+   * primary        — headings, titles, primary body copy
+   * secondary      — subtitles, card captions, button labels
+   * body-secondary — supporting CONTENT: descriptions, summaries
+   * muted          — UI METADATA: labels, captions, timestamps
+   * faint          — de-emphasised/disabled values
+   * inverse        — text over images and dark surfaces
+   * on-accent      — text on accent-filled controls
+   * (body-secondary and muted share a primitive today; they are separate
+   *  roles so they can diverge without touching components.) */
+  --color-text-primary: var(--color-gray-900);
+  --color-text-secondary: var(--color-gray-600);
+  --color-text-body-secondary: var(--color-gray-500);
+  --color-text-muted: var(--color-gray-500);
+  --color-text-faint: var(--color-gray-100);
+  --color-text-inverse: var(--color-sage-50);
+  --color-text-on-accent: var(--color-gray-0);
+
+  /* Surface roles — elevation/function axis */
+  --color-surface-page: var(--color-sage-200);
+  --color-surface-card: var(--color-sage-100);
+  --color-surface-subtle: var(--color-sage-50);
+  --color-surface-sunken: var(--color-sage-200); /* page color inside a card */
+  --color-surface-inverse: var(--color-green-950);
+  /* Translucent compositions — light-mode assumption baked in; these need
+   * real values (not re-aliases) in any dark theme. */
+  --color-surface-field: rgb(255 255 255 / 0.6);
+  --color-surface-overlay: rgb(255 255 255 / 0.5);
+  --color-surface-control: rgb(
+    255 255 255 / 0.7
+  ); /* resting translucent small controls (chips) */
+  --color-surface-hover: rgb(255 255 255 / 0.3);
+  --color-surface-active: rgb(153 189 157 / 0.5); /* green-300 @ 50% */
+  --color-scrim: rgb(0 0 0 / 0.5); /* modal/drawer backdrop */
+
+  /* Tone kits — surface / icon / text / border per tone.
+   * Vocabulary: positive | warning | critical (info added when needed).
+   * A new stateful component composes a kit; it never mints a hex. */
+  --color-surface-positive: var(--color-green-100);
+  --color-icon-positive: var(--color-green-700);
+  --color-text-positive: var(--color-green-700);
+  --color-border-positive: var(--color-green-700);
+
+  --color-surface-warning: var(--color-gold-100);
+  --color-icon-warning: var(--color-gold-700);
+  --color-text-warning: var(--color-gold-700);
+  --color-border-warning: var(--color-gold-700);
+
+  --color-surface-critical: var(--color-red-100);
+  --color-icon-critical: var(--color-red-600);
+  --color-text-critical: var(--color-red-700);
+  --color-border-critical: var(--color-red-500);
+
+  /* Solid fills — filled controls and toasts per tone */
+  --color-fill-positive: var(--color-green-600);
+  --color-fill-warning: var(--color-gold-700);
+  --color-fill-critical: var(--color-red-600);
+  --color-fill-critical-hover: var(--color-red-700);
+
+  /* Accent */
+  --color-accent: var(--color-green-700);
+  --color-accent-hover: var(--color-green-600);
+  --color-accent-muted: var(--color-green-200);
+
+  /* Borders */
+  --color-border-card: var(--color-gray-0);
+  --color-border-card-translucent: rgb(255 255 255 / 0.5);
+  --color-border-divider: var(--color-sage-150);
+  --color-border-divider-subtle: rgb(225 229 226 / 0.3); /* sage-150 @ 30% */
+
+  /* Focus */
+  --color-focus-ring: var(--color-green-700);
+
+  /* Typography roles — size and color are separate axes: "card title" =
+   * text-primary (color) x heading (size) x semibold (weight). */
+  --font-size-title: 2rem; /* 32px — page titles */
+  --font-size-stat: 1.5rem; /* 24px — big numbers */
+  --font-size-subheading: 1.25rem; /* 20px */
+  --font-size-heading: 1.125rem; /* 18px — card/drawer titles */
+  --font-size-section: 1.0625rem; /* 17px — section titles */
+  --font-size-body: 0.875rem; /* 14px */
+  --font-size-body-small: 0.8125rem; /* 13px */
+  --font-size-label: 0.6875rem; /* 11px */
+  --font-size-micro: 0.5625rem; /* 9px */
+
+  /* Spacing roles */
+  --space-tight-gap: var(--spacing-1);
+  --space-inline-gap: var(--spacing-2);
+  --space-item-gap: var(--spacing-3);
+  --space-row-gap: var(--spacing-4);
+  --space-section-gap: var(--spacing-5);
+  --space-card-padding: var(--spacing-6);
+  --space-section-break: var(--spacing-10);
+
+  /* =========================================================
+   * TIER 3 — COMPONENT
+   * (location/component names welcome; aliases or measured values only)
+   * ========================================================= */
+
+  --chip-radius: var(--radius-full);
+  --card-dashboard-radius: 1.25rem; /* 20px — confirmed, deliberate change from the original 24px */
+  --card-tile-radius: 1.25rem; /* 20px */
+  --card-row-radius: var(--radius-lg);
+  --sidebar-surface: rgb(178 209 184 / 0.3);
+  --avatar-fill: var(--color-green-600);
+  --thumbnail-scrim: linear-gradient(
+    to top,
+    rgb(0 0 0 / 0.49),
+    rgb(0 0 0 / 0.1)
+  );
 }

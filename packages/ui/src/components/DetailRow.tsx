@@ -20,19 +20,15 @@ export function DetailRow({
   return (
     <div
       className={[
-        'flex w-full items-start gap-[var(--space-row-gap)]',
-        'border-b border-[var(--color-border-divider)]',
-        'py-[var(--space-item-gap)]',
+        'flex w-full items-start gap-row-gap',
+        'border-b border-divider',
+        'py-item-gap',
         className,
       ].join(' ')}
       {...props}
     >
-      <span className="w-[100px] shrink-0 text-[length:var(--font-size-label)] text-[var(--text-label)]">
-        {label}
-      </span>
-      <span className="min-w-0 flex-1 text-[length:var(--font-size-body)] leading-[1.3] text-[var(--text-stat-value)]">
-        {value}
-      </span>
+      <span className="w-[100px] shrink-0 text-label text-muted">{label}</span>
+      <span className="min-w-0 flex-1 text-body text-primary">{value}</span>
     </div>
   )
 }

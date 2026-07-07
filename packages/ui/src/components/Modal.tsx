@@ -57,9 +57,9 @@ export function Modal({
     <dialog
       ref={dialogRef}
       className={[
-        'w-full rounded-[var(--radius-xl)] shadow-[var(--shadow-lg)]',
-        'p-0 bg-white border border-[var(--color-neutral-200)]',
-        'backdrop:bg-black/50',
+        'w-full rounded-xl shadow-lg',
+        'p-0 bg-surface-card border border-card',
+        'backdrop:bg-scrim',
         sizeStyles[size],
       ].join(' ')}
       onClick={handleOverlayClick}
@@ -71,24 +71,24 @@ export function Modal({
           className={[
             'flex items-center justify-between',
             'px-6 py-4',
-            'border-b border-[var(--color-neutral-200)]',
+            'border-b border-divider',
           ].join(' ')}
         >
           <h2
             id="modal-title"
-            className="text-lg font-semibold text-[var(--color-neutral-900)]"
+            className="text-heading font-semibold text-primary"
           >
             {title}
           </h2>
           <button
             onClick={onClose}
             className={[
-              'rounded-[var(--radius-md)] p-1',
-              'text-[var(--color-neutral-500)]',
-              'hover:bg-[var(--color-neutral-100)]',
-              'hover:text-[var(--color-neutral-700)]',
+              'rounded-md p-1',
+              'text-muted',
+              'hover:bg-surface-hover',
+              'hover:text-primary',
               'focus-visible:outline-none focus-visible:ring-2',
-              'focus-visible:ring-[var(--color-primary-500)]',
+              'focus-visible:ring-focus',
             ].join(' ')}
             aria-label="Close modal"
           >
@@ -115,8 +115,8 @@ export function Modal({
         <div
           className={[
             'px-6 py-4',
-            'border-t border-[var(--color-neutral-200)]',
-            'bg-[var(--color-neutral-50)]',
+            'border-t border-divider',
+            'bg-surface-subtle',
             'flex items-center justify-end gap-3',
           ].join(' ')}
         >

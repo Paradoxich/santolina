@@ -8,7 +8,7 @@ export function AboutSection({ description }: AboutSectionProps) {
   if (!description) return null
   return (
     <DrawerSection label="About">
-      <p className="w-full text-[length:var(--font-size-body)] leading-[1.5] text-[var(--text-body-primary)]">
+      <p className="w-full text-body leading-[1.5] text-primary">
         {description}
       </p>
     </DrawerSection>

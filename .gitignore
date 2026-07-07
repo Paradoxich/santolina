@@ -40,3 +40,9 @@ coverage
 
 # Storybook
 storybook-static
+
+# TypeScript
+*.tsbuildinfo
+
+# Claude Code
+.claude

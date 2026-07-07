@@ -5,7 +5,7 @@ import { monthName } from './format-plant'
 
 export type GoodForBullet = {
   text: string
-  tone: 'positive' | 'caution'
+  tone: 'positive' | 'warning'
 }
 
 export interface CompanionName {
@@ -31,7 +31,7 @@ export function buildGoodForYourGarden(
 ): GoodForBullet[] {
   const bullets: GoodForBullet[] = []
 
-  // Tier 1 — sun match (positive or caution)
+  // Tier 1 — sun match (positive or warning)
   const sun = plant.sun_requirements ?? []
   if (sun.length > 0 && garden.sun_exposure) {
     if (garden.sun_exposure === 'mixed' || sun.includes(garden.sun_exposure)) {
@@ -46,12 +46,12 @@ export function buildGoodForYourGarden(
     ) {
       bullets.push({
         text: 'Needs more sun than your garden currently gets',
-        tone: 'caution',
+        tone: 'warning',
       })
     } else {
       bullets.push({
         text: 'Prefers different light than your garden currently gets',
-        tone: 'caution',
+        tone: 'warning',
       })
     }
   }
@@ -71,7 +71,7 @@ export function buildGoodForYourGarden(
     } else {
       bullets.push({
         text: 'May struggle to survive winter in your climate zone',
-        tone: 'caution',
+        tone: 'warning',
       })
     }
   }
@@ -87,7 +87,7 @@ export function buildGoodForYourGarden(
     })
   }
 
-  // Tier 2 — too large for a balcony (caution)
+  // Tier 2 — too large for a balcony (warning)
   if (
     garden.space_type === 'terrace_balcony' &&
     plant.height_max_cm != null &&
@@ -95,7 +95,7 @@ export function buildGoodForYourGarden(
   ) {
     bullets.push({
       text: 'May outgrow a balcony or container',
-      tone: 'caution',
+      tone: 'warning',
     })
   }
 

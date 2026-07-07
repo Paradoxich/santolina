@@ -8,7 +8,7 @@ const meta: Meta<typeof Toast> = {
   argTypes: {
     variant: {
       control: 'select',
-      options: ['default', 'success', 'warning', 'error'],
+      options: ['default', 'positive', 'warning', 'critical'],
     },
   },
 }
@@ -23,10 +23,10 @@ export const Default: Story = {
   },
 }
 
-export const Success: Story = {
+export const Positive: Story = {
   args: {
-    variant: 'success',
-    title: 'Success',
+    variant: 'positive',
+    title: 'Positive',
     description: 'Plant watered successfully!',
   },
 }
@@ -39,10 +39,10 @@ export const Warning: Story = {
   },
 }
 
-export const Error: Story = {
+export const Critical: Story = {
   args: {
-    variant: 'error',
-    title: 'Error',
+    variant: 'critical',
+    title: 'Critical',
     description: 'Failed to save your plant data.',
   },
 }

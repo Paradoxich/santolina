@@ -20,7 +20,7 @@ export const Default: Story = {
       <p
         style={{
           fontSize: 'var(--font-size-body)',
-          color: 'var(--text-body-secondary)',
+          color: 'var(--color-text-body-secondary)',
         }}
       >
         Panel body content goes here.
@@ -34,9 +34,9 @@ export const WithoutHeader: Story = {
     children: (
       <p
         style={{
-          fontSize: 'var(--font-size-20)',
+          fontSize: 'var(--font-size-subheading)',
           fontWeight: 500,
-          color: 'var(--text-insight-text)',
+          color: 'var(--color-text-primary)',
         }}
       >
         A headline-style panel with no header row.

@@ -49,7 +49,7 @@ export function Tabs({
   return (
     <div
       role="tablist"
-      className={['flex items-start gap-[var(--space-section-gap)]', className]
+      className={['flex items-start gap-section-gap', className]
         .join(' ')
         .trim()}
       {...props}
@@ -71,21 +71,21 @@ export function Tabs({
             onKeyDown={(e) => handleKeyDown(e, index)}
             className={[
               'relative inline-flex items-start gap-1 pb-3',
-              'text-[length:var(--font-size-body)]',
+              'text-body',
               'whitespace-nowrap select-none',
-              'transition-colors duration-[var(--duration-normal)]',
-              'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent-primary)]',
+              'transition-colors duration-normal',
+              'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus',
               active
-                ? 'font-semibold text-[var(--text-page-title)]'
-                : 'font-normal text-[var(--text-meta)] hover:text-[var(--text-page-title)]',
+                ? 'font-semibold text-primary'
+                : 'font-normal text-muted hover:text-primary',
               active
-                ? 'after:absolute after:bottom-0 after:left-0 after:h-px after:w-full after:bg-[var(--text-page-title)] after:content-[""]'
+                ? 'after:absolute after:bottom-0 after:left-0 after:h-px after:w-full after:bg-current after:content-[""]'
                 : '',
             ].join(' ')}
           >
             {item.label}
             {item.count !== undefined && (
-              <sup className="mt-[3px] text-[length:var(--font-size-label)] font-normal text-[var(--text-meta)]">
+              <sup className="mt-[3px] text-label font-normal text-muted">
                 {item.count}
               </sup>
             )}

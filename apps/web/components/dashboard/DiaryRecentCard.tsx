@@ -26,20 +26,20 @@ export function DiaryRecentCard({ diaries, count = 3 }: DiaryRecentCardProps) {
         {recent.map((entry, i) => (
           <li
             key={entry.plantName}
-            className="flex w-full items-center gap-[var(--space-row-gap)] border-b border-[var(--color-border-divider)] py-[var(--space-item-gap)]"
+            className="flex w-full items-center gap-row-gap border-b border-divider py-item-gap"
           >
-            <span className="w-[38px] shrink-0 text-[length:var(--font-size-label)] text-[var(--text-timestamp)]">
+            <span className="w-[38px] shrink-0 text-label text-muted">
               {formatDayLabel(entry.date)}
             </span>
-            <span className="flex min-w-0 items-center gap-[var(--space-tight-gap)]">
+            <span className="flex min-w-0 items-center gap-tight-gap">
               <span
                 aria-hidden="true"
-                className="size-2 shrink-0 rounded-[var(--radius-xs)]"
+                className="size-2 shrink-0 rounded-xs"
                 style={{
                   backgroundColor: diaryDotColors[i % diaryDotColors.length],
                 }}
               />
-              <span className="truncate text-[length:var(--font-size-body)] text-[var(--text-list-title)]">
+              <span className="truncate text-body text-primary">
                 {entry.plantName}
               </span>
             </span>

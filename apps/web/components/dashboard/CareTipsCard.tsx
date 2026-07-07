@@ -12,16 +12,14 @@ export function CareTipsCard({ tips }: CareTipsCardProps) {
       meta={`${tips.length} tasks`}
       className="relative h-full overflow-hidden"
     >
-      <ul className="flex w-full flex-col gap-[var(--space-tight-gap)]">
+      <ul className="flex w-full flex-col gap-tight-gap">
         {tips.map((tip) => (
           <li
             key={tip.id}
-            className="flex h-10 w-full items-center justify-between gap-[var(--space-row-gap)] rounded-[var(--radius-sm)] bg-[var(--color-background-card-subtle)] px-[var(--space-item-gap)] py-[var(--space-inline-gap)]"
+            className="flex h-10 w-full items-center justify-between gap-row-gap rounded-sm bg-surface-subtle px-item-gap py-inline-gap"
           >
-            <span className="truncate text-[length:var(--font-size-body)] text-[var(--text-task-label)]">
-              {tip.text}
-            </span>
-            <span className="shrink-0 whitespace-nowrap text-[length:var(--font-size-label)] text-[var(--text-meta)]">
+            <span className="truncate text-body text-primary">{tip.text}</span>
+            <span className="shrink-0 whitespace-nowrap text-label text-muted">
               {tip.due}
             </span>
           </li>
@@ -29,7 +27,7 @@ export function CareTipsCard({ tips }: CareTipsCardProps) {
       </ul>
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-[71px] bg-gradient-to-t from-[var(--color-background-card)] to-transparent"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-[71px] bg-gradient-to-t from-[var(--color-surface-card)] to-transparent"
       />
     </Panel>
   )

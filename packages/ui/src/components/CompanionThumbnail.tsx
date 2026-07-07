@@ -25,8 +25,8 @@ export function CompanionThumbnail({
     <div
       className={[
         'relative flex h-full min-w-0 flex-1 flex-col items-start justify-end',
-        'overflow-hidden rounded-[var(--radius-xs)]',
-        'pb-[var(--space-inline-gap)] pl-[var(--space-item-gap)] pr-[var(--space-inline-gap)]',
+        'overflow-hidden rounded-xs',
+        'pb-inline-gap pl-item-gap pr-inline-gap',
         className,
       ].join(' ')}
       {...props}
@@ -38,9 +38,9 @@ export function CompanionThumbnail({
       />
       <div
         aria-hidden="true"
-        className="absolute inset-0 bg-gradient-to-t from-[rgba(0,0,0,0.49)] to-[rgba(0,0,0,0.1)]"
+        className="absolute inset-0 bg-[image:var(--thumbnail-scrim)]"
       />
-      <span className="relative whitespace-nowrap text-[length:var(--font-size-label)] text-[var(--text-image-label)]">
+      <span className="relative whitespace-nowrap text-label text-inverse">
         {label}
       </span>
     </div>

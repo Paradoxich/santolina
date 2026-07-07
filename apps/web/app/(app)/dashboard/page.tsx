@@ -27,25 +27,23 @@ export default function DashboardPage() {
 
   return (
     <div className="max-w-[1032px] pb-16 pt-12">
-      <h1 className="text-[length:var(--font-size-page-title)] font-semibold tracking-[-0.04em] text-[var(--text-page-title)]">
+      <h1 className="text-title font-semibold tracking-[-0.04em] text-primary">
         {today}
       </h1>
-      <p className="mt-3 text-[length:var(--font-size-body)] text-[var(--text-page-subtitle)]">
-        {dashboardSubtitle}
-      </p>
+      <p className="mt-3 text-body text-secondary">{dashboardSubtitle}</p>
 
-      <div className="mt-8 flex flex-col gap-[var(--space-section-gap)]">
-        <div className="grid h-[276px] grid-cols-[592fr_420fr] gap-[var(--space-section-gap)]">
+      <div className="mt-8 flex flex-col gap-section-gap">
+        <div className="grid h-[276px] grid-cols-[592fr_420fr] gap-section-gap">
           <MyPlantsCard plants={myPlants} totalInGarden={growingCount} />
           <BloomTimelineCard season={bloomSeason} />
         </div>
 
-        <div className="grid h-[272px] grid-cols-2 gap-[var(--space-section-gap)]">
+        <div className="grid h-[272px] grid-cols-2 gap-section-gap">
           <WeatherCard location={weatherLocation} days={weatherDays} />
           <CareTipsCard tips={careTips} />
         </div>
 
-        <div className="grid h-[234px] grid-cols-3 gap-[var(--space-section-gap)]">
+        <div className="grid h-[234px] grid-cols-3 gap-section-gap">
           <PlannedCard plants={plannedPlants} />
           <DiaryRecentCard diaries={samplePlantDiaries} />
           <InsightCard text={gardenInsight} />

@@ -8,8 +8,8 @@ interface DrawerSectionProps {
 /** Uppercase section label + content, matching the drawer's section rhythm. */
 export function DrawerSection({ label, children }: DrawerSectionProps) {
   return (
-    <section className="flex w-full flex-col gap-[var(--space-inline-gap)]">
-      <h3 className="w-full text-[length:var(--font-size-label)] font-medium uppercase tracking-[0.05em] text-[var(--text-section-label)]">
+    <section className="flex w-full flex-col gap-inline-gap">
+      <h3 className="w-full text-label font-medium uppercase tracking-[0.05em] text-muted">
         {label}
       </h3>
       {children}

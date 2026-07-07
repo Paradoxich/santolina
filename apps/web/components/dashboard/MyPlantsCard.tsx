@@ -14,11 +14,11 @@ export function MyPlantsCard({ plants, totalInGarden }: MyPlantsCardProps) {
       meta={`${totalInGarden} in garden`}
       className="h-full"
     >
-      <div className="flex min-h-0 flex-1 gap-[var(--space-tight-gap)]">
+      <div className="flex min-h-0 flex-1 gap-tight-gap">
         {plants.map((plant) => (
           <div
             key={plant.name}
-            className="relative min-w-0 flex-1 overflow-hidden rounded-[var(--radius-xs)]"
+            className="relative min-w-0 flex-1 overflow-hidden rounded-xs"
           >
             <Image
               src={plant.imageUrl}
@@ -29,9 +29,9 @@ export function MyPlantsCard({ plants, totalInGarden }: MyPlantsCardProps) {
             />
             <div
               aria-hidden="true"
-              className="absolute inset-0 bg-gradient-to-t from-black/50 to-black/10"
+              className="absolute inset-0 bg-[image:var(--thumbnail-scrim)]"
             />
-            <span className="absolute bottom-[var(--space-inline-gap)] left-[var(--space-item-gap)] text-[length:var(--font-size-label)] text-[var(--text-image-label)]">
+            <span className="absolute bottom-inline-gap left-item-gap text-label text-inverse">
               {plant.name}
             </span>
           </div>

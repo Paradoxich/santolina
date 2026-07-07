@@ -25,14 +25,14 @@ export function AppSidebar() {
   const pathname = usePathname()
 
   return (
-    <aside className="fixed bottom-2 left-2 top-2 z-10 flex w-56 flex-col gap-[var(--space-section-gap)] overflow-hidden rounded-[var(--radius-md)] border border-[var(--color-border-sidebar)] bg-[var(--color-background-sidebar)] p-[var(--space-inline-gap)]">
+    <aside className="fixed bottom-2 left-2 top-2 z-10 flex w-56 flex-col gap-section-gap overflow-hidden rounded-md border border-card-translucent bg-[var(--sidebar-surface)] p-inline-gap">
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 bg-cover bg-center opacity-15"
         style={{ backgroundImage: "url('/textures/sidebar-texture.png')" }}
       />
 
-      <div className="relative p-[var(--space-row-gap)]">
+      <div className="relative p-row-gap">
         <Link href="/" className="inline-flex items-center gap-[6px]">
           <Image
             src="/logo-mark.svg"
@@ -41,7 +41,7 @@ export function AppSidebar() {
             height={15}
             className="shrink-0"
           />
-          <span className="text-[length:var(--font-size-logo)] font-medium tracking-[-0.05em] text-black">
+          <span className="text-base font-medium tracking-[-0.05em] text-primary">
             santolina
           </span>
         </Link>
@@ -49,19 +49,15 @@ export function AppSidebar() {
 
       <button
         type="button"
-        className="relative flex w-full items-center gap-[var(--space-item-gap)] rounded-[var(--radius-md)] bg-[var(--color-background-overlay)] p-[var(--space-section-gap)] text-left shadow-[var(--shadow-soft)] transition-colors duration-[var(--duration-normal)] hover:bg-white/70"
+        className="relative flex w-full items-center gap-item-gap rounded-md bg-surface-overlay p-section-gap text-left shadow-soft transition-colors duration-normal hover:bg-surface-control"
       >
         <Image src="/icons/icon-agent.svg" alt="" width={16} height={16} />
-        <span className="flex-1 text-[length:var(--font-size-body)] text-[var(--text-nav-label)]">
-          Agent
-        </span>
-        <span className="text-[length:var(--font-size-label)] text-[var(--color-accent-primary)]">
-          ⌘K
-        </span>
+        <span className="flex-1 text-body text-primary">Agent</span>
+        <span className="text-label text-accent">⌘K</span>
       </button>
 
-      <nav className="relative flex min-h-0 flex-1 flex-col gap-[var(--space-row-gap)]">
-        <ul className="flex flex-1 flex-col gap-[var(--space-tight-gap)]">
+      <nav className="relative flex min-h-0 flex-1 flex-col gap-row-gap">
+        <ul className="flex flex-1 flex-col gap-tight-gap">
           {navItems.map((item) => {
             const active = pathname.startsWith(item.href)
             return (
@@ -70,12 +66,10 @@ export function AppSidebar() {
                   href={item.href}
                   aria-current={active ? 'page' : undefined}
                   className={[
-                    'flex h-12 items-center gap-[var(--space-item-gap)] rounded-[var(--radius-sm)] pl-[var(--space-row-gap)] pr-2',
-                    'text-[length:var(--font-size-body)] text-[var(--text-nav-label)]',
-                    'transition-colors duration-[var(--duration-normal)]',
-                    active
-                      ? 'bg-[var(--color-background-active)]'
-                      : 'hover:bg-[var(--color-background-overlay)]',
+                    'flex h-12 items-center gap-item-gap rounded-sm pl-row-gap pr-2',
+                    'text-body text-primary',
+                    'transition-colors duration-normal',
+                    active ? 'bg-surface-active' : 'hover:bg-surface-overlay',
                   ].join(' ')}
                 >
                   <Image src={item.icon} alt="" width={16} height={16} />
@@ -86,13 +80,11 @@ export function AppSidebar() {
           })}
         </ul>
 
-        <div className="flex items-center gap-[var(--space-inline-gap)] p-[var(--space-item-gap)]">
-          <span className="flex size-6 items-center justify-center rounded-full bg-[var(--color-avatar-fill)] text-[length:var(--font-size-label)] text-[var(--text-image-label)]">
+        <div className="flex items-center gap-inline-gap p-item-gap">
+          <span className="flex size-6 items-center justify-center rounded-full bg-[var(--avatar-fill)] text-label text-inverse">
             PA
           </span>
-          <span className="flex-1 text-[length:var(--font-size-body)] text-[var(--text-profile-name)]">
-            Paradoxich
-          </span>
+          <span className="flex-1 text-body text-primary">Paradoxich</span>
         </div>
       </nav>
     </aside>

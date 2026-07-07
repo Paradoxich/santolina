@@ -21,7 +21,7 @@ export function Spinner({
     <svg
       className={[
         'animate-spin',
-        'text-[var(--color-primary-600)]',
+        'text-accent',
         sizeStyles[size],
         className,
       ].join(' ')}

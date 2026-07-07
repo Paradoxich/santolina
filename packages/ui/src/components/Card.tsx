@@ -20,9 +20,9 @@ export function Card({ children, className = '', ...props }: CardProps) {
   return (
     <div
       className={[
-        'bg-white rounded-[var(--radius-lg)]',
-        'border border-[var(--color-neutral-200)]',
-        'shadow-[var(--shadow-sm)]',
+        'bg-surface-card rounded-lg',
+        'border border-card',
+        'shadow-sm',
         'overflow-hidden',
         className,
       ].join(' ')}
@@ -40,11 +40,7 @@ export function CardHeader({
 }: CardHeaderProps) {
   return (
     <div
-      className={[
-        'px-6 py-4',
-        'border-b border-[var(--color-neutral-200)]',
-        className,
-      ].join(' ')}
+      className={['px-6 py-4', 'border-b border-divider', className].join(' ')}
       {...props}
     >
       {children}
@@ -73,8 +69,8 @@ export function CardFooter({
     <div
       className={[
         'px-6 py-4',
-        'border-t border-[var(--color-neutral-200)]',
-        'bg-[var(--color-neutral-50)]',
+        'border-t border-divider',
+        'bg-surface-subtle',
         className,
       ].join(' ')}
       {...props}
