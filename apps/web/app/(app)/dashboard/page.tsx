@@ -40,7 +40,7 @@ export default function DashboardPage() {
           <BloomTimelineCard season={bloomSeason} />
         </div>
 
-        <div className="grid h-[252px] grid-cols-2 gap-[var(--space-section-gap)]">
+        <div className="grid h-[272px] grid-cols-2 gap-[var(--space-section-gap)]">
           <WeatherCard location={weatherLocation} days={weatherDays} />
           <CareTipsCard tips={careTips} />
         </div>
