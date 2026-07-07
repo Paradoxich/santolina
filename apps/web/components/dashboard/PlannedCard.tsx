@@ -9,14 +9,14 @@ interface PlannedCardProps {
 export function PlannedCard({ plants }: PlannedCardProps) {
   return (
     <Panel title="Planned" meta={`${plants.length} plants`} className="h-full">
-      <ul className="flex w-full flex-col gap-[var(--space-item-gap)]">
+      <ul className="flex w-full flex-col gap-item-gap">
         {plants.map((plant) => (
           <li
             key={plant.name}
-            className="flex w-full items-center justify-between gap-[var(--space-row-gap)]"
+            className="flex w-full items-center justify-between gap-row-gap"
           >
-            <span className="flex min-w-0 items-center gap-[var(--space-tight-gap)]">
-              <span className="relative size-5 shrink-0 overflow-hidden rounded-[var(--radius-xs)]">
+            <span className="flex min-w-0 items-center gap-tight-gap">
+              <span className="relative size-5 shrink-0 overflow-hidden rounded-xs">
                 <Image
                   src={plant.imageUrl}
                   alt=""
@@ -25,11 +25,11 @@ export function PlannedCard({ plants }: PlannedCardProps) {
                   className="object-cover"
                 />
               </span>
-              <span className="truncate text-[length:var(--font-size-body-small)] text-[var(--text-list-title)]">
+              <span className="truncate text-body-small text-primary">
                 {plant.name}
               </span>
             </span>
-            <span className="shrink-0 whitespace-nowrap text-[length:var(--font-size-label)] text-[var(--text-meta)]">
+            <span className="shrink-0 whitespace-nowrap text-label text-muted">
               {plant.months}
             </span>
           </li>

@@ -48,7 +48,7 @@ export function ExploreClient({ plants, detail }: ExploreClientProps) {
       ].join(' ')}
     >
       <div className={detail ? 'w-full max-w-[680px] shrink-0' : 'flex-1'}>
-        <h1 className="text-[length:var(--font-size-page-title)] font-semibold tracking-[-0.04em] text-[var(--text-page-title)]">
+        <h1 className="text-title font-semibold tracking-[-0.04em] text-primary">
           What to plant next?
         </h1>
 
@@ -61,12 +61,10 @@ export function ExploreClient({ plants, detail }: ExploreClientProps) {
           />
         </div>
 
-        <p className="mt-16 text-[length:var(--font-size-body)] text-[var(--text-page-subtitle)]">
-          Recommended plants
-        </p>
+        <p className="mt-16 text-body text-secondary">Recommended plants</p>
 
         {detail ? (
-          <div className="mt-4 flex flex-col gap-[var(--space-item-gap)]">
+          <div className="mt-4 flex flex-col gap-item-gap">
             {visible.map((plant) => (
               <ExplorePlantListRow
                 key={plant.id}
@@ -77,7 +75,7 @@ export function ExploreClient({ plants, detail }: ExploreClientProps) {
             ))}
           </div>
         ) : (
-          <div className="mt-4 grid grid-cols-1 gap-[var(--space-item-gap)] md:grid-cols-2 xl:grid-cols-3">
+          <div className="mt-4 grid grid-cols-1 gap-item-gap md:grid-cols-2 xl:grid-cols-3">
             {visible.map((plant) => (
               <ExplorePlantTile
                 key={plant.id}
@@ -89,7 +87,7 @@ export function ExploreClient({ plants, detail }: ExploreClientProps) {
         )}
 
         {visible.length === 0 && (
-          <p className="mt-8 text-[length:var(--font-size-body)] text-[var(--text-meta)]">
+          <p className="mt-8 text-body text-muted">
             No plants found for &ldquo;{query}&rdquo;.
           </p>
         )}

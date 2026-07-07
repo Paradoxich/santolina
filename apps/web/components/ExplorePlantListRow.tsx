@@ -18,13 +18,13 @@ export function ExplorePlantListRow({
       onClick={onClick}
       aria-current={selected ? 'true' : undefined}
       className={[
-        'flex w-full items-start gap-[var(--space-item-gap)] rounded-[var(--component-card-explore-list-row-radius)] border p-[var(--space-item-gap)] text-left shadow-[var(--shadow-sm)] transition-colors duration-[var(--duration-normal)]',
+        'flex w-full items-start gap-item-gap rounded-card-row border p-item-gap text-left shadow-sm transition-colors duration-normal',
         selected
-          ? 'border-[var(--color-accent-primary)] bg-[var(--color-background-active)]'
+          ? 'border-accent bg-surface-active'
           : 'border-card bg-surface-card hover:bg-surface-subtle',
       ].join(' ')}
     >
-      <div className="relative size-[76px] shrink-0 overflow-hidden rounded-[var(--radius-sm)]">
+      <div className="relative size-[76px] shrink-0 overflow-hidden rounded-sm">
         <Image
           src={plant.imageUrl}
           alt={plant.commonName}
@@ -33,16 +33,16 @@ export function ExplorePlantListRow({
           className="object-cover"
         />
       </div>
-      <div className="flex min-w-0 flex-1 flex-col gap-[var(--space-inline-gap)]">
-        <div className="flex flex-col gap-[var(--space-tight-gap)]">
-          <h3 className="text-[length:var(--font-size-card-title)] font-semibold text-[var(--text-card-title)]">
+      <div className="flex min-w-0 flex-1 flex-col gap-inline-gap">
+        <div className="flex flex-col gap-tight-gap">
+          <h3 className="text-heading font-semibold text-primary">
             {plant.commonName}
           </h3>
-          <p className="text-[length:var(--font-size-body-small)] italic leading-[1.3] tracking-[-0.01em] text-[var(--text-caption)]">
+          <p className="text-body-small italic leading-compact tracking-compact text-muted">
             {plant.botanicalName}
           </p>
         </div>
-        <p className="line-clamp-1 text-[length:var(--font-size-body-small)] leading-[1.3] tracking-[-0.01em] text-[var(--text-body-secondary)]">
+        <p className="line-clamp-1 text-body-small leading-compact tracking-compact text-body-secondary">
           {plant.description}
         </p>
       </div>

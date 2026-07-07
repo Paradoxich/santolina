@@ -39,7 +39,7 @@ export default function MyGardenPage() {
 
   return (
     <div className="pb-16">
-      <header className="border-b border-[var(--color-background-card-subtle)] pt-8">
+      <header className="border-b border-sage-50 pt-8">
         <Tabs
           items={[
             { value: 'growing', label: 'Growing', count: growing.length },
@@ -50,17 +50,17 @@ export default function MyGardenPage() {
         />
       </header>
 
-      <h1 className="mt-12 text-[length:var(--font-size-page-title)] font-semibold tracking-[-0.04em] text-[var(--text-page-title)]">
+      <h1 className="mt-12 text-title font-semibold tracking-[-0.04em] text-primary">
         {activeTabLabel}
       </h1>
-      <p className="mt-3 text-[length:var(--font-size-body)] text-[var(--text-page-subtitle)]">
+      <p className="mt-3 text-body text-secondary">
         {tab === 'growing'
           ? 'Plants currently in your garden. Sorted by status.'
           : "Plants you want to add. Move into Growing once they're in the ground."}
       </p>
 
       {tab === 'growing' && (
-        <div className="mt-11 flex items-center gap-[var(--space-inline-gap)]">
+        <div className="mt-11 flex items-center gap-inline-gap">
           {statusFilters.map((s) => (
             <Chip
               key={s.value}
@@ -73,7 +73,7 @@ export default function MyGardenPage() {
         </div>
       )}
 
-      <div className="mt-6 grid grid-cols-1 gap-[var(--space-item-gap)] md:grid-cols-2 xl:grid-cols-3">
+      <div className="mt-6 grid grid-cols-1 gap-item-gap md:grid-cols-2 xl:grid-cols-3">
         {visible.map((plant) =>
           tab === 'growing' ? (
             <GardenPlantTile key={plant.id} plant={plant} />
@@ -84,7 +84,7 @@ export default function MyGardenPage() {
       </div>
 
       {visible.length === 0 && (
-        <p className="mt-11 text-[length:var(--font-size-body)] text-[var(--text-meta)]">
+        <p className="mt-11 text-body text-muted">
           {tab === 'growing'
             ? 'No plants match this filter yet.'
             : 'Nothing planned yet.'}

@@ -11,9 +11,9 @@ export function ExplorePlantTile({ plant, onClick }: ExplorePlantTileProps) {
     <button
       type="button"
       onClick={onClick}
-      className="flex flex-col gap-[var(--space-section-gap)] rounded-[var(--component-card-explore-grid-tile-radius)] border border-[var(--color-border-card)] p-[var(--space-card-padding)] text-left transition-colors duration-[var(--duration-normal)] hover:bg-[var(--color-background-card-subtle)]"
+      className="flex flex-col gap-section-gap rounded-card-tile border border-card p-card-padding text-left transition-colors duration-normal hover:bg-surface-subtle"
     >
-      <div className="relative h-[162px] w-full overflow-hidden rounded-[var(--radius-sm)]">
+      <div className="relative h-[162px] w-full overflow-hidden rounded-sm">
         <Image
           src={plant.imageUrl}
           alt={plant.commonName}
@@ -22,16 +22,16 @@ export function ExplorePlantTile({ plant, onClick }: ExplorePlantTileProps) {
           className="object-cover"
         />
       </div>
-      <div className="flex flex-col gap-[var(--space-inline-gap)]">
-        <div className="flex flex-col gap-[var(--space-tight-gap)]">
-          <h3 className="text-[length:var(--font-size-card-title)] font-semibold text-[var(--text-card-title)]">
+      <div className="flex flex-col gap-inline-gap">
+        <div className="flex flex-col gap-tight-gap">
+          <h3 className="text-heading font-semibold text-primary">
             {plant.commonName}
           </h3>
-          <p className="text-[length:var(--font-size-body-small)] italic leading-[1.3] tracking-[-0.01em] text-[var(--text-caption)]">
+          <p className="text-body-small italic leading-compact tracking-compact text-muted">
             {plant.botanicalName}
           </p>
         </div>
-        <p className="line-clamp-3 text-[length:var(--font-size-body-small)] leading-[1.3] tracking-[-0.01em] text-[var(--text-body-secondary)]">
+        <p className="line-clamp-3 text-body-small leading-compact tracking-compact text-body-secondary">
           {plant.description}
         </p>
       </div>

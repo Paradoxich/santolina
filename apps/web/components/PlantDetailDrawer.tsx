@@ -31,58 +31,56 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
   return (
     <aside
       aria-label={`${plant.common_name} details`}
-      className="fixed inset-y-0 right-0 z-20 flex w-[440px] flex-col gap-[var(--space-section-break)] overflow-y-auto border-l border-card bg-[var(--color-background-card)] p-[var(--space-card-padding)]"
+      className="fixed inset-y-0 right-0 z-20 flex w-[440px] flex-col gap-section-break overflow-y-auto border-l border-card bg-surface-card p-card-padding"
     >
       <div className="flex w-full shrink-0 items-center justify-between">
         <button
           type="button"
           onClick={onClose}
           aria-label="Close plant details"
-          className="flex size-8 items-center justify-center rounded-full bg-[var(--color-background-close-button)] transition-opacity duration-[var(--duration-normal)] hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent-primary)]"
+          className="flex size-8 items-center justify-center rounded-full bg-sage-300 transition-opacity duration-normal hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
         >
           <Image src="/icons/icon-close.svg" alt="" width={16} height={16} />
         </button>
 
-        <div className="flex items-center gap-[var(--space-inline-gap)]">
+        <div className="flex items-center gap-inline-gap">
           <button
             type="button"
-            className="flex h-8 items-center rounded-[var(--radius-sm)] border border-card bg-[var(--color-background-inverse)] px-[var(--space-item-gap)] text-[length:var(--font-size-body-small)] text-[var(--text-button-primary-label)]"
+            className="flex h-8 items-center rounded-sm border border-card bg-surface-inverse px-item-gap text-body-small text-on-accent"
           >
             Add to plan
           </button>
           <button
             type="button"
-            className="flex h-8 items-center rounded-[var(--radius-sm)] bg-[var(--color-background-subtle)] px-[var(--space-inline-gap)] text-[length:var(--font-size-body-small)] text-[var(--text-button-label)]"
+            className="flex h-8 items-center rounded-sm bg-surface-control px-inline-gap text-body-small text-secondary"
           >
             I have this
           </button>
           <button
             type="button"
             aria-label="Chat about this plant"
-            className="flex size-8 items-center justify-center rounded-full bg-[var(--color-background-subtle)]"
+            className="flex size-8 items-center justify-center rounded-full bg-surface-control"
           >
             <Image src="/icons/icon-chat.svg" alt="" width={16} height={16} />
           </button>
         </div>
       </div>
 
-      <div className="flex w-full shrink-0 flex-col gap-[var(--space-item-gap)]">
-        <h2 className="w-full text-[length:var(--font-size-page-title)] font-semibold tracking-[-0.04em] text-[var(--text-page-title)]">
+      <div className="flex w-full shrink-0 flex-col gap-item-gap">
+        <h2 className="w-full text-title font-semibold tracking-[-0.04em] text-primary">
           {plant.common_name}
         </h2>
         {subtitle && (
-          <p className="w-full text-[length:var(--font-size-body)] italic text-[var(--text-caption)]">
-            {subtitle}
-          </p>
+          <p className="w-full text-body italic text-muted">{subtitle}</p>
         )}
       </div>
 
       {photos.length > 0 && (
-        <div className="flex w-full shrink-0 gap-[var(--space-inline-gap)] overflow-x-auto">
+        <div className="flex w-full shrink-0 gap-inline-gap overflow-x-auto">
           {photos.map((src, i) => (
             <div
               key={src}
-              className="relative h-[141px] shrink-0 overflow-hidden rounded-[var(--radius-sm)]"
+              className="relative h-[141px] shrink-0 overflow-hidden rounded-sm"
               style={{ width: PHOTO_WIDTHS[i % PHOTO_WIDTHS.length] }}
             >
               <Image
@@ -97,7 +95,7 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
         </div>
       )}
 
-      <div className="flex w-full flex-col gap-[var(--space-section-break)]">
+      <div className="flex w-full flex-col gap-section-break">
         <AboutSection description={plant.description} />
         <GoodForYourGardenSection bullets={bullets} />
         <CareSection plant={plant} />

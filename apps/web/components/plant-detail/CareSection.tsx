@@ -29,7 +29,7 @@ export function CareSection({ plant }: CareSectionProps) {
 
   return (
     <DrawerSection label="Care">
-      <div className="grid w-full grid-cols-2 gap-[var(--space-inline-gap)]">
+      <div className="grid w-full grid-cols-2 gap-inline-gap">
         {cards.map((card) => (
           <StatCard key={card.label} label={card.label} icon={icon(card.icon)}>
             {card.body}

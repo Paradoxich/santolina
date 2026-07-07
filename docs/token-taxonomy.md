@@ -1,10 +1,11 @@
 # Paradox UI — Token Taxonomy
 
-Status: **implemented** (2026-07-07) — migration steps 1–3 are done (new
-`index.css`, Tailwind preset, all `packages/ui` components + app touchpoints
-migrated). Step 4 (delete deprecated aliases once remaining app components stop
-using old names, then sync to Figma Variables) is pending. Based on the
-design-system audit of the same date.
+Status: **fully implemented** (2026-07-07) — all four migration steps are
+done: new `index.css`, Tailwind preset, every component (packages/ui and
+apps/web) migrated to preset classes, and the deprecated alias block deleted.
+No old token names exist in code. Remaining: rebuild the Figma Variable
+collections from this structure (transcribe from the live `/design-system`
+page). Based on the design-system audit of the same date.
 
 ---
 
@@ -269,8 +270,20 @@ either font) and are removed.
 4. Delete deprecated aliases and dead ramps; sync final structure to Figma
    Variables.
 
+## Resolved decisions
+
+- `--font-size-20` → `subheading`: confirmed. Its two usages (diary "Plants"
+  subsection heading, dashboard insight text) are both 20px display text one
+  step under a title.
+- `--card-dashboard-radius: 20px`: confirmed deliberate (changed from the
+  original 24px).
+- Close button surface stays `sage-300` (#d1e0d3); the #d2e0d6 in Figma is
+  stale and gets corrected during the Figma rebuild.
+- Logo ink unified from raw #000 to `text-primary` (#111); MyPlantsCard image
+  gradient unified onto `--thumbnail-scrim` (49%→10%).
+
 ## Open items
 
-- Confirm the role of `--font-size-20` (→ `subheading`?) against Figma.
-- Resolve `--card-dashboard-radius` 20px-vs-24px comment/value mismatch in Figma.
 - `critical` tone values await a designed red ramp (placeholder acceptable).
+- Figma Variable collections to be rebuilt from this file (Primitives hidden,
+  Semantic with Light/Dark modes, Component).

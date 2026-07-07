@@ -12,7 +12,7 @@ export function WorksWellWithSection({
   if (companions.length === 0) return null
   return (
     <DrawerSection label="Works well with">
-      <div className="flex h-[105px] w-full items-center gap-[var(--space-tight-gap)]">
+      <div className="flex h-[105px] w-full items-center gap-tight-gap">
         {companions.slice(0, 5).map((companion) => (
           <CompanionThumbnail
             key={companion.id}

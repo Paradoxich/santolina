@@ -7,10 +7,10 @@ interface InsightCardProps {
 export function InsightCard({ text }: InsightCardProps) {
   return (
     <Panel className="h-full justify-between">
-      <p className="text-[length:var(--font-size-20)] font-medium leading-[1.2] tracking-[-0.02em] text-[var(--text-insight-text)]">
+      <p className="text-subheading font-medium leading-[1.2] tracking-heading text-primary">
         {text}
       </p>
-      <span className="text-[length:var(--font-size-label)] font-medium uppercase tracking-[0.05em] text-[var(--text-section-label)]">
+      <span className="text-label font-medium uppercase tracking-[0.05em] text-muted">
         Garden insight
       </span>
     </Panel>

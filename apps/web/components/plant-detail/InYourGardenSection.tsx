@@ -19,9 +19,9 @@ export function InYourGardenSection({ plant }: InYourGardenSectionProps) {
 
   return (
     <DrawerSection label="In your garden">
-      <div className="flex w-full flex-col gap-[var(--space-inline-gap)]">
+      <div className="flex w-full flex-col gap-inline-gap">
         {(bloom || plant.best_placement) && (
-          <div className="grid w-full grid-cols-2 gap-[var(--space-inline-gap)]">
+          <div className="grid w-full grid-cols-2 gap-inline-gap">
             {bloom && (
               <StatCard
                 tone="soft"

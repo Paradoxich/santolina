@@ -28,7 +28,7 @@ export function BloomTimelineCard({ season }: BloomTimelineCardProps) {
             <span
               key={month + i}
               className={[
-                'h-full w-px bg-[var(--color-accent-primary)]',
+                'h-full w-px bg-accent',
                 i === season.currentMonth ? '' : 'opacity-10',
               ].join(' ')}
             />
@@ -45,7 +45,7 @@ export function BloomTimelineCard({ season }: BloomTimelineCardProps) {
             style={{ top: span.y }}
           >
             <div
-              className="absolute h-[4px] -translate-y-1/2 rounded-[var(--radius-full)]"
+              className="absolute h-[4px] -translate-y-1/2 rounded-full"
               style={{
                 left: `${span.x}%`,
                 width: `${span.width}%`,
@@ -54,7 +54,7 @@ export function BloomTimelineCard({ season }: BloomTimelineCardProps) {
             />
             <div
               className={[
-                'absolute -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-[var(--radius-full)]',
+                'absolute -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full',
                 span.emphasis === 'now' ? 'border' : '',
               ].join(' ')}
               style={{
@@ -76,15 +76,13 @@ export function BloomTimelineCard({ season }: BloomTimelineCardProps) {
         ))}
       </div>
 
-      <div className="flex w-full items-center justify-between text-center text-[length:var(--font-size-micro)]">
+      <div className="flex w-full items-center justify-between text-center text-micro">
         {season.months.map((month, i) => (
           <span
             key={month + i}
             className={[
               'w-10',
-              i === season.currentMonth
-                ? 'text-[var(--color-accent-primary)]'
-                : 'text-[var(--text-label)]',
+              i === season.currentMonth ? 'text-accent' : 'text-muted',
             ].join(' ')}
           >
             {month}

@@ -24,17 +24,15 @@ function groupNotesByMonth(notes: DiaryNote[]): [string, DiaryNote[]][] {
 
 function NoteCard({ note }: { note: DiaryNote }) {
   return (
-    <article className="flex w-full items-start gap-[var(--space-item-gap)] rounded-[var(--radius-sm)] bg-[var(--color-background-page)] p-[var(--space-inline-gap)]">
-      <div className="flex min-w-0 flex-1 flex-col gap-[var(--space-inline-gap)]">
-        <p className="text-[length:var(--font-size-body)] leading-normal text-[var(--text-list-description)]">
-          {note.text}
-        </p>
+    <article className="flex w-full items-start gap-item-gap rounded-sm bg-surface-page p-inline-gap">
+      <div className="flex min-w-0 flex-1 flex-col gap-inline-gap">
+        <p className="text-body leading-normal text-primary">{note.text}</p>
         {note.photos && note.photos.length > 0 && (
-          <div className="flex gap-[var(--space-inline-gap)]">
+          <div className="flex gap-inline-gap">
             {note.photos.map((photo) => (
               <div
                 key={photo.src}
-                className="relative h-[79px] shrink-0 overflow-hidden rounded-[var(--radius-xs)]"
+                className="relative h-[79px] shrink-0 overflow-hidden rounded-xs"
                 style={{ width: photo.width }}
               >
                 <Image
@@ -49,7 +47,7 @@ function NoteCard({ note }: { note: DiaryNote }) {
           </div>
         )}
       </div>
-      <span className="w-[60px] shrink-0 text-right text-[length:var(--font-size-label)] text-[var(--text-timestamp)]">
+      <span className="w-[60px] shrink-0 text-right text-label text-muted">
         {formatDayLabel(note.date)}
       </span>
     </article>
@@ -62,70 +60,66 @@ export function DiaryDetailDrawer({ diary, onClose }: DiaryDetailDrawerProps) {
   return (
     <aside
       aria-label={`${diary.plantName} diary`}
-      className="fixed inset-y-0 right-0 z-20 flex w-[440px] flex-col gap-[var(--space-section-break)] overflow-y-auto border-l border-card bg-[var(--color-background-card)] p-[var(--space-card-padding)]"
+      className="fixed inset-y-0 right-0 z-20 flex w-[440px] flex-col gap-section-break overflow-y-auto border-l border-card bg-surface-card p-card-padding"
     >
       <div className="flex w-full shrink-0 items-center justify-between">
         <button
           type="button"
           onClick={onClose}
           aria-label="Close diary"
-          className="flex size-8 items-center justify-center rounded-full bg-[var(--color-background-close-button)] transition-opacity duration-[var(--duration-normal)] hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent-primary)]"
+          className="flex size-8 items-center justify-center rounded-full bg-sage-300 transition-opacity duration-normal hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
         >
           <Image src="/icons/icon-close.svg" alt="" width={16} height={16} />
         </button>
 
-        <div className="flex items-center gap-[var(--space-inline-gap)]">
+        <div className="flex items-center gap-inline-gap">
           <button
             type="button"
-            className="flex h-8 items-center rounded-[var(--radius-sm)] bg-[var(--color-background-subtle)] px-[var(--space-inline-gap)] text-[length:var(--font-size-body-small)] text-[var(--text-button-label)]"
+            className="flex h-8 items-center rounded-sm bg-surface-control px-inline-gap text-body-small text-secondary"
           >
             Open plant details
           </button>
           <button
             type="button"
             aria-label="Chat about this plant"
-            className="flex size-8 items-center justify-center rounded-full bg-[var(--color-background-subtle)]"
+            className="flex size-8 items-center justify-center rounded-full bg-surface-control"
           >
             <Image src="/icons/icon-chat.svg" alt="" width={16} height={16} />
           </button>
         </div>
       </div>
 
-      <div className="flex w-full shrink-0 flex-col gap-[var(--space-item-gap)]">
-        <h2 className="w-full text-[length:var(--font-size-page-title)] font-semibold tracking-[-0.04em] text-[var(--text-page-title)]">
+      <div className="flex w-full shrink-0 flex-col gap-item-gap">
+        <h2 className="w-full text-title font-semibold tracking-[-0.04em] text-primary">
           {diary.plantName} Diary
         </h2>
-        <p className="w-full text-[length:var(--font-size-body)] leading-normal text-[var(--text-page-subtitle)]">
+        <p className="w-full text-body leading-normal text-secondary">
           {diary.summary}
         </p>
       </div>
 
-      <hr className="w-full shrink-0 border-t border-[var(--color-border-divider)]" />
+      <hr className="w-full shrink-0 border-t border-divider" />
 
-      <div className="flex w-full shrink-0 flex-col gap-[var(--space-card-padding)]">
-        <h3 className="text-[length:var(--font-size-body)] font-semibold text-[var(--text-section-title)]">
-          Your notes
-        </h3>
+      <div className="flex w-full shrink-0 flex-col gap-card-padding">
+        <h3 className="text-body font-semibold text-primary">Your notes</h3>
         <button
           type="button"
-          className="flex w-full items-center gap-[var(--space-inline-gap)] rounded-[var(--radius-sm)] border border-dashed border-card bg-[var(--color-background-overlay)] p-[var(--space-item-gap)] transition-colors duration-[var(--duration-normal)] hover:bg-surface-control"
+          className="flex w-full items-center gap-inline-gap rounded-sm border border-dashed border-card bg-surface-overlay p-item-gap transition-colors duration-normal hover:bg-surface-control"
         >
           <Image src="/icons/icon-plus.svg" alt="" width={16} height={16} />
-          <span className="text-[length:var(--font-size-body)] text-[var(--text-button-label)]">
-            New note
-          </span>
+          <span className="text-body text-secondary">New note</span>
         </button>
       </div>
 
       {monthGroups.map(([month, notes]) => (
         <section
           key={month}
-          className="flex w-full shrink-0 flex-col gap-[var(--space-item-gap)]"
+          className="flex w-full shrink-0 flex-col gap-item-gap"
         >
-          <h4 className="text-[length:var(--font-size-label)] font-medium uppercase tracking-[0.05em] text-[var(--text-section-label)]">
+          <h4 className="text-label font-medium uppercase tracking-[0.05em] text-muted">
             {month}
           </h4>
-          <div className="flex w-full flex-col gap-[var(--space-tight-gap)]">
+          <div className="flex w-full flex-col gap-tight-gap">
             {notes.map((note) => (
               <NoteCard key={note.id} note={note} />
             ))}
