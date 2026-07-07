@@ -32,7 +32,7 @@
    * ========================================================= */
 
   /* Green — brand */
-  --color-green-100: #d9f0e0;
+  --color-green-100: #cfe5d6;
   --color-green-200: #b1d7bc;
   --color-green-300: #99bd9d;
   --color-green-600: #386b41;
@@ -196,6 +196,7 @@
   ); /* resting translucent small controls (chips) */
   --color-surface-hover: rgb(255 255 255 / 0.3);
   --color-surface-active: rgb(153 189 157 / 0.5); /* green-300 @ 50% */
+  --color-surface-card-translucent: rgb(237 242 238 / 0.7); /* sage-100 @ 70% */
   --color-scrim: rgb(0 0 0 / 0.5); /* modal/drawer backdrop */
 
   /* Tone kits — surface / icon / text / border per tone.
@@ -263,8 +264,10 @@
    * ========================================================= */
 
   --chip-radius: var(--radius-full);
-  --card-dashboard-radius: 1.25rem; /* 20px — confirmed, deliberate change from the original 24px */
-  --card-tile-radius: 1.25rem; /* 20px */
+  --card-tile-radius: 1.25rem; /* 20px — confirmed, deliberate change from the original 24px */
+  --card-dashboard-radius: var(
+    --card-tile-radius
+  ); /* same shape as card-tile, used on the My Garden dashboard tabs */
   --card-row-radius: var(--radius-lg);
   --sidebar-surface: rgb(178 209 184 / 0.3);
   --avatar-fill: var(--color-green-600);

@@ -1,20 +1,21 @@
 'use client'
 
 import Link from 'next/link'
-import Image from 'next/image'
 import { usePathname } from 'next/navigation'
+import { Icon } from '@paradoxui/ui'
+import { icons, type IconName } from '@/lib/icons'
 
 interface NavItem {
   label: string
   href: string
-  icon: string
+  icon: IconName
 }
 
 const navItems: NavItem[] = [
-  { label: 'Dashboard', href: '/dashboard', icon: '/icons/icon-grid.svg' },
-  { label: 'Garden', href: '/garden', icon: '/icons/icon-leaf.svg' },
-  { label: 'Diary', href: '/diary', icon: '/icons/icon-diary.svg' },
-  { label: 'Explore', href: '/explore', icon: '/icons/icon-search.svg' },
+  { label: 'Dashboard', href: '/dashboard', icon: 'grid' },
+  { label: 'Garden', href: '/garden', icon: 'leaf' },
+  { label: 'Diary', href: '/diary', icon: 'diary' },
+  { label: 'Explore', href: '/explore', icon: 'search' },
 ]
 
 export function MobileTabBar() {
@@ -47,10 +48,10 @@ export function MobileTabBar() {
             aria-current={active ? 'page' : undefined}
             className={[
               'flex w-16 items-center justify-center rounded-full',
-              active ? 'bg-accent-muted' : '',
+              active ? 'bg-surface-card-translucent' : '',
             ].join(' ')}
           >
-            <Image src={item.icon} alt="" width={16} height={16} />
+            <Icon src={icons[item.icon]} />
           </Link>
         )
       })}
@@ -60,7 +61,7 @@ export function MobileTabBar() {
         aria-label="Open agent"
         className="flex w-16 items-center justify-center rounded-full"
       >
-        <Image src="/icons/icon-agent.svg" alt="" width={16} height={16} />
+        <Icon src={icons.agent} />
       </button>
     </nav>
   )

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { AnimatePresence } from 'framer-motion'
 import { SearchField } from '@paradoxui/ui'
 import { ExplorePlantTile } from '@/components/ExplorePlantTile'
 import { ExplorePlantListRow } from '@/components/ExplorePlantListRow'
@@ -95,7 +96,15 @@ export function ExploreClient({ plants, detail }: ExploreClientProps) {
         )}
       </div>
 
-      {detail && <PlantDetailDrawer detail={detail} onClose={closeDrawer} />}
+      <AnimatePresence>
+        {detail && (
+          <PlantDetailDrawer
+            key="plant-detail-drawer"
+            detail={detail}
+            onClose={closeDrawer}
+          />
+        )}
+      </AnimatePresence>
     </div>
   )
 }

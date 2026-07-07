@@ -148,7 +148,8 @@ duplicate. Create a new component when the behavior differs, not just the skin.
 
 Existing primitives: Button, Input, SearchField, Card (+Header/Body/Footer),
 Badge, Chip, Tabs, Avatar, Spinner, Modal, Toast, Tooltip, Panel,
-ChecklistItem, CompanionThumbnail, DetailRow, SeasonalStageRow, StatCard.
+ChecklistItem, CompanionThumbnail, DetailRow, SeasonalStageRow, StatCard,
+MediaCard, Icon.
 
 ---
 
@@ -165,14 +166,54 @@ ChecklistItem, CompanionThumbnail, DetailRow, SeasonalStageRow, StatCard.
 - **`/design-system` is the living reference** — it renders tokens and
   components straight from the packages and reads resolved values from the
   rendered CSS. When tokens change, it updates itself. Keep it current when
-  adding roles or components.
+  adding roles or components. It's organized into tabs (Overview, Colors,
+  Typography, Spacing & Radius, Components, All Tokens); **All Tokens** is a
+  raw, exhaustive audit view — every custom property in `index.css`, grouped
+  in file order — use it to check for gaps, not the curated showcase tabs.
 - Domain components take domain types as props (`plant: GardenPlant`) and
   translate them into primitive props internally.
-- Images: `next/image` with `fill` + `sizes` for photos, assets from
-  `apps/web/public/` (`/plants/`, `/icons/`, `/textures/`), downscaled to web
-  sizes (~800px) before committing.
+- **Photos**: `next/image` with `fill` + `sizes`, assets from
+  `apps/web/public/` (`/plants/`, `/textures/`), downscaled to web sizes
+  (~800px) before committing.
+- **Icons**: never hardcode an `/icons/icon-x.svg` path in a component. Add
+  the file to `apps/web/public/icons/`, register it in `apps/web/lib/icons.ts`
+  (`icons.someName`), and render it with `<Icon src={icons.someName} />` from
+  `@paradoxui/ui`. `Icon` is a plain `<img>` wrapper that forces every icon
+  into a consistent `size × size` box via `object-contain`, regardless of the
+  source SVG's own proportions — necessary because the icon SVGs (Figma
+  export artifacts) carry `preserveAspectRatio="none"` with mismatched
+  viewBoxes, so rendering them directly with fixed `width`/`height` distorts
+  some and lets others overflow their box. Registering the path also means a
+  typo'd or renamed icon fails at compile time instead of 404ing silently.
 - Sample/mock data lives in `apps/web/lib/`, typed against `apps/web/types/`,
   structured so Supabase data can replace it 1:1.
+
+### Drawers / slide-in edge panels
+
+`PlantDetailDrawer` and `DiaryDetailDrawer` establish the pattern — follow it
+for any future slide-in panel rather than reinventing it:
+
+- **Split the shell from the scroll region.** The header (close button +
+  actions) is a `shrink-0` sibling _outside_ the scrollable area, not a
+  `position: sticky` child inside it. Sticky-inside-scroll works but is
+  fragile (flex `gap` collapses oddly once the gap itself scrolls past, and
+  Firefox can visibly flash content above a sticky bar during fast/trackpad
+  scrolling). A plain two-sibling column — header, then
+  `flex-1 overflow-y-auto` content — sidesteps both and needs no
+  `will-change` workarounds.
+- **Motion**: a `motion.aside` (`framer-motion`) with
+  `initial={{ x: '100%' }}` `animate={{ x: 0 }}` `exit={{ x: '100%' }}`,
+  wrapped in `<AnimatePresence>` by the parent so the exit animation plays
+  before unmount instead of the element vanishing instantly. Framer Motion
+  can't read CSS custom properties, so the transition is a local constant
+  that mirrors `--duration-slow` / `--ease-in-out` —
+  `{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }` — keep the two in sync by hand
+  if those tokens ever change.
+- **Shape**: flush against the true viewport edge it slides in from (no
+  radius, no border there), `lg:rounded-l-lg` plus a border on the other
+  three sides, and `lg:top-2 lg:bottom-2` (not `inset-y-0`) so it floats off
+  the top/bottom the way the sidebar does. An edge-attached panel, not a
+  floating modal — but not a hard flush rectangle either.
 
 ---
 

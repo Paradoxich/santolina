@@ -56,3 +56,9 @@ export type { CompanionThumbnailProps } from './components/CompanionThumbnail'
 
 export { Panel } from './components/Panel'
 export type { PanelProps } from './components/Panel'
+
+export { MediaCard } from './components/MediaCard'
+export type { MediaCardProps } from './components/MediaCard'
+
+export { Icon } from './components/Icon'
+export type { IconProps } from './components/Icon'

@@ -1,7 +1,13 @@
 import { useEffect } from 'react'
 import Image from 'next/image'
+import { motion } from 'framer-motion'
+import { Icon } from '@paradoxui/ui'
+import { icons } from '@/lib/icons'
 import type { DiaryNote, PlantDiary } from '@/types/diary'
 import { formatDayLabel, formatMonthLabel } from '@/lib/utils'
+
+/** Mirrors --duration-slow / --ease-in-out — Framer Motion can't read CSS vars. */
+const DRAWER_TRANSITION = { duration: 0.3, ease: [0.4, 0, 0.2, 1] as const }
 
 interface DiaryDetailDrawerProps {
   diary: PlantDiary
@@ -72,75 +78,79 @@ export function DiaryDetailDrawer({ diary, onClose }: DiaryDetailDrawerProps) {
   }, [])
 
   return (
-    <aside
+    <motion.aside
       aria-label={`${diary.plantName} diary`}
-      className="fixed inset-0 z-20 flex w-full flex-col gap-section-break overflow-y-auto bg-surface-card p-card-padding lg:inset-y-0 lg:inset-x-auto lg:right-0 lg:w-[440px] lg:border-l lg:border-card"
+      initial={{ x: '100%' }}
+      animate={{ x: 0 }}
+      exit={{ x: '100%' }}
+      transition={DRAWER_TRANSITION}
+      className="fixed inset-0 z-20 flex w-full flex-col overflow-hidden bg-surface-card lg:inset-x-auto lg:top-2 lg:bottom-2 lg:right-0 lg:w-[440px] lg:rounded-l-lg lg:border-l lg:border-y lg:border-card"
     >
-      <div className="flex w-full shrink-0 items-center justify-between">
+      <div className="flex w-full shrink-0 items-center justify-between border-b border-card p-card-padding">
         <button
           type="button"
           onClick={onClose}
           aria-label="Close diary"
-          className="flex size-8 items-center justify-center rounded-full bg-sage-300 transition-opacity duration-normal hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+          className="flex size-8 items-center justify-center rounded-full border border-card bg-surface-control transition-opacity duration-normal hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
         >
-          <Image src="/icons/icon-close.svg" alt="" width={16} height={16} />
+          <Icon src={icons.close} />
         </button>
 
         <div className="flex items-center gap-inline-gap">
           <button
             type="button"
-            className="flex h-8 items-center rounded-sm bg-surface-control px-inline-gap text-body-small text-secondary"
+            className="flex h-8 items-center rounded-sm border border-card bg-surface-control px-inline-gap text-body-small text-secondary"
           >
             Open plant details
           </button>
           <button
             type="button"
             aria-label="Chat about this plant"
-            className="flex size-8 items-center justify-center rounded-full bg-surface-control"
+            className="flex size-8 items-center justify-center rounded-full border border-card bg-surface-control"
           >
-            <Image src="/icons/icon-chat.svg" alt="" width={16} height={16} />
+            <Icon src={icons.chat} />
           </button>
         </div>
       </div>
 
-      <div className="flex w-full shrink-0 flex-col gap-item-gap">
-        <h2 className="w-full text-title font-semibold tracking-[-0.04em] text-primary">
-          {diary.plantName} Diary
-        </h2>
-        <p className="w-full text-body leading-normal text-secondary">
-          {diary.summary}
-        </p>
+      <div className="flex w-full flex-1 flex-col gap-section-break overflow-y-auto p-card-padding">
+        <div className="flex w-full shrink-0 flex-col gap-item-gap">
+          <h2 className="w-full text-title font-semibold tracking-[-0.04em] text-primary">
+            {diary.plantName} Diary
+          </h2>
+          <p className="w-full text-body leading-normal text-secondary">
+            {diary.summary}
+          </p>
+        </div>
+
+        <div className="flex w-full shrink-0 flex-col gap-card-padding">
+          <h3 className="text-body font-semibold text-primary">Your notes</h3>
+          <button
+            type="button"
+            className="flex w-full items-center gap-inline-gap rounded-sm border border-dashed border-card bg-surface-overlay p-item-gap transition-colors duration-normal hover:bg-surface-control"
+          >
+            <Icon src={icons.plus} />
+            <span className="text-body text-secondary">New note</span>
+          </button>
+        </div>
+
+        {monthGroups.map(([month, notes]) => (
+          <section
+            key={month}
+            className="flex w-full shrink-0 flex-col gap-item-gap"
+          >
+            <h4 className="text-label font-medium uppercase tracking-[0.05em] text-muted">
+              {month}
+            </h4>
+            <div className="flex w-full flex-col gap-tight-gap">
+              {notes.map((note) => (
+                <NoteCard key={note.id} note={note} />
+              ))}
+            </div>
+          </section>
+        ))}
       </div>
-
-      <hr className="w-full shrink-0 border-t border-divider" />
-
-      <div className="flex w-full shrink-0 flex-col gap-card-padding">
-        <h3 className="text-body font-semibold text-primary">Your notes</h3>
-        <button
-          type="button"
-          className="flex w-full items-center gap-inline-gap rounded-sm border border-dashed border-card bg-surface-overlay p-item-gap transition-colors duration-normal hover:bg-surface-control"
-        >
-          <Image src="/icons/icon-plus.svg" alt="" width={16} height={16} />
-          <span className="text-body text-secondary">New note</span>
-        </button>
-      </div>
-
-      {monthGroups.map(([month, notes]) => (
-        <section
-          key={month}
-          className="flex w-full shrink-0 flex-col gap-item-gap"
-        >
-          <h4 className="text-label font-medium uppercase tracking-[0.05em] text-muted">
-            {month}
-          </h4>
-          <div className="flex w-full flex-col gap-tight-gap">
-            {notes.map((note) => (
-              <NoteCard key={note.id} note={note} />
-            ))}
-          </div>
-        </section>
-      ))}
-    </aside>
+    </motion.aside>
   )
 }
 

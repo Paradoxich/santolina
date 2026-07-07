@@ -2,10 +2,13 @@
 
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
+import { AnimatePresence } from 'framer-motion'
+import { Icon } from '@paradoxui/ui'
 import { DiaryListRow } from '@/components/DiaryListRow'
 import { DiaryDetailDrawer } from '@/components/DiaryDetailDrawer'
 import { samplePlantDiaries } from '@/lib/sample-diary'
 import { parseISODate } from '@/lib/utils'
+import { icons } from '@/lib/icons'
 
 export default function PlantDiaryPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -33,7 +36,7 @@ export default function PlantDiaryPage() {
   return (
     <div className="max-w-[669px] pb-16 pt-8 md:pt-12">
       <header className="flex flex-col gap-card-padding">
-        <div className="flex max-w-[407px] flex-col gap-item-gap">
+        <div className="flex flex-col gap-item-gap">
           <h1 className="text-title font-semibold tracking-[-0.04em] text-primary">
             Plant Diary
           </h1>
@@ -69,12 +72,7 @@ export default function PlantDiaryPage() {
           <span className="flex-1 text-body leading-normal text-secondary">
             Garden reflections
           </span>
-          <Image
-            src="/icons/icon-arrow-right.svg"
-            alt=""
-            width={16}
-            height={16}
-          />
+          <Icon src={icons.arrowRight} />
         </button>
       </header>
 
@@ -85,7 +83,7 @@ export default function PlantDiaryPage() {
           aria-label="Filter diary entries"
           className="flex size-8 items-center justify-center rounded-sm transition-colors duration-normal hover:bg-surface-overlay"
         >
-          <Image src="/icons/icon-filter.svg" alt="" width={16} height={16} />
+          <Icon src={icons.filter} />
         </button>
       </div>
 
@@ -100,12 +98,15 @@ export default function PlantDiaryPage() {
         ))}
       </div>
 
-      {selected && (
-        <DiaryDetailDrawer
-          diary={selected}
-          onClose={() => setSelectedId(null)}
-        />
-      )}
+      <AnimatePresence>
+        {selected && (
+          <DiaryDetailDrawer
+            key="diary-detail-drawer"
+            diary={selected}
+            onClose={() => setSelectedId(null)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   )
 }

@@ -1,29 +1,26 @@
-import Image from 'next/image'
-import { StatCard } from '@paradoxui/ui'
+import { Icon, StatCard } from '@paradoxui/ui'
 import type { DbPlant } from '@/lib/plants-db'
 import { formatLightNeeds } from '@/lib/format-plant'
+import { icons, type IconName } from '@/lib/icons'
 import { DrawerSection } from './DrawerSection'
 
 interface CareSectionProps {
   plant: DbPlant
 }
 
-function icon(src: string) {
-  return <Image src={src} alt="" width={16} height={16} />
-}
-
 export function CareSection({ plant }: CareSectionProps) {
   const light = formatLightNeeds(plant)
-  const cards = [
-    { label: 'Water', body: plant.water_needs, icon: '/icons/icon-water.svg' },
-    { label: 'Light', body: light, icon: '/icons/icon-water.svg' },
-    { label: 'Soil', body: plant.soil_needs, icon: '/icons/icon-soil.svg' },
+  const allCards: { label: string; body: string | null; icon: IconName }[] = [
+    { label: 'Water', body: plant.water_needs, icon: 'water' },
+    { label: 'Light', body: light, icon: 'water' },
+    { label: 'Soil', body: plant.soil_needs, icon: 'soil' },
     {
       label: 'Maintenance',
       body: plant.maintenance_notes,
-      icon: '/icons/icon-maintenance.svg',
+      icon: 'maintenance',
     },
-  ].filter((c) => c.body)
+  ]
+  const cards = allCards.filter((c) => c.body)
 
   if (cards.length === 0 && !plant.common_issues) return null
 
@@ -31,7 +28,11 @@ export function CareSection({ plant }: CareSectionProps) {
     <DrawerSection label="Care">
       <div className="grid w-full grid-cols-1 gap-inline-gap sm:grid-cols-2">
         {cards.map((card) => (
-          <StatCard key={card.label} label={card.label} icon={icon(card.icon)}>
+          <StatCard
+            key={card.label}
+            label={card.label}
+            icon={<Icon src={icons[card.icon]} />}
+          >
             {card.body}
           </StatCard>
         ))}
@@ -39,7 +40,7 @@ export function CareSection({ plant }: CareSectionProps) {
           <StatCard
             tone="warning"
             label="Common issues"
-            icon={icon('/icons/icon-issues.svg')}
+            icon={<Icon src={icons.issues} />}
             className="sm:col-span-2"
           >
             {plant.common_issues}

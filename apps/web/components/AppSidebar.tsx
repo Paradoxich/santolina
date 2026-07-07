@@ -3,22 +3,20 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
+import { Icon } from '@paradoxui/ui'
+import { icons, type IconName } from '@/lib/icons'
 
 interface NavItem {
   label: string
   href: string
-  icon: string
+  icon: IconName
 }
 
 const navItems: NavItem[] = [
-  { label: 'Dashboard', href: '/dashboard', icon: '/icons/icon-grid.svg' },
-  { label: 'My Garden', href: '/garden', icon: '/icons/icon-leaf.svg' },
-  { label: 'Plant Diary', href: '/diary', icon: '/icons/icon-diary.svg' },
-  {
-    label: 'Explore Plants',
-    href: '/explore',
-    icon: '/icons/icon-search.svg',
-  },
+  { label: 'Dashboard', href: '/dashboard', icon: 'grid' },
+  { label: 'My Garden', href: '/garden', icon: 'leaf' },
+  { label: 'Plant Diary', href: '/diary', icon: 'diary' },
+  { label: 'Explore Plants', href: '/explore', icon: 'search' },
 ]
 
 export function AppSidebar() {
@@ -49,9 +47,9 @@ export function AppSidebar() {
 
       <button
         type="button"
-        className="relative flex w-full items-center gap-item-gap rounded-md bg-surface-overlay p-section-gap text-left shadow-soft transition-colors duration-normal hover:bg-surface-control"
+        className="relative flex w-full items-center gap-item-gap rounded-md border border-dashed border-accent bg-surface-active p-section-gap text-left transition-colors duration-normal hover:bg-green-300"
       >
-        <Image src="/icons/icon-agent.svg" alt="" width={16} height={16} />
+        <Icon src={icons.agent} />
         <span className="flex-1 text-body text-primary">Agent</span>
         <span className="text-label text-accent">⌘K</span>
       </button>
@@ -69,10 +67,12 @@ export function AppSidebar() {
                     'flex h-12 items-center gap-item-gap rounded-sm pl-row-gap pr-2',
                     'text-body text-primary',
                     'transition-colors duration-normal',
-                    active ? 'bg-surface-active' : 'hover:bg-surface-overlay',
+                    active
+                      ? 'bg-surface-card-translucent'
+                      : 'hover:bg-surface-overlay',
                   ].join(' ')}
                 >
-                  <Image src={item.icon} alt="" width={16} height={16} />
+                  <Icon src={icons[item.icon]} />
                   {item.label}
                 </Link>
               </li>
