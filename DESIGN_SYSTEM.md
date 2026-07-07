@@ -3,9 +3,10 @@
 How to build UI in this repo. This is the reference for humans and AI agents
 alike — read it before adding or changing any visual code.
 
-**Source of truth:** the Santolina Figma file. Design tokens are Figma
-variables, synced into `@paradoxui/tokens`. When Figma and code disagree,
-Figma wins — update the tokens, don't patch components.
+**Source of truth: the code.** Tokens live in `packages/tokens/index.css`,
+structured by `docs/token-taxonomy.md`, and rendered live at `/design-system`
+in the app. Figma Variables are synced _from_ this structure, not the other
+way around. When Figma and code disagree, code wins — fix Figma.
 
 ---
 
@@ -13,12 +14,12 @@ Figma wins — update the tokens, don't patch components.
 
 ```
 @paradoxui/tokens   →   @paradoxui/ui   →   apps/web
-(CSS variables)         (generic React)     (Santolina product)
+(CSS vars + preset)     (generic React)     (Santolina product)
 ```
 
 | Layer          | Package               | Contains                                             | May know about gardens? |
 | -------------- | --------------------- | ---------------------------------------------------- | ----------------------- |
-| 1 — Tokens     | `packages/tokens`     | CSS custom properties only. Zero dependencies.       | No                      |
+| 1 — Tokens     | `packages/tokens`     | CSS custom properties + the Tailwind preset.         | No                      |
 | 2 — Primitives | `packages/ui`         | Generic React components (Button, Card, Chip, Tabs…) | **Never**               |
 | 3 — Product    | `apps/web/components` | Domain components (GardenPlantTile, AppSidebar…)     | Yes                     |
 
@@ -35,105 +36,98 @@ Dependencies flow one way only: web → ui → tokens. Never the reverse.
 
 ---
 
-## 2. Tokens
+## 2. Tokens — the three tiers
 
-All tokens live in `packages/tokens/index.css` as CSS custom properties on
-`:root`. They come in two kinds:
+Full taxonomy and rationale: `docs/token-taxonomy.md`. Live visual reference:
+`/design-system` in the running app. The short version:
 
-### Core scales
+| Tier          | Vocabulary      | Examples                                          | Raw values allowed?  |
+| ------------- | --------------- | ------------------------------------------------- | -------------------- |
+| 1 — Primitive | hue/scale names | `--color-green-700`, `--spacing-4`, `--radius-lg` | **Only here**        |
+| 2 — Semantic  | role names      | `--color-text-muted`, `--color-surface-card`      | No — always aliases  |
+| 3 — Component | component names | `--chip-radius`, `--thumbnail-scrim`              | Measured values only |
 
-Generic ramps and scales, mostly used as building blocks and fallbacks:
+You can tell a token's tier by reading it. Components consume tier 2 ~95% of
+the time. Dark mode (later) overrides tier 2 and nothing else.
 
-- `--color-primary-*`, `--color-neutral-*`, `--color-success-*`, etc. (50–950 ramps)
-- `--font-size-xs` … `--font-size-4xl`
-- `--spacing-1` … `--spacing-24` (4px base unit)
-- `--radius-sm` (8px), `--radius-md` (12px), `--radius-lg` (16px), `--radius-xl` (24px), `--radius-full`
-- `--shadow-sm/md/lg/soft`, `--duration-*`, `--ease-*`
+### The rules that keep the system small
 
-### Semantic tokens (synced from Figma variables)
+1. **Roles describe function, never location.** `surface-card`, not
+   `background-close-button`. Location names are allowed in tier 3 only.
+2. **New semantic role** only if you can state its usage rule in one sentence
+   ("`text-muted` is UI metadata: labels, captions, timestamps").
+   **New raw value** only if design actually chose one. Two roles may share a
+   primitive today and diverge later by re-pointing one alias.
+3. **Components consume shared roles.** Three card components with three text
+   slots reuse the same roles — they don't mint nine tokens. A tier 3 token
+   exists only for a component-specific measured value or a deliberate theming
+   hook, added at the moment of need, never preemptively.
+4. **Tone vocabulary is `positive` / `warning` / `critical`** (plus `info`
+   when a component needs it). Every tone is a four-role kit: `surface-`,
+   `icon-`, `text-`, `border-`. `success`, `error`, and `caution` do not exist.
+5. **Color roles and size roles are separate axes.** A card title is
+   `text-primary` (color) × `text-heading` (size) × `font-semibold` (weight) —
+   there is no "card title" token.
 
-These describe _intent_, and are what you should reach for first:
+### Text color roles (the complete set)
 
-| Category    | Tokens                                                              | Examples                                                                                                    |
-| ----------- | ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| Backgrounds | `--color-background-*`                                              | `page`, `sidebar`, `overlay`, `subtle`, `active`, `card-subtle`                                             |
-| Accents     | `--color-accent-primary`, `--color-badge-bg`, `--color-avatar-fill` | the greens                                                                                                  |
-| Text        | `--text-*`                                                          | `page-title`, `page-subtitle`, `meta`, `card-title`, `card-caption`, `chip-label`, `nav-label`              |
-| Type sizes  | `--font-size-*`                                                     | `page-title` (32), `card-title` (18), `body` (14), `body-small` (13), `label` (11), `logo` (16)             |
-| Spacing     | `--space-*`                                                         | `tight-gap` (4), `inline-gap` (8), `item-gap` (12), `row-gap` (16), `section-gap` (20), `card-padding` (24) |
-| Component   | `--component-*`                                                     | `chip-radius`, `card-dashboard-radius` (24)                                                                 |
-
-Naming maps 1:1 from Figma: the variable `color/background/page` becomes
-`--color-background-page`, `space/item-gap` becomes `--space-item-gap`.
-
-### Rules
-
-1. **Never hardcode** a color, font size, spacing, or radius value in a
-   component. If the value you need doesn't exist as a token, add it to
-   `packages/tokens/index.css` first (and ideally as a Figma variable too).
-2. Prefer semantic tokens (`--text-card-title`) over raw ramps
-   (`--color-neutral-900`). Use ramps only when no semantic token fits.
-3. Component-specific values (like the dashboard card's 24px radius) get
-   `--component-<name>-<property>` tokens.
-
-### Syncing from Figma
-
-When new designs land:
-
-1. Select the frame in Figma Desktop and pull variables through the Figma MCP
-   (`get_variable_defs`).
-2. Add/update the semantic section of `packages/tokens/index.css`, converting
-   `slash/names` to `--kebab-case`.
-3. Export any new assets (photos, icons, textures) into `apps/web/public/`.
-   Downscale photos to web sizes (~800px wide) before committing.
+`primary` (headings, primary copy) · `secondary` (subtitles, captions, button
+labels) · `body-secondary` (supporting content) · `muted` (UI metadata) ·
+`faint` (dimmed) · `inverse` (over images/dark) · `on-accent` (on filled
+controls). If you think you need an eighth, apply rule 2.
 
 ---
 
-## 3. Typography
+## 3. Styling pattern — preset classes
 
-One family for the entire app: **Public Sans** (`--font-family-sans`), loaded
-via Google Fonts in `apps/web/styles/globals.css`. The body element sets it
-globally — components should never override the font family. Hierarchy comes
-from size, weight, and color, not from switching typefaces.
-
-If a Figma frame appears to use another font (e.g. Inter), that's a design
-artifact — build it in Public Sans.
-
-Use the semantic size tokens; don't invent sizes. Page titles get tight
-tracking (`tracking-[-0.04em]`), matching Figma.
-
----
-
-## 4. Styling pattern
-
-Tailwind CSS with **arbitrary values referencing tokens**. This is the house
-style in both `packages/ui` and `apps/web`:
+The Tailwind preset (`packages/tokens/preset.ts`, wired into both Tailwind
+configs) maps every token to a utility class. **This is the house style:**
 
 ```tsx
-// Good — tokens via CSS variables
-className="bg-[var(--color-background-subtle)] text-[var(--text-chip-label)]
-           text-[length:var(--font-size-body-small)] p-[var(--space-card-padding)]
-           rounded-[var(--component-chip-radius)]"
+// Good — semantic preset classes
+className =
+  'bg-surface-card text-muted text-body-small p-card-padding rounded-chip'
 
-// Bad — hardcoded values
-className="bg-white/70 text-[#111] text-[13px] p-6 rounded-full"
+// Legacy — arbitrary values; do not write new code like this
+className =
+  'bg-[var(--color-surface-card)] text-[length:var(--font-size-body-small)]'
+
+// Broken — Tailwind's stock palette is removed; these do not compile
+className = 'bg-white text-black text-[13px] border-gray-200'
 ```
 
 Notes:
 
-- Font sizes need the `length:` prefix: `text-[length:var(--font-size-body)]`.
-- Structural utilities (`flex`, `grid`, `items-center`, `relative`, `w-full`,
-  breakpoint prefixes) are fine as-is — tokens are for _design_ values.
-- Tailwind's own spacing utilities (`gap-2`, `mt-6`) are acceptable for
-  one-off layout distances in the app, but gaps that come from the design
-  should use the `--space-*` tokens.
-- The visual language is soft and glassy: translucent whites over the sage
-  page background, hairline white borders, `--shadow-soft`, generous radii.
-  Reach for the existing background tokens before inventing new opacity values.
+- Tailwind's default palette is intentionally gone. `bg-white` produces no
+  CSS — the visible breakage is the point. White is `--color-border-card` /
+  `bg-gray-0`; near-black surfaces are `surface-inverse`.
+- Bare `border` utilities default to `border-divider`. The soft white card
+  outlines this design language uses everywhere are `border-card`.
+- Type roles are composite: `text-body-small` sets size + line-height +
+  tracking together. Don't re-add `leading-[1.3] tracking-[-0.01em]` by hand;
+  override with `leading-normal` etc. only where the design genuinely differs.
+- Structural utilities (`flex`, `grid`, `items-center`, `w-full`, breakpoints)
+  are fine as-is — tokens are for _design_ values. Tailwind numeric spacing
+  (`gap-2`, `p-4`) is acceptable for one-off layout distances; gaps that come
+  from the design use the semantic keys (`gap-item-gap`, `p-card-padding`).
+- Tier 3 tokens without a preset key are consumed as arbitrary values with
+  the _new_ names: `bg-[var(--sidebar-surface)]`, `bg-[image:var(--thumbnail-scrim)]`.
+- The visual language is soft and glassy: sage surfaces, translucent whites
+  (`surface-overlay/control/field/hover`), hairline `border-card` outlines,
+  `shadow-soft`, generous radii. Reach for existing surface roles before
+  inventing opacity values.
+
+### Typography
+
+One family for the entire app: **Public Sans** (`--font-family-sans`), loaded
+by `@paradoxui/tokens` itself. Components never override the font family —
+hierarchy comes from size roles, weight, and color roles. If a Figma frame
+appears to use another font (e.g. Inter), that's a design artifact — build it
+in Public Sans.
 
 ---
 
-## 5. Component requirements (`packages/ui`)
+## 4. Component requirements (`packages/ui`)
 
 Every primitive must have:
 
@@ -141,53 +135,68 @@ Every primitive must have:
    from `src/index.ts` (both component and props type).
 2. **Accessibility built in**: correct roles (`tablist`/`tab`, `aria-pressed`
    for toggles, `aria-current` for nav), keyboard navigation (arrow keys for
-   composite widgets), and visible focus states
-   (`focus-visible:outline-[var(--color-accent-primary)]`).
+   composite widgets), and visible focus states (`focus-visible:outline-focus`
+   / `ring-focus`).
 3. **At least one Storybook story** in `src/stories/`.
-4. **Tokens only** — no hardcoded design values, no garden knowledge.
+4. **Semantic preset classes only** — no hardcoded design values, no raw
+   ramps without cause, no garden knowledge.
 5. `'use client'` directive only if it uses state, refs, or event handlers.
+6. State/tone props use the shared vocabulary: `positive | warning | critical`.
 
 Extend an existing primitive with a variant prop before creating a near
-duplicate. Create a new component when the behavior differs, not just the
-skin.
+duplicate. Create a new component when the behavior differs, not just the skin.
 
 Existing primitives: Button, Input, SearchField, Card (+Header/Body/Footer),
-Badge, Chip, Tabs, Avatar, Spinner, Modal, Toast, Tooltip, ChecklistItem,
-CompanionThumbnail, DetailRow, SeasonalStageRow, StatCard.
+Badge, Chip, Tabs, Avatar, Spinner, Modal, Toast, Tooltip, Panel,
+ChecklistItem, CompanionThumbnail, DetailRow, SeasonalStageRow, StatCard.
 
 ---
 
-## 6. App-layer conventions (`apps/web`)
+## 5. App-layer conventions (`apps/web`)
 
 - **Server components by default.** Add `'use client'` only where
-  interactivity requires it (the `/garden` page is client because of tab and
-  filter state).
+  interactivity requires it.
 - **The app shell** lives in `app/(app)/layout.tsx` — sage page background +
-  fixed `AppSidebar`. Every product page goes inside the `(app)` route group
-  so it inherits the shell.
-- **The root page (`/`) is the in-progress landing page.** It is deliberately
-  self-contained (CSS module, hardcoded values, no tokens) so design-system
-  changes never affect it. Leave it alone until launch, then swap it.
+  fixed `AppSidebar`. Every product page goes inside the `(app)` route group.
+- **The root page (`/`) is the in-progress landing page** and a documented
+  exception zone: self-contained CSS module, hardcoded values allowed, no new
+  tokens minted for it. It will be replaced at launch. See the exemption
+  comment in `app/page.module.css`.
+- **`/design-system` is the living reference** — it renders tokens and
+  components straight from the packages and reads resolved values from the
+  rendered CSS. When tokens change, it updates itself. Keep it current when
+  adding roles or components.
 - Domain components take domain types as props (`plant: GardenPlant`) and
   translate them into primitive props internally.
-- Images: use `next/image` with `fill` + `sizes` for photos, assets from
-  `apps/web/public/` (`/plants/`, `/icons/`, `/textures/`).
-- Sample/mock data lives in `apps/web/lib/` and is typed against
-  `apps/web/types/` — structured so Supabase data can replace it 1:1.
+- Images: `next/image` with `fill` + `sizes` for photos, assets from
+  `apps/web/public/` (`/plants/`, `/icons/`, `/textures/`), downscaled to web
+  sizes (~800px) before committing.
+- Sample/mock data lives in `apps/web/lib/`, typed against `apps/web/types/`,
+  structured so Supabase data can replace it 1:1.
 
 ---
 
-## 7. Checklist for building a new screen from Figma
+## 6. Checklist for building a new screen from Figma
 
-1. Select the frame in Figma Desktop; pull design context and variables via
-   the Figma MCP.
-2. Diff the variables against `packages/tokens/index.css`; add anything new.
+1. Pull the frame's design context via the Figma MCP — but treat its values
+   as _input_, not truth: map every color/size/spacing onto existing semantic
+   roles first.
+2. A value with no matching role → apply rule 2 (§2). Usually the answer is
+   an existing role; occasionally it's a new role or tier 3 token added to
+   `packages/tokens/index.css` **and** the preset **and** `/design-system`.
 3. Export new assets to `apps/web/public/`, downscaled.
 4. Identify the pieces: which existing primitives cover it, which new
-   _generic_ primitives are needed (build those in `packages/ui` with stories),
-   and what remains as domain components in `apps/web/components`.
+   _generic_ primitives are needed (build in `packages/ui` with stories), and
+   what remains as domain components in `apps/web/components`.
 5. Build the page in `app/(app)/<route>/page.tsx`, server-rendered unless it
-   needs state.
-6. Verify against the Figma screenshot side by side, run
-   `pnpm typecheck`, and check the landing page at `/` still renders
-   untouched.
+   needs state. Preset classes only.
+6. Verify against the Figma screenshot, run `pnpm typecheck` and the build,
+   and grep your diff for `var(--` and stock-palette classes — both signal a
+   wrong turn.
+
+## 7. Syncing code → Figma
+
+When the token structure changes, update the Figma Variable collections to
+match: **Primitives** (hidden from the design surface), **Semantic** (with
+Light mode; Dark added later), **Component** — same names, `/` instead of
+`--`. The `/design-system` page is the transcription source.
