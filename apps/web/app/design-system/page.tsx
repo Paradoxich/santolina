@@ -12,6 +12,7 @@ import {
   CompanionThumbnail,
   DetailRow,
   Input,
+  MediaCard,
   Panel,
   SearchField,
   SeasonalStageRow,
@@ -21,6 +22,9 @@ import {
   Toast,
 } from '@paradoxui/ui'
 import { CssVar, Swatch } from '@/components/design-system/TokenRef'
+import { TokenTierBlock } from '@/components/design-system/TokenTable'
+import { DesignSystemTabs } from '@/components/design-system/DesignSystemTabs'
+import { allTokens } from '@/components/design-system/token-data'
 
 export const metadata: Metadata = {
   title: 'Design System — Paradox UI',
@@ -126,51 +130,44 @@ function ToneKit({
   )
 }
 
-export default function DesignSystemPage() {
+const placeholderImage = <div className="size-full bg-sage-300" aria-hidden />
+
+function OverviewTab() {
   return (
-    <main className="mx-auto flex max-w-[880px] flex-col gap-section-break px-card-padding py-section-break">
-      <header className="flex flex-col gap-item-gap">
-        <h1 className="text-title font-semibold tracking-heading text-primary">
-          Design System
-        </h1>
-        <p className="max-w-[560px] text-body text-body-secondary">
-          Live reference for Paradox UI tokens and components. This page renders
-          straight from <code>@paradoxui/tokens</code> — the code is the source
-          of truth, and every value shown here is read from the rendered CSS, so
-          it cannot drift. Taxonomy and rules:{' '}
-          <code>docs/token-taxonomy.md</code>.
-        </p>
-      </header>
+    <Panel title="The rules" meta="tiers & naming">
+      <ul className="flex flex-col" role="list">
+        <ChecklistItem>
+          Grammar: --color-{'{category}'}-{'{role}'}. Roles describe function
+          (surface-card), never location (background-close-button). Location
+          names are allowed in tier 3 only.
+        </ChecklistItem>
+        <ChecklistItem>
+          Tier by vocabulary: primitives are hues (green-600), semantics are
+          roles (accent), component tokens are components (chip-radius). Raw
+          values live in tier 1 only; dark mode will override tier 2 only.
+        </ChecklistItem>
+        <ChecklistItem>
+          New semantic role only if its usage rule fits one sentence. New raw
+          value only if design actually chose one. Two roles may share a
+          primitive and diverge later.
+        </ChecklistItem>
+        <ChecklistItem>
+          Components consume shared roles — three cards with three text slots
+          reuse the same roles, not nine new tokens.
+        </ChecklistItem>
+        <ChecklistItem tone="warning">
+          Tone vocabulary is positive / warning / critical. “success”, “error”,
+          “caution” and Tailwind stock colors (bg-white, text-black) do not
+          exist — they will not compile.
+        </ChecklistItem>
+      </ul>
+    </Panel>
+  )
+}
 
-      <Panel title="The rules" meta="tiers & naming">
-        <ul className="flex flex-col" role="list">
-          <ChecklistItem>
-            Grammar: --color-{'{category}'}-{'{role}'}. Roles describe function
-            (surface-card), never location (background-close-button). Location
-            names are allowed in tier 3 only.
-          </ChecklistItem>
-          <ChecklistItem>
-            Tier by vocabulary: primitives are hues (green-600), semantics are
-            roles (accent), component tokens are components (chip-radius). Raw
-            values live in tier 1 only; dark mode will override tier 2 only.
-          </ChecklistItem>
-          <ChecklistItem>
-            New semantic role only if its usage rule fits one sentence. New raw
-            value only if design actually chose one. Two roles may share a
-            primitive and diverge later.
-          </ChecklistItem>
-          <ChecklistItem>
-            Components consume shared roles — three cards with three text slots
-            reuse the same roles, not nine new tokens.
-          </ChecklistItem>
-          <ChecklistItem tone="warning">
-            Tone vocabulary is positive / warning / critical. “success”,
-            “error”, “caution” and Tailwind stock colors (bg-white, text-black)
-            do not exist — they will not compile.
-          </ChecklistItem>
-        </ul>
-      </Panel>
-
+function ColorsTab() {
+  return (
+    <>
       <Section
         title="Tier 1 — Primitive ramps"
         intro="Hue-named, raw values live only here. Reach for a semantic role first; ramps are the escape hatch."
@@ -259,6 +256,10 @@ export default function DesignSystemPage() {
           <Swatch name="surface-control" className="bg-surface-control" />
           <Swatch name="surface-hover" className="bg-surface-hover" />
           <Swatch name="surface-active" className="bg-surface-active" />
+          <Swatch
+            name="surface-card-translucent"
+            className="bg-surface-card-translucent"
+          />
           <Swatch name="scrim" className="bg-scrim" />
           <Swatch name="accent" className="bg-accent" />
           <Swatch name="accent-hover" className="bg-accent-hover" />
@@ -288,60 +289,70 @@ export default function DesignSystemPage() {
           />
         </div>
       </Section>
+    </>
+  )
+}
 
-      <Section
-        title="Typography roles"
-        intro="Composite text styles from the preset — size, line height and tracking travel together."
-      >
-        <div className="rounded-sm border border-card bg-surface-card px-row-gap">
-          <TypeRow
-            role="title"
-            className="text-title font-semibold"
-            sample="Page title"
-          />
-          <TypeRow
-            role="stat"
-            className="text-stat font-semibold"
-            sample="24 plants"
-          />
-          <TypeRow
-            role="subheading"
-            className="text-subheading font-semibold"
-            sample="Subheading"
-          />
-          <TypeRow
-            role="heading"
-            className="text-heading font-semibold"
-            sample="Card and drawer titles"
-          />
-          <TypeRow
-            role="section"
-            className="text-section font-medium"
-            sample="Section title"
-          />
-          <TypeRow
-            role="body"
-            className="text-body"
-            sample="Body copy for descriptions and content."
-          />
-          <TypeRow
-            role="body-small"
-            className="text-body-small"
-            sample="Small body copy with compact leading and tracking."
-          />
-          <TypeRow
-            role="label"
-            className="text-label"
-            sample="LABELS, CAPTIONS, TIMESTAMPS"
-          />
-          <TypeRow
-            role="micro"
-            className="text-micro"
-            sample="micro annotations"
-          />
-        </div>
-      </Section>
+function TypographyTab() {
+  return (
+    <Section
+      title="Typography roles"
+      intro="Composite text styles from the preset — size, line height and tracking travel together."
+    >
+      <div className="rounded-sm border border-card bg-surface-card px-row-gap">
+        <TypeRow
+          role="title"
+          className="text-title font-semibold"
+          sample="Page title"
+        />
+        <TypeRow
+          role="stat"
+          className="text-stat font-semibold"
+          sample="24 plants"
+        />
+        <TypeRow
+          role="subheading"
+          className="text-subheading font-semibold"
+          sample="Subheading"
+        />
+        <TypeRow
+          role="heading"
+          className="text-heading font-semibold"
+          sample="Card and drawer titles"
+        />
+        <TypeRow
+          role="section"
+          className="text-section font-medium"
+          sample="Section title"
+        />
+        <TypeRow
+          role="body"
+          className="text-body"
+          sample="Body copy for descriptions and content."
+        />
+        <TypeRow
+          role="body-small"
+          className="text-body-small"
+          sample="Small body copy with compact leading and tracking."
+        />
+        <TypeRow
+          role="label"
+          className="text-label"
+          sample="LABELS, CAPTIONS, TIMESTAMPS"
+        />
+        <TypeRow
+          role="micro"
+          className="text-micro"
+          sample="micro annotations"
+        />
+      </div>
+    </Section>
+  )
+}
 
+function SpacingTab() {
+  return (
+    <>
       <Section title="Spacing roles">
         <div className="rounded-sm border border-card bg-surface-card px-row-gap">
           <SpaceRow role="tight-gap" />
@@ -397,172 +408,258 @@ export default function DesignSystemPage() {
           ))}
         </div>
       </Section>
+    </>
+  )
+}
 
-      <Section
-        title="Components"
-        intro="Every component consumes semantic roles only. Interactive states (Modal, Tooltip) live in Storybook."
-      >
-        <div className="flex flex-col gap-section-gap">
-          <div className="flex flex-col gap-inline-gap">
-            <Label>Button</Label>
-            <div className="flex flex-wrap items-center gap-item-gap">
-              <Button variant="primary">Primary</Button>
-              <Button variant="secondary">Secondary</Button>
-              <Button variant="ghost">Ghost</Button>
-              <Button variant="destructive">Destructive</Button>
-              <Button variant="primary" isLoading>
-                Loading
-              </Button>
-              <Button variant="primary" disabled>
-                Disabled
-              </Button>
-            </div>
+function ComponentsTab() {
+  return (
+    <Section
+      title="Components"
+      intro="Every component consumes semantic roles only. Interactive states (Modal, Tooltip) live in Storybook."
+    >
+      <div className="flex flex-col gap-section-gap">
+        <div className="flex flex-col gap-inline-gap">
+          <Label>Button</Label>
+          <div className="flex flex-wrap items-center gap-item-gap">
+            <Button variant="primary">Primary</Button>
+            <Button variant="secondary">Secondary</Button>
+            <Button variant="ghost">Ghost</Button>
+            <Button variant="destructive">Destructive</Button>
+            <Button variant="primary" isLoading>
+              Loading
+            </Button>
+            <Button variant="primary" disabled>
+              Disabled
+            </Button>
           </div>
-
-          <div className="flex flex-col gap-inline-gap">
-            <Label>Badge · Chip · Avatar · Spinner</Label>
-            <div className="flex flex-wrap items-center gap-item-gap">
-              <Badge variant="default">Default</Badge>
-              <Badge variant="positive">Positive</Badge>
-              <Badge variant="warning">Warning</Badge>
-              <Badge variant="critical">Critical</Badge>
-              <Chip>Resting chip</Chip>
-              <Chip selected>Selected chip</Chip>
-              <Avatar initials="PA" size="md" />
-              <Spinner size="md" />
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-inline-gap">
-            <Label>Toast</Label>
-            <div className="grid grid-cols-2 gap-item-gap">
-              <Toast
-                variant="default"
-                title="Default"
-                description="Neutral information."
-              />
-              <Toast
-                variant="positive"
-                title="Positive"
-                description="Plant added to your palette."
-              />
-              <Toast
-                variant="warning"
-                title="Warning"
-                description="Frost expected this week."
-              />
-              <Toast
-                variant="critical"
-                title="Critical"
-                description="Could not save your note."
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-section-gap">
-            <div className="flex flex-col gap-item-gap">
-              <Label>Input · SearchField</Label>
-              <Input
-                label="Garden name"
-                placeholder="e.g. Balcony south"
-                helperText="Shown on your dashboard."
-              />
-              <Input
-                label="City"
-                defaultValue="Opatija"
-                errorMessage="We couldn't find this city."
-              />
-              <SearchField placeholder="Search plants" />
-            </div>
-            <div className="flex flex-col gap-item-gap">
-              <Label>Tabs · StatCard</Label>
-              <Tabs
-                items={[
-                  { value: 'all', label: 'All', count: 24 },
-                  { value: 'planned', label: 'Planned', count: 6 },
-                  { value: 'planted', label: 'Planted' },
-                ]}
-                value="all"
-              />
-              <div className="grid grid-cols-2 gap-item-gap">
-                <StatCard label="Neutral" tone="neutral">
-                  Recessed default card.
-                </StatCard>
-                <StatCard label="Soft" tone="soft">
-                  Subtle card surface.
-                </StatCard>
-                <StatCard label="Common issues" tone="warning">
-                  Warm background for warnings.
-                </StatCard>
-                <StatCard label="Environment benefits" tone="positive">
-                  Green background for benefits.
-                </StatCard>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-section-gap">
-            <div className="flex flex-col gap-inline-gap">
-              <Label>ChecklistItem · DetailRow · SeasonalStageRow</Label>
-              <ul className="flex flex-col" role="list">
-                <ChecklistItem>Thrives in your sun conditions</ChecklistItem>
-                <ChecklistItem tone="warning">
-                  May struggle over winter in your zone
-                </ChecklistItem>
-              </ul>
-              <div>
-                <DetailRow label="Botanical name" value="Salvia nemorosa" />
-                <DetailRow label="Height" value="40–60 cm" />
-              </div>
-              <div>
-                <SeasonalStageRow stage="Spring">
-                  New growth emerges; feed once.
-                </SeasonalStageRow>
-                <SeasonalStageRow stage="Summer">
-                  Deadhead to extend blooming.
-                </SeasonalStageRow>
-              </div>
-            </div>
-            <div className="flex flex-col gap-inline-gap">
-              <Label>CompanionThumbnail · Card</Label>
-              <div className="flex h-20 gap-inline-gap">
-                <CompanionThumbnail
-                  src="/plants/plant-01.png"
-                  label="Lavender"
-                />
-                <CompanionThumbnail
-                  src="/plants/plant-02.png"
-                  label="Echinacea"
-                />
-              </div>
-              <Card>
-                <CardHeader>
-                  <span className="text-heading font-semibold text-primary">
-                    Card title
-                  </span>
-                </CardHeader>
-                <CardBody>
-                  <p className="text-body text-body-secondary">
-                    Card body content styled with semantic roles.
-                  </p>
-                </CardBody>
-                <CardFooter>
-                  <Button variant="ghost" size="sm">
-                    Action
-                  </Button>
-                </CardFooter>
-              </Card>
-            </div>
-          </div>
-
-          <Panel title="Panel" meta="with title and meta">
-            <p className="text-body text-body-secondary">
-              Dashboard panel surface with translucent card border and
-              card-dashboard radius.
-            </p>
-          </Panel>
         </div>
-      </Section>
+
+        <div className="flex flex-col gap-inline-gap">
+          <Label>Badge · Chip · Avatar · Spinner</Label>
+          <div className="flex flex-wrap items-center gap-item-gap">
+            <Badge variant="default">Default</Badge>
+            <Badge variant="positive">Positive</Badge>
+            <Badge variant="warning">Warning</Badge>
+            <Badge variant="critical">Critical</Badge>
+            <Chip>Resting chip</Chip>
+            <Chip selected>Selected chip</Chip>
+            <Avatar initials="PA" size="md" />
+            <Spinner size="md" />
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-inline-gap">
+          <Label>MediaCard</Label>
+          <div className="grid grid-cols-3 gap-item-gap">
+            <MediaCard
+              image={placeholderImage}
+              imageHeight={140}
+              title="Lavender"
+              subtitle="Lavandula angustifolia"
+              body="Fragrant, drought-tolerant perennial."
+            />
+            <MediaCard
+              image={placeholderImage}
+              imageHeight={140}
+              title="Lavender"
+              titleAdornment={<Badge variant="positive">blooming</Badge>}
+              body="❋ Deadhead spent blooms to rebloom."
+            />
+            <MediaCard
+              image={placeholderImage}
+              imageHeight={140}
+              title="Lavender"
+              subtitle="Part shade · Aug–Oct"
+              body="Suggested for your conditions."
+              border="dashed"
+            />
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-inline-gap">
+          <Label>Toast</Label>
+          <div className="grid grid-cols-2 gap-item-gap">
+            <Toast
+              variant="default"
+              title="Default"
+              description="Neutral information."
+            />
+            <Toast
+              variant="positive"
+              title="Positive"
+              description="Plant added to your palette."
+            />
+            <Toast
+              variant="warning"
+              title="Warning"
+              description="Frost expected this week."
+            />
+            <Toast
+              variant="critical"
+              title="Critical"
+              description="Could not save your note."
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-section-gap">
+          <div className="flex flex-col gap-item-gap">
+            <Label>Input · SearchField</Label>
+            <Input
+              label="Garden name"
+              placeholder="e.g. Balcony south"
+              helperText="Shown on your dashboard."
+            />
+            <Input
+              label="City"
+              defaultValue="Opatija"
+              errorMessage="We couldn't find this city."
+            />
+            <SearchField placeholder="Search plants" />
+          </div>
+          <div className="flex flex-col gap-item-gap">
+            <Label>Tabs · StatCard</Label>
+            <Tabs
+              items={[
+                { value: 'all', label: 'All', count: 24 },
+                { value: 'planned', label: 'Planned', count: 6 },
+                { value: 'planted', label: 'Planted' },
+              ]}
+              value="all"
+            />
+            <div className="grid grid-cols-2 gap-item-gap">
+              <StatCard label="Neutral" tone="neutral">
+                Recessed default card.
+              </StatCard>
+              <StatCard label="Soft" tone="soft">
+                Subtle card surface.
+              </StatCard>
+              <StatCard label="Common issues" tone="warning">
+                Warm background for warnings.
+              </StatCard>
+              <StatCard label="Environment benefits" tone="positive">
+                Green background for benefits.
+              </StatCard>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-section-gap">
+          <div className="flex flex-col gap-inline-gap">
+            <Label>ChecklistItem · DetailRow · SeasonalStageRow</Label>
+            <ul className="flex flex-col" role="list">
+              <ChecklistItem>Thrives in your sun conditions</ChecklistItem>
+              <ChecklistItem tone="warning">
+                May struggle over winter in your zone
+              </ChecklistItem>
+            </ul>
+            <div>
+              <DetailRow label="Botanical name" value="Salvia nemorosa" />
+              <DetailRow label="Height" value="40–60 cm" />
+            </div>
+            <div>
+              <SeasonalStageRow stage="Spring">
+                New growth emerges; feed once.
+              </SeasonalStageRow>
+              <SeasonalStageRow stage="Summer">
+                Deadhead to extend blooming.
+              </SeasonalStageRow>
+            </div>
+          </div>
+          <div className="flex flex-col gap-inline-gap">
+            <Label>CompanionThumbnail · Card</Label>
+            <div className="flex h-20 gap-inline-gap">
+              <CompanionThumbnail src="/plants/plant-01.png" label="Lavender" />
+              <CompanionThumbnail
+                src="/plants/plant-02.png"
+                label="Echinacea"
+              />
+            </div>
+            <Card>
+              <CardHeader>
+                <span className="text-heading font-semibold text-primary">
+                  Card title
+                </span>
+              </CardHeader>
+              <CardBody>
+                <p className="text-body text-body-secondary">
+                  Card body content styled with semantic roles.
+                </p>
+              </CardBody>
+              <CardFooter>
+                <Button variant="ghost" size="sm">
+                  Action
+                </Button>
+              </CardFooter>
+            </Card>
+          </div>
+        </div>
+
+        <Panel title="Panel" meta="with title and meta">
+          <p className="text-body text-body-secondary">
+            Dashboard panel surface with translucent card border and
+            card-dashboard radius.
+          </p>
+        </Panel>
+      </div>
+    </Section>
+  )
+}
+
+function AllTokensTab() {
+  return (
+    <Section
+      title="All tokens"
+      intro="Every custom property defined in packages/tokens/index.css, in file order. If it's not here, it doesn't exist yet — this is the audit view, not the showcase."
+    >
+      <div className="flex flex-col gap-section-break">
+        {allTokens.map((tier) => (
+          <TokenTierBlock key={tier.tier} tier={tier} />
+        ))}
+      </div>
+    </Section>
+  )
+}
+
+export default function DesignSystemPage() {
+  return (
+    <main className="mx-auto flex max-w-[880px] flex-col gap-section-break px-card-padding py-section-break">
+      <header className="flex flex-col gap-item-gap">
+        <h1 className="text-title font-semibold tracking-heading text-primary">
+          Design System
+        </h1>
+        <p className="max-w-[560px] text-body text-body-secondary">
+          Live reference for Paradox UI tokens and components. This page renders
+          straight from <code>@paradoxui/tokens</code> — the code is the source
+          of truth, and every value shown here is read from the rendered CSS, so
+          it cannot drift. Taxonomy and rules:{' '}
+          <code>docs/token-taxonomy.md</code>.
+        </p>
+      </header>
+
+      <DesignSystemTabs
+        tabs={[
+          { value: 'overview', label: 'Overview', content: <OverviewTab /> },
+          { value: 'colors', label: 'Colors', content: <ColorsTab /> },
+          {
+            value: 'typography',
+            label: 'Typography',
+            content: <TypographyTab />,
+          },
+          {
+            value: 'spacing',
+            label: 'Spacing & radius',
+            content: <SpacingTab />,
+          },
+          {
+            value: 'components',
+            label: 'Components',
+            content: <ComponentsTab />,
+          },
+          { value: 'tokens', label: 'All tokens', content: <AllTokensTab /> },
+        ]}
+      />
     </main>
   )
 }

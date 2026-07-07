@@ -287,3 +287,28 @@ either font) and are removed.
 - `critical` tone values await a designed red ramp (placeholder acceptable).
 - Figma Variable collections to be rebuilt from this file (Primitives hidden,
   Semantic with Light/Dark modes, Component).
+
+## Changes since this audit
+
+This file is a point-in-time record — it isn't rewritten as the system
+evolves. For current values, `/design-system`'s **All Tokens** tab is
+authoritative. Notable drift from the snapshot above:
+
+- **New surface token**: `--color-surface-card-translucent: rgb(237 242 238 / 0.7)`
+  (sage-100 @ 70%) — added for the sidebar's active-nav-item highlight, which
+  needed to read against the sidebar's own translucent background where
+  `surface-active` (the green wash) was already spoken for by the Agent
+  button.
+- **`--card-tile-radius` / `--card-dashboard-radius` de-duplicated**: both were
+  independently hardcoded to `1.25rem`, which is exactly the kind of
+  same-value-two-places drift this taxonomy exists to prevent.
+  `--card-tile-radius` is now the source; `--card-dashboard-radius: var(--card-tile-radius)`.
+  Fix the source once, both move together.
+- **Close button surface is no longer `sage-300`**: it now uses
+  `bg-surface-control` (the same translucent-white role every other small
+  action button in a drawer header uses), so the resolved decision recorded
+  above is superseded.
+- **New primitives**: `MediaCard` (packages/ui) unifies the plant tile shell
+  used across Growing/Planned/Explore. `Icon` (packages/ui) plus an
+  `apps/web/lib/icons.ts` registry now own icon rendering — see
+  `DESIGN_SYSTEM.md` §5 for the pattern.

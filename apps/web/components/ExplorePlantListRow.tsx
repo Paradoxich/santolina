@@ -18,10 +18,8 @@ export function ExplorePlantListRow({
       onClick={onClick}
       aria-current={selected ? 'true' : undefined}
       className={[
-        'flex w-full items-start gap-item-gap rounded-card-row border p-item-gap text-left shadow-sm transition-colors duration-normal',
-        selected
-          ? 'border-accent bg-surface-active'
-          : 'border-card bg-surface-card hover:bg-surface-subtle',
+        'flex w-full items-start gap-item-gap rounded-card-row border border-card p-item-gap text-left transition-colors duration-normal',
+        selected ? 'bg-surface-card shadow-soft' : 'hover:bg-surface-subtle',
       ].join(' ')}
     >
       <div className="relative size-[76px] shrink-0 overflow-hidden rounded-sm">

@@ -29,7 +29,7 @@ export function Chip({
         'transition-colors duration-normal',
         'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus',
         selected
-          ? 'bg-surface-inverse text-inverse'
+          ? 'bg-accent text-on-accent hover:bg-accent-hover'
           : 'bg-surface-control text-primary hover:bg-gray-0',
         className,
       ].join(' ')}
