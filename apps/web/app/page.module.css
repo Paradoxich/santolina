@@ -1,17 +1,18 @@
 /*
- * TEMPORARY WIP LANDING PAGE — exempt from design-token rules.
- * Predates the design system and will be replaced by a real landing page.
- * Migrate values to semantic tokens only where one already fits; do NOT
- * mint tokens for its one-off colors. See docs/token-taxonomy.md.
+ * TEMPORARY WIP LANDING PAGE — will be replaced by a real landing page.
+ * Predates the design system; its type scale (80px hero, custom sizes)
+ * stays hand-tuned for this layout rather than using product type roles.
+ * Colors are wired to semantic tokens so it reads as on-brand in the
+ * meantime. See docs/token-taxonomy.md.
  */
 
 .root {
-  font-family: 'Public Sans', sans-serif;
+  font-family: var(--font-family-sans);
   font-weight: 400;
-  background: #fbfcfa;
+  background: var(--color-surface-subtle);
   min-height: 100vh;
   padding: 280px 0 400px;
-  color: #000000;
+  color: var(--color-text-primary);
   letter-spacing: -0.3px;
 }
 
@@ -22,18 +23,18 @@
 }
 
 .headline {
-  font-family: 'Public Sans', sans-serif;
+  font-family: var(--font-family-sans);
   font-size: 80px;
   line-height: 1.1;
   letter-spacing: -0.06em;
-  color: #000000;
+  color: var(--color-text-primary);
   margin: 0 0 12px 0;
 }
 
 .meta {
   font-size: 20px;
   font-weight: 400;
-  color: #616456;
+  color: var(--color-text-body-secondary);
   line-height: 1.7;
   margin: 0 0 200px;
 }
@@ -42,11 +43,11 @@
   display: inline-block;
   position: relative;
   isolation: isolate;
-  color: #000000;
+  color: var(--color-text-primary);
   text-decoration: underline;
   text-underline-offset: 3px;
   font-weight: 500;
-  text-decoration-color: #ccc;
+  text-decoration-color: var(--color-border-divider);
 }
 
 .meta a:hover {
@@ -61,7 +62,7 @@
   width: calc(100% + 6px);
   transform: translateY(-50%);
   height: 18px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 39 12' preserveAspectRatio='none' fill='none'%3E%3Cpath d='M0.464573 1.10555C0.149529 0.632985 0.488292 0 1.05625 0H37.3988C37.9668 0 38.3055 0.632985 37.9905 1.10555C37.8313 1.34441 37.8313 1.65559 37.9905 1.89445L38.2275 2.25C38.5303 2.70416 38.5303 3.29584 38.2275 3.75C37.9248 4.20416 37.9248 4.79584 38.2275 5.25C38.5303 5.70416 38.5303 6.29584 38.2275 6.75C37.9248 7.20416 37.9248 7.79584 38.2275 8.25C38.5303 8.70416 38.5303 9.29584 38.2275 9.75L37.9905 10.1056C37.8313 10.3444 37.8313 10.6556 37.9905 10.8944C38.3055 11.367 37.9668 12 37.3988 12H1.05625C0.488294 12 0.149529 11.367 0.464573 10.8944C0.623813 10.6556 0.623813 10.3444 0.464573 10.1056L0.227539 9.75C-0.0752367 9.29584 -0.0752366 8.70416 0.227539 8.25C0.530315 7.79584 0.530315 7.20416 0.227539 6.75C-0.0752366 6.29584 -0.0752366 5.70416 0.227539 5.25C0.530315 4.79584 0.530315 4.20416 0.227539 3.75C-0.0752366 3.29584 -0.0752366 2.70416 0.227539 2.25L0.464573 1.89445C0.623813 1.65559 0.623813 1.34441 0.464573 1.10555Z' fill='%2338EBAF'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 39 12' preserveAspectRatio='none' fill='none'%3E%3Cpath d='M0.464573 1.10555C0.149529 0.632985 0.488292 0 1.05625 0H37.3988C37.9668 0 38.3055 0.632985 37.9905 1.10555C37.8313 1.34441 37.8313 1.65559 37.9905 1.89445L38.2275 2.25C38.5303 2.70416 38.5303 3.29584 38.2275 3.75C37.9248 4.20416 37.9248 4.79584 38.2275 5.25C38.5303 5.70416 38.5303 6.29584 38.2275 6.75C37.9248 7.20416 37.9248 7.79584 38.2275 8.25C38.5303 8.70416 38.5303 9.29584 38.2275 9.75L37.9905 10.1056C37.8313 10.3444 37.8313 10.6556 37.9905 10.8944C38.3055 11.367 37.9668 12 37.3988 12H1.05625C0.488294 12 0.149529 11.367 0.464573 10.8944C0.623813 10.6556 0.623813 10.3444 0.464573 10.1056L0.227539 9.75C-0.0752367 9.29584 -0.0752366 8.70416 0.227539 8.25C0.530315 7.79584 0.530315 7.20416 0.227539 6.75C-0.0752366 6.29584 -0.0752366 5.70416 0.227539 5.25C0.530315 4.79584 0.530315 4.20416 0.227539 3.75C-0.0752366 3.29584 -0.0752366 2.70416 0.227539 2.25L0.464573 1.89445C0.623813 1.65559 0.623813 1.34441 0.464573 1.10555Z' fill='%232B6E3F'/%3E%3C/svg%3E");
   background-size: 100% 100%;
   background-repeat: no-repeat;
   z-index: -1;
@@ -72,7 +73,7 @@
   font-size: 14px;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #000000;
+  color: var(--color-text-primary);
   margin: 0 0 12px;
   padding-top: 20px;
   font-weight: 600;
@@ -88,8 +89,8 @@
   height: 1px;
   background: repeating-linear-gradient(
     90deg,
-    #e5e8dc 0,
-    #e5e8dc 4px,
+    var(--color-border-divider) 0,
+    var(--color-border-divider) 4px,
     transparent 4px,
     transparent 8px
   );
@@ -122,8 +123,8 @@
   height: 1px;
   background: repeating-linear-gradient(
     90deg,
-    #e5e8dc 0,
-    #e5e8dc 4px,
+    var(--color-border-divider) 0,
+    var(--color-border-divider) 4px,
     transparent 4px,
     transparent 8px
   );
@@ -140,8 +141,8 @@
   height: 1px;
   background: repeating-linear-gradient(
     90deg,
-    #e5e8dc 0,
-    #e5e8dc 4px,
+    var(--color-border-divider) 0,
+    var(--color-border-divider) 4px,
     transparent 4px,
     transparent 8px
   );
@@ -155,18 +156,18 @@
 }
 
 .done .dot {
-  background: #959987;
+  background: var(--color-accent);
 }
 .active .dot {
-  background: #000000;
+  background: var(--color-text-primary);
 }
 .pending .dot {
-  background: #e2e6da;
+  background: var(--color-sage-200);
 }
 
 .done .text {
   position: relative;
-  color: #1a1a18;
+  color: var(--color-text-muted);
 }
 
 .done .text::after {
@@ -183,11 +184,11 @@
   pointer-events: none;
 }
 .active .text {
-  color: #1a1a18;
+  color: var(--color-text-primary);
   font-weight: 500;
 }
 .pending .text {
-  color: #a7afa5;
+  color: var(--color-text-faint);
 }
 
 .tag {
@@ -202,21 +203,21 @@
 }
 
 .tagDone {
-  background: #ddebdd;
-  color: #959987;
+  background: var(--color-surface-positive);
+  color: var(--color-text-positive);
 }
 .tagNow {
   background-color: transparent;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='39' height='12' viewBox='0 0 39 12' fill='none'%3E%3Cpath d='M0.464573 1.10555C0.149529 0.632985 0.488292 0 1.05625 0H37.3988C37.9668 0 38.3055 0.632985 37.9905 1.10555C37.8313 1.34441 37.8313 1.65559 37.9905 1.89445L38.2275 2.25C38.5303 2.70416 38.5303 3.29584 38.2275 3.75C37.9248 4.20416 37.9248 4.79584 38.2275 5.25C38.5303 5.70416 38.5303 6.29584 38.2275 6.75C37.9248 7.20416 37.9248 7.79584 38.2275 8.25C38.5303 8.70416 38.5303 9.29584 38.2275 9.75L37.9905 10.1056C37.8313 10.3444 37.8313 10.6556 37.9905 10.8944C38.3055 11.367 37.9668 12 37.3988 12H1.05625C0.488294 12 0.149529 11.367 0.464573 10.8944C0.623813 10.6556 0.623813 10.3444 0.464573 10.1056L0.227539 9.75C-0.0752367 9.29584 -0.0752366 8.70416 0.227539 8.25C0.530315 7.79584 0.530315 7.20416 0.227539 6.75C-0.0752366 6.29584 -0.0752366 5.70416 0.227539 5.25C0.530315 4.79584 0.530315 4.20416 0.227539 3.75C-0.0752366 3.29584 -0.0752366 2.70416 0.227539 2.25L0.464573 1.89445C0.623813 1.65559 0.623813 1.34441 0.464573 1.10555Z' fill='%2338EBAF'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='39' height='12' viewBox='0 0 39 12' fill='none'%3E%3Cpath d='M0.464573 1.10555C0.149529 0.632985 0.488292 0 1.05625 0H37.3988C37.9668 0 38.3055 0.632985 37.9905 1.10555C37.8313 1.34441 37.8313 1.65559 37.9905 1.89445L38.2275 2.25C38.5303 2.70416 38.5303 3.29584 38.2275 3.75C37.9248 4.20416 37.9248 4.79584 38.2275 5.25C38.5303 5.70416 38.5303 6.29584 38.2275 6.75C37.9248 7.20416 37.9248 7.79584 38.2275 8.25C38.5303 8.70416 38.5303 9.29584 38.2275 9.75L37.9905 10.1056C37.8313 10.3444 37.8313 10.6556 37.9905 10.8944C38.3055 11.367 37.9668 12 37.3988 12H1.05625C0.488294 12 0.149529 11.367 0.464573 10.8944C0.623813 10.6556 0.623813 10.3444 0.464573 10.1056L0.227539 9.75C-0.0752367 9.29584 -0.0752366 8.70416 0.227539 8.25C0.530315 7.79584 0.530315 7.20416 0.227539 6.75C-0.0752366 6.29584 -0.0752366 5.70416 0.227539 5.25C0.530315 4.79584 0.530315 4.20416 0.227539 3.75C-0.0752366 3.29584 -0.0752366 2.70416 0.227539 2.25L0.464573 1.89445C0.623813 1.65559 0.623813 1.34441 0.464573 1.10555Z' fill='%232B6E3F'/%3E%3C/svg%3E");
   background-size: 100% 120%;
   background-repeat: no-repeat;
-  color: #1a1a18;
+  color: var(--color-text-on-accent);
   border-radius: 0;
-  font-family: 'Public Sans', sans-serif;
+  font-family: var(--font-family-sans);
 }
 
 .footer {
   margin-top: 48px;
   font-size: 12px;
-  color: #d8dbd0;
+  color: var(--color-sage-300);
 }
