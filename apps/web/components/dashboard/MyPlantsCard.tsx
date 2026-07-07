@@ -29,7 +29,7 @@ export function MyPlantsCard({ plants, totalInGarden }: MyPlantsCardProps) {
             />
             <div
               aria-hidden="true"
-              className="absolute inset-0 bg-gradient-to-t from-black/50 to-black/10"
+              className="absolute inset-0 bg-[image:var(--thumbnail-scrim)]"
             />
             <span className="absolute bottom-[var(--space-inline-gap)] left-[var(--space-item-gap)] text-[length:var(--font-size-label)] text-[var(--text-image-label)]">
               {plant.name}

@@ -50,7 +50,7 @@ export function PlannedPlantTile({
         <button
           type="button"
           onClick={() => onMarkAsPlanted?.(plant.id)}
-          className="flex h-8 flex-1 items-center gap-[var(--space-inline-gap)] rounded-[var(--radius-sm)] bg-[var(--color-background-subtle)] p-[var(--space-inline-gap)] text-[length:var(--font-size-body-small)] text-[var(--text-card-title)] transition-colors duration-[var(--duration-normal)] hover:bg-white"
+          className="flex h-8 flex-1 items-center gap-[var(--space-inline-gap)] rounded-[var(--radius-sm)] bg-[var(--color-background-subtle)] p-[var(--space-inline-gap)] text-[length:var(--font-size-body-small)] text-[var(--text-card-title)] transition-colors duration-[var(--duration-normal)] hover:bg-gray-0"
         >
           <span className="flex-1 text-left">Mark as planted</span>
           <Image

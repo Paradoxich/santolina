@@ -31,7 +31,7 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
   return (
     <aside
       aria-label={`${plant.common_name} details`}
-      className="fixed inset-y-0 right-0 z-20 flex w-[440px] flex-col gap-[var(--space-section-break)] overflow-y-auto border-l border-white bg-[var(--color-background-card)] p-[var(--space-card-padding)]"
+      className="fixed inset-y-0 right-0 z-20 flex w-[440px] flex-col gap-[var(--space-section-break)] overflow-y-auto border-l border-card bg-[var(--color-background-card)] p-[var(--space-card-padding)]"
     >
       <div className="flex w-full shrink-0 items-center justify-between">
         <button
@@ -46,7 +46,7 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
         <div className="flex items-center gap-[var(--space-inline-gap)]">
           <button
             type="button"
-            className="flex h-8 items-center rounded-[var(--radius-sm)] border border-white bg-[var(--color-background-inverse)] px-[var(--space-item-gap)] text-[length:var(--font-size-body-small)] text-[var(--text-button-primary-label)]"
+            className="flex h-8 items-center rounded-[var(--radius-sm)] border border-card bg-[var(--color-background-inverse)] px-[var(--space-item-gap)] text-[length:var(--font-size-body-small)] text-[var(--text-button-primary-label)]"
           >
             Add to plan
           </button>

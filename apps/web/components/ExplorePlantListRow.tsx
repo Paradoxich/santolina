@@ -21,7 +21,7 @@ export function ExplorePlantListRow({
         'flex w-full items-start gap-[var(--space-item-gap)] rounded-[var(--component-card-explore-list-row-radius)] border p-[var(--space-item-gap)] text-left shadow-[var(--shadow-sm)] transition-colors duration-[var(--duration-normal)]',
         selected
           ? 'border-[var(--color-accent-primary)] bg-[var(--color-background-active)]'
-          : 'border-white bg-[var(--color-background-card)] hover:bg-[var(--color-background-card-subtle)]',
+          : 'border-card bg-surface-card hover:bg-surface-subtle',
       ].join(' ')}
     >
       <div className="relative size-[76px] shrink-0 overflow-hidden rounded-[var(--radius-sm)]">

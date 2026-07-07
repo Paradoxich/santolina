@@ -12,22 +12,20 @@ export interface InputProps extends Omit<
 }
 
 const variantStyles: Record<NonNullable<InputProps['variant']>, string> = {
-  default: [
-    'border-[var(--color-neutral-300)]',
-    'focus:border-[var(--color-primary-500)]',
-    'focus:ring-[var(--color-primary-500)]',
-  ].join(' '),
+  default: ['border-divider', 'focus:border-accent', 'focus:ring-focus'].join(
+    ' '
+  ),
   error: [
-    'border-[var(--color-error-500)]',
-    'focus:border-[var(--color-error-500)]',
-    'focus:ring-[var(--color-error-500)]',
+    'border-critical',
+    'focus:border-critical',
+    'focus:ring-critical',
   ].join(' '),
 }
 
 const sizeStyles: Record<NonNullable<InputProps['inputSize']>, string> = {
-  sm: 'px-3 py-1.5 text-sm rounded-[var(--radius-md)]',
-  md: 'px-3 py-2 text-base rounded-[var(--radius-md)]',
-  lg: 'px-4 py-3 text-lg rounded-[var(--radius-lg)]',
+  sm: 'px-3 py-1.5 text-sm rounded-md',
+  md: 'px-3 py-2 text-base rounded-md',
+  lg: 'px-4 py-3 text-lg rounded-lg',
 }
 
 export function Input({
@@ -45,12 +43,12 @@ export function Input({
   const errorId = inputId ? `${inputId}-error` : undefined
 
   const baseStyles = [
-    'w-full border bg-white',
-    'text-[var(--color-neutral-900)]',
-    'placeholder:text-[var(--color-neutral-400)]',
+    'w-full border bg-surface-field',
+    'text-primary',
+    'placeholder:text-faint',
     'focus:outline-none focus:ring-2 focus:ring-offset-0',
-    'disabled:bg-[var(--color-neutral-100)] disabled:cursor-not-allowed disabled:opacity-70',
-    'transition-colors duration-[var(--duration-normal)]',
+    'disabled:bg-surface-subtle disabled:cursor-not-allowed disabled:opacity-70',
+    'transition-colors duration-normal',
   ].join(' ')
 
   const displayVariant = errorMessage ? 'error' : variant
@@ -58,10 +56,7 @@ export function Input({
   return (
     <div className="flex flex-col gap-1">
       {label && (
-        <label
-          htmlFor={inputId}
-          className="text-sm font-medium text-[var(--color-neutral-700)]"
-        >
+        <label htmlFor={inputId} className="text-sm font-medium text-secondary">
           {label}
         </label>
       )}
@@ -82,16 +77,12 @@ export function Input({
         {...props}
       />
       {errorMessage && (
-        <p
-          id={errorId}
-          className="text-sm text-[var(--color-error-600)]"
-          role="alert"
-        >
+        <p id={errorId} className="text-sm text-critical" role="alert">
           {errorMessage}
         </p>
       )}
       {helperText && !errorMessage && (
-        <p id={helperId} className="text-sm text-[var(--color-neutral-500)]">
+        <p id={helperId} className="text-sm text-muted">
           {helperText}
         </p>
       )}

@@ -44,10 +44,10 @@ export default function PlantDiaryPage() {
 
         <button
           type="button"
-          className="flex h-11 w-[222px] items-center gap-[var(--space-tight-gap)] rounded-[var(--radius-md)] border border-white bg-[var(--color-background-card)] p-[var(--space-item-gap)] text-left transition-colors duration-[var(--duration-normal)] hover:bg-[var(--color-background-subtle)]"
+          className="flex h-11 w-[222px] items-center gap-[var(--space-tight-gap)] rounded-[var(--radius-md)] border border-card bg-[var(--color-background-card)] p-[var(--space-item-gap)] text-left transition-colors duration-[var(--duration-normal)] hover:bg-[var(--color-background-subtle)]"
         >
           <span className="flex h-5 shrink-0 items-center">
-            <span className="relative -mr-2 h-5 w-[14px] overflow-hidden rounded-[var(--radius-xs)] border border-white">
+            <span className="relative -mr-2 h-5 w-[14px] overflow-hidden rounded-[var(--radius-xs)] border border-card">
               <Image
                 src="/diary/note-photo-01.png"
                 alt=""
@@ -56,7 +56,7 @@ export default function PlantDiaryPage() {
                 className="object-cover"
               />
             </span>
-            <span className="relative h-5 w-[19px] overflow-hidden rounded-[var(--radius-xs)] border border-white">
+            <span className="relative h-5 w-[19px] overflow-hidden rounded-[var(--radius-xs)] border border-card">
               <Image
                 src="/diary/note-photo-02.png"
                 alt=""

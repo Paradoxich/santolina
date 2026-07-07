@@ -9,39 +9,39 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 
 const variantStyles: Record<NonNullable<ButtonProps['variant']>, string> = {
   primary: [
-    'bg-[var(--color-primary-600)]',
-    'text-white',
-    'hover:bg-[var(--color-primary-700)]',
-    'focus-visible:ring-[var(--color-primary-500)]',
+    'bg-accent',
+    'text-on-accent',
+    'hover:bg-accent-hover',
+    'focus-visible:ring-focus',
     'border-transparent',
   ].join(' '),
   secondary: [
     'bg-transparent',
-    'text-[var(--color-primary-700)]',
-    'border-[var(--color-primary-300)]',
-    'hover:bg-[var(--color-primary-50)]',
-    'focus-visible:ring-[var(--color-primary-500)]',
+    'text-accent',
+    'border-accent',
+    'hover:bg-surface-positive',
+    'focus-visible:ring-focus',
   ].join(' '),
   ghost: [
     'bg-transparent',
-    'text-[var(--color-neutral-700)]',
+    'text-secondary',
     'border-transparent',
-    'hover:bg-[var(--color-neutral-100)]',
-    'focus-visible:ring-[var(--color-neutral-400)]',
+    'hover:bg-surface-hover',
+    'focus-visible:ring-focus',
   ].join(' '),
   destructive: [
-    'bg-[var(--color-error-600)]',
-    'text-white',
+    'bg-fill-critical',
+    'text-on-accent',
     'border-transparent',
-    'hover:bg-[var(--color-error-700)]',
-    'focus-visible:ring-[var(--color-error-500)]',
+    'hover:bg-fill-critical-hover',
+    'focus-visible:ring-critical',
   ].join(' '),
 }
 
 const sizeStyles: Record<NonNullable<ButtonProps['size']>, string> = {
-  sm: 'px-3 py-1.5 text-sm rounded-[var(--radius-md)]',
-  md: 'px-4 py-2 text-base rounded-[var(--radius-md)]',
-  lg: 'px-6 py-3 text-lg rounded-[var(--radius-lg)]',
+  sm: 'px-3 py-1.5 text-sm rounded-md',
+  md: 'px-4 py-2 text-base rounded-md',
+  lg: 'px-6 py-3 text-lg rounded-lg',
 }
 
 export function Button({
@@ -56,7 +56,7 @@ export function Button({
   const baseStyles = [
     'inline-flex items-center justify-center gap-2',
     'font-medium border',
-    'transition-colors duration-[var(--duration-normal)]',
+    'transition-colors duration-normal',
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
     'disabled:pointer-events-none disabled:opacity-50',
     'cursor-pointer',

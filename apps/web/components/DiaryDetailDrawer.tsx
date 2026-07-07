@@ -62,7 +62,7 @@ export function DiaryDetailDrawer({ diary, onClose }: DiaryDetailDrawerProps) {
   return (
     <aside
       aria-label={`${diary.plantName} diary`}
-      className="fixed inset-y-0 right-0 z-20 flex w-[440px] flex-col gap-[var(--space-section-break)] overflow-y-auto border-l border-white bg-[var(--color-background-card)] p-[var(--space-card-padding)]"
+      className="fixed inset-y-0 right-0 z-20 flex w-[440px] flex-col gap-[var(--space-section-break)] overflow-y-auto border-l border-card bg-[var(--color-background-card)] p-[var(--space-card-padding)]"
     >
       <div className="flex w-full shrink-0 items-center justify-between">
         <button
@@ -108,7 +108,7 @@ export function DiaryDetailDrawer({ diary, onClose }: DiaryDetailDrawerProps) {
         </h3>
         <button
           type="button"
-          className="flex w-full items-center gap-[var(--space-inline-gap)] rounded-[var(--radius-sm)] border border-dashed border-white bg-[var(--color-background-overlay)] p-[var(--space-item-gap)] transition-colors duration-[var(--duration-normal)] hover:bg-white/70"
+          className="flex w-full items-center gap-[var(--space-inline-gap)] rounded-[var(--radius-sm)] border border-dashed border-card bg-[var(--color-background-overlay)] p-[var(--space-item-gap)] transition-colors duration-[var(--duration-normal)] hover:bg-surface-control"
         >
           <Image src="/icons/icon-plus.svg" alt="" width={16} height={16} />
           <span className="text-[length:var(--font-size-body)] text-[var(--text-button-label)]">

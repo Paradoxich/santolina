@@ -113,7 +113,17 @@ importers:
         specifier: ^9.0.0
         version: 9.1.2(eslint@8.57.1)
 
-  packages/tokens: {}
+  packages/tokens:
+    devDependencies:
+      '@paradoxui/typescript-config':
+        specifier: workspace:*
+        version: link:../typescript-config
+      tailwindcss:
+        specifier: ^3.4.0
+        version: 3.4.19(tsx@4.23.0)(yaml@2.8.3)
+      typescript:
+        specifier: ^5.4.0
+        version: 5.9.3
 
   packages/typescript-config: {}
 

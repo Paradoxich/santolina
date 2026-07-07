@@ -4,9 +4,9 @@ export interface ChecklistItemProps extends React.LiHTMLAttributes<HTMLLIElement
   /**
    * Visual treatment of the leading icon.
    * - `positive` — green checkmark
-   * - `caution` — amber alert
+   * - `warning` — amber alert
    */
-  tone?: 'positive' | 'caution'
+  tone?: 'positive' | 'warning'
   children: React.ReactNode
 }
 
@@ -15,7 +15,7 @@ function CheckIcon() {
     <svg
       viewBox="0 0 12 12"
       fill="none"
-      className="size-3 text-[var(--color-accent-primary)]"
+      className="size-3 text-icon-positive"
       aria-hidden="true"
     >
       <path
@@ -29,12 +29,12 @@ function CheckIcon() {
   )
 }
 
-function CautionIcon() {
+function WarningIcon() {
   return (
     <svg
       viewBox="0 0 12 12"
       fill="none"
-      className="size-3 text-[var(--color-accent-caution)]"
+      className="size-3 text-icon-warning"
       aria-hidden="true"
     >
       <circle cx="6" cy="6" r="5" stroke="currentColor" strokeWidth="1.25" />
@@ -64,19 +64,19 @@ export function ChecklistItem({
   return (
     <li
       className={[
-        'flex w-full items-center gap-[var(--space-inline-gap)]',
-        'border-b border-[var(--color-border-divider-subtle)]',
+        'flex w-full items-center gap-inline-gap',
+        'border-b border-divider-subtle',
         'first:border-t',
-        'p-[var(--space-inline-gap)]',
+        'p-inline-gap',
         className,
       ].join(' ')}
       {...props}
     >
       <span className="flex size-3 shrink-0 items-center justify-center">
-        {tone === 'caution' ? <CautionIcon /> : <CheckIcon />}
+        {tone === 'warning' ? <WarningIcon /> : <CheckIcon />}
       </span>
-      <span className="min-w-0 flex-1 text-[length:var(--font-size-body-small)] leading-[1.3] tracking-[-0.01em] text-[var(--text-body-secondary)]">
-        <span className="sr-only">{tone === 'caution' ? 'Caution: ' : ''}</span>
+      <span className="min-w-0 flex-1 text-body-small text-body-secondary">
+        <span className="sr-only">{tone === 'warning' ? 'Caution: ' : ''}</span>
         {children}
       </span>
     </li>

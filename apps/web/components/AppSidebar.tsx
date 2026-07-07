@@ -41,7 +41,7 @@ export function AppSidebar() {
             height={15}
             className="shrink-0"
           />
-          <span className="text-[length:var(--font-size-logo)] font-medium tracking-[-0.05em] text-black">
+          <span className="text-[length:var(--font-size-logo)] font-medium tracking-[-0.05em] text-primary">
             santolina
           </span>
         </Link>
@@ -49,7 +49,7 @@ export function AppSidebar() {
 
       <button
         type="button"
-        className="relative flex w-full items-center gap-[var(--space-item-gap)] rounded-[var(--radius-md)] bg-[var(--color-background-overlay)] p-[var(--space-section-gap)] text-left shadow-[var(--shadow-soft)] transition-colors duration-[var(--duration-normal)] hover:bg-white/70"
+        className="relative flex w-full items-center gap-[var(--space-item-gap)] rounded-[var(--radius-md)] bg-[var(--color-background-overlay)] p-[var(--space-section-gap)] text-left shadow-[var(--shadow-soft)] transition-colors duration-[var(--duration-normal)] hover:bg-surface-control"
       >
         <Image src="/icons/icon-agent.svg" alt="" width={16} height={16} />
         <span className="flex-1 text-[length:var(--font-size-body)] text-[var(--text-nav-label)]">

@@ -22,23 +22,23 @@ export function Panel({
   return (
     <section
       className={[
-        'flex flex-col gap-[var(--space-section-gap)]',
-        'rounded-[var(--component-card-dashboard-radius)]',
-        'border border-[var(--color-border-card-translucent)]',
-        'bg-[var(--color-background-card)] p-[var(--space-card-padding)]',
+        'flex flex-col gap-section-gap',
+        'rounded-card-dashboard',
+        'border border-card-translucent',
+        'bg-surface-card p-card-padding',
         className,
       ].join(' ')}
       {...props}
     >
       {(title || meta) && (
-        <div className="flex w-full items-baseline justify-between gap-[var(--space-row-gap)]">
+        <div className="flex w-full items-baseline justify-between gap-row-gap">
           {title && (
-            <h2 className="min-w-0 flex-1 text-[length:var(--font-size-section-title)] font-medium tracking-[-0.02em] text-[var(--text-panel-title)]">
+            <h2 className="min-w-0 flex-1 text-section font-medium text-primary">
               {title}
             </h2>
           )}
           {meta && (
-            <span className="shrink-0 whitespace-nowrap text-[length:var(--font-size-body)] text-[var(--text-meta)]">
+            <span className="shrink-0 whitespace-nowrap text-body text-muted">
               {meta}
             </span>
           )}

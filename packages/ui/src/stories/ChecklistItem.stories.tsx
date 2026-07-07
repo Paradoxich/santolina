@@ -6,7 +6,7 @@ const meta: Meta<typeof ChecklistItem> = {
   component: ChecklistItem,
   tags: ['autodocs'],
   argTypes: {
-    tone: { control: 'select', options: ['positive', 'caution'] },
+    tone: { control: 'select', options: ['positive', 'warning'] },
   },
   decorators: [
     (Story) => (
@@ -25,7 +25,7 @@ export const Positive: Story = {
 
 export const Caution: Story = {
   args: {
-    tone: 'caution',
+    tone: 'warning',
     children: 'Needs more sun than your garden currently gets',
   },
 }
@@ -35,7 +35,7 @@ export const List: Story = {
     <ul role="list" style={{ maxWidth: 400, listStyle: 'none', padding: 0 }}>
       <ChecklistItem>Low maintenance once established</ChecklistItem>
       <ChecklistItem>Excellent pollinator support</ChecklistItem>
-      <ChecklistItem tone="caution">
+      <ChecklistItem tone="warning">
         May outgrow a balcony or container
       </ChecklistItem>
     </ul>

@@ -20,11 +20,11 @@ interface PlantCardProps {
 
 const statusVariantMap: Record<
   Plant['status'],
-  'success' | 'warning' | 'error' | 'default'
+  'positive' | 'warning' | 'critical' | 'default'
 > = {
-  healthy: 'success',
+  healthy: 'positive',
   'needs-water': 'warning',
-  critical: 'error',
+  critical: 'critical',
   dormant: 'default',
 }
 
@@ -65,7 +65,7 @@ export function PlantCard({ plant, onWater, onViewDetails }: PlantCardProps) {
                 margin: 0,
                 fontWeight: 'var(--font-weight-semibold)',
                 fontSize: 'var(--font-size-md)',
-                color: 'var(--color-neutral-900)',
+                color: 'var(--color-text-primary)',
               }}
             >
               {plant.name}
@@ -75,7 +75,7 @@ export function PlantCard({ plant, onWater, onViewDetails }: PlantCardProps) {
                 style={{
                   margin: '2px 0 0',
                   fontSize: 'var(--font-size-xs)',
-                  color: 'var(--color-neutral-500)',
+                  color: 'var(--color-text-muted)',
                   fontStyle: 'italic',
                 }}
               >
@@ -96,7 +96,7 @@ export function PlantCard({ plant, onWater, onViewDetails }: PlantCardProps) {
             style={{
               margin: 0,
               fontSize: 'var(--font-size-sm)',
-              color: 'var(--color-neutral-600)',
+              color: 'var(--color-text-body-secondary)',
             }}
           >
             Last watered: {formatDate(plant.lastWatered)} (
@@ -108,7 +108,7 @@ export function PlantCard({ plant, onWater, onViewDetails }: PlantCardProps) {
             style={{
               margin: 'var(--spacing-2) 0 0',
               fontSize: 'var(--font-size-sm)',
-              color: 'var(--color-neutral-600)',
+              color: 'var(--color-text-body-secondary)',
             }}
           >
             {plant.notes}

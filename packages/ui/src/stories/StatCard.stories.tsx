@@ -8,7 +8,7 @@ const meta: Meta<typeof StatCard> = {
   argTypes: {
     tone: {
       control: 'select',
-      options: ['neutral', 'soft', 'caution', 'positive'],
+      options: ['neutral', 'soft', 'warning', 'positive'],
     },
   },
 }
@@ -36,7 +36,7 @@ export const Default: Story = {
 
 export const Caution: Story = {
   args: {
-    tone: 'caution',
+    tone: 'warning',
     label: 'Common issues',
     children:
       'Can become floppy in overly rich soil or too much shade. Poor drainage may cause crown rot during winter.',
@@ -69,7 +69,7 @@ export const Grid: Story = {
         Performs best in full sun.
       </StatCard>
       <StatCard
-        tone="caution"
+        tone="warning"
         label="Common issues"
         style={{ gridColumn: 'span 2' }}
       >

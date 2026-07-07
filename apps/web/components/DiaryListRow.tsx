@@ -23,8 +23,8 @@ export function DiaryListRow({
       className={[
         'flex w-full items-start gap-[var(--space-item-gap)] p-[var(--space-row-gap)] text-left transition-colors duration-[var(--duration-normal)]',
         selected
-          ? 'rounded-[var(--radius-lg)] border border-white bg-[var(--color-background-card)]'
-          : 'border-b border-white hover:rounded-[var(--radius-lg)] hover:border-transparent hover:bg-[var(--color-background-hover)]',
+          ? 'rounded-[var(--radius-lg)] border border-card bg-[var(--color-background-card)]'
+          : 'border-b border-card hover:rounded-[var(--radius-lg)] hover:border-transparent hover:bg-[var(--color-background-hover)]',
       ].join(' ')}
     >
       <div className="flex min-w-0 flex-1 flex-col gap-[var(--space-tight-gap)]">

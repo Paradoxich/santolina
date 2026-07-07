@@ -26,10 +26,10 @@ export function Avatar({
     <div
       className={[
         'relative inline-flex items-center justify-center',
-        'rounded-[var(--radius-full)]',
+        'rounded-full',
         'overflow-hidden',
-        'bg-[var(--color-primary-100)]',
-        'text-[var(--color-primary-700)]',
+        'bg-accent-muted',
+        'text-accent',
         'font-medium',
         'select-none',
         sizeStyles[size],

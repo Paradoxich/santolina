@@ -9,18 +9,18 @@ export interface StatCardProps extends React.HTMLAttributes<HTMLDivElement> {
    * Background treatment.
    * - `neutral` — default recessed card
    * - `soft` — subtle card surface
-   * - `caution` — warm background for warnings
+   * - `warning` — warm background for warnings
    * - `positive` — green background for benefits
    */
-  tone?: 'neutral' | 'soft' | 'caution' | 'positive'
+  tone?: 'neutral' | 'soft' | 'warning' | 'positive'
   children: React.ReactNode
 }
 
 const toneStyles: Record<NonNullable<StatCardProps['tone']>, string> = {
-  neutral: 'bg-[var(--color-background-page)]',
-  soft: 'bg-[var(--color-background-card)]',
-  caution: 'bg-[var(--color-background-caution-card)]',
-  positive: 'bg-[var(--color-background-benefit-card)]',
+  neutral: 'bg-surface-sunken',
+  soft: 'bg-surface-card',
+  warning: 'bg-surface-warning',
+  positive: 'bg-surface-positive',
 }
 
 /**
@@ -38,17 +38,15 @@ export function StatCard({
   return (
     <div
       className={[
-        'flex flex-col gap-[var(--space-inline-gap)]',
-        'rounded-[var(--radius-sm)] p-[var(--space-row-gap)]',
+        'flex flex-col gap-inline-gap',
+        'rounded-sm p-row-gap',
         toneStyles[tone],
         className,
       ].join(' ')}
       {...props}
     >
-      <div className="flex w-full items-center justify-between gap-[var(--space-row-gap)]">
-        <span className="min-w-0 flex-1 text-[length:var(--font-size-label)] text-[var(--text-stat-label)]">
-          {label}
-        </span>
+      <div className="flex w-full items-center justify-between gap-row-gap">
+        <span className="min-w-0 flex-1 text-label text-primary">{label}</span>
         {icon && (
           <span
             aria-hidden="true"
@@ -58,7 +56,7 @@ export function StatCard({
           </span>
         )}
       </div>
-      <div className="w-full text-[length:var(--font-size-body-small)] leading-[1.3] tracking-[-0.01em] text-[var(--text-body-secondary)]">
+      <div className="w-full text-body-small text-body-secondary">
         {children}
       </div>
     </div>

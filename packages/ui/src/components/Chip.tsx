@@ -22,15 +22,15 @@ export function Chip({
       aria-pressed={selected}
       className={[
         'inline-flex h-8 items-center justify-center',
-        'px-[var(--space-row-gap)]',
-        'rounded-[var(--component-chip-radius)]',
-        'text-[length:var(--font-size-body-small)]',
+        'px-row-gap',
+        'rounded-chip',
+        'text-body-small',
         'whitespace-nowrap select-none',
-        'transition-colors duration-[var(--duration-normal)]',
-        'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent-primary)]',
+        'transition-colors duration-normal',
+        'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus',
         selected
-          ? 'bg-[var(--color-text-primary)] text-[var(--text-button-primary-label)]'
-          : 'bg-[var(--color-background-subtle)] text-[var(--text-chip-label)] hover:bg-white',
+          ? 'bg-surface-inverse text-inverse'
+          : 'bg-surface-control text-primary hover:bg-gray-0',
         className,
       ].join(' ')}
       {...props}

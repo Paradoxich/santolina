@@ -1,3 +1,10 @@
+/*
+ * TEMPORARY WIP LANDING PAGE — exempt from design-token rules.
+ * Predates the design system and will be replaced by a real landing page.
+ * Migrate values to semantic tokens only where one already fits; do NOT
+ * mint tokens for its one-off colors. See docs/token-taxonomy.md.
+ */
+
 .root {
   font-family: 'Public Sans', sans-serif;
   font-weight: 400;

@@ -37,7 +37,7 @@ export function CareSection({ plant }: CareSectionProps) {
         ))}
         {plant.common_issues && (
           <StatCard
-            tone="caution"
+            tone="warning"
             label="Common issues"
             icon={icon('/icons/icon-issues.svg')}
             className="col-span-2"
