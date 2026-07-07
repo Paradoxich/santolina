@@ -21,7 +21,7 @@ export function InYourGardenSection({ plant }: InYourGardenSectionProps) {
     <DrawerSection label="In your garden">
       <div className="flex w-full flex-col gap-inline-gap">
         {(bloom || plant.best_placement) && (
-          <div className="grid w-full grid-cols-2 gap-inline-gap">
+          <div className="grid w-full grid-cols-1 gap-inline-gap sm:grid-cols-2">
             {bloom && (
               <StatCard
                 tone="soft"
@@ -36,7 +36,7 @@ export function InYourGardenSection({ plant }: InYourGardenSectionProps) {
                 tone="soft"
                 label="Best Placement"
                 icon={icon('/icons/icon-placement.svg')}
-                className={bloom ? '' : 'col-span-2'}
+                className={bloom ? '' : 'sm:col-span-2'}
               >
                 {plant.best_placement}
               </StatCard>

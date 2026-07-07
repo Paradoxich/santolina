@@ -12,7 +12,7 @@ export function MyPlantsCard({ plants, totalInGarden }: MyPlantsCardProps) {
     <Panel
       title="My plants"
       meta={`${totalInGarden} in garden`}
-      className="h-full"
+      className="h-[220px] lg:h-full"
     >
       <div className="flex min-h-0 flex-1 gap-tight-gap">
         {plants.map((plant) => (

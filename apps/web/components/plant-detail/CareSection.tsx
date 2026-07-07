@@ -29,7 +29,7 @@ export function CareSection({ plant }: CareSectionProps) {
 
   return (
     <DrawerSection label="Care">
-      <div className="grid w-full grid-cols-2 gap-inline-gap">
+      <div className="grid w-full grid-cols-1 gap-inline-gap sm:grid-cols-2">
         {cards.map((card) => (
           <StatCard key={card.label} label={card.label} icon={icon(card.icon)}>
             {card.body}
@@ -40,7 +40,7 @@ export function CareSection({ plant }: CareSectionProps) {
             tone="warning"
             label="Common issues"
             icon={icon('/icons/icon-issues.svg')}
-            className="col-span-2"
+            className="sm:col-span-2"
           >
             {plant.common_issues}
           </StatCard>
