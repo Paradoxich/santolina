@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import Image from 'next/image'
 import type { PlantDetail } from '@/lib/plant-detail'
 import { formatPlantSubtitle } from '@/lib/format-plant'
@@ -28,10 +29,23 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
   const photos = (plant.image_urls ?? []).slice(0, 3)
   const bullets = buildGoodForYourGarden(plant, garden, companions)
 
+  useEffect(() => {
+    // Mirrors the lg breakpoint: below it the drawer is a full-screen
+    // sheet (it also has to clear the desktop sidebar, which appears at
+    // md), so the page underneath must not scroll behind it.
+    const mq = window.matchMedia('(max-width: 1023px)')
+    if (!mq.matches) return
+    const original = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = original
+    }
+  }, [])
+
   return (
     <aside
       aria-label={`${plant.common_name} details`}
-      className="fixed inset-y-0 right-0 z-20 flex w-[440px] flex-col gap-section-break overflow-y-auto border-l border-card bg-surface-card p-card-padding"
+      className="fixed inset-0 z-20 flex w-full flex-col gap-section-break overflow-y-auto bg-surface-card p-card-padding lg:inset-y-0 lg:inset-x-auto lg:right-0 lg:w-[440px] lg:border-l lg:border-card"
     >
       <div className="flex w-full shrink-0 items-center justify-between">
         <button
@@ -76,11 +90,11 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
       </div>
 
       {photos.length > 0 && (
-        <div className="flex w-full shrink-0 gap-inline-gap overflow-x-auto">
+        <div className="flex w-full shrink-0 snap-x snap-mandatory gap-inline-gap overflow-x-auto">
           {photos.map((src, i) => (
             <div
               key={src}
-              className="relative h-[141px] shrink-0 overflow-hidden rounded-sm"
+              className="relative h-[141px] shrink-0 snap-start overflow-hidden rounded-sm"
               style={{ width: PHOTO_WIDTHS[i % PHOTO_WIDTHS.length] }}
             >
               <Image

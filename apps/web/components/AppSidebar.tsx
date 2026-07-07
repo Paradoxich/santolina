@@ -25,7 +25,7 @@ export function AppSidebar() {
   const pathname = usePathname()
 
   return (
-    <aside className="fixed bottom-2 left-2 top-2 z-10 flex w-56 flex-col gap-section-gap overflow-hidden rounded-md border border-card-translucent bg-[var(--sidebar-surface)] p-inline-gap">
+    <aside className="fixed bottom-2 left-2 top-2 z-10 hidden w-56 flex-col gap-section-gap overflow-hidden rounded-md border border-card-translucent bg-[var(--sidebar-surface)] p-inline-gap md:flex">
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 bg-cover bg-center opacity-15"

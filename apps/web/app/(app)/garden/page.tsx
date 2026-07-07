@@ -50,7 +50,7 @@ export default function MyGardenPage() {
         />
       </header>
 
-      <h1 className="mt-12 text-title font-semibold tracking-[-0.04em] text-primary">
+      <h1 className="mt-8 text-title font-semibold tracking-[-0.04em] text-primary md:mt-12">
         {activeTabLabel}
       </h1>
       <p className="mt-3 text-body text-secondary">
@@ -60,7 +60,7 @@ export default function MyGardenPage() {
       </p>
 
       {tab === 'growing' && (
-        <div className="mt-11 flex items-center gap-inline-gap">
+        <div className="mt-11 flex items-center gap-inline-gap overflow-x-auto pb-1">
           {statusFilters.map((s) => (
             <Chip
               key={s.value}

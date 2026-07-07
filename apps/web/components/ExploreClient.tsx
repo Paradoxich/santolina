@@ -43,8 +43,8 @@ export function ExploreClient({ plants, detail }: ExploreClientProps) {
   return (
     <div
       className={[
-        'flex items-start pb-16 pt-12',
-        detail ? 'pr-[480px]' : '',
+        'flex items-start pb-12 pt-8 md:pb-16 md:pt-12',
+        detail ? 'lg:pr-[480px]' : '',
       ].join(' ')}
     >
       <div className={detail ? 'w-full max-w-[680px] shrink-0' : 'flex-1'}>
@@ -61,7 +61,9 @@ export function ExploreClient({ plants, detail }: ExploreClientProps) {
           />
         </div>
 
-        <p className="mt-16 text-body text-secondary">Recommended plants</p>
+        <p className="mt-8 text-body text-secondary md:mt-16">
+          Recommended plants
+        </p>
 
         {detail ? (
           <div className="mt-4 flex flex-col gap-item-gap">

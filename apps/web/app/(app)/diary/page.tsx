@@ -31,7 +31,7 @@ export default function PlantDiaryPage() {
   )
 
   return (
-    <div className="max-w-[669px] pb-16 pt-12">
+    <div className="max-w-[669px] pb-16 pt-8 md:pt-12">
       <header className="flex flex-col gap-card-padding">
         <div className="flex max-w-[407px] flex-col gap-item-gap">
           <h1 className="text-title font-semibold tracking-[-0.04em] text-primary">
@@ -78,7 +78,7 @@ export default function PlantDiaryPage() {
         </button>
       </header>
 
-      <div className="mt-12 flex items-center justify-between">
+      <div className="mt-8 flex items-center justify-between md:mt-12">
         <h2 className="text-subheading font-semibold text-primary">Plants</h2>
         <button
           type="button"

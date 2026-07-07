@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import Image from 'next/image'
 import type { DiaryNote, PlantDiary } from '@/types/diary'
 import { formatDayLabel, formatMonthLabel } from '@/lib/utils'
@@ -57,10 +58,23 @@ function NoteCard({ note }: { note: DiaryNote }) {
 export function DiaryDetailDrawer({ diary, onClose }: DiaryDetailDrawerProps) {
   const monthGroups = groupNotesByMonth(diary.notes)
 
+  useEffect(() => {
+    // Mirrors the lg breakpoint: below it the drawer is a full-screen
+    // sheet (it also has to clear the desktop sidebar, which appears at
+    // md), so the page underneath must not scroll behind it.
+    const mq = window.matchMedia('(max-width: 1023px)')
+    if (!mq.matches) return
+    const original = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = original
+    }
+  }, [])
+
   return (
     <aside
       aria-label={`${diary.plantName} diary`}
-      className="fixed inset-y-0 right-0 z-20 flex w-[440px] flex-col gap-section-break overflow-y-auto border-l border-card bg-surface-card p-card-padding"
+      className="fixed inset-0 z-20 flex w-full flex-col gap-section-break overflow-y-auto bg-surface-card p-card-padding lg:inset-y-0 lg:inset-x-auto lg:right-0 lg:w-[440px] lg:border-l lg:border-card"
     >
       <div className="flex w-full shrink-0 items-center justify-between">
         <button

@@ -26,24 +26,24 @@ export default function DashboardPage() {
   const growingCount = sampleGardenPlants.filter((p) => !p.planned).length
 
   return (
-    <div className="max-w-[1032px] pb-16 pt-12">
+    <div className="max-w-[1032px] pb-16 pt-8 md:pt-12">
       <h1 className="text-title font-semibold tracking-[-0.04em] text-primary">
         {today}
       </h1>
       <p className="mt-3 text-body text-secondary">{dashboardSubtitle}</p>
 
       <div className="mt-8 flex flex-col gap-section-gap">
-        <div className="grid h-[276px] grid-cols-[592fr_420fr] gap-section-gap">
+        <div className="grid grid-cols-1 gap-section-gap lg:h-[276px] lg:grid-cols-[592fr_420fr]">
           <MyPlantsCard plants={myPlants} totalInGarden={growingCount} />
           <BloomTimelineCard season={bloomSeason} />
         </div>
 
-        <div className="grid h-[272px] grid-cols-2 gap-section-gap">
+        <div className="grid grid-cols-1 gap-section-gap lg:h-[272px] lg:grid-cols-2">
           <WeatherCard location={weatherLocation} days={weatherDays} />
           <CareTipsCard tips={careTips} />
         </div>
 
-        <div className="grid h-[234px] grid-cols-3 gap-section-gap">
+        <div className="grid grid-cols-1 gap-section-gap lg:h-[234px] lg:grid-cols-3">
           <PlannedCard plants={plannedPlants} />
           <DiaryRecentCard diaries={samplePlantDiaries} />
           <InsightCard text={gardenInsight} />

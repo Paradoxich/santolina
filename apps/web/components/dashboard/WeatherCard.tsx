@@ -10,7 +10,7 @@ interface WeatherCardProps {
 export function WeatherCard({ location, days }: WeatherCardProps) {
   return (
     <Panel title="Weather" meta={location} className="h-full gap-8">
-      <div className="flex min-h-0 flex-1 items-start gap-[56px]">
+      <div className="flex min-h-0 flex-1 items-start gap-3 lg:gap-[56px]">
         {days.map((day) => (
           <div
             key={day.label}
@@ -24,7 +24,7 @@ export function WeatherCard({ location, days }: WeatherCardProps) {
               alt=""
               width={102}
               height={48}
-              className="h-12 w-auto"
+              className="h-8 w-auto lg:h-12"
             />
             <div className="flex items-baseline justify-center gap-inline-gap">
               <span className="text-stat text-primary">{day.high}°</span>
