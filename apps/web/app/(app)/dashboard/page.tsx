@@ -9,16 +9,18 @@ import {
   bloomSeason,
   dashboardSubtitle,
   gardenInsight,
-  myPlants,
-  plannedPlants,
 } from '@/lib/sample-dashboard'
-import { sampleGardenPlants } from '@/lib/sample-garden'
 import { getCareTips } from '@/lib/care-tips'
+import { formatBloomRangeShort } from '@/lib/format-plant'
 import { listPalette } from '@/server/palette-actions'
 import { getCurrentGarden } from '@/lib/current-garden'
 import { getForecast } from '@/lib/open-meteo'
 import { getPlantDiaries } from '@/lib/diary'
-import type { WeatherDay } from '@/types/dashboard'
+import type {
+  DashboardPlant,
+  PlannedPlant,
+  WeatherDay,
+} from '@/types/dashboard'
 
 export const dynamic = 'force-dynamic'
 
@@ -27,8 +29,25 @@ export default async function DashboardPage() {
     month: 'long',
     day: 'numeric',
   }).format(new Date())
-  const growingCount = sampleGardenPlants.filter((p) => !p.planned).length
-  const careTips = getCareTips(await listPalette())
+  const palette = await listPalette()
+  const careTips = getCareTips(palette)
+
+  const growing = palette.filter((p) => p.status === 'planted')
+  const myPlants: DashboardPlant[] = growing
+    .map((p) => ({
+      name: p.plant.common_name,
+      imageUrl: p.plant.image_url ?? p.plant.image_urls?.[0] ?? '',
+    }))
+    .filter((p) => p.imageUrl)
+    .slice(0, 5)
+
+  const plannedPlants: PlannedPlant[] = palette
+    .filter((p) => p.status === 'planned')
+    .map((p) => ({
+      name: p.plant.common_name,
+      imageUrl: p.plant.image_url ?? p.plant.image_urls?.[0] ?? '',
+      months: formatBloomRangeShort(p.plant.bloom_months) ?? '',
+    }))
 
   const garden = await getCurrentGarden()
   let weatherDays: WeatherDay[] | null = null
@@ -51,7 +70,7 @@ export default async function DashboardPage() {
 
       <div className="mt-8 flex flex-col gap-section-gap">
         <div className="grid grid-cols-1 gap-section-gap lg:h-[276px] lg:grid-cols-[592fr_420fr]">
-          <MyPlantsCard plants={myPlants} totalInGarden={growingCount} />
+          <MyPlantsCard plants={myPlants} totalInGarden={growing.length} />
           <BloomTimelineCard season={bloomSeason} />
         </div>
 

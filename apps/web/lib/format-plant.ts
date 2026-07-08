@@ -41,14 +41,16 @@ function joinWithOr(items: string[]): string {
 }
 
 /**
- * Derive a "May → July" range from bloom month integers. Handles a
- * single month ("May") and ranges that wrap the year boundary
- * ("November → February"). Returns null for an empty list.
+ * First and last month of a bloom window, treating the months as a
+ * circular range (the window starts just after the largest gap, so
+ * [11, 12, 1, 2] → [11, 2]). Returns null for an empty list.
  */
-export function formatBloomRange(months: number[] | null): string | null {
+function bloomRangeEndpoints(
+  months: number[] | null
+): [first: number, last: number] | null {
   if (!months || months.length === 0) return null
   const unique = [...new Set(months)].sort((a, b) => a - b)
-  if (unique.length === 1) return monthName(unique[0]!)
+  if (unique.length === 1) return [unique[0]!, unique[0]!]
 
   // Find the largest circular gap; the range starts just after it.
   let gapStart = unique.length - 1
@@ -60,9 +62,29 @@ export function formatBloomRange(months: number[] | null): string | null {
       gapStart = i
     }
   }
-  const first = unique[(gapStart + 1) % unique.length]!
-  const last = unique[gapStart]!
+  return [unique[(gapStart + 1) % unique.length]!, unique[gapStart]!]
+}
+
+/**
+ * Derive a "May → July" range from bloom month integers. Handles a
+ * single month ("May") and ranges that wrap the year boundary
+ * ("November → February"). Returns null for an empty list.
+ */
+export function formatBloomRange(months: number[] | null): string | null {
+  const endpoints = bloomRangeEndpoints(months)
+  if (!endpoints) return null
+  const [first, last] = endpoints
+  if (first === last) return monthName(first)
   return `${monthName(first)} → ${monthName(last)}`
+}
+
+/** Compact "Apr–May" variant of formatBloomRange, for tight card rows. */
+export function formatBloomRangeShort(months: number[] | null): string | null {
+  const endpoints = bloomRangeEndpoints(months)
+  if (!endpoints) return null
+  const [first, last] = endpoints
+  if (first === last) return monthName(first).slice(0, 3)
+  return `${monthName(first).slice(0, 3)}–${monthName(last).slice(0, 3)}`
 }
 
 const SUN_LABELS: Record<string, string> = {
