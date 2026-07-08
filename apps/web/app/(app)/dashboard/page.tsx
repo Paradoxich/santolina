@@ -19,6 +19,8 @@ import { samplePlantDiaries } from '@/lib/sample-diary'
 import { getCareTips } from '@/lib/care-tips'
 import { listPalette } from '@/server/palette-actions'
 
+export const dynamic = 'force-dynamic'
+
 export default async function DashboardPage() {
   const today = new Intl.DateTimeFormat('en-US', {
     month: 'long',
