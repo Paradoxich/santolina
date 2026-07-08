@@ -5,12 +5,9 @@ import { CareTipsCard } from '@/components/dashboard/CareTipsCard'
 import { PlannedCard } from '@/components/dashboard/PlannedCard'
 import { DiaryRecentCard } from '@/components/dashboard/DiaryRecentCard'
 import { InsightCard } from '@/components/dashboard/InsightCard'
-import {
-  bloomSeason,
-  dashboardSubtitle,
-  gardenInsight,
-} from '@/lib/sample-dashboard'
+import { dashboardSubtitle, gardenInsight } from '@/lib/sample-dashboard'
 import { getCareTips } from '@/lib/care-tips'
+import { deriveBloomSeason } from '@/lib/bloom-timeline'
 import { formatBloomRangeShort } from '@/lib/format-plant'
 import { listPalette } from '@/server/palette-actions'
 import { getCurrentGarden } from '@/lib/current-garden'
@@ -71,7 +68,7 @@ export default async function DashboardPage() {
       <div className="mt-8 flex flex-col gap-section-gap">
         <div className="grid grid-cols-1 gap-section-gap lg:h-[276px] lg:grid-cols-[592fr_420fr]">
           <MyPlantsCard plants={myPlants} totalInGarden={growing.length} />
-          <BloomTimelineCard season={bloomSeason} />
+          <BloomTimelineCard season={deriveBloomSeason(palette)} />
         </div>
 
         <div className="grid grid-cols-1 gap-section-gap lg:h-[272px] lg:grid-cols-2">
