@@ -115,3 +115,7 @@ choice, curation strategy, safe upsert function).
 
 - [`docs/architecture.md`](docs/architecture.md) — data-layer architecture decisions
 - [`DESIGN_SYSTEM.md`](DESIGN_SYSTEM.md) — how to build UI in this repo (tokens, components, styling patterns)
+
+## License
+
+All rights reserved — see [`LICENSE`](LICENSE). See [`LICENSE_NOTES.md`](LICENSE_NOTES.md) for how this applies across the monorepo's two products.
