@@ -5,7 +5,7 @@ import { Chip, Tabs } from '@paradoxui/ui'
 import { GardenPlantTile } from '@/components/GardenPlantTile'
 import { PlannedPlantTile } from '@/components/PlannedPlantTile'
 import { sampleGardenPlants } from '@/lib/sample-garden'
-import type { BloomStatus } from '@/types/garden'
+import { getBloomStatus, type BloomStatus } from '@/lib/bloom-status'
 
 type StatusFilter = 'all' | BloomStatus
 
@@ -15,6 +15,7 @@ const statusFilters: { value: StatusFilter; label: string }[] = [
   { value: 'pre-bloom', label: 'Pre-bloom' },
   { value: 'resting', label: 'Resting' },
   { value: 'done', label: 'Done' },
+  { value: 'evergreen', label: 'Evergreen' },
 ]
 
 export default function MyGardenPage() {
@@ -32,7 +33,7 @@ export default function MyGardenPage() {
     tab === 'growing'
       ? filter === 'all'
         ? growing
-        : growing.filter((p) => p.status === filter)
+        : growing.filter((p) => getBloomStatus(p.bloomMonths) === filter)
       : planned
 
   const activeTabLabel = tab === 'growing' ? 'Growing' : 'Planned'

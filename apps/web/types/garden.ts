@@ -1,5 +1,3 @@
-export type BloomStatus = 'blooming' | 'pre-bloom' | 'resting' | 'done'
-
 export type SpaceType =
   | 'ground_garden'
   | 'raised_beds'
@@ -34,7 +32,8 @@ export interface GardenPlant {
   id: string
   name: string
   imageUrl: string
-  status: BloomStatus
+  /** Mirrors plants.bloom_months — bloom status is derived, not stored. See lib/bloom-status.ts. */
+  bloomMonths: number[]
   note: string
   planned?: boolean
   /** e.g. "Part shade · Aug–Oct" — shown on planned plant cards */

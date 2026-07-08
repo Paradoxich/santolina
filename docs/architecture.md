@@ -220,3 +220,28 @@ Full column list as of the current schema version:
 | **Monotonic**                                                                                                                | `is_curated` — stored as `plants.is_curated OR EXCLUDED.is_curated`; can only become `true`, never reverts to `false` on re-seed              |
 
 **AI-only fields are not referenced anywhere in the function body.** `plant_type`, `plant_type_label`, `style_tags`, `space_types`, `bloom_color`, `foliage_color`, `spread_min_cm`, `spread_max_cm`, `water_needs`, `water_needs_summary`, `light_needs`, `soil_needs`, `maintenance_notes`, `common_issues`, `best_placement`, `environment_benefits`, `seasonal_rhythm`, `garden_use_tags`, and `ai_drafted_at` cannot be overwritten via the Trefle sync path — this is a structural guarantee, not a convention.
+
+---
+
+## 10. Bloom status computation: derived, not stored
+
+**Decision:** A palette plant's bloom status (`blooming` / `pre-bloom` / `done` / `resting` / `evergreen`) is computed on the fly from `plants.bloom_months` via a pure function, `getBloomStatus()` in `apps/web/lib/bloom-status.ts`. It is never written to a column.
+
+**Rationale:** Unlike hardiness zone derivation (§4), which needed a historical temperature-threshold table to map a Trefle temperature value to a USDA zone, bloom status needs no external data at all — `bloom_months` already exists on every curated plant, and "what's the status today" is a pure function of that array plus the current date. Storing a computed status would mean re-deriving it on a schedule (a cron, a nightly job) to keep it from going stale; computing it at render time makes staleness structurally impossible and needs no extra infrastructure.
+
+**The rule:**
+
+```
+normalizeMonth(m) = ((m - 1 + 12) % 12) + 1
+
+getBloomStatus(bloomMonths, today = now):
+  if bloomMonths is empty                              → 'evergreen'
+  if currentMonth ∈ bloomMonths                         → 'blooming'
+  if currentMonth == normalizeMonth(min(bloomMonths) - 1) → 'pre-bloom'
+  if currentMonth == normalizeMonth(max(bloomMonths) + 1) → 'done'
+  otherwise                                              → 'resting'
+```
+
+Checked in priority order as listed. `currentMonth` is `today.getMonth() + 1` (1–12).
+
+**Known limitation — contiguous-window assumption:** `min`/`max` over `bloomMonths` only produce the correct bloom-window boundary when the bloom period doesn't cross the December→January wrap. A plant blooming `[11, 12, 1, 2]` (Nov–Feb) has `min = 1` and `max = 12`, which is backwards — `pre-bloom`/`done` would be computed against the wrong edge of the window. None of the currently curated plants have a bloom window that wraps the year boundary, so this is an accepted v1 limitation, not a bug being fixed now. If a future species needs it, the fix is to detect the wrap (a large gap between sorted consecutive months, e.g. via circular clustering) rather than a plain `Math.min`/`Math.max`.

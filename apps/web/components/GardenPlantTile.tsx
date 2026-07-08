@@ -1,12 +1,14 @@
 import Image from 'next/image'
 import { MediaCard } from '@paradoxui/ui'
-import type { GardenPlant, BloomStatus } from '@/types/garden'
+import { getBloomStatus, type BloomStatus } from '@/lib/bloom-status'
+import type { GardenPlant } from '@/types/garden'
 
 const statusLabels: Record<BloomStatus, string> = {
   blooming: 'blooming',
   'pre-bloom': 'pre bloom',
   resting: 'resting',
   done: 'done',
+  evergreen: 'evergreen',
 }
 
 interface GardenPlantTileProps {
@@ -14,6 +16,8 @@ interface GardenPlantTileProps {
 }
 
 export function GardenPlantTile({ plant }: GardenPlantTileProps) {
+  const bloomStatus = getBloomStatus(plant.bloomMonths)
+
   return (
     <MediaCard
       image={
@@ -29,7 +33,7 @@ export function GardenPlantTile({ plant }: GardenPlantTileProps) {
       title={plant.name}
       titleAdornment={
         <span className="mt-[3px] inline-flex items-center justify-center rounded-md bg-accent-muted px-tight-gap pb-[3px] pt-tight-gap text-label leading-none text-accent">
-          {statusLabels[plant.status]}
+          {statusLabels[bloomStatus]}
         </span>
       }
       body={<>❋ {plant.note}</>}
