@@ -257,3 +257,25 @@ Checked in priority order as listed. `currentMonth` is `today.getMonth() + 1` (1
 **Why this over a temporary permissive RLS policy:** A permissive policy (e.g. `USING (true)` or an anon-role carve-out) would need to be written now and correctly reverted later — an easy thing to forget, and a real risk if it ships to production. The existing `auth.uid() = user_id` policies are already correct for when real auth exists; bypassing them at the client layer for this one single-tenant test phase keeps the policies untouched and the eventual auth cutover simpler — swap `getCurrentGarden()`'s hardcoded id for a real session lookup, delete `lib/current-garden.ts`, done. It also mirrors a pattern already established in this codebase (§5): service-role access for privileged, script-like operations, kept out of the client bundle.
 
 **Explicitly temporary:** `lib/current-garden.ts` hardcodes the single seeded garden's id (`7055368c-6158-46b9-a592-223974c7a319`) and is commented as such. It assumes single-tenant, single-garden usage — do not build multi-user or multi-garden features on top of it. It gets deleted, not extended, once onboarding creates real garden rows tied to real auth sessions.
+
+---
+
+## 12. Palette write path: application-level upsert, reversible button state machine
+
+**Decision:** `server/palette-actions.ts` (`addToPalette`, `updateStatus`, `removeFromPalette`, `getPaletteStatus`, `listPalette`) is the write path for `palette_plants`. Same pattern as §11: the service-role client, scoped to `getCurrentGardenId()`. Every write also filters on `garden_id` before mutating — `updateStatus`/`removeFromPalette` no-op (throw) rather than silently touching a row outside the current garden, which matters once this stops being single-tenant.
+
+**`addToPalette` is an application-level upsert, not `ON CONFLICT`:** there's no unique constraint on `(garden_id, plant_id)` in the live schema, and adding one was out of scope (no schema changes for this pass). `addToPalette` selects for an existing row on that pair first, then updates it (status/source) if found, or inserts if not. This means clicking "Add to plan" on an already-planned plant, or "I have this" on an already-planted one, just updates the existing row instead of creating a duplicate — the same behavior a DB-level upsert would give, implemented at the application layer instead.
+
+**Drawer button state machine — fully reversible, two buttons, three states:**
+
+```
+not-in-palette ⇄ planned ⇄ planted
+```
+
+- **not-in-palette:** both buttons active. "Add to plan" → `addToPalette(status: 'planned')`. "I have this" → `addToPalette(status: 'planted')`.
+- **planned:** "Add to plan" becomes "Remove from plan" → `removeFromPalette`, back to not-in-palette. "I have this" stays active, unchanged label → `updateStatus(status: 'planted')`, upgrading in place (same `paletteId`, no new row).
+- **planted:** "I have this" becomes "Remove from garden" → `removeFromPalette`, back to not-in-palette. "Add to plan" is disabled — downgrading planted→planned isn't a meaningful action via this button, so it's the one non-actionable state rather than a dead-end label pretending to do something.
+
+`getPaletteStatus` is fetched on drawer mount and whenever the displayed plant changes (the drawer is a single reused component instance across plant selections in Explore, not remounted per plant — see `ExploreClient`'s static `key`), with a cancellation guard so a fast plant switch can't let a stale response overwrite the newer one.
+
+**No toast/notification system exists in the app** (`Toast` in `@paradoxui/ui` is an unwired presentational primitive, only ever rendered in the design-system showcase). Rather than building toast infrastructure for this one feature, loading/error feedback is local component state: button labels swap to "Adding…"/"Saving…"/"Removing…" while a request is in flight, and a small inline banner (`text-critical`, same token Badge/Toast already use for their critical variant) shows on failure. My Garden's Planned-tab actions (remove, mark as planted) follow the same local-state pattern, calling `router.refresh()` on success to re-run the server component and pull fresh `listPalette()` data — there's no client-side cache to invalidate.
