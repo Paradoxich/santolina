@@ -74,7 +74,10 @@ export default async function DashboardPage() {
       <div className="mt-8 flex flex-col gap-section-gap">
         <div className="grid grid-cols-1 gap-section-gap lg:h-[276px] lg:grid-cols-[592fr_420fr]">
           <MyPlantsCard plants={myPlants} totalInGarden={growing.length} />
-          <BloomTimelineCard season={deriveBloomSeason(palette)} />
+          <BloomTimelineCard
+            season={deriveBloomSeason(palette)}
+            hasPlants={growing.length > 0}
+          />
         </div>
 
         <div className="grid grid-cols-1 gap-section-gap lg:h-[272px] lg:grid-cols-2">
@@ -83,7 +86,7 @@ export default async function DashboardPage() {
             country={garden?.country ?? null}
             days={weatherDays}
           />
-          <CareTipsCard tips={careTips} />
+          <CareTipsCard tips={careTips} showEmptyHint={palette.length === 0} />
         </div>
 
         <div className="grid grid-cols-1 gap-section-gap lg:h-[234px] lg:grid-cols-3">

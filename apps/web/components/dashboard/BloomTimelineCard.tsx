@@ -10,9 +10,28 @@ const emphasisOpacity: Record<BloomSpan['emphasis'], string> = {
 
 interface BloomTimelineCardProps {
   season: BloomSeason
+  /** False when the garden has no growing plants — shows the empty hint instead of the chart. */
+  hasPlants?: boolean
 }
 
-export function BloomTimelineCard({ season }: BloomTimelineCardProps) {
+export function BloomTimelineCard({
+  season,
+  hasPlants = true,
+}: BloomTimelineCardProps) {
+  if (!hasPlants) {
+    return (
+      <Panel
+        title={season.title}
+        meta={season.meta}
+        className="h-full overflow-hidden"
+      >
+        <p className="text-body-small text-muted">
+          Once you add plants, you&apos;ll see their bloom season here.
+        </p>
+      </Panel>
+    )
+  }
+
   return (
     <Panel
       title={season.title}

@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { AnimatePresence } from 'framer-motion'
 import { Icon } from '@paradoxui/ui'
 import { DiaryListRow } from '@/components/DiaryListRow'
+import { EmptyState } from '@/components/EmptyState'
 import { DiaryDetailDrawer } from '@/components/DiaryDetailDrawer'
 import { parseISODate } from '@/lib/utils'
 import { icons } from '@/lib/icons'
@@ -98,16 +99,25 @@ export function DiaryClient({
         </button>
       </div>
 
-      <div className="mt-row-gap flex flex-col gap-inline-gap">
-        {sortedDiaries.map((diary) => (
-          <DiaryListRow
-            key={diary.id}
-            diary={diary}
-            selected={diary.id === selectedId}
-            onClick={() => setSelectedId(diary.id)}
-          />
-        ))}
-      </div>
+      {sortedDiaries.length === 0 ? (
+        <EmptyState
+          className="mt-row-gap"
+          message="Find plants you'd like to grow. Each one keeps its diary here."
+          ctaLabel="Explore plants"
+          ctaHref="/explore"
+        />
+      ) : (
+        <div className="mt-row-gap flex flex-col gap-inline-gap">
+          {sortedDiaries.map((diary) => (
+            <DiaryListRow
+              key={diary.id}
+              diary={diary}
+              selected={diary.id === selectedId}
+              onClick={() => setSelectedId(diary.id)}
+            />
+          ))}
+        </div>
+      )}
 
       <AnimatePresence>
         {selected && (

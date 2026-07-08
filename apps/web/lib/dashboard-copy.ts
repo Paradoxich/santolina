@@ -103,22 +103,22 @@ export function buildGardenInsight(
     return `${blooming[0]!.plant.common_name} is feeding local pollinators right now.`
 
   if (blooming.length >= 2)
-    return `${blooming.length} of your plants are in bloom at once — one of your garden's busiest weeks.`
+    return `${blooming.length} of your plants are in bloom at once, one of your garden's busiest weeks.`
 
   if (blooming.length === 1) {
     const plant = blooming[0]!.plant
     const lastMonth = Math.max(...(plant.bloom_months ?? []))
     return Number.isFinite(lastMonth)
-      ? `${plant.common_name} is at its peak — its bloom runs through ${monthName(lastMonth)}.`
+      ? `${plant.common_name} is at its peak, with blooms running through ${monthName(lastMonth)}.`
       : `${plant.common_name} is at its peak right now.`
   }
 
   if (preBloom.length > 0)
-    return `${preBloom[0]!.plant.common_name} is about to open — expect new color in the coming weeks.`
+    return `${preBloom[0]!.plant.common_name} is about to open. Expect new color in the coming weeks.`
 
   const plannedCount = palette.filter((p) => p.status === 'planned').length
   if (plannedCount > 0)
-    return `Nothing in bloom right now — a good moment to plant from your ${plannedCount} planned ${plannedCount === 1 ? 'pick' : 'picks'}.`
+    return `Nothing in bloom right now. A good moment to plant from your ${plannedCount} planned ${plannedCount === 1 ? 'pick' : 'picks'}.`
 
-  return 'Your garden is resting — its evergreen structure is doing the quiet work this season.'
+  return 'Your garden is resting. Its evergreen structure is doing the quiet work this season.'
 }

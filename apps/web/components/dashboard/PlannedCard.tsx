@@ -7,6 +7,14 @@ interface PlannedCardProps {
 }
 
 export function PlannedCard({ plants }: PlannedCardProps) {
+  if (plants.length === 0) {
+    return (
+      <Panel title="Planned" meta="0 plants" className="h-full">
+        <p className="text-body-small text-muted">Nothing planned yet.</p>
+      </Panel>
+    )
+  }
+
   return (
     <Panel title="Planned" meta={`${plants.length} plants`} className="h-full">
       <ul className="flex w-full flex-col gap-item-gap">

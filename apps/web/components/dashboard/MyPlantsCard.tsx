@@ -8,6 +8,20 @@ interface MyPlantsCardProps {
 }
 
 export function MyPlantsCard({ plants, totalInGarden }: MyPlantsCardProps) {
+  if (plants.length === 0) {
+    return (
+      <Panel
+        title="My plants"
+        meta={`${totalInGarden} in garden`}
+        className="h-[220px] lg:h-full"
+      >
+        <p className="text-body-small text-muted">
+          Find plants you&apos;d like to grow. They&apos;ll show up here.
+        </p>
+      </Panel>
+    )
+  }
+
   return (
     <Panel
       title="My plants"
