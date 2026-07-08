@@ -1,6 +1,5 @@
 import type {
   BloomSeason,
-  CareTip,
   DashboardPlant,
   PlannedPlant,
   WeatherDay,
@@ -139,21 +138,6 @@ export const weatherDays: WeatherDay[] = [
     high: 15,
     low: 3,
     description: 'Temperatures will drop.',
-  },
-]
-
-export const careTips: CareTip[] = [
-  {
-    id: 'plant-out',
-    text: 'Today is a good day to plant out and a poor day to prune.',
-    due: 'today',
-  },
-  { id: 'mulch', text: 'Mulch the perennial bed', due: 'this week' },
-  { id: 'trim', text: 'Trim the hedges and shrubs', due: 'next week' },
-  {
-    id: 'bulbs',
-    text: 'Plant spring bulbs in the garden',
-    due: 'by the end of the month',
   },
 ]
 

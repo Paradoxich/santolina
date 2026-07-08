@@ -49,9 +49,9 @@ export interface WeatherDay {
 }
 
 export interface CareTip {
-  id: string
+  plantId: string | null
+  plantName: string | null
   text: string
-  due: string
 }
 
 export interface PlannedPlant {

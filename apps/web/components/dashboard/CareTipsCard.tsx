@@ -13,15 +13,17 @@ export function CareTipsCard({ tips }: CareTipsCardProps) {
       className="relative h-full overflow-hidden"
     >
       <ul className="flex w-full flex-col gap-tight-gap">
-        {tips.map((tip) => (
+        {tips.map((tip, index) => (
           <li
-            key={tip.id}
+            key={`${tip.plantId ?? 'general'}-${index}`}
             className="flex h-10 w-full items-center justify-between gap-row-gap rounded-sm bg-surface-subtle px-item-gap py-inline-gap"
           >
             <span className="truncate text-body text-primary">{tip.text}</span>
-            <span className="shrink-0 whitespace-nowrap text-label text-muted">
-              {tip.due}
-            </span>
+            {tip.plantName && (
+              <span className="shrink-0 whitespace-nowrap text-label text-muted">
+                {tip.plantName}
+              </span>
+            )}
           </li>
         ))}
       </ul>
