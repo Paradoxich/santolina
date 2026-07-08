@@ -245,3 +245,15 @@ getBloomStatus(bloomMonths, today = now):
 Checked in priority order as listed. `currentMonth` is `today.getMonth() + 1` (1–12).
 
 **Known limitation — contiguous-window assumption:** `min`/`max` over `bloomMonths` only produce the correct bloom-window boundary when the bloom period doesn't cross the December→January wrap. A plant blooming `[11, 12, 1, 2]` (Nov–Feb) has `min = 1` and `max = 12`, which is backwards — `pre-bloom`/`done` would be computed against the wrong edge of the window. None of the currently curated plants have a bloom window that wraps the year boundary, so this is an accepted v1 limitation, not a bug being fixed now. If a future species needs it, the fix is to detect the wrap (a large gap between sorted consecutive months, e.g. via circular clustering) rather than a plain `Math.min`/`Math.max`.
+
+---
+
+## 11. RLS blocker on `gardens`/`palette_plants`: service-role client, hardcoded garden id
+
+**The bug:** `getPlantDetail()` always fell back to a hardcoded `DEFAULT_GARDEN` mock object, with a comment claiming this was "while onboarding/auth don't exist yet." That was the wrong diagnosis. The real cause: `gardens`' and `palette_plants`' RLS policies both require `auth.uid()` to match the garden's `user_id` (directly on `gardens`, via a join on `palette_plants`). Since the app has no real auth session, the anon client's `auth.uid()` is always null, so every query against these two tables silently returned zero rows — not because the data didn't exist (a real garden row was seeded and present the whole time), but because RLS was quietly blocking it. The `.maybeSingle()` fallback masked this as "no row yet" instead of surfacing it as a permissions problem.
+
+**Decision:** Reads/writes to `gardens` and `palette_plants` go through the service-role client (`lib/supabase-admin.ts`, same client already used for the Trefle sync) scoped to one hardcoded, known-good garden id, via a new `lib/current-garden.ts` helper (`getCurrentGardenId()`, `getCurrentGarden()`). RLS policies themselves are untouched.
+
+**Why this over a temporary permissive RLS policy:** A permissive policy (e.g. `USING (true)` or an anon-role carve-out) would need to be written now and correctly reverted later — an easy thing to forget, and a real risk if it ships to production. The existing `auth.uid() = user_id` policies are already correct for when real auth exists; bypassing them at the client layer for this one single-tenant test phase keeps the policies untouched and the eventual auth cutover simpler — swap `getCurrentGarden()`'s hardcoded id for a real session lookup, delete `lib/current-garden.ts`, done. It also mirrors a pattern already established in this codebase (§5): service-role access for privileged, script-like operations, kept out of the client bundle.
+
+**Explicitly temporary:** `lib/current-garden.ts` hardcodes the single seeded garden's id (`7055368c-6158-46b9-a592-223974c7a319`) and is commented as such. It assumes single-tenant, single-garden usage — do not build multi-user or multi-garden features on top of it. It gets deleted, not extended, once onboarding creates real garden rows tied to real auth sessions.
