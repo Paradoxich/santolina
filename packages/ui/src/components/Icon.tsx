@@ -16,6 +16,7 @@ export function Icon({
   size = 16,
   alt = '',
   className = '',
+  style,
   ...props
 }: IconProps) {
   return (
@@ -24,6 +25,10 @@ export function Icon({
       alt={alt}
       width={size}
       height={size}
+      // Inline CSS size, not just the width/height attributes: preflight's
+      // `img { height: auto }` overrides attributes and lets a non-square
+      // source stretch the box. CSS wins over preflight.
+      style={{ width: size, height: size, ...style }}
       className={['object-contain', className].join(' ').trim()}
       {...props}
     />
