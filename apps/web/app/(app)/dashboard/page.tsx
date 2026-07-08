@@ -5,9 +5,12 @@ import { CareTipsCard } from '@/components/dashboard/CareTipsCard'
 import { PlannedCard } from '@/components/dashboard/PlannedCard'
 import { DiaryRecentCard } from '@/components/dashboard/DiaryRecentCard'
 import { InsightCard } from '@/components/dashboard/InsightCard'
-import { dashboardSubtitle, gardenInsight } from '@/lib/sample-dashboard'
 import { getCareTips } from '@/lib/care-tips'
 import { deriveBloomSeason } from '@/lib/bloom-timeline'
+import {
+  buildDashboardSubtitle,
+  buildGardenInsight,
+} from '@/lib/dashboard-copy'
 import { formatBloomRangeShort } from '@/lib/format-plant'
 import { listPalette } from '@/server/palette-actions'
 import { getCurrentGarden } from '@/lib/current-garden'
@@ -58,12 +61,15 @@ export default async function DashboardPage() {
 
   const diaries = await getPlantDiaries()
 
+  const subtitle = buildDashboardSubtitle(weatherDays, palette)
+  const insight = buildGardenInsight(palette)
+
   return (
     <div className="max-w-[1032px] pb-16 pt-8 md:pt-12">
       <h1 className="text-title font-semibold tracking-[-0.04em] text-primary">
         {today}
       </h1>
-      <p className="mt-3 text-body text-secondary">{dashboardSubtitle}</p>
+      <p className="mt-3 text-body text-secondary">{subtitle}</p>
 
       <div className="mt-8 flex flex-col gap-section-gap">
         <div className="grid grid-cols-1 gap-section-gap lg:h-[276px] lg:grid-cols-[592fr_420fr]">
@@ -83,7 +89,7 @@ export default async function DashboardPage() {
         <div className="grid grid-cols-1 gap-section-gap lg:h-[234px] lg:grid-cols-3">
           <PlannedCard plants={plannedPlants} />
           <DiaryRecentCard diaries={diaries} />
-          <InsightCard text={gardenInsight} />
+          <InsightCard text={insight} />
         </div>
       </div>
     </div>
