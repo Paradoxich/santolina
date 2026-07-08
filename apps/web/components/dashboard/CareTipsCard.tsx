@@ -1,17 +1,34 @@
+import Link from 'next/link'
 import { Panel } from '@paradoxui/ui'
 import type { CareTip } from '@/types/dashboard'
 
 interface CareTipsCardProps {
   tips: CareTip[]
+  /** True when the palette is empty — shows a hint above the generic seasonal tips. */
+  showEmptyHint?: boolean
 }
 
-export function CareTipsCard({ tips }: CareTipsCardProps) {
+export function CareTipsCard({
+  tips,
+  showEmptyHint = false,
+}: CareTipsCardProps) {
   return (
     <Panel
       title="Care tips"
       meta={`${tips.length} tasks`}
       className="relative h-full overflow-hidden"
     >
+      {showEmptyHint && (
+        <p className="mb-inline-gap text-body-small text-muted">
+          <Link
+            href="/explore"
+            className="text-primary underline decoration-dotted underline-offset-4"
+          >
+            Add plants
+          </Link>{' '}
+          to your garden for tips tailored to what you&apos;re growing.
+        </p>
+      )}
       <ul className="flex w-full flex-col gap-tight-gap">
         {tips.map((tip, index) => (
           <li

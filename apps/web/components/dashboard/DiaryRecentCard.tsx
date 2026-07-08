@@ -20,6 +20,14 @@ export function DiaryRecentCard({ diaries, count = 3 }: DiaryRecentCardProps) {
     )
     .slice(0, count)
 
+  if (recent.length === 0) {
+    return (
+      <Panel title="Diary" meta="0 recent" className="h-full">
+        <p className="text-body-small text-muted">No diary entries yet.</p>
+      </Panel>
+    )
+  }
+
   return (
     <Panel title="Diary" meta={`${recent.length} recent`} className="h-full">
       <ul className="flex w-full flex-col">

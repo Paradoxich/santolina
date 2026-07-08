@@ -1,4 +1,5 @@
 import Image from 'next/image'
+import Link from 'next/link'
 import { Panel } from '@paradoxui/ui'
 import type { BloomSeason, BloomSpan } from '@/types/dashboard'
 
@@ -10,9 +11,34 @@ const emphasisOpacity: Record<BloomSpan['emphasis'], string> = {
 
 interface BloomTimelineCardProps {
   season: BloomSeason
+  /** False when the garden has no growing plants — shows the empty hint instead of the chart. */
+  hasPlants?: boolean
 }
 
-export function BloomTimelineCard({ season }: BloomTimelineCardProps) {
+export function BloomTimelineCard({
+  season,
+  hasPlants = true,
+}: BloomTimelineCardProps) {
+  if (!hasPlants) {
+    return (
+      <Panel
+        title={season.title}
+        meta={season.meta}
+        className="h-full overflow-hidden"
+      >
+        <p className="text-body-small text-muted">
+          <Link
+            href="/explore"
+            className="text-primary underline decoration-dotted underline-offset-4"
+          >
+            Add plants
+          </Link>{' '}
+          to see your bloom timeline.
+        </p>
+      </Panel>
+    )
+  }
+
   return (
     <Panel
       title={season.title}

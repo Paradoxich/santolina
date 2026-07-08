@@ -1,4 +1,5 @@
 import Image from 'next/image'
+import Link from 'next/link'
 import { Panel } from '@paradoxui/ui'
 import type { DashboardPlant } from '@/types/dashboard'
 
@@ -8,6 +9,27 @@ interface MyPlantsCardProps {
 }
 
 export function MyPlantsCard({ plants, totalInGarden }: MyPlantsCardProps) {
+  if (plants.length === 0) {
+    return (
+      <Panel
+        title="My plants"
+        meta={`${totalInGarden} in garden`}
+        className="h-[220px] lg:h-full"
+      >
+        <p className="text-body-small text-muted">
+          No plants yet —{' '}
+          <Link
+            href="/explore"
+            className="text-primary underline decoration-dotted underline-offset-4"
+          >
+            explore
+          </Link>{' '}
+          and add some to get started.
+        </p>
+      </Panel>
+    )
+  }
+
   return (
     <Panel
       title="My plants"

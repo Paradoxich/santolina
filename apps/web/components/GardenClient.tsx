@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { AnimatePresence } from 'framer-motion'
 import { Chip, Tabs, useToast } from '@paradoxui/ui'
+import { EmptyState } from '@/components/EmptyState'
 import { GardenPlantTile } from '@/components/GardenPlantTile'
 import { PlannedPlantTile } from '@/components/PlannedPlantTile'
 import { PlantDetailDrawer } from '@/components/PlantDetailDrawer'
@@ -236,13 +237,35 @@ export function GardenClient({ gardenId, palette, detail }: GardenClientProps) {
         )}
       </div>
 
-      {visible.length === 0 && (
-        <p className="mt-11 text-body text-muted">
-          {tab === 'growing'
-            ? 'No plants match this filter yet.'
-            : 'Nothing planned yet.'}
-        </p>
-      )}
+      {visible.length === 0 &&
+        (tab === 'growing' ? (
+          growing.length > 0 ? (
+            <p className="mt-11 text-body text-muted">
+              No plants match this filter yet.
+            </p>
+          ) : planned.length > 0 ? (
+            <EmptyState
+              className="mt-11"
+              message="Move a planted plant here once it's in the ground."
+              ctaLabel="View planned"
+              onCtaClick={() => handleTabChange('planned')}
+            />
+          ) : (
+            <EmptyState
+              className="mt-11"
+              message="Add plants to your garden to see them here."
+              ctaLabel="Explore plants"
+              ctaHref="/explore"
+            />
+          )
+        ) : (
+          <EmptyState
+            className="mt-11"
+            message="Add plants to your garden to start planning what's next."
+            ctaLabel="Explore plants"
+            ctaHref="/explore"
+          />
+        ))}
 
       <AnimatePresence>
         {detail && (
