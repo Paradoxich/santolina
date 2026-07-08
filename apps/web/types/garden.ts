@@ -12,6 +12,8 @@ export interface Garden {
   name: string | null
   city: string | null
   country: string | null
+  lat: number | null
+  lon: number | null
   climate_zone: string | null
   hardiness_zone: string | null
   space_type: SpaceType | null
