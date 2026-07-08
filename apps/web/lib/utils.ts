@@ -56,3 +56,39 @@ export function formatMonthLabel(iso: string): string {
 export function cn(...classes: (string | false | null | undefined)[]): string {
   return classes.filter(Boolean).join(' ')
 }
+
+const RELATIVE_TIME_UNITS: [Intl.RelativeTimeFormatUnit, number][] = [
+  ['year', 60 * 60 * 24 * 365],
+  ['month', 60 * 60 * 24 * 30],
+  ['week', 60 * 60 * 24 * 7],
+  ['day', 60 * 60 * 24],
+  ['hour', 60 * 60],
+  ['minute', 60],
+]
+
+const relativeTimeFormatter = new Intl.RelativeTimeFormat('en', {
+  numeric: 'always',
+  style: 'long',
+})
+
+/**
+ * Formats an ISO timestamp as "2 days ago" style relative time.
+ * `numeric: 'always'` keeps it consistently "X ago" rather than Intl's
+ * idiomatic "yesterday"/"last week" phrasing for the 1-unit case.
+ */
+export function formatRelativeTime(
+  iso: string,
+  now: Date = new Date()
+): string {
+  const diffSec = Math.round((now.getTime() - new Date(iso).getTime()) / 1000)
+
+  for (const [unit, secondsInUnit] of RELATIVE_TIME_UNITS) {
+    if (diffSec >= secondsInUnit) {
+      return relativeTimeFormatter.format(
+        -Math.floor(diffSec / secondsInUnit),
+        unit
+      )
+    }
+  }
+  return relativeTimeFormatter.format(-Math.max(diffSec, 0), 'second')
+}

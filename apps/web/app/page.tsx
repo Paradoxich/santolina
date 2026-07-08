@@ -1,4 +1,5 @@
 import styles from './page.module.css'
+import { LatestPrLine } from '@/components/LatestPrLine'
 
 type ItemStatus = 'done' | 'active' | 'pending'
 
@@ -57,6 +58,8 @@ export default function InProgressPage() {
           </a>
           <br />
         </p>
+
+        <LatestPrLine />
 
         <p className={styles.label}>How's it going</p>
 
