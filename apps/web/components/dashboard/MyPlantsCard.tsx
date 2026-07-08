@@ -1,5 +1,4 @@
 import Image from 'next/image'
-import Link from 'next/link'
 import { Panel } from '@paradoxui/ui'
 import type { DashboardPlant } from '@/types/dashboard'
 
@@ -17,13 +16,7 @@ export function MyPlantsCard({ plants, totalInGarden }: MyPlantsCardProps) {
         className="h-[220px] lg:h-full"
       >
         <p className="text-body-small text-muted">
-          <Link
-            href="/explore"
-            className="text-primary underline decoration-dotted underline-offset-4"
-          >
-            Add plants
-          </Link>{' '}
-          to your garden to see them here.
+          Find plants you&apos;d like to grow. They&apos;ll show up here.
         </p>
       </Panel>
     )

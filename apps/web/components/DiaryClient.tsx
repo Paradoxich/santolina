@@ -102,7 +102,7 @@ export function DiaryClient({
       {sortedDiaries.length === 0 ? (
         <EmptyState
           className="mt-row-gap"
-          message="Add plants to your garden to start tracking their diaries."
+          message="Find plants you'd like to grow. Each one keeps its diary here."
           ctaLabel="Explore plants"
           ctaHref="/explore"
         />

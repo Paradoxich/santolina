@@ -1,4 +1,3 @@
-import Link from 'next/link'
 import { Panel } from '@paradoxui/ui'
 import type { CareTip } from '@/types/dashboard'
 
@@ -20,13 +19,8 @@ export function CareTipsCard({
     >
       {showEmptyHint && (
         <p className="mb-inline-gap text-body-small text-muted">
-          <Link
-            href="/explore"
-            className="text-primary underline decoration-dotted underline-offset-4"
-          >
-            Add plants
-          </Link>{' '}
-          to your garden for tips tailored to what you&apos;re growing.
+          Add plants to your garden for tips tailored to what you&apos;re
+          growing.
         </p>
       )}
       <ul className="flex w-full flex-col gap-tight-gap">

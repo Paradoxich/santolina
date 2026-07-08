@@ -253,7 +253,7 @@ export function GardenClient({ gardenId, palette, detail }: GardenClientProps) {
           ) : (
             <EmptyState
               className="mt-11"
-              message="Add plants to your garden to see them here."
+              message="Find plants you'd like to grow and add them to your garden."
               ctaLabel="Explore plants"
               ctaHref="/explore"
             />

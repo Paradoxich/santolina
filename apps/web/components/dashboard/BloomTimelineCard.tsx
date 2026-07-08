@@ -1,5 +1,4 @@
 import Image from 'next/image'
-import Link from 'next/link'
 import { Panel } from '@paradoxui/ui'
 import type { BloomSeason, BloomSpan } from '@/types/dashboard'
 
@@ -27,13 +26,7 @@ export function BloomTimelineCard({
         className="h-full overflow-hidden"
       >
         <p className="text-body-small text-muted">
-          <Link
-            href="/explore"
-            className="text-primary underline decoration-dotted underline-offset-4"
-          >
-            Add plants
-          </Link>{' '}
-          to see your bloom timeline.
+          Once you add plants, you&apos;ll see their bloom season here.
         </p>
       </Panel>
     )
