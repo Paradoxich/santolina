@@ -7,6 +7,7 @@ import { icons } from '@/lib/icons'
 import type { DiaryNote, PlantDiary } from '@/types/diary'
 import { formatDayLabel, formatMonthLabel } from '@/lib/utils'
 import { addDiaryEntry, deleteDiaryThread } from '@/server/diary-actions'
+import { addToPalette } from '@/server/palette-actions'
 
 /** Mirrors --duration-slow / --ease-in-out — Framer Motion can't read CSS vars. */
 const DRAWER_TRANSITION = { duration: 0.3, ease: [0.4, 0, 0.2, 1] as const }
@@ -90,6 +91,9 @@ export function DiaryDetailDrawer({
   const [isDeleting, setIsDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
 
+  const [isReAdding, setIsReAdding] = useState(false)
+  const [reAddError, setReAddError] = useState<string | null>(null)
+
   const noteCount = diary.notes.length
   const photoCount = diary.notes.reduce(
     (sum, note) => sum + (note.photos?.length ?? 0),
@@ -125,6 +129,26 @@ export function DiaryDetailDrawer({
       )
     } finally {
       setIsDeleting(false)
+    }
+  }
+
+  /** Re-adds a removed plant as planted — flips isGrowing back to true via router.refresh(), no navigation needed. */
+  const handleAddBackToGarden = async () => {
+    setIsReAdding(true)
+    setReAddError(null)
+    try {
+      await addToPalette({
+        plantId: diary.plantId,
+        status: 'planted',
+        source: 'manual',
+      })
+      router.refresh()
+    } catch (err) {
+      setReAddError(
+        err instanceof Error ? err.message : 'Something went wrong.'
+      )
+    } finally {
+      setIsReAdding(false)
     }
   }
 
@@ -275,89 +299,113 @@ export function DiaryDetailDrawer({
         <div className="flex w-full shrink-0 flex-col gap-card-padding">
           <h3 className="text-body font-semibold text-primary">Your notes</h3>
 
-          {isComposing ? (
-            <div className="flex w-full flex-col gap-inline-gap rounded-sm border border-card bg-surface-overlay p-item-gap">
-              <textarea
-                value={noteText}
-                onChange={(e) => setNoteText(e.target.value)}
-                placeholder="What's new with this plant?"
-                rows={3}
-                autoFocus
-                className="w-full resize-none rounded-sm bg-transparent text-body text-primary placeholder:text-muted focus:outline-none"
-              />
-
-              {photoFiles.length > 0 && (
-                <ul className="flex flex-wrap gap-inline-gap">
-                  {photoFiles.map((file, i) => (
-                    <li
-                      key={`${file.name}-${i}`}
-                      className="flex items-center gap-tight-gap rounded-xs border border-card bg-surface-page px-tight-gap py-0.5 text-label text-muted"
-                    >
-                      {file.name}
-                      <button
-                        type="button"
-                        onClick={() => removePhoto(i)}
-                        aria-label={`Remove ${file.name}`}
-                        className="text-muted hover:text-critical"
-                      >
-                        ×
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-
-              {composerError && (
-                <p className="text-body-small text-critical">{composerError}</p>
-              )}
-
-              <div className="flex items-center justify-between gap-inline-gap">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={handleFileChange}
-                  className="hidden"
+          {isGrowing ? (
+            isComposing ? (
+              <div className="flex w-full flex-col gap-inline-gap rounded-sm border border-card bg-surface-overlay p-item-gap">
+                <textarea
+                  value={noteText}
+                  onChange={(e) => setNoteText(e.target.value)}
+                  placeholder="What's new with this plant?"
+                  rows={3}
+                  autoFocus
+                  className="w-full resize-none rounded-sm bg-transparent text-body text-primary placeholder:text-muted focus:outline-none"
                 />
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="flex items-center gap-tight-gap text-body-small text-secondary hover:text-primary"
-                >
-                  <Icon src={icons.plus} size={14} />
-                  Add photo
-                </button>
 
-                <div className="flex items-center gap-inline-gap">
+                {photoFiles.length > 0 && (
+                  <ul className="flex flex-wrap gap-inline-gap">
+                    {photoFiles.map((file, i) => (
+                      <li
+                        key={`${file.name}-${i}`}
+                        className="flex items-center gap-tight-gap rounded-xs border border-card bg-surface-page px-tight-gap py-0.5 text-label text-muted"
+                      >
+                        {file.name}
+                        <button
+                          type="button"
+                          onClick={() => removePhoto(i)}
+                          aria-label={`Remove ${file.name}`}
+                          className="text-muted hover:text-critical"
+                        >
+                          ×
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                {composerError && (
+                  <p className="text-body-small text-critical">
+                    {composerError}
+                  </p>
+                )}
+
+                <div className="flex items-center justify-between gap-inline-gap">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
                   <button
                     type="button"
-                    onClick={resetComposer}
-                    disabled={isSubmitting}
-                    className="text-body-small text-muted hover:text-primary disabled:opacity-50"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex items-center gap-tight-gap text-body-small text-secondary hover:text-primary"
                   >
-                    Cancel
+                    <Icon src={icons.plus} size={14} />
+                    Add photo
                   </button>
-                  <button
-                    type="button"
-                    onClick={handleSaveNote}
-                    disabled={isSubmitting}
-                    className="rounded-sm bg-accent px-item-gap py-1 text-body-small font-medium text-on-accent disabled:opacity-50"
-                  >
-                    {isSubmitting ? 'Saving…' : 'Save'}
-                  </button>
+
+                  <div className="flex items-center gap-inline-gap">
+                    <button
+                      type="button"
+                      onClick={resetComposer}
+                      disabled={isSubmitting}
+                      className="text-body-small text-muted hover:text-primary disabled:opacity-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleSaveNote}
+                      disabled={isSubmitting}
+                      className="rounded-sm bg-accent px-item-gap py-1 text-body-small font-medium text-on-accent disabled:opacity-50"
+                    >
+                      {isSubmitting ? 'Saving…' : 'Save'}
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setIsComposing(true)}
+                className="flex w-full items-center gap-inline-gap rounded-sm border border-dashed border-card bg-surface-overlay p-item-gap transition-colors duration-normal hover:bg-surface-control"
+              >
+                <Icon src={icons.plus} />
+                <span className="text-body text-secondary">New note</span>
+              </button>
+            )
           ) : (
-            <button
-              type="button"
-              onClick={() => setIsComposing(true)}
-              className="flex w-full items-center gap-inline-gap rounded-sm border border-dashed border-card bg-surface-overlay p-item-gap transition-colors duration-normal hover:bg-surface-control"
-            >
-              <Icon src={icons.plus} />
-              <span className="text-body text-secondary">New note</span>
-            </button>
+            <div className="flex w-full flex-col gap-inline-gap">
+              <p className="text-body-small text-muted">
+                No longer in your garden — notes are read-only.
+              </p>
+              <button
+                type="button"
+                onClick={handleAddBackToGarden}
+                disabled={isReAdding}
+                className="flex w-full items-center gap-inline-gap rounded-sm bg-surface-control p-inline-gap text-body-small text-primary transition-colors duration-normal hover:bg-gray-0 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <span className="flex-1 text-left">
+                  {isReAdding ? 'Adding back…' : 'Add back to garden'}
+                </span>
+                <Icon src={icons.arrowRight} />
+              </button>
+              {reAddError && (
+                <p className="text-body-small text-critical">{reAddError}</p>
+              )}
+            </div>
           )}
         </div>
 
