@@ -1,0 +1,15 @@
+.line {
+  font-size: 12px;
+  color: var(--color-sage-300);
+  margin: 0 0 176px;
+}
+
+.line a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.line a:hover {
+  color: var(--color-text-primary);
+}
