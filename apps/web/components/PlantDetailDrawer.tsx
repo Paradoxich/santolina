@@ -1,11 +1,19 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Icon } from '@paradoxui/ui'
+import { Icon, useToast } from '@paradoxui/ui'
 import { icons } from '@/lib/icons'
 import type { PlantDetail } from '@/lib/plant-detail'
 import { formatPlantSubtitle } from '@/lib/format-plant'
 import { buildGoodForYourGarden } from '@/lib/good-for-your-garden'
+import {
+  addToPalette,
+  updateStatus,
+  removeFromPalette,
+  getPaletteStatus,
+  type PaletteStatus,
+} from '@/server/palette-actions'
 import { AboutSection } from './plant-detail/AboutSection'
 import { GoodForYourGardenSection } from './plant-detail/GoodForYourGardenSection'
 import { CareSection } from './plant-detail/CareSection'
@@ -34,6 +42,252 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
   )
   const photos = (plant.image_urls ?? []).slice(0, 3)
   const bullets = buildGoodForYourGarden(plant, garden, companions)
+
+  const router = useRouter()
+  const { toast } = useToast()
+
+  const [palette, setPalette] = useState<{
+    paletteId: string
+    status: PaletteStatus
+  } | null>(null)
+  const [isStatusLoading, setIsStatusLoading] = useState(true)
+  const [pendingAction, setPendingAction] = useState<'plan' | 'garden' | null>(
+    null
+  )
+  const [actionError, setActionError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    setIsStatusLoading(true)
+    setActionError(null)
+    getPaletteStatus({ plantId: plant.id })
+      .then((result) => {
+        if (!cancelled) setPalette(result)
+      })
+      .catch((err) => {
+        if (!cancelled)
+          setActionError(
+            err instanceof Error ? err.message : 'Failed to load palette status'
+          )
+      })
+      .finally(() => {
+        if (!cancelled) setIsStatusLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [plant.id])
+
+  const handleAddToPlan = async () => {
+    setActionError(null)
+    setPendingAction('plan')
+    try {
+      if (palette?.status === 'planned') {
+        const removedId = palette.paletteId
+        await removeFromPalette({ paletteId: removedId })
+        setPalette(null)
+        router.refresh()
+        toast({
+          groupKey: plant.id,
+          title: 'Removed from plan',
+          description: `${plant.common_name} removed from your planned list.`,
+          actions: [
+            {
+              label: 'Undo',
+              onClick: async () => {
+                try {
+                  const result = await addToPalette({
+                    plantId: plant.id,
+                    status: 'planned',
+                    source: 'manual',
+                  })
+                  setPalette({ paletteId: result.id, status: result.status })
+                  router.refresh()
+                } catch (err) {
+                  setActionError(
+                    err instanceof Error ? err.message : 'Undo failed.'
+                  )
+                }
+              },
+            },
+          ],
+        })
+      } else if (!palette) {
+        const result = await addToPalette({
+          plantId: plant.id,
+          status: 'planned',
+          source: 'manual',
+        })
+        setPalette({ paletteId: result.id, status: result.status })
+        router.refresh()
+        toast({
+          groupKey: plant.id,
+          title: 'Added to your plan',
+          description: `${plant.common_name} is on your planned list.`,
+          variant: 'positive',
+          actions: [
+            {
+              label: 'See planned',
+              onClick: () => router.push('/garden?tab=planned'),
+            },
+            {
+              label: 'Undo',
+              onClick: async () => {
+                try {
+                  await removeFromPalette({ paletteId: result.id })
+                  setPalette(null)
+                  router.refresh()
+                } catch (err) {
+                  setActionError(
+                    err instanceof Error ? err.message : 'Undo failed.'
+                  )
+                }
+              },
+            },
+          ],
+        })
+      }
+    } catch (err) {
+      setActionError(
+        err instanceof Error ? err.message : 'Something went wrong.'
+      )
+    } finally {
+      setPendingAction(null)
+    }
+  }
+
+  /**
+   * Handles the drawer's second button across all three states. The
+   * transition it performs — and its label — differs by state: fresh add
+   * (not-in-palette), promotion (planned -> planted, "Move to growing"),
+   * or removal (planted -> not-in-palette). See docs/architecture.md §14
+   * for why "Add to garden" and "Move to growing" have to stay distinct
+   * labels rather than one button always saying the same thing.
+   */
+  const handleSecondaryAction = async () => {
+    setActionError(null)
+    setPendingAction('garden')
+    try {
+      if (palette?.status === 'planted') {
+        const removedId = palette.paletteId
+        await removeFromPalette({ paletteId: removedId })
+        setPalette(null)
+        router.refresh()
+        toast({
+          groupKey: plant.id,
+          title: 'Removed from your garden',
+          description: `${plant.common_name} removed from your garden.`,
+          actions: [
+            {
+              label: 'Undo',
+              onClick: async () => {
+                try {
+                  const result = await addToPalette({
+                    plantId: plant.id,
+                    status: 'planted',
+                    source: 'manual',
+                  })
+                  setPalette({ paletteId: result.id, status: result.status })
+                  router.refresh()
+                } catch (err) {
+                  setActionError(
+                    err instanceof Error ? err.message : 'Undo failed.'
+                  )
+                }
+              },
+            },
+          ],
+        })
+      } else if (palette?.status === 'planned') {
+        const paletteId = palette.paletteId
+        await updateStatus({ paletteId, status: 'planted' })
+        setPalette({ paletteId, status: 'planted' })
+        router.refresh()
+        toast({
+          groupKey: plant.id,
+          title: 'Moved to growing',
+          description: `${plant.common_name} is now growing in your garden.`,
+          variant: 'positive',
+          actions: [
+            {
+              label: 'Undo',
+              onClick: async () => {
+                try {
+                  await updateStatus({ paletteId, status: 'planned' })
+                  setPalette({ paletteId, status: 'planned' })
+                  router.refresh()
+                } catch (err) {
+                  setActionError(
+                    err instanceof Error ? err.message : 'Undo failed.'
+                  )
+                }
+              },
+            },
+          ],
+        })
+      } else {
+        const result = await addToPalette({
+          plantId: plant.id,
+          status: 'planted',
+          source: 'manual',
+        })
+        setPalette({ paletteId: result.id, status: result.status })
+        router.refresh()
+        toast({
+          groupKey: plant.id,
+          title: 'Added to your garden',
+          description: `${plant.common_name} is now growing in your garden.`,
+          variant: 'positive',
+          actions: [
+            {
+              label: 'Undo',
+              onClick: async () => {
+                try {
+                  await removeFromPalette({ paletteId: result.id })
+                  setPalette(null)
+                  router.refresh()
+                } catch (err) {
+                  setActionError(
+                    err instanceof Error ? err.message : 'Undo failed.'
+                  )
+                }
+              },
+            },
+          ],
+        })
+      }
+    } catch (err) {
+      setActionError(
+        err instanceof Error ? err.message : 'Something went wrong.'
+      )
+    } finally {
+      setPendingAction(null)
+    }
+  }
+
+  const addToPlanLabel =
+    pendingAction === 'plan'
+      ? palette?.status === 'planned'
+        ? 'Removing…'
+        : 'Adding…'
+      : palette?.status === 'planned'
+        ? 'Remove from plan'
+        : 'Add to plan'
+
+  const secondaryActionLabel =
+    pendingAction === 'garden'
+      ? palette?.status === 'planted'
+        ? 'Removing…'
+        : palette?.status === 'planned'
+          ? 'Moving…'
+          : 'Saving…'
+      : palette?.status === 'planted'
+        ? 'Remove from garden'
+        : palette?.status === 'planned'
+          ? 'Move to growing'
+          : 'Add to garden'
+
+  const controlsDisabled = isStatusLoading || pendingAction !== null
 
   useEffect(() => {
     // Mirrors the lg breakpoint: below it the drawer is a full-screen
@@ -70,15 +324,19 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
         <div className="flex items-center gap-inline-gap">
           <button
             type="button"
-            className="flex h-8 items-center rounded-sm border border-card bg-surface-inverse px-item-gap text-body-small text-on-accent"
+            onClick={handleAddToPlan}
+            disabled={controlsDisabled || palette?.status === 'planted'}
+            className="flex h-8 items-center rounded-sm border border-card bg-surface-inverse px-item-gap text-body-small text-on-accent disabled:cursor-not-allowed disabled:opacity-50"
           >
-            Add to plan
+            {addToPlanLabel}
           </button>
           <button
             type="button"
-            className="flex h-8 items-center rounded-sm border border-card bg-surface-control px-inline-gap text-body-small text-secondary"
+            onClick={handleSecondaryAction}
+            disabled={controlsDisabled}
+            className="flex h-8 items-center rounded-sm border border-card bg-surface-control px-inline-gap text-body-small text-secondary disabled:cursor-not-allowed disabled:opacity-50"
           >
-            I have this
+            {secondaryActionLabel}
           </button>
           <button
             type="button"
@@ -89,6 +347,15 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
           </button>
         </div>
       </div>
+
+      {actionError && (
+        <p
+          role="alert"
+          className="w-full shrink-0 border-b border-card bg-surface-critical px-card-padding py-inline-gap text-label text-critical"
+        >
+          {actionError}
+        </p>
+      )}
 
       <div className="flex w-full flex-1 flex-col gap-section-break overflow-y-auto p-card-padding">
         <div className="flex w-full shrink-0 flex-col gap-item-gap">

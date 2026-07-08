@@ -13,13 +13,16 @@ const statusLabels: Record<BloomStatus, string> = {
 
 interface GardenPlantTileProps {
   plant: GardenPlant
+  onClick?: () => void
 }
 
-export function GardenPlantTile({ plant }: GardenPlantTileProps) {
+export function GardenPlantTile({ plant, onClick }: GardenPlantTileProps) {
   const bloomStatus = getBloomStatus(plant.bloomMonths)
 
   return (
     <MediaCard
+      as="button"
+      onClick={onClick}
       image={
         <Image
           src={plant.imageUrl}

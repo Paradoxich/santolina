@@ -34,7 +34,10 @@ export { Modal } from './components/Modal'
 export type { ModalProps } from './components/Modal'
 
 export { Toast } from './components/Toast'
-export type { ToastProps } from './components/Toast'
+export type { ToastProps, ToastAction } from './components/Toast'
+
+export { ToastProvider, useToast } from './components/ToastProvider'
+export type { ToastOptions } from './components/ToastProvider'
 
 export { Tooltip } from './components/Tooltip'
 export type { TooltipProps } from './components/Tooltip'

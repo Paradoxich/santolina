@@ -6,16 +6,21 @@ import type { GardenPlant } from '@/types/garden'
 interface PlannedPlantTileProps {
   plant: GardenPlant
   onRemove?: (id: string) => void
-  onMarkAsPlanted?: (id: string) => void
+  onMoveToGrowing?: (id: string) => void
+  onOpenDetails?: (id: string) => void
+  disabled?: boolean
 }
 
 export function PlannedPlantTile({
   plant,
   onRemove,
-  onMarkAsPlanted,
+  onMoveToGrowing,
+  onOpenDetails,
+  disabled = false,
 }: PlannedPlantTileProps) {
   return (
     <MediaCard
+      surface="sunken"
       image={
         <Image
           src={plant.imageUrl}
@@ -35,17 +40,27 @@ export function PlannedPlantTile({
           <button
             type="button"
             onClick={() => onRemove?.(plant.id)}
+            disabled={disabled}
             aria-label={`Remove ${plant.name} from planned`}
-            className="flex h-8 items-center justify-center rounded-[6px] border border-card p-inline-gap transition-colors duration-normal hover:bg-surface-overlay"
+            className="flex h-8 items-center justify-center rounded-[6px] border border-card p-inline-gap transition-colors duration-normal hover:bg-surface-overlay disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Icon src={icons.trash} />
           </button>
           <button
             type="button"
-            onClick={() => onMarkAsPlanted?.(plant.id)}
-            className="flex h-8 flex-1 items-center gap-inline-gap rounded-sm bg-surface-control p-inline-gap text-body-small text-primary transition-colors duration-normal hover:bg-gray-0"
+            onClick={() => onOpenDetails?.(plant.id)}
+            aria-label={`View details for ${plant.name}`}
+            className="flex h-8 items-center justify-center rounded-[6px] border border-card p-inline-gap transition-colors duration-normal hover:bg-surface-overlay"
           >
-            <span className="flex-1 text-left">Mark as planted</span>
+            <Icon src={icons.info} />
+          </button>
+          <button
+            type="button"
+            onClick={() => onMoveToGrowing?.(plant.id)}
+            disabled={disabled}
+            className="flex h-8 flex-1 items-center gap-inline-gap rounded-sm bg-surface-control p-inline-gap text-body-small text-primary transition-colors duration-normal hover:bg-gray-0 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <span className="flex-1 text-left">Move to growing</span>
             <Icon src={icons.arrowRight} />
           </button>
         </>

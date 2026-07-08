@@ -13,6 +13,7 @@ export const icons = {
   diary: '/icons/icon-diary.svg',
   filter: '/icons/icon-filter.svg',
   grid: '/icons/icon-grid.svg',
+  info: '/icons/icon-info.svg',
   issues: '/icons/icon-issues.svg',
   leaf: '/icons/icon-leaf.svg',
   maintenance: '/icons/icon-maintenance.svg',

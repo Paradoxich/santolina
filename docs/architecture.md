@@ -257,3 +257,76 @@ Checked in priority order as listed. `currentMonth` is `today.getMonth() + 1` (1
 **Why this over a temporary permissive RLS policy:** A permissive policy (e.g. `USING (true)` or an anon-role carve-out) would need to be written now and correctly reverted later — an easy thing to forget, and a real risk if it ships to production. The existing `auth.uid() = user_id` policies are already correct for when real auth exists; bypassing them at the client layer for this one single-tenant test phase keeps the policies untouched and the eventual auth cutover simpler — swap `getCurrentGarden()`'s hardcoded id for a real session lookup, delete `lib/current-garden.ts`, done. It also mirrors a pattern already established in this codebase (§5): service-role access for privileged, script-like operations, kept out of the client bundle.
 
 **Explicitly temporary:** `lib/current-garden.ts` hardcodes the single seeded garden's id (`7055368c-6158-46b9-a592-223974c7a319`) and is commented as such. It assumes single-tenant, single-garden usage — do not build multi-user or multi-garden features on top of it. It gets deleted, not extended, once onboarding creates real garden rows tied to real auth sessions.
+
+---
+
+## 12. Palette write path: application-level upsert, reversible button state machine
+
+**Decision:** `server/palette-actions.ts` (`addToPalette`, `updateStatus`, `removeFromPalette`, `getPaletteStatus`, `listPalette`) is the write path for `palette_plants`. Same pattern as §11: the service-role client, scoped to `getCurrentGardenId()`. Every write also filters on `garden_id` before mutating — `updateStatus`/`removeFromPalette` no-op (throw) rather than silently touching a row outside the current garden, which matters once this stops being single-tenant.
+
+**`addToPalette` is an application-level upsert, not `ON CONFLICT`:** there's no unique constraint on `(garden_id, plant_id)` in the live schema, and adding one was out of scope (no schema changes for this pass). `addToPalette` selects for an existing row on that pair first, then updates it (status/source) if found, or inserts if not. This means clicking "Add to plan" on an already-planned plant, or "I have this" on an already-planted one, just updates the existing row instead of creating a duplicate — the same behavior a DB-level upsert would give, implemented at the application layer instead.
+
+**Drawer button state machine — fully reversible, two buttons, three states:**
+
+```
+not-in-palette ⇄ planned ⇄ planted
+```
+
+- **not-in-palette:** both buttons active. "Add to plan" → `addToPalette(status: 'planned')`. "Add to garden" → `addToPalette(status: 'planted')`.
+- **planned:** "Add to plan" becomes "Remove from plan" → `removeFromPalette`, back to not-in-palette. "Add to garden" stays active, unchanged label → `updateStatus(status: 'planted')`, upgrading in place (same `paletteId`, no new row).
+- **planted:** "Add to garden" becomes "Remove from garden" → `removeFromPalette`, back to not-in-palette. "Add to plan" is disabled — downgrading planted→planned isn't a meaningful action via this button, so it's the one non-actionable state rather than a dead-end label pretending to do something.
+
+(Originally shipped as "I have this" — renamed to "Add to garden" for symmetry with "Add to plan" when toast notifications were added, see §13.)
+
+`getPaletteStatus` is fetched on drawer mount and whenever the displayed plant changes (the drawer is a single reused component instance across plant selections in Explore, not remounted per plant — see `ExploreClient`'s static `key`), with a cancellation guard so a fast plant switch can't let a stale response overwrite the newer one.
+
+Loading/error feedback while a request is in flight is local component state: button labels swap to "Adding…"/"Saving…"/"Removing…", and a small inline banner (`text-critical`, same token Badge/Toast already use for their critical variant) shows on failure. My Garden's Planned-tab actions (remove, mark as planted) follow the same local-state pattern, calling `router.refresh()` on success to re-run the server component and pull fresh `listPalette()` data — there's no client-side cache to invalidate. Success feedback (confirmation + undo) is a toast — see §13.
+
+---
+
+## 13. Toast notifications: built from scratch, grouped by entity to prevent stale actions
+
+**No toast/notification system existed in the app** before this — `Toast` in `@paradoxui/ui` was an unwired presentational primitive, only ever rendered in the design-system showcase, with no provider, state management, or stacking logic anywhere. Adding confirmation + undo toasts to the palette actions (§12) required building this from scratch.
+
+**Where it lives:** `packages/ui` — a toast provider/hook is generic UI infrastructure with no garden knowledge, so per the project's Layer 2/3 split it belongs in the framework package, not `apps/web`.
+
+- `components/Toast.tsx` — extended with an optional `actions?: ToastAction[]` slot (label + onClick), rendered as inline text buttons below the description. Backward compatible; the design-system showcase usage is untouched.
+- `components/ToastProvider.tsx` — new. `ToastProvider` (context + a fixed-position stack rendered via `Toast`) and `useToast()` (`{ toast(options) }`). Auto-dismisses each toast after `duration` (default 6000ms). Mounted once in `app/(app)/layout.tsx`, so the Explore drawer and My Garden share one toast stack and toasts survive client-side navigation between them (the layout doesn't remount on route change within the group).
+
+**Bug found during testing, fixed before shipping — `groupKey` dedup:** rapid actions on the same plant (e.g. Add to plan → Remove from plan in quick succession, well within the 6s auto-dismiss window) stacked two toasts. The older toast's "Undo" button stayed mounted and clickable, but its closure captured the _original_ `paletteId` — which the newer action had already deleted. Clicking that stale Undo threw "Palette row not found in the current garden" (a real, reachable error, not just a test artifact — reproduced by scripting the exact click sequence a fast/impatient user could produce). Fix: `ToastOptions.groupKey` — every palette toast call passes the plant's id as `groupKey`; `ToastProvider.toast()` removes any existing toast with the same `groupKey` before adding the new one, so only the latest, valid action's toast (and its correctly-scoped Undo) is ever on screen for a given plant. A second bug surfaced by the same fix: `groupKey` was being spread onto the underlying `<div>` via `{...toastProps}` (React DOM prop warning) — fixed by explicitly destructuring it out before the spread, alongside `id` and `actions`.
+
+**Copy and undo semantics, by action:**
+
+| Action                                         | Toast                      | Extra action                          | Undo does                                                                                              |
+| ---------------------------------------------- | -------------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| Add to plan                                    | "Added to your plan"       | See planned (→ `/garden?tab=planned`) | `removeFromPalette` (delete the row just created)                                                      |
+| Remove from plan                               | "Removed from plan"        | —                                     | `addToPalette` (re-insert with the captured prior status/source/notes)                                 |
+| Add to garden (fresh)                          | "Added to your garden"     | —                                     | `removeFromPalette`                                                                                    |
+| Move to growing (drawer, promote from planned) | "Moved to growing"         | —                                     | `updateStatus(status: 'planned')` — reverts in place, doesn't delete                                   |
+| Remove from garden                             | "Removed from your garden" | —                                     | `addToPalette` (re-insert)                                                                             |
+| Move to growing (My Garden card)               | "Moved to growing"         | —                                     | `updateStatus(status: 'planned')`                                                                      |
+| Remove from planned — trash icon (My Garden)   | "Removed from plan"        | —                                     | `addToPalette` (re-insert, using the row captured from the still-valid `palette` prop before deletion) |
+
+Each Undo closure is handwritten per call site rather than derived generically — insert/update/delete each has a different correct inverse (delete a fresh insert, revert a status change, re-insert a deletion), and a generic "undo the last mutation" abstraction would have to reconstruct that same branching anyway. Any action button click (Undo or "See planned") dismisses its own toast immediately, rather than waiting for the timer — prevents a double-click from re-firing an already-completed undo.
+
+---
+
+## 14. "Add to garden" vs. "Move to growing": two different transitions, two different labels
+
+**The problem:** the drawer's second button used to say "Add to garden" in every state except `planted`, covering two operations that are not the same thing to a user: (1) adding a plant to the palette for the first time (source: `manual`, brand new row) and (2) promoting an already-planned plant to planted (`updateStatus`, same row, no new insert). Reusing one label for both made the button's meaning ambiguous — "Add to garden" on a plant you'd already planned reads as if it might create a duplicate entry, when it actually just changes that plant's status.
+
+**Decision:** these stay two distinct labels everywhere the transition appears, tied strictly to what's actually happening to the data, not to which button/card triggered it:
+
+- **"Add to plan" / "Add to garden"** — only for the not-in-palette state. A fresh `addToPalette` insert.
+- **"Move to growing"** — only for promoting an existing `planned` row to `planted`. An `updateStatus` in place, same `paletteId`. Applies to the drawer's second button when `palette.status === 'planned'`, and to the Planned card's primary action in My Garden (`PlannedPlantTile`) — same underlying transition, same label, regardless of where it's triggered from.
+
+Toast copy follows the same split: "Added to your garden" only fires for a fresh insert; "Moved to growing" fires for the promotion, in both the drawer and the My Garden card. `PlantDetailDrawer`'s handler for this button is named `handleSecondaryAction` (not `handleAddToGarden`) precisely because it isn't always "add to garden" — it branches into insert, promote, or remove depending on current state, matching `secondaryActionLabel`'s three-way branch.
+
+## 15. Growing vs. Planned: a record you inspect vs. a draft you act on
+
+**Decision:** the two My Garden tabs intentionally use different card interaction models, not an inconsistency to reconcile:
+
+- **Growing (`GardenPlantTile`)** — a record of what's already in the ground. The whole card is a button (`MediaCard as="button"`) that opens the detail drawer; there's nothing else to do to a growing plant from the grid itself.
+- **Planned (`PlannedPlantTile`)** — a draft awaiting a decision (move it to growing, or drop it). The card body is inert on purpose; only the explicit trash / info / "Move to growing" icons in the footer are interactive. A whole-card click here would fight with those adjacent actions — with three sibling click targets already in the footer, clicking anywhere else on the card doing yet another thing (opening the drawer) makes it hard to tell what a click on the image or title vs. the footer will do. Requiring the small info icon for "view details" keeps the card's primary surface reserved for the two decisions it exists to prompt.
+
+**Visual reinforcement:** `MediaCard` gained a `surface?: 'card' | 'sunken'` prop (`bg-surface-card` vs `bg-surface-sunken`) so Planned cards can recede relative to Growing cards without inventing a new token — `surface-sunken` resolves to the same sage-200 as the page background (already used this way by `StatCard`'s `neutral` tone), so a Planned card reads as blending into the page rather than sitting on it, reinforcing "this isn't real yet" alongside the existing dashed border.
