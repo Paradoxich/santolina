@@ -7,7 +7,6 @@ import { DiaryRecentCard } from '@/components/dashboard/DiaryRecentCard'
 import { InsightCard } from '@/components/dashboard/InsightCard'
 import {
   bloomSeason,
-  careTips,
   dashboardSubtitle,
   gardenInsight,
   myPlants,
@@ -17,13 +16,16 @@ import {
 } from '@/lib/sample-dashboard'
 import { sampleGardenPlants } from '@/lib/sample-garden'
 import { samplePlantDiaries } from '@/lib/sample-diary'
+import { getCareTips } from '@/lib/care-tips'
+import { listPalette } from '@/server/palette-actions'
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
   const today = new Intl.DateTimeFormat('en-US', {
     month: 'long',
     day: 'numeric',
   }).format(new Date())
   const growingCount = sampleGardenPlants.filter((p) => !p.planned).length
+  const careTips = getCareTips(await listPalette())
 
   return (
     <div className="max-w-[1032px] pb-16 pt-8 md:pt-12">
