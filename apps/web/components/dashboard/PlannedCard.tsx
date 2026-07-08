@@ -16,14 +16,16 @@ export function PlannedCard({ plants }: PlannedCardProps) {
             className="flex w-full items-center justify-between gap-row-gap"
           >
             <span className="flex min-w-0 items-center gap-tight-gap">
-              <span className="relative size-5 shrink-0 overflow-hidden rounded-xs">
-                <Image
-                  src={plant.imageUrl}
-                  alt=""
-                  fill
-                  sizes="20px"
-                  className="object-cover"
-                />
+              <span className="relative size-5 shrink-0 overflow-hidden rounded-xs bg-surface-subtle">
+                {plant.imageUrl && (
+                  <Image
+                    src={plant.imageUrl}
+                    alt=""
+                    fill
+                    sizes="20px"
+                    className="object-cover"
+                  />
+                )}
               </span>
               <span className="truncate text-body-small text-primary">
                 {plant.name}
