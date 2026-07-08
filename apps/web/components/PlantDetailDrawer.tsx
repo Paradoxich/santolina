@@ -86,6 +86,7 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
         const removedId = palette.paletteId
         await removeFromPalette({ paletteId: removedId })
         setPalette(null)
+        router.refresh()
         toast({
           groupKey: plant.id,
           title: 'Removed from plan',
@@ -101,6 +102,7 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
                     source: 'manual',
                   })
                   setPalette({ paletteId: result.id, status: result.status })
+                  router.refresh()
                 } catch (err) {
                   setActionError(
                     err instanceof Error ? err.message : 'Undo failed.'
@@ -117,6 +119,7 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
           source: 'manual',
         })
         setPalette({ paletteId: result.id, status: result.status })
+        router.refresh()
         toast({
           groupKey: plant.id,
           title: 'Added to your plan',
@@ -133,6 +136,7 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
                 try {
                   await removeFromPalette({ paletteId: result.id })
                   setPalette(null)
+                  router.refresh()
                 } catch (err) {
                   setActionError(
                     err instanceof Error ? err.message : 'Undo failed.'
@@ -152,7 +156,15 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
     }
   }
 
-  const handleAddToGarden = async () => {
+  /**
+   * Handles the drawer's second button across all three states. The
+   * transition it performs — and its label — differs by state: fresh add
+   * (not-in-palette), promotion (planned -> planted, "Move to growing"),
+   * or removal (planted -> not-in-palette). See docs/architecture.md §14
+   * for why "Add to garden" and "Move to growing" have to stay distinct
+   * labels rather than one button always saying the same thing.
+   */
+  const handleSecondaryAction = async () => {
     setActionError(null)
     setPendingAction('garden')
     try {
@@ -160,6 +172,7 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
         const removedId = palette.paletteId
         await removeFromPalette({ paletteId: removedId })
         setPalette(null)
+        router.refresh()
         toast({
           groupKey: plant.id,
           title: 'Removed from your garden',
@@ -175,6 +188,7 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
                     source: 'manual',
                   })
                   setPalette({ paletteId: result.id, status: result.status })
+                  router.refresh()
                 } catch (err) {
                   setActionError(
                     err instanceof Error ? err.message : 'Undo failed.'
@@ -188,9 +202,10 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
         const paletteId = palette.paletteId
         await updateStatus({ paletteId, status: 'planted' })
         setPalette({ paletteId, status: 'planted' })
+        router.refresh()
         toast({
           groupKey: plant.id,
-          title: 'Added to your garden',
+          title: 'Moved to growing',
           description: `${plant.common_name} is now growing in your garden.`,
           variant: 'positive',
           actions: [
@@ -200,6 +215,7 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
                 try {
                   await updateStatus({ paletteId, status: 'planned' })
                   setPalette({ paletteId, status: 'planned' })
+                  router.refresh()
                 } catch (err) {
                   setActionError(
                     err instanceof Error ? err.message : 'Undo failed.'
@@ -216,6 +232,7 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
           source: 'manual',
         })
         setPalette({ paletteId: result.id, status: result.status })
+        router.refresh()
         toast({
           groupKey: plant.id,
           title: 'Added to your garden',
@@ -228,6 +245,7 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
                 try {
                   await removeFromPalette({ paletteId: result.id })
                   setPalette(null)
+                  router.refresh()
                 } catch (err) {
                   setActionError(
                     err instanceof Error ? err.message : 'Undo failed.'
@@ -256,14 +274,18 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
         ? 'Remove from plan'
         : 'Add to plan'
 
-  const addToGardenLabel =
+  const secondaryActionLabel =
     pendingAction === 'garden'
       ? palette?.status === 'planted'
         ? 'Removing…'
-        : 'Saving…'
+        : palette?.status === 'planned'
+          ? 'Moving…'
+          : 'Saving…'
       : palette?.status === 'planted'
         ? 'Remove from garden'
-        : 'Add to garden'
+        : palette?.status === 'planned'
+          ? 'Move to growing'
+          : 'Add to garden'
 
   const controlsDisabled = isStatusLoading || pendingAction !== null
 
@@ -310,11 +332,11 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
           </button>
           <button
             type="button"
-            onClick={handleAddToGarden}
+            onClick={handleSecondaryAction}
             disabled={controlsDisabled}
             className="flex h-8 items-center rounded-sm border border-card bg-surface-control px-inline-gap text-body-small text-secondary disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {addToGardenLabel}
+            {secondaryActionLabel}
           </button>
           <button
             type="button"

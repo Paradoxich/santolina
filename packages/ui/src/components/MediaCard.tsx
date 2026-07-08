@@ -16,9 +16,16 @@ export interface MediaCardProps {
   bodyClassName?: string
   footer?: React.ReactNode
   border?: 'solid' | 'dashed'
+  /** Card surface tone. 'sunken' recedes toward the page background — use for lower-emphasis/draft cards. */
+  surface?: 'card' | 'sunken'
   as?: 'article' | 'button'
   onClick?: () => void
   className?: string
+}
+
+const surfaceStyles: Record<NonNullable<MediaCardProps['surface']>, string> = {
+  card: 'bg-surface-card',
+  sunken: 'bg-surface-sunken',
 }
 
 export function MediaCard({
@@ -31,12 +38,14 @@ export function MediaCard({
   bodyClassName = '',
   footer,
   border = 'solid',
+  surface = 'card',
   as = 'article',
   onClick,
   className = '',
 }: MediaCardProps) {
   const chrome = [
-    'flex flex-col gap-section-gap rounded-card-tile bg-surface-card p-card-padding',
+    'flex flex-col gap-section-gap rounded-card-tile p-card-padding',
+    surfaceStyles[surface],
     border === 'dashed'
       ? 'border border-dashed border-card'
       : 'border border-card',

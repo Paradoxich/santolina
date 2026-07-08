@@ -297,14 +297,36 @@ Loading/error feedback while a request is in flight is local component state: bu
 
 **Copy and undo semantics, by action:**
 
-| Action                                       | Toast                      | Extra action                          | Undo does                                                                                              |
-| -------------------------------------------- | -------------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| Add to plan                                  | "Added to your plan"       | See planned (→ `/garden?tab=planned`) | `removeFromPalette` (delete the row just created)                                                      |
-| Remove from plan                             | "Removed from plan"        | —                                     | `addToPalette` (re-insert with the captured prior status/source/notes)                                 |
-| Add to garden (fresh)                        | "Added to your garden"     | —                                     | `removeFromPalette`                                                                                    |
-| Add to garden (upgrade from planned)         | "Added to your garden"     | —                                     | `updateStatus(status: 'planned')` — reverts in place, doesn't delete                                   |
-| Remove from garden                           | "Removed from your garden" | —                                     | `addToPalette` (re-insert)                                                                             |
-| Mark as planted (My Garden)                  | "Added to your garden"     | —                                     | `updateStatus(status: 'planned')`                                                                      |
-| Remove from planned — trash icon (My Garden) | "Removed from plan"        | —                                     | `addToPalette` (re-insert, using the row captured from the still-valid `palette` prop before deletion) |
+| Action                                         | Toast                      | Extra action                          | Undo does                                                                                              |
+| ---------------------------------------------- | -------------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| Add to plan                                    | "Added to your plan"       | See planned (→ `/garden?tab=planned`) | `removeFromPalette` (delete the row just created)                                                      |
+| Remove from plan                               | "Removed from plan"        | —                                     | `addToPalette` (re-insert with the captured prior status/source/notes)                                 |
+| Add to garden (fresh)                          | "Added to your garden"     | —                                     | `removeFromPalette`                                                                                    |
+| Move to growing (drawer, promote from planned) | "Moved to growing"         | —                                     | `updateStatus(status: 'planned')` — reverts in place, doesn't delete                                   |
+| Remove from garden                             | "Removed from your garden" | —                                     | `addToPalette` (re-insert)                                                                             |
+| Move to growing (My Garden card)               | "Moved to growing"         | —                                     | `updateStatus(status: 'planned')`                                                                      |
+| Remove from planned — trash icon (My Garden)   | "Removed from plan"        | —                                     | `addToPalette` (re-insert, using the row captured from the still-valid `palette` prop before deletion) |
 
 Each Undo closure is handwritten per call site rather than derived generically — insert/update/delete each has a different correct inverse (delete a fresh insert, revert a status change, re-insert a deletion), and a generic "undo the last mutation" abstraction would have to reconstruct that same branching anyway. Any action button click (Undo or "See planned") dismisses its own toast immediately, rather than waiting for the timer — prevents a double-click from re-firing an already-completed undo.
+
+---
+
+## 14. "Add to garden" vs. "Move to growing": two different transitions, two different labels
+
+**The problem:** the drawer's second button used to say "Add to garden" in every state except `planted`, covering two operations that are not the same thing to a user: (1) adding a plant to the palette for the first time (source: `manual`, brand new row) and (2) promoting an already-planned plant to planted (`updateStatus`, same row, no new insert). Reusing one label for both made the button's meaning ambiguous — "Add to garden" on a plant you'd already planned reads as if it might create a duplicate entry, when it actually just changes that plant's status.
+
+**Decision:** these stay two distinct labels everywhere the transition appears, tied strictly to what's actually happening to the data, not to which button/card triggered it:
+
+- **"Add to plan" / "Add to garden"** — only for the not-in-palette state. A fresh `addToPalette` insert.
+- **"Move to growing"** — only for promoting an existing `planned` row to `planted`. An `updateStatus` in place, same `paletteId`. Applies to the drawer's second button when `palette.status === 'planned'`, and to the Planned card's primary action in My Garden (`PlannedPlantTile`) — same underlying transition, same label, regardless of where it's triggered from.
+
+Toast copy follows the same split: "Added to your garden" only fires for a fresh insert; "Moved to growing" fires for the promotion, in both the drawer and the My Garden card. `PlantDetailDrawer`'s handler for this button is named `handleSecondaryAction` (not `handleAddToGarden`) precisely because it isn't always "add to garden" — it branches into insert, promote, or remove depending on current state, matching `secondaryActionLabel`'s three-way branch.
+
+## 15. Growing vs. Planned: a record you inspect vs. a draft you act on
+
+**Decision:** the two My Garden tabs intentionally use different card interaction models, not an inconsistency to reconcile:
+
+- **Growing (`GardenPlantTile`)** — a record of what's already in the ground. The whole card is a button (`MediaCard as="button"`) that opens the detail drawer; there's nothing else to do to a growing plant from the grid itself.
+- **Planned (`PlannedPlantTile`)** — a draft awaiting a decision (move it to growing, or drop it). The card body is inert on purpose; only the explicit trash / info / "Move to growing" icons in the footer are interactive. A whole-card click here would fight with those adjacent actions — with three sibling click targets already in the footer, clicking anywhere else on the card doing yet another thing (opening the drawer) makes it hard to tell what a click on the image or title vs. the footer will do. Requiring the small info icon for "view details" keeps the card's primary surface reserved for the two decisions it exists to prompt.
+
+**Visual reinforcement:** `MediaCard` gained a `surface?: 'card' | 'sunken'` prop (`bg-surface-card` vs `bg-surface-sunken`) so Planned cards can recede relative to Growing cards without inventing a new token — `surface-sunken` resolves to the same sage-200 as the page background (already used this way by `StatCard`'s `neutral` tone), so a Planned card reads as blending into the page rather than sitting on it, reinforcing "this isn't real yet" alongside the existing dashed border.

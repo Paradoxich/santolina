@@ -1,12 +1,15 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { AnimatePresence } from 'framer-motion'
 import { Chip, Tabs, useToast } from '@paradoxui/ui'
 import { GardenPlantTile } from '@/components/GardenPlantTile'
 import { PlannedPlantTile } from '@/components/PlannedPlantTile'
+import { PlantDetailDrawer } from '@/components/PlantDetailDrawer'
 import { getBloomStatus, type BloomStatus } from '@/lib/bloom-status'
 import { formatExposure, formatBloomRange } from '@/lib/format-plant'
+import type { PlantDetail } from '@/lib/plant-detail'
 import {
   addToPalette,
   updateStatus,
@@ -48,9 +51,10 @@ function toGardenPlant(row: PalettePlant): GardenPlant {
 
 interface GardenClientProps {
   palette: PalettePlant[]
+  detail: PlantDetail | null
 }
 
-export function GardenClient({ palette }: GardenClientProps) {
+export function GardenClient({ palette, detail }: GardenClientProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { toast } = useToast()
@@ -66,6 +70,24 @@ export function GardenClient({ palette }: GardenClientProps) {
     setFilter('all')
     router.replace(`/garden?tab=${value}`, { scroll: false })
   }
+
+  const openPlant = (plantId: string) =>
+    router.push(`/garden?tab=${tab}&plant=${plantId}`, { scroll: false })
+  const openPlantByPaletteId = (paletteId: string) => {
+    const row = palette.find((p) => p.id === paletteId)
+    if (row) openPlant(row.plantId)
+  }
+  const closeDrawer = () => router.push(`/garden?tab=${tab}`, { scroll: false })
+
+  useEffect(() => {
+    if (!detail) return
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeDrawer()
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [detail])
 
   const growing = palette
     .filter((p) => p.status === 'planted')
@@ -119,7 +141,7 @@ export function GardenClient({ palette }: GardenClientProps) {
     }
   }
 
-  const handleMarkAsPlanted = async (paletteId: string) => {
+  const handleMoveToGrowing = async (paletteId: string) => {
     const row = palette.find((p) => p.id === paletteId)
     setActionError(null)
     setPendingId(paletteId)
@@ -128,7 +150,7 @@ export function GardenClient({ palette }: GardenClientProps) {
       router.refresh()
       toast({
         groupKey: row?.plantId,
-        title: 'Added to your garden',
+        title: 'Moved to growing',
         description: `${row?.plant.common_name ?? 'Plant'} is now growing in your garden.`,
         variant: 'positive',
         actions: [
@@ -195,13 +217,18 @@ export function GardenClient({ palette }: GardenClientProps) {
       <div className="mt-6 grid grid-cols-1 gap-item-gap md:grid-cols-2 xl:grid-cols-3">
         {visible.map((plant) =>
           tab === 'growing' ? (
-            <GardenPlantTile key={plant.id} plant={plant} />
+            <GardenPlantTile
+              key={plant.id}
+              plant={plant}
+              onClick={() => openPlantByPaletteId(plant.id)}
+            />
           ) : (
             <PlannedPlantTile
               key={plant.id}
               plant={plant}
               onRemove={handleRemove}
-              onMarkAsPlanted={handleMarkAsPlanted}
+              onMoveToGrowing={handleMoveToGrowing}
+              onOpenDetails={openPlantByPaletteId}
               disabled={pendingId === plant.id}
             />
           )
@@ -215,6 +242,16 @@ export function GardenClient({ palette }: GardenClientProps) {
             : 'Nothing planned yet.'}
         </p>
       )}
+
+      <AnimatePresence>
+        {detail && (
+          <PlantDetailDrawer
+            key="plant-detail-drawer"
+            detail={detail}
+            onClose={closeDrawer}
+          />
+        )}
+      </AnimatePresence>
     </div>
   )
 }
