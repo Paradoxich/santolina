@@ -1,0 +1,13 @@
+Copyright (c) 2026 Ana Beverin
+
+All Rights Reserved.
+
+This repository and all of its contents (including but not limited to source
+code, documentation, design assets, and data) are proprietary and confidential.
+No permission is granted to copy, modify, merge, publish, distribute,
+sublicense, use, or sell copies of this software, in whole or in part, without
+the prior explicit written consent of the copyright holder.
+
+This applies to the entire repository, including the packages/ directories.
+See LICENSE_NOTES.md for context on the two products housed in this monorepo
+and their differing long-term licensing plans.
