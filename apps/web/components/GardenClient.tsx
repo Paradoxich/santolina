@@ -246,7 +246,7 @@ export function GardenClient({ gardenId, palette, detail }: GardenClientProps) {
           ) : planned.length > 0 ? (
             <EmptyState
               className="mt-11"
-              message="Move a planted plant here once it's in the ground."
+              message="Move a planned plant here once it's in the ground."
               ctaLabel="View planned"
               onCtaClick={() => handleTabChange('planned')}
             />
@@ -261,7 +261,7 @@ export function GardenClient({ gardenId, palette, detail }: GardenClientProps) {
         ) : (
           <EmptyState
             className="mt-11"
-            message="Add plants to your garden to start planning what's next."
+            message="Find plants you'd like to grow and add them to your plan."
             ctaLabel="Explore plants"
             ctaHref="/explore"
           />

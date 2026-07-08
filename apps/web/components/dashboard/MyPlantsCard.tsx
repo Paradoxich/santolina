@@ -17,14 +17,13 @@ export function MyPlantsCard({ plants, totalInGarden }: MyPlantsCardProps) {
         className="h-[220px] lg:h-full"
       >
         <p className="text-body-small text-muted">
-          No plants yet —{' '}
           <Link
             href="/explore"
             className="text-primary underline decoration-dotted underline-offset-4"
           >
-            explore
+            Add plants
           </Link>{' '}
-          and add some to get started.
+          to your garden to see them here.
         </p>
       </Panel>
     )
