@@ -1,13 +1,14 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { Chip, Tabs } from '@paradoxui/ui'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { Chip, Tabs, useToast } from '@paradoxui/ui'
 import { GardenPlantTile } from '@/components/GardenPlantTile'
 import { PlannedPlantTile } from '@/components/PlannedPlantTile'
 import { getBloomStatus, type BloomStatus } from '@/lib/bloom-status'
 import { formatExposure, formatBloomRange } from '@/lib/format-plant'
 import {
+  addToPalette,
   updateStatus,
   removeFromPalette,
   type PalettePlant,
@@ -51,7 +52,11 @@ interface GardenClientProps {
 
 export function GardenClient({ palette }: GardenClientProps) {
   const router = useRouter()
-  const [tab, setTab] = useState('growing')
+  const searchParams = useSearchParams()
+  const { toast } = useToast()
+  const [tab, setTab] = useState(
+    searchParams.get('tab') === 'planned' ? 'planned' : 'growing'
+  )
   const [filter, setFilter] = useState<StatusFilter>('all')
   const [pendingId, setPendingId] = useState<string | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
@@ -59,6 +64,7 @@ export function GardenClient({ palette }: GardenClientProps) {
   const handleTabChange = (value: string) => {
     setTab(value)
     setFilter('all')
+    router.replace(`/garden?tab=${value}`, { scroll: false })
   }
 
   const growing = palette
@@ -77,11 +83,33 @@ export function GardenClient({ palette }: GardenClientProps) {
   const activeTabLabel = tab === 'growing' ? 'Growing' : 'Planned'
 
   const handleRemove = async (paletteId: string) => {
+    const row = palette.find((p) => p.id === paletteId)
     setActionError(null)
     setPendingId(paletteId)
     try {
       await removeFromPalette({ paletteId })
       router.refresh()
+      if (row) {
+        toast({
+          groupKey: row.plantId,
+          title: 'Removed from plan',
+          description: `${row.plant.common_name} removed from your planned list.`,
+          actions: [
+            {
+              label: 'Undo',
+              onClick: async () => {
+                await addToPalette({
+                  plantId: row.plantId,
+                  status: row.status,
+                  source: row.source,
+                  notes: row.notes ?? undefined,
+                })
+                router.refresh()
+              },
+            },
+          ],
+        })
+      }
     } catch (err) {
       setActionError(
         err instanceof Error ? err.message : 'Something went wrong.'
@@ -92,11 +120,27 @@ export function GardenClient({ palette }: GardenClientProps) {
   }
 
   const handleMarkAsPlanted = async (paletteId: string) => {
+    const row = palette.find((p) => p.id === paletteId)
     setActionError(null)
     setPendingId(paletteId)
     try {
       await updateStatus({ paletteId, status: 'planted' })
       router.refresh()
+      toast({
+        groupKey: row?.plantId,
+        title: 'Added to your garden',
+        description: `${row?.plant.common_name ?? 'Plant'} is now growing in your garden.`,
+        variant: 'positive',
+        actions: [
+          {
+            label: 'Undo',
+            onClick: async () => {
+              await updateStatus({ paletteId, status: 'planned' })
+              router.refresh()
+            },
+          },
+        ],
+      })
     } catch (err) {
       setActionError(
         err instanceof Error ? err.message : 'Something went wrong.'

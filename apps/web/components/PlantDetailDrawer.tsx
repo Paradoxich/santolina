@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Icon } from '@paradoxui/ui'
+import { Icon, useToast } from '@paradoxui/ui'
 import { icons } from '@/lib/icons'
 import type { PlantDetail } from '@/lib/plant-detail'
 import { formatPlantSubtitle } from '@/lib/format-plant'
@@ -42,6 +43,9 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
   const photos = (plant.image_urls ?? []).slice(0, 3)
   const bullets = buildGoodForYourGarden(plant, garden, companions)
 
+  const router = useRouter()
+  const { toast } = useToast()
+
   const [palette, setPalette] = useState<{
     paletteId: string
     status: PaletteStatus
@@ -79,8 +83,33 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
     setPendingAction('plan')
     try {
       if (palette?.status === 'planned') {
-        await removeFromPalette({ paletteId: palette.paletteId })
+        const removedId = palette.paletteId
+        await removeFromPalette({ paletteId: removedId })
         setPalette(null)
+        toast({
+          groupKey: plant.id,
+          title: 'Removed from plan',
+          description: `${plant.common_name} removed from your planned list.`,
+          actions: [
+            {
+              label: 'Undo',
+              onClick: async () => {
+                try {
+                  const result = await addToPalette({
+                    plantId: plant.id,
+                    status: 'planned',
+                    source: 'manual',
+                  })
+                  setPalette({ paletteId: result.id, status: result.status })
+                } catch (err) {
+                  setActionError(
+                    err instanceof Error ? err.message : 'Undo failed.'
+                  )
+                }
+              },
+            },
+          ],
+        })
       } else if (!palette) {
         const result = await addToPalette({
           plantId: plant.id,
@@ -88,6 +117,31 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
           source: 'manual',
         })
         setPalette({ paletteId: result.id, status: result.status })
+        toast({
+          groupKey: plant.id,
+          title: 'Added to your plan',
+          description: `${plant.common_name} is on your planned list.`,
+          variant: 'positive',
+          actions: [
+            {
+              label: 'See planned',
+              onClick: () => router.push('/garden?tab=planned'),
+            },
+            {
+              label: 'Undo',
+              onClick: async () => {
+                try {
+                  await removeFromPalette({ paletteId: result.id })
+                  setPalette(null)
+                } catch (err) {
+                  setActionError(
+                    err instanceof Error ? err.message : 'Undo failed.'
+                  )
+                }
+              },
+            },
+          ],
+        })
       }
     } catch (err) {
       setActionError(
@@ -98,16 +152,63 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
     }
   }
 
-  const handleIHaveThis = async () => {
+  const handleAddToGarden = async () => {
     setActionError(null)
     setPendingAction('garden')
     try {
       if (palette?.status === 'planted') {
-        await removeFromPalette({ paletteId: palette.paletteId })
+        const removedId = palette.paletteId
+        await removeFromPalette({ paletteId: removedId })
         setPalette(null)
+        toast({
+          groupKey: plant.id,
+          title: 'Removed from your garden',
+          description: `${plant.common_name} removed from your garden.`,
+          actions: [
+            {
+              label: 'Undo',
+              onClick: async () => {
+                try {
+                  const result = await addToPalette({
+                    plantId: plant.id,
+                    status: 'planted',
+                    source: 'manual',
+                  })
+                  setPalette({ paletteId: result.id, status: result.status })
+                } catch (err) {
+                  setActionError(
+                    err instanceof Error ? err.message : 'Undo failed.'
+                  )
+                }
+              },
+            },
+          ],
+        })
       } else if (palette?.status === 'planned') {
-        await updateStatus({ paletteId: palette.paletteId, status: 'planted' })
-        setPalette({ paletteId: palette.paletteId, status: 'planted' })
+        const paletteId = palette.paletteId
+        await updateStatus({ paletteId, status: 'planted' })
+        setPalette({ paletteId, status: 'planted' })
+        toast({
+          groupKey: plant.id,
+          title: 'Added to your garden',
+          description: `${plant.common_name} is now growing in your garden.`,
+          variant: 'positive',
+          actions: [
+            {
+              label: 'Undo',
+              onClick: async () => {
+                try {
+                  await updateStatus({ paletteId, status: 'planned' })
+                  setPalette({ paletteId, status: 'planned' })
+                } catch (err) {
+                  setActionError(
+                    err instanceof Error ? err.message : 'Undo failed.'
+                  )
+                }
+              },
+            },
+          ],
+        })
       } else {
         const result = await addToPalette({
           plantId: plant.id,
@@ -115,6 +216,27 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
           source: 'manual',
         })
         setPalette({ paletteId: result.id, status: result.status })
+        toast({
+          groupKey: plant.id,
+          title: 'Added to your garden',
+          description: `${plant.common_name} is now growing in your garden.`,
+          variant: 'positive',
+          actions: [
+            {
+              label: 'Undo',
+              onClick: async () => {
+                try {
+                  await removeFromPalette({ paletteId: result.id })
+                  setPalette(null)
+                } catch (err) {
+                  setActionError(
+                    err instanceof Error ? err.message : 'Undo failed.'
+                  )
+                }
+              },
+            },
+          ],
+        })
       }
     } catch (err) {
       setActionError(
@@ -134,14 +256,14 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
         ? 'Remove from plan'
         : 'Add to plan'
 
-  const iHaveThisLabel =
+  const addToGardenLabel =
     pendingAction === 'garden'
       ? palette?.status === 'planted'
         ? 'Removing…'
         : 'Saving…'
       : palette?.status === 'planted'
         ? 'Remove from garden'
-        : 'I have this'
+        : 'Add to garden'
 
   const controlsDisabled = isStatusLoading || pendingAction !== null
 
@@ -188,11 +310,11 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
           </button>
           <button
             type="button"
-            onClick={handleIHaveThis}
+            onClick={handleAddToGarden}
             disabled={controlsDisabled}
             className="flex h-8 items-center rounded-sm border border-card bg-surface-control px-inline-gap text-body-small text-secondary disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {iHaveThisLabel}
+            {addToGardenLabel}
           </button>
           <button
             type="button"

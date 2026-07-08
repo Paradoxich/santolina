@@ -1,9 +1,15 @@
 import React from 'react'
 
+export interface ToastAction {
+  label: string
+  onClick: () => void
+}
+
 export interface ToastProps extends React.HTMLAttributes<HTMLDivElement> {
   variant?: 'default' | 'positive' | 'warning' | 'critical'
   title?: string
   description?: string
+  actions?: ToastAction[]
   onClose?: () => void
 }
 
@@ -33,6 +39,7 @@ export function Toast({
   variant = 'default',
   title,
   description,
+  actions = [],
   onClose,
   className = '',
   ...props
@@ -62,6 +69,20 @@ export function Toast({
         )}
         {description && (
           <p className="text-sm opacity-90 mt-0.5">{description}</p>
+        )}
+        {actions.length > 0 && (
+          <div className="mt-2 flex items-center gap-4">
+            {actions.map((action) => (
+              <button
+                key={action.label}
+                type="button"
+                onClick={action.onClick}
+                className="text-sm font-semibold underline underline-offset-2 hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current rounded"
+              >
+                {action.label}
+              </button>
+            ))}
+          </div>
         )}
       </div>
       {onClose && (

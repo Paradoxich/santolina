@@ -272,10 +272,39 @@ Checked in priority order as listed. `currentMonth` is `today.getMonth() + 1` (1
 not-in-palette ⇄ planned ⇄ planted
 ```
 
-- **not-in-palette:** both buttons active. "Add to plan" → `addToPalette(status: 'planned')`. "I have this" → `addToPalette(status: 'planted')`.
-- **planned:** "Add to plan" becomes "Remove from plan" → `removeFromPalette`, back to not-in-palette. "I have this" stays active, unchanged label → `updateStatus(status: 'planted')`, upgrading in place (same `paletteId`, no new row).
-- **planted:** "I have this" becomes "Remove from garden" → `removeFromPalette`, back to not-in-palette. "Add to plan" is disabled — downgrading planted→planned isn't a meaningful action via this button, so it's the one non-actionable state rather than a dead-end label pretending to do something.
+- **not-in-palette:** both buttons active. "Add to plan" → `addToPalette(status: 'planned')`. "Add to garden" → `addToPalette(status: 'planted')`.
+- **planned:** "Add to plan" becomes "Remove from plan" → `removeFromPalette`, back to not-in-palette. "Add to garden" stays active, unchanged label → `updateStatus(status: 'planted')`, upgrading in place (same `paletteId`, no new row).
+- **planted:** "Add to garden" becomes "Remove from garden" → `removeFromPalette`, back to not-in-palette. "Add to plan" is disabled — downgrading planted→planned isn't a meaningful action via this button, so it's the one non-actionable state rather than a dead-end label pretending to do something.
+
+(Originally shipped as "I have this" — renamed to "Add to garden" for symmetry with "Add to plan" when toast notifications were added, see §13.)
 
 `getPaletteStatus` is fetched on drawer mount and whenever the displayed plant changes (the drawer is a single reused component instance across plant selections in Explore, not remounted per plant — see `ExploreClient`'s static `key`), with a cancellation guard so a fast plant switch can't let a stale response overwrite the newer one.
 
-**No toast/notification system exists in the app** (`Toast` in `@paradoxui/ui` is an unwired presentational primitive, only ever rendered in the design-system showcase). Rather than building toast infrastructure for this one feature, loading/error feedback is local component state: button labels swap to "Adding…"/"Saving…"/"Removing…" while a request is in flight, and a small inline banner (`text-critical`, same token Badge/Toast already use for their critical variant) shows on failure. My Garden's Planned-tab actions (remove, mark as planted) follow the same local-state pattern, calling `router.refresh()` on success to re-run the server component and pull fresh `listPalette()` data — there's no client-side cache to invalidate.
+Loading/error feedback while a request is in flight is local component state: button labels swap to "Adding…"/"Saving…"/"Removing…", and a small inline banner (`text-critical`, same token Badge/Toast already use for their critical variant) shows on failure. My Garden's Planned-tab actions (remove, mark as planted) follow the same local-state pattern, calling `router.refresh()` on success to re-run the server component and pull fresh `listPalette()` data — there's no client-side cache to invalidate. Success feedback (confirmation + undo) is a toast — see §13.
+
+---
+
+## 13. Toast notifications: built from scratch, grouped by entity to prevent stale actions
+
+**No toast/notification system existed in the app** before this — `Toast` in `@paradoxui/ui` was an unwired presentational primitive, only ever rendered in the design-system showcase, with no provider, state management, or stacking logic anywhere. Adding confirmation + undo toasts to the palette actions (§12) required building this from scratch.
+
+**Where it lives:** `packages/ui` — a toast provider/hook is generic UI infrastructure with no garden knowledge, so per the project's Layer 2/3 split it belongs in the framework package, not `apps/web`.
+
+- `components/Toast.tsx` — extended with an optional `actions?: ToastAction[]` slot (label + onClick), rendered as inline text buttons below the description. Backward compatible; the design-system showcase usage is untouched.
+- `components/ToastProvider.tsx` — new. `ToastProvider` (context + a fixed-position stack rendered via `Toast`) and `useToast()` (`{ toast(options) }`). Auto-dismisses each toast after `duration` (default 6000ms). Mounted once in `app/(app)/layout.tsx`, so the Explore drawer and My Garden share one toast stack and toasts survive client-side navigation between them (the layout doesn't remount on route change within the group).
+
+**Bug found during testing, fixed before shipping — `groupKey` dedup:** rapid actions on the same plant (e.g. Add to plan → Remove from plan in quick succession, well within the 6s auto-dismiss window) stacked two toasts. The older toast's "Undo" button stayed mounted and clickable, but its closure captured the _original_ `paletteId` — which the newer action had already deleted. Clicking that stale Undo threw "Palette row not found in the current garden" (a real, reachable error, not just a test artifact — reproduced by scripting the exact click sequence a fast/impatient user could produce). Fix: `ToastOptions.groupKey` — every palette toast call passes the plant's id as `groupKey`; `ToastProvider.toast()` removes any existing toast with the same `groupKey` before adding the new one, so only the latest, valid action's toast (and its correctly-scoped Undo) is ever on screen for a given plant. A second bug surfaced by the same fix: `groupKey` was being spread onto the underlying `<div>` via `{...toastProps}` (React DOM prop warning) — fixed by explicitly destructuring it out before the spread, alongside `id` and `actions`.
+
+**Copy and undo semantics, by action:**
+
+| Action                                       | Toast                      | Extra action                          | Undo does                                                                                              |
+| -------------------------------------------- | -------------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| Add to plan                                  | "Added to your plan"       | See planned (→ `/garden?tab=planned`) | `removeFromPalette` (delete the row just created)                                                      |
+| Remove from plan                             | "Removed from plan"        | —                                     | `addToPalette` (re-insert with the captured prior status/source/notes)                                 |
+| Add to garden (fresh)                        | "Added to your garden"     | —                                     | `removeFromPalette`                                                                                    |
+| Add to garden (upgrade from planned)         | "Added to your garden"     | —                                     | `updateStatus(status: 'planned')` — reverts in place, doesn't delete                                   |
+| Remove from garden                           | "Removed from your garden" | —                                     | `addToPalette` (re-insert)                                                                             |
+| Mark as planted (My Garden)                  | "Added to your garden"     | —                                     | `updateStatus(status: 'planned')`                                                                      |
+| Remove from planned — trash icon (My Garden) | "Removed from plan"        | —                                     | `addToPalette` (re-insert, using the row captured from the still-valid `palette` prop before deletion) |
+
+Each Undo closure is handwritten per call site rather than derived generically — insert/update/delete each has a different correct inverse (delete a fresh insert, revert a status change, re-insert a deletion), and a generic "undo the last mutation" abstraction would have to reconstruct that same branching anyway. Any action button click (Undo or "See planned") dismisses its own toast immediately, rather than waiting for the timer — prevents a double-click from re-firing an already-completed undo.
