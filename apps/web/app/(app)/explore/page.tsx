@@ -1,5 +1,6 @@
 import { ExploreClient } from '@/components/ExploreClient'
 import { getExplorePlants, getPlantDetail } from '@/lib/plant-detail'
+import { getCurrentGardenId } from '@/lib/current-garden'
 
 export const dynamic = 'force-dynamic'
 
@@ -15,5 +16,11 @@ export default async function ExplorePlantsPage({
     plantId ? getPlantDetail(plantId) : Promise.resolve(null),
   ])
 
-  return <ExploreClient plants={plants} detail={detail} />
+  return (
+    <ExploreClient
+      gardenId={getCurrentGardenId()}
+      plants={plants}
+      detail={detail}
+    />
+  )
 }

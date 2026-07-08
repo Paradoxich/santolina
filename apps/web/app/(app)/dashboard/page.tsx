@@ -13,11 +13,11 @@ import {
   plannedPlants,
 } from '@/lib/sample-dashboard'
 import { sampleGardenPlants } from '@/lib/sample-garden'
-import { samplePlantDiaries } from '@/lib/sample-diary'
 import { getCareTips } from '@/lib/care-tips'
 import { listPalette } from '@/server/palette-actions'
 import { getCurrentGarden } from '@/lib/current-garden'
 import { getForecast } from '@/lib/open-meteo'
+import { getPlantDiaries } from '@/lib/diary'
 import type { WeatherDay } from '@/types/dashboard'
 
 export const dynamic = 'force-dynamic'
@@ -39,6 +39,8 @@ export default async function DashboardPage() {
       weatherDays = null
     }
   }
+
+  const diaries = await getPlantDiaries()
 
   return (
     <div className="max-w-[1032px] pb-16 pt-8 md:pt-12">
@@ -64,7 +66,7 @@ export default async function DashboardPage() {
 
         <div className="grid grid-cols-1 gap-section-gap lg:h-[234px] lg:grid-cols-3">
           <PlannedCard plants={plannedPlants} />
-          <DiaryRecentCard diaries={samplePlantDiaries} />
+          <DiaryRecentCard diaries={diaries} />
           <InsightCard text={gardenInsight} />
         </div>
       </div>

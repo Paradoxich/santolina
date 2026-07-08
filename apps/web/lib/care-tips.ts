@@ -195,9 +195,13 @@ export function getCurrentSeason(today: Date = new Date()): Season {
 }
 
 /**
- * Derives up to 5 Care Tips from the palette's seasonal_rhythm data for the
- * current season. Falls back to STATIC_SEASONAL_TIPS when the palette is
- * empty or has nothing usable for this season.
+ * Derives up to 5 Care Tips from the palette's maintenance_notes — the
+ * field actually written as prescriptive care guidance ("deadhead spent
+ * blooms"), not seasonal_rhythm, which is descriptive narrative about
+ * what the plant is doing right now, not what to do about it. Season is
+ * still used to prioritize currently-blooming/pre-bloom plants to the
+ * front of the list. Falls back to STATIC_SEASONAL_TIPS when the palette
+ * is empty or has nothing usable.
  */
 export function getCareTips(
   palette: PalettePlant[],
@@ -208,7 +212,7 @@ export function getCareTips(
   const candidates = palette
     .filter((p) => p.status === 'planted' || p.status === 'planned')
     .map((p) => {
-      const text = p.plant.seasonal_rhythm?.[season]
+      const text = p.plant.maintenance_notes
       if (!text) return null
       return {
         plantId: p.plantId,

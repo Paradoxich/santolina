@@ -11,11 +11,16 @@ import type { PlantDetail } from '@/lib/plant-detail'
 import type { CatalogPlant } from '@/types/garden'
 
 interface ExploreClientProps {
+  gardenId: string
   plants: CatalogPlant[]
   detail: PlantDetail | null
 }
 
-export function ExploreClient({ plants, detail }: ExploreClientProps) {
+export function ExploreClient({
+  gardenId,
+  plants,
+  detail,
+}: ExploreClientProps) {
   const router = useRouter()
   const [query, setQuery] = useState('')
 
@@ -100,6 +105,7 @@ export function ExploreClient({ plants, detail }: ExploreClientProps) {
         {detail && (
           <PlantDetailDrawer
             key="plant-detail-drawer"
+            gardenId={gardenId}
             detail={detail}
             onClose={closeDrawer}
           />

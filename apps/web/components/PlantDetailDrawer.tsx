@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Icon, useToast } from '@paradoxui/ui'
+import { Icon, Modal, useToast } from '@paradoxui/ui'
 import { icons } from '@/lib/icons'
 import type { PlantDetail } from '@/lib/plant-detail'
 import { formatPlantSubtitle } from '@/lib/format-plant'
@@ -14,6 +14,7 @@ import {
   getPaletteStatus,
   type PaletteStatus,
 } from '@/server/palette-actions'
+import { listDiaryEntries } from '@/server/diary-actions'
 import { AboutSection } from './plant-detail/AboutSection'
 import { GoodForYourGardenSection } from './plant-detail/GoodForYourGardenSection'
 import { CareSection } from './plant-detail/CareSection'
@@ -24,6 +25,7 @@ import { GoodForSection } from './plant-detail/GoodForSection'
 import { DetailsSection } from './plant-detail/DetailsSection'
 
 interface PlantDetailDrawerProps {
+  gardenId: string
   detail: PlantDetail
   onClose: () => void
 }
@@ -34,7 +36,11 @@ const PHOTO_WIDTHS = [131, 175, 207]
 /** Mirrors --duration-slow / --ease-in-out — Framer Motion can't read CSS vars. */
 const DRAWER_TRANSITION = { duration: 0.3, ease: [0.4, 0, 0.2, 1] as const }
 
-export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
+export function PlantDetailDrawer({
+  gardenId,
+  detail,
+  onClose,
+}: PlantDetailDrawerProps) {
   const { plant, companions, garden } = detail
   const subtitle = formatPlantSubtitle(
     plant.scientific_name,
@@ -55,6 +61,9 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
     null
   )
   const [actionError, setActionError] = useState<string | null>(null)
+
+  const [isCheckingDiary, setIsCheckingDiary] = useState(false)
+  const [isRemoveDialogOpen, setIsRemoveDialogOpen] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -156,49 +165,103 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
     }
   }
 
+  /** The actual removal — shared by the no-diary immediate path and the confirmation dialog. */
+  const performRemoveFromGarden = async () => {
+    if (!palette) return
+    const removedId = palette.paletteId
+    await removeFromPalette({ paletteId: removedId })
+    setPalette(null)
+    router.refresh()
+    toast({
+      groupKey: plant.id,
+      title: 'Removed from your garden',
+      description: `${plant.common_name} removed from your garden.`,
+      actions: [
+        {
+          label: 'Undo',
+          onClick: async () => {
+            try {
+              const result = await addToPalette({
+                plantId: plant.id,
+                status: 'planted',
+                source: 'manual',
+              })
+              setPalette({ paletteId: result.id, status: result.status })
+              router.refresh()
+            } catch (err) {
+              setActionError(
+                err instanceof Error ? err.message : 'Undo failed.'
+              )
+            }
+          },
+        },
+      ],
+    })
+  }
+
   /**
-   * Handles the drawer's second button across all three states. The
-   * transition it performs — and its label — differs by state: fresh add
-   * (not-in-palette), promotion (planned -> planted, "Move to growing"),
-   * or removal (planted -> not-in-palette). See docs/architecture.md §14
-   * for why "Add to garden" and "Move to growing" have to stay distinct
+   * Clicking the trash icon (planted state only). Checks for existing
+   * diary content first — zero entries removes immediately, one or more
+   * opens the confirmation dialog instead so removal never silently
+   * implies the notes are gone too.
+   */
+  const handleRemoveClick = async () => {
+    if (!palette) return
+    setActionError(null)
+    setIsCheckingDiary(true)
+    try {
+      const entries = await listDiaryEntries({ gardenId, plantId: plant.id })
+      if (entries.length === 0) {
+        setPendingAction('garden')
+        await performRemoveFromGarden()
+        setPendingAction(null)
+      } else {
+        setIsRemoveDialogOpen(true)
+      }
+    } catch (err) {
+      setActionError(
+        err instanceof Error ? err.message : 'Something went wrong.'
+      )
+    } finally {
+      setIsCheckingDiary(false)
+    }
+  }
+
+  const closeRemoveDialog = () => {
+    setIsRemoveDialogOpen(false)
+  }
+
+  const handleConfirmRemove = async () => {
+    setPendingAction('garden')
+    try {
+      await performRemoveFromGarden()
+      closeRemoveDialog()
+    } catch (err) {
+      setActionError(
+        err instanceof Error ? err.message : 'Something went wrong.'
+      )
+    } finally {
+      setPendingAction(null)
+    }
+  }
+
+  /** Navigates straight to this plant's diary thread — same ?plant= convention as this drawer's own route. */
+  const handleOpenDiary = () => {
+    router.push(`/diary?plant=${plant.id}`)
+  }
+
+  /**
+   * Handles the drawer's second button for the two non-removal states.
+   * Removal (planted -> not-in-palette) goes through the trash icon and
+   * performRemoveFromGarden instead — see docs/architecture.md §14 for
+   * why "Add to garden" and "Move to growing" have to stay distinct
    * labels rather than one button always saying the same thing.
    */
   const handleSecondaryAction = async () => {
     setActionError(null)
     setPendingAction('garden')
     try {
-      if (palette?.status === 'planted') {
-        const removedId = palette.paletteId
-        await removeFromPalette({ paletteId: removedId })
-        setPalette(null)
-        router.refresh()
-        toast({
-          groupKey: plant.id,
-          title: 'Removed from your garden',
-          description: `${plant.common_name} removed from your garden.`,
-          actions: [
-            {
-              label: 'Undo',
-              onClick: async () => {
-                try {
-                  const result = await addToPalette({
-                    plantId: plant.id,
-                    status: 'planted',
-                    source: 'manual',
-                  })
-                  setPalette({ paletteId: result.id, status: result.status })
-                  router.refresh()
-                } catch (err) {
-                  setActionError(
-                    err instanceof Error ? err.message : 'Undo failed.'
-                  )
-                }
-              },
-            },
-          ],
-        })
-      } else if (palette?.status === 'planned') {
+      if (palette?.status === 'planned') {
         const paletteId = palette.paletteId
         await updateStatus({ paletteId, status: 'planted' })
         setPalette({ paletteId, status: 'planted' })
@@ -276,16 +339,12 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
 
   const secondaryActionLabel =
     pendingAction === 'garden'
-      ? palette?.status === 'planted'
-        ? 'Removing…'
-        : palette?.status === 'planned'
-          ? 'Moving…'
-          : 'Saving…'
-      : palette?.status === 'planted'
-        ? 'Remove from garden'
-        : palette?.status === 'planned'
-          ? 'Move to growing'
-          : 'Add to garden'
+      ? palette?.status === 'planned'
+        ? 'Moving…'
+        : 'Saving…'
+      : palette?.status === 'planned'
+        ? 'Move to growing'
+        : 'Add to garden'
 
   const controlsDisabled = isStatusLoading || pendingAction !== null
 
@@ -322,22 +381,45 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
         </button>
 
         <div className="flex items-center gap-inline-gap">
-          <button
-            type="button"
-            onClick={handleAddToPlan}
-            disabled={controlsDisabled || palette?.status === 'planted'}
-            className="flex h-8 items-center rounded-sm border border-card bg-surface-inverse px-item-gap text-body-small text-on-accent disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {addToPlanLabel}
-          </button>
-          <button
-            type="button"
-            onClick={handleSecondaryAction}
-            disabled={controlsDisabled}
-            className="flex h-8 items-center rounded-sm border border-card bg-surface-control px-inline-gap text-body-small text-secondary disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {secondaryActionLabel}
-          </button>
+          {palette?.status !== 'planted' && (
+            <button
+              type="button"
+              onClick={handleAddToPlan}
+              disabled={controlsDisabled}
+              className="flex h-8 items-center rounded-sm border border-card bg-surface-inverse px-item-gap text-body-small text-on-accent disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {addToPlanLabel}
+            </button>
+          )}
+          {palette?.status === 'planted' ? (
+            <>
+              <button
+                type="button"
+                onClick={handleRemoveClick}
+                disabled={controlsDisabled || isCheckingDiary}
+                aria-label="Remove from garden"
+                className="flex size-8 items-center justify-center rounded-full border border-card bg-surface-control transition-opacity duration-normal hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <Icon src={icons.trash} />
+              </button>
+              <button
+                type="button"
+                onClick={handleOpenDiary}
+                className="flex h-8 items-center rounded-sm border border-card bg-surface-control px-inline-gap text-body-small text-secondary"
+              >
+                Open diary
+              </button>
+            </>
+          ) : (
+            <button
+              type="button"
+              onClick={handleSecondaryAction}
+              disabled={controlsDisabled}
+              className="flex h-8 items-center rounded-sm border border-card bg-surface-control px-inline-gap text-body-small text-secondary disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {secondaryActionLabel}
+            </button>
+          )}
           <button
             type="button"
             aria-label="Chat about this plant"
@@ -398,6 +480,38 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
           <DetailsSection plant={plant} />
         </div>
       </div>
+
+      <Modal
+        isOpen={isRemoveDialogOpen}
+        onClose={closeRemoveDialog}
+        title={`Remove ${plant.common_name} from your garden?`}
+        size="sm"
+        footer={
+          <>
+            <button
+              type="button"
+              onClick={closeRemoveDialog}
+              disabled={pendingAction === 'garden'}
+              className="flex h-8 items-center rounded-sm border border-card bg-surface-control px-inline-gap text-body-small text-secondary disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleConfirmRemove}
+              disabled={pendingAction === 'garden'}
+              className="flex h-8 items-center rounded-sm border border-card bg-surface-inverse px-item-gap text-body-small text-on-accent disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {pendingAction === 'garden' ? 'Removing…' : 'Remove from garden'}
+            </button>
+          </>
+        }
+      >
+        <p className="text-body text-secondary">
+          Your diary for this plant will be left intact. You can delete it or
+          bring the plant back to your garden from the diary view.
+        </p>
+      </Modal>
     </motion.aside>
   )
 }
