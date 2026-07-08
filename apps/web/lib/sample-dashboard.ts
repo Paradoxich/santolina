@@ -2,12 +2,11 @@ import type {
   BloomSeason,
   DashboardPlant,
   PlannedPlant,
-  WeatherDay,
 } from '@/types/dashboard'
 
 /**
- * Sample data matching the Figma design. Weather will come from
- * Open-Meteo and the rest from Supabase once the backend is wired up.
+ * Sample data matching the Figma design. Weather now comes from Open-Meteo
+ * (see lib/open-meteo.ts); the rest from Supabase once the backend is wired up.
  */
 
 export const dashboardSubtitle =
@@ -114,32 +113,6 @@ export const bloomSeason: BloomSeason = {
     },
   ],
 }
-
-export const weatherLocation = 'Opatija'
-
-export const weatherDays: WeatherDay[] = [
-  {
-    label: 'Today',
-    icon: 'cloudy',
-    high: 17,
-    low: 7,
-    description: 'Partly cloudy, small chance of rain.',
-  },
-  {
-    label: 'Tomorrow',
-    icon: 'rain',
-    high: 14,
-    low: 7,
-    description: 'Rain expected in the morning.',
-  },
-  {
-    label: 'Thu',
-    icon: 'sunny',
-    high: 15,
-    low: 3,
-    description: 'Temperatures will drop.',
-  },
-]
 
 export const plannedPlants: PlannedPlant[] = [
   {

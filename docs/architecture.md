@@ -344,3 +344,30 @@ Toast copy follows the same split: "Added to your garden" only fires for a fresh
 **Fallback:** an empty palette, or one where every plant lacks a `seasonal_rhythm` entry for the current season, falls back to `STATIC_SEASONAL_TIPS`, a hardcoded `Record<Season, CareTip[]>` of generic, plant-agnostic seasonal tasks (e.g. "Water deeply in early morning to reduce evaporation loss." for summer). This is what a brand-new user with an empty palette sees, so it's written as genuinely useful advice, not obvious filler.
 
 **Not building yet:** more specific, event-relative advice — e.g. "fertilize ~3 weeks after planting" — would need dated Diary entries to anchor "since when" and a care-timing ruleset keyed by `plant_type`/`care_level`. Neither exists yet; the Diary itself hasn't been built (still in the test-version scope per `CLAUDE.md`). Revisit once Diary entries give a real planting date to compute against.
+
+---
+
+## 17. Weather integration: Open-Meteo geocoding + forecast, both free, no key
+
+**Decision:** the Dashboard's Weather card is now backed by two Open-Meteo endpoints, neither requiring an API key:
+
+- **Geocoding** (`geocoding-api.open-meteo.com/v1/search`) — called directly from the browser as the user types in the location picker (`components/dashboard/LocationPickerModal.tsx`), debounced 300ms via a new `useDebounce` hook (`hooks/useDebounce.ts` — no debounce utility existed in the codebase before this). Returns `name`/`admin1`/`country` specifically so cities that share a name (e.g. multiple "Springfield"s, multiple "Opatija"s) can be told apart in the results list — confirmed during testing that both cases actually occur in the wild, not just a hypothetical.
+- **Forecast** (`api.open-meteo.com/v1/forecast`, `daily=weathercode,temperature_2m_max,temperature_2m_min`) — called server-side from the dashboard page (`lib/open-meteo.ts` → `getForecast()`), same "derive at render time, no new DB column" philosophy as bloom status (§10) and care tips (§16): the `gardens` table only stores `lat`/`lon` (added in migration `20260707141438_add_garden_coordinates.sql`, before this pass added a matching `lat`/`lon` to the `Garden` TS type — the DB column existed before the type did); the actual forecast is fetched fresh on every dashboard load (`cache: 'no-store'`) rather than cached.
+
+**Write path:** selecting a city calls `setGardenLocation()` (`server/garden-actions.ts`), a `'use server'` action following the same service-role-client-scoped-to-the-hardcoded-garden-id pattern as `palette-actions.ts` (§11/§12) — writes `city`, `country`, `lat`, `lon` in one update, then the modal closes and calls `router.refresh()`, matching how palette mutations already trigger live updates (no `revalidatePath` anywhere in this codebase; client-side refresh is the established pattern).
+
+**Icon mapping — a 7-concept collapse, not a 1:1 code map:** `lib/weather-icon.ts` adds `mapWeatherCode(code: number): WeatherIconType`, collapsing Open-Meteo's ~30 numeric weathercodes into 7 semantic concepts (`sunny`, `partly-cloudy`, `cloudy`, `foggy`, `rain`, `snow`, `thunderstorm`). It's pure and keyed only on the code, not time of day — day/night icon variants are an explicit future item, not part of this pass.
+
+**Icon assets — 3 of 7 concepts have a dedicated asset today:** `public/icons/` only has `weather-sunny.svg`, `weather-cloudy.svg`, and `weather-rain.svg` (added in a recent merge). `getWeatherIconAsset()` folds the 4 concepts without a dedicated asset onto the closest existing one as a deliberate, visible placeholder rather than silently inventing new SVGs:
+
+| Concept         | Asset used       | Dedicated asset exists? |
+| --------------- | ---------------- | ----------------------- |
+| `sunny`         | `weather-sunny`  | Yes                     |
+| `rain`          | `weather-rain`   | Yes                     |
+| `thunderstorm`  | `weather-rain`   | **No — falls back**     |
+| `cloudy`        | `weather-cloudy` | Yes                     |
+| `partly-cloudy` | `weather-cloudy` | **No — falls back**     |
+| `foggy`         | `weather-cloudy` | **No — falls back**     |
+| `snow`          | `weather-cloudy` | **No — falls back**     |
+
+**Not building yet:** dedicated `partly-cloudy`/`foggy`/`snow`/`thunderstorm` icon assets — flagged here so the gap is chosen deliberately rather than papered over with an invented SVG. Day/night icon variants, similarly deferred.

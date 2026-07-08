@@ -11,13 +11,14 @@ import {
   gardenInsight,
   myPlants,
   plannedPlants,
-  weatherDays,
-  weatherLocation,
 } from '@/lib/sample-dashboard'
 import { sampleGardenPlants } from '@/lib/sample-garden'
 import { samplePlantDiaries } from '@/lib/sample-diary'
 import { getCareTips } from '@/lib/care-tips'
 import { listPalette } from '@/server/palette-actions'
+import { getCurrentGarden } from '@/lib/current-garden'
+import { getForecast } from '@/lib/open-meteo'
+import type { WeatherDay } from '@/types/dashboard'
 
 export const dynamic = 'force-dynamic'
 
@@ -28,6 +29,16 @@ export default async function DashboardPage() {
   }).format(new Date())
   const growingCount = sampleGardenPlants.filter((p) => !p.planned).length
   const careTips = getCareTips(await listPalette())
+
+  const garden = await getCurrentGarden()
+  let weatherDays: WeatherDay[] | null = null
+  if (garden?.lat != null && garden?.lon != null) {
+    try {
+      weatherDays = await getForecast(garden.lat, garden.lon)
+    } catch {
+      weatherDays = null
+    }
+  }
 
   return (
     <div className="max-w-[1032px] pb-16 pt-8 md:pt-12">
@@ -43,7 +54,11 @@ export default async function DashboardPage() {
         </div>
 
         <div className="grid grid-cols-1 gap-section-gap lg:h-[272px] lg:grid-cols-2">
-          <WeatherCard location={weatherLocation} days={weatherDays} />
+          <WeatherCard
+            location={garden?.city ?? null}
+            country={garden?.country ?? null}
+            days={weatherDays}
+          />
           <CareTipsCard tips={careTips} />
         </div>
 
