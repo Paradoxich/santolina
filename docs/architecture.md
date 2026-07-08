@@ -371,3 +371,19 @@ Toast copy follows the same split: "Added to your garden" only fires for a fresh
 | `snow`          | `weather-cloudy` | **No — falls back**     |
 
 **Not building yet:** dedicated `partly-cloudy`/`foggy`/`snow`/`thunderstorm` icon assets — flagged here so the gap is chosen deliberately rather than papered over with an invented SVG. Day/night icon variants, similarly deferred.
+
+---
+
+## 18. Diary: identity is (garden, plant), not the palette row
+
+**Decision:** `diary_entries` keys a thread by `garden_id` + `plant_id`, with `palette_plant_id` as a nullable, set-null-on-delete convenience link (`references palette_plants(id) on delete set null`) rather than the thread's real identity.
+
+**Why not key by `palette_plant_id` directly:** `removeFromPalette` (§11/§12) hard-deletes the `palette_plants` row when a plant is removed from the garden. If that row were the diary's foreign key with `on delete cascade`, every note a user wrote about that plant would vanish the moment they removed it from their palette — a much more destructive action than the user is actually taking. Keying on `garden_id`+`plant_id` instead means the notes are about the plant, not about the act of currently tracking it; removing and re-adding the same plant later reattaches its history automatically (new entries just won't have a `palette_plant_id` for the gap in between).
+
+**Two sources feed the list:** `lib/diary.ts`'s `getPlantDiaries()` returns one `PlantDiary` per `planted` (growing) row in the _current_ `palette_plants` for the garden (so a freshly-planted plant shows up with an empty thread, ready for its first note) — `planned`/`considering` plants don't get one yet, since a diary is for tracking something you're actually tending, not a plan. It then adds a second bucket: any plant with `diary_entries` in this garden that's no longer in `palette_plants` at all. Those get `paletteId: null`, and `DiaryListRow` renders a small "Removed from garden" tag next to the plant name instead of hiding the thread — removal is destructive to the palette row, not to the plant's history. Still writable: the composer works the same for a removed plant's diary (e.g. a closing note), since `addDiaryEntry`'s `paletteId` is optional and the schema never required a live palette row.
+
+**Storage — public bucket, temporary:** `diary-photos` is a public Supabase Storage bucket (`storage/v1/object/public/diary-photos/...`), so uploaded photos are viewable via their public URL immediately, no signed URLs. Same posture as the public plants catalog images — there's no real per-user privacy boundary yet (single hardcoded dev garden, §11), so "public" costs nothing today. Revisit once real auth/profiles exist. Upload path convention: `{gardenId}/{plantId}/{timestamp}-{filename}`, set in `addDiaryEntry` (`server/diary-actions.ts`).
+
+**Not solving now:** `deleteDiaryEntry` removes the `diary_entries` row but leaves its uploaded photos in the bucket — an accepted orphaned-file gap for v1. `deleteDiaryEntry` is also not wired to any UI affordance yet (`NoteCard` has no delete button); it exists in `server/diary-actions.ts` for completeness and future use.
+
+**Scope cut — no AI synthesis:** the diary drawer's summary paragraph (`diary.summary`) is the plant's static `plants.description` field (Trefle-sourced botanical description), not a synthesized "how this plant did this season" narrative generated from the diary's own notes. Synthesizing across entries is an explicit future Agent feature (deferred per `CLAUDE.md`) — the chat icon in the drawer header stays present but unwired, not faked with static text pretending to be dynamic.

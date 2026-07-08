@@ -1,6 +1,7 @@
 import { GardenClient } from '@/components/GardenClient'
 import { listPalette } from '@/server/palette-actions'
 import { getPlantDetail } from '@/lib/plant-detail'
+import { getCurrentGardenId } from '@/lib/current-garden'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,5 +17,11 @@ export default async function MyGardenPage({
     plantId ? getPlantDetail(plantId) : Promise.resolve(null),
   ])
 
-  return <GardenClient palette={palette} detail={detail} />
+  return (
+    <GardenClient
+      gardenId={getCurrentGardenId()}
+      palette={palette}
+      detail={detail}
+    />
+  )
 }

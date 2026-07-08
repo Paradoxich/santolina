@@ -28,10 +28,17 @@ export function DiaryListRow({
       ].join(' ')}
     >
       <div className="flex min-w-0 flex-1 flex-col gap-tight-gap">
-        <h3 className="text-body font-semibold text-primary">
-          {diary.plantName}
-        </h3>
-        {latest && (
+        <div className="flex items-center gap-tight-gap">
+          <h3 className="text-body font-semibold text-primary">
+            {diary.plantName}
+          </h3>
+          {diary.paletteId === null && (
+            <span className="shrink-0 rounded-xs bg-surface-subtle px-tight-gap py-0.5 text-label text-muted">
+              Removed from garden
+            </span>
+          )}
+        </div>
+        {latest && latest.text && (
           <p className="truncate text-body leading-normal text-primary">
             {latest.text}
           </p>
