@@ -55,6 +55,61 @@ const SEED_LIST: Array<number | string> = [
   'Geranium sanguineum',
   'Sedum spectabile',
   'Viburnum tinus',
+  // --- catalog expansion, July 2026 ---
+  // cottage
+  'Alcea rosea',
+  'Aquilegia vulgaris',
+  'Lupinus polyphyllus',
+  'Campanula persicifolia',
+  'Dianthus barbatus',
+  'Phlox paniculata',
+  'Clematis viticella',
+  // mediterranean
+  'Salvia nemorosa',
+  'Perovskia atriplicifolia',
+  'Echinops ritro',
+  'Eryngium planum',
+  'Thymus vulgaris',
+  'Verbena bonariensis',
+  'Oenothera lindheimeri',
+  // wildflower
+  'Knautia macedonica',
+  'Leucanthemum vulgare',
+  'Monarda didyma',
+  'Scabiosa columbaria',
+  'Coreopsis verticillata',
+  'Rudbeckia fulgida',
+  // modern / structural
+  'Stipa tenuissima',
+  'Festuca glauca',
+  'Allium giganteum',
+  'Kniphofia uvaria',
+  'Euphorbia characias',
+  'Verbascum olympicum',
+  // lush / shade
+  'Brunnera macrophylla',
+  'Heuchera micrantha',
+  'Dryopteris filix-mas',
+  'Ligularia dentata',
+  'Rodgersia podophylla',
+  'Lamium maculatum',
+  // classic
+  'Syringa vulgaris',
+  'Philadelphus coronarius',
+  'Ilex aquifolium',
+  'Lonicera periclymenum',
+  'Hydrangea arborescens',
+  'Rosa gallica',
+  // season spread — bulbs, early spring, autumn, winter interest
+  'Narcissus pseudonarcissus',
+  'Tulipa gesneriana',
+  'Crocus vernus',
+  'Galanthus nivalis',
+  'Helleborus niger',
+  'Anemone hupehensis',
+  'Tiarella cordifolia',
+  'Aster amellus',
+  'Hemerocallis fulva',
 ]
 
 // ---------------------------------------------------------------------------
