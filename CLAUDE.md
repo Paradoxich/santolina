@@ -126,23 +126,31 @@ Never commit `.env.local`. Never expose service role key to the client.
 
 - **Web first** — desktop optimised, mobile responsive. No native mobile app in v1.
 - **Ornamental gardening only** — edible growing is a later phase.
-- **Progressive onboarding** — 5 steps (location, space type, sun, style, size). No forced completion. Value shown immediately.
-- **No account creation during onboarding** — prompted when user first tries to save.
-- **Logging is optional** — never required, never pushed.
-- **Agent is invisible infrastructure** — no personality, no name, no popups. It makes everything smarter quietly.
+- **Progressive onboarding** — 5 steps (location, space type, sun, style, size). No forced completion. Value shown immediately. _Deferred post-test — see scope below._
+- **No account creation during onboarding** — prompted when user first tries to save. _Deferred post-test along with onboarding._
+- **Logging is in scope for the test version** — the Diary is the baseline "memory" of a user's plants. Still never required, never pushed.
+- **Agent is invisible infrastructure** — no personality, no name, no popups. It makes everything smarter quietly. _Deferred post-test — see scope below._
 - **Profile changes never override palette** — system suggests, user decides.
 
 ---
 
-## V1 scope — five features only
+## Scope — phased rollout
 
-1. Garden Profile
-2. Plant Library
-3. My Garden / Palette
-4. Seasonal View
-5. The Agent
+Scope changed during design from the original five-feature plan. Current phase is a test version that validates the core garden-tracking loop before investing in onboarding and the agent layer.
 
-Everything else is deferred. Do not build logging, diagnostics, edible growing, or multiple gardens in v1.
+**Test version (current phase):**
+
+1. Dashboard
+2. Plant Library / Explore
+3. My Garden / Palette (growing + planned)
+4. Diary
+
+**Deferred to post-test (expected a few weeks out):**
+
+- Garden Profile / onboarding (5-step wizard)
+- The Agent
+
+Everything else is deferred. Do not build edible growing or multiple gardens in this phase.
 
 ---
 
