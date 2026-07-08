@@ -125,11 +125,11 @@ Never commit `.env.local`. Never expose service role key to the client.
 ## Key product decisions
 
 - **Web first** — desktop optimised, mobile responsive. No native mobile app in v1.
-- **Ornamental gardening only** — edible growing is a later phase.
+- **Ornamental-first, not ornamental-only** — the vision is "a small home garden I want to be beautiful," not farm management. Herbs and a few edibles are welcome; dedicated edible-growing features are a later phase.
 - **Progressive onboarding** — 5 steps (location, space type, sun, style, size). No forced completion. Value shown immediately. _Deferred post-test — see scope below._
 - **No account creation during onboarding** — prompted when user first tries to save. _Deferred post-test along with onboarding._
 - **Logging is in scope for the test version** — the Diary is the baseline "memory" of a user's plants. Still never required, never pushed.
-- **Agent is invisible infrastructure** — no personality, no name, no popups. It makes everything smarter quietly. _Deferred post-test — see scope below._
+- **Agent = invisible wiring + summonable sidekick** — it quietly powers seasonal logic, memory, and recommendations, and never pops up uninvited. But it does have a visible entry point (sidebar "Agent ⌘K" button; chat icons in the plant/diary drawers open plant-scoped conversations) and, once built, can take or surface actions you discuss with it (e.g. add a plant to Planned). Exact chat behavior is not fully decided. _Deferred post-test — see scope below._
 - **Profile changes never override palette** — system suggests, user decides.
 
 ---
