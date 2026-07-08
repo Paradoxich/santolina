@@ -82,12 +82,12 @@ export function GardenClient({ palette, detail }: GardenClientProps) {
   useEffect(() => {
     if (!detail) return
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') closeDrawer()
+      if (e.key === 'Escape')
+        router.push(`/garden?tab=${tab}`, { scroll: false })
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [detail])
+  }, [detail, tab, router])
 
   const growing = palette
     .filter((p) => p.status === 'planted')
