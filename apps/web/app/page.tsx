@@ -6,6 +6,8 @@ type ItemStatus = 'done' | 'active' | 'pending'
 interface TrackItem {
   label: string
   status: ItemStatus
+  href?: string
+  tag?: string
 }
 
 const items: TrackItem[] = [
@@ -18,8 +20,14 @@ const items: TrackItem[] = [
   { label: 'User flows & states', status: 'done' },
   { label: 'UI & interaction design', status: 'done' },
   { label: 'Visual direction & branding', status: 'done' },
-  { label: 'Design system', status: 'active' },
-  { label: 'Build core experience', status: 'active' },
+  { label: 'Design system', status: 'active', tag: 'Building' },
+  {
+    label: 'Build core experience',
+    status: 'active',
+    href: 'https://santolina.app/dashboard',
+    tag: 'Building',
+  },
+  { label: 'Set up the database', status: 'active', tag: 'Wiring' },
   { label: 'Landing page', status: 'pending' },
   { label: 'Alpha: test & validate', status: 'pending' },
   { label: 'Build additional features', status: 'pending' },
@@ -69,10 +77,16 @@ export default function InProgressPage() {
               key={item.label}
               className={`${styles.item} ${styles[item.status]}`}
             >
-              <span className={styles.text}>{item.label}</span>
-              {item.status === 'active' && (
+              {item.href ? (
+                <a href={item.href} className={styles.text}>
+                  {item.label}
+                </a>
+              ) : (
+                <span className={styles.text}>{item.label}</span>
+              )}
+              {item.status === 'active' && item.tag && (
                 <span className={`${styles.tag} ${styles.tagNow}`}>
-                  Exploring
+                  {item.tag}
                 </span>
               )}
             </li>

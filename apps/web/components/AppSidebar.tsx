@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
-import { Icon } from '@paradoxui/ui'
+import { Badge, Icon } from '@paradoxui/ui'
 import { icons, type IconName } from '@/lib/icons'
 
 interface NavItem {
@@ -30,7 +30,7 @@ export function AppSidebar() {
         style={{ backgroundImage: "url('/textures/sidebar-texture.png')" }}
       />
 
-      <div className="relative p-row-gap">
+      <div className="relative flex items-center justify-between p-row-gap">
         <Link href="/" className="inline-flex items-center gap-[6px]">
           <Image
             src="/logo-mark.svg"
@@ -43,6 +43,12 @@ export function AppSidebar() {
             santolina
           </span>
         </Link>
+        <Badge
+          variant="positive"
+          className="whitespace-nowrap uppercase tracking-wide"
+        >
+          WIP
+        </Badge>
       </div>
 
       <button
