@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Icon, Modal, useToast } from '@paradoxui/ui'
+import { Drawer, Icon, Modal, useToast } from '@paradoxui/ui'
 import { icons } from '@/lib/icons'
+import { DRAWER_MOTION } from '@/lib/drawer-motion'
 import type { PlantDetail } from '@/lib/plant-detail'
 import { formatPlantSubtitle } from '@/lib/format-plant'
 import { buildGoodForYourGarden } from '@/lib/good-for-your-garden'
@@ -32,9 +33,6 @@ interface PlantDetailDrawerProps {
 
 /** Photo widths cycle to match the Figma strip (third photo clips at the edge). */
 const PHOTO_WIDTHS = [131, 175, 207]
-
-/** Mirrors --duration-slow / --ease-in-out — Framer Motion can't read CSS vars. */
-const DRAWER_TRANSITION = { duration: 0.3, ease: [0.4, 0, 0.2, 1] as const }
 
 export function PlantDetailDrawer({
   gardenId,
@@ -348,39 +346,16 @@ export function PlantDetailDrawer({
 
   const controlsDisabled = isStatusLoading || pendingAction !== null
 
-  useEffect(() => {
-    // Mirrors the lg breakpoint: below it the drawer is a full-screen
-    // sheet (it also has to clear the desktop sidebar, which appears at
-    // md), so the page underneath must not scroll behind it.
-    const mq = window.matchMedia('(max-width: 1023px)')
-    if (!mq.matches) return
-    const original = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.body.style.overflow = original
-    }
-  }, [])
-
   return (
-    <motion.aside
-      aria-label={`${plant.common_name} details`}
-      initial={{ x: '100%' }}
-      animate={{ x: 0 }}
-      exit={{ x: '100%' }}
-      transition={DRAWER_TRANSITION}
-      className="fixed inset-0 z-20 flex w-full flex-col overflow-hidden bg-surface-card lg:inset-x-auto lg:top-2 lg:bottom-2 lg:right-0 lg:w-[440px] lg:rounded-l-lg lg:border-l lg:border-y lg:border-card"
-    >
-      <div className="flex w-full shrink-0 items-center justify-between border-b border-card p-card-padding">
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="Close plant details"
-          className="flex size-8 items-center justify-center rounded-full border border-card bg-surface-control transition-opacity duration-normal hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
-        >
-          <Icon src={icons.close} />
-        </button>
-
-        <div className="flex items-center gap-inline-gap">
+    <Drawer
+      label={`${plant.common_name} details`}
+      onClose={onClose}
+      closeLabel="Close plant details"
+      closeIcon={<Icon src={icons.close} />}
+      panelComponent={motion.aside}
+      panelProps={DRAWER_MOTION}
+      headerActions={
+        <>
           {palette?.status !== 'planted' && (
             <button
               type="button"
@@ -427,9 +402,9 @@ export function PlantDetailDrawer({
           >
             <Icon src={icons.chat} />
           </button>
-        </div>
-      </div>
-
+        </>
+      }
+    >
       {actionError && (
         <p
           role="alert"
@@ -512,7 +487,7 @@ export function PlantDetailDrawer({
           bring the plant back to your garden from the diary view.
         </p>
       </Modal>
-    </motion.aside>
+    </Drawer>
   )
 }
 
