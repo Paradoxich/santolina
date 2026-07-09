@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useId } from 'react'
 
 export interface TooltipProps {
   content: React.ReactNode
@@ -24,7 +24,7 @@ export function Tooltip({
 }: TooltipProps) {
   const [visible, setVisible] = useState(false)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const tooltipId = useRef(`tooltip-${Math.random().toString(36).slice(2)}`)
+  const tooltipId = useId()
 
   const show = () => {
     timerRef.current = setTimeout(() => setVisible(true), delay)
@@ -46,7 +46,7 @@ export function Tooltip({
     onMouseLeave: hide,
     onFocus: show,
     onBlur: hide,
-    'aria-describedby': visible ? tooltipId.current : undefined,
+    'aria-describedby': visible ? tooltipId : undefined,
   })
 
   return (
@@ -54,7 +54,7 @@ export function Tooltip({
       {child}
       {visible && (
         <span
-          id={tooltipId.current}
+          id={tooltipId}
           role="tooltip"
           className={[
             'absolute z-50',

@@ -30,7 +30,7 @@ export const Default: Story = {
             </>
           }
         >
-          <p style={{ color: 'var(--color-neutral-700)', margin: 0 }}>
+          <p style={{ color: 'var(--color-text-secondary)', margin: 0 }}>
             Are you sure you want to mark all plants as watered today?
           </p>
         </Modal>
