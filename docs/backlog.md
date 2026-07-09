@@ -15,13 +15,13 @@ closing the gap between the kit and how the app actually consumes it.
 **Kit vs. product**
 
 - [ ] Extend `Button` with the variants the product needs (small circular icon buttons, light "control" style), then adopt it across the existing hand-rolled call sites. Highest-leverage cleanup.
-- [ ] Bloom-status badge colors — the five statuses share one accent badge; design a categorical hue palette (hue-named variants in the kit, status→hue mapping in the app) so each status reads distinct. Wiring is done; this is purely color decisions.
+- [ ] Bloom-status badge colors — the five statuses share one placeholder chip; design a categorical hue palette (hue-named variants in the kit, status→hue mapping in the app) so each status reads distinct. Placement and wiring are done; this is purely color decisions. Chip currently reads over a photo (see placement in Done), so the palette needs enough contrast/opacity to sit on an image.
 
 **Kit consistency**
 
 - [ ] Add `forwardRef` across kit components (form libraries, tooltip positioning).
 - [ ] Unify prop naming (`variant` vs. `tone`, `size` vs. `inputSize`).
-- [ ] Add a class-merging strategy for consumer style overrides (`tailwind-merge` or equivalent).
+- [ ] Add a class-merging strategy for consumer style overrides (`tailwind-merge` or equivalent). Follow-up once it lands: the bloom-status corner chip (`GardenPlantTile`) is a hand-rolled frosted overlay `<span>` because Badge's variant background can't currently be overridden for the on-photo frosted look — fold it into a Badge `overlay`/frosted variant then (pairs with the bloom-status colors below).
 - [ ] Spacing-token migration for Button, Input, and Modal — fold into each component's redesign pass rather than a standalone sweep (mapping numeric padding onto the semantic scale is a design decision, and a standalone pass would be churned by the redesigns anyway).
 - [ ] Redesign Toasts, Input fields, and Modal to the product's visual language.
 
@@ -45,7 +45,8 @@ closing the gap between the kit and how the app actually consumes it.
 - [x] Fix small kit bugs — undefined `--color-neutral-*` references, fixed Modal element id, SSR-unsafe Tooltip ids (`Tooltip`/`Modal` now use `useId()`).
 - [x] Extract `Drawer` into `@paradoxui/ui` — the kit owns the non-animated chrome (positioning, scroll lock, header/close); animation is injected via `panelComponent`/`panelProps`, so the kit carries no framer-motion dependency. `lib/drawer-motion.ts` is the app's single slide-in source of truth.
 - [x] Card spacing migrated to semantic tokens (`px-card-padding py-row-gap`, value-identical to the old `px-6 py-4`).
-- [x] Adopt `Badge`/`Avatar` at the three hand-rolled sites — bloom pill (new generic `accent` variant, labels sentence-cased to match the filter chips), "Removed from garden" tag (default variant), sidebar avatar (new `xs` size; `Avatar` now consumes the `--avatar-fill` component token).
+- [x] Adopt `Badge`/`Avatar` at the hand-rolled sites — "Removed from garden" tag (kit `Badge` default variant), sidebar avatar (kit `Avatar`, new `xs` size, now consuming the `--avatar-fill` token). Bloom-status labels sentence-cased to match the filter chips.
+- [x] Move bloom status to a frosted corner chip on the photo (top-right) — off the title, reads over any image. Implemented as a tokenized overlay `<span>` rather than the kit Badge (see the tailwind-merge follow-up above); colors are a placeholder pending the palette item.
 
 ---
 
