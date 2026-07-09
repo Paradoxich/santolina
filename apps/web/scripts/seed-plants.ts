@@ -18,7 +18,8 @@
  * is fill-only, so a re-run can fill gaps but never overwrites stored data.
  *
  * CAUTION: verify each new plant after seeding — Trefle name search can
- * silently resolve to a sibling species (see docs/backlog.md, round 3).
+ * silently resolve to a sibling species (diff requested vs stored
+ * scientific_name; seed by numeric Trefle ID or add manually when it does).
  *
  * Edit SEED_LIST below with the plants you want to import.
  */
