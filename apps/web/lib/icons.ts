@@ -16,6 +16,7 @@ export const icons = {
   info: '/icons/icon-info.svg',
   issues: '/icons/icon-issues.svg',
   leaf: '/icons/icon-leaf.svg',
+  light: '/icons/icon-light.svg',
   maintenance: '/icons/icon-maintenance.svg',
   placement: '/icons/icon-placement.svg',
   plus: '/icons/icon-plus.svg',

@@ -12,7 +12,7 @@ export function CareSection({ plant }: CareSectionProps) {
   const light = formatLightNeeds(plant)
   const allCards: { label: string; body: string | null; icon: IconName }[] = [
     { label: 'Water', body: plant.water_needs, icon: 'water' },
-    { label: 'Light', body: light, icon: 'water' },
+    { label: 'Light', body: light, icon: 'light' },
     { label: 'Soil', body: plant.soil_needs, icon: 'soil' },
     {
       label: 'Maintenance',

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { AnimatePresence } from 'framer-motion'
-import { EmptyState, Icon } from '@paradoxui/ui'
+import { EmptyState, Icon, Tooltip } from '@paradoxui/ui'
 import { DiaryListRow } from '@/components/DiaryListRow'
 import { DiaryDetailDrawer } from '@/components/DiaryDetailDrawer'
 import { parseISODate } from '@/lib/utils'
@@ -90,13 +90,15 @@ export function DiaryClient({
 
       <div className="mt-8 flex items-center justify-between md:mt-12">
         <h2 className="text-subheading font-semibold text-primary">Notes</h2>
-        <button
-          type="button"
-          aria-label="Filter diary entries"
-          className="flex size-8 items-center justify-center rounded-sm transition-colors duration-normal hover:bg-surface-overlay"
-        >
-          <Icon src={icons.filter} />
-        </button>
+        <Tooltip content="Filter diary entries" position="bottom">
+          <button
+            type="button"
+            aria-label="Filter diary entries"
+            className="flex size-8 items-center justify-center rounded-sm transition-colors duration-normal hover:bg-surface-overlay"
+          >
+            <Icon src={icons.filter} />
+          </button>
+        </Tooltip>
       </div>
 
       {sortedDiaries.length === 0 ? (

@@ -262,13 +262,15 @@ export function DiaryDetailDrawer({
           >
             Open plant details
           </button>
-          <button
-            type="button"
-            aria-label="Chat about this plant"
-            className="flex size-8 items-center justify-center rounded-full border border-card bg-surface-control"
-          >
-            <Icon src={icons.chat} />
-          </button>
+          <Tooltip content="Chat about this plant" position="bottom">
+            <button
+              type="button"
+              aria-label="Chat about this plant"
+              className="flex size-8 items-center justify-center rounded-full border border-card bg-surface-control"
+            >
+              <Icon src={icons.chat} />
+            </button>
+          </Tooltip>
         </>
       }
     >
