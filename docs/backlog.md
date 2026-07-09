@@ -1,8 +1,9 @@
 # Santolina + Paradox UI — Roadmap
 
 Working backlog for the Santolina app and the Paradox UI design system extracted
-from it. Grouped into buckets and roughly prioritized within each; checked items
-are done. This is a living document, not a commitment.
+from it. Grouped into buckets and roughly prioritized within each; open items
+come first, completed ones are grouped under **Done** at the end of each section.
+This is a living document, not a commitment.
 
 ---
 
@@ -15,17 +16,13 @@ closing the gap between the kit and how the app actually consumes it.
 
 - [ ] Extend `Button` with the variants the product needs (small circular icon buttons, light "control" style), then adopt it across the existing hand-rolled call sites. Highest-leverage cleanup.
 - [ ] Extract `Drawer` — Plant Detail and Diary Detail share an identical shell, header, close button, scroll-lock, and animation. Open decision: whether the kit owns the animation or the app does.
-- [ ] Extract `EmptyState` as a kit primitive, injecting the framework `Link` at the app layer.
-- [ ] Extract `DrawerSection` (the uppercase-label wrapper), currently repeated across screens.
 - [ ] Adopt `Badge`/`Avatar` for the bloom-status pill, status tags, and sidebar avatar. Give the plant status tags distinct colors (currently uniform).
-- [ ] Componentize the Sidebar into a single shared component.
 
 **Kit consistency**
 
 - [ ] Add `forwardRef` across kit components (form libraries, tooltip positioning).
 - [ ] Unify prop naming (`variant` vs. `tone`, `size` vs. `inputSize`).
 - [ ] Add a class-merging strategy for consumer style overrides (`tailwind-merge` or equivalent).
-- [ ] Fix known small bugs: undefined `--color-neutral-*` references, fixed Modal element id, SSR-unsafe Tooltip ids.
 - [ ] Finish the spacing-token migration on older components (Button, Input, Card, Modal).
 - [ ] Redesign Toasts, Input fields, and Modal to the product's visual language.
 
@@ -41,17 +38,27 @@ closing the gap between the kit and how the app actually consumes it.
 - [ ] Empty-state placeholder illustration.
 - [ ] General motion/transition pass across the UI.
 
+**Done**
+
+- [x] Extract `EmptyState` into `@paradoxui/ui` — the `next/link` coupling inverted via a `linkComponent` prop (defaults to `<a>`); app call sites pass Next's `Link`.
+- [x] Extract `DrawerSection` into `@paradoxui/ui` — moved unchanged; the plant-detail sections import it from the kit.
+- [x] Componentize the Sidebar — already a single `AppSidebar` (plus `MobileTabBar`); Avatar adoption stays tracked under the `Badge`/`Avatar` item above.
+- [x] Fix small kit bugs — undefined `--color-neutral-*` references, fixed Modal element id, SSR-unsafe Tooltip ids (`Tooltip`/`Modal` now use `useId()`).
+
 ---
 
 ## Database & Plant Data
 
+- [ ] **Editorial review of the cross-check's remaining flags** — a few plant-type classifications and one hardiness value. Judgment calls, intentionally unapplied.
+- [ ] `users` / `agent_sessions` tables — idle by design until authentication and the agent land.
+
+**Done**
+
 - [x] **Populate `plant_combinations`** via an AI pass — 311 companion pairs across the 125-plant catalog, capped at 5 per plant and deduped; verified rendering in the app.
 - [x] **Correct systematic under-reporting of sun requirements** — data corrected, plus two forward fixes in the curation and cross-check scripts so future drafts capture the full tolerated range.
 - [x] **Build the botanical cross-check** (`cross-check-plants.ts`) — a blind second-pass fact-checker over curated fields; flags only, never writes.
-- [ ] **Editorial review of the cross-check's remaining flags** — a few plant-type classifications and one hardiness value. Judgment calls, intentionally unapplied.
 - [x] **Expand the plant catalog** — now 125 species, all curated with images and descriptions.
 - [x] **Replayable migration** recording the direct-to-DB data corrections, guarded and idempotent.
-- [ ] `users` / `agent_sessions` tables — idle by design until authentication and the agent land.
 
 _Accepted v1 gap: orphaned storage files are not cleaned up on delete._
 
@@ -74,18 +81,22 @@ _Deferred by design: diary AI summaries (wait for the agent), repo split (wait f
 
 - [ ] Care Tips — rework the header count for the generic-fallback state.
 - [ ] Diary — edit/delete a single note; refine the "removed from garden" treatment; reposition the clear-diary and add-note actions; add a top border above the notes list.
+- [ ] Apply tooltips to all icon buttons.
 - [ ] Search — recommended chips below the search field.
 - [ ] Plant detail — polish small card backgrounds, swap the water icon, add an image placeholder for missing photos.
-- [ ] 404 page.
 - [ ] Bloom Timeline — show a plant's name on hover.
-- [ ] My Plants — thumbnail border radius 4px → 8px.
+
+**Done**
+
+- [x] 404 page — on-brand `app/not-found.tsx` with a back-to-dashboard link.
+- [x] My Plants card — thumbnail border radius 4px → 8px.
 
 ---
 
 ## Suggested sequencing
 
 1. Extend `Button` and adopt it across the app — stops the kit/product drift and unblocks consistent UI work.
-2. Extract the shared primitives the product already needs (Drawer, EmptyState, DrawerSection).
+2. Extract the shared `Drawer` primitive the product already needs.
 3. Bundle the Diary UI fixes.
 4. Kit consistency, de-gardening, and packaging as Paradox UI rises in priority.
 5. Authentication last, scoped alongside onboarding.
