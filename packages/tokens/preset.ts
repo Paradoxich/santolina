@@ -97,6 +97,7 @@ const preset = {
         critical: 'var(--color-surface-critical)',
       },
       scrim: 'var(--color-scrim)',
+      avatar: 'var(--avatar-fill)',
       accent: {
         DEFAULT: 'var(--color-accent)',
         hover: 'var(--color-accent-hover)',

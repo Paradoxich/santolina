@@ -1,12 +1,13 @@
 import React from 'react'
 
 export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
-  variant?: 'default' | 'positive' | 'warning' | 'critical'
+  variant?: 'default' | 'accent' | 'positive' | 'warning' | 'critical'
   children: React.ReactNode
 }
 
 const variantStyles: Record<NonNullable<BadgeProps['variant']>, string> = {
   default: ['bg-surface-subtle', 'text-secondary', 'border-divider'].join(' '),
+  accent: ['bg-accent-muted', 'text-accent', 'border-transparent'].join(' '),
   positive: ['bg-surface-positive', 'text-positive', 'border-transparent'].join(
     ' '
   ),

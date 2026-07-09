@@ -15,7 +15,7 @@ closing the gap between the kit and how the app actually consumes it.
 **Kit vs. product**
 
 - [ ] Extend `Button` with the variants the product needs (small circular icon buttons, light "control" style), then adopt it across the existing hand-rolled call sites. Highest-leverage cleanup.
-- [ ] Adopt `Badge`/`Avatar` for the bloom-status pill, status tags, and sidebar avatar. Give the plant status tags distinct colors (currently uniform).
+- [ ] Bloom-status badge colors — the five statuses share one accent badge; design a categorical hue palette (hue-named variants in the kit, status→hue mapping in the app) so each status reads distinct. Wiring is done; this is purely color decisions.
 
 **Kit consistency**
 
@@ -45,6 +45,7 @@ closing the gap between the kit and how the app actually consumes it.
 - [x] Fix small kit bugs — undefined `--color-neutral-*` references, fixed Modal element id, SSR-unsafe Tooltip ids (`Tooltip`/`Modal` now use `useId()`).
 - [x] Extract `Drawer` into `@paradoxui/ui` — the kit owns the non-animated chrome (positioning, scroll lock, header/close); animation is injected via `panelComponent`/`panelProps`, so the kit carries no framer-motion dependency. `lib/drawer-motion.ts` is the app's single slide-in source of truth.
 - [x] Card spacing migrated to semantic tokens (`px-card-padding py-row-gap`, value-identical to the old `px-6 py-4`).
+- [x] Adopt `Badge`/`Avatar` at the three hand-rolled sites — bloom pill (new generic `accent` variant, labels sentence-cased to match the filter chips), "Removed from garden" tag (default variant), sidebar avatar (new `xs` size; `Avatar` now consumes the `--avatar-fill` component token).
 
 ---
 
