@@ -1,6 +1,6 @@
 import { CompanionThumbnail } from '@paradoxui/ui'
 import type { CompanionPlant } from '@/lib/plant-detail'
-import { DrawerSection } from './DrawerSection'
+import { DrawerSection } from '@paradoxui/ui'
 
 interface WorksWellWithSectionProps {
   companions: CompanionPlant[]

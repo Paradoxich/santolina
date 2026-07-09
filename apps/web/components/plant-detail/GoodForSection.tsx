@@ -1,5 +1,5 @@
 import { formatGoodFor } from '@/lib/format-plant'
-import { DrawerSection } from './DrawerSection'
+import { DrawerSection } from '@paradoxui/ui'
 
 interface GoodForSectionProps {
   tags: string[] | null

@@ -2,7 +2,7 @@ import { Icon, StatCard } from '@paradoxui/ui'
 import type { DbPlant } from '@/lib/plants-db'
 import { formatLightNeeds } from '@/lib/format-plant'
 import { icons, type IconName } from '@/lib/icons'
-import { DrawerSection } from './DrawerSection'
+import { DrawerSection } from '@paradoxui/ui'
 
 interface CareSectionProps {
   plant: DbPlant

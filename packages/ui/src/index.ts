@@ -65,3 +65,9 @@ export type { MediaCardProps } from './components/MediaCard'
 
 export { Icon } from './components/Icon'
 export type { IconProps } from './components/Icon'
+
+export { DrawerSection } from './components/DrawerSection'
+export type { DrawerSectionProps } from './components/DrawerSection'
+
+export { EmptyState } from './components/EmptyState'
+export type { EmptyStateProps } from './components/EmptyState'

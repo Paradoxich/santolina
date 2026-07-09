@@ -32,7 +32,7 @@ export function MyPlantsCard({ plants, totalInGarden }: MyPlantsCardProps) {
         {plants.map((plant) => (
           <div
             key={plant.name}
-            className="relative min-w-0 flex-1 overflow-hidden rounded-xs"
+            className="relative min-w-0 flex-1 overflow-hidden rounded-sm"
           >
             <Image
               src={plant.imageUrl}
