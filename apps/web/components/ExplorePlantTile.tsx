@@ -25,7 +25,7 @@ export function ExplorePlantTile({ plant, onClick }: ExplorePlantTileProps) {
       title={plant.commonName}
       subtitle={plant.botanicalName}
       body={plant.description}
-      bodyClassName="line-clamp-3"
+      bodyClassName="line-clamp-2"
     />
   )
 }

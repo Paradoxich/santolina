@@ -89,7 +89,7 @@ export function DiaryClient({
       </header>
 
       <div className="mt-8 flex items-center justify-between md:mt-12">
-        <h2 className="text-subheading font-semibold text-primary">Plants</h2>
+        <h2 className="text-subheading font-semibold text-primary">Notes</h2>
         <button
           type="button"
           aria-label="Filter diary entries"

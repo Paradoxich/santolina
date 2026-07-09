@@ -37,7 +37,7 @@ export function WeatherCard({ location, country, days }: WeatherCardProps) {
       </div>
 
       {location && days ? (
-        <div className="flex min-h-0 flex-1 items-start gap-3 lg:gap-[56px]">
+        <div className="flex min-h-0 flex-1 items-end gap-3 lg:gap-[56px]">
           {days.map((day) => (
             <div
               key={day.label}
@@ -46,13 +46,15 @@ export function WeatherCard({ location, country, days }: WeatherCardProps) {
               <span className="w-full text-center text-label font-medium uppercase tracking-[0.05em] text-muted">
                 {day.label}
               </span>
-              <Image
-                src={`/icons/weather-${day.icon}.svg`}
-                alt=""
-                width={102}
-                height={48}
-                className="h-8 w-auto lg:h-12"
-              />
+              <div className="flex h-14 items-center lg:h-16">
+                <Image
+                  src={`/icons/weather-${day.icon}.svg`}
+                  alt=""
+                  width={102}
+                  height={48}
+                  className="h-8 w-auto lg:h-12"
+                />
+              </div>
               <div className="flex items-baseline justify-center gap-inline-gap">
                 <span className="text-stat text-primary">{day.high}°</span>
                 <span className="text-stat text-faint">{day.low}°</span>
