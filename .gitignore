@@ -13,6 +13,9 @@ build
 .env.local
 .env.*.local
 
+# Script output (cross-check reports etc.)
+apps/web/reports
+
 # Turbo
 .turbo
 
