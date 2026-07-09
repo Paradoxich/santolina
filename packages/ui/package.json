@@ -22,7 +22,9 @@
     "react-dom": "^19.0.0"
   },
   "dependencies": {
-    "@paradoxui/tokens": "workspace:*"
+    "@paradoxui/tokens": "workspace:*",
+    "clsx": "^2.1.1",
+    "tailwind-merge": "^2.5.0"
   },
   "devDependencies": {
     "@paradoxui/eslint-config": "workspace:*",
