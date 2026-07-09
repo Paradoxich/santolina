@@ -40,4 +40,6 @@ export interface GardenPlant {
   planned?: boolean
   /** e.g. "Part shade · Aug–Oct" — shown on planned plant cards */
   caption?: string
+  /** Terse field note about position within the current stage (or a care cue) — shown on growing cards. See lib/bloom-status.ts getStageNote. */
+  stageNote?: string
 }

@@ -44,7 +44,10 @@ export function GardenPlantTile({ plant, onClick }: GardenPlantTileProps) {
       }
       imageHeight={200}
       title={plant.name}
-      body={<>❋ {plant.note}</>}
+      // Terse field note on where the plant sits within its stage, or what's
+      // next for it (see getStageNote). Says what the status chip can't; always
+      // present, so it reads as a real line rather than an orphan marker.
+      body={plant.stageNote}
     />
   )
 }

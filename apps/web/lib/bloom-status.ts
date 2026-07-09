@@ -1,3 +1,5 @@
+import { monthName } from './format-plant'
+
 export type BloomStatus =
   | 'blooming'
   | 'pre-bloom'
@@ -36,4 +38,40 @@ export function getBloomStatus(
   if (currentMonth === normalizeMonth(maxMonth + 1)) return 'done'
 
   return 'resting'
+}
+
+/**
+ * A terse field note (≤7 words, no trailing punctuation) about where the
+ * plant sits *within* its current stage, or what's next for it. It always
+ * says something the status chip alone can't — position (early/peak/late), a
+ * recent event, or the next flowering — and never describes the plant or
+ * restates the stage. Pure function of bloom_months and a reference date.
+ *
+ * Resting plants (dormant, but they flower) look forward to their next bloom
+ * month; the 2 catalog plants with no bloom_months at all fall to the
+ * evergreen line. Position within blooming compares the current month to the
+ * window's first/last month, so it shares getBloomStatus's wrap-around
+ * limitation. Always returns a string — the card line is never blank.
+ */
+export function getStageNote(
+  bloomMonths: number[],
+  today: Date = new Date()
+): string {
+  const status = getBloomStatus(bloomMonths, today)
+  const currentMonth = today.getMonth() + 1
+
+  if (status === 'evergreen') return 'Year-round structure'
+  if (status === 'pre-bloom') return 'Buds forming now'
+  if (status === 'done') return 'Flowering just finished'
+
+  const minMonth = Math.min(...bloomMonths)
+  const maxMonth = Math.max(...bloomMonths)
+
+  if (status === 'resting') return `Blooms again in ${monthName(minMonth)}`
+
+  // blooming — position within the window
+  if (minMonth === maxMonth) return 'Peak flowering now'
+  if (currentMonth === minMonth) return 'First flowers opening'
+  if (currentMonth === maxMonth) return 'Bloom ending soon'
+  return 'Peak flowering now'
 }

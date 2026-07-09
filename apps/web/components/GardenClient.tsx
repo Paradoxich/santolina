@@ -8,7 +8,11 @@ import { Chip, EmptyState, Tabs, useToast } from '@paradoxui/ui'
 import { GardenPlantTile } from '@/components/GardenPlantTile'
 import { PlannedPlantTile } from '@/components/PlannedPlantTile'
 import { PlantDetailDrawer } from '@/components/PlantDetailDrawer'
-import { getBloomStatus, type BloomStatus } from '@/lib/bloom-status'
+import {
+  getBloomStatus,
+  getStageNote,
+  type BloomStatus,
+} from '@/lib/bloom-status'
 import { formatExposure, formatBloomRange } from '@/lib/format-plant'
 import type { PlantDetail } from '@/lib/plant-detail'
 import {
@@ -47,6 +51,7 @@ function toGardenPlant(row: PalettePlant): GardenPlant {
     note: row.notes ?? '',
     planned: row.status === 'planned',
     caption: caption || undefined,
+    stageNote: getStageNote(plant.bloom_months ?? []),
   }
 }
 
