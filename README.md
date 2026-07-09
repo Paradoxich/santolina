@@ -29,7 +29,7 @@ santolina/
 - **Package manager**: pnpm with workspaces
 - **Monorepo orchestration**: Turborepo
 - **Node version**: 20 LTS
-- **App**: Next.js 15, TypeScript, Tailwind CSS, Framer Motion, Zustand, Supabase, Vercel AI SDK
+- **App**: Next.js 15, TypeScript, Tailwind CSS, Framer Motion, Supabase, Vercel AI SDK
 - **UI library**: React 19, TypeScript, Tailwind CSS, Storybook 8
 - **Tokens**: Pure CSS custom properties
 
@@ -94,22 +94,32 @@ pnpm test
 
 ### Plant data layer
 
-The `plants` table is seeded from Trefle and then filled in by an AI curation
-pass. Both scripts require the relevant keys in `apps/web/.env.local`
-(`TREFLE_API_KEY`, `ANTHROPIC_API_KEY`):
+The `plants` table is seeded from Trefle, then enriched and extended by a series
+of AI passes. All scripts live in `apps/web/scripts/` and require the relevant
+keys in `apps/web/.env.local` (`TREFLE_API_KEY`, `ANTHROPIC_API_KEY`):
 
 ```bash
 cd apps/web
 
-# Seed from Trefle
+# Seed botanical facts from Trefle
 ./node_modules/.bin/tsx --env-file=.env.local scripts/seed-plants.ts
 
-# AI curation pass — fills gaps Trefle can't
+# AI curation pass — fills gaps Trefle can't (care, style tags, seasonal rhythm)
 ./node_modules/.bin/tsx --env-file=.env.local scripts/curate-plants.ts
+
+# Companion pairings — populates plant_combinations (idempotent; --limit N, --dry-run)
+./node_modules/.bin/tsx --env-file=.env.local scripts/curate-combinations.ts
+
+# Botanical cross-check — blind fact-check of curated fields; flags only, never writes.
+# Writes a report to apps/web/reports/ (gitignored). Supports --limit N.
+./node_modules/.bin/tsx --env-file=.env.local scripts/cross-check-plants.ts
 ```
 
-See `docs/architecture.md` for the data-layer decisions behind this (provider
-choice, curation strategy, safe upsert function).
+Run them in this order: `curate-combinations` expects a curated catalog, and
+`cross-check-plants` reviews what the earlier passes drafted. See
+`docs/architecture.md` for the data-layer decisions behind each — provider
+choice and safe upsert (§1, §9), curation (§6), combinations (§19), and the
+cross-check (§20).
 
 ## Further reading
 
