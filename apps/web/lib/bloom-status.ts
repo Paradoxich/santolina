@@ -1,4 +1,5 @@
 import { monthName } from './format-plant'
+import { getCurrentSeason, type Season } from './season'
 
 export type BloomStatus =
   | 'blooming'
@@ -40,6 +41,18 @@ export function getBloomStatus(
   return 'resting'
 }
 
+// Evergreens have no bloom window, so their note is anchored to the moment —
+// what the plant is doing this season, not what it definitionally is. Keyed by
+// the 6-stage season vocabulary for a Mediterranean-adjacent climate.
+const EVERGREEN_NOTES: Record<Season, string> = {
+  early_spring: 'Fresh backdrop as spring starts',
+  late_spring: 'Lush behind the spring blooms',
+  summer: 'Holding well in summer heat',
+  late_summer: 'Still green as summer fades',
+  autumn: 'Structure as the borders fade',
+  winter: 'Good winter structure',
+}
+
 /**
  * A terse field note (≤7 words, no trailing punctuation) about where the
  * plant sits *within* its current stage, or what's next for it. It always
@@ -48,7 +61,7 @@ export function getBloomStatus(
  * restates the stage. Pure function of bloom_months and a reference date.
  *
  * Resting plants (dormant, but they flower) look forward to their next bloom
- * month; the 2 catalog plants with no bloom_months at all fall to the
+ * month; the 2 catalog plants with no bloom_months at all get a season-keyed
  * evergreen line. Position within blooming compares the current month to the
  * window's first/last month, so it shares getBloomStatus's wrap-around
  * limitation. Always returns a string — the card line is never blank.
@@ -60,7 +73,7 @@ export function getStageNote(
   const status = getBloomStatus(bloomMonths, today)
   const currentMonth = today.getMonth() + 1
 
-  if (status === 'evergreen') return 'Year-round structure'
+  if (status === 'evergreen') return EVERGREEN_NOTES[getCurrentSeason(today)]
   if (status === 'pre-bloom') return 'Buds forming now'
   if (status === 'done') return 'Flowering just finished'
 

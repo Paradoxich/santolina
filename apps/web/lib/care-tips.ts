@@ -1,27 +1,10 @@
 // Pure logic for the Dashboard's Care Tips card. Client-safe.
-import type { SeasonalRhythm } from './plants-db'
 import type { PalettePlant } from '@/server/palette-actions'
 import type { CareTip } from '@/types/dashboard'
 import { getBloomStatus } from './bloom-status'
-
-export type Season = keyof SeasonalRhythm
+import { getCurrentSeason, type Season } from './season'
 
 const MAX_TIPS = 5
-
-const MONTH_TO_SEASON: Record<number, Season> = {
-  12: 'winter',
-  1: 'winter',
-  2: 'winter',
-  3: 'early_spring',
-  4: 'early_spring',
-  5: 'late_spring',
-  6: 'late_spring',
-  7: 'summer',
-  8: 'summer',
-  9: 'late_summer',
-  10: 'autumn',
-  11: 'autumn',
-}
 
 /** Generic, plant-agnostic tasks shown when the palette has nothing usable for the current season. */
 export const STATIC_SEASONAL_TIPS: Record<Season, CareTip[]> = {
@@ -187,11 +170,6 @@ export const STATIC_SEASONAL_TIPS: Record<Season, CareTip[]> = {
       text: "Plan next season's planting while the garden rests.",
     },
   ],
-}
-
-/** Maps a calendar month onto the 6-stage seasonal_rhythm vocabulary (Mediterranean/European climate). */
-export function getCurrentSeason(today: Date = new Date()): Season {
-  return MONTH_TO_SEASON[today.getMonth() + 1]!
 }
 
 /**
