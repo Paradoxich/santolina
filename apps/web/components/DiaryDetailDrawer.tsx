@@ -375,7 +375,7 @@ export function DiaryDetailDrawer({
           ) : (
             <div className="flex w-full flex-col gap-inline-gap">
               <p className="text-body-small text-muted">
-                No longer in your garden — notes are read-only.
+                No longer in your garden. Notes are read-only.
               </p>
               <button
                 type="button"
