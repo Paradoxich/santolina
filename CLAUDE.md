@@ -170,7 +170,6 @@ Everything else is deferred. Do not build edible growing or multiple gardens in 
 - Changesets — added before first npm publish
 - Chromatic — added once enough components exist
 - Playwright — added for critical flows later
-- Real design tokens — placeholders only until Figma design is complete
 - Supabase realtime — not needed in v1
 - Multiple gardens per user — schema supports it, app enforces one in v1
 
