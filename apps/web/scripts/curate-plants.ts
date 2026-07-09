@@ -88,7 +88,8 @@ interface CurationResponse {
   garden_use_tags?: string[]
   bloom_color?: string[]
   foliage_color?: string | null
-  sun_requirements?: Array<(typeof SUN_VALUES)[number]>
+  sun_thrives?: Array<(typeof SUN_VALUES)[number]>
+  sun_tolerates?: Array<(typeof SUN_VALUES)[number]>
   bloom_months?: number[]
   water_needs?: string | null
   water_needs_summary?: string | null
@@ -141,7 +142,8 @@ function buildPrompt(plant: DbPlant): string {
   if (!plant.garden_use_tags?.length) missing.push('garden_use_tags')
   if (!plant.bloom_color?.length) missing.push('bloom_color')
   if (plant.foliage_color === null) missing.push('foliage_color')
-  if (!plant.sun_requirements?.length) missing.push('sun_requirements')
+  // sun is drafted as two fields; sun_requirements is derived by a DB trigger.
+  if (!plant.sun_thrives?.length) missing.push('sun_thrives', 'sun_tolerates')
   if (!plant.bloom_months?.length) missing.push('bloom_months')
   if (!plant.water_needs) missing.push('water_needs')
   if (!plant.water_needs_summary) missing.push('water_needs_summary')
@@ -172,9 +174,6 @@ function buildPrompt(plant: DbPlant): string {
     ...(plant.hardiness_zone_max
       ? { hardiness_zone_max: plant.hardiness_zone_max }
       : {}),
-    ...(plant.sun_requirements?.length
-      ? { sun_requirements: plant.sun_requirements }
-      : {}),
     ...(plant.bloom_months?.length ? { bloom_months: plant.bloom_months } : {}),
     ...(plant.water_needs ? { water_needs: plant.water_needs } : {}),
   }
@@ -200,7 +199,8 @@ Field specifications:
 - garden_use_tags: Array of 2-4 practical use-case phrases describing how this plant is typically used in a garden (e.g. ["pollinator gardens", "gravel gardens", "sunny borders", "wildlife gardens"]). This is DISTINCT from style_tags — use-case focused, not aesthetic.
 - bloom_color: Array of plain English color names (e.g. ["purple", "white"]). Empty array [] for non-flowering or purely foliage plants.
 - foliage_color: Single string only if the foliage is notably distinctive (e.g. "silver", "burgundy", "variegated grey-green"). null if typical green.
-- sun_requirements: Subset of ["full_sun", "partial_sun", "shade"]. Include EVERY exposure the species reliably grows in, not just its single optimum — most garden plants tolerate a range, so prefer multiple values unless the species genuinely only performs in one. E.g. a plant that thrives in full sun but also does fine in partial sun should return both.
+- sun_thrives: Subset of ["full_sun", "partial_sun", "shade"] — the exposure(s) where the species performs at its BEST (flowers well, best habit, healthy growth). Usually one, occasionally two. Must be non-empty.
+- sun_tolerates: Subset of ["full_sun", "partial_sun", "shade"], DISJOINT from sun_thrives — ADDITIONAL exposures the species accepts and grows acceptably in but is not at its best. Include every exposure it reliably tolerates beyond its optimum; [] if it only performs in its thrives range. E.g. a plant best in full sun that also does fine in partial sun → sun_thrives ["full_sun"], sun_tolerates ["partial_sun"].
 - bloom_months: Array of integers 1–12 (Jan=1, Dec=12). Must be internally consistent with seasonal_rhythm if you are providing both.
 - water_needs: 1-2 short sentences. Plain second-person-adjacent language. E.g. "Moderate watering while establishing. Drought tolerant once mature."
 - water_needs_summary: Very short category phrase, max ~4 words, no trailing period. E.g. "Low to moderate", "Moderate", "Low once established". Must be consistent with water_needs.
@@ -307,8 +307,16 @@ function buildPatch(plant: DbPlant, response: CurationResponse): PlantPatch {
   // foliage_color: null is a valid value (means "typical green" — skip re-asking)
   if (plant.foliage_color === null && 'foliage_color' in response)
     patch.foliage_color = response.foliage_color ?? null
-  if (!plant.sun_requirements?.length && response.sun_requirements?.length)
-    patch.sun_requirements = response.sun_requirements
+  // Sun: write the two source fields; the DB trigger derives sun_requirements.
+  // Clamp tolerates to be disjoint from thrives (enforced by a CHECK too).
+  if (!plant.sun_thrives?.length && response.sun_thrives?.length) {
+    const thrives = response.sun_thrives
+    const thrivesSet = new Set<string>(thrives)
+    patch.sun_thrives = thrives
+    patch.sun_tolerates = (response.sun_tolerates ?? []).filter(
+      (s) => !thrivesSet.has(s)
+    )
+  }
   if (!plant.bloom_months?.length && response.bloom_months?.length)
     patch.bloom_months = response.bloom_months
   if (!plant.water_needs && response.water_needs != null)
@@ -339,13 +347,15 @@ function buildPatch(plant: DbPlant, response: CurationResponse): PlantPatch {
 // DB helpers
 // ---------------------------------------------------------------------------
 
-async function fetchUncuratedPlants(): Promise<DbPlant[]> {
+async function fetchUncuratedPlants(newOnly = false): Promise<DbPlant[]> {
   const db = getSupabaseAdmin()
-  const { data, error } = await db
-    .from('plants')
-    .select('*')
-    .eq('is_curated', false)
-    .order('common_name')
+  let query = db.from('plants').select('*').eq('is_curated', false)
+
+  // --new-only: limit to rows that have never been drafted, so a targeted
+  // top-up after seeding a few plants doesn't re-query the whole catalog.
+  if (newOnly) query = query.is('ai_drafted_at', null)
+
+  const { data, error } = await query.order('common_name')
 
   if (error) throw new Error(`Failed to fetch plants: ${error.message}`)
   return (data ?? []) as DbPlant[]
@@ -370,8 +380,12 @@ function sleep(ms: number): Promise<void> {
 }
 
 async function main() {
-  console.log('\nFetching uncurated plants from Supabase...')
-  const plants = await fetchUncuratedPlants()
+  const newOnly = process.argv.slice(2).includes('--new-only')
+
+  console.log(
+    `\nFetching ${newOnly ? 'undrafted ' : ''}uncurated plants from Supabase...`
+  )
+  const plants = await fetchUncuratedPlants(newOnly)
 
   if (!plants.length) {
     console.log('No uncurated plants found — nothing to do.')

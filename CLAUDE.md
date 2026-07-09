@@ -187,3 +187,4 @@ Everything else is deferred. Do not build edible growing or multiple gardens in 
 - Framework: paradoxui.com
 - npm: @paradoxui/tokens, @paradoxui/ui
 - GitHub: santolina (app), paradoxui (framework)
+- Backlog / roadmap: the Notion **Build Backlog** is the single source of truth (there is no in-repo backlog). Design/architecture rationale still lives in `docs/architecture.md`.

@@ -40,7 +40,7 @@ This document records the architectural decisions made during the build of the p
 
 **`is_curated` flag:** Set to `false` on all automated writes. Flipping it to `true` is a deliberate manual step after human review. This means the plants table always has a clear distinction between "machine-drafted" and "human-verified" rows.
 
-**What "human review" means (redefined July 2026):** the reviewer isn't a botanist, so `is_curated = true` asserts an _editorial_ pass, not botanical verification: the image shows the right plant, the description reads well and on-brand, and the style/space tags make product sense. Botanical facts (hardiness, sun, bloom months) are to be verified by a separate AI cross-check pass — a second, independent model run prompted to fact-check the curation output and flag disagreements for human spot-checking (backlog; not built yet).
+**What "human review" means (redefined July 2026):** the reviewer isn't a botanist, so `is_curated = true` asserts an _editorial_ pass, not botanical verification: the image shows the right plant, the description reads well and on-brand, and the style/space tags make product sense. Botanical facts (hardiness, sun, bloom months) are verified by a separate AI cross-check pass — a second, independent model run prompted to fact-check the curation output and flag disagreements for human spot-checking (built; see §20).
 
 **Note:** this separation was not fully enforced until a bug was found and fixed (see §9). Initially, re-running the Trefle seed against already-curated plants silently overwrote `description`, `care_level`, and `height_min_cm` with Trefle's null values, since these are fields both Trefle and AI can populate. The fix (§9) makes this structurally impossible going forward, not just a convention.
 
@@ -222,6 +222,8 @@ Full column list as of the current schema version:
 | **Monotonic**                                                                                                                | `is_curated` — stored as `plants.is_curated OR EXCLUDED.is_curated`; can only become `true`, never reverts to `false` on re-seed              |
 
 **AI-only fields are not referenced anywhere in the function body.** `plant_type`, `plant_type_label`, `style_tags`, `space_types`, `bloom_color`, `foliage_color`, `spread_min_cm`, `spread_max_cm`, `water_needs`, `water_needs_summary`, `light_needs`, `soil_needs`, `maintenance_notes`, `common_issues`, `best_placement`, `environment_benefits`, `seasonal_rhythm`, `garden_use_tags`, and `ai_drafted_at` cannot be overwritten via the Trefle sync path — this is a structural guarantee, not a convention.
+
+**Revised July 9, 2026 — the original rules were fill-only in the wrong direction.** The table above protected fields only when Trefle sends _nothing_: `COALESCE(EXCLUDED.x, plants.x)` lets an incoming non-null Trefle value overwrite the stored one, and the array `CASE` rules pointed the same way. That was fine against Trefle's nulls (the original bug) but destructive wherever Trefle _has_ data and the stored value had since been editorially corrected — the round-3 full re-seed reverted 49 of the 62 editorial `sun_requirements` corrections (§20) this way. `supabase/migrations/20260709210000_fill_only_trefle_upsert.sql` replaces the function with uniform **fill-only** semantics: on UPDATE the stored value always wins and Trefle can only fill gaps (null scalars, empty arrays); `common_name`/`scientific_name`/`data_source` are no longer rewritten either. INSERTs are unchanged. Trade-off: a re-seed can no longer refresh names/images/bloom data on existing rows — refreshing from Trefle now requires explicit tooling that declares which fields it overwrites. Alongside this, `seed-plants.ts` now skips already-cataloged species by default (matched on scientific name, then on resolved Trefle ID to catch synonym remaps); `--include-existing` restores full-list behavior. Verified live: a hostile upsert against a corrected row left every field intact, and a full default seed run made zero writes (145 skipped).
 
 ---
 
@@ -439,3 +441,48 @@ Annuals with null zones on both sides are not flagged (nulls are correct there, 
 **Replayable record:** the corrections are captured as a data migration, `supabase/migrations/20260709092512_correct_crosscheck_botanical_fields.sql`, so the diff isn't the only trace of what was applied. It re-keys off `scientific_name` rather than the live UUIDs (portable across environments) and carries the same guards (`is_curated = false` plus an exact prior-value match), so it is idempotent — a no-op against the already-corrected live rows, and against any environment whose values don't match the recorded pre-correction state. It's a one-off record, not part of the seed path; a fresh seed drafts its own values and these specific corrections simply won't match.
 
 **Output:** terminal report grouped disagreements-first, plus a timestamped JSON report in `apps/web/reports/` (gitignored) recording every flag with stored vs checked values — the artifact for Ana's spot-check sweep and the source of record for any bulk correction. `--limit N` for testing.
+
+---
+
+## 21. Sun-tolerance widening: the cross-check's under-report findings, applied as a repeatable step
+
+> **Superseded by §22 (two-field sun model), same day.** The widening step was the interim backstop under the single-list model; once sun is drafted as `sun_thrives` + `sun_tolerates`, first drafts capture the tolerated range at the source and the corrective sweep drops out of the standard round. The section is kept for the record; `apply-sun-widening.ts` remains as a fallback for a legacy flat-list report.
+
+**Why:** the sun under-reporting from §20 is not a one-time cleanup — it recurs on every new batch. The `curate-plants.ts` prompt instruction to include the full tolerated range does not reliably stop a single draft from naming only the optimum (a lone pass anchors on the textbook answer). Hand-authoring a correction migration each round (as §20 did once) does not scale toward a 500–700 species catalog. `scripts/apply-sun-widening.ts` turns that correction into a routine pipeline step.
+
+**Decision (July 9, 2026):** the widener consumes the latest `cross-check-*.json` report and, for each under-reported-tolerance sun flag, widens the stored range to the check's range. Because it acts only on strict-subset flags, "widen to the check" is exactly the union of the two independent reads — it only ever adds an exposure the blind second pass judged tolerable, never removes one. It writes directly to the DB (like `curate-plants.ts`), not as a migration, and logs each run to `apps/web/reports/sun-widening-*.json` (gitignored).
+
+**Safety rules — each earns its place:**
+
+- **Single-value ranges only** (e.g. `[full_sun] → [full_sun, partial_sun]`). A lone value is the under-report signal. Rows already listing 2+ exposures are left untouched: widening those to all three asserts a plant "grows anywhere" — the least trustworthy claim — and can silently undo a deliberate editorial narrowing. Learned the hard way: the first version widened `Ajuga` (a shade groundcover editorially cut to `[partial_sun, shade]`) back to include full sun because a fresh over-broad read over-claimed; reverted, and the rule tightened to single-value.
+- **`is_curated = false` only** — a finalized plant's sun is frozen; the machine never touches it. This is the freeze boundary: uncurated = maintained toward the corroborated range, curated = human-owned.
+- **Strict-subset (`under-reported tolerance`) flags only** — contradictions (`no overlap`) and lateral shifts (`partial overlap`) are left for editorial review. A machine can't tell "narrow but right" from "wrong direction". Example left for Ana: `Berberis aquifolium` stored `[full_sun]` vs checked `[partial_sun, shade]` (a shade shrub — likely a plain error, but a judgment call, not a widen).
+- **Guarded + idempotent** — skips any row whose live value no longer equals the report's recorded stored value (drift protection), and re-guards `is_curated = false` at write time. A re-run is a no-op.
+
+**Pipeline order:** `seed → curate-plants → cross-check-plants → apply-sun-widening → curate-combinations`. The widener depends on a fresh cross-check report reflecting current DB state.
+
+**Not the root fix.** This is a corroborated backstop that keeps first-draft narrowing from reaching users, not a cure. The root fix is §22.
+
+---
+
+## 22. Sun modelled as best + tolerated (the root fix)
+
+**Why:** §20/§21 treated the symptom (a single flat `sun_requirements` list drafts too narrow, so we detect and widen). The cause is the field itself: one list can't say where a plant _thrives_ versus where it merely _tolerates_ an exposure, so the drafter defaults to the optimum and every batch under-reports. Modelling the two ideas separately removes the ambiguity at the source. Chosen July 9, 2026, pulled ahead of the 500–700 species expansion so new plants are captured correctly the first time rather than re-curated later.
+
+**Model (migration `20260709220000`):**
+
+- `sun_thrives text[]` — exposures where the plant performs at its best (usually one, sometimes two; non-empty once curated).
+- `sun_tolerates text[]` — additional exposures it accepts but isn't at its best in; disjoint from `sun_thrives`; may be empty.
+- `sun_requirements` (unchanged, app-facing) — a **derived mirror**, kept as `canonical(sun_thrives ∪ sun_tolerates)` by a `BEFORE INSERT OR UPDATE` trigger whenever either source field is non-empty. Every existing read site (`good-for-your-garden.ts`, plant detail, garden tile, `format-plant.ts`) keeps reading `sun_requirements` untouched — the app is unchanged; only the source of the data moved underneath it.
+
+**Integrity** is enforced in the DB, not by convention: CHECK constraints require both sets to be valid exposures, disjoint, and forbid "tolerates without a thrives" (a plant with any sun data must have a best). A bonus effect: because the trigger recomputes `sun_requirements` from the two source fields on every write, the Trefle seed path can no longer perturb a split plant's sun even if the fill-only upsert (§9) ever let a value through — the derived value is a pure function of the AI/editorial source fields.
+
+**Curation** (`curate-plants.ts`) now drafts the two fields directly — `sun_thrives` (best) and `sun_tolerates` (additional, disjoint) — instead of the flat list. The two-field ask is what fixes the under-reporting: naming "where it also merely tolerates" explicitly is exactly the question the old single list elided. `sun_requirements` is no longer drafted or sent as known data; the trigger owns it.
+
+**Backfill** (`scripts/backfill-sun-split.ts`, one-time) split the existing catalog **set-preservingly**: for each plant it only partitioned the exposures the plant _already had_ into thrives vs tolerates, clamped to the current set in code, so `sun_thrives ∪ sun_tolerates` always equals the prior `sun_requirements`. Single-exposure plants took the value as the best with no API call; multi-exposure plants asked only which subset is primary. The app-visible `sun_requirements` was provably unchanged for all 152, so every prior editorial correction and widening survived intact.
+
+**Editorial boundary unchanged:** all rows stay `is_curated = false`; the split is a data-model change, not an editorial sign-off. When Ana finalizes a plant she edits the two source fields, and the trigger keeps the mirror in sync.
+
+**Standard round is now:** `seed → curate-plants → cross-check-plants → curate-combinations`. The cross-check still fact-checks (it reads the derived `sun_requirements`), but the corrective widening sweep (§21) is retired — first drafts no longer systematically narrow.
+
+**Still deferred to post-test:** surfacing the distinction in the UI ("thrives in full sun, tolerates part shade") and using it in matching (prefer thrive-matches, still surface tolerate-matches). The data is captured now; the presentation waits for the test to inform it.

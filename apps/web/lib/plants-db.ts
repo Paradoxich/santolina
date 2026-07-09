@@ -44,7 +44,13 @@ export interface DbPlant {
   height_max_cm: number | null
   hardiness_zone_min: number | null
   hardiness_zone_max: number | null
+  // sun_requirements is a DERIVED mirror of sun_thrives ∪ sun_tolerates,
+  // maintained by a DB trigger (see 20260709220000). App reads this field;
+  // curation/editorial write the two source fields below. It stays the read
+  // surface so existing consumers are unaffected.
   sun_requirements: string[] | null
+  sun_thrives: string[] | null
+  sun_tolerates: string[] | null
   image_url: string | null
   image_urls: string[] | null
   is_curated: boolean
