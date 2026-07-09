@@ -13,8 +13,8 @@ export function CareTipsCard({
 }: CareTipsCardProps) {
   return (
     <Panel
-      title="Care tips"
-      meta={`${tips.length} tasks`}
+      title="Plant care"
+      meta={`${tips.length} tips`}
       className="relative h-full overflow-hidden"
     >
       {showEmptyHint && (

@@ -110,6 +110,64 @@ const SEED_LIST: Array<number | string> = [
   'Tiarella cordifolia',
   'Aster amellus',
   'Hemerocallis fulva',
+  // --- round 2: to 125, July 2026 ---
+  // cottage fillers & front-of-border
+  'Nepeta racemosa',
+  'Alchemilla mollis',
+  'Astrantia major',
+  'Geum coccineum',
+  'Penstemon barbatus',
+  'Malva moschata',
+  'Myosotis sylvatica',
+  'Viola odorata',
+  // mediterranean / dry & gravel
+  'Helichrysum italicum',
+  'Phlomis fruticosa',
+  'Teucrium chamaedrys',
+  'Sempervivum tectorum',
+  'Sedum acre',
+  'Armeria maritima',
+  'Iris germanica',
+  'Artemisia absinthium',
+  // wildflower / meadow
+  'Echium vulgare',
+  'Silene dioica',
+  'Primula veris',
+  'Origanum vulgare',
+  // grasses
+  'Pennisetum alopecuroides',
+  'Briza media',
+  'Deschampsia cespitosa',
+  'Molinia caerulea',
+  // shade & ground cover
+  'Polystichum setiferum',
+  'Epimedium grandiflorum',
+  'Pulmonaria officinalis',
+  'Convallaria majalis',
+  'Ajuga reptans',
+  'Vinca minor',
+  'Anemone nemorosa',
+  'Aconitum napellus',
+  // flowering shrubs
+  'Lavandula stoechas',
+  'Spiraea japonica',
+  'Weigela florida',
+  'Forsythia suspensa',
+  'Ribes sanguineum',
+  'Cornus alba',
+  'Sambucus nigra',
+  'Cotinus coggygria',
+  // climbers
+  'Jasminum officinale',
+  'Wisteria sinensis',
+  'Passiflora caerulea',
+  'Hydrangea anomala',
+  // bulbs & seasonal color
+  'Hyacinthus orientalis',
+  'Muscari armeniacum',
+  'Cyclamen hederifolium',
+  'Dahlia pinnata',
+  'Crocosmia aurea',
 ]
 
 // ---------------------------------------------------------------------------
