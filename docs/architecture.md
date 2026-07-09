@@ -441,3 +441,22 @@ Annuals with null zones on both sides are not flagged (nulls are correct there, 
 **Replayable record:** the corrections are captured as a data migration, `supabase/migrations/20260709092512_correct_crosscheck_botanical_fields.sql`, so the diff isn't the only trace of what was applied. It re-keys off `scientific_name` rather than the live UUIDs (portable across environments) and carries the same guards (`is_curated = false` plus an exact prior-value match), so it is idempotent — a no-op against the already-corrected live rows, and against any environment whose values don't match the recorded pre-correction state. It's a one-off record, not part of the seed path; a fresh seed drafts its own values and these specific corrections simply won't match.
 
 **Output:** terminal report grouped disagreements-first, plus a timestamped JSON report in `apps/web/reports/` (gitignored) recording every flag with stored vs checked values — the artifact for Ana's spot-check sweep and the source of record for any bulk correction. `--limit N` for testing.
+
+---
+
+## 21. Sun-tolerance widening: the cross-check's under-report findings, applied as a repeatable step
+
+**Why:** the sun under-reporting from §20 is not a one-time cleanup — it recurs on every new batch. The `curate-plants.ts` prompt instruction to include the full tolerated range does not reliably stop a single draft from naming only the optimum (a lone pass anchors on the textbook answer). Hand-authoring a correction migration each round (as §20 did once) does not scale toward a 500–700 species catalog. `scripts/apply-sun-widening.ts` turns that correction into a routine pipeline step.
+
+**Decision (July 9, 2026):** the widener consumes the latest `cross-check-*.json` report and, for each under-reported-tolerance sun flag, widens the stored range to the check's range. Because it acts only on strict-subset flags, "widen to the check" is exactly the union of the two independent reads — it only ever adds an exposure the blind second pass judged tolerable, never removes one. It writes directly to the DB (like `curate-plants.ts`), not as a migration, and logs each run to `apps/web/reports/sun-widening-*.json` (gitignored).
+
+**Safety rules — each earns its place:**
+
+- **Single-value ranges only** (e.g. `[full_sun] → [full_sun, partial_sun]`). A lone value is the under-report signal. Rows already listing 2+ exposures are left untouched: widening those to all three asserts a plant "grows anywhere" — the least trustworthy claim — and can silently undo a deliberate editorial narrowing. Learned the hard way: the first version widened `Ajuga` (a shade groundcover editorially cut to `[partial_sun, shade]`) back to include full sun because a fresh over-broad read over-claimed; reverted, and the rule tightened to single-value.
+- **`is_curated = false` only** — a finalized plant's sun is frozen; the machine never touches it. This is the freeze boundary: uncurated = maintained toward the corroborated range, curated = human-owned.
+- **Strict-subset (`under-reported tolerance`) flags only** — contradictions (`no overlap`) and lateral shifts (`partial overlap`) are left for editorial review. A machine can't tell "narrow but right" from "wrong direction". Example left for Ana: `Berberis aquifolium` stored `[full_sun]` vs checked `[partial_sun, shade]` (a shade shrub — likely a plain error, but a judgment call, not a widen).
+- **Guarded + idempotent** — skips any row whose live value no longer equals the report's recorded stored value (drift protection), and re-guards `is_curated = false` at write time. A re-run is a no-op.
+
+**Pipeline order:** `seed → curate-plants → cross-check-plants → apply-sun-widening → curate-combinations`. The widener depends on a fresh cross-check report reflecting current DB state.
+
+**Not the root fix.** This is a corroborated backstop that keeps first-draft narrowing from reaching users, not a cure. The root fix is to model sun as best + tolerated (a "thrives in" set plus a "tolerates" set) instead of one flat array, which dissolves the thrive-vs-tolerate ambiguity the two passes keep disagreeing over — a schema + UI change deferred to post-test.
