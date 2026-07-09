@@ -25,7 +25,7 @@ export const Default: Story = {
         </h3>
       </CardHeader>
       <CardBody>
-        <p style={{ margin: 0, color: 'var(--color-neutral-600)' }}>
+        <p style={{ margin: 0, color: 'var(--color-text-secondary)' }}>
           Tropical plant with large, glossy leaves. Thrives in indirect light.
         </p>
       </CardBody>

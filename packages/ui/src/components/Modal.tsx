@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useId, useRef } from 'react'
 
 export interface ModalProps {
   isOpen: boolean
@@ -26,6 +26,7 @@ export function Modal({
   size = 'md',
 }: ModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null)
+  const titleId = useId()
 
   useEffect(() => {
     const dialog = dialogRef.current
@@ -64,7 +65,7 @@ export function Modal({
       ].join(' ')}
       onClick={handleOverlayClick}
       aria-modal="true"
-      aria-labelledby={title ? 'modal-title' : undefined}
+      aria-labelledby={title ? titleId : undefined}
     >
       {title && (
         <div
@@ -74,10 +75,7 @@ export function Modal({
             'border-b border-divider',
           ].join(' ')}
         >
-          <h2
-            id="modal-title"
-            className="text-heading font-semibold text-primary"
-          >
+          <h2 id={titleId} className="text-heading font-semibold text-primary">
             {title}
           </h2>
           <button
