@@ -12,11 +12,20 @@
  *   - IDs are fetched directly via the species detail endpoint.
  *   - Names are searched first; the top result's ID is used.
  *
+ * Species already in the catalog are SKIPPED by default (matched on
+ * scientific name or resolved Trefle ID), so routine runs only touch new
+ * entries. Pass --include-existing to re-upsert known species; the upsert
+ * is fill-only, so a re-run can fill gaps but never overwrites stored data.
+ *
+ * CAUTION: verify each new plant after seeding — Trefle name search can
+ * silently resolve to a sibling species (see docs/backlog.md, round 3).
+ *
  * Edit SEED_LIST below with the plants you want to import.
  */
 
 import { fetchAndMapSpecies, searchSpeciesByName } from '../lib/trefle'
 import { upsertPlant } from '../lib/plants-db'
+import { getSupabaseAdmin } from '../lib/supabase-admin'
 
 // ---------------------------------------------------------------------------
 // Edit this list before running.
@@ -168,6 +177,46 @@ const SEED_LIST: Array<number | string> = [
   'Cyclamen hederifolium',
   'Dahlia pinnata',
   'Crocosmia aurea',
+  // --- round 3: lush/modern balance + winter interest, July 2026 ---
+  // NOTE: 4 entries below could not be seeded by name — Trefle name-search
+  // returns a sibling species. They were instead inserted manually
+  // (data_source='manual', source_species_id NULL) and AI-curated, so they
+  // ARE in the catalog. Keep them commented out here so a future seed run
+  // doesn't re-import the wrong sibling. To Trefle-back them later, seed by
+  // numeric species ID, not name.
+  // lush / shade / foliage
+  'Hakonechloa macra',
+  'Athyrium niponicum',
+  // 'Matteuccia struthiopteris', // name search resolved to Onoclea orientalis (wrong fern) — needs Trefle ID
+  'Aruncus dioicus',
+  'Persicaria amplexicaulis', // stored under accepted synonym Bistorta amplexicaulis — correct plant
+  // 'Bergenia cordifolia', // no Trefle match at all — seed by ID or enter manually
+  // modern / structural
+  'Echinacea purpurea',
+  'Panicum virgatum',
+  // 'Calamagrostis acutiflora', // name search resolved to C. caucasica (wrong grass) — needs Trefle ID
+  'Baptisia australis',
+  'Liatris spicata',
+  'Yucca filamentosa',
+  // mediterranean / dry
+  'Lavandula angustifolia', // NOTE: duplicate of round-1 'Lavender' — already in catalog
+  'Euphorbia myrsinites',
+  'Eschscholzia californica',
+  // winter & early-season interest
+  'Helleborus orientalis',
+  'Hamamelis mollis',
+  'Jasminum nudiflorum',
+  'Sarcococca confusa',
+  'Mahonia aquifolium', // stored under accepted synonym Berberis aquifolium — correct plant
+  'Cornus mas',
+  'Eranthis hyemalis',
+  'Iris reticulata',
+  // 'Erica carnea', // name search resolved to E. erigena (wrong heath) — needs Trefle ID
+  'Camellia japonica',
+  // autumn interest
+  'Symphyotrichum novae-angliae',
+  'Colchicum autumnale',
+  'Ceratostigma plumbaginoides',
 ]
 
 // ---------------------------------------------------------------------------
@@ -180,6 +229,32 @@ const INTER_SPECIES_DELAY_MS = 1500
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+// Species already in the catalog are skipped by default so a routine run
+// only touches new entries — no wasted Trefle calls, no rate-limit failures
+// on long lists. Pass --include-existing to re-upsert known species (the
+// upsert is fill-only, so re-runs can fill gaps but never overwrite).
+interface ExistingCatalog {
+  ids: Set<number>
+  names: Set<string>
+}
+
+async function fetchExistingCatalog(): Promise<ExistingCatalog> {
+  const db = getSupabaseAdmin()
+  const { data, error } = await db
+    .from('plants')
+    .select('source_species_id, scientific_name')
+
+  if (error) throw new Error(`Failed to fetch catalog: ${error.message}`)
+
+  const ids = new Set<number>()
+  const names = new Set<string>()
+  for (const row of data ?? []) {
+    if (row.source_species_id !== null) ids.add(row.source_species_id)
+    if (row.scientific_name) names.add(row.scientific_name.toLowerCase())
+  }
+  return { ids, names }
 }
 
 async function resolveId(entry: number | string): Promise<number> {
@@ -212,17 +287,51 @@ async function main() {
     process.exit(0)
   }
 
+  const includeExisting = process.argv.slice(2).includes('--include-existing')
+  const existing = includeExisting
+    ? { ids: new Set<number>(), names: new Set<string>() }
+    : await fetchExistingCatalog()
+
+  if (!includeExisting) {
+    console.log(
+      `\nCatalog has ${existing.names.size} species — already-seeded entries will be skipped (--include-existing to override).`
+    )
+  }
+
   console.log(`\nSeeding ${SEED_LIST.length} plant(s) from Trefle...\n`)
 
   const failures: Array<{ entry: number | string; error: string }> = []
   let succeeded = 0
+  let skipped = 0
 
   for (const [i, entry] of SEED_LIST.entries()) {
     const prefix = `[${pad(i + 1)}/${pad(SEED_LIST.length)}]`
 
+    // Skip known species before spending any Trefle calls
+    if (
+      (typeof entry === 'number' && existing.ids.has(entry)) ||
+      (typeof entry === 'string' && existing.names.has(entry.toLowerCase()))
+    ) {
+      console.log(`${prefix} — already in catalog, skipped: ${entry}`)
+      skipped++
+      continue
+    }
+
     try {
       console.log(`${prefix} Processing: ${entry}`)
       const perenualId = await resolveId(entry)
+
+      // A name entry can resolve to a species we already hold under a
+      // synonym (e.g. Persicaria → Bistorta) — catch that after resolution.
+      if (existing.ids.has(perenualId)) {
+        console.log(
+          `${prefix} — resolved to source_species_id ${perenualId}, already in catalog, skipped`
+        )
+        skipped++
+        await sleep(INTER_SPECIES_DELAY_MS)
+        continue
+      }
+
       const mapped = await fetchAndMapSpecies(perenualId)
       const saved = await upsertPlant(mapped)
       console.log(
@@ -241,7 +350,7 @@ async function main() {
   // Summary
   console.log('\n─────────────────────────────────────────')
   console.log(
-    `Seeding complete: ${succeeded} succeeded, ${failures.length} failed`
+    `Seeding complete: ${succeeded} succeeded, ${skipped} skipped (already in catalog), ${failures.length} failed`
   )
 
   if (failures.length) {

@@ -339,13 +339,15 @@ function buildPatch(plant: DbPlant, response: CurationResponse): PlantPatch {
 // DB helpers
 // ---------------------------------------------------------------------------
 
-async function fetchUncuratedPlants(): Promise<DbPlant[]> {
+async function fetchUncuratedPlants(newOnly = false): Promise<DbPlant[]> {
   const db = getSupabaseAdmin()
-  const { data, error } = await db
-    .from('plants')
-    .select('*')
-    .eq('is_curated', false)
-    .order('common_name')
+  let query = db.from('plants').select('*').eq('is_curated', false)
+
+  // --new-only: limit to rows that have never been drafted, so a targeted
+  // top-up after seeding a few plants doesn't re-query the whole catalog.
+  if (newOnly) query = query.is('ai_drafted_at', null)
+
+  const { data, error } = await query.order('common_name')
 
   if (error) throw new Error(`Failed to fetch plants: ${error.message}`)
   return (data ?? []) as DbPlant[]
@@ -370,8 +372,12 @@ function sleep(ms: number): Promise<void> {
 }
 
 async function main() {
-  console.log('\nFetching uncurated plants from Supabase...')
-  const plants = await fetchUncuratedPlants()
+  const newOnly = process.argv.slice(2).includes('--new-only')
+
+  console.log(
+    `\nFetching ${newOnly ? 'undrafted ' : ''}uncurated plants from Supabase...`
+  )
+  const plants = await fetchUncuratedPlants(newOnly)
 
   if (!plants.length) {
     console.log('No uncurated plants found — nothing to do.')
