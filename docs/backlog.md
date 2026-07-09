@@ -15,7 +15,6 @@ closing the gap between the kit and how the app actually consumes it.
 **Kit vs. product**
 
 - [ ] Extend `Button` with the variants the product needs (small circular icon buttons, light "control" style), then adopt it across the existing hand-rolled call sites. Highest-leverage cleanup.
-- [ ] Extract `Drawer` — Plant Detail and Diary Detail share an identical shell, header, close button, scroll-lock, and animation. Open decision: whether the kit owns the animation or the app does.
 - [ ] Adopt `Badge`/`Avatar` for the bloom-status pill, status tags, and sidebar avatar. Give the plant status tags distinct colors (currently uniform).
 
 **Kit consistency**
@@ -23,7 +22,7 @@ closing the gap between the kit and how the app actually consumes it.
 - [ ] Add `forwardRef` across kit components (form libraries, tooltip positioning).
 - [ ] Unify prop naming (`variant` vs. `tone`, `size` vs. `inputSize`).
 - [ ] Add a class-merging strategy for consumer style overrides (`tailwind-merge` or equivalent).
-- [ ] Finish the spacing-token migration on older components (Button, Input, Card, Modal).
+- [ ] Spacing-token migration for Button, Input, and Modal — fold into each component's redesign pass rather than a standalone sweep (mapping numeric padding onto the semantic scale is a design decision, and a standalone pass would be churned by the redesigns anyway).
 - [ ] Redesign Toasts, Input fields, and Modal to the product's visual language.
 
 **Publishing prep**
@@ -44,6 +43,8 @@ closing the gap between the kit and how the app actually consumes it.
 - [x] Extract `DrawerSection` into `@paradoxui/ui` — moved unchanged; the plant-detail sections import it from the kit.
 - [x] Componentize the Sidebar — already a single `AppSidebar` (plus `MobileTabBar`); Avatar adoption stays tracked under the `Badge`/`Avatar` item above.
 - [x] Fix small kit bugs — undefined `--color-neutral-*` references, fixed Modal element id, SSR-unsafe Tooltip ids (`Tooltip`/`Modal` now use `useId()`).
+- [x] Extract `Drawer` into `@paradoxui/ui` — the kit owns the non-animated chrome (positioning, scroll lock, header/close); animation is injected via `panelComponent`/`panelProps`, so the kit carries no framer-motion dependency. `lib/drawer-motion.ts` is the app's single slide-in source of truth.
+- [x] Card spacing migrated to semantic tokens (`px-card-padding py-row-gap`, value-identical to the old `px-6 py-4`).
 
 ---
 
@@ -96,7 +97,6 @@ _Deferred by design: diary AI summaries (wait for the agent), repo split (wait f
 ## Suggested sequencing
 
 1. Extend `Button` and adopt it across the app — stops the kit/product drift and unblocks consistent UI work.
-2. Extract the shared `Drawer` primitive the product already needs.
-3. Bundle the Diary UI fixes.
-4. Kit consistency, de-gardening, and packaging as Paradox UI rises in priority.
-5. Authentication last, scoped alongside onboarding.
+2. Bundle the Diary UI fixes.
+3. Kit consistency, de-gardening, and packaging as Paradox UI rises in priority.
+4. Authentication last, scoped alongside onboarding.
