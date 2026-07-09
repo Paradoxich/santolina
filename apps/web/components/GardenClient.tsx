@@ -159,7 +159,7 @@ export function GardenClient({ gardenId, palette, detail }: GardenClientProps) {
         groupKey: row?.plantId,
         title: 'Moved to growing',
         description: `${row?.plant.common_name ?? 'Plant'} is now growing in your garden.`,
-        variant: 'positive',
+        tone: 'positive',
         actions: [
           {
             label: 'Undo',

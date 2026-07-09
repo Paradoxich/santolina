@@ -1,9 +1,11 @@
 import React from 'react'
+import { cn } from '../utils/cn'
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'ghost' | 'destructive'
   size?: 'sm' | 'md' | 'lg'
   isLoading?: boolean
+  ref?: React.Ref<HTMLButtonElement>
   children: React.ReactNode
 }
 
@@ -49,8 +51,9 @@ export function Button({
   size = 'md',
   isLoading = false,
   disabled,
-  className = '',
+  className,
   children,
+  ref,
   ...props
 }: ButtonProps) {
   const baseStyles = [
@@ -64,12 +67,13 @@ export function Button({
 
   return (
     <button
-      className={[
+      ref={ref}
+      className={cn(
         baseStyles,
         variantStyles[variant],
         sizeStyles[size],
-        className,
-      ].join(' ')}
+        className
+      )}
       disabled={disabled || isLoading}
       aria-busy={isLoading}
       {...props}

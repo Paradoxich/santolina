@@ -1,4 +1,5 @@
 import React from 'react'
+import { cn } from '../utils/cn'
 
 export interface EmptyStateProps {
   message: string
@@ -15,6 +16,7 @@ export interface EmptyStateProps {
   linkComponent?: React.ElementType
   onCtaClick?: () => void
   className?: string
+  ref?: React.Ref<HTMLDivElement>
 }
 
 const ctaClasses =
@@ -31,13 +33,18 @@ export function EmptyState({
   ctaHref,
   linkComponent,
   onCtaClick,
-  className = '',
+  className,
+  ref,
 }: EmptyStateProps) {
   const LinkComponent = linkComponent ?? 'a'
 
   return (
     <div
-      className={`flex h-[404px] w-full flex-col items-center justify-center gap-section-gap rounded-md border border-dashed border-card p-card-padding ${className}`}
+      ref={ref}
+      className={cn(
+        'flex h-[404px] w-full flex-col items-center justify-center gap-section-gap rounded-md border border-dashed border-card p-card-padding',
+        className
+      )}
     >
       <p className="text-center text-body text-secondary">{message}</p>
       {ctaHref ? (

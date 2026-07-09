@@ -1,4 +1,5 @@
 import React from 'react'
+import { cn } from '../utils/cn'
 
 export interface CompanionThumbnailProps extends React.HTMLAttributes<HTMLDivElement> {
   /** Image URL */
@@ -7,6 +8,7 @@ export interface CompanionThumbnailProps extends React.HTMLAttributes<HTMLDivEle
   label: string
   /** Override alt text if the label alone isn't descriptive enough */
   alt?: string
+  ref?: React.Ref<HTMLDivElement>
 }
 
 /**
@@ -18,17 +20,19 @@ export function CompanionThumbnail({
   src,
   label,
   alt,
-  className = '',
+  className,
+  ref,
   ...props
 }: CompanionThumbnailProps) {
   return (
     <div
-      className={[
+      ref={ref}
+      className={cn(
         'relative flex h-full min-w-0 flex-1 flex-col items-start justify-end',
         'overflow-hidden rounded-xs',
         'pb-inline-gap pl-item-gap pr-inline-gap',
-        className,
-      ].join(' ')}
+        className
+      )}
       {...props}
     >
       <img

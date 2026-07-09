@@ -6,7 +6,7 @@ const meta: Meta<typeof Toast> = {
   component: Toast,
   tags: ['autodocs'],
   argTypes: {
-    variant: {
+    tone: {
       control: 'select',
       options: ['default', 'positive', 'warning', 'critical'],
     },
@@ -17,7 +17,7 @@ type Story = StoryObj<typeof Toast>
 
 export const Default: Story = {
   args: {
-    variant: 'default',
+    tone: 'default',
     title: 'Notification',
     description: 'Your plant has been updated.',
   },
@@ -25,7 +25,7 @@ export const Default: Story = {
 
 export const Positive: Story = {
   args: {
-    variant: 'positive',
+    tone: 'positive',
     title: 'Positive',
     description: 'Plant watered successfully!',
   },
@@ -33,7 +33,7 @@ export const Positive: Story = {
 
 export const Warning: Story = {
   args: {
-    variant: 'warning',
+    tone: 'warning',
     title: 'Heads up',
     description: 'Your Cactus needs water in 2 days.',
   },
@@ -41,7 +41,7 @@ export const Warning: Story = {
 
 export const Critical: Story = {
   args: {
-    variant: 'critical',
+    tone: 'critical',
     title: 'Critical',
     description: 'Failed to save your plant data.',
   },

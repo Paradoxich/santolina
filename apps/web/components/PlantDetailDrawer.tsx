@@ -131,7 +131,7 @@ export function PlantDetailDrawer({
           groupKey: plant.id,
           title: 'Added to your plan',
           description: `${plant.common_name} is on your planned list.`,
-          variant: 'positive',
+          tone: 'positive',
           actions: [
             {
               label: 'See planned',
@@ -268,7 +268,7 @@ export function PlantDetailDrawer({
           groupKey: plant.id,
           title: 'Moved to growing',
           description: `${plant.common_name} is now growing in your garden.`,
-          variant: 'positive',
+          tone: 'positive',
           actions: [
             {
               label: 'Undo',
@@ -298,7 +298,7 @@ export function PlantDetailDrawer({
           groupKey: plant.id,
           title: 'Added to your garden',
           description: `${plant.common_name} is now growing in your garden.`,
-          variant: 'positive',
+          tone: 'positive',
           actions: [
             {
               label: 'Undo',

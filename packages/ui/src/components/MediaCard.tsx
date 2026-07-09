@@ -1,4 +1,5 @@
 import React from 'react'
+import { cn } from '../utils/cn'
 
 export interface MediaCardProps {
   /** Image element (e.g. a Next.js `Image` with `fill`) — MediaCard owns the
@@ -21,6 +22,8 @@ export interface MediaCardProps {
   as?: 'article' | 'button'
   onClick?: () => void
   className?: string
+  /** Forwarded to the root element (article or button). */
+  ref?: React.Ref<HTMLElement>
 }
 
 const surfaceStyles: Record<NonNullable<MediaCardProps['surface']>, string> = {
@@ -35,22 +38,23 @@ export function MediaCard({
   subtitle,
   titleAdornment,
   body,
-  bodyClassName = '',
+  bodyClassName,
   footer,
   border = 'solid',
   surface = 'card',
   as = 'article',
   onClick,
-  className = '',
+  className,
+  ref,
 }: MediaCardProps) {
-  const chrome = [
+  const chrome = cn(
     'flex flex-col gap-section-gap rounded-card-tile p-card-padding',
     surfaceStyles[surface],
     border === 'dashed'
       ? 'border border-dashed border-card'
       : 'border border-card',
-    className,
-  ].join(' ')
+    className
+  )
 
   const content = (
     <>
@@ -74,11 +78,7 @@ export function MediaCard({
           )}
         </div>
         {body && (
-          <p
-            className={['text-body-small text-secondary', bodyClassName].join(
-              ' '
-            )}
-          >
+          <p className={cn('text-body-small text-secondary', bodyClassName)}>
             {body}
           </p>
         )}
@@ -90,19 +90,24 @@ export function MediaCard({
   if (as === 'button') {
     return (
       <button
+        ref={ref as React.Ref<HTMLButtonElement>}
         type="button"
         onClick={onClick}
-        className={[
+        className={cn(
           chrome,
-          'text-left transition-colors duration-normal hover:bg-surface-subtle',
-        ].join(' ')}
+          'text-left transition-colors duration-normal hover:bg-surface-subtle'
+        )}
       >
         {content}
       </button>
     )
   }
 
-  return <article className={chrome}>{content}</article>
+  return (
+    <article ref={ref as React.Ref<HTMLElement>} className={chrome}>
+      {content}
+    </article>
+  )
 }
 
 export default MediaCard

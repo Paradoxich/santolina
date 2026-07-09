@@ -1,10 +1,12 @@
 import React from 'react'
+import { cn } from '../utils/cn'
 
 export interface PanelProps extends React.HTMLAttributes<HTMLElement> {
   /** Panel heading shown at the top left */
   title?: string
   /** Secondary text shown at the top right, baseline-aligned with the title */
   meta?: string
+  ref?: React.Ref<HTMLElement>
   children: React.ReactNode
 }
 
@@ -15,19 +17,21 @@ export interface PanelProps extends React.HTMLAttributes<HTMLElement> {
 export function Panel({
   title,
   meta,
-  className = '',
+  className,
+  ref,
   children,
   ...props
 }: PanelProps) {
   return (
     <section
-      className={[
+      ref={ref}
+      className={cn(
         'flex flex-col gap-section-gap',
         'rounded-card-dashboard',
         'border border-card-translucent',
         'bg-surface-card p-card-padding',
-        className,
-      ].join(' ')}
+        className
+      )}
       {...props}
     >
       {(title || meta) && (
