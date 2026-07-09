@@ -1,11 +1,15 @@
 import type { ReactNode } from 'react'
 
-interface DrawerSectionProps {
+export interface DrawerSectionProps {
+  /** Uppercase section label. */
   label: string
   children: ReactNode
 }
 
-/** Uppercase section label + content, matching the drawer's section rhythm. */
+/**
+ * Uppercase section label followed by its content, providing a consistent
+ * section rhythm inside drawers and detail panels.
+ */
 export function DrawerSection({ label, children }: DrawerSectionProps) {
   return (
     <section className="flex w-full flex-col gap-inline-gap">
@@ -16,3 +20,5 @@ export function DrawerSection({ label, children }: DrawerSectionProps) {
     </section>
   )
 }
+
+export default DrawerSection

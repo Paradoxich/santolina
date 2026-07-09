@@ -1,4 +1,4 @@
-import { DrawerSection } from './DrawerSection'
+import { DrawerSection } from '@paradoxui/ui'
 
 interface AboutSectionProps {
   description: string | null

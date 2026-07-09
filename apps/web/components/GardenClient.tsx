@@ -3,8 +3,8 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { AnimatePresence } from 'framer-motion'
-import { Chip, Tabs, useToast } from '@paradoxui/ui'
-import { EmptyState } from '@/components/EmptyState'
+import Link from 'next/link'
+import { Chip, EmptyState, Tabs, useToast } from '@paradoxui/ui'
 import { GardenPlantTile } from '@/components/GardenPlantTile'
 import { PlannedPlantTile } from '@/components/PlannedPlantTile'
 import { PlantDetailDrawer } from '@/components/PlantDetailDrawer'
@@ -256,6 +256,7 @@ export function GardenClient({ gardenId, palette, detail }: GardenClientProps) {
               message="Find plants you'd like to grow and add them to your garden."
               ctaLabel="Explore plants"
               ctaHref="/explore"
+              linkComponent={Link}
             />
           )
         ) : (
@@ -264,6 +265,7 @@ export function GardenClient({ gardenId, palette, detail }: GardenClientProps) {
             message="Find plants you'd like to grow and add them to your plan."
             ctaLabel="Explore plants"
             ctaHref="/explore"
+            linkComponent={Link}
           />
         ))}
 

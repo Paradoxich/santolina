@@ -6,7 +6,7 @@ import {
   formatPlantType,
   formatWaterNeedsSummary,
 } from '@/lib/format-plant'
-import { DrawerSection } from './DrawerSection'
+import { DrawerSection } from '@paradoxui/ui'
 
 interface DetailsSectionProps {
   plant: DbPlant

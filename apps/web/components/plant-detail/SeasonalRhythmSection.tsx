@@ -1,6 +1,6 @@
 import { SeasonalStageRow } from '@paradoxui/ui'
 import type { SeasonalRhythm } from '@/lib/plants-db'
-import { DrawerSection } from './DrawerSection'
+import { DrawerSection } from '@paradoxui/ui'
 
 interface SeasonalRhythmSectionProps {
   rhythm: SeasonalRhythm | null
