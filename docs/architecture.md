@@ -446,6 +446,8 @@ Annuals with null zones on both sides are not flagged (nulls are correct there, 
 
 ## 21. Sun-tolerance widening: the cross-check's under-report findings, applied as a repeatable step
 
+> **Superseded by §22 (two-field sun model), same day.** The widening step was the interim backstop under the single-list model; once sun is drafted as `sun_thrives` + `sun_tolerates`, first drafts capture the tolerated range at the source and the corrective sweep drops out of the standard round. The section is kept for the record; `apply-sun-widening.ts` remains as a fallback for a legacy flat-list report.
+
 **Why:** the sun under-reporting from §20 is not a one-time cleanup — it recurs on every new batch. The `curate-plants.ts` prompt instruction to include the full tolerated range does not reliably stop a single draft from naming only the optimum (a lone pass anchors on the textbook answer). Hand-authoring a correction migration each round (as §20 did once) does not scale toward a 500–700 species catalog. `scripts/apply-sun-widening.ts` turns that correction into a routine pipeline step.
 
 **Decision (July 9, 2026):** the widener consumes the latest `cross-check-*.json` report and, for each under-reported-tolerance sun flag, widens the stored range to the check's range. Because it acts only on strict-subset flags, "widen to the check" is exactly the union of the two independent reads — it only ever adds an exposure the blind second pass judged tolerable, never removes one. It writes directly to the DB (like `curate-plants.ts`), not as a migration, and logs each run to `apps/web/reports/sun-widening-*.json` (gitignored).
@@ -459,4 +461,28 @@ Annuals with null zones on both sides are not flagged (nulls are correct there, 
 
 **Pipeline order:** `seed → curate-plants → cross-check-plants → apply-sun-widening → curate-combinations`. The widener depends on a fresh cross-check report reflecting current DB state.
 
-**Not the root fix.** This is a corroborated backstop that keeps first-draft narrowing from reaching users, not a cure. The root fix is to model sun as best + tolerated (a "thrives in" set plus a "tolerates" set) instead of one flat array, which dissolves the thrive-vs-tolerate ambiguity the two passes keep disagreeing over — a schema + UI change deferred to post-test.
+**Not the root fix.** This is a corroborated backstop that keeps first-draft narrowing from reaching users, not a cure. The root fix is §22.
+
+---
+
+## 22. Sun modelled as best + tolerated (the root fix)
+
+**Why:** §20/§21 treated the symptom (a single flat `sun_requirements` list drafts too narrow, so we detect and widen). The cause is the field itself: one list can't say where a plant _thrives_ versus where it merely _tolerates_ an exposure, so the drafter defaults to the optimum and every batch under-reports. Modelling the two ideas separately removes the ambiguity at the source. Chosen July 9, 2026, pulled ahead of the 500–700 species expansion so new plants are captured correctly the first time rather than re-curated later.
+
+**Model (migration `20260709220000`):**
+
+- `sun_thrives text[]` — exposures where the plant performs at its best (usually one, sometimes two; non-empty once curated).
+- `sun_tolerates text[]` — additional exposures it accepts but isn't at its best in; disjoint from `sun_thrives`; may be empty.
+- `sun_requirements` (unchanged, app-facing) — a **derived mirror**, kept as `canonical(sun_thrives ∪ sun_tolerates)` by a `BEFORE INSERT OR UPDATE` trigger whenever either source field is non-empty. Every existing read site (`good-for-your-garden.ts`, plant detail, garden tile, `format-plant.ts`) keeps reading `sun_requirements` untouched — the app is unchanged; only the source of the data moved underneath it.
+
+**Integrity** is enforced in the DB, not by convention: CHECK constraints require both sets to be valid exposures, disjoint, and forbid "tolerates without a thrives" (a plant with any sun data must have a best). A bonus effect: because the trigger recomputes `sun_requirements` from the two source fields on every write, the Trefle seed path can no longer perturb a split plant's sun even if the fill-only upsert (§9) ever let a value through — the derived value is a pure function of the AI/editorial source fields.
+
+**Curation** (`curate-plants.ts`) now drafts the two fields directly — `sun_thrives` (best) and `sun_tolerates` (additional, disjoint) — instead of the flat list. The two-field ask is what fixes the under-reporting: naming "where it also merely tolerates" explicitly is exactly the question the old single list elided. `sun_requirements` is no longer drafted or sent as known data; the trigger owns it.
+
+**Backfill** (`scripts/backfill-sun-split.ts`, one-time) split the existing catalog **set-preservingly**: for each plant it only partitioned the exposures the plant _already had_ into thrives vs tolerates, clamped to the current set in code, so `sun_thrives ∪ sun_tolerates` always equals the prior `sun_requirements`. Single-exposure plants took the value as the best with no API call; multi-exposure plants asked only which subset is primary. The app-visible `sun_requirements` was provably unchanged for all 152, so every prior editorial correction and widening survived intact.
+
+**Editorial boundary unchanged:** all rows stay `is_curated = false`; the split is a data-model change, not an editorial sign-off. When Ana finalizes a plant she edits the two source fields, and the trigger keeps the mirror in sync.
+
+**Standard round is now:** `seed → curate-plants → cross-check-plants → curate-combinations`. The cross-check still fact-checks (it reads the derived `sun_requirements`), but the corrective widening sweep (§21) is retired — first drafts no longer systematically narrow.
+
+**Still deferred to post-test:** surfacing the distinction in the UI ("thrives in full sun, tolerates part shade") and using it in matching (prefer thrive-matches, still surface tolerate-matches). The data is captured now; the presentation waits for the test to inform it.

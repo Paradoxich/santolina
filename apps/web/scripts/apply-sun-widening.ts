@@ -1,4 +1,12 @@
 /**
+ * SUPERSEDED (July 9, 2026) by the two-field sun model (migration
+ * 20260709220000; curation now drafts sun_thrives + sun_tolerates directly, so
+ * first drafts capture the full tolerated range at the source and this
+ * corrective sweep is no longer part of the standard round). Kept for the
+ * record and as a fallback for a legacy flat-list report. Note: it writes
+ * sun_requirements, which is now a trigger-derived mirror — on a split row the
+ * write is recomputed away, so this only affects rows not yet split.
+ *
  * Sun-tolerance widening — applies the blind cross-check's sun findings.
  *
  * The curation pass systematically under-reports `sun_requirements`: it names
