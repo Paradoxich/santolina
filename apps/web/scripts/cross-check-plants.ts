@@ -197,14 +197,16 @@ function comparePlant(plant: DbPlant, check: CrossCheckResponse): Flag[] {
     }
   }
 
-  // sun_requirements: compared as sets. No overlap → disagree;
-  // different-but-overlapping → minor.
+  // sun_requirements: compared as sets.
+  //   no overlap                        → disagree (contradiction)
+  //   stored is a proper subset of check → disagree (under-reported tolerance —
+  //                                        the systematic first-pass tendency)
+  //   any other partial overlap (shift)  → minor
   const storedSun = plant.sun_requirements ?? []
   const checkedSun = check.sun_requirements ?? []
   if (storedSun.length && checkedSun.length) {
-    const overlap = storedSun.filter((s) =>
-      (checkedSun as string[]).includes(s)
-    )
+    const checkedSet = new Set<string>(checkedSun)
+    const overlap = storedSun.filter((s) => checkedSet.has(s))
     if (!overlap.length) {
       flags.push({
         field: 'sun_requirements',
@@ -213,17 +215,30 @@ function comparePlant(plant: DbPlant, check: CrossCheckResponse): Flag[] {
         checked: checkedSun,
         detail: 'no overlap',
       })
-    } else if (
-      storedSun.length !== checkedSun.length ||
-      overlap.length !== storedSun.length
-    ) {
-      flags.push({
-        field: 'sun_requirements',
-        severity: 'minor',
-        stored: storedSun,
-        checked: checkedSun,
-        detail: 'partial overlap',
-      })
+    } else {
+      const storedSubsetOfChecked = storedSun.every((s) => checkedSet.has(s))
+      const widened =
+        storedSubsetOfChecked && checkedSun.length > storedSun.length
+      if (widened) {
+        flags.push({
+          field: 'sun_requirements',
+          severity: 'disagree',
+          stored: storedSun,
+          checked: checkedSun,
+          detail: 'stored range narrower than check (under-reported tolerance)',
+        })
+      } else if (
+        storedSun.length !== checkedSun.length ||
+        overlap.length !== storedSun.length
+      ) {
+        flags.push({
+          field: 'sun_requirements',
+          severity: 'minor',
+          stored: storedSun,
+          checked: checkedSun,
+          detail: 'partial overlap',
+        })
+      }
     }
   }
 

@@ -423,13 +423,15 @@ Toast copy follows the same split: "Added to your garden" only fires for a fresh
 
 **Comparison happens in code, with tolerance rules** — botanical sources legitimately disagree at the margins, so exact-match would drown real errors in noise:
 
-| Field              | `disagree` (spot-check) | `minor` (listed, likely fine)                               |
-| ------------------ | ----------------------- | ----------------------------------------------------------- |
-| `plant_type`       | any mismatch            | —                                                           |
-| `hardiness_zone_*` | ≥ 2 zones apart         | one side null (±1 zone passes silently)                     |
-| `sun_requirements` | no set overlap          | partial overlap                                             |
-| `bloom_months`     | no shared months        | window boundary drifts > 1 month; one side reports no bloom |
+| Field              | `disagree` (spot-check)                                                              | `minor` (listed, likely fine)                                               |
+| ------------------ | ------------------------------------------------------------------------------------ | --------------------------------------------------------------------------- |
+| `plant_type`       | any mismatch                                                                         | —                                                                           |
+| `hardiness_zone_*` | ≥ 2 zones apart                                                                      | one side null (±1 zone passes silently)                                     |
+| `sun_requirements` | no set overlap, or stored is a proper subset of the check (under-reported tolerance) | genuine shift: partial overlap that is neither a subset nor a contradiction |
+| `bloom_months`     | no shared months                                                                     | window boundary drifts > 1 month; one side reports no bloom                 |
 
 Annuals with null zones on both sides are not flagged (nulls are correct there, per §6's annual rule).
+
+**Why `sun_requirements` under-reporting is a `disagree`, not `minor`:** the first full run surfaced a systematic first-pass tendency — 61 of 68 flags were sun `minor` drift, almost all the stored range being narrower than the check (e.g. stored `[full_sun]`, checked `[full_sun, partial_sun]`). Because the pattern is directional and pervasive rather than random noise, a stored range that is a strict subset of the check is treated as a real gap worth correcting and flagged `disagree`; only a genuine shift (overlap that is neither a subset nor a contradiction) stays `minor`. The paired forward fix is in `curate-plants.ts`: the `sun_requirements` field spec now instructs the drafter to include every exposure the species reliably grows in, not just its single optimum, so future drafts don't reproduce the narrowing. Existing rows are corrected through Ana's editorial sweep (now surfaced as `disagree`), not auto-overwritten — consistent with §3's "never auto-overwrite; `is_curated` is a human gate."
 
 **Output:** terminal report grouped disagreements-first, plus a timestamped JSON report in `apps/web/reports/` (gitignored) recording every flag with stored vs checked values — the artifact for Ana's spot-check sweep. `--limit N` for testing.

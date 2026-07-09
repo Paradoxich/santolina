@@ -200,7 +200,7 @@ Field specifications:
 - garden_use_tags: Array of 2-4 practical use-case phrases describing how this plant is typically used in a garden (e.g. ["pollinator gardens", "gravel gardens", "sunny borders", "wildlife gardens"]). This is DISTINCT from style_tags — use-case focused, not aesthetic.
 - bloom_color: Array of plain English color names (e.g. ["purple", "white"]). Empty array [] for non-flowering or purely foliage plants.
 - foliage_color: Single string only if the foliage is notably distinctive (e.g. "silver", "burgundy", "variegated grey-green"). null if typical green.
-- sun_requirements: Subset of ["full_sun", "partial_sun", "shade"]. Can be multiple if the plant tolerates a range.
+- sun_requirements: Subset of ["full_sun", "partial_sun", "shade"]. Include EVERY exposure the species reliably grows in, not just its single optimum — most garden plants tolerate a range, so prefer multiple values unless the species genuinely only performs in one. E.g. a plant that thrives in full sun but also does fine in partial sun should return both.
 - bloom_months: Array of integers 1–12 (Jan=1, Dec=12). Must be internally consistent with seasonal_rhythm if you are providing both.
 - water_needs: 1-2 short sentences. Plain second-person-adjacent language. E.g. "Moderate watering while establishing. Drought tolerant once mature."
 - water_needs_summary: Very short category phrase, max ~4 words, no trailing period. E.g. "Low to moderate", "Moderate", "Low once established". Must be consistent with water_needs.
