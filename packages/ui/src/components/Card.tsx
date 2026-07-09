@@ -40,7 +40,11 @@ export function CardHeader({
 }: CardHeaderProps) {
   return (
     <div
-      className={['px-6 py-4', 'border-b border-divider', className].join(' ')}
+      className={[
+        'px-card-padding py-row-gap',
+        'border-b border-divider',
+        className,
+      ].join(' ')}
       {...props}
     >
       {children}
@@ -54,7 +58,10 @@ export function CardBody({
   ...props
 }: CardBodyProps) {
   return (
-    <div className={['px-6 py-4', className].join(' ')} {...props}>
+    <div
+      className={['px-card-padding py-row-gap', className].join(' ')}
+      {...props}
+    >
       {children}
     </div>
   )
@@ -68,7 +75,7 @@ export function CardFooter({
   return (
     <div
       className={[
-        'px-6 py-4',
+        'px-card-padding py-row-gap',
         'border-t border-divider',
         'bg-surface-subtle',
         className,
