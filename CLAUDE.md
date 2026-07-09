@@ -57,7 +57,7 @@ Full UI-building guidance — tokens, typography, styling patterns, component re
 
 - Next.js 15, App Router, TypeScript, Tailwind CSS v3
 - Framer Motion for animations
-- Zustand for client-side state
+- Zustand — installed but not yet used; reserved for future shared client state (see Code conventions)
 - Supabase for database, auth, storage
 - Vercel AI SDK for agent layer
 - Deployed on Vercel
@@ -72,24 +72,27 @@ Full UI-building guidance — tokens, typography, styling patterns, component re
   /components       ← product components (domain-specific, Layer 3)
   /lib              ← utilities, helpers, constants
   /hooks            ← custom React hooks
-  /store            ← Zustand stores
   /styles           ← global styles, Tailwind config
   /types            ← TypeScript type definitions
   /server           ← server actions and API route handlers
+  /scripts          ← data scripts (seed, curate, cross-check, combinations) — run via tsx, see docs/architecture.md §7
 ```
+
+No `/store` yet — the app holds no global client state (see Code conventions). A `/store` directory arrives only if Zustand is adopted. `/reports` may appear at runtime for cross-check output; it is gitignored, not source.
 
 ---
 
 ## Database — Supabase
 
-Six tables. All IDs are UUIDs. Row-level security required on all user-owned tables.
+Seven tables. All IDs are UUIDs. Row-level security required on all user-owned tables.
 
 - `users` — extends Supabase auth.users
 - `gardens` — garden profile (location, space type, sun, style, size). One per user in v1.
 - `plants` — shared plant catalog cached from the Trefle API, enriched by an AI curation pass. Public read, service role write.
-- `palette_plants` — join table between gardens and plants. User's palette. Includes status (planned/planted/considering) and source (generated/manual/existing).
-- `plant_combinations` — which plants work well together. Public read, service role write.
+- `palette_plants` — join table between gardens and plants. User's palette. Includes status (planned/planted) and source (generated/manual/existing). The status check constraint also permits a legacy `considering`, but the product no longer uses it — the app only moves plants between planned and planted (see `docs/architecture.md` §12).
+- `plant_combinations` — which plants work well together. Public read, service role write. Populated by `apps/web/scripts/curate-combinations.ts` (see `docs/architecture.md` §19).
 - `agent_sessions` — rolling agent context summary per garden.
+- `diary_entries` — user's dated notes and photos per plant. Keyed by garden + plant (not the palette row), so a plant's history survives being removed from the palette. User-owned (RLS on garden ownership); photos live in the public `diary-photos` storage bucket. See `docs/architecture.md` §18.
 
 Full schema is documented in Notion. Data-layer decisions (provider choice, curation flow, safe upsert strategy) are recorded in `docs/architecture.md`. Never store passwords — Supabase auth handles that.
 
@@ -99,7 +102,10 @@ Full schema is documented in Notion. Data-layer decisions (provider choice, cura
 
 - **Open-Meteo** — weather and climate data. Free, no API key. City-level resolution. Used to derive climate zone, hardiness zone, frost dates, seasonal data from user's city input.
 - **Trefle API** — plant species data (`TREFLE_API_KEY`). Plants are cached in the `plants` table; Trefle populates botanical facts only. Replaced Perenual, whose free tier returned paywalled nulls — see `docs/architecture.md` §1.
-- **Anthropic API** — AI curation pass (`ANTHROPIC_API_KEY`, model `claude-sonnet-4-5`). Fills gaps Trefle can't (care instructions, style tags, seasonal rhythm) via `scripts/curate-plants.ts`. Never overwrites existing data.
+- **Anthropic API** — powers three offline data scripts (`ANTHROPIC_API_KEY`, model `claude-sonnet-4-5`), all under `apps/web/scripts/`, none in the request path:
+  - `curate-plants.ts` — fills gaps Trefle can't (care instructions, style tags, seasonal rhythm). Never overwrites existing data.
+  - `curate-combinations.ts` — populates `plant_combinations` with companion pairings (see `docs/architecture.md` §19).
+  - `cross-check-plants.ts` — blind second pass that fact-checks botanical fields and flags disagreements; never writes to the DB (see `docs/architecture.md` §20).
 - **Vercel AI SDK** — agent layer. Streaming responses. Model TBD (Claude or GPT-4o). Key in environment variables.
 
 ---
@@ -160,7 +166,7 @@ Everything else is deferred. Do not build edible growing or multiple gardens in 
 - No hardcoded color, spacing, or typography values — always use tokens via CSS custom properties or Tailwind config
 - Server components by default in Next.js — client components only when interactivity requires it
 - Server actions for data mutations — no API routes unless necessary
-- Zustand for client state — no Redux, no Context for global state
+- Client state: local component state plus server actions with `router.refresh()` to re-pull server data — no Redux. Zustand is installed but not yet used; adopt it only when genuinely shared client state appears (most likely the Agent), and add `/store` then. Context is fine for UI infrastructure (e.g. the toast provider in `@paradoxui/ui`), just not as a global app-state store.
 - Prettier: no semi, single quotes, tab width 2, trailing commas es5, print width 80
 
 ---
