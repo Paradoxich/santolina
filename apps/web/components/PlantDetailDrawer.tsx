@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Drawer, Icon, Modal, useToast } from '@paradoxui/ui'
+import { Drawer, Icon, Modal, Tooltip, useToast } from '@paradoxui/ui'
 import { icons } from '@/lib/icons'
 import { DRAWER_MOTION } from '@/lib/drawer-motion'
 import type { PlantDetail } from '@/lib/plant-detail'
@@ -368,15 +368,21 @@ export function PlantDetailDrawer({
           )}
           {palette?.status === 'planted' ? (
             <>
-              <button
-                type="button"
-                onClick={handleRemoveClick}
-                disabled={controlsDisabled || isCheckingDiary}
-                aria-label="Remove from garden"
-                className="flex size-8 items-center justify-center rounded-full border border-card bg-surface-control transition-opacity duration-normal hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <Icon src={icons.trash} />
-              </button>
+              <Tooltip content="Remove from garden" position="bottom">
+                {/* Span carries the hover handlers: a disabled button doesn't
+                    reliably fire mouse events, and this button disables mid-action. */}
+                <span className="inline-flex">
+                  <button
+                    type="button"
+                    onClick={handleRemoveClick}
+                    disabled={controlsDisabled || isCheckingDiary}
+                    aria-label="Remove from garden"
+                    className="flex size-8 items-center justify-center rounded-full border border-card bg-surface-control transition-opacity duration-normal hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <Icon src={icons.trash} />
+                  </button>
+                </span>
+              </Tooltip>
               <button
                 type="button"
                 onClick={handleOpenDiary}
@@ -395,13 +401,15 @@ export function PlantDetailDrawer({
               {secondaryActionLabel}
             </button>
           )}
-          <button
-            type="button"
-            aria-label="Chat about this plant"
-            className="flex size-8 items-center justify-center rounded-full border border-card bg-surface-control"
-          >
-            <Icon src={icons.chat} />
-          </button>
+          <Tooltip content="Chat about this plant" position="bottom">
+            <button
+              type="button"
+              aria-label="Chat about this plant"
+              className="flex size-8 items-center justify-center rounded-full border border-card bg-surface-control"
+            >
+              <Icon src={icons.chat} />
+            </button>
+          </Tooltip>
         </>
       }
     >

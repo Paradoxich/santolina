@@ -1,5 +1,5 @@
 import Image from 'next/image'
-import { MediaCard, Icon } from '@paradoxui/ui'
+import { MediaCard, Icon, Tooltip } from '@paradoxui/ui'
 import { icons } from '@/lib/icons'
 import type { GardenPlant } from '@/types/garden'
 
@@ -37,23 +37,31 @@ export function PlannedPlantTile({
       border="dashed"
       footer={
         <>
-          <button
-            type="button"
-            onClick={() => onRemove?.(plant.id)}
-            disabled={disabled}
-            aria-label={`Remove ${plant.name} from planned`}
-            className="flex h-8 items-center justify-center rounded-[6px] border border-card p-inline-gap transition-colors duration-normal hover:bg-surface-overlay disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <Icon src={icons.trash} />
-          </button>
-          <button
-            type="button"
-            onClick={() => onOpenDetails?.(plant.id)}
-            aria-label={`View details for ${plant.name}`}
-            className="flex h-8 items-center justify-center rounded-[6px] border border-card p-inline-gap transition-colors duration-normal hover:bg-surface-overlay"
-          >
-            <Icon src={icons.info} />
-          </button>
+          <Tooltip content="Remove from planned">
+            {/* Span carries the hover handlers: a disabled button doesn't
+                reliably fire mouse events. */}
+            <span className="inline-flex">
+              <button
+                type="button"
+                onClick={() => onRemove?.(plant.id)}
+                disabled={disabled}
+                aria-label={`Remove ${plant.name} from planned`}
+                className="flex h-8 items-center justify-center rounded-[6px] border border-card p-inline-gap transition-colors duration-normal hover:bg-surface-overlay disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <Icon src={icons.trash} />
+              </button>
+            </span>
+          </Tooltip>
+          <Tooltip content="View details">
+            <button
+              type="button"
+              onClick={() => onOpenDetails?.(plant.id)}
+              aria-label={`View details for ${plant.name}`}
+              className="flex h-8 items-center justify-center rounded-[6px] border border-card p-inline-gap transition-colors duration-normal hover:bg-surface-overlay"
+            >
+              <Icon src={icons.info} />
+            </button>
+          </Tooltip>
           <button
             type="button"
             onClick={() => onMoveToGrowing?.(plant.id)}

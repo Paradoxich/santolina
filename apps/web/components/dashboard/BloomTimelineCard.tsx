@@ -72,24 +72,36 @@ export function BloomTimelineCard({
               }}
             />
             <div
-              className={[
-                'absolute -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full',
-                span.emphasis === 'now' ? 'border' : '',
-              ].join(' ')}
+              className="group absolute -translate-x-1/2 -translate-y-1/2"
               style={{
                 left: `${span.thumbAt}%`,
                 width: span.thumbSize,
                 height: span.thumbSize,
-                borderColor: span.emphasis === 'now' ? span.color : undefined,
               }}
             >
-              <Image
-                src={span.imageUrl}
-                alt={span.plantName}
-                fill
-                sizes="24px"
-                className="object-cover"
-              />
+              <div
+                className={[
+                  'h-full w-full overflow-hidden rounded-full',
+                  span.emphasis === 'now' ? 'border' : '',
+                ].join(' ')}
+                style={{
+                  borderColor: span.emphasis === 'now' ? span.color : undefined,
+                }}
+              >
+                <Image
+                  src={span.imageUrl}
+                  alt={span.plantName}
+                  fill
+                  sizes="24px"
+                  className="object-cover"
+                />
+              </div>
+              <span
+                role="tooltip"
+                className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-1 -translate-x-1/2 whitespace-nowrap rounded-md bg-surface-inverse px-2 py-1 text-micro font-medium text-inverse opacity-0 shadow-md transition-opacity duration-normal group-hover:opacity-100"
+              >
+                {span.plantName}
+              </span>
             </div>
           </div>
         ))}
