@@ -12,7 +12,7 @@ import { Toast, type ToastAction, type ToastProps } from './Toast'
 export interface ToastOptions {
   title?: string
   description?: string
-  variant?: ToastProps['variant']
+  tone?: ToastProps['tone']
   actions?: ToastAction[]
   /** Milliseconds before auto-dismiss. Defaults to 6000. */
   duration?: number

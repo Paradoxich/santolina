@@ -1,8 +1,10 @@
 import React from 'react'
+import { cn } from '../utils/cn'
 
 export interface SpinnerProps extends React.SVGAttributes<SVGElement> {
   size?: 'sm' | 'md' | 'lg'
   label?: string
+  ref?: React.Ref<SVGSVGElement>
 }
 
 const sizeStyles: Record<NonNullable<SpinnerProps['size']>, string> = {
@@ -14,17 +16,14 @@ const sizeStyles: Record<NonNullable<SpinnerProps['size']>, string> = {
 export function Spinner({
   size = 'md',
   label = 'Loading…',
-  className = '',
+  className,
+  ref,
   ...props
 }: SpinnerProps) {
   return (
     <svg
-      className={[
-        'animate-spin',
-        'text-accent',
-        sizeStyles[size],
-        className,
-      ].join(' ')}
+      ref={ref}
+      className={cn('animate-spin', 'text-accent', sizeStyles[size], className)}
       xmlns="http://www.w3.org/2000/svg"
       fill="none"
       viewBox="0 0 24 24"

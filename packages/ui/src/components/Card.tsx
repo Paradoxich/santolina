@@ -1,31 +1,37 @@
 import React from 'react'
+import { cn } from '../utils/cn'
 
 export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
+  ref?: React.Ref<HTMLDivElement>
   children: React.ReactNode
 }
 
 export interface CardHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
+  ref?: React.Ref<HTMLDivElement>
   children: React.ReactNode
 }
 
 export interface CardBodyProps extends React.HTMLAttributes<HTMLDivElement> {
+  ref?: React.Ref<HTMLDivElement>
   children: React.ReactNode
 }
 
 export interface CardFooterProps extends React.HTMLAttributes<HTMLDivElement> {
+  ref?: React.Ref<HTMLDivElement>
   children: React.ReactNode
 }
 
-export function Card({ children, className = '', ...props }: CardProps) {
+export function Card({ children, className, ref, ...props }: CardProps) {
   return (
     <div
-      className={[
+      ref={ref}
+      className={cn(
         'bg-surface-card rounded-lg',
         'border border-card',
         'shadow-sm',
         'overflow-hidden',
-        className,
-      ].join(' ')}
+        className
+      )}
       {...props}
     >
       {children}
@@ -35,16 +41,18 @@ export function Card({ children, className = '', ...props }: CardProps) {
 
 export function CardHeader({
   children,
-  className = '',
+  className,
+  ref,
   ...props
 }: CardHeaderProps) {
   return (
     <div
-      className={[
+      ref={ref}
+      className={cn(
         'px-card-padding py-row-gap',
         'border-b border-divider',
-        className,
-      ].join(' ')}
+        className
+      )}
       {...props}
     >
       {children}
@@ -54,12 +62,14 @@ export function CardHeader({
 
 export function CardBody({
   children,
-  className = '',
+  className,
+  ref,
   ...props
 }: CardBodyProps) {
   return (
     <div
-      className={['px-card-padding py-row-gap', className].join(' ')}
+      ref={ref}
+      className={cn('px-card-padding py-row-gap', className)}
       {...props}
     >
       {children}
@@ -69,17 +79,19 @@ export function CardBody({
 
 export function CardFooter({
   children,
-  className = '',
+  className,
+  ref,
   ...props
 }: CardFooterProps) {
   return (
     <div
-      className={[
+      ref={ref}
+      className={cn(
         'px-card-padding py-row-gap',
         'border-t border-divider',
         'bg-surface-subtle',
-        className,
-      ].join(' ')}
+        className
+      )}
       {...props}
     >
       {children}

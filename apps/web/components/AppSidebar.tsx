@@ -44,7 +44,7 @@ export function AppSidebar() {
           </span>
         </Link>
         <Badge
-          variant="positive"
+          tone="positive"
           className="whitespace-nowrap uppercase tracking-wide"
         >
           WIP

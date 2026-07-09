@@ -1,4 +1,5 @@
 import React from 'react'
+import { cn } from '../utils/cn'
 
 export interface InputProps extends Omit<
   React.InputHTMLAttributes<HTMLInputElement>,
@@ -8,7 +9,8 @@ export interface InputProps extends Omit<
   label?: string
   helperText?: string
   errorMessage?: string
-  inputSize?: 'sm' | 'md' | 'lg'
+  size?: 'sm' | 'md' | 'lg'
+  ref?: React.Ref<HTMLInputElement>
 }
 
 const variantStyles: Record<NonNullable<InputProps['variant']>, string> = {
@@ -22,7 +24,7 @@ const variantStyles: Record<NonNullable<InputProps['variant']>, string> = {
   ].join(' '),
 }
 
-const sizeStyles: Record<NonNullable<InputProps['inputSize']>, string> = {
+const sizeStyles: Record<NonNullable<InputProps['size']>, string> = {
   sm: 'px-3 py-1.5 text-sm rounded-md',
   md: 'px-3 py-2 text-base rounded-md',
   lg: 'px-4 py-3 text-lg rounded-lg',
@@ -33,9 +35,10 @@ export function Input({
   label,
   helperText,
   errorMessage,
-  inputSize = 'md',
+  size = 'md',
   id,
-  className = '',
+  className,
+  ref,
   ...props
 }: InputProps) {
   const inputId = id ?? label?.toLowerCase().replace(/\s+/g, '-')
@@ -61,13 +64,14 @@ export function Input({
         </label>
       )}
       <input
+        ref={ref}
         id={inputId}
-        className={[
+        className={cn(
           baseStyles,
           variantStyles[displayVariant],
-          sizeStyles[inputSize],
-          className,
-        ].join(' ')}
+          sizeStyles[size],
+          className
+        )}
         aria-describedby={
           [errorMessage ? errorId : null, helperText ? helperId : null]
             .filter(Boolean)

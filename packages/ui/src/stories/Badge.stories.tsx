@@ -8,7 +8,11 @@ const meta: Meta<typeof Badge> = {
   argTypes: {
     variant: {
       control: 'select',
-      options: ['default', 'positive', 'warning', 'critical'],
+      options: ['default', 'accent'],
+    },
+    tone: {
+      control: 'select',
+      options: ['positive', 'warning', 'critical'],
     },
   },
 }
@@ -19,14 +23,18 @@ export const Default: Story = {
   args: { variant: 'default', children: 'Default' },
 }
 
+export const Accent: Story = {
+  args: { variant: 'accent', children: 'Accent' },
+}
+
 export const Positive: Story = {
-  args: { variant: 'positive', children: 'Healthy' },
+  args: { tone: 'positive', children: 'Healthy' },
 }
 
 export const Warning: Story = {
-  args: { variant: 'warning', children: 'Needs water' },
+  args: { tone: 'warning', children: 'Needs water' },
 }
 
 export const Critical: Story = {
-  args: { variant: 'critical', children: 'Critical' },
+  args: { tone: 'critical', children: 'Critical' },
 }

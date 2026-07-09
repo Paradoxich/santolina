@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useEffect, useId, useRef } from 'react'
+import { cn } from '../utils/cn'
 
 export interface ModalProps {
   isOpen: boolean
@@ -57,37 +58,37 @@ export function Modal({
   return (
     <dialog
       ref={dialogRef}
-      className={[
+      className={cn(
         'w-full rounded-xl shadow-lg',
         'p-0 bg-surface-card border border-card',
         'backdrop:bg-scrim',
-        sizeStyles[size],
-      ].join(' ')}
+        sizeStyles[size]
+      )}
       onClick={handleOverlayClick}
       aria-modal="true"
       aria-labelledby={title ? titleId : undefined}
     >
       {title && (
         <div
-          className={[
+          className={cn(
             'flex items-center justify-between',
             'px-6 py-4',
-            'border-b border-divider',
-          ].join(' ')}
+            'border-b border-divider'
+          )}
         >
           <h2 id={titleId} className="text-heading font-semibold text-primary">
             {title}
           </h2>
           <button
             onClick={onClose}
-            className={[
+            className={cn(
               'rounded-md p-1',
               'text-muted',
               'hover:bg-surface-hover',
               'hover:text-primary',
               'focus-visible:outline-none focus-visible:ring-2',
-              'focus-visible:ring-focus',
-            ].join(' ')}
+              'focus-visible:ring-focus'
+            )}
             aria-label="Close modal"
           >
             <svg
@@ -111,12 +112,12 @@ export function Modal({
 
       {footer && (
         <div
-          className={[
+          className={cn(
             'px-6 py-4',
             'border-t border-divider',
             'bg-surface-subtle',
-            'flex items-center justify-end gap-3',
-          ].join(' ')}
+            'flex items-center justify-end gap-3'
+          )}
         >
           {footer}
         </div>

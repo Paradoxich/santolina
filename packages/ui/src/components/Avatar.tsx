@@ -1,10 +1,12 @@
 import React from 'react'
+import { cn } from '../utils/cn'
 
 export interface AvatarProps extends React.HTMLAttributes<HTMLDivElement> {
   src?: string
   alt?: string
   initials?: string
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
+  ref?: React.Ref<HTMLDivElement>
 }
 
 const sizeStyles: Record<NonNullable<AvatarProps['size']>, string> = {
@@ -20,12 +22,14 @@ export function Avatar({
   alt = '',
   initials,
   size = 'md',
-  className = '',
+  className,
+  ref,
   ...props
 }: AvatarProps) {
   return (
     <div
-      className={[
+      ref={ref}
+      className={cn(
         'relative inline-flex items-center justify-center',
         'rounded-full',
         'overflow-hidden',
@@ -34,8 +38,8 @@ export function Avatar({
         'font-medium',
         'select-none',
         sizeStyles[size],
-        className,
-      ].join(' ')}
+        className
+      )}
       aria-label={alt || initials}
       role="img"
       {...props}

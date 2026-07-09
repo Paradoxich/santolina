@@ -1,4 +1,5 @@
 import React from 'react'
+import { cn } from '../utils/cn'
 
 export interface StatCardProps extends React.HTMLAttributes<HTMLDivElement> {
   /** Short label shown in the card header */
@@ -13,6 +14,7 @@ export interface StatCardProps extends React.HTMLAttributes<HTMLDivElement> {
    * - `positive` — green background for benefits
    */
   tone?: 'neutral' | 'soft' | 'warning' | 'positive'
+  ref?: React.Ref<HTMLDivElement>
   children: React.ReactNode
 }
 
@@ -31,18 +33,20 @@ export function StatCard({
   label,
   icon,
   tone = 'neutral',
-  className = '',
+  className,
+  ref,
   children,
   ...props
 }: StatCardProps) {
   return (
     <div
-      className={[
+      ref={ref}
+      className={cn(
         'flex flex-col gap-inline-gap',
         'rounded-sm p-row-gap',
         toneStyles[tone],
-        className,
-      ].join(' ')}
+        className
+      )}
       {...props}
     >
       <div className="flex w-full items-center justify-between gap-row-gap">

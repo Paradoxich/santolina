@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import { cn } from '../utils/cn'
 
 export interface TabItem {
   /** Unique value identifying the tab */
@@ -18,6 +19,7 @@ export interface TabsProps extends Omit<
   /** Value of the active tab */
   value: string
   onChange?: (value: string) => void
+  ref?: React.Ref<HTMLDivElement>
 }
 
 /**
@@ -28,7 +30,8 @@ export function Tabs({
   items,
   value,
   onChange,
-  className = '',
+  className,
+  ref,
   ...props
 }: TabsProps) {
   const tabRefs = React.useRef<Map<string, HTMLButtonElement>>(new Map())
@@ -48,10 +51,9 @@ export function Tabs({
 
   return (
     <div
+      ref={ref}
       role="tablist"
-      className={['flex items-start gap-section-gap', className]
-        .join(' ')
-        .trim()}
+      className={cn('flex items-start gap-section-gap', className)}
       {...props}
     >
       {items.map((item, index) => {
@@ -69,7 +71,7 @@ export function Tabs({
             tabIndex={active ? 0 : -1}
             onClick={() => onChange?.(item.value)}
             onKeyDown={(e) => handleKeyDown(e, index)}
-            className={[
+            className={cn(
               'relative inline-flex items-start gap-1 pb-3',
               'text-body',
               'whitespace-nowrap select-none',
@@ -80,8 +82,8 @@ export function Tabs({
                 : 'font-normal text-muted hover:text-primary',
               active
                 ? 'after:absolute after:bottom-0 after:left-0 after:h-px after:w-full after:bg-current after:content-[""]'
-                : '',
-            ].join(' ')}
+                : ''
+            )}
           >
             {item.label}
             {item.count !== undefined && (

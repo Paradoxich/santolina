@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useRef, useEffect, useId } from 'react'
+import { cn } from '../utils/cn'
 
 export interface TooltipProps {
   content: React.ReactNode
@@ -56,7 +57,7 @@ export function Tooltip({
         <span
           id={tooltipId}
           role="tooltip"
-          className={[
+          className={cn(
             'absolute z-50',
             'px-2 py-1',
             'text-xs font-medium',
@@ -66,8 +67,8 @@ export function Tooltip({
             'shadow-md',
             'pointer-events-none',
             'whitespace-nowrap',
-            positionStyles[position],
-          ].join(' ')}
+            positionStyles[position]
+          )}
         >
           {content}
         </span>

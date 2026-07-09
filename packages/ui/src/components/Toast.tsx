@@ -1,4 +1,5 @@
 import React from 'react'
+import { cn } from '../utils/cn'
 
 export interface ToastAction {
   label: string
@@ -6,14 +7,15 @@ export interface ToastAction {
 }
 
 export interface ToastProps extends React.HTMLAttributes<HTMLDivElement> {
-  variant?: 'default' | 'positive' | 'warning' | 'critical'
+  tone?: 'default' | 'positive' | 'warning' | 'critical'
   title?: string
   description?: string
   actions?: ToastAction[]
   onClose?: () => void
+  ref?: React.Ref<HTMLDivElement>
 }
 
-const variantStyles: Record<NonNullable<ToastProps['variant']>, string> = {
+const toneStyles: Record<NonNullable<ToastProps['tone']>, string> = {
   default: ['bg-surface-inverse', 'text-inverse', 'border-transparent'].join(
     ' '
   ),
@@ -28,7 +30,7 @@ const variantStyles: Record<NonNullable<ToastProps['variant']>, string> = {
   ),
 }
 
-const iconMap: Record<NonNullable<ToastProps['variant']>, string> = {
+const iconMap: Record<NonNullable<ToastProps['tone']>, string> = {
   default: 'ℹ',
   positive: '✓',
   warning: '⚠',
@@ -36,32 +38,34 @@ const iconMap: Record<NonNullable<ToastProps['variant']>, string> = {
 }
 
 export function Toast({
-  variant = 'default',
+  tone = 'default',
   title,
   description,
   actions = [],
   onClose,
-  className = '',
+  className,
+  ref,
   ...props
 }: ToastProps) {
   return (
     <div
-      className={[
+      ref={ref}
+      className={cn(
         'flex items-start gap-3',
         'px-4 py-3',
         'rounded-lg',
         'border',
         'shadow-lg',
         'min-w-[280px] max-w-sm',
-        variantStyles[variant],
-        className,
-      ].join(' ')}
+        toneStyles[tone],
+        className
+      )}
       role="alert"
       aria-live="assertive"
       {...props}
     >
       <span className="text-base flex-shrink-0 mt-0.5" aria-hidden="true">
-        {iconMap[variant]}
+        {iconMap[tone]}
       </span>
       <div className="flex-1 min-w-0">
         {title && (

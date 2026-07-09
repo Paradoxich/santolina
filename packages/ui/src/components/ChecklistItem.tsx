@@ -1,4 +1,5 @@
 import React from 'react'
+import { cn } from '../utils/cn'
 
 export interface ChecklistItemProps extends React.LiHTMLAttributes<HTMLLIElement> {
   /**
@@ -7,6 +8,7 @@ export interface ChecklistItemProps extends React.LiHTMLAttributes<HTMLLIElement
    * - `warning` — amber alert
    */
   tone?: 'positive' | 'warning'
+  ref?: React.Ref<HTMLLIElement>
   children: React.ReactNode
 }
 
@@ -57,19 +59,21 @@ function WarningIcon() {
  */
 export function ChecklistItem({
   tone = 'positive',
-  className = '',
+  className,
+  ref,
   children,
   ...props
 }: ChecklistItemProps) {
   return (
     <li
-      className={[
+      ref={ref}
+      className={cn(
         'flex w-full items-center gap-inline-gap',
         'border-b border-divider-subtle',
         'first:border-t',
         'p-inline-gap',
-        className,
-      ].join(' ')}
+        className
+      )}
       {...props}
     >
       <span className="flex size-3 shrink-0 items-center justify-center">

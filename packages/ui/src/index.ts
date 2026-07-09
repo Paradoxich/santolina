@@ -74,3 +74,5 @@ export type { DrawerSectionProps } from './components/DrawerSection'
 
 export { EmptyState } from './components/EmptyState'
 export type { EmptyStateProps } from './components/EmptyState'
+
+export { cn } from './utils/cn'

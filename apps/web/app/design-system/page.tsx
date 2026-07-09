@@ -439,9 +439,9 @@ function ComponentsTab() {
           <Label>Badge · Chip · Avatar · Spinner</Label>
           <div className="flex flex-wrap items-center gap-item-gap">
             <Badge variant="default">Default</Badge>
-            <Badge variant="positive">Positive</Badge>
-            <Badge variant="warning">Warning</Badge>
-            <Badge variant="critical">Critical</Badge>
+            <Badge tone="positive">Positive</Badge>
+            <Badge tone="warning">Warning</Badge>
+            <Badge tone="critical">Critical</Badge>
             <Chip>Resting chip</Chip>
             <Chip selected>Selected chip</Chip>
             <Avatar initials="PA" size="md" />
@@ -463,7 +463,7 @@ function ComponentsTab() {
               image={placeholderImage}
               imageHeight={140}
               title="Lavender"
-              titleAdornment={<Badge variant="positive">blooming</Badge>}
+              titleAdornment={<Badge tone="positive">blooming</Badge>}
               body="❋ Deadhead spent blooms to rebloom."
             />
             <MediaCard
@@ -481,22 +481,22 @@ function ComponentsTab() {
           <Label>Toast</Label>
           <div className="grid grid-cols-2 gap-item-gap">
             <Toast
-              variant="default"
+              tone="default"
               title="Default"
               description="Neutral information."
             />
             <Toast
-              variant="positive"
+              tone="positive"
               title="Positive"
               description="Plant added to your palette."
             />
             <Toast
-              variant="warning"
+              tone="warning"
               title="Warning"
               description="Frost expected this week."
             />
             <Toast
-              variant="critical"
+              tone="critical"
               title="Critical"
               description="Could not save your note."
             />

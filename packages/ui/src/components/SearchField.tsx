@@ -1,4 +1,5 @@
 import React from 'react'
+import { cn } from '../utils/cn'
 
 export interface SearchFieldProps extends Omit<
   React.InputHTMLAttributes<HTMLInputElement>,
@@ -6,6 +7,10 @@ export interface SearchFieldProps extends Omit<
 > {
   /** Accessible label for the input. Defaults to the placeholder. */
   label?: string
+  /** Class applied to the outer pill wrapper. */
+  className?: string
+  /** Forwarded to the underlying search `<input>`. */
+  ref?: React.Ref<HTMLInputElement>
 }
 
 /**
@@ -14,12 +19,13 @@ export interface SearchFieldProps extends Omit<
 export function SearchField({
   label,
   placeholder = 'Search...',
-  className = '',
+  className,
+  ref,
   ...props
 }: SearchFieldProps) {
   return (
     <label
-      className={[
+      className={cn(
         'flex h-12 w-full items-center gap-item-gap',
         'rounded-full',
         'bg-surface-field',
@@ -27,8 +33,8 @@ export function SearchField({
         'shadow-soft',
         'transition-colors duration-normal',
         'focus-within:bg-gray-0',
-        className,
-      ].join(' ')}
+        className
+      )}
     >
       <svg
         aria-hidden="true"
@@ -46,16 +52,17 @@ export function SearchField({
         />
       </svg>
       <input
+        ref={ref}
         type="search"
         aria-label={label ?? placeholder}
         placeholder={placeholder}
-        className={[
+        className={cn(
           'w-full min-w-0 flex-1 bg-transparent',
           'text-body-small text-primary',
           'placeholder:text-secondary',
           'outline-none',
-          '[&::-webkit-search-cancel-button]:hidden',
-        ].join(' ')}
+          '[&::-webkit-search-cancel-button]:hidden'
+        )}
         {...props}
       />
     </label>

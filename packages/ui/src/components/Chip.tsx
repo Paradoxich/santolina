@@ -1,8 +1,10 @@
 import React from 'react'
+import { cn } from '../utils/cn'
 
 export interface ChipProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   /** Whether the chip is currently selected */
   selected?: boolean
+  ref?: React.Ref<HTMLButtonElement>
   children: React.ReactNode
 }
 
@@ -13,14 +15,16 @@ export interface ChipProps extends React.ButtonHTMLAttributes<HTMLButtonElement>
 export function Chip({
   selected = false,
   children,
-  className = '',
+  className,
+  ref,
   ...props
 }: ChipProps) {
   return (
     <button
+      ref={ref}
       type="button"
       aria-pressed={selected}
-      className={[
+      className={cn(
         'inline-flex h-8 items-center justify-center',
         'px-row-gap',
         'rounded-chip',
@@ -31,8 +35,8 @@ export function Chip({
         selected
           ? 'bg-accent text-on-accent hover:bg-accent-hover'
           : 'bg-surface-control text-primary hover:bg-gray-0',
-        className,
-      ].join(' ')}
+        className
+      )}
       {...props}
     >
       {children}
