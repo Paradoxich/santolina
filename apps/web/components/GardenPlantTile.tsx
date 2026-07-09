@@ -1,14 +1,15 @@
 import Image from 'next/image'
-import { MediaCard } from '@paradoxui/ui'
+import { Badge, MediaCard } from '@paradoxui/ui'
 import { getBloomStatus, type BloomStatus } from '@/lib/bloom-status'
 import type { GardenPlant } from '@/types/garden'
 
+// Matches the Growing tab's filter chip labels exactly.
 const statusLabels: Record<BloomStatus, string> = {
-  blooming: 'blooming',
-  'pre-bloom': 'pre bloom',
-  resting: 'resting',
-  done: 'done',
-  evergreen: 'evergreen',
+  blooming: 'Blooming',
+  'pre-bloom': 'Pre-bloom',
+  resting: 'Resting',
+  done: 'Done',
+  evergreen: 'Evergreen',
 }
 
 interface GardenPlantTileProps {
@@ -35,9 +36,9 @@ export function GardenPlantTile({ plant, onClick }: GardenPlantTileProps) {
       imageHeight={200}
       title={plant.name}
       titleAdornment={
-        <span className="mt-[3px] inline-flex items-center justify-center rounded-md bg-accent-muted px-tight-gap pb-[3px] pt-tight-gap text-label leading-none text-accent">
+        <Badge variant="accent" className="mt-[3px] whitespace-nowrap">
           {statusLabels[bloomStatus]}
-        </span>
+        </Badge>
       }
       body={<>❋ {plant.note}</>}
     />

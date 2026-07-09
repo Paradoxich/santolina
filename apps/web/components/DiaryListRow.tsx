@@ -1,4 +1,5 @@
 import Image from 'next/image'
+import { Badge } from '@paradoxui/ui'
 import type { PlantDiary } from '@/types/diary'
 import { formatDayLabel } from '@/lib/utils'
 
@@ -63,9 +64,7 @@ export function DiaryListRow({
             </span>
           )}
           {diary.paletteId === null && (
-            <span className="whitespace-nowrap rounded-xs bg-surface-subtle px-tight-gap py-0.5 text-label text-muted">
-              Removed from garden
-            </span>
+            <Badge className="whitespace-nowrap">Removed from garden</Badge>
           )}
         </div>
       )}

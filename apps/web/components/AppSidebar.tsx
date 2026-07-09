@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
-import { Badge, Icon } from '@paradoxui/ui'
+import { Avatar, Badge, Icon } from '@paradoxui/ui'
 import { icons, type IconName } from '@/lib/icons'
 
 interface NavItem {
@@ -87,9 +87,7 @@ export function AppSidebar() {
         </ul>
 
         <div className="flex items-center gap-inline-gap p-item-gap">
-          <span className="flex size-6 items-center justify-center rounded-full bg-[var(--avatar-fill)] text-label text-inverse">
-            PA
-          </span>
+          <Avatar size="xs" initials="PA" alt="Paradoxich" />
           <span className="flex-1 text-body text-primary">Paradoxich</span>
         </div>
       </nav>
