@@ -2,7 +2,7 @@
   "name": "@paradoxui/tokens",
   "version": "0.0.1",
   "private": true,
-  "license": "MIT",
+  "license": "UNLICENSED",
   "main": "./index.css",
   "exports": {
     ".": "./index.css",
