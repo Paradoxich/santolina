@@ -23,7 +23,11 @@ export function CareTipsCard({
           growing.
         </p>
       )}
-      <ul className="flex w-full flex-col gap-tight-gap">
+      {/* flex-1 (basis 0) + min-h-0 + overflow-hidden: the list fills whatever
+          height the row settles at and clips under the fade, instead of its
+          full 5-tip height inflating the row now that row heights are min-h
+          floors. This card's design is "show what fits, fade the rest". */}
+      <ul className="flex min-h-0 w-full flex-1 basis-0 flex-col gap-tight-gap overflow-hidden">
         {tips.map((tip, index) => (
           <li
             key={`${tip.plantId ?? 'general'}-${index}`}
