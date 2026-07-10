@@ -12,6 +12,12 @@ interface NavItem {
   icon: IconName
 }
 
+export interface SidebarIdentity {
+  name: string
+  initials: string
+  avatarUrl: string | null
+}
+
 const navItems: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: 'grid' },
   { label: 'My Garden', href: '/garden', icon: 'leaf' },
@@ -19,7 +25,7 @@ const navItems: NavItem[] = [
   { label: 'Explore Plants', href: '/explore', icon: 'search' },
 ]
 
-export function AppSidebar() {
+export function AppSidebar({ identity }: { identity: SidebarIdentity }) {
   const pathname = usePathname()
 
   return (
@@ -87,8 +93,15 @@ export function AppSidebar() {
         </ul>
 
         <div className="flex items-center gap-inline-gap p-item-gap">
-          <Avatar size="xs" initials="PA" alt="Paradoxich" />
-          <span className="flex-1 text-body text-primary">Paradoxich</span>
+          <Avatar
+            size="xs"
+            src={identity.avatarUrl ?? undefined}
+            initials={identity.initials}
+            alt={identity.name}
+          />
+          <span className="flex-1 truncate text-body text-primary">
+            {identity.name}
+          </span>
         </div>
       </nav>
     </aside>

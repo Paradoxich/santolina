@@ -8,16 +8,25 @@ import { cache } from 'react'
 import { createSupabaseServerClient } from './supabase-server'
 import type { Garden } from '@/types/garden'
 
+export interface SessionProfile {
+  email: string | null
+  displayName: string | null
+  avatarUrl: string | null
+}
+
 export interface SessionGardenContext {
   userId: string
   garden: Garden | null
+  profile: SessionProfile
 }
 
 /**
- * The signed-in user and their garden, or null when there is no session.
+ * The signed-in user (garden + profile), or null when there is no session.
  * Nullable garden is expected only between signup and the first-run location
- * step. Wrapped in React `cache()` so the layout, page, and plant-detail all
- * share one lookup per request instead of re-hitting the auth server.
+ * step. Profile comes from the `users` table (populated by the signup trigger,
+ * and the eventual source of truth for editable display name). Wrapped in React
+ * `cache()` so the layout, pages, and plant-detail share one lookup per request
+ * instead of re-hitting the auth server.
  */
 export const getSessionGardenContext = cache(
   async (): Promise<SessionGardenContext | null> => {
@@ -28,17 +37,33 @@ export const getSessionGardenContext = cache(
     } = await supabase.auth.getUser()
     if (!user) return null
 
-    const { data, error } = await supabase
-      .from('gardens')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: true })
-      .limit(1)
-      .maybeSingle()
+    const [gardenRes, profileRes] = await Promise.all([
+      supabase
+        .from('gardens')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: true })
+        .limit(1)
+        .maybeSingle(),
+      supabase
+        .from('users')
+        .select('display_name, avatar_url')
+        .eq('id', user.id)
+        .maybeSingle(),
+    ])
 
-    if (error) throw new Error(`Failed to load garden: ${error.message}`)
+    if (gardenRes.error)
+      throw new Error(`Failed to load garden: ${gardenRes.error.message}`)
 
-    return { userId: user.id, garden: (data as Garden) ?? null }
+    return {
+      userId: user.id,
+      garden: (gardenRes.data as Garden) ?? null,
+      profile: {
+        email: user.email ?? null,
+        displayName: profileRes.data?.display_name ?? null,
+        avatarUrl: profileRes.data?.avatar_url ?? null,
+      },
+    }
   }
 )
 
