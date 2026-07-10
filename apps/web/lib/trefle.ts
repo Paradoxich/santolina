@@ -345,17 +345,12 @@ function mapCommonNameAliases(
   return eng.filter((n) => n.toLowerCase() !== primaryName.toLowerCase())
 }
 
-/**
- * Join the flat native distribution string array into a short phrase.
- * e.g. ["France", "Italy", "Spain"] → "France, Italy, Spain"
- */
-function mapNativeTo(
-  distribution: { native: string[] | null } | null | undefined
-): string | null {
-  const places = distribution?.native
-  if (!places?.length) return null
-  return places.join(', ')
-}
+// native_to is intentionally NOT taken from Trefle's distribution: that field
+// is a raw TDWG botanical-region dump (50+ items, defunct names like
+// "Yugoslavia", truncations, misspellings) and it's user-facing. Instead we
+// leave it null on seed so the AI curation pass writes a short modern-geography
+// phrase (e.g. "Europe and western Asia") — see scripts/curate-plants.ts and
+// scripts/regenerate-native-to.ts.
 
 // ---------------------------------------------------------------------------
 // Main mapper
@@ -375,7 +370,7 @@ export function mapTrefleDetail(detail: TrefleDetail): MappedPlant {
     common_name_aliases: mapCommonNameAliases(detail.common_names, commonName),
     scientific_name: detail.scientific_name ?? null,
     family: detail.family ?? null,
-    native_to: mapNativeTo(detail.distribution),
+    native_to: null,
     description: detail.growth?.description ?? null,
     care_level: null,
     bloom_months: bloomMonths,
