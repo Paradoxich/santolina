@@ -4,13 +4,10 @@ import { WeatherCard } from '@/components/dashboard/WeatherCard'
 import { CareTipsCard } from '@/components/dashboard/CareTipsCard'
 import { PlannedCard } from '@/components/dashboard/PlannedCard'
 import { DiaryRecentCard } from '@/components/dashboard/DiaryRecentCard'
-import { InsightCard } from '@/components/dashboard/InsightCard'
+import { ImpactCard } from '@/components/dashboard/ImpactCard'
 import { getCareTips } from '@/lib/care-tips'
 import { deriveBloomSeason } from '@/lib/bloom-timeline'
-import {
-  buildDashboardSubtitle,
-  buildGardenInsight,
-} from '@/lib/dashboard-copy'
+import { buildDashboardSubtitle, buildGardenImpact } from '@/lib/dashboard-copy'
 import { formatBloomRangeShort } from '@/lib/format-plant'
 import { listPalette } from '@/server/palette-actions'
 import { getCurrentGarden } from '@/lib/current-garden'
@@ -62,7 +59,7 @@ export default async function DashboardPage() {
   const diaries = await getPlantDiaries()
 
   const subtitle = buildDashboardSubtitle(weatherDays, palette)
-  const insight = buildGardenInsight(palette)
+  const impact = buildGardenImpact(palette)
 
   return (
     <div className="max-w-[1032px] pb-16 pt-8 md:pt-12">
@@ -92,7 +89,7 @@ export default async function DashboardPage() {
         <div className="grid grid-cols-1 gap-section-gap lg:h-[234px] lg:grid-cols-3">
           <PlannedCard plants={plannedPlants} />
           <DiaryRecentCard diaries={diaries} />
-          <InsightCard text={insight} />
+          <ImpactCard text={impact} />
         </div>
       </div>
     </div>

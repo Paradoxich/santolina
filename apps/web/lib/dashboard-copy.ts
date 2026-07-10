@@ -1,10 +1,11 @@
-// Pure logic for the Dashboard's subtitle and Garden Insight copy.
+// Pure logic for the Dashboard's subtitle and Garden Impact copy.
 // Client-safe. Composes short observations from the real forecast and
 // palette instead of static sample strings — same spirit as care-tips.ts.
 import type { PalettePlant } from '@/server/palette-actions'
 import type { WeatherDay } from '@/types/dashboard'
 import { getBloomStatus } from './bloom-status'
 import { monthName } from './format-plant'
+import { getCurrentSeason } from './season'
 
 interface BloomGroups {
   blooming: PalettePlant[]
@@ -81,44 +82,89 @@ export function buildDashboardSubtitle(
   return weather ? `${weather} ${bloom}` : bloom
 }
 
-const POLLINATOR_PATTERN = /pollinator|bee|butterfly|wildlife/i
+// Ecosystem-benefit buckets for the Garden Impact card, keyword-matched
+// against the AI-curated environment_benefits prose. A structured
+// ecosystem_tags column is the post-test upgrade (see the Build Backlog);
+// these buckets are the v1.
+const POLLINATOR_PATTERN = /pollinator|bee|butterfl|hoverfl|nectar/i
+const BIRD_PATTERN = /bird/i
+const SHELTER_PATTERN = /shelter|habitat|overwinter/i
+const EARLY_NECTAR_PATTERN = /early pollinator|few other (flower|source)/i
+const LATE_NECTAR_PATTERN = /late-season|late season|sources are declining/i
 
 /**
- * The Garden Insight card: one garden-level observation derived from
- * the palette, picked in priority order.
+ * The Garden Impact card: one sentence about what the garden is giving
+ * back to the local ecosystem right now, picked in priority order.
+ *
+ * Deliberately NOT bloom status - the subtitle, Bloom Timeline, and tile
+ * chips already carry that. Bloom only appears here as the mechanism of a
+ * benefit ("X is feeding..." requires X to be in bloom). Ecosystem framing
+ * also keeps the card alive year-round: berries feed birds in autumn,
+ * evergreens shelter insects in winter.
  */
-export function buildGardenInsight(
+export function buildGardenImpact(
   palette: PalettePlant[],
   today: Date = new Date()
 ): string {
+  const planted = palette.filter((p) => p.status === 'planted')
+  if (planted.length === 0)
+    return 'Every plant you add becomes part of the local ecosystem. Start with one and it begins.'
+
+  const benefits = (row: PalettePlant) => row.plant.environment_benefits ?? ''
   const groups = groupByBloomStatus(palette, today)
-  const { blooming, preBloom } = groups
+  const season = getCurrentSeason(today)
 
-  const supportsPollinators = blooming.some((r) =>
-    POLLINATOR_PATTERN.test(r.plant.environment_benefits ?? '')
+  // Active benefit: pollinator plants in bloom right now.
+  const feeding = groups.blooming.filter((r) =>
+    POLLINATOR_PATTERN.test(benefits(r))
   )
-  if (supportsPollinators && blooming.length >= 2)
-    return 'Your garden is supporting local pollinators during one of its busiest bloom weeks.'
-  if (supportsPollinators)
-    return `${blooming[0]!.plant.common_name} is feeding local pollinators right now.`
-
-  if (blooming.length >= 2)
-    return `${blooming.length} of your plants are in bloom at once, one of your garden's busiest weeks.`
-
-  if (blooming.length === 1) {
-    const plant = blooming[0]!.plant
-    const lastMonth = Math.max(...(plant.bloom_months ?? []))
-    return Number.isFinite(lastMonth)
-      ? `${plant.common_name} is at its peak, with blooms running through ${monthName(lastMonth)}.`
-      : `${plant.common_name} is at its peak right now.`
+  if (feeding.length >= 2)
+    return 'Your plants are feeding bees and butterflies right now, right when colonies need it most.'
+  if (feeding.length === 1) {
+    const row = feeding[0]!
+    if (EARLY_NECTAR_PATTERN.test(benefits(row)))
+      return `${row.plant.common_name} is one of the few nectar sources available this early. Pollinators are already finding it.`
+    if (LATE_NECTAR_PATTERN.test(benefits(row)))
+      return `${row.plant.common_name} is one of the last nectar sources still going as other gardens wind down.`
+    return `${row.plant.common_name} is feeding local pollinators right now, in a landscape where that's increasingly rare.`
   }
 
-  if (preBloom.length > 0)
-    return `${preBloom[0]!.plant.common_name} is about to open. Expect new color in the coming weeks.`
+  // Seasonal benefits that don't need anything in bloom.
+  const forBirds = planted.filter((r) => BIRD_PATTERN.test(benefits(r)))
+  if (forBirds.length > 0 && (season === 'late_summer' || season === 'autumn'))
+    return `${forBirds[0]!.plant.common_name} will keep garden birds fed well into autumn, when food sources are getting scarce.`
 
-  const plannedCount = palette.filter((p) => p.status === 'planned').length
-  if (plannedCount > 0)
-    return `Nothing in bloom right now. A good moment to plant from your ${plannedCount} planned ${plannedCount === 1 ? 'pick' : 'picks'}.`
+  const sheltering = planted.filter(
+    (r) =>
+      SHELTER_PATTERN.test(benefits(r)) ||
+      (r.plant.bloom_months ?? []).length === 0
+  )
+  if (sheltering.length > 0 && season === 'winter')
+    return 'Your evergreens are sheltering birds and overwintering insects through the coldest months.'
 
-  return 'Your garden is resting. Its evergreen structure is doing the quiet work this season.'
+  // Upcoming benefit: a pollinator plant with a bloom window ahead.
+  const upcoming = [...groups.preBloom, ...planted].find(
+    (r) =>
+      POLLINATOR_PATTERN.test(benefits(r)) &&
+      getBloomStatus(r.plant.bloom_months ?? [], today) !== 'blooming' &&
+      (r.plant.bloom_months ?? []).length > 0
+  )
+  if (upcoming) {
+    const nextMonth = nextBloomMonth(upcoming.plant.bloom_months ?? [], today)
+    return `When ${upcoming.plant.common_name} blooms in ${monthName(nextMonth)}, it'll be a reliable food source for local pollinators.`
+  }
+
+  // "Resting" only when nothing is in bloom; a garden can reach here while
+  // blooming if none of its plants carry ecosystem keywords (rare: 177/201
+  // catalog plants mention pollinators).
+  return groups.blooming.length > 0
+    ? 'Your garden is quietly supporting the local ecosystem, even now.'
+    : 'Even resting, your garden is habitat. The quiet work continues.'
+}
+
+/** The next month (1-12) a bloom window opens, relative to today. */
+function nextBloomMonth(bloomMonths: number[], today: Date): number {
+  const currentMonth = today.getMonth() + 1
+  const ahead = bloomMonths.filter((m) => m > currentMonth)
+  return ahead.length > 0 ? Math.min(...ahead) : Math.min(...bloomMonths)
 }
