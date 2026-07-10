@@ -92,7 +92,17 @@ export function AppSidebar({ identity }: { identity: SidebarIdentity }) {
           })}
         </ul>
 
-        <div className="flex items-center gap-inline-gap p-item-gap">
+        <Link
+          href="/settings"
+          aria-current={pathname.startsWith('/settings') ? 'page' : undefined}
+          className={[
+            'flex items-center gap-inline-gap rounded-sm p-item-gap',
+            'transition-colors duration-normal',
+            pathname.startsWith('/settings')
+              ? 'bg-surface-card-translucent'
+              : 'hover:bg-surface-overlay',
+          ].join(' ')}
+        >
           <Avatar
             size="xs"
             src={identity.avatarUrl ?? undefined}
@@ -102,7 +112,7 @@ export function AppSidebar({ identity }: { identity: SidebarIdentity }) {
           <span className="flex-1 truncate text-body text-primary">
             {identity.name}
           </span>
-        </div>
+        </Link>
       </nav>
     </aside>
   )
