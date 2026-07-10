@@ -20,7 +20,12 @@ const items: TrackItem[] = [
   { label: 'User flows & states', status: 'done' },
   { label: 'UI & interaction design', status: 'done' },
   { label: 'Visual direction & branding', status: 'done' },
-  { label: 'Design system', status: 'active', tag: 'Building' },
+  {
+    label: 'Design system',
+    status: 'active',
+    href: '/design-system',
+    tag: 'Building',
+  },
   {
     label: 'Build core experience',
     status: 'active',

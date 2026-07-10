@@ -81,8 +81,8 @@ function TokenPreview({ name, kind }: { name: string; kind: TokenKind }) {
 function TokenRow({ name, kind }: TokenEntry) {
   const value = useTokenValue(name)
   return (
-    <div className="flex min-h-[40px] items-center gap-row-gap border-b border-divider py-tight-gap last:border-b-0">
-      <code className="w-[280px] shrink-0 truncate text-body-small text-primary">
+    <div className="flex min-h-[40px] flex-wrap items-center gap-x-row-gap gap-y-tight-gap border-b border-divider py-tight-gap last:border-b-0 sm:flex-nowrap">
+      <code className="w-full truncate text-body-small text-primary sm:w-[280px] sm:shrink-0">
         {name}
       </code>
       <span className="min-w-0 flex-1 truncate text-body-small text-muted">
@@ -108,18 +108,14 @@ function TokenGroupBlock({ group }: { group: TokenGroup }) {
   )
 }
 
+/** Renders a tier's token groups. Title and intro belong to the caller —
+ * the chapter's Section owns the single heading, so nothing repeats. */
 export function TokenTierBlock({ tier }: { tier: TokenTier }) {
   return (
-    <div className="flex flex-col gap-section-gap">
-      <div className="flex flex-col gap-tight-gap">
-        <h3 className="text-section font-medium text-primary">{tier.tier}</h3>
-        <p className="text-body text-body-secondary">{tier.intro}</p>
-      </div>
-      <div className="flex flex-col gap-row-gap">
-        {tier.groups.map((group) => (
-          <TokenGroupBlock key={group.title} group={group} />
-        ))}
-      </div>
+    <div className="flex flex-col gap-section-break">
+      {tier.groups.map((group) => (
+        <TokenGroupBlock key={group.title} group={group} />
+      ))}
     </div>
   )
 }
