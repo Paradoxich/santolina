@@ -80,13 +80,8 @@ export function BloomTimelineCard({
               }}
             >
               <div
-                className={[
-                  'h-full w-full overflow-hidden rounded-full',
-                  span.emphasis === 'now' ? 'border' : '',
-                ].join(' ')}
-                style={{
-                  borderColor: span.emphasis === 'now' ? span.color : undefined,
-                }}
+                className="relative h-full w-full overflow-hidden rounded-full border"
+                style={{ borderColor: span.color }}
               >
                 <Image
                   src={span.imageUrl}
