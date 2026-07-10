@@ -69,32 +69,23 @@ export const getSessionGardenContext = cache(
 
 /**
  * Resolves the signed-in user's garden for a mutation, returning the session
- * client to run it through. Throws if there's no session or no garden — both
- * are "impossible" states behind the auth gate + first-run step, so throwing
- * (rather than silently no-op'ing) surfaces a real bug if either is missing.
+ * client to run it through. Reuses the cached `getSessionGardenContext`, so
+ * multiple callers in one request (e.g. the dashboard's listPalette +
+ * getPlantDiaries + page context) share a single auth + garden lookup instead
+ * of each re-hitting the auth server. Throws if there's no session or no garden
+ * — both are "impossible" states behind the auth gate + first-run step, so
+ * throwing (rather than silently no-op'ing) surfaces a real bug if either is
+ * missing.
  */
 export async function requireSessionGarden(): Promise<{
   supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>
   userId: string
   garden: Garden
 }> {
+  const ctx = await getSessionGardenContext()
+  if (!ctx) throw new Error('Not signed in')
+  if (!ctx.garden) throw new Error('No garden for the signed-in user')
+
   const supabase = await createSupabaseServerClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) throw new Error('Not signed in')
-
-  const { data, error } = await supabase
-    .from('gardens')
-    .select('*')
-    .eq('user_id', user.id)
-    .order('created_at', { ascending: true })
-    .limit(1)
-    .maybeSingle()
-
-  if (error) throw new Error(`Failed to load garden: ${error.message}`)
-  if (!data) throw new Error('No garden for the signed-in user')
-
-  return { supabase, userId: user.id, garden: data as Garden }
+  return { supabase, userId: ctx.userId, garden: ctx.garden }
 }
