@@ -36,8 +36,12 @@ export function WeatherCard({ location, country, days }: WeatherCardProps) {
         </button>
       </div>
 
+      {/* Day columns are items-start, not items-end: a two-line description
+          (e.g. "Thunderstorms expected.") makes its column taller, and
+          bottom-alignment would push that day's label/icon/temps up out of
+          line with the other days. */}
       {location && days ? (
-        <div className="flex min-h-0 flex-1 items-end gap-3 lg:gap-[56px]">
+        <div className="flex min-h-0 flex-1 items-start gap-3 lg:gap-[56px]">
           {days.map((day) => (
             <div
               key={day.label}
