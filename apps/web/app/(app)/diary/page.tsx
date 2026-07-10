@@ -1,6 +1,5 @@
 import { DiaryClient } from '@/components/DiaryClient'
 import { getPlantDiaries } from '@/lib/diary'
-import { getCurrentGardenId } from '@/lib/current-garden'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,10 +12,6 @@ export default async function PlantDiaryPage({
   const diaries = await getPlantDiaries()
 
   return (
-    <DiaryClient
-      gardenId={getCurrentGardenId()}
-      diaries={diaries}
-      initialPlantId={initialPlantId ?? null}
-    />
+    <DiaryClient diaries={diaries} initialPlantId={initialPlantId ?? null} />
   )
 }

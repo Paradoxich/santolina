@@ -1,9 +1,10 @@
 'use server'
 
-// Writes to gardens go through the service-role client, scoped to the one
-// hardcoded garden id — see lib/current-garden.ts and docs/architecture.md §11.
-import { getSupabaseAdmin } from '@/lib/supabase-admin'
-import { getCurrentGardenId } from '@/lib/current-garden'
+// Garden writes run through the session client, scoped to the signed-in user's
+// garden. RLS (`gardens.user_id = auth.uid()`) guarantees a user can only touch
+// their own garden, so no application-level ownership check is needed.
+// See docs/architecture.md §24.
+import { createSupabaseServerClient } from '@/lib/supabase-server'
 
 interface SetGardenLocationInput {
   city: string
@@ -12,20 +13,27 @@ interface SetGardenLocationInput {
   lon: number
 }
 
-/** Writes the picked location onto the current garden's row. */
+/**
+ * Writes the picked location onto the signed-in user's garden. Used by both
+ * the first-run location step and the dashboard's change-location modal.
+ */
 export async function setGardenLocation({
   city,
   country,
   lat,
   lon,
 }: SetGardenLocationInput): Promise<void> {
-  const db = getSupabaseAdmin()
-  const gardenId = getCurrentGardenId()
+  const supabase = await createSupabaseServerClient()
 
-  const { data, error } = await db
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not signed in')
+
+  const { data, error } = await supabase
     .from('gardens')
     .update({ city, country, lat, lon })
-    .eq('id', gardenId)
+    .eq('user_id', user.id)
     .select('id')
     .maybeSingle()
 

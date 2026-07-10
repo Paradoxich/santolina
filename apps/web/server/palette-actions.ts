@@ -1,10 +1,10 @@
 'use server'
 
-// Reads/writes to gardens/palette_plants go through the service-role
-// client, scoped to the one hardcoded garden id — see lib/current-garden.ts
-// and docs/architecture.md §11/§12 for why (RLS blocker, no real auth yet).
-import { getSupabaseAdmin } from '@/lib/supabase-admin'
-import { getCurrentGardenId } from '@/lib/current-garden'
+// Reads/writes to palette_plants run through the session client, scoped to the
+// signed-in user's garden. RLS (`palette_plants` -> `gardens.user_id = auth.uid()`)
+// enforces ownership; the explicit garden_id filters are kept for correctness
+// and defense-in-depth. See docs/architecture.md §24.
+import { requireSessionGarden } from '@/lib/session-garden'
 import type { DbPlant } from '@/lib/plants-db'
 
 export type PaletteStatus = 'planned' | 'planted' | 'considering'
@@ -40,8 +40,8 @@ export async function addToPalette({
   source,
   notes,
 }: AddToPaletteInput): Promise<{ id: string; status: PaletteStatus }> {
-  const db = getSupabaseAdmin()
-  const gardenId = getCurrentGardenId()
+  const { supabase: db, garden } = await requireSessionGarden()
+  const gardenId = garden.id
 
   const { data: existing, error: findError } = await db
     .from('palette_plants')
@@ -88,8 +88,8 @@ export async function updateStatus({
   paletteId: string
   status: PaletteStatus
 }): Promise<void> {
-  const db = getSupabaseAdmin()
-  const gardenId = getCurrentGardenId()
+  const { supabase: db, garden } = await requireSessionGarden()
+  const gardenId = garden.id
 
   const { data, error } = await db
     .from('palette_plants')
@@ -109,8 +109,8 @@ export async function removeFromPalette({
 }: {
   paletteId: string
 }): Promise<void> {
-  const db = getSupabaseAdmin()
-  const gardenId = getCurrentGardenId()
+  const { supabase: db, garden } = await requireSessionGarden()
+  const gardenId = garden.id
 
   const { data, error } = await db
     .from('palette_plants')
@@ -130,8 +130,8 @@ export async function getPaletteStatus({
 }: {
   plantId: string
 }): Promise<{ paletteId: string; status: PaletteStatus } | null> {
-  const db = getSupabaseAdmin()
-  const gardenId = getCurrentGardenId()
+  const { supabase: db, garden } = await requireSessionGarden()
+  const gardenId = garden.id
 
   const { data, error } = await db
     .from('palette_plants')
@@ -146,15 +146,14 @@ export async function getPaletteStatus({
   return { paletteId: data.id, status: data.status as PaletteStatus }
 }
 
-/** Palette rows for a garden, joined with their plants row. Defaults to the current garden. */
+/** Palette rows for the signed-in user's garden, joined with their plants row. */
 export async function listPalette({
-  gardenId = getCurrentGardenId(),
   status,
 }: {
-  gardenId?: string
   status?: PaletteStatus
 } = {}): Promise<PalettePlant[]> {
-  const db = getSupabaseAdmin()
+  const { supabase: db, garden } = await requireSessionGarden()
+  const gardenId = garden.id
 
   let query = db
     .from('palette_plants')

@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Modal, SearchField, Spinner } from '@paradoxui/ui'
-import { searchCities, type GeocodingResult } from '@/lib/open-meteo'
-import { useDebounce } from '@/hooks/useDebounce'
+import { Modal } from '@paradoxui/ui'
+import { type GeocodingResult } from '@/lib/open-meteo'
+import { CitySearch } from '@/components/CitySearch'
 import { setGardenLocation } from '@/server/garden-actions'
 
 interface LocationPickerModalProps {
@@ -21,47 +21,14 @@ export function LocationPickerModal({
   currentCountry,
 }: LocationPickerModalProps) {
   const router = useRouter()
-  const [query, setQuery] = useState('')
-  const [results, setResults] = useState<GeocodingResult[]>([])
-  const [isSearching, setIsSearching] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [selectingId, setSelectingId] = useState<number | null>(null)
-  const debouncedQuery = useDebounce(query, 300)
 
   useEffect(() => {
     if (!isOpen) return
-    setQuery('')
-    setResults([])
     setError(null)
     setSelectingId(null)
   }, [isOpen])
-
-  useEffect(() => {
-    const trimmed = debouncedQuery.trim()
-    if (trimmed.length < 2) {
-      setResults([])
-      return
-    }
-
-    let cancelled = false
-    setIsSearching(true)
-    setError(null)
-
-    searchCities(trimmed)
-      .then((cities) => {
-        if (!cancelled) setResults(cities)
-      })
-      .catch(() => {
-        if (!cancelled) setError('Could not search for that city. Try again.')
-      })
-      .finally(() => {
-        if (!cancelled) setIsSearching(false)
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [debouncedQuery])
 
   const handleSelect = async (city: GeocodingResult) => {
     setSelectingId(city.id)
@@ -80,12 +47,6 @@ export function LocationPickerModal({
       setSelectingId(null)
     }
   }
-
-  const showEmpty =
-    !isSearching &&
-    !error &&
-    debouncedQuery.trim().length >= 2 &&
-    results.length === 0
 
   return (
     <Modal
@@ -127,52 +88,13 @@ export function LocationPickerModal({
           </div>
         )}
 
-        <SearchField
-          placeholder="Search for a city..."
-          label="Search for a city"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          autoFocus
-        />
-
-        {isSearching && (
-          <div className="flex justify-center py-4">
-            <Spinner size="sm" />
-          </div>
-        )}
-
         {error && <p className="text-body-small text-critical">{error}</p>}
 
-        {!isSearching && results.length > 0 && (
-          <ul className="flex max-h-64 flex-col gap-1 overflow-y-auto">
-            {results.map((city) => (
-              <li key={city.id}>
-                <button
-                  type="button"
-                  onClick={() => handleSelect(city)}
-                  disabled={selectingId !== null}
-                  className={[
-                    'w-full rounded-md px-3 py-2 text-left',
-                    'text-body-small text-primary',
-                    'hover:bg-surface-hover',
-                    'focus-visible:outline-none focus-visible:ring-2',
-                    'focus-visible:ring-focus',
-                    'disabled:opacity-50',
-                  ].join(' ')}
-                >
-                  {city.name}
-                  {city.admin1 ? `, ${city.admin1}` : ''}, {city.country}
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-
-        {showEmpty && (
-          <p className="text-body-small text-muted">
-            No cities found for &ldquo;{debouncedQuery}&rdquo;.
-          </p>
-        )}
+        <CitySearch
+          onSelect={handleSelect}
+          selectingId={selectingId}
+          autoFocus
+        />
       </div>
     </Modal>
   )

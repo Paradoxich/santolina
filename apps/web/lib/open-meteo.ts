@@ -1,3 +1,4 @@
+import { unstable_cache } from 'next/cache'
 import type { WeatherDay } from '@/types/dashboard'
 import {
   getWeatherDescription,
@@ -58,12 +59,9 @@ export async function searchCities(query: string): Promise<GeocodingResult[]> {
 }
 
 /** Today + next 2 days, shaped for the dashboard Weather card. */
-export async function getForecast(
-  lat: number,
-  lon: number
-): Promise<WeatherDay[]> {
+async function fetchForecast(lat: number, lon: number): Promise<WeatherDay[]> {
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=auto`
-  const res = await fetch(url, { cache: 'no-store' })
+  const res = await fetch(url)
   if (!res.ok) throw new Error(`Forecast request failed: ${res.status}`)
 
   const data = (await res.json()) as OpenMeteoForecastResponse
@@ -90,3 +88,17 @@ export async function getForecast(
     }
   })
 }
+
+/**
+ * Cached ~1h per lat/lon. Weather barely moves hour to hour, so there's no
+ * reason to re-hit Open-Meteo (a non-co-located third party) on every dashboard
+ * load — this keeps it off the request's critical path. `unstable_cache` caches
+ * across requests even though the dashboard is force-dynamic.
+ */
+export const getForecast = unstable_cache(
+  fetchForecast,
+  ['open-meteo-forecast'],
+  {
+    revalidate: 3600,
+  }
+)

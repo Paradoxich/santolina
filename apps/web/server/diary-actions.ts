@@ -1,10 +1,10 @@
 'use server'
 
-// Writes/reads on diary_entries go through the service-role client, same
-// pattern as palette/garden actions — see lib/current-garden.ts and
-// docs/architecture.md §11 for why (RLS blocker, no real auth yet).
-import { getSupabaseAdmin } from '@/lib/supabase-admin'
-import { getCurrentGardenId } from '@/lib/current-garden'
+// Reads/writes on diary_entries run through the session client, scoped to the
+// signed-in user's garden via RLS — same pattern as palette actions. The
+// garden is always resolved from the session, never taken from the client.
+// See docs/architecture.md §24.
+import { requireSessionGarden } from '@/lib/session-garden'
 
 export interface DiaryEntry {
   id: string
@@ -42,20 +42,18 @@ function toDiaryEntry(row: DiaryEntryRow): DiaryEntry {
   }
 }
 
-/** Entries for a given garden+plant pair, newest first. */
+/** Entries for the signed-in user's garden + the given plant, newest first. */
 export async function listDiaryEntries({
-  gardenId,
   plantId,
 }: {
-  gardenId: string
   plantId: string
 }): Promise<DiaryEntry[]> {
-  const db = getSupabaseAdmin()
+  const { supabase: db, garden } = await requireSessionGarden()
 
   const { data, error } = await db
     .from('diary_entries')
     .select('*')
-    .eq('garden_id', gardenId)
+    .eq('garden_id', garden.id)
     .eq('plant_id', plantId)
     .order('created_at', { ascending: false })
 
@@ -70,19 +68,18 @@ export async function listDiaryEntries({
  * signed URL generation needed for v1.
  */
 export async function addDiaryEntry({
-  gardenId,
   plantId,
   paletteId,
   note,
   photoFiles,
 }: {
-  gardenId: string
   plantId: string
   paletteId?: string | null
   note?: string
   photoFiles?: File[]
 }): Promise<DiaryEntry> {
-  const db = getSupabaseAdmin()
+  const { supabase: db, garden } = await requireSessionGarden()
+  const gardenId = garden.id
 
   const photoUrls: string[] = []
   if (photoFiles && photoFiles.length > 0) {
@@ -128,14 +125,13 @@ export async function deleteDiaryEntry({
 }: {
   entryId: string
 }): Promise<void> {
-  const db = getSupabaseAdmin()
-  const gardenId = getCurrentGardenId()
+  const { supabase: db, garden } = await requireSessionGarden()
 
   const { data, error } = await db
     .from('diary_entries')
     .delete()
     .eq('id', entryId)
-    .eq('garden_id', gardenId)
+    .eq('garden_id', garden.id)
     .select('id')
     .maybeSingle()
 
@@ -150,18 +146,16 @@ export async function deleteDiaryEntry({
  * deleteDiaryEntry.
  */
 export async function deleteDiaryThread({
-  gardenId,
   plantId,
 }: {
-  gardenId: string
   plantId: string
 }): Promise<void> {
-  const db = getSupabaseAdmin()
+  const { supabase: db, garden } = await requireSessionGarden()
 
   const { error } = await db
     .from('diary_entries')
     .delete()
-    .eq('garden_id', gardenId)
+    .eq('garden_id', garden.id)
     .eq('plant_id', plantId)
 
   if (error) throw new Error(`Failed to delete diary thread: ${error.message}`)

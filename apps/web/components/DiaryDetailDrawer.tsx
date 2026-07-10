@@ -16,7 +16,6 @@ function pluralize(count: number, noun: string): string {
 
 interface DiaryDetailDrawerProps {
   diary: PlantDiary
-  gardenId: string
   onClose: () => void
 }
 
@@ -69,11 +68,7 @@ function NoteCard({ note }: { note: DiaryNote }) {
   )
 }
 
-export function DiaryDetailDrawer({
-  diary,
-  gardenId,
-  onClose,
-}: DiaryDetailDrawerProps) {
+export function DiaryDetailDrawer({ diary, onClose }: DiaryDetailDrawerProps) {
   const router = useRouter()
   const { toast } = useToast()
   const monthGroups = groupNotesByMonth(diary.notes)
@@ -105,7 +100,7 @@ export function DiaryDetailDrawer({
     setIsDeleting(true)
     setDeleteError(null)
     try {
-      await deleteDiaryThread({ gardenId, plantId: diary.plantId })
+      await deleteDiaryThread({ plantId: diary.plantId })
       router.refresh()
       toast(
         isGrowing
@@ -178,7 +173,6 @@ export function DiaryDetailDrawer({
     setComposerError(null)
     try {
       await addDiaryEntry({
-        gardenId,
         plantId: diary.plantId,
         paletteId: diary.paletteId,
         note: trimmed || undefined,

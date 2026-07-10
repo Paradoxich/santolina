@@ -12,14 +12,12 @@ import { icons } from '@/lib/icons'
 import type { PlantDiary } from '@/types/diary'
 
 interface DiaryClientProps {
-  gardenId: string
   diaries: PlantDiary[]
   /** Deep-links straight to a plant's thread, e.g. from PlantDetailDrawer's "Open diary" button. */
   initialPlantId?: string | null
 }
 
 export function DiaryClient({
-  gardenId,
   diaries,
   initialPlantId = null,
 }: DiaryClientProps) {
@@ -127,7 +125,6 @@ export function DiaryClient({
           <DiaryDetailDrawer
             key="diary-detail-drawer"
             diary={selected}
-            gardenId={gardenId}
             onClose={() => setSelectedId(null)}
           />
         )}

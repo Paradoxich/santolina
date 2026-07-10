@@ -1,6 +1,5 @@
 // SERVER-ONLY — builds the Diary page's PlantDiary list from real data.
-import { getSupabaseAdmin } from './supabase-admin'
-import { getCurrentGardenId } from './current-garden'
+import { requireSessionGarden } from './session-garden'
 import { listDiaryEntries, type DiaryEntry } from '@/server/diary-actions'
 import type { DbPlant } from './plants-db'
 import type { DiaryNote, PlantDiary } from '@/types/diary'
@@ -22,10 +21,9 @@ function toDiaryNote(entry: DiaryEntry): DiaryNote {
 
 async function toPlantDiary(
   plant: DbPlant,
-  paletteId: string | null,
-  gardenId: string
+  paletteId: string | null
 ): Promise<PlantDiary> {
-  const entries = await listDiaryEntries({ gardenId, plantId: plant.id })
+  const entries = await listDiaryEntries({ plantId: plant.id })
   const notes = entries.map(toDiaryNote)
 
   return {
@@ -48,8 +46,8 @@ async function toPlantDiary(
  * diary is for tracking something you're actually tending, not a plan.
  */
 export async function getPlantDiaries(): Promise<PlantDiary[]> {
-  const db = getSupabaseAdmin()
-  const gardenId = getCurrentGardenId()
+  const { supabase: db, garden } = await requireSessionGarden()
+  const gardenId = garden.id
 
   const [
     { data: paletteRows, error: paletteError },
@@ -96,12 +94,8 @@ export async function getPlantDiaries(): Promise<PlantDiary[]> {
   }
 
   const [activeDiaries, removedDiaries] = await Promise.all([
-    Promise.all(
-      plantedRows.map((row) => toPlantDiary(row.plants, row.id, gardenId))
-    ),
-    Promise.all(
-      removedPlants.map((plant) => toPlantDiary(plant, null, gardenId))
-    ),
+    Promise.all(plantedRows.map((row) => toPlantDiary(row.plants, row.id))),
+    Promise.all(removedPlants.map((plant) => toPlantDiary(plant, null))),
   ])
 
   return [...activeDiaries, ...removedDiaries]
