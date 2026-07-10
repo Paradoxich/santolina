@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Card, CardBody } from '@paradoxui/ui'
 import { CitySearch } from '@/components/CitySearch'
 import { type GeocodingResult } from '@/lib/open-meteo'
-import { setGardenLocationForCurrentUser } from '@/server/garden-actions'
+import { setGardenLocation } from '@/server/garden-actions'
 
 // NOTE: functional copy + layout, not yet through Ana's voice/design pass.
 export function FirstRunLocation() {
@@ -17,7 +17,7 @@ export function FirstRunLocation() {
     setSelectingId(city.id)
     setError(null)
     try {
-      await setGardenLocationForCurrentUser({
+      await setGardenLocation({
         city: city.name,
         country: city.country,
         lat: city.latitude,

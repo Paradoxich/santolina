@@ -26,7 +26,6 @@ import { GoodForSection } from './plant-detail/GoodForSection'
 import { DetailsSection } from './plant-detail/DetailsSection'
 
 interface PlantDetailDrawerProps {
-  gardenId: string
   detail: PlantDetail
   onClose: () => void
 }
@@ -34,11 +33,7 @@ interface PlantDetailDrawerProps {
 /** Photo widths cycle to match the Figma strip (third photo clips at the edge). */
 const PHOTO_WIDTHS = [131, 175, 207]
 
-export function PlantDetailDrawer({
-  gardenId,
-  detail,
-  onClose,
-}: PlantDetailDrawerProps) {
+export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
   const { plant, companions, garden } = detail
   const subtitle = formatPlantSubtitle(
     plant.scientific_name,
@@ -208,7 +203,7 @@ export function PlantDetailDrawer({
     setActionError(null)
     setIsCheckingDiary(true)
     try {
-      const entries = await listDiaryEntries({ gardenId, plantId: plant.id })
+      const entries = await listDiaryEntries({ plantId: plant.id })
       if (entries.length === 0) {
         setPendingAction('garden')
         await performRemoveFromGarden()

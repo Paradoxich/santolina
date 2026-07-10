@@ -1,14 +1,21 @@
-// Session-refresh helper for Next.js middleware.
+// Session-refresh + auth gate for Next.js middleware.
 //
-// Runs on every matched request: reads the auth cookies, refreshes the token
-// if needed, and writes the refreshed cookies onto the outgoing response so
-// Server Components see a current session.
-//
-// Scope note: this only refreshes the session today. The full-app auth gate
-// (redirect unauthenticated requests, keep the landing public) lands as a
-// later step in the auth epic — see docs/architecture.md §24.
+// Runs on every matched request: refreshes the auth token, writes the refreshed
+// cookies onto the response, and redirects unauthenticated requests away from
+// protected routes. The santolina.app landing and the auth routes stay public.
+// See docs/architecture.md §24.
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+
+// Routes reachable without a session. Everything else requires auth.
+// `/` is the public landing; `/auth/*` completes sign-in; `/design-system` is
+// the component showcase, not user data.
+function isPublicPath(pathname: string): boolean {
+  if (pathname === '/' || pathname === '/login') return true
+  if (pathname.startsWith('/auth')) return true
+  if (pathname.startsWith('/design-system')) return true
+  return false
+}
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
@@ -42,7 +49,18 @@ export async function updateSession(request: NextRequest) {
   // IMPORTANT: refresh the session by calling getUser() immediately, with no
   // code between createServerClient and this call. Reordering here is a common
   // source of hard-to-debug session bugs.
-  await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  // Gate: send unauthenticated requests for protected routes to /login,
+  // preserving where they were headed so the callback can return them there.
+  if (!user && !isPublicPath(request.nextUrl.pathname)) {
+    const loginUrl = request.nextUrl.clone()
+    loginUrl.pathname = '/login'
+    loginUrl.searchParams.set('next', request.nextUrl.pathname)
+    return NextResponse.redirect(loginUrl)
+  }
 
   return supabaseResponse
 }

@@ -56,12 +56,11 @@ function toGardenPlant(row: PalettePlant): GardenPlant {
 }
 
 interface GardenClientProps {
-  gardenId: string
   palette: PalettePlant[]
   detail: PlantDetail | null
 }
 
-export function GardenClient({ gardenId, palette, detail }: GardenClientProps) {
+export function GardenClient({ palette, detail }: GardenClientProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { toast } = useToast()
@@ -278,7 +277,6 @@ export function GardenClient({ gardenId, palette, detail }: GardenClientProps) {
         {detail && (
           <PlantDetailDrawer
             key="plant-detail-drawer"
-            gardenId={gardenId}
             detail={detail}
             onClose={closeDrawer}
           />

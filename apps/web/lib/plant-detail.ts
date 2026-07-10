@@ -1,6 +1,6 @@
 // SERVER-ONLY — fetches plant detail data for the drawer.
 import { getSupabase } from './supabase'
-import { getCurrentGarden } from './current-garden'
+import { getSessionGardenContext } from './session-garden'
 import type { DbPlant } from './plants-db'
 import type { CatalogPlant, Garden } from '@/types/garden'
 
@@ -38,31 +38,30 @@ export async function getExplorePlants(): Promise<CatalogPlant[]> {
 }
 
 /**
- * A single plant with its resolved companions and the user's garden.
- * Companions come from plant_combinations in both directions; entries
- * without an image are dropped (the thumbnails need one). The garden
- * comes from getCurrentGarden() (service-role client, hardcoded id —
- * see lib/current-garden.ts) since RLS blocks the anon client here
- * until real auth exists.
+ * A single plant with its resolved companions and the signed-in user's
+ * garden (used for the "good for your garden" matching). Companions come
+ * from plant_combinations in both directions; entries without an image are
+ * dropped (the thumbnails need one). Plants/combinations are public catalog
+ * data read via the anon client; only the garden needs the session.
  */
 export async function getPlantDetail(
   plantId: string
 ): Promise<PlantDetail | null> {
   const supabase = getSupabase()
-  const [plantRes, combosRes, garden] = await Promise.all([
+  const [plantRes, combosRes, ctx] = await Promise.all([
     supabase.from('plants').select('*').eq('id', plantId).maybeSingle(),
     supabase
       .from('plant_combinations')
       .select('plant_id_a, plant_id_b')
       .or(`plant_id_a.eq.${plantId},plant_id_b.eq.${plantId}`),
-    getCurrentGarden(),
+    getSessionGardenContext(),
   ])
 
   if (plantRes.error)
     throw new Error(`Failed to load plant: ${plantRes.error.message}`)
   if (!plantRes.data) return null
-  if (!garden)
-    throw new Error('Current garden not found — check the seeded gardens row')
+  const garden = ctx?.garden
+  if (!garden) throw new Error('No garden for the signed-in user')
 
   const companionIds = (combosRes.data ?? [])
     .map((c) => (c.plant_id_a === plantId ? c.plant_id_b : c.plant_id_a))

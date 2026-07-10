@@ -10,7 +10,7 @@ import { deriveBloomSeason } from '@/lib/bloom-timeline'
 import { buildDashboardSubtitle, buildGardenImpact } from '@/lib/dashboard-copy'
 import { formatBloomRangeShort } from '@/lib/format-plant'
 import { listPalette } from '@/server/palette-actions'
-import { getCurrentGarden } from '@/lib/current-garden'
+import { getSessionGardenContext } from '@/lib/session-garden'
 import { getForecast } from '@/lib/open-meteo'
 import { getPlantDiaries } from '@/lib/diary'
 import type {
@@ -46,7 +46,7 @@ export default async function DashboardPage() {
       months: formatBloomRangeShort(p.plant.bloom_months) ?? '',
     }))
 
-  const garden = await getCurrentGarden()
+  const garden = (await getSessionGardenContext())?.garden ?? null
   let weatherDays: WeatherDay[] | null = null
   if (garden?.lat != null && garden?.lon != null) {
     try {
