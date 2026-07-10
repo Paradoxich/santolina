@@ -486,3 +486,17 @@ Annuals with null zones on both sides are not flagged (nulls are correct there, 
 **Standard round is now:** `seed → curate-plants → cross-check-plants → curate-combinations`. The cross-check still fact-checks (it reads the derived `sun_requirements`), but the corrective widening sweep (§21) is retired — first drafts no longer systematically narrow.
 
 **Still deferred to post-test:** surfacing the distinction in the UI ("thrives in full sun, tolerates part shade") and using it in matching (prefer thrive-matches, still surface tolerate-matches). The data is captured now; the presentation waits for the test to inform it.
+
+---
+
+## 23. `plant_type` is a functional label, not strict botany
+
+**Decided July 10, 2026** (Ana delegated the ruling during the round-4 sweep). The round-4 cross-check flagged 10 `plant_type` disagreements where a blind second AI applied stricter botany than the product needs. `plant_type` is a **gardener-facing "what kind of plant is this"** label — how you buy, place, and care for it — not a botanical growth-form classification. The catalog's existing labels were already internally consistent, so 8 of the 10 flags were rejected as false positives. The convention, for future rounds:
+
+- **Geophytes → `bulb`.** Anything sold and planted as a dormant storage organ — true bulbs, corms, tubers. Precedent already in the catalog: Crocus/Colchicum (corms), Iris reticulata, Cyclamen (tubers), Hesperantha (corm) are all `bulb`. Do **not** reclassify corms/tubers to `perennial`.
+- **`succulent` only for fleshy mat/rosette succulents** (Sedum acre, Sempervivum). Border perennials with semi-succulent foliage that die back — Hylotelephium (border sedum), Euphorbia myrsinites — stay `perennial`. The deciding test is the storage/dieback habit, not xeric looks: `Yucca filamentosa` is xeric and rosette-forming but builds **persistent woody stems and never dies back**, so it is a `shrub`, not a perennial or succulent (corrected July 10, 2026 — the round-4 sweep had wrongly filed it as perennial).
+- **Mediterranean subshrubs → `shrub`.** Woody-based evergreen subshrubs (lavender, rosemary, santolina, thyme, helichrysum, sage, wall germander, `Euphorbia characias`) are filed `shrub`; the descriptive `plant_type_label` may carry the nuance ("Evergreen subshrub"). Round-4 aligned the two outliers still at `perennial` — **Salvia officinalis** and **Teucrium chamaedrys** — to `shrub` / "Evergreen subshrub" so the group is uniform.
+- **`shrub` vs `tree` by garden use, not ultimate size.** A large shrub / small tree grown as a garden shrub (e.g. `Pittosporum tenuifolium`) stays `shrub`; `tree` is reserved for plants grown as standalone specimens (Taxus, Ilex).
+- **Life-cycle by how it's grown in a temperate ornamental garden.** Tender perennials grown as annuals keep `annual` (`Eschscholzia californica`); short-lived perennials keep `perennial` (`Rudbeckia hirta`).
+
+Corrections that follow this convention are applied by the same guarded, reversible method as §20 (update by `scientific_name`/`id`, guarded on `is_curated = false` and an exact match on the prior value). They do **not** flip `is_curated` — a functional-classification fix is not Ana's editorial pass.

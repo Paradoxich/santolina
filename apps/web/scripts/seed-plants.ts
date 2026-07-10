@@ -218,6 +218,70 @@ const SEED_LIST: Array<number | string> = [
   'Symphyotrichum novae-angliae',
   'Colchicum autumnale',
   'Ceratostigma plumbaginoides',
+  // --- round 4: to ~200, July 2026 ---
+  // Gap-targeted: winter/late-autumn bloom (Oct–Feb hole), plus the thin
+  // modern / lush / mediterranean style tags and the shade-thrives deficit.
+  // CAUTION: cultivar/hybrid entries below (× media, × bodnantense, ×
+  // hybridus, × purpureus, × burkwoodii, × fraseri) do not resolve cleanly
+  // in Trefle name search — verify each against the requested vs stored
+  // scientific_name after seeding, and re-seed by numeric Trefle ID if it
+  // drifts to a sibling or parent species.
+  // winter & late-autumn interest
+  151168, // Mahonia × media unavailable in Trefle → Berberis japonica (Mahonia japonica), stored under accepted synonym
+  'Chimonanthus praecox',
+  'Daphne bholua',
+  351791, // Viburnum × bodnantense unavailable → Viburnum farreri (a parent, same winter bloom)
+  'Skimmia japonica',
+  'Cornus sericea',
+  'Hesperantha coccinea',
+  'Cyclamen coum',
+  // Helleborus × hybridus dropped — redundant with existing Helleborus orientalis
+  'Edgeworthia chrysantha',
+  'Nandina domestica',
+  'Liriope muscari',
+  'Tricyrtis hirta',
+  183032, // Erysimum 'Bowles's Mauve' is a sterile cultivar → Erysimum linifolium (the species behind it)
+  // lush / shade
+  'Polygonatum hybridum',
+  'Lamprocapnos spectabilis',
+  'Kirengeshoma palmata',
+  'Actaea simplex',
+  'Darmera peltata',
+  'Asarum europaeum',
+  'Adiantum pedatum',
+  'Podophyllum hexandrum',
+  'Melianthus major',
+  'Ophiopogon planiscapus',
+  // modern / structural
+  'Stipa gigantea',
+  'Anemanthele lessoniana',
+  'Sesleria autumnalis',
+  'Sanguisorba officinalis',
+  'Astelia chathamica',
+  'Euphorbia amygdaloides',
+  'Allium hollandicum',
+  'Verbena hastata',
+  // mediterranean / dry
+  'Stachys byzantina',
+  'Ballota pseudodictamnus',
+  'Convolvulus cneorum',
+  'Phlomis russeliana',
+  'Teucrium fruticans',
+  'Tulbaghia violacea',
+  'Cistus purpureus',
+  'Salvia guaranitica',
+  // climbers
+  'Trachelospermum jasminoides',
+  'Clematis armandii',
+  'Clematis montana',
+  'Campsis radicans',
+  'Parthenocissus tricuspidata',
+  'Akebia quinata',
+  // structural evergreen shrubs
+  'Pittosporum tenuifolium',
+  'Choisya ternata',
+  217374, // Osmanthus × burkwoodii unavailable → Osmanthus delavayi (a parent, spring-fragrant evergreen)
+  'Photinia fraseri',
 ]
 
 // ---------------------------------------------------------------------------
