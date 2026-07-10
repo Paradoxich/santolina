@@ -500,3 +500,31 @@ Annuals with null zones on both sides are not flagged (nulls are correct there, 
 - **Life-cycle by how it's grown in a temperate ornamental garden.** Tender perennials grown as annuals keep `annual` (`Eschscholzia californica`); short-lived perennials keep `perennial` (`Rudbeckia hirta`).
 
 Corrections that follow this convention are applied by the same guarded, reversible method as §20 (update by `scientific_name`/`id`, guarded on `is_curated = false` and an exact match on the prior value). They do **not** flip `is_curated` — a functional-classification fix is not Ana's editorial pass.
+
+---
+
+## 24. Auth + single-garden identity: the cutover from single-tenant shim to real accounts
+
+**Decided July 10, 2026.** Auth is being pulled forward from post-test into the build. The reasoning: accounts are what make the product "real," and they define the account-settings surface that has to exist before any public launch. This section records the finalized shape. It supersedes the shims documented in §11 (`current-garden.ts`) and §12 (service-role palette writes) — those get _deleted_, not extended, by this work.
+
+**Auth and onboarding are decoupled.** The original plan (§11, and the Notion spec) bundled auth with the 5-step onboarding wizard and deferred both together. They separate cleanly: auth is infrastructure; the wizard (sun/style/size, which feed palette _recommendations_) is product and stays deferred. What auth needs from onboarding is exactly one field — **location** — because location is the only profile input anything consumes today (it drives the Open-Meteo climate/hardiness/frost derivation in §17, which feeds the weather-derived dashboard copy shipped in PR #18). So we collect location and nothing else.
+
+**Auth methods: magic link (default) + Google OAuth.** Passwordless email is the default — Supabase ships it out of the box, and it removes password friction at exactly the sign-up moment. Google OAuth sits alongside it (not instead), because European beginners skew toward "sign in with Google." Both are near-zero implementation cost on Supabase. Consequence: **there is no password anywhere**, so account settings has no password management to build.
+
+**Garden provisioning: auto-created, never "set up."** v1 is one garden per user, so there is nothing to choose or configure. A Postgres trigger on `auth.users` insert creates the `users` row _and_ an empty `gardens` row. The user never "creates a garden" — it exists the moment they exist.
+
+**The garden profile exists as data but has no UI.** All `gardens` profile columns (location, space type, sun, style, size) are present from day one, but only `location` is populated this phase (by the first-run step below). The rest stay null until the deferred onboarding wizard fills them. There is **no profile screen** — the profile is plumbing, not a surface.
+
+**First-run: a single required location step. Null location _is_ the gate — no separate "onboarded" flag.** After auth, a user whose garden has a null `location` is routed to a one-field location capture; once set, they reach the app. The gate logic is a single condition (`garden.location IS NULL → location step`), so there is no `onboarding_complete` boolean to keep in sync. Location is **required** (not skippable) on purpose: guaranteeing it exists before the dashboard lets us delete all profile-less-fallback code — the app may always assume a location. This is the one "forced" input, a deliberate exception to the never-required ethos, justified because the entire climate layer depends on it.
+
+**The whole app is gated; only the santolina.app landing stays public.** This reverses the earlier documented philosophy ("no account gate, value shown immediately, prompt only at first save") — a conscious change, not drift. Landing page sells the product; everything under it (dashboard, explore, my garden, diary) requires a session. Middleware redirects unauthenticated requests to the landing/login. Consequence: the "prompt at first save" logic never needs building.
+
+**RLS cutover is the real work and the real risk.** Every user-scoped server action (`palette-actions.ts`, `diary-actions.ts`, `garden-actions.ts`) switches from the service-role client (which bypasses RLS) to a session client via `@supabase/ssr`, so the existing `auth.uid()` policies actually run. Service-role is retained _only_ for the plants catalog writes (Trefle sync, curation scripts — §5). The RLS policies in `20260706093045_initial_schema.sql` have never been exercised against a real session, so expect policy bugs on first login — this is the part to test hardest.
+
+**Account settings: the basics only.** Email, sign out, delete account, **reset garden** (destructive-confirm dialog — doubles as the easy way to clear test data), and **edit location** (the one live profile field needs a home; settings is it). Nothing else.
+
+**The seed garden is discarded.** `7055368c…` holds 5 palette rows and 1 diary entry — throwaway test data, not real plants. It is not migrated or claimed; it's dropped. The shared `plants`/`plant_combinations` catalog is garden-independent (public read) and wholly unaffected — every new user sees all catalog species immediately.
+
+**Sidebar identity** is wired to the authenticated user / `users` table, replacing the hardcoded "PA / Paradoxich" in `AppSidebar.tsx`.
+
+**Ordered work items:** (1) `@supabase/ssr` + three client flavors + `middleware.ts` session refresh; (2) `handle_new_user` trigger creating `users` + empty `gardens`; (3) magic-link + Google auth UI and callback route; (4) required first-run location step, gated on null `location`; (5) flip the three server actions to the session client, delete `current-garden.ts` and its hardcoded id; (6) full-app middleware gate, landing stays public; (7) sidebar identity from `users`; (8) account settings surface. Operational, not code: custom SMTP (Resend/Postmark) for magic-link deliverability before public launch — Supabase's built-in sender is rate-limited; and a Google Cloud OAuth app + redirect URLs configured in Google and Supabase.
