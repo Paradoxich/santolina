@@ -23,3 +23,48 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* Closed-loop drift: the camera orbits the field in a slow ellipse, so the
+   last frame equals the first and the loop needs no cut, fade, or reversal.
+   The orbit is built from two out-of-phase oscillations (a smooth Lissajous
+   circle): the strip eases left-right while a nested wrapper eases up-down,
+   offset by a quarter period, so the direction rotates continuously and
+   the motion never stalls or corners.
+   The zoom breathes with the sweep (1.1x at the edges, 1.3x mid-sweep).
+   Coverage depends on the phase lock: the vertical sway crosses zero when
+   the zoom (and so the vertical slack) is at its 1.1x minimum. Keep the y
+   delay at minus a quarter of the duration, both durations identical, and
+   x keyframes within [-33%, 7%]. If you lower the 1.1x edge zoom, shrink
+   the y amplitude below (edgeScale - 1) / 2 of the panel height. */
+@keyframes ken-burns-x {
+  0%,
+  100% {
+    transform: translateX(2%) scale(1.1);
+  }
+  50% {
+    transform: translateX(-28%) scale(1.3);
+  }
+}
+
+@keyframes ken-burns-y {
+  0%,
+  100% {
+    transform: translateY(-5%);
+  }
+  50% {
+    transform: translateY(5%);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .animate-ken-burns {
+    animation: ken-burns-x 40s ease-in-out infinite;
+    will-change: transform;
+  }
+
+  .animate-ken-burns-y {
+    animation: ken-burns-y 40s ease-in-out infinite;
+    animation-delay: -10s; /* quarter period behind the x oscillation */
+    will-change: transform;
+  }
+}
