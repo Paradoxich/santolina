@@ -36,6 +36,9 @@ export interface DbPlant {
   scientific_name: string | null
   family: string | null
   native_to: string | null
+  // WGSRPD Level-2 region tags (Option A), regenerated from Trefle native
+  // distribution. Powers the "native to my area" lens — see lib/native-to-me.ts.
+  native_region: string[] | null
   description: string | null
   care_level: 'low' | 'medium' | 'high' | null
   bloom_months: number[] | null
