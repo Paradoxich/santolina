@@ -210,6 +210,7 @@ const preset = {
       'card-dashboard': 'var(--card-dashboard-radius)',
       'card-tile': 'var(--card-tile-radius)',
       'card-row': 'var(--card-row-radius)',
+      modal: 'var(--modal-radius)',
     },
     boxShadow: {
       none: 'none',

@@ -8,7 +8,13 @@ const meta: Meta<typeof Button> = {
   argTypes: {
     variant: {
       control: 'select',
-      options: ['primary', 'secondary', 'ghost', 'destructive'],
+      options: [
+        'primary',
+        'secondary',
+        'ghost',
+        'destructive',
+        'destructive-ghost',
+      ],
     },
     size: {
       control: 'select',
@@ -33,6 +39,10 @@ export const Ghost: Story = {
 
 export const Destructive: Story = {
   args: { variant: 'destructive', children: 'Delete' },
+}
+
+export const DestructiveGhost: Story = {
+  args: { variant: 'destructive-ghost', children: 'Reset' },
 }
 
 export const Small: Story = {

@@ -58,7 +58,7 @@
   --color-gray-900: #111111;
 
   /* Red — critical tone (placeholder steps until a ramp is designed) */
-  --color-red-100: #fee2e2;
+  --color-red-100: #edd8d4;
   --color-red-500: #ef4444;
   --color-red-600: #dc2626;
   --color-red-700: #b91c1c;
@@ -194,7 +194,7 @@
   --color-surface-control: rgb(
     255 255 255 / 0.7
   ); /* resting translucent small controls (chips) */
-  --color-surface-hover: rgb(255 255 255 / 0.3);
+  --color-surface-hover: rgb(255 255 255 / 0.7);
   --color-surface-active: rgb(153 189 157 / 0.5); /* green-300 @ 50% */
   --color-surface-card-translucent: rgb(237 242 238 / 0.7); /* sage-100 @ 70% */
   --color-scrim: rgb(0 0 0 / 0.5); /* modal/drawer backdrop */
@@ -269,6 +269,7 @@
     --card-tile-radius
   ); /* same shape as card-tile, used on the My Garden dashboard tabs */
   --card-row-radius: var(--radius-lg);
+  --modal-radius: 1.25rem; /* 20px — dialog / modal surface */
   --sidebar-surface: rgb(178 209 184 / 0.3);
   --avatar-fill: var(--color-green-600);
   --thumbnail-scrim: linear-gradient(

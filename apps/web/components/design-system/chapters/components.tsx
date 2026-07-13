@@ -41,6 +41,7 @@ function Actions() {
           <Button variant="secondary">Secondary</Button>
           <Button variant="ghost">Ghost</Button>
           <Button variant="destructive">Destructive</Button>
+          <Button variant="destructive-ghost">Destructive ghost</Button>
           <Button variant="primary" isLoading>
             Loading
           </Button>

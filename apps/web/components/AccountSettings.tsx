@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Button, Card, CardBody, Modal } from '@paradoxui/ui'
+import { Button, Card, CardBody, CardHeader, Icon, Modal } from '@paradoxui/ui'
+import { icons } from '@/lib/icons'
 import { LocationPickerModal } from '@/components/dashboard/LocationPickerModal'
 import { signOut, resetGarden, deleteAccount } from '@/server/account-actions'
 
@@ -58,47 +59,55 @@ export function AccountSettings({
       </h1>
 
       <div className="mt-8 flex flex-col gap-section-gap">
-        <Card>
-          <CardBody className="flex flex-col gap-4">
+        <Card className="border-[color:var(--color-surface-page)] shadow-none">
+          <CardHeader className="border-[color:var(--color-surface-page)] py-card-padding">
+            <h2 className="text-section font-medium leading-none text-primary">
+              Profile
+            </h2>
+          </CardHeader>
+          <CardBody className="flex items-center justify-between gap-4 py-card-padding">
             <div>
-              <p className="text-body-small text-secondary">Signed in as</p>
-              <p className="text-body text-primary">{email ?? 'Unknown'}</p>
+              <p className="text-body text-primary">Signed in as</p>
+              <p className="text-body-small text-secondary">
+                {email ?? 'Unknown'}
+              </p>
             </div>
-            <div>
-              <Button
-                variant="secondary"
-                size="sm"
-                isLoading={busy === 'signout'}
-                onClick={() => {
-                  setBusy('signout')
-                  signOut()
-                }}
-              >
-                Sign out
-              </Button>
-            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              isLoading={busy === 'signout'}
+              onClick={() => {
+                setBusy('signout')
+                signOut()
+              }}
+            >
+              Sign out
+            </Button>
           </CardBody>
         </Card>
 
-        <Card>
-          <CardBody className="flex flex-col gap-5">
-            <div className="flex items-center justify-between gap-4">
+        <Card className="border-[color:var(--color-surface-page)] shadow-none">
+          <CardHeader className="border-[color:var(--color-surface-page)] py-card-padding">
+            <h2 className="text-section font-medium leading-none text-primary">
+              Garden
+            </h2>
+          </CardHeader>
+          <CardBody className="flex flex-col gap-card-padding py-card-padding">
+            <button
+              type="button"
+              className="flex cursor-pointer items-center justify-between gap-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+              onClick={() => setLocationOpen(true)}
+            >
               <div>
-                <p className="text-body-small text-secondary">Location</p>
-                <p className="text-body text-primary">
+                <p className="text-body text-primary">Location</p>
+                <p className="text-body-small text-secondary">
                   {city ? `${city}${country ? `, ${country}` : ''}` : 'Not set'}
                 </p>
               </div>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => setLocationOpen(true)}
-              >
-                Change
-              </Button>
-            </div>
+              <Icon src={icons.arrowRight} size={16} />
+            </button>
 
-            <div className="flex items-center justify-between gap-4 border-t border-divider pt-5">
+            <div className="flex items-center justify-between gap-4 border-t border-divider pt-card-padding">
               <div>
                 <p className="text-body text-primary">Reset garden</p>
                 <p className="text-body-small text-secondary">
@@ -106,7 +115,7 @@ export function AccountSettings({
                 </p>
               </div>
               <Button
-                variant="secondary"
+                variant="destructive-ghost"
                 size="sm"
                 onClick={() => setResetOpen(true)}
               >
@@ -116,8 +125,13 @@ export function AccountSettings({
           </CardBody>
         </Card>
 
-        <Card>
-          <CardBody className="flex items-center justify-between gap-4">
+        <Card className="border-[color:var(--color-surface-page)] bg-surface-critical shadow-none">
+          <CardHeader className="border-[color:var(--color-surface-page)] py-card-padding">
+            <h2 className="text-section font-medium leading-none text-primary">
+              Danger zone
+            </h2>
+          </CardHeader>
+          <CardBody className="flex items-center justify-between gap-4 py-card-padding">
             <div>
               <p className="text-body text-primary">Delete account</p>
               <p className="text-body-small text-secondary">

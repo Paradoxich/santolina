@@ -59,7 +59,7 @@ export function Modal({
     <dialog
       ref={dialogRef}
       className={cn(
-        'w-full rounded-xl shadow-lg',
+        'w-full rounded-modal shadow-lg',
         'p-0 bg-surface-card border border-card',
         'backdrop:bg-scrim',
         sizeStyles[size]
@@ -70,11 +70,7 @@ export function Modal({
     >
       {title && (
         <div
-          className={cn(
-            'flex items-center justify-between',
-            'px-6 py-4',
-            'border-b border-divider'
-          )}
+          className={cn('flex items-center justify-between', 'px-6 pt-6 pb-3')}
         >
           <h2 id={titleId} className="text-heading font-semibold text-primary">
             {title}
@@ -83,39 +79,45 @@ export function Modal({
             onClick={onClose}
             className={cn(
               'rounded-md p-1',
-              'text-muted',
+              'text-primary',
               'hover:bg-surface-hover',
-              'hover:text-primary',
               'focus-visible:outline-none focus-visible:ring-2',
               'focus-visible:ring-focus'
             )}
             aria-label="Close modal"
           >
             <svg
-              width="20"
-              height="20"
-              viewBox="0 0 20 20"
-              fill="currentColor"
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
               aria-hidden="true"
             >
               <path
-                fillRule="evenodd"
-                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                clipRule="evenodd"
+                d="M13.3333 13.3333L2.66667 2.66667M13.3333 2.66667L2.66667 13.3333"
+                stroke="currentColor"
+                strokeWidth="1.33333"
+                strokeLinecap="round"
               />
             </svg>
           </button>
         </div>
       )}
 
-      <div className="px-6 py-4">{children}</div>
+      <div
+        className={cn(
+          'px-6',
+          title ? 'pt-3' : 'pt-6',
+          footer ? 'pb-3' : 'pb-6'
+        )}
+      >
+        {children}
+      </div>
 
       {footer && (
         <div
           className={cn(
-            'px-6 py-4',
-            'border-t border-divider',
-            'bg-surface-subtle',
+            'px-6 pt-3 pb-6',
             'flex items-center justify-end gap-3'
           )}
         >
