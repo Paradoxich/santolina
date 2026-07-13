@@ -2,12 +2,17 @@ import { useRef, useState } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Drawer, Icon, Modal, Tooltip, useToast } from '@paradoxui/ui'
+import { Drawer, Icon, Menu, Modal, Tooltip, useToast } from '@paradoxui/ui'
+import type { MenuItem } from '@paradoxui/ui'
 import { icons } from '@/lib/icons'
 import { DRAWER_MOTION } from '@/lib/drawer-motion'
 import type { DiaryNote, PlantDiary } from '@/types/diary'
 import { formatDayLabel, formatMonthLabel } from '@/lib/utils'
-import { addDiaryEntry, deleteDiaryThread } from '@/server/diary-actions'
+import {
+  addDiaryEntry,
+  deleteDiaryEntry,
+  deleteDiaryThread,
+} from '@/server/diary-actions'
 import { addToPalette } from '@/server/palette-actions'
 
 function pluralize(count: number, noun: string): string {
@@ -34,9 +39,36 @@ function groupNotesByMonth(notes: DiaryNote[]): [string, DiaryNote[]][] {
   return Array.from(groups.entries())
 }
 
-function NoteCard({ note }: { note: DiaryNote }) {
+function NoteCard({
+  note,
+  onDelete,
+}: {
+  note: DiaryNote
+  /** Present only when the note can be deleted (growing threads). */
+  onDelete?: (note: DiaryNote) => void
+}) {
+  const { toast } = useToast()
+
+  const menuItems: MenuItem[] = []
+  if (note.text) {
+    menuItems.push({
+      label: 'Copy text',
+      onSelect: () => {
+        void navigator.clipboard.writeText(note.text)
+        toast({ groupKey: note.id, title: 'Note copied' })
+      },
+    })
+  }
+  if (onDelete) {
+    menuItems.push({
+      label: 'Delete note',
+      tone: 'critical',
+      onSelect: () => onDelete(note),
+    })
+  }
+
   return (
-    <article className="flex w-full items-start gap-item-gap rounded-sm bg-surface-page p-inline-gap">
+    <article className="group flex w-full items-start gap-item-gap rounded-sm bg-surface-page p-inline-gap">
       <div className="flex min-w-0 flex-1 flex-col gap-inline-gap">
         {note.text && (
           <p className="text-body leading-normal text-primary">{note.text}</p>
@@ -61,9 +93,36 @@ function NoteCard({ note }: { note: DiaryNote }) {
           </div>
         )}
       </div>
-      <span className="w-[60px] shrink-0 text-right text-label text-muted">
-        {formatDayLabel(note.date)}
-      </span>
+      <div className="flex shrink-0 items-start gap-tight-gap">
+        <span className="w-[60px] text-right text-label leading-6 text-muted">
+          {formatDayLabel(note.date)}
+        </span>
+        {menuItems.length > 0 && (
+          <Menu
+            label="Note actions"
+            items={menuItems}
+            trigger={
+              <svg
+                aria-hidden="true"
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                fill="none"
+                className="text-secondary"
+              >
+                <path
+                  d="M4 6l4 4 4-4"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            }
+            triggerClassName="flex size-6 items-center justify-center rounded-full transition-all duration-normal hover:bg-surface-overlay focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100 md:aria-expanded:opacity-100"
+          />
+        )}
+      </div>
     </article>
   )
 }
@@ -83,6 +142,10 @@ export function DiaryDetailDrawer({ diary, onClose }: DiaryDetailDrawerProps) {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
+
+  const [noteToDelete, setNoteToDelete] = useState<DiaryNote | null>(null)
+  const [isDeletingNote, setIsDeletingNote] = useState(false)
+  const [noteDeleteError, setNoteDeleteError] = useState<string | null>(null)
 
   const [isReAdding, setIsReAdding] = useState(false)
   const [reAddError, setReAddError] = useState<string | null>(null)
@@ -122,6 +185,28 @@ export function DiaryDetailDrawer({ diary, onClose }: DiaryDetailDrawerProps) {
       )
     } finally {
       setIsDeleting(false)
+    }
+  }
+
+  const handleConfirmDeleteNote = async () => {
+    if (!noteToDelete) return
+    setIsDeletingNote(true)
+    setNoteDeleteError(null)
+    try {
+      await deleteDiaryEntry({ entryId: noteToDelete.id })
+      router.refresh()
+      toast({
+        groupKey: diary.plantId,
+        title: 'Note deleted',
+        description: `A note was deleted from ${diary.plantName}'s diary.`,
+      })
+      setNoteToDelete(null)
+    } catch (err) {
+      setNoteDeleteError(
+        err instanceof Error ? err.message : 'Something went wrong.'
+      )
+    } finally {
+      setIsDeletingNote(false)
     }
   }
 
@@ -401,7 +486,11 @@ export function DiaryDetailDrawer({ diary, onClose }: DiaryDetailDrawerProps) {
             </h4>
             <div className="flex w-full flex-col gap-tight-gap">
               {notes.map((note) => (
-                <NoteCard key={note.id} note={note} />
+                <NoteCard
+                  key={note.id}
+                  note={note}
+                  onDelete={isGrowing ? setNoteToDelete : undefined}
+                />
               ))}
             </div>
           </section>
@@ -452,6 +541,44 @@ export function DiaryDetailDrawer({ diary, onClose }: DiaryDetailDrawerProps) {
         {deleteError && (
           <p className="mt-inline-gap text-body-small text-critical">
             {deleteError}
+          </p>
+        )}
+      </Modal>
+
+      <Modal
+        isOpen={noteToDelete !== null}
+        onClose={() => setNoteToDelete(null)}
+        title="Delete this note?"
+        size="sm"
+        footer={
+          <>
+            <button
+              type="button"
+              onClick={() => setNoteToDelete(null)}
+              disabled={isDeletingNote}
+              className="flex h-8 items-center rounded-sm border border-card bg-surface-control px-inline-gap text-body-small text-secondary disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleConfirmDeleteNote}
+              disabled={isDeletingNote}
+              className="flex h-8 items-center rounded-sm border border-transparent bg-fill-critical px-inline-gap text-body-small text-on-accent hover:bg-fill-critical-hover disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {isDeletingNote ? 'Deleting…' : 'Delete note'}
+            </button>
+          </>
+        }
+      >
+        <p className="text-body text-secondary">
+          {noteToDelete?.photos?.length
+            ? `This will permanently delete this note and ${pluralize(noteToDelete.photos.length, 'photo')}. This can't be undone.`
+            : `This will permanently delete this note. This can't be undone.`}
+        </p>
+        {noteDeleteError && (
+          <p className="mt-inline-gap text-body-small text-critical">
+            {noteDeleteError}
           </p>
         )}
       </Modal>
