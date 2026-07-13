@@ -1,5 +1,6 @@
 import Image from 'next/image'
-import { MediaCard } from '@paradoxui/ui'
+import { MediaCard, Icon } from '@paradoxui/ui'
+import { icons } from '@/lib/icons'
 import type { CatalogPlant } from '@/types/garden'
 
 interface ExplorePlantTileProps {
@@ -13,13 +14,19 @@ export function ExplorePlantTile({ plant, onClick }: ExplorePlantTileProps) {
       as="button"
       onClick={onClick}
       image={
-        <Image
-          src={plant.imageUrl}
-          alt={plant.commonName}
-          fill
-          sizes="(max-width: 1280px) 50vw, 360px"
-          className="object-cover"
-        />
+        plant.imageUrl ? (
+          <Image
+            src={plant.imageUrl}
+            alt={plant.commonName}
+            fill
+            sizes="(max-width: 1280px) 50vw, 360px"
+            className="object-cover"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center bg-surface-subtle">
+            <Icon src={icons.leaf} size={32} className="opacity-40" />
+          </div>
+        )
       }
       imageHeight={162}
       title={plant.commonName}
