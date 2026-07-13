@@ -11,30 +11,32 @@ const meta: Meta<typeof Modal> = {
 export default meta
 type Story = StoryObj<typeof Modal>
 
+function DefaultModalStory() {
+  const [open, setOpen] = useState(false)
+  return (
+    <>
+      <Button onClick={() => setOpen(true)}>Open Modal</Button>
+      <Modal
+        isOpen={open}
+        onClose={() => setOpen(false)}
+        title="Water your plants"
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={() => setOpen(false)}>Confirm</Button>
+          </>
+        }
+      >
+        <p style={{ color: 'var(--color-text-secondary)', margin: 0 }}>
+          Are you sure you want to mark all plants as watered today?
+        </p>
+      </Modal>
+    </>
+  )
+}
+
 export const Default: Story = {
-  render: () => {
-    const [open, setOpen] = useState(false)
-    return (
-      <>
-        <Button onClick={() => setOpen(true)}>Open Modal</Button>
-        <Modal
-          isOpen={open}
-          onClose={() => setOpen(false)}
-          title="Water your plants"
-          footer={
-            <>
-              <Button variant="ghost" onClick={() => setOpen(false)}>
-                Cancel
-              </Button>
-              <Button onClick={() => setOpen(false)}>Confirm</Button>
-            </>
-          }
-        >
-          <p style={{ color: 'var(--color-text-secondary)', margin: 0 }}>
-            Are you sure you want to mark all plants as watered today?
-          </p>
-        </Modal>
-      </>
-    )
-  },
+  render: () => <DefaultModalStory />,
 }
