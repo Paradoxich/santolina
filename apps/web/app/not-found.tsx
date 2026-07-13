@@ -1,19 +1,34 @@
+import Image from 'next/image'
 import Link from 'next/link'
 
+/**
+ * The 404 as an uncatalogued specimen: a botanical plate of a plant that
+ * doesn't exist (Pagina perdita, "lost page"), in the empty-state engraving
+ * style. The binomial label is hand-drawn inside the artwork; the copy
+ * stays dry per the copy rules. Illustration is decorative (empty alt) —
+ * the heading carries the meaning.
+ *
+ * pagina-perdita.png is currently a placeholder block — swap in Ana's
+ * export at its final dimensions (raster at exact 1x/2x, PNG-8; the dither
+ * moirés if the browser rescales it).
+ */
 export default function NotFound() {
   return (
     <main className="flex min-h-[100dvh] flex-col items-center justify-center gap-section-gap bg-surface-page px-card-padding text-center">
+      <Image
+        src="/illustrations/pagina-perdita.png"
+        alt=""
+        width={280}
+        height={340}
+        priority
+      />
       <div className="flex max-w-[440px] flex-col items-center gap-inline-gap">
         <p className="text-label font-medium uppercase tracking-[0.05em] text-muted">
           Error 404
         </p>
         <h1 className="text-title font-semibold text-primary">
-          Page not found
+          This one isn&apos;t in the catalog.
         </h1>
-        <p className="text-body text-secondary">
-          The page you&apos;re looking for isn&apos;t here. It may have moved,
-          or the link may be wrong.
-        </p>
       </div>
       <Link
         href="/dashboard"
