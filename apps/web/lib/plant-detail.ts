@@ -22,7 +22,7 @@ export async function getExplorePlants(): Promise<CatalogPlant[]> {
   const { data, error } = await supabase
     .from('plants')
     .select(
-      'id, common_name, scientific_name, description, image_url, image_urls, common_name_aliases, plant_type, style_tags, sun_thrives, bloom_months, native_region'
+      'id, common_name, scientific_name, description, image_url, image_urls, common_name_aliases, plant_type, style_tags, sun_thrives, bloom_months, bloom_color, native_region'
     )
     .order('common_name')
 
@@ -39,6 +39,7 @@ export async function getExplorePlants(): Promise<CatalogPlant[]> {
     styleTags: p.style_tags ?? [],
     sunThrives: p.sun_thrives ?? [],
     bloomMonths: p.bloom_months ?? [],
+    bloomColor: p.bloom_color ?? [],
     nativeRegion: p.native_region ?? [],
   }))
 }

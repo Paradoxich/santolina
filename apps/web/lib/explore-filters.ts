@@ -7,6 +7,7 @@
 // (never `peak_season`, which is only ~22% filled). Native-to-my-region is
 // an optional discovery lens per the Region Data Model decision — the chip
 // only renders when the garden's region resolves (see lib/native-to-me.ts).
+import { bucketsForPlant } from '@/lib/bloom-colors'
 import type { CatalogPlant } from '@/types/garden'
 
 export interface ExploreFilterState {
@@ -18,6 +19,8 @@ export interface ExploreFilterState {
   seasons: string[]
   /** style_tags values, e.g. "cottage" */
   styles: string[]
+  /** canonical bloom color buckets — see lib/bloom-colors.ts */
+  colors: string[]
   /** limit to plants native to the garden's region(s) */
   nativeOnly: boolean
 }
@@ -27,6 +30,7 @@ export const EMPTY_FILTERS: ExploreFilterState = {
   sun: [],
   seasons: [],
   styles: [],
+  colors: [],
   nativeOnly: false,
 }
 
@@ -84,6 +88,7 @@ export function countActiveFilters(f: ExploreFilterState): number {
     f.sun.length +
     f.seasons.length +
     f.styles.length +
+    f.colors.length +
     (f.nativeOnly ? 1 : 0)
   )
 }
@@ -117,6 +122,11 @@ export function matchesFilters(
 
   if (f.styles.length > 0 && !f.styles.some((s) => plant.styleTags.includes(s)))
     return false
+
+  if (f.colors.length > 0) {
+    const buckets = bucketsForPlant(plant.bloomColor)
+    if (!f.colors.some((c) => buckets.includes(c))) return false
+  }
 
   if (f.nativeOnly) {
     if (gardenRegions.length === 0) return false
