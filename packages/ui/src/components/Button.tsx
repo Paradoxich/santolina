@@ -2,7 +2,12 @@ import React from 'react'
 import { cn } from '../utils/cn'
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'ghost' | 'destructive'
+  variant?:
+    | 'primary'
+    | 'secondary'
+    | 'ghost'
+    | 'destructive'
+    | 'destructive-ghost'
   size?: 'sm' | 'md' | 'lg'
   isLoading?: boolean
   ref?: React.Ref<HTMLButtonElement>
@@ -38,10 +43,17 @@ const variantStyles: Record<NonNullable<ButtonProps['variant']>, string> = {
     'hover:bg-fill-critical-hover',
     'focus-visible:ring-critical',
   ].join(' '),
+  'destructive-ghost': [
+    'bg-transparent',
+    'text-critical',
+    'border-transparent',
+    'hover:bg-surface-critical',
+    'focus-visible:ring-critical',
+  ].join(' '),
 }
 
 const sizeStyles: Record<NonNullable<ButtonProps['size']>, string> = {
-  sm: 'px-3 py-1.5 text-sm rounded-md',
+  sm: 'px-3 py-1.5 text-sm rounded-sm',
   md: 'px-4 py-2 text-base rounded-md',
   lg: 'px-6 py-3 text-lg rounded-lg',
 }
