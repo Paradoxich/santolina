@@ -16,13 +16,13 @@ export interface PlantDetail {
   garden: Garden
 }
 
-/** All catalog plants, shaped for the explore grid/list. */
+/** All catalog plants, shaped for the explore grid/list and its filter row. */
 export async function getExplorePlants(): Promise<CatalogPlant[]> {
   const supabase = getSupabase()
   const { data, error } = await supabase
     .from('plants')
     .select(
-      'id, common_name, scientific_name, description, image_url, image_urls'
+      'id, common_name, scientific_name, description, image_url, image_urls, common_name_aliases, plant_type, style_tags, sun_thrives, bloom_months, native_region'
     )
     .order('common_name')
 
@@ -34,6 +34,12 @@ export async function getExplorePlants(): Promise<CatalogPlant[]> {
     botanicalName: p.scientific_name ?? '',
     imageUrl: p.image_url ?? p.image_urls?.[0] ?? '',
     description: p.description ?? '',
+    aliases: p.common_name_aliases ?? [],
+    plantType: p.plant_type ?? '',
+    styleTags: p.style_tags ?? [],
+    sunThrives: p.sun_thrives ?? [],
+    bloomMonths: p.bloom_months ?? [],
+    nativeRegion: p.native_region ?? [],
   }))
 }
 

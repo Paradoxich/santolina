@@ -9,17 +9,25 @@ export interface SearchFieldProps extends Omit<
   label?: string
   /** Class applied to the outer pill wrapper. */
   className?: string
+  /**
+   * Optional slot rendered at the trailing edge of the pill — typically an
+   * icon button (e.g. a filter toggle). Interactive elements are safe here:
+   * clicking them does not activate the label's input focus.
+   */
+  trailingAction?: React.ReactNode
   /** Forwarded to the underlying search `<input>`. */
   ref?: React.Ref<HTMLInputElement>
 }
 
 /**
- * A pill-shaped search input with a leading magnifier icon.
+ * A pill-shaped search input with a leading magnifier icon and an optional
+ * trailing action slot.
  */
 export function SearchField({
   label,
   placeholder = 'Search...',
   className,
+  trailingAction,
   ref,
   ...props
 }: SearchFieldProps) {
@@ -65,6 +73,7 @@ export function SearchField({
         )}
         {...props}
       />
+      {trailingAction && <span className="shrink-0">{trailingAction}</span>}
     </label>
   )
 }
