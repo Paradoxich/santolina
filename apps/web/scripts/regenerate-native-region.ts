@@ -1,0 +1,565 @@
+/**
+ * Regenerate `native_region` for the whole catalog from structured distribution
+ * data. Decision: Notion "Region Data Model — Decision" (Option A, signed off).
+ *
+ * WHY: the existing native_region tags (mediterranean / balkans / croatia) are
+ * an unreliable prompt artifact from the round-5 seed. They are discarded and
+ * regenerated for all plants from one consistent source so the tags cannot
+ * contradict the plant's real native range and coverage is complete by
+ * construction rather than dependent on what a prompt happened to ask for.
+ *
+ * MODEL (Option A — TDWG WGSRPD Level 2, one consistent zoom level):
+ *   Primary   — Trefle `distributions.native[]` (Level-3 codes, native-only,
+ *               already establishment-filtered), each L3 unit rolled up to its
+ *               Level-2 region via the authoritative tdwg/wgsrpd table. "YUG"
+ *               (the atomic Level-3 unit; Croatia is not exposed below it)
+ *               becomes "Southeastern Europe" — the stale label never surfaces.
+ *   Fallback  — when Trefle returns an EMPTY native list (a Trefle coverage
+ *               hole, confirmed on accepted records — not bad IDs), derive the
+ *               Level-2 tags from the already-clean `native_to` prose using the
+ *               curation model. Garden hybrids / cultigens with no wild range
+ *               stay correctly empty.
+ *
+ * NOT in scope: rewriting the user-facing `native_to` prose. That is voice-
+ * passed copy and belongs in a separate, copy-reviewed pass. This script only
+ * writes `native_region`, which is currently read by nothing (inert column),
+ * so applying it has no downstream breakage.
+ *
+ * SAFETY: generate-then-apply, same split as cross-check-native-to.ts.
+ *   Default run  — computes everything, writes a review report + JSON to
+ *                  reports/, and NEVER touches the DB.
+ *   --apply      — reads back the generated JSON and writes native_region.
+ *                  Run the default first, review reports/native-region-regen.md,
+ *                  THEN --apply.
+ *
+ * Usage (from apps/web):
+ *   ./node_modules/.bin/tsx --env-file=.env.local scripts/regenerate-native-region.ts
+ *   ./node_modules/.bin/tsx --env-file=.env.local scripts/regenerate-native-region.ts --limit 20
+ *   ./node_modules/.bin/tsx --env-file=.env.local scripts/regenerate-native-region.ts --apply
+ */
+
+import { mkdirSync, writeFileSync, readFileSync, existsSync } from 'node:fs'
+import { join } from 'node:path'
+import { getSupabaseAdmin } from '../lib/supabase-admin'
+import { getSpeciesBySlug } from '../lib/trefle'
+import { getAnthropicClient, CURATION_MODEL } from '../lib/anthropic-client'
+
+// ---------------------------------------------------------------------------
+// Paths
+// ---------------------------------------------------------------------------
+const REPORTS_DIR = join(process.cwd(), 'reports')
+const GEOJSON = join(REPORTS_DIR, 'level3.geojson')
+const WGSRPD_MAP = join(REPORTS_DIR, 'wgsrpd-l3-map.json')
+const TREFLE_CACHE = join(REPORTS_DIR, 'trefle-native-cache.json')
+const NATIVE_TO_CACHE = join(REPORTS_DIR, 'native_to-l2-cache.json')
+const PLAN_JSON = join(REPORTS_DIR, 'native-region-regen.json')
+const PLAN_MD = join(REPORTS_DIR, 'native-region-regen.md')
+
+// ---------------------------------------------------------------------------
+// WGSRPD Level 2 region names (canonical, stable — 52 regions).
+// ---------------------------------------------------------------------------
+const L2_NAMES: Record<number, string> = {
+  10: 'Northern Europe',
+  11: 'Middle Europe',
+  12: 'Southwestern Europe',
+  13: 'Southeastern Europe',
+  14: 'Eastern Europe',
+  20: 'Northern Africa',
+  21: 'Macaronesia',
+  22: 'West Tropical Africa',
+  23: 'West-Central Tropical Africa',
+  24: 'Northeast Tropical Africa',
+  25: 'East Tropical Africa',
+  26: 'South Tropical Africa',
+  27: 'Southern Africa',
+  28: 'Middle Atlantic Ocean',
+  29: 'Western Indian Ocean',
+  30: 'Siberia',
+  31: 'Russian Far East',
+  32: 'Middle Asia',
+  33: 'Caucasus',
+  34: 'Western Asia',
+  35: 'Arabian Peninsula',
+  36: 'China',
+  37: 'Mongolia',
+  38: 'Eastern Asia',
+  40: 'Indian Subcontinent',
+  41: 'Indo-China',
+  42: 'Malesia',
+  43: 'Papuasia',
+  50: 'Australia',
+  51: 'New Zealand',
+  60: 'Southwestern Pacific',
+  61: 'South-Central Pacific',
+  62: 'Northwestern Pacific',
+  63: 'North-Central Pacific',
+  70: 'Subarctic America',
+  71: 'Western Canada',
+  72: 'Eastern Canada',
+  73: 'Northwestern U.S.A.',
+  74: 'North-Central U.S.A.',
+  75: 'Northeastern U.S.A.',
+  76: 'Southwestern U.S.A.',
+  77: 'South-Central U.S.A.',
+  78: 'Southeastern U.S.A.',
+  79: 'Mexico',
+  80: 'Central America',
+  81: 'Caribbean',
+  82: 'Northern South America',
+  83: 'Western South America',
+  84: 'Brazil',
+  85: 'Southern South America',
+  90: 'Subantarctic Islands',
+  91: 'Antarctic Continent',
+}
+const L2_VOCAB = Object.values(L2_NAMES)
+const L2_SET = new Set(L2_VOCAB)
+
+// A plant whose native_to says it has no wild range — empty is correct.
+const NO_WILD_RANGE =
+  /garden|hybrid|cultivar|cultigen|of cultivated|origin unknown/i
+
+// Reviewed manual corrections to specific model-derived fallback rows. Kept as
+// data (not hand-edits to the plan JSON) so they survive re-generation and stay
+// auditable. `tags` forces an exact Level-2 set; `noWildRange` forces empty.
+const MANUAL_OVERRIDES: Record<
+  string,
+  { tags?: string[]; noWildRange?: true; reason: string }
+> = {
+  // Circumboreal fern — the bare "Europe, Asia, and North America" prose
+  // expanded to 25 regions incl. tropical/desert false positives. Tightened to
+  // the cool-temperate Northern-Hemisphere core.
+  'Matteuccia struthiopteris': {
+    tags: [
+      'Northern Europe',
+      'Middle Europe',
+      'Eastern Europe',
+      'Southeastern Europe',
+      'Southwestern Europe',
+      'Siberia',
+      'Russian Far East',
+      'Caucasus',
+      'China',
+      'Eastern Asia',
+      'Subarctic America',
+      'Western Canada',
+      'Eastern Canada',
+      'Northwestern U.S.A.',
+      'North-Central U.S.A.',
+      'Northeastern U.S.A.',
+    ],
+    reason: 'tightened circumboreal; dropped tropical/desert over-reach',
+  },
+  // "the Mediterranean region" pulled in Western Asia; rosemary is not native
+  // to the Levant. Keep the western/central-Mediterranean rim.
+  'Rosmarinus officinalis': {
+    tags: ['Northern Africa', 'Southeastern Europe', 'Southwestern Europe'],
+    reason: 'dropped Western Asia — not native Levant range',
+  },
+  // Garden hybrid (Cistus × purpureus) stored without the × — no wild range.
+  'Cistus purpureus': {
+    noWildRange: true,
+    reason: 'garden hybrid (Cistus × purpureus) — no wild native range',
+  },
+}
+
+const uniqSorted = (xs: string[]) => [...new Set(xs)].sort()
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
+
+// ---------------------------------------------------------------------------
+// Authoritative WGSRPD L3 -> L2 map (downloaded once, cached).
+// ---------------------------------------------------------------------------
+interface L3Info {
+  l2cod: number
+  l2name: string
+  l1cod: number
+  l3name: string
+}
+
+async function loadWgsrpdMap(): Promise<Record<string, L3Info>> {
+  if (existsSync(WGSRPD_MAP))
+    return JSON.parse(readFileSync(WGSRPD_MAP, 'utf8'))
+  let text: string
+  if (existsSync(GEOJSON)) {
+    text = readFileSync(GEOJSON, 'utf8')
+  } else {
+    console.log('Downloading tdwg/wgsrpd level3.geojson (once)…')
+    const res = await fetch(
+      'https://raw.githubusercontent.com/tdwg/wgsrpd/master/geojson/level3.geojson'
+    )
+    if (!res.ok) throw new Error(`geojson download failed: ${res.status}`)
+    text = await res.text()
+    writeFileSync(GEOJSON, text)
+  }
+  const gj = JSON.parse(text)
+  const map: Record<string, L3Info> = {}
+  for (const f of gj.features) {
+    const p = f.properties
+    const l2cod = p.LEVEL2_COD as number
+    map[p.LEVEL3_COD] = {
+      l2cod,
+      l2name: L2_NAMES[l2cod] ?? `?L2-${l2cod}`,
+      l1cod: p.LEVEL1_COD as number,
+      l3name: p.LEVEL3_NAM as string,
+    }
+  }
+  writeFileSync(WGSRPD_MAP, JSON.stringify(map))
+  return map
+}
+
+// ---------------------------------------------------------------------------
+// Trefle native L3 codes, cached by source_species_id.
+// ---------------------------------------------------------------------------
+interface NativeZone {
+  name: string
+  code: string
+  level: number
+}
+type TrefleCache = Record<
+  string,
+  { sci?: string; native?: NativeZone[]; error?: unknown }
+>
+
+async function loadTrefleNative(sids: number[]): Promise<TrefleCache> {
+  const cache: TrefleCache = existsSync(TREFLE_CACHE)
+    ? JSON.parse(readFileSync(TREFLE_CACHE, 'utf8'))
+    : {}
+  const missing = sids.filter(
+    (s) => !cache[String(s)] || cache[String(s)]!.error
+  )
+  if (missing.length) {
+    console.log(
+      `Fetching Trefle native distribution for ${missing.length} species…`
+    )
+    for (let i = 0; i < missing.length; i++) {
+      const sid = missing[i]!
+      try {
+        const detail = (await getSpeciesBySlug(sid)) as unknown as {
+          scientific_name?: string
+          distributions?: { native?: NativeZone[] | null } | null
+        }
+        const native = (detail.distributions?.native ?? []).map((z) => ({
+          name: z.name,
+          code: z.code,
+          level: z.level,
+        }))
+        cache[String(sid)] = { sci: detail.scientific_name, native }
+      } catch (e) {
+        cache[String(sid)] = { error: String(e) }
+      }
+      if ((i + 1) % 20 === 0) writeFileSync(TREFLE_CACHE, JSON.stringify(cache))
+      await sleep(120)
+    }
+    writeFileSync(TREFLE_CACHE, JSON.stringify(cache))
+  }
+  return cache
+}
+
+// ---------------------------------------------------------------------------
+// Fallback: native_to prose -> Level-2 regions, via the curation model.
+// Cached by the exact native_to string so re-runs are stable and cheap.
+// ---------------------------------------------------------------------------
+function deriveFromNativeToPrompt(nativeTo: string): string {
+  return `You translate a plant's native-range phrase into a set of TDWG WGSRPD Level-2 botanical regions. Return the MINIMAL set of regions the phrase implies as NATIVE range — no introduced/cultivated range, no padding.
+
+Use ONLY these exact region strings:
+${JSON.stringify(L2_VOCAB)}
+
+Notes:
+- Bare "Europe" means all five European regions (Northern, Middle, Southwestern, Southeastern, Eastern Europe).
+- WGSRPD places Italy, Greece, Crete, the Balkans, Romania, Bulgaria in "Southeastern Europe"; Iberia, France, Corsica, Sardinia, Baleares in "Southwestern Europe".
+- "the Mediterranean" spans Southwestern Europe, Southeastern Europe, Northern Africa, and Western Asia.
+- Turkey spans "Western Asia" (its European sliver is Southeastern Europe).
+
+Native-range phrase: "${nativeTo}"
+
+Respond with ONLY a JSON array of region strings, no prose, no code fences.`
+}
+
+async function deriveFromNativeTo(
+  nativeTo: string,
+  cache: Record<string, string[]>
+): Promise<{ tags: string[]; offVocab: string[] }> {
+  if (cache[nativeTo]) return { tags: cache[nativeTo]!, offVocab: [] }
+  const client = getAnthropicClient()
+  const msg = await client.messages.create({
+    model: CURATION_MODEL,
+    max_tokens: 300,
+    messages: [{ role: 'user', content: deriveFromNativeToPrompt(nativeTo) }],
+  })
+  const text = msg.content
+    .filter((b) => b.type === 'text')
+    .map((b) => (b as { type: 'text'; text: string }).text)
+    .join('')
+  const cleaned = text
+    .trim()
+    .replace(/^```(?:json)?/i, '')
+    .replace(/```$/, '')
+    .trim()
+  const arr = JSON.parse(
+    cleaned.slice(cleaned.indexOf('['), cleaned.lastIndexOf(']') + 1)
+  ) as unknown[]
+  const all = arr.filter((x): x is string => typeof x === 'string')
+  const tags = uniqSorted(all.filter((r) => L2_SET.has(r)))
+  const offVocab = all.filter((r) => !L2_SET.has(r))
+  cache[nativeTo] = tags
+  writeFileSync(NATIVE_TO_CACHE, JSON.stringify(cache, null, 2))
+  return { tags, offVocab }
+}
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+interface PlantRow {
+  id: string
+  source_species_id: number | null
+  common_name: string
+  scientific_name: string | null
+  native_to: string | null
+  native_region: string[] | null
+}
+
+type Source =
+  | 'trefle-l3'
+  | 'native_to-fallback'
+  | 'empty-no-wild-range'
+  | 'empty-unresolved'
+  | 'manual-override'
+
+interface PlanEntry {
+  id: string
+  common_name: string
+  scientific_name: string | null
+  native_to: string | null
+  old_tags: string[]
+  new_tags: string[]
+  source: Source
+  flags: string[]
+}
+
+// ---------------------------------------------------------------------------
+// Generate
+// ---------------------------------------------------------------------------
+async function generate(limit: number | null): Promise<PlanEntry[]> {
+  const supabase = getSupabaseAdmin()
+  const { data, error } = await supabase
+    .from('plants')
+    .select(
+      'id, source_species_id, common_name, scientific_name, native_to, native_region'
+    )
+    .order('common_name')
+  if (error) throw error
+  let plants = (data ?? []) as PlantRow[]
+  if (limit) plants = plants.slice(0, limit)
+
+  const wgsrpd = await loadWgsrpdMap()
+  const sids = plants
+    .map((p) => p.source_species_id)
+    .filter((s): s is number => s != null)
+  const trefle = await loadTrefleNative(sids)
+  const nativeToCache: Record<string, string[]> = existsSync(NATIVE_TO_CACHE)
+    ? JSON.parse(readFileSync(NATIVE_TO_CACHE, 'utf8'))
+    : {}
+
+  const unknownCodes = new Set<string>()
+  const plan: PlanEntry[] = []
+  let fallbackCount = 0
+
+  for (const p of plants) {
+    const old_tags = p.native_region ?? []
+    const flags: string[] = []
+    let new_tags: string[] = []
+    let source: Source
+
+    const entry =
+      p.source_species_id != null
+        ? trefle[String(p.source_species_id)]
+        : undefined
+    const native = entry?.native ?? []
+
+    if (native.length > 0) {
+      // Primary: Trefle L3 -> L2
+      const l2: string[] = []
+      for (const z of native) {
+        const info = wgsrpd[z.code]
+        if (!info) {
+          unknownCodes.add(z.code)
+          flags.push(`unmapped-L3:${z.code}`)
+          continue
+        }
+        l2.push(info.l2name)
+      }
+      new_tags = uniqSorted(l2)
+      source = 'trefle-l3'
+    } else if (p.native_to && NO_WILD_RANGE.test(p.native_to)) {
+      // Correctly empty (garden hybrid / no wild range)
+      new_tags = []
+      source = 'empty-no-wild-range'
+    } else if (p.native_to) {
+      // Fallback: derive from native_to prose (Trefle had no native data)
+      fallbackCount++
+      const { tags, offVocab } = await deriveFromNativeTo(
+        p.native_to,
+        nativeToCache
+      )
+      new_tags = tags
+      source = 'native_to-fallback'
+      flags.push('MODEL-DERIVED — review')
+      if (offVocab.length) flags.push(`off-vocab-dropped:${offVocab.join('/')}`)
+      if (tags.length >= 12) flags.push(`over-broad:${tags.length}-regions`)
+      await sleep(1200)
+    } else {
+      new_tags = []
+      source = 'empty-unresolved'
+      flags.push('NO native_to and NO Trefle data — cannot tag')
+    }
+
+    // Reviewed manual corrections win over the derived result.
+    const override = p.scientific_name
+      ? MANUAL_OVERRIDES[p.scientific_name]
+      : undefined
+    if (override) {
+      if (override.noWildRange) {
+        new_tags = []
+        source = 'empty-no-wild-range'
+      } else {
+        const bad = (override.tags ?? []).filter((t) => !L2_SET.has(t))
+        if (bad.length)
+          throw new Error(
+            `override for ${p.scientific_name} has invalid L2 tags: ${bad.join(', ')}`
+          )
+        new_tags = uniqSorted(override.tags ?? [])
+        source = 'manual-override'
+      }
+      flags.push(`OVERRIDE: ${override.reason}`)
+    }
+
+    plan.push({
+      id: p.id,
+      common_name: p.common_name,
+      scientific_name: p.scientific_name,
+      native_to: p.native_to,
+      old_tags,
+      new_tags,
+      source,
+      flags,
+    })
+  }
+
+  // ---- report ----
+  const bySource: Record<string, number> = {}
+  for (const e of plan) bySource[e.source] = (bySource[e.source] ?? 0) + 1
+  const emptyNew = plan.filter((e) => e.new_tags.length === 0)
+  const flagged = plan.filter((e) => e.flags.length > 0)
+
+  writeFileSync(PLAN_JSON, JSON.stringify({ generatedAt: null, plan }, null, 2))
+
+  const L: string[] = []
+  L.push(
+    '# native_region regeneration plan — REVIEW BEFORE --apply (no DB writes yet)'
+  )
+  L.push('')
+  L.push(
+    `Plants: **${plan.length}**. Option A (TDWG Level 2). native_region only.`
+  )
+  L.push('')
+  L.push('## Source breakdown')
+  for (const [k, v] of Object.entries(bySource).sort((a, b) => b[1] - a[1]))
+    L.push(`- ${k}: **${v}**`)
+  L.push('')
+  L.push(
+    `- New tag set empty after regen: **${emptyNew.length}** — ${emptyNew.map((e) => e.scientific_name).join(', ') || '(none)'}`
+  )
+  L.push(
+    `- Unmapped L3 codes encountered: **${unknownCodes.size}** ${unknownCodes.size ? '— ' + [...unknownCodes].join(', ') : ''}`
+  )
+  L.push('')
+  L.push(`## Rows needing a human glance (${flagged.length})`)
+  L.push('| plant | native_to | source | new tags | flags |')
+  L.push('|---|---|---|---|---|')
+  for (const e of flagged) {
+    L.push(
+      `| ${e.common_name} | ${e.native_to ?? ''} | ${e.source} | ${e.new_tags.join(', ') || '—'} | ${e.flags.join('; ')} |`
+    )
+  }
+  L.push('')
+  L.push('## Full plan (old → new)')
+  L.push('| plant | old | new | source |')
+  L.push('|---|---|---|---|')
+  for (const e of plan) {
+    L.push(
+      `| ${e.common_name} | ${e.old_tags.join(',') || '—'} | ${e.new_tags.join(', ') || '—'} | ${e.source} |`
+    )
+  }
+  writeFileSync(PLAN_MD, L.join('\n'))
+
+  console.log('\n=== GENERATE COMPLETE (no DB writes) ===')
+  console.log(`plants: ${plan.length}`)
+  console.log(
+    `sources: ${Object.entries(bySource)
+      .map(([k, v]) => `${k}=${v}`)
+      .join(', ')}`
+  )
+  console.log(
+    `fallback model calls: ${fallbackCount} | empty after regen: ${emptyNew.length} | unmapped L3: ${unknownCodes.size}`
+  )
+  console.log(`review -> ${PLAN_MD}`)
+  console.log(
+    `then apply -> ./node_modules/.bin/tsx --env-file=.env.local scripts/regenerate-native-region.ts --apply`
+  )
+  return plan
+}
+
+// ---------------------------------------------------------------------------
+// Apply — read back the reviewed plan and write native_region only.
+// ---------------------------------------------------------------------------
+async function apply(): Promise<void> {
+  if (!existsSync(PLAN_JSON)) {
+    throw new Error(
+      'No plan found. Run the default (generate) mode and review it first.'
+    )
+  }
+  const { plan } = JSON.parse(readFileSync(PLAN_JSON, 'utf8')) as {
+    plan: PlanEntry[]
+  }
+  const supabase = getSupabaseAdmin()
+  console.log(`Applying native_region for ${plan.length} plants…`)
+  let changed = 0
+  for (let i = 0; i < plan.length; i++) {
+    const e = plan[i]!
+    const before = [...e.old_tags].sort().join(',')
+    const after = [...e.new_tags].sort().join(',')
+    const { error } = await supabase
+      .from('plants')
+      .update({ native_region: e.new_tags })
+      .eq('id', e.id)
+    if (error)
+      throw new Error(`update failed for ${e.common_name}: ${error.message}`)
+    if (before !== after) changed++
+    if ((i + 1) % 50 === 0) console.log(`  ${i + 1}/${plan.length}`)
+  }
+  console.log(`\n=== APPLY COMPLETE ===`)
+  console.log(
+    `rows written: ${plan.length} | rows whose tags changed: ${changed}`
+  )
+}
+
+// ---------------------------------------------------------------------------
+async function main() {
+  mkdirSync(REPORTS_DIR, { recursive: true })
+  const args = process.argv.slice(2)
+  const isApply = args.includes('--apply')
+  const li = args.indexOf('--limit')
+  const limit = li >= 0 && args[li + 1] ? parseInt(args[li + 1]!, 10) : null
+
+  if (isApply) {
+    await apply()
+  } else {
+    await generate(limit)
+  }
+}
+
+main().catch((e) => {
+  console.error(e)
+  process.exit(1)
+})
