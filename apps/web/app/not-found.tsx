@@ -8,9 +8,12 @@ import Link from 'next/link'
  * stays dry per the copy rules. Illustration is decorative (empty alt) —
  * the heading carries the meaning.
  *
- * pagina-perdita.png is currently a placeholder block — swap in Ana's
- * export at its final dimensions (raster at exact 1x/2x, PNG-8; the dither
- * moirés if the browser rescales it).
+ * pagina-perdita.png is Ana's 1140x1113 export displayed at exactly half
+ * size (570x557), so retina screens sample it 1:1 and standard screens get
+ * a clean integer 2:1 downscale — the dither moirés under fractional
+ * rescaling, which is also why the image opts out of Next's optimizer.
+ * Follow-up (tracked in the backlog): re-export as PNG-8 indexed to cut
+ * the 858KB weight; dither palettes compress extremely well.
  */
 export default function NotFound() {
   return (
@@ -18,9 +21,10 @@ export default function NotFound() {
       <Image
         src="/illustrations/pagina-perdita.png"
         alt=""
-        width={280}
-        height={340}
+        width={570}
+        height={557}
         priority
+        unoptimized
       />
       <div className="flex max-w-[440px] flex-col items-center gap-inline-gap">
         <p className="text-label font-medium uppercase tracking-[0.05em] text-muted">
