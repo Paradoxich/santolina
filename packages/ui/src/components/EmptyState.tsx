@@ -5,6 +5,12 @@ export interface EmptyStateProps {
   message: string
   ctaLabel: string
   /**
+   * Optional illustration rendered above the message — an inline SVG or
+   * `<img>`. Decorative by contract: the message carries the meaning, so
+   * pass `aria-hidden="true"` (or an empty `alt`) on the element itself.
+   */
+  illustration?: React.ReactNode
+  /**
    * Navigation target for the CTA. Rendered through `linkComponent`
    * (a plain `<a>` by default). For in-page actions use `onCtaClick` instead.
    */
@@ -30,6 +36,7 @@ const ctaClasses =
 export function EmptyState({
   message,
   ctaLabel,
+  illustration,
   ctaHref,
   linkComponent,
   onCtaClick,
@@ -46,6 +53,7 @@ export function EmptyState({
         className
       )}
     >
+      {illustration && <div className="shrink-0">{illustration}</div>}
       <p className="text-center text-body text-secondary">{message}</p>
       {ctaHref ? (
         <LinkComponent href={ctaHref} className={ctaClasses}>
