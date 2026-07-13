@@ -18,6 +18,9 @@ export type { BadgeProps } from './components/Badge'
 export { Chip } from './components/Chip'
 export type { ChipProps } from './components/Chip'
 
+export { SwatchChip } from './components/SwatchChip'
+export type { SwatchChipProps } from './components/SwatchChip'
+
 export { Tabs } from './components/Tabs'
 export type { TabsProps, TabItem } from './components/Tabs'
 

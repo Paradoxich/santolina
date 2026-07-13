@@ -1,6 +1,7 @@
 'use client'
 
-import { Chip } from '@paradoxui/ui'
+import { Chip, SwatchChip } from '@paradoxui/ui'
+import { BLOOM_COLOR_BUCKETS } from '@/lib/bloom-colors'
 import {
   EMPTY_FILTERS,
   SEASON_OPTIONS,
@@ -91,6 +92,25 @@ export function ExploreFilters({
           onChange({ ...filters, styles: toggleValue(filters.styles, v) })
         }
       />
+      <div>
+        <p className="text-body-small text-secondary">Color</p>
+        <div className="mt-2 flex flex-wrap gap-2">
+          {BLOOM_COLOR_BUCKETS.map((b) => (
+            <SwatchChip
+              key={b.value}
+              color={b.swatch}
+              label={b.label}
+              selected={filters.colors.includes(b.value)}
+              onClick={() =>
+                onChange({
+                  ...filters,
+                  colors: toggleValue(filters.colors, b.value),
+                })
+              }
+            />
+          ))}
+        </div>
+      </div>
 
       <div className="flex flex-wrap items-center gap-2">
         {canFilterNative && (

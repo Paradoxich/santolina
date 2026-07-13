@@ -38,6 +38,8 @@ export interface CatalogPlant {
   sunThrives: string[]
   /** Months 1–12 of flowering — bloom-season filtering derives from these. */
   bloomMonths: number[]
+  /** Raw bloom color values — bucketed for filtering by lib/bloom-colors.ts. */
+  bloomColor: string[]
   /** WGSRPD Level-2 native region tags — powers the native-to-me lens. */
   nativeRegion: string[]
 }
