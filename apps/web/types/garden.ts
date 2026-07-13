@@ -28,6 +28,18 @@ export interface CatalogPlant {
   botanicalName: string
   imageUrl: string
   description: string
+  /** Alternate common names — searched alongside the primary name. */
+  aliases: string[]
+  /** Functional growth form (plants.plant_type), e.g. "perennial". */
+  plantType: string
+  /** Aesthetic style tags (plants.style_tags). */
+  styleTags: string[]
+  /** Exposures the plant thrives in (plants.sun_thrives) — the filter axis. */
+  sunThrives: string[]
+  /** Months 1–12 of flowering — bloom-season filtering derives from these. */
+  bloomMonths: number[]
+  /** WGSRPD Level-2 native region tags — powers the native-to-me lens. */
+  nativeRegion: string[]
 }
 
 export interface GardenPlant {
