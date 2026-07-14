@@ -18,7 +18,8 @@ import { formatExposure, formatBloomRange } from '@/lib/format-plant'
 import type { PlantDetail } from '@/lib/plant-detail'
 import {
   addToPalette,
-  updateStatus,
+  markPlanted,
+  undoMarkPlanted,
   removeFromPalette,
   type PalettePlant,
 } from '@/server/palette-actions'
@@ -153,7 +154,7 @@ export function GardenClient({ palette, detail }: GardenClientProps) {
     setActionError(null)
     setPendingId(paletteId)
     try {
-      await updateStatus({ paletteId, status: 'planted' })
+      const { plantedEventId } = await markPlanted({ paletteId })
       router.refresh()
       toast({
         groupKey: row?.plantId,
@@ -164,7 +165,7 @@ export function GardenClient({ palette, detail }: GardenClientProps) {
           {
             label: 'Undo',
             onClick: async () => {
-              await updateStatus({ paletteId, status: 'planned' })
+              await undoMarkPlanted({ paletteId, plantedEventId })
               router.refresh()
             },
           },

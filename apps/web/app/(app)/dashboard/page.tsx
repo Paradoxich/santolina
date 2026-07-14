@@ -5,11 +5,12 @@ import { CareTipsCard } from '@/components/dashboard/CareTipsCard'
 import { PlannedCard } from '@/components/dashboard/PlannedCard'
 import { DiaryRecentCard } from '@/components/dashboard/DiaryRecentCard'
 import { ImpactCard } from '@/components/dashboard/ImpactCard'
-import { getCareTips } from '@/lib/care-tips'
+import { getCareTips, isPeakHeat, type CareEvent } from '@/lib/care-tips'
 import { deriveBloomSeason } from '@/lib/bloom-timeline'
 import { buildDashboardSubtitle, buildGardenImpact } from '@/lib/dashboard-copy'
 import { formatBloomRangeShort } from '@/lib/format-plant'
 import { listPalette } from '@/server/palette-actions'
+import { listGardenCareEvents } from '@/server/diary-actions'
 import { getSessionGardenContext } from '@/lib/session-garden'
 import { getForecast } from '@/lib/open-meteo'
 import { getPlantDiaries } from '@/lib/diary'
@@ -27,7 +28,6 @@ export default async function DashboardPage() {
     day: 'numeric',
   }).format(new Date())
   const palette = await listPalette()
-  const careTips = getCareTips(palette)
 
   const growing = palette.filter((p) => p.status === 'planted')
   const myPlants: DashboardPlant[] = growing
@@ -56,6 +56,19 @@ export default async function DashboardPage() {
   }
 
   const diaries = await getPlantDiaries()
+
+  // Care Tips fold in Tier 3 event-relative tips (from typed diary events) and
+  // let weather push the no_peak_heat gate — so this runs after the palette,
+  // diary events, and forecast are all in hand.
+  const careEvents: CareEvent[] = (await listGardenCareEvents()).map((e) => ({
+    plantId: e.plantId,
+    eventType: e.eventType,
+    occurredAt: new Date(e.createdAt),
+  }))
+  const careTips = getCareTips(palette, {
+    events: careEvents,
+    peakHeat: isPeakHeat(weatherDays?.[0]?.high ?? null),
+  })
 
   const subtitle = buildDashboardSubtitle(weatherDays, palette)
   const impact = buildGardenImpact(palette)

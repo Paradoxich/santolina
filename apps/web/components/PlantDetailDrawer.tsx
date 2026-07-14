@@ -10,7 +10,8 @@ import { formatPlantSubtitle } from '@/lib/format-plant'
 import { buildGoodForYourGarden } from '@/lib/good-for-your-garden'
 import {
   addToPalette,
-  updateStatus,
+  markPlanted,
+  undoMarkPlanted,
   removeFromPalette,
   getPaletteStatus,
   type PaletteStatus,
@@ -256,7 +257,7 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
     try {
       if (palette?.status === 'planned') {
         const paletteId = palette.paletteId
-        await updateStatus({ paletteId, status: 'planted' })
+        const { plantedEventId } = await markPlanted({ paletteId })
         setPalette({ paletteId, status: 'planted' })
         router.refresh()
         toast({
@@ -269,7 +270,7 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
               label: 'Undo',
               onClick: async () => {
                 try {
-                  await updateStatus({ paletteId, status: 'planned' })
+                  await undoMarkPlanted({ paletteId, plantedEventId })
                   setPalette({ paletteId, status: 'planned' })
                   router.refresh()
                 } catch (err) {
