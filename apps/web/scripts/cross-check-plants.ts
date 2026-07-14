@@ -15,6 +15,11 @@
  * Usage (from apps/web):
  *   ./node_modules/.bin/tsx --env-file=.env.local scripts/cross-check-plants.ts
  *   ./node_modules/.bin/tsx --env-file=.env.local scripts/cross-check-plants.ts --limit 5
+ *   ./node_modules/.bin/tsx --env-file=.env.local scripts/cross-check-plants.ts --new-only
+ *
+ * --new-only scopes the check to the most recent seed batch (rows created on
+ * the newest calendar day), so a post-seed run doesn't re-check the whole
+ * catalog. Same convention as curate-plants.ts --new-only.
  */
 
 import { mkdirSync, writeFileSync } from 'node:fs'
@@ -86,6 +91,21 @@ function parseLimit(): number | null {
     throw new Error('--limit must be a positive integer')
   }
   return limit
+}
+
+// --new-only restricts the check to the most recent seed batch — the rows
+// whose created_at falls on the same calendar day (UTC) as the newest plant.
+// A seed round adds all its rows on one day, so this scopes a post-seed
+// cross-check to the fresh drafts without re-checking the whole catalog (the
+// costly default, since every row is is_curated = false). Mirrors the
+// curate-plants.ts --new-only convention.
+function newestBatchOnly<T extends { created_at: string }>(rows: T[]): T[] {
+  if (!rows.length) return rows
+  const newestDay = rows
+    .map((r) => r.created_at.slice(0, 10))
+    .sort()
+    .at(-1)
+  return rows.filter((r) => r.created_at.slice(0, 10) === newestDay)
 }
 
 // ---------------------------------------------------------------------------
@@ -301,6 +321,7 @@ function sleep(ms: number): Promise<void> {
 
 async function main() {
   const limit = parseLimit()
+  const newOnly = process.argv.slice(2).includes('--new-only')
   const db = getSupabaseAdmin()
 
   console.log('\nFetching AI-drafted plants from Supabase...')
@@ -311,9 +332,12 @@ async function main() {
     .order('common_name')
   if (error) throw new Error(`Failed to fetch plants: ${error.message}`)
 
+  const scoped = newOnly
+    ? newestBatchOnly((data ?? []) as Array<{ created_at: string }>)
+    : (data ?? [])
   const plants = (
-    limit ? (data ?? []).slice(0, limit) : (data ?? [])
-  ) as DbPlant[]
+    limit ? scoped.slice(0, limit) : scoped
+  ) as unknown as DbPlant[]
   if (!plants.length) {
     console.log('No AI-drafted plants found — nothing to check.')
     process.exit(0)

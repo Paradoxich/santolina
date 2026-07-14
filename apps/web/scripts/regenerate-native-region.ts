@@ -234,14 +234,22 @@ async function loadTrefleNative(sids: number[]): Promise<TrefleCache> {
     for (let i = 0; i < missing.length; i++) {
       const sid = missing[i]!
       try {
+        // Trefle's native zone objects carry the TDWG code under `tdwg_code`
+        // and the level under `tdwg_level` — NOT `code`/`level`. Reading the
+        // wrong field names leaves `code` undefined, so every zone falls
+        // through as unmapped-L3 and the plant ends up untagged.
         const detail = (await getSpeciesBySlug(sid)) as unknown as {
           scientific_name?: string
-          distributions?: { native?: NativeZone[] | null } | null
+          distributions?: {
+            native?:
+              | Array<{ name: string; tdwg_code?: string; tdwg_level?: number }>
+              | null
+          } | null
         }
         const native = (detail.distributions?.native ?? []).map((z) => ({
           name: z.name,
-          code: z.code,
-          level: z.level,
+          code: z.tdwg_code ?? '',
+          level: z.tdwg_level ?? 0,
         }))
         cache[String(sid)] = { sci: detail.scientific_name, native }
       } catch (e) {
