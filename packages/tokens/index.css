@@ -35,6 +35,7 @@
   --color-green-100: #cfe5d6;
   --color-green-200: #b1d7bc;
   --color-green-300: #99bd9d;
+  --color-green-500: #3b9255;
   --color-green-600: #386b41;
   --color-green-700: #2b6e3f;
   --color-green-950: #020e03;
@@ -105,6 +106,8 @@
   /* Letter spacing */
   --tracking-compact: -0.01em; /* pairs with line-height-compact */
   --tracking-heading: -0.02em; /* section/panel headings */
+  --tracking-title: -0.04em; /* page titles — baked into the title type role */
+  --tracking-label: 0.05em; /* uppercase labels only; plain labels stay untracked */
 
   /* Spacing — 4px base unit */
   --spacing-0: 0;
@@ -271,6 +274,12 @@
   --card-row-radius: var(--radius-lg);
   --modal-radius: 1.25rem; /* 20px — dialog / modal surface */
   --sidebar-surface: rgb(178 209 184 / 0.3);
+  --sidebar-width: 14rem; /* 224px — app sidebar */
+  /* main content clearance: sidebar width + 8px viewport inset + 40px gutter */
+  --sidebar-offset: calc(var(--sidebar-width) + var(--spacing-12));
+  --login-border: var(--color-green-500);
+  /* gray-900 @ 20% — translucent composition, light-mode assumption baked in */
+  --login-hairline: rgb(17 17 17 / 0.2);
   --avatar-fill: var(--color-green-600);
   --thumbnail-scrim: linear-gradient(
     to top,

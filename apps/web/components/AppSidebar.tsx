@@ -29,7 +29,7 @@ export function AppSidebar({ identity }: { identity: SidebarIdentity }) {
   const pathname = usePathname()
 
   return (
-    <aside className="fixed bottom-2 left-2 top-2 z-10 hidden w-56 flex-col gap-section-gap overflow-hidden rounded-md border border-card-translucent bg-[var(--sidebar-surface)] p-inline-gap md:flex">
+    <aside className="fixed bottom-2 left-2 top-2 z-10 hidden w-sidebar flex-col gap-section-gap overflow-hidden rounded-md border border-card-translucent bg-[var(--sidebar-surface)] p-inline-gap md:flex">
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 bg-cover bg-center opacity-15"
@@ -37,7 +37,7 @@ export function AppSidebar({ identity }: { identity: SidebarIdentity }) {
       />
 
       <div className="relative flex items-center justify-between p-row-gap">
-        <Link href="/" className="inline-flex items-center gap-[6px]">
+        <Link href="/" className="inline-flex items-center gap-1.5">
           <Image
             src="/logo-mark.svg"
             alt=""

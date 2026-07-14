@@ -96,7 +96,7 @@ function TokenRow({ name, kind }: TokenEntry) {
 function TokenGroupBlock({ group }: { group: TokenGroup }) {
   return (
     <div className="flex flex-col gap-tight-gap">
-      <p className="text-label uppercase tracking-[0.05em] text-muted">
+      <p className="text-label uppercase tracking-label text-muted">
         {group.title}
       </p>
       <div className="rounded-sm border border-card bg-surface-card px-row-gap">

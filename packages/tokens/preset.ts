@@ -6,7 +6,9 @@ import type { Config } from 'tailwindcss'
  * Maps the token CSS custom properties (index.css) into the Tailwind theme
  * so utilities and raw CSS stay in sync by construction. Consumers add:
  *
- *   presets: [require('@paradoxui/tokens/preset')]
+ *   import preset from '@paradoxui/tokens/preset'
+ *   // ...
+ *   presets: [preset]
  *
  * `theme` keys here REPLACE Tailwind defaults on purpose: the stock palette
  * is removed so hardcodes like `bg-white` fail visibly instead of shipping
@@ -25,6 +27,7 @@ const ramps = {
     100: 'var(--color-green-100)',
     200: 'var(--color-green-200)',
     300: 'var(--color-green-300)',
+    500: 'var(--color-green-500)',
     600: 'var(--color-green-600)',
     700: 'var(--color-green-700)',
     950: 'var(--color-green-950)',
@@ -77,6 +80,9 @@ const preset = {
         critical: 'var(--color-icon-critical)',
       },
       accent: 'var(--color-accent)',
+      login: {
+        hairline: 'var(--login-hairline)',
+      },
     },
     backgroundColor: {
       ...ramps,
@@ -127,6 +133,10 @@ const preset = {
       warning: 'var(--color-border-warning)',
       critical: 'var(--color-border-critical)',
       accent: 'var(--color-accent)',
+      login: {
+        DEFAULT: 'var(--login-border)',
+        hairline: 'var(--login-hairline)',
+      },
     },
     ringColor: {
       ...ramps,
@@ -155,7 +165,10 @@ const preset = {
       /* type roles — composite "text styles" (size + leading + tracking) */
       title: [
         'var(--font-size-title)',
-        { lineHeight: 'var(--line-height-tight)' },
+        {
+          lineHeight: 'var(--line-height-tight)',
+          letterSpacing: 'var(--tracking-title)',
+        },
       ],
       stat: [
         'var(--font-size-stat)',
@@ -243,13 +256,25 @@ const preset = {
         'section-gap': 'var(--space-section-gap)',
         'card-padding': 'var(--space-card-padding)',
         'section-break': 'var(--space-section-break)',
+        /* component tier */
+        sidebar: 'var(--sidebar-width)',
+        'sidebar-offset': 'var(--sidebar-offset)',
       },
       lineHeight: {
+        /* named defaults re-pointed at tokens; numeric leading-* stay stock */
+        none: 'var(--line-height-none)',
+        tight: 'var(--line-height-tight)',
         compact: 'var(--line-height-compact)',
+        snug: 'var(--line-height-snug)',
+        normal: 'var(--line-height-normal)',
+        relaxed: 'var(--line-height-relaxed)',
+        loose: 'var(--line-height-loose)',
       },
       letterSpacing: {
         compact: 'var(--tracking-compact)',
         heading: 'var(--tracking-heading)',
+        title: 'var(--tracking-title)',
+        label: 'var(--tracking-label)',
       },
     },
   },

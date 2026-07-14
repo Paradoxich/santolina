@@ -419,7 +419,7 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
 
       <div className="flex w-full flex-1 flex-col gap-section-break overflow-y-auto p-card-padding">
         <div className="flex w-full shrink-0 flex-col gap-item-gap">
-          <h2 className="w-full text-title font-semibold tracking-[-0.04em] text-primary">
+          <h2 className="w-full text-title font-semibold text-primary">
             {plant.common_name}
           </h2>
           {subtitle && (

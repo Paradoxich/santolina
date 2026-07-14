@@ -22,7 +22,7 @@ export default function DesignSystemLayout({
         <div className="flex flex-col gap-section-gap px-card-padding py-item-gap lg:sticky lg:top-0 lg:py-section-gap">
           <Link
             href="/design-system/overview"
-            className="text-label uppercase tracking-[0.05em] text-muted transition-colors hover:text-primary"
+            className="text-label uppercase tracking-label text-muted transition-colors hover:text-primary"
           >
             Design system
           </Link>

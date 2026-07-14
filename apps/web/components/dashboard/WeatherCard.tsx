@@ -47,7 +47,7 @@ export function WeatherCard({ location, country, days }: WeatherCardProps) {
               key={day.label}
               className="flex min-w-0 flex-1 flex-col items-center gap-item-gap"
             >
-              <span className="w-full text-center text-label font-medium uppercase tracking-[0.05em] text-muted">
+              <span className="w-full text-center text-label font-medium uppercase tracking-label text-muted">
                 {day.label}
               </span>
               <div className="flex h-14 items-center lg:h-16">

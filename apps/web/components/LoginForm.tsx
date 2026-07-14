@@ -125,7 +125,7 @@ export function LoginForm() {
       <div className="flex w-full flex-col gap-5">
         <Button
           type="button"
-          className="h-12 w-full rounded-md border-[#3b9255] text-body-small"
+          className="h-12 w-full rounded-md border-login text-body-small"
           isLoading={googleLoading}
           onClick={handleGoogle}
         >
@@ -134,9 +134,9 @@ export function LoginForm() {
         </Button>
 
         <div className="flex items-center gap-5 px-3" aria-hidden="true">
-          <span className="flex-1 border-t border-dashed border-[rgba(17,17,17,0.2)]" />
+          <span className="flex-1 border-t border-dashed border-login-hairline" />
           <span className="text-body-small text-secondary">or</span>
-          <span className="flex-1 border-t border-dashed border-[rgba(17,17,17,0.2)]" />
+          <span className="flex-1 border-t border-dashed border-login-hairline" />
         </div>
 
         <form
@@ -155,14 +155,14 @@ export function LoginForm() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Enter your email"
-            className="min-w-0 flex-1 bg-transparent text-body-small font-medium text-primary placeholder:text-[rgba(17,17,17,0.2)] focus:outline-none"
+            className="min-w-0 flex-1 bg-transparent text-body-small font-medium text-primary placeholder:text-login-hairline focus:outline-none"
           />
           <button
             type="submit"
             disabled={!hasEmail || status === 'sending'}
             aria-label="Send me a sign in link"
             className={cn(
-              'flex h-full shrink-0 items-center rounded-sm border border-[#3b9255] bg-accent px-2 text-body-small font-medium text-on-accent',
+              'flex h-full shrink-0 items-center rounded-sm border border-login bg-accent px-2 text-body-small font-medium text-on-accent',
               'transition-opacity duration-slow',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus',
               hasEmail ? 'hover:bg-accent-hover' : 'opacity-10'
@@ -202,6 +202,8 @@ export function LoginForm() {
   )
 }
 
+// The four fill hexes are Google's brand marks, not system colors — they
+// stay literal and are exempt from the design-token rule.
 function GoogleMark() {
   return (
     <svg

@@ -65,7 +65,7 @@ export default function DitherLabPage() {
         <div className="flex flex-1 flex-col gap-8">
           {/* Hover mode. */}
           <div className="flex flex-col gap-2">
-            <span className="text-label uppercase tracking-[0.05em] text-muted">
+            <span className="text-label uppercase tracking-label text-muted">
               Hover mode
             </span>
             <div className="flex flex-wrap gap-2">
@@ -132,7 +132,7 @@ export default function DitherLabPage() {
           />
 
           <div className="rounded-card-tile bg-surface-card p-4">
-            <p className="text-label uppercase tracking-[0.05em] text-muted">
+            <p className="text-label uppercase tracking-label text-muted">
               Current
             </p>
             <code className="mt-2 block text-body text-primary">
@@ -164,7 +164,7 @@ function Slider({
 }) {
   return (
     <label className="flex flex-col gap-2">
-      <span className="flex items-baseline justify-between text-label uppercase tracking-[0.05em] text-muted">
+      <span className="flex items-baseline justify-between text-label uppercase tracking-label text-muted">
         {label}
         <span className="text-body tabular-nums text-primary">{value}</span>
       </span>

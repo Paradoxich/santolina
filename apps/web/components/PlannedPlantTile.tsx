@@ -38,6 +38,9 @@ export function PlannedPlantTile({
       footer={
         <>
           <Tooltip content="Remove from planned">
+            {/* rounded-[6px] (here and on the details button) sits between
+                radius-xs (4px) and radius-sm (8px) — kept literal pending
+                Ana's ruling on whether it should snap or become a token. */}
             {/* Span carries the hover handlers: a disabled button doesn't
                 reliably fire mouse events. */}
             <span className="inline-flex">

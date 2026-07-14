@@ -67,7 +67,7 @@ export function ExploreClient({
       ].join(' ')}
     >
       <div className={detail ? 'w-full max-w-[680px] shrink-0' : 'flex-1'}>
-        <h1 className="text-title font-semibold tracking-[-0.04em] text-primary">
+        <h1 className="text-title font-semibold text-primary">
           What to plant next?
         </h1>
 

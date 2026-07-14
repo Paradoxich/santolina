@@ -192,7 +192,7 @@ export function GardenClient({ palette, detail }: GardenClientProps) {
         />
       </header>
 
-      <h1 className="mt-8 text-title font-semibold tracking-[-0.04em] text-primary md:mt-12">
+      <h1 className="mt-8 text-title font-semibold text-primary md:mt-12">
         {activeTabLabel}
       </h1>
       <p className="mt-3 text-body text-secondary">

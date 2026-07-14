@@ -13,7 +13,7 @@ export interface DrawerSectionProps {
 export function DrawerSection({ label, children }: DrawerSectionProps) {
   return (
     <section className="flex w-full flex-col gap-inline-gap">
-      <h3 className="w-full text-label font-medium uppercase tracking-[0.05em] text-muted">
+      <h3 className="w-full text-label font-medium uppercase tracking-label text-muted">
         {label}
       </h3>
       {children}

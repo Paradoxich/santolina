@@ -12,10 +12,10 @@ export function ImpactCard({ text }: ImpactCardProps) {
       {/* Keep the copy clear of the bottom-right hummingbird: on mobile the
           card is tall enough to seat the bird below the text, and the text
           stays in the left ~two-thirds so it never runs under the wing. */}
-      <p className="max-w-[66%] text-subheading font-medium leading-[1.2] tracking-heading text-primary lg:max-w-none">
+      <p className="max-w-[66%] text-subheading font-medium leading-tight tracking-heading text-primary lg:max-w-none">
         {text}
       </p>
-      <span className="text-label font-medium uppercase tracking-[0.05em] text-muted">
+      <span className="text-label font-medium uppercase tracking-label text-muted">
         Garden impact
       </span>
     </Panel>
