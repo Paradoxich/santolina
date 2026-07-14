@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import { Panel } from '@paradoxui/ui'
 import type { BloomSeason, BloomSpan } from '@/types/dashboard'
+import { CardIllustration } from './CardIllustration'
 
 const emphasisOpacity: Record<BloomSpan['emphasis'], string> = {
   now: 'opacity-100',
@@ -22,10 +23,11 @@ export function BloomTimelineCard({
     return (
       <Panel
         title={season.title}
-        meta={season.meta}
-        className="h-full overflow-hidden"
+        meta={season.weekLabel}
+        className="relative isolate min-h-[320px] overflow-hidden lg:min-h-0 lg:h-full"
       >
-        <p className="text-body-small text-muted">
+        <CardIllustration name="bloom" />
+        <p className="mt-auto max-w-[55%] text-body-small text-muted">
           Once you add plants, you&apos;ll see their bloom season here.
         </p>
       </Panel>

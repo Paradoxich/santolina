@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import { Panel } from '@paradoxui/ui'
 import type { PlannedPlant } from '@/types/dashboard'
+import { CardIllustration } from './CardIllustration'
 
 interface PlannedCardProps {
   plants: PlannedPlant[]
@@ -9,8 +10,14 @@ interface PlannedCardProps {
 export function PlannedCard({ plants }: PlannedCardProps) {
   if (plants.length === 0) {
     return (
-      <Panel title="Planned" meta="0 plants" className="h-full">
-        <p className="text-body-small text-muted">Nothing planned yet.</p>
+      <Panel
+        title="Planned"
+        className="relative isolate min-h-[280px] overflow-hidden lg:min-h-0 lg:h-full"
+      >
+        <CardIllustration name="planned" />
+        <p className="mt-auto max-w-[55%] text-body-small text-muted">
+          Nothing planned yet.
+        </p>
       </Panel>
     )
   }
