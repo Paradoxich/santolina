@@ -115,7 +115,7 @@ export const STATIC_SEASONAL_TIPS: Record<Season, CareTip[]> = {
     {
       plantId: null,
       plantName: null,
-      text: 'Apply a slow-release fertiliser as new growth begins.',
+      text: 'Apply a slow-release fertilizer as new growth begins.',
     },
     {
       plantId: null,
@@ -174,7 +174,7 @@ export const STATIC_SEASONAL_TIPS: Record<Season, CareTip[]> = {
     {
       plantId: null,
       plantName: null,
-      text: 'Avoid fertilizing during the hottest weeks — focus on water instead.',
+      text: 'Avoid fertilizing during the hottest weeks. Focus on water instead.',
     },
     {
       plantId: null,
