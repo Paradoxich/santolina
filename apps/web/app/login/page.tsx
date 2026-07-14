@@ -1,7 +1,7 @@
 import { Suspense } from 'react'
 import type { Metadata } from 'next'
-import Image from 'next/image'
 import { LoginForm } from '@/components/LoginForm'
+import { DitheredHero } from '@/components/DitheredHero'
 
 export const metadata: Metadata = {
   title: 'Welcome to Santolina',
@@ -19,21 +19,23 @@ export default function LoginPage() {
       </div>
       <div className="hidden py-5 pr-5 lg:flex lg:w-1/2">
         <div className="relative flex-1 overflow-hidden rounded-card-tile bg-accent">
-          {/* Wider than the panel so the orbiting drift always has slack.
-              The outer strip oscillates on x, the inner wrapper on y; a
-              quarter-period offset between them traces a smooth ellipse. */}
-          <div className="animate-ken-burns absolute inset-y-0 left-0 w-[135%]">
-            <div className="animate-ken-burns-y absolute inset-0">
-              <Image
-                src="/textures/signup-hero-landscape.jpg"
-                alt=""
-                fill
-                priority
-                sizes="(min-width: 1024px) 70vw, 0px"
-                className="object-cover"
-              />
-            </div>
-          </div>
+          {/* Fallback for no-WebGL / no-JS: the plain photo. The shader canvas
+              paints over it (Ken Burns orbit + screen-locked dither) once it
+              initialises. */}
+          <img
+            src="/textures/signup-hero-landscape.jpg"
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+          <DitheredHero
+            src="/textures/signup-hero-landscape.jpg"
+            levels={14}
+            cell={2}
+            hoverMode="spotlight"
+            revealRadius={100}
+            softness={0.8}
+            weight={0.5}
+          />
         </div>
       </div>
     </main>
