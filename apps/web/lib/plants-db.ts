@@ -47,6 +47,12 @@ export interface DbPlant {
   height_max_cm: number | null
   hardiness_zone_min: number | null
   hardiness_zone_max: number | null
+  // Canonical hardiness field: RHS rating (H1a-H7). USDA zones above are
+  // legacy; USDA display is derived from this at render time (lib/hardiness.ts).
+  // Editorial-owned — NOT in the upsert_trefle_plant path, so a Trefle re-seed
+  // cannot touch it; protected from re-draft once hardiness_verified is true.
+  hardiness_rating: string | null
+  hardiness_verified: boolean
   // sun_requirements is a DERIVED mirror of sun_thrives ∪ sun_tolerates,
   // maintained by a DB trigger (see 20260709220000). App reads this field;
   // curation/editorial write the two source fields below. It stays the read
