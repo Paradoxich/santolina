@@ -53,6 +53,7 @@ function NoteCard({
   if (note.text) {
     menuItems.push({
       label: 'Copy text',
+      icon: <Icon src={icons.copy} size={16} />,
       onSelect: () => {
         void navigator.clipboard.writeText(note.text)
         toast({ groupKey: note.id, title: 'Note copied' })
@@ -62,6 +63,7 @@ function NoteCard({
   if (onDelete) {
     menuItems.push({
       label: 'Delete note',
+      icon: <Icon src={icons.trashCritical} size={16} />,
       tone: 'critical',
       onSelect: () => onDelete(note),
     })
@@ -284,59 +286,11 @@ export function DiaryDetailDrawer({ diary, onClose }: DiaryDetailDrawerProps) {
       panelProps={DRAWER_MOTION}
       headerActions={
         <>
-          <Tooltip
-            content={isGrowing ? 'Clear diary' : 'Delete diary'}
-            position="bottom"
-          >
-            {/* Hover handlers go on this span, not the button — disabled
-                buttons don't reliably fire mouse events, and this is exactly
-                the state where the tooltip is most useful. */}
-            <span className="inline-flex">
-              <button
-                type="button"
-                onClick={() => setIsDeleteDialogOpen(true)}
-                disabled={noteCount === 0}
-                aria-label={isGrowing ? 'Clear diary' : 'Delete diary'}
-                className="flex size-8 items-center justify-center rounded-full border border-card bg-surface-control transition-opacity duration-normal hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {isGrowing ? (
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    aria-hidden="true"
-                  >
-                    <path
-                      d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"
-                      stroke="var(--stroke-0, black)"
-                      strokeWidth="1.8"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                    <path
-                      d="M22 21H7"
-                      stroke="var(--stroke-0, black)"
-                      strokeWidth="1.8"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                    <path
-                      d="m5 11 9 9"
-                      stroke="var(--stroke-0, black)"
-                      strokeWidth="1.8"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                ) : (
-                  <Icon src={icons.trash} />
-                )}
-              </button>
-            </span>
-          </Tooltip>
           <button
             type="button"
+            onClick={() =>
+              router.push(`/garden?tab=growing&plant=${diary.plantId}`)
+            }
             className="flex h-8 items-center rounded-sm border border-card bg-surface-control px-inline-gap text-body-small text-secondary"
           >
             Open plant details
@@ -364,7 +318,60 @@ export function DiaryDetailDrawer({ diary, onClose }: DiaryDetailDrawerProps) {
         </div>
 
         <div className="flex w-full shrink-0 flex-col gap-card-padding">
-          <h3 className="text-body font-semibold text-primary">Your notes</h3>
+          <div className="flex w-full items-center justify-between gap-inline-gap">
+            <h3 className="text-body font-semibold text-primary">Your notes</h3>
+            <Tooltip
+              content={isGrowing ? 'Clear diary' : 'Delete diary'}
+              position="bottom"
+            >
+              {/* Hover handlers go on this span, not the button — disabled
+                  buttons don't reliably fire mouse events, and this is exactly
+                  the state where the tooltip is most useful. */}
+              <span className="inline-flex">
+                <button
+                  type="button"
+                  onClick={() => setIsDeleteDialogOpen(true)}
+                  disabled={noteCount === 0}
+                  aria-label={isGrowing ? 'Clear diary' : 'Delete diary'}
+                  className="flex size-8 items-center justify-center rounded-full transition-all duration-normal hover:bg-surface-overlay focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {isGrowing ? (
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"
+                        stroke="var(--stroke-0, black)"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <path
+                        d="M22 21H7"
+                        stroke="var(--stroke-0, black)"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <path
+                        d="m5 11 9 9"
+                        stroke="var(--stroke-0, black)"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  ) : (
+                    <Icon src={icons.trash} />
+                  )}
+                </button>
+              </span>
+            </Tooltip>
+          </div>
 
           {isGrowing ? (
             isComposing ? (

@@ -1,6 +1,6 @@
-import Image from 'next/image'
 import { MediaCard, Icon, Tooltip } from '@paradoxui/ui'
 import { icons } from '@/lib/icons'
+import { PlantImage } from '@/components/PlantImage'
 import type { GardenPlant } from '@/types/garden'
 
 interface PlannedPlantTileProps {
@@ -22,7 +22,7 @@ export function PlannedPlantTile({
     <MediaCard
       surface="sunken"
       image={
-        <Image
+        <PlantImage
           src={plant.imageUrl}
           alt={plant.name}
           fill

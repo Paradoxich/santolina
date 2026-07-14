@@ -20,7 +20,6 @@ export function InYourGardenSection({ plant }: InYourGardenSectionProps) {
           <div className="grid w-full grid-cols-1 gap-inline-gap sm:grid-cols-2">
             {bloom && (
               <StatCard
-                tone="soft"
                 label="Expected Bloom"
                 icon={<Icon src={icons.bloom} />}
               >
@@ -29,7 +28,6 @@ export function InYourGardenSection({ plant }: InYourGardenSectionProps) {
             )}
             {plant.best_placement && (
               <StatCard
-                tone="soft"
                 label="Best Placement"
                 icon={<Icon src={icons.placement} />}
                 className={bloom ? '' : 'sm:col-span-2'}

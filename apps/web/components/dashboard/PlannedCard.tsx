@@ -1,5 +1,5 @@
-import Image from 'next/image'
 import { Panel } from '@paradoxui/ui'
+import { PlantImage } from '@/components/PlantImage'
 import type { PlannedPlant } from '@/types/dashboard'
 import { CardIllustration } from './CardIllustration'
 
@@ -32,15 +32,13 @@ export function PlannedCard({ plants }: PlannedCardProps) {
           >
             <span className="flex min-w-0 items-center gap-tight-gap">
               <span className="relative size-5 shrink-0 overflow-hidden rounded-xs bg-surface-subtle">
-                {plant.imageUrl && (
-                  <Image
-                    src={plant.imageUrl}
-                    alt=""
-                    fill
-                    sizes="20px"
-                    className="object-cover"
-                  />
-                )}
+                <PlantImage
+                  src={plant.imageUrl}
+                  alt=""
+                  fill
+                  sizes="20px"
+                  className="object-cover"
+                />
               </span>
               <span className="truncate text-body-small text-primary">
                 {plant.name}
