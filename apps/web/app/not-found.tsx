@@ -14,12 +14,12 @@ import Link from 'next/link'
  */
 export default function NotFound() {
   return (
-    <main className="flex min-h-[100dvh] flex-col items-center justify-center overflow-x-clip bg-surface-page px-card-padding pb-12 text-center">
+    <main className="flex min-h-dvh flex-col items-center justify-center overflow-x-clip bg-surface-page px-card-padding pb-12 text-center">
       <div className="relative aspect-[572/561] w-full max-w-[572px]">
-        {/* The paper sheet. Ana's export is transparent, so the sheet color
-            comes from the comp (#ecf1ed) — part of the illustration, not UI
-            chrome; candidate for the decorative token tier. */}
-        <div className="absolute left-1/2 top-1/2 w-[92.15%] -translate-x-1/2 -translate-y-1/2 rotate-[5.25deg] bg-[#ecf1ed]">
+        {/* The paper sheet. Ana's export is transparent; the comp's sheet
+            color (#ecf1ed) is close enough to sage-100 that it was snapped
+            to the token (Ana's ruling, July 2026). */}
+        <div className="absolute left-1/2 top-1/2 w-[92.15%] -translate-x-1/2 -translate-y-1/2 rotate-[5.25deg] bg-sage-100">
           <Image
             src="/illustrations/pagina-perdita.png"
             alt=""
@@ -48,7 +48,7 @@ export default function NotFound() {
       </div>
       <div className="mt-6 flex max-w-[440px] flex-col items-center gap-item-gap">
         <p className="text-body-small italic text-secondary">404</p>
-        <h1 className="text-title font-semibold tracking-[-0.04em] text-primary">
+        <h1 className="text-title font-semibold text-primary">
           This one isn&apos;t in the catalog.
         </h1>
       </div>

@@ -48,9 +48,7 @@ export function DiaryClient({
     <div className="max-w-[669px] pb-16 pt-8 md:pt-12">
       <header className="flex flex-col gap-card-padding">
         <div className="flex flex-col gap-item-gap">
-          <h1 className="text-title font-semibold tracking-[-0.04em] text-primary">
-            Plant Diary
-          </h1>
+          <h1 className="text-title font-semibold text-primary">Plant Diary</h1>
           <p className="text-body text-secondary">
             Save notes, photos, and seasonal changes as your plants evolve.
           </p>

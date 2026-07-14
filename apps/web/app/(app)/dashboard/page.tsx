@@ -62,9 +62,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="max-w-[1032px] pb-16 pt-8 md:pt-12">
-      <h1 className="text-title font-semibold tracking-[-0.04em] text-primary">
-        {today}
-      </h1>
+      <h1 className="text-title font-semibold text-primary">{today}</h1>
       <p className="mt-3 text-body text-secondary">{subtitle}</p>
 
       {/* Row heights are design floors (min-h), not fixed: a card whose content

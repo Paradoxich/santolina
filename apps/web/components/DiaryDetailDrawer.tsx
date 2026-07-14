@@ -309,7 +309,7 @@ export function DiaryDetailDrawer({ diary, onClose }: DiaryDetailDrawerProps) {
     >
       <div className="flex w-full flex-1 flex-col gap-section-break overflow-y-auto p-card-padding">
         <div className="flex w-full shrink-0 flex-col gap-item-gap">
-          <h2 className="w-full text-title font-semibold tracking-[-0.04em] text-primary">
+          <h2 className="w-full text-title font-semibold text-primary">
             {diary.plantName} Diary
           </h2>
           <p className="w-full text-body leading-normal text-secondary">
@@ -488,7 +488,7 @@ export function DiaryDetailDrawer({ diary, onClose }: DiaryDetailDrawerProps) {
             key={month}
             className="flex w-full shrink-0 flex-col gap-item-gap"
           >
-            <h4 className="text-label font-medium uppercase tracking-[0.05em] text-muted">
+            <h4 className="text-label font-medium uppercase tracking-label text-muted">
               {month}
             </h4>
             <div className="flex w-full flex-col gap-tight-gap">

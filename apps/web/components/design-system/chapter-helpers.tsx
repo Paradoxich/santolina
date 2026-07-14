@@ -38,8 +38,6 @@ export function Section({
 
 export function Label({ children }: { children: React.ReactNode }) {
   return (
-    <p className="text-label uppercase tracking-[0.05em] text-muted">
-      {children}
-    </p>
+    <p className="text-label uppercase tracking-label text-muted">{children}</p>
   )
 }

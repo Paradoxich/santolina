@@ -21,7 +21,7 @@ function ToneKit({
           className={`size-3 rounded-full bg-current ${icon}`}
           aria-hidden
         />
-        <span className="text-label uppercase tracking-[0.05em] text-primary">
+        <span className="text-label uppercase tracking-label text-primary">
           {tone}
         </span>
       </div>

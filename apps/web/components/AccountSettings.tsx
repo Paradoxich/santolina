@@ -54,9 +54,7 @@ export function AccountSettings({
 
   return (
     <div className="max-w-[640px] pb-16 pt-8 md:pt-12">
-      <h1 className="text-title font-semibold tracking-[-0.04em] text-primary">
-        Account
-      </h1>
+      <h1 className="text-title font-semibold text-primary">Account</h1>
 
       <div className="mt-8 flex flex-col gap-section-gap">
         <Card className="border-[color:var(--color-surface-page)] shadow-none">

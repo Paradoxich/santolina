@@ -19,7 +19,7 @@ export function MyPlantsCard({ plants, totalInGarden }: MyPlantsCardProps) {
         {/* The bush is centred and runs full-width on a narrow card, so on
             mobile the hint sits under the title (clear of the art) and only
             drops to the bottom-left at desktop, matching the comp. */}
-        <p className="max-w-[12rem] text-body-small text-muted lg:mt-auto">
+        <p className="max-w-48 text-body-small text-muted lg:mt-auto">
           Find plants you&apos;d like to grow. They&apos;ll show up here.
         </p>
       </Panel>
