@@ -37,13 +37,13 @@ export default function NotFound() {
           src="/illustrations/tape.svg"
           alt=""
           aria-hidden="true"
-          className="absolute left-[109.5%] top-[10.7%] aspect-[141/30] w-[24.8%] -translate-x-1/2 -translate-y-1/2 rotate-45"
+          className="absolute left-[95.5%] top-[10.7%] aspect-[141/30] w-[24.8%] -translate-x-1/2 -translate-y-1/2 rotate-45"
         />
         <img
           src="/illustrations/tape.svg"
           alt=""
           aria-hidden="true"
-          className="absolute left-[18.5%] top-[88.2%] aspect-[141/30] w-[24.8%] -translate-x-1/2 -translate-y-1/2 rotate-45"
+          className="absolute left-[4.6%] top-[88.2%] aspect-[141/30] w-[24.8%] -translate-x-1/2 -translate-y-1/2 rotate-45"
         />
       </div>
       <div className="mt-6 flex max-w-[440px] flex-col items-center gap-item-gap">
