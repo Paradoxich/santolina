@@ -6,6 +6,11 @@ import { Drawer, Icon, Menu, Modal, Tooltip, useToast } from '@paradoxui/ui'
 import type { MenuItem } from '@paradoxui/ui'
 import { icons } from '@/lib/icons'
 import { DRAWER_MOTION } from '@/lib/drawer-motion'
+import {
+  DIARY_EVENT_TYPES,
+  DIARY_EVENT_LABELS,
+  type DiaryEventType,
+} from '@/lib/diary-events'
 import type { DiaryNote, PlantDiary } from '@/types/diary'
 import { formatDayLabel, formatMonthLabel } from '@/lib/utils'
 import {
@@ -72,6 +77,11 @@ function NoteCard({
   return (
     <article className="group flex w-full items-start gap-item-gap rounded-sm bg-surface-page p-inline-gap">
       <div className="flex min-w-0 flex-1 flex-col gap-inline-gap">
+        {note.eventType && (
+          <span className="w-fit rounded-full bg-surface-control px-tight-gap py-0.5 text-label font-medium text-secondary">
+            {DIARY_EVENT_LABELS[note.eventType]}
+          </span>
+        )}
         {note.text && (
           <p className="text-body leading-normal text-primary">{note.text}</p>
         )}
@@ -134,12 +144,15 @@ export function DiaryDetailDrawer({ diary, onClose }: DiaryDetailDrawerProps) {
   const { toast } = useToast()
   const monthGroups = groupNotesByMonth(diary.notes)
 
-  const [isComposing, setIsComposing] = useState(false)
   const [noteText, setNoteText] = useState('')
+  const [selectedEvent, setSelectedEvent] = useState<DiaryEventType | null>(
+    null
+  )
   const [photoFiles, setPhotoFiles] = useState<File[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [composerError, setComposerError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -233,10 +246,18 @@ export function DiaryDetailDrawer({ diary, onClose }: DiaryDetailDrawerProps) {
   }
 
   const resetComposer = () => {
-    setIsComposing(false)
     setNoteText('')
+    setSelectedEvent(null)
     setPhotoFiles([])
     setComposerError(null)
+    const el = textareaRef.current
+    if (el) el.style.height = 'auto'
+  }
+
+  /** Grows the single-line input with its content, chat-style, up to a cap. */
+  const autoGrow = (el: HTMLTextAreaElement) => {
+    el.style.height = 'auto'
+    el.style.height = `${Math.min(el.scrollHeight, 140)}px`
   }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -251,8 +272,11 @@ export function DiaryDetailDrawer({ diary, onClose }: DiaryDetailDrawerProps) {
 
   const handleSaveNote = async () => {
     const trimmed = noteText.trim()
-    if (!trimmed && photoFiles.length === 0) {
-      setComposerError('Add a note or a photo first.')
+    // Event-only entries are valid — a typed event carries its own meaning
+    // (the auto "planted" event is exactly this shape), so a note or photo
+    // isn't required when an event chip is selected.
+    if (!trimmed && photoFiles.length === 0 && !selectedEvent) {
+      setComposerError('Add a note, a photo, or an event first.')
       return
     }
 
@@ -263,6 +287,7 @@ export function DiaryDetailDrawer({ diary, onClose }: DiaryDetailDrawerProps) {
         plantId: diary.plantId,
         paletteId: diary.paletteId,
         note: trimmed || undefined,
+        eventType: selectedEvent,
         photoFiles: photoFiles.length > 0 ? photoFiles : undefined,
       })
       router.refresh()
@@ -275,6 +300,10 @@ export function DiaryDetailDrawer({ diary, onClose }: DiaryDetailDrawerProps) {
       setIsSubmitting(false)
     }
   }
+
+  const composerPlaceholder = selectedEvent
+    ? `Add a note about ${DIARY_EVENT_LABELS[selectedEvent].toLowerCase()} (optional)`
+    : "What's new with this plant?"
 
   return (
     <Drawer
@@ -317,170 +346,59 @@ export function DiaryDetailDrawer({ diary, onClose }: DiaryDetailDrawerProps) {
           </p>
         </div>
 
-        <div className="flex w-full shrink-0 flex-col gap-card-padding">
-          <div className="flex w-full items-center justify-between gap-inline-gap">
-            <h3 className="text-body font-semibold text-primary">Your notes</h3>
-            <Tooltip
-              content={isGrowing ? 'Clear diary' : 'Delete diary'}
-              position="bottom"
-            >
-              {/* Hover handlers go on this span, not the button — disabled
-                  buttons don't reliably fire mouse events, and this is exactly
-                  the state where the tooltip is most useful. */}
-              <span className="inline-flex">
-                <button
-                  type="button"
-                  onClick={() => setIsDeleteDialogOpen(true)}
-                  disabled={noteCount === 0}
-                  aria-label={isGrowing ? 'Clear diary' : 'Delete diary'}
-                  className="flex size-8 items-center justify-center rounded-full transition-all duration-normal hover:bg-surface-overlay focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {isGrowing ? (
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      aria-hidden="true"
-                    >
-                      <path
-                        d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"
-                        stroke="var(--stroke-0, black)"
-                        strokeWidth="1.8"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                      <path
-                        d="M22 21H7"
-                        stroke="var(--stroke-0, black)"
-                        strokeWidth="1.8"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                      <path
-                        d="m5 11 9 9"
-                        stroke="var(--stroke-0, black)"
-                        strokeWidth="1.8"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  ) : (
-                    <Icon src={icons.trash} />
-                  )}
-                </button>
-              </span>
-            </Tooltip>
-          </div>
-
-          {isGrowing ? (
-            isComposing ? (
-              <div className="flex w-full flex-col gap-inline-gap rounded-sm border border-card bg-surface-overlay p-item-gap">
-                <textarea
-                  value={noteText}
-                  onChange={(e) => setNoteText(e.target.value)}
-                  placeholder="What's new with this plant?"
-                  rows={3}
-                  autoFocus
-                  className="w-full resize-none rounded-sm bg-transparent text-body text-primary placeholder:text-muted focus:outline-none"
-                />
-
-                {photoFiles.length > 0 && (
-                  <ul className="flex flex-wrap gap-inline-gap">
-                    {photoFiles.map((file, i) => (
-                      <li
-                        key={`${file.name}-${i}`}
-                        className="flex items-center gap-tight-gap rounded-xs border border-card bg-surface-page px-tight-gap py-0.5 text-label text-muted"
-                      >
-                        {file.name}
-                        <button
-                          type="button"
-                          onClick={() => removePhoto(i)}
-                          aria-label={`Remove ${file.name}`}
-                          className="text-muted hover:text-critical"
-                        >
-                          ×
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-
-                {composerError && (
-                  <p className="text-body-small text-critical">
-                    {composerError}
-                  </p>
-                )}
-
-                <div className="flex items-center justify-between gap-inline-gap">
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    onChange={handleFileChange}
-                    className="hidden"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="flex items-center gap-tight-gap text-body-small text-secondary hover:text-primary"
+        <div className="flex w-full shrink-0 items-center justify-between gap-inline-gap">
+          <h3 className="text-body font-semibold text-primary">Your notes</h3>
+          <Tooltip
+            content={isGrowing ? 'Clear diary' : 'Delete diary'}
+            position="bottom"
+          >
+            {/* Hover handlers go on this span, not the button — disabled
+                buttons don't reliably fire mouse events, and this is exactly
+                the state where the tooltip is most useful. */}
+            <span className="inline-flex">
+              <button
+                type="button"
+                onClick={() => setIsDeleteDialogOpen(true)}
+                disabled={noteCount === 0}
+                aria-label={isGrowing ? 'Clear diary' : 'Delete diary'}
+                className="flex size-8 items-center justify-center rounded-full transition-all duration-normal hover:bg-surface-overlay focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isGrowing ? (
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    aria-hidden="true"
                   >
-                    <Icon src={icons.plus} size={14} />
-                    Add photo
-                  </button>
-
-                  <div className="flex items-center gap-inline-gap">
-                    <button
-                      type="button"
-                      onClick={resetComposer}
-                      disabled={isSubmitting}
-                      className="text-body-small text-muted hover:text-primary disabled:opacity-50"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleSaveNote}
-                      disabled={isSubmitting}
-                      className="rounded-sm bg-accent px-item-gap py-1 text-body-small font-medium text-on-accent disabled:opacity-50"
-                    >
-                      {isSubmitting ? 'Saving…' : 'Save'}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setIsComposing(true)}
-                className="flex w-full items-center gap-inline-gap rounded-sm border border-dashed border-card bg-surface-overlay p-item-gap transition-colors duration-normal hover:bg-surface-control"
-              >
-                <Icon src={icons.plus} />
-                <span className="text-body text-secondary">New note</span>
+                    <path
+                      d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"
+                      stroke="var(--stroke-0, black)"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="M22 21H7"
+                      stroke="var(--stroke-0, black)"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="m5 11 9 9"
+                      stroke="var(--stroke-0, black)"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                ) : (
+                  <Icon src={icons.trash} />
+                )}
               </button>
-            )
-          ) : (
-            <div className="flex w-full flex-col gap-inline-gap">
-              <p className="text-body-small text-muted">
-                No longer in your garden. Notes are read-only.
-              </p>
-              <button
-                type="button"
-                onClick={handleAddBackToGarden}
-                disabled={isReAdding}
-                className="flex w-full items-center gap-inline-gap rounded-sm bg-surface-control p-inline-gap text-body-small text-primary transition-colors duration-normal hover:bg-gray-0 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <span className="flex-1 text-left">
-                  {isReAdding ? 'Adding back…' : 'Add back to garden'}
-                </span>
-                <Icon src={icons.arrowRight} />
-              </button>
-              {reAddError && (
-                <p className="text-body-small text-critical">{reAddError}</p>
-              )}
-            </div>
-          )}
+            </span>
+          </Tooltip>
         </div>
 
         {monthGroups.map(([month, notes]) => (
@@ -502,6 +420,127 @@ export function DiaryDetailDrawer({ diary, onClose }: DiaryDetailDrawerProps) {
             </div>
           </section>
         ))}
+      </div>
+
+      {/* Pinned composer — chat-style input anchored to the bottom of the
+          drawer, always visible while the plant is growing. Removed plants get
+          the read-only "add back" affordance in the same slot instead. */}
+      <div className="flex w-full shrink-0 flex-col gap-inline-gap border-t border-card bg-surface-card p-card-padding">
+        {isGrowing ? (
+          <>
+            <div className="flex flex-wrap gap-tight-gap">
+              {DIARY_EVENT_TYPES.map((event) => {
+                const active = selectedEvent === event
+                return (
+                  <button
+                    key={event}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() => setSelectedEvent(active ? null : event)}
+                    className={`rounded-full border px-item-gap py-0.5 text-label font-medium transition-colors duration-normal ${
+                      active
+                        ? 'border-transparent bg-accent text-on-accent'
+                        : 'border-card bg-surface-control text-secondary hover:bg-surface-overlay'
+                    }`}
+                  >
+                    {DIARY_EVENT_LABELS[event]}
+                  </button>
+                )
+              })}
+            </div>
+
+            {photoFiles.length > 0 && (
+              <ul className="flex flex-wrap gap-inline-gap">
+                {photoFiles.map((file, i) => (
+                  <li
+                    key={`${file.name}-${i}`}
+                    className="flex items-center gap-tight-gap rounded-xs border border-card bg-surface-page px-tight-gap py-0.5 text-label text-muted"
+                  >
+                    {file.name}
+                    <button
+                      type="button"
+                      onClick={() => removePhoto(i)}
+                      aria-label={`Remove ${file.name}`}
+                      className="text-muted hover:text-critical"
+                    >
+                      ×
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {composerError && (
+              <p className="text-body-small text-critical">{composerError}</p>
+            )}
+
+            <div className="flex w-full items-end gap-tight-gap rounded-sm border border-card bg-surface-overlay p-tight-gap">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleFileChange}
+                className="hidden"
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                aria-label="Add photo"
+                className="flex size-8 shrink-0 items-center justify-center rounded-full text-secondary transition-colors duration-normal hover:bg-surface-control hover:text-primary"
+              >
+                <Icon src={icons.plus} />
+              </button>
+              <textarea
+                ref={textareaRef}
+                value={noteText}
+                onChange={(e) => {
+                  setNoteText(e.target.value)
+                  autoGrow(e.target)
+                }}
+                onKeyDown={(e) => {
+                  // Enter sends, Shift+Enter inserts a newline — chat convention.
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault()
+                    if (!isSubmitting) void handleSaveNote()
+                  }
+                }}
+                placeholder={composerPlaceholder}
+                rows={1}
+                className="min-h-8 w-full flex-1 resize-none self-center bg-transparent py-1 text-body text-primary placeholder:text-muted focus:outline-none"
+              />
+              <button
+                type="button"
+                onClick={handleSaveNote}
+                disabled={isSubmitting}
+                aria-label="Add entry"
+                className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent text-on-accent transition-opacity duration-normal hover:opacity-90 disabled:opacity-50"
+              >
+                <Icon src={icons.arrowRight} />
+              </button>
+            </div>
+          </>
+        ) : (
+          <div className="flex w-full flex-col gap-inline-gap">
+            <p className="text-body-small text-muted">
+              No longer in your garden. Notes are read-only.
+            </p>
+            <button
+              type="button"
+              onClick={handleAddBackToGarden}
+              disabled={isReAdding}
+              className="flex w-full items-center gap-inline-gap rounded-sm bg-surface-control p-inline-gap text-body-small text-primary transition-colors duration-normal hover:bg-gray-0 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <span className="flex-1 text-left">
+                {isReAdding ? 'Adding back…' : 'Add back to garden'}
+              </span>
+              <Icon src={icons.arrowRight} />
+            </button>
+            {reAddError && (
+              <p className="text-body-small text-critical">{reAddError}</p>
+            )}
+          </div>
+        )}
       </div>
 
       <Modal

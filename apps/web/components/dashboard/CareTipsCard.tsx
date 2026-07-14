@@ -34,9 +34,11 @@ export function CareTipsCard({
             className="flex h-10 w-full items-center justify-between gap-row-gap rounded-sm bg-surface-subtle px-item-gap py-inline-gap"
           >
             <span className="truncate text-body text-primary">{tip.text}</span>
-            {tip.plantName && (
+            {/* Event tips already name the plant in their text, so they show
+                their timeframe here instead; guidance tips show the plant. */}
+            {(tip.timeframe ?? tip.plantName) && (
               <span className="shrink-0 whitespace-nowrap text-label text-muted">
-                {tip.plantName}
+                {tip.timeframe ?? tip.plantName}
               </span>
             )}
           </li>

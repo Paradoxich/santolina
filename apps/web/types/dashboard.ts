@@ -61,6 +61,12 @@ export interface CareTip {
   plantId: string | null
   plantName: string | null
   text: string
+  /**
+   * When this tip is relevant, e.g. "this week" — carried by time-bound and
+   * event-relative tips (the Figma timeframe ruling). Null for evergreen
+   * guidance tips, which have no deadline.
+   */
+  timeframe?: string | null
 }
 
 export interface PlannedPlant {

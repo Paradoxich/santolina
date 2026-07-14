@@ -5,6 +5,7 @@
 // garden is always resolved from the session, never taken from the client.
 // See docs/architecture.md §24.
 import { requireSessionGarden } from '@/lib/session-garden'
+import type { DiaryEventType } from '@/lib/diary-events'
 
 export interface DiaryEntry {
   id: string
@@ -13,6 +14,8 @@ export interface DiaryEntry {
   /** The live palette_plants row id, or null if the plant has since been removed from the garden. */
   paletteId: string | null
   note: string | null
+  /** Typed care event this entry logged, or null for a freeform note. */
+  eventType: DiaryEventType | null
   photoUrls: string[]
   createdAt: string
   updatedAt: string
@@ -24,6 +27,7 @@ interface DiaryEntryRow {
   plant_id: string
   palette_plant_id: string | null
   note: string | null
+  event_type: DiaryEventType | null
   photo_urls: string[]
   created_at: string
   updated_at: string
@@ -36,6 +40,7 @@ function toDiaryEntry(row: DiaryEntryRow): DiaryEntry {
     plantId: row.plant_id,
     paletteId: row.palette_plant_id,
     note: row.note,
+    eventType: row.event_type,
     photoUrls: row.photo_urls,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -62,6 +67,32 @@ export async function listDiaryEntries({
 }
 
 /**
+ * Every typed care event in the signed-in user's garden — the raw material
+ * for Tier 3 event-relative Care Tips. Freeform notes (event_type null) are
+ * excluded. Kept lean (three columns) since the dashboard reads it on every
+ * render alongside the palette.
+ */
+export async function listGardenCareEvents(): Promise<
+  { plantId: string; eventType: DiaryEventType; createdAt: string }[]
+> {
+  const { supabase: db, garden } = await requireSessionGarden()
+
+  const { data, error } = await db
+    .from('diary_entries')
+    .select('plant_id, event_type, created_at')
+    .eq('garden_id', garden.id)
+    .not('event_type', 'is', null)
+
+  if (error) throw new Error(`Failed to load care events: ${error.message}`)
+
+  return (data ?? []).map((row) => ({
+    plantId: row.plant_id,
+    eventType: row.event_type as DiaryEventType,
+    createdAt: row.created_at,
+  }))
+}
+
+/**
  * Adds a diary entry, uploading any photos to the diary-photos bucket first.
  * Path convention: {gardenId}/{plantId}/{timestamp}-{filename}. The bucket
  * is public, so the resulting public URL is immediately viewable — no
@@ -71,11 +102,13 @@ export async function addDiaryEntry({
   plantId,
   paletteId,
   note,
+  eventType,
   photoFiles,
 }: {
   plantId: string
   paletteId?: string | null
   note?: string
+  eventType?: DiaryEventType | null
   photoFiles?: File[]
 }): Promise<DiaryEntry> {
   const { supabase: db, garden } = await requireSessionGarden()
@@ -107,6 +140,7 @@ export async function addDiaryEntry({
       plant_id: plantId,
       palette_plant_id: paletteId ?? null,
       note: note ?? null,
+      event_type: eventType ?? null,
       photo_urls: photoUrls,
     })
     .select('*')

@@ -103,6 +103,109 @@ export async function updateStatus({
   if (!data) throw new Error('Palette row not found in the current garden')
 }
 
+/**
+ * Flips a palette row from planned to planted and, unless the plant is
+ * `source: 'existing'` (its planting date is unknown — `added_at` is
+ * palette-add time, not a planting date), writes a typed "planted" diary
+ * event so Tier 3 establishment tips can compute from it.
+ *
+ * The event is written here at the app level, not by a DB trigger, so the
+ * existing reversible state machine can delete it on undo — undoMarkPlanted
+ * takes back the returned id. See the Care Tips v2 behavior spec.
+ *
+ * Adding a plant straight to the garden as planted (the "Add to garden" path
+ * in addToPalette, source manual/generated) is intentionally not covered: the
+ * spec scopes the auto-event to the planned -> planted flip.
+ */
+export async function markPlanted({
+  paletteId,
+}: {
+  paletteId: string
+}): Promise<{ status: PaletteStatus; plantedEventId: string | null }> {
+  const { supabase: db, garden } = await requireSessionGarden()
+  const gardenId = garden.id
+
+  const { data: row, error: findError } = await db
+    .from('palette_plants')
+    .select('id, plant_id, source')
+    .eq('id', paletteId)
+    .eq('garden_id', gardenId)
+    .maybeSingle()
+
+  if (findError)
+    throw new Error(`Failed to load palette row: ${findError.message}`)
+  if (!row) throw new Error('Palette row not found in the current garden')
+
+  const { error: updateError } = await db
+    .from('palette_plants')
+    .update({ status: 'planted' })
+    .eq('id', paletteId)
+    .eq('garden_id', gardenId)
+
+  if (updateError)
+    throw new Error(`Failed to update status: ${updateError.message}`)
+
+  let plantedEventId: string | null = null
+  if (row.source !== 'existing') {
+    const { data: entry, error: eventError } = await db
+      .from('diary_entries')
+      .insert({
+        garden_id: gardenId,
+        plant_id: row.plant_id,
+        palette_plant_id: paletteId,
+        event_type: 'planted',
+        note: null,
+        photo_urls: [],
+      })
+      .select('id')
+      .single()
+
+    if (eventError)
+      throw new Error(`Failed to log planted event: ${eventError.message}`)
+    plantedEventId = entry.id
+  }
+
+  return { status: 'planted', plantedEventId }
+}
+
+/**
+ * Reverses markPlanted: flips the row back to planned and deletes the
+ * auto-created "planted" diary event by the id markPlanted returned. Undo
+ * carries that id, so no lookup or guesswork about which event was ours.
+ */
+export async function undoMarkPlanted({
+  paletteId,
+  plantedEventId,
+}: {
+  paletteId: string
+  plantedEventId: string | null
+}): Promise<void> {
+  const { supabase: db, garden } = await requireSessionGarden()
+  const gardenId = garden.id
+
+  const { data, error } = await db
+    .from('palette_plants')
+    .update({ status: 'planned' })
+    .eq('id', paletteId)
+    .eq('garden_id', gardenId)
+    .select('id')
+    .maybeSingle()
+
+  if (error) throw new Error(`Failed to update status: ${error.message}`)
+  if (!data) throw new Error('Palette row not found in the current garden')
+
+  if (plantedEventId) {
+    const { error: deleteError } = await db
+      .from('diary_entries')
+      .delete()
+      .eq('id', plantedEventId)
+      .eq('garden_id', gardenId)
+
+    if (deleteError)
+      throw new Error(`Failed to remove planted event: ${deleteError.message}`)
+  }
+}
+
 /** Same garden-ownership check as updateStatus before deleting. */
 export async function removeFromPalette({
   paletteId,

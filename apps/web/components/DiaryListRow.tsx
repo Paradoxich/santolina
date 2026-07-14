@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import { Badge } from '@paradoxui/ui'
 import type { PlantDiary } from '@/types/diary'
+import { DIARY_EVENT_LABELS } from '@/lib/diary-events'
 import { formatDayLabel } from '@/lib/utils'
 
 interface DiaryListRowProps {
@@ -15,6 +16,19 @@ export function DiaryListRow({
   onClick,
 }: DiaryListRowProps) {
   const latest = diary.notes[0]
+  // Prefer the note text; otherwise show what the entry captured so the row is
+  // never blank — the event label for an event-only entry (e.g. the auto
+  // "planted" event), or a photo count for a photo-only one.
+  const photoCount = latest?.photos?.length ?? 0
+  const preview = latest
+    ? latest.text ||
+      (latest.eventType ? DIARY_EVENT_LABELS[latest.eventType] : '') ||
+      (photoCount > 0
+        ? photoCount === 1
+          ? 'Added a new photo'
+          : `Added ${photoCount} new photos`
+        : '')
+    : null
 
   return (
     <button
@@ -33,9 +47,9 @@ export function DiaryListRow({
           {diary.plantName}
         </h3>
         {latest ? (
-          latest.text && (
+          preview && (
             <p className="truncate text-body leading-normal text-primary">
-              {latest.text}
+              {preview}
             </p>
           )
         ) : (

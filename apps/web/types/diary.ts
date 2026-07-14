@@ -1,3 +1,5 @@
+import type { DiaryEventType } from '@/lib/diary-events'
+
 export interface DiaryNotePhoto {
   src: string
   /** Rendered width in px — the Figma photo strip mixes widths. */
@@ -10,6 +12,8 @@ export interface DiaryNote {
   /** ISO date, e.g. "2026-05-08" */
   date: string
   photos?: DiaryNotePhoto[]
+  /** Typed care event this entry logged, or null for a freeform note. */
+  eventType?: DiaryEventType | null
 }
 
 /** One diary per palette plant — thread identity is (garden, plant), not the palette row itself. */
