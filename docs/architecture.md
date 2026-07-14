@@ -483,7 +483,7 @@ Annuals with null zones on both sides are not flagged (nulls are correct there, 
 
 **Editorial boundary unchanged:** all rows stay `is_curated = false`; the split is a data-model change, not an editorial sign-off. When Ana finalizes a plant she edits the two source fields, and the trigger keeps the mirror in sync.
 
-**Standard round is now:** `seed → curate-plants → cross-check-plants → curate-combinations`. The cross-check still fact-checks (it reads the derived `sun_requirements`), but the corrective widening sweep (§21) is retired — first drafts no longer systematically narrow.
+**Standard round is now:** `seed → curate-plants → cross-check-plants → curate-combinations`. The cross-check still fact-checks (it reads the derived `sun_requirements`), but the corrective widening sweep (§21) is retired — first drafts no longer systematically narrow. **Superseded by §25** — the cadence has since grown (native_region regeneration, the bloom-color guard, `--new-only` scoping); §25 is the current end-to-end runbook.
 
 **Still deferred to post-test:** surfacing the distinction in the UI ("thrives in full sun, tolerates part shade") and using it in matching (prefer thrive-matches, still surface tolerate-matches). The data is captured now; the presentation waits for the test to inform it.
 
@@ -528,3 +528,51 @@ Corrections that follow this convention are applied by the same guarded, reversi
 **Sidebar identity** is wired to the authenticated user / `users` table, replacing the hardcoded "PA / Paradoxich" in `AppSidebar.tsx`.
 
 **Ordered work items:** (1) `@supabase/ssr` + three client flavors + `middleware.ts` session refresh; (2) `handle_new_user` trigger creating `users` + empty `gardens`; (3) magic-link + Google auth UI and callback route; (4) required first-run location step, gated on null `location`; (5) flip the three server actions to the session client, delete `current-garden.ts` and its hardcoded id; (6) full-app middleware gate, landing stays public; (7) sidebar identity from `users`; (8) account settings surface. Operational, not code: custom SMTP (Resend/Postmark) for magic-link deliverability before public launch — Supabase's built-in sender is rate-limited; and a Google Cloud OAuth app + redirect URLs configured in Google and Supabase.
+
+---
+
+## 25. The plant-expansion round: current end-to-end cadence (runbook)
+
+**This is the authoritative pipeline for adding plants to the catalog.** It supersedes the shorter "standard round" line in §22, which has since grown. Every step is an offline script under `apps/web/scripts/`, run via `tsx --env-file=.env.local`, none in the request path (§6). The catalog reached **418 species / 1042 combinations** at round 6 (July 14 2026): 29 → 125 → 148 → 201 → 318 → 418 across rounds.
+
+Run the steps **in this order** after choosing a batch of species:
+
+1. **Seed.** Add rows from Trefle. Use `seed-plants.ts` (a flat list) or a purpose-built round script (`seed-regional-natives.ts`, `seed-round6.ts`) when the batch needs its own resolver or selection rationale. **Seed by verified Trefle ID or exact scientific-name match — never the top name-search hit.** Trefle name search silently resolves to sibling species; the round scripts resolve by exact genus+species (synonym-aware) and log any drift. Cultivars/hybrids rarely resolve — seed the species parent by numeric Trefle ID (see §4, and the round notes). Seeding is skip-by-default on already-cataloged species (§9).
+2. **Curate.** `curate-plants.ts --new-only` fills every AI field on rows where `ai_drafted_at IS NULL` (the fresh batch only). `--new-only` keeps the pass off the already-drafted catalog. A transient invalid-JSON failure just leaves that row `ai_drafted_at = NULL`; re-run to pick it up.
+3. **Combinations.** `curate-combinations.ts` adds companion pairings (§19). Idempotent, auto-skips plants already at the 5-companion cap, so new plants mostly pair among themselves once the catalog is mature.
+4. **Regenerate native_region.** `regenerate-native-region.ts` (generate, review, then `--apply`) — see §26. **Must run after every seed** or new plants stay untagged for the "native to my region" filter.
+5. **Guards (never write; fail loudly).** `cross-check-plants.ts --new-only` blind-fact-checks the batch's botanical fields (§20); `--new-only` scopes it to the newest calendar-day batch instead of re-checking the whole `is_curated = false` catalog (mirrors curate-plants). `check-bloom-colors.ts` fails if the batch invented a `bloom_color` shade not mapped in `lib/bloom-colors.ts` — an unmapped value silently drops out of the Explore color filter, so map each new shade into an existing bucket before shipping.
+6. **Hardiness.** `draft-hardiness.ts` drafts an RHS rating for any unrated new rows — see §27.
+
+**Editorial vs. mechanical stays intact throughout.** None of these steps flips `is_curated` (§3): curation drafts, the guards only flag, and botanical/functional fixes (§20, §23) are guarded reversible corrections, not Ana's editorial pass. Cross-check disagreements on `plant_type` are usually the §23 functional-label convention (false positives), not errors.
+
+**Working-tree discipline.** These scripts touch the live Supabase project directly (there is one project, no separate env), so a seed/curate run mutates production data — intended, but know it. When another session shares the git working tree, commit round code from a throwaway `git worktree` off `main` (or the round branch) and stage only your files by explicit path; never `git add -A` on a shared tree.
+
+## 26. `native_region`: WGSRPD Level-2, regenerated from Trefle (and the `tdwg_code` trap)
+
+**Model (Option A, Ana signed off — Notion "Region Data Model — Decision").** `native_region text[]` is a controlled set of TDWG WGSRPD **Level-2** region names (52 regions, e.g. "Southeastern Europe", "Eastern Asia"), one consistent zoom level for the whole catalog. It powers the Explore "native to my region" lens (`lib/native-to-me.ts`, shipped PR #44). It replaced an earlier ad-hoc `mediterranean/balkans/croatia` tag set that was a prompt artifact — structurally unfit for a filter because a wrong/missing tag hides plants invisibly.
+
+**How it's generated** — `regenerate-native-region.ts`, generate-then-`--apply` (default run writes `reports/native-region-regen.md` + JSON and never touches the DB; review, then `--apply`):
+- **Primary:** Trefle `distributions.native[]` Level-3 codes, each rolled up to Level-2 via the authoritative `tdwg/wgsrpd` table. "YUG" (Croatia isn't exposed below Level-3) → "Southeastern Europe".
+- **Fallback:** when Trefle returns an empty native list (a coverage hole on an otherwise-valid record), derive Level-2 tags from the clean `native_to` prose with the curation model.
+- **Manual overrides:** a small in-script table for reviewed outliers; garden hybrids with no wild range stay correctly empty.
+
+**Re-run after every seed** (step 4 above). The existing catalog is served from `reports/trefle-native-cache.json`, so only new species trigger fresh Trefle fetches.
+
+**The `tdwg_code` trap (fixed July 14 2026, round 6).** Trefle's native-zone objects carry the region code under **`tdwg_code`** and the level under **`tdwg_level`** — *not* `code`/`level`. The script had been reading `z.code` (undefined), so every freshly-fetched plant produced `unmapped-L3:undefined` and ended up untagged. It stayed **dormant** because the existing catalog was cache hits; it only surfaced when 100 new plants forced fresh fetches (76 empty instead of 2). Fix: read `z.tdwg_code`/`z.tdwg_level`. Note that fixing the parse is not enough on its own — the stale name-only cache entries must be **purged so they refetch**; `loadTrefleNative` only fetches missing/errored keys. After the fix, empty dropped to 2 (the two genuine garden hybrids) and all new plants tagged.
+
+## 27. Hardiness: RHS rating is canonical, drafted then human-verified
+
+**The problem.** Hardiness gates the real user question ("will it survive my winter"), but a July 2026 audit found **no free per-species hardiness source exists**: Trefle's `growth.minimum_temperature` is null for 100% of the catalog (so the old Trefle→USDA-zone mapping was dead code and was removed — see §4); RHS publishes ratings but offers no API or dataset and its content is copyrighted (bulk scraping barred); USDA's APIs map a *location* to a zone, not a *species*; Wikidata's hardiness properties are effectively empty (23 taxa worldwide). Before this model, every plant's `hardiness_zone_min`/`max` was a single unanchored Claude estimate.
+
+**Decision (Ana, July 14 2026).** The **RHS hardiness rating (H1a–H7) is the canonical field**, a good fit for the Euro/Med-skewed catalog. USDA zone, where shown, is **derived from the rating at render time** (`lib/hardiness.ts`) — never stored alongside. Two columns (migration `20260714164514`): `hardiness_rating text` (CHECK `H1a…H7`) and `hardiness_verified boolean default false`.
+
+**Draft-then-verify flow:**
+- **Draft baseline** — `scripts/draft-hardiness.ts` drafts a rating for every plant **blind** (species identity only, same discipline as the cross-check), writes `hardiness_rating`, leaves `hardiness_verified = false`. Ran across all 418 at round 6 (0 failures; distribution skews hardy — H5 174, H7 124 — as expected). Default targets `hardiness_rating IS NULL`; `--redraft-unverified` re-drafts unverified rows after a prompt change; **verified rows are never selected.**
+- **Human verification** — a person confirms each rating against RHS public plant pages (reading pages by hand is fine; only bulk scraping is barred) and flips `hardiness_verified = true`, in **priority order: the six garden-style starter palettes first** (highest user exposure); the long tail can stay drafted-but-unverified.
+
+**`hardiness_verified` gates assertion, it doesn't excuse it.** The UI must only present a hardiness claim confidently when `hardiness_verified = true`; unverified rows say nothing or carry a quiet "approximate" marker. This is the opposite of a confidence flag that would license showing unanchored numbers everywhere.
+
+**Re-seed safe by construction.** `hardiness_rating` is **editorial-owned**, the same category as `style_tags` and Ana's editorial corrections. It is not referenced by `upsert_trefle_plant` (§9), so a Trefle re-seed physically cannot touch it; `curate-plants` doesn't write it; the draft skips rated/verified rows. Verification work survives re-seeds — the failure mode Ana flagged (like the pre-COALESCE editorial wipe, §9) is closed.
+
+**Follow-ups (not built yet):** (1) the UI gating above; (2) then **drop the legacy `hardiness_zone_min`/`max` columns** — "don't store both" — but only *after* the render path derives from the rating, or hardiness display breaks; (3) once verification is done, record in the build log **what fraction of AI drafts survived RHS verification unchanged vs. got corrected** — that ratio is the real measure of the draft's quality.
