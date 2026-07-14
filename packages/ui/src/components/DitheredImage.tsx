@@ -1,10 +1,12 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import { cn } from '../utils/cn'
 
 /**
- * A still image drawn through a WebGL fragment shader that owns both the slow
- * Ken Burns orbit and a screen-locked ordered (Bayer) dither.
+ * An image drawn through a WebGL fragment shader that owns both a slow Ken
+ * Burns orbit and a screen-locked ordered (Bayer) dither, with an optional
+ * interactive cursor lens.
  *
  * The photo drifts in UV space (u_time), while the Bayer threshold is sampled
  * from an 8x8 matrix indexed by gl_FragCoord, so the dither grid stays pinned
@@ -16,26 +18,30 @@ import { useEffect, useRef } from 'react'
  * coarsen / spotlight); its position eases in with a critically damped weight
  * so a heavy setting glides smoothly rather than springing.
  *
+ * The component owns its box: it renders a plain <img> (the fallback shown
+ * when WebGL or JavaScript is unavailable, and while the texture loads) with
+ * the shader canvas painted over it. Size and style it via `className`.
+ *
  * The Bayer matrix rides in as an 8x8 texture (unit 1) rather than a GLSL
  * array: large local arrays with computed indices are a portability trap in
  * GLSL ES 1.00 and silently misbehave on some drivers.
- *
- * This knows nothing about gardens and is a candidate to lift into
- * @paradoxui/ui as a generic <DitheredImage> primitive.
  */
 
-type DitheredHeroProps = {
+export interface DitheredImageProps {
+  /** Image URL. For a WebGL texture from another origin it must be CORS-enabled. */
   src: string
+  /** Alt text for the fallback image. Defaults to '' (decorative). */
+  alt?: string
+  /** Classes for the root box (sizing, radius, background). */
+  className?: string
   /**
-   * Quantisation steps per colour channel. Higher = subtler (keeps the photo's
+   * Quantisation steps per colour channel. Higher = subtler (keeps the image's
    * real colour, just a fine dither grain); lower = heavier posterisation.
    */
   levels?: number
   /** Dither cell size in CSS pixels. Larger = chunkier. */
   cell?: number
-  /**
-   * Radius in CSS pixels of the cursor lens. 0 disables the interaction.
-   */
+  /** Radius in CSS pixels of the cursor lens. 0 disables the interaction. */
   revealRadius?: number
   /** Lens edge feather, 0 (hard edge) to 1 (very soft). */
   softness?: number
@@ -46,11 +52,11 @@ type DitheredHeroProps = {
   weight?: number
   /**
    * What the lens does under the cursor:
-   * - reveal: dissolve the dither back to the clean photo (soft circle)
+   * - reveal: dissolve the dither back to the clean image (soft circle)
    * - organic: same reveal with a torn, wobbling edge
-   * - magnify: bulge the photo toward the cursor and reveal it (a loupe)
+   * - magnify: bulge the image toward the cursor and reveal it (a loupe)
    * - coarsen: grow the dots into chunky blocks under the cursor
-   * - spotlight: brighten and saturate the photo inside the lens
+   * - spotlight: brighten and saturate the image inside the lens
    */
   hoverMode?: 'reveal' | 'organic' | 'magnify' | 'coarsen' | 'spotlight'
 }
@@ -121,8 +127,8 @@ void main() {
   }
   float lens = (1.0 - smoothstep(radius * (1.0 - u_soft), radius, dist)) * u_hover;
 
-  // Screen position feeding the photo sample. Magnify pulls it toward the
-  // cursor so the photo bulges (a loupe). The dither stays on real gl_FragCoord.
+  // Screen position feeding the image sample. Magnify pulls it toward the
+  // cursor so the image bulges (a loupe). The dither stays on real gl_FragCoord.
   vec2 pos = gl_FragCoord.xy;
   if (u_mode > 1.5 && u_mode < 2.5) {
     pos = mix(pos, u_mouse, core * 0.35 * u_hover);
@@ -163,13 +169,13 @@ void main() {
 
   vec3 outColor = dithered;
   if (u_mode < 2.5) {
-    // reveal (0), organic (1), magnify (2): dissolve to the clean photo inside.
+    // reveal (0), organic (1), magnify (2): dissolve to the clean image inside.
     outColor = mix(dithered, c, lens);
   } else if (u_mode < 3.5) {
     // coarsen (3): the chunky dots are the effect; nothing to reveal.
     outColor = dithered;
   } else {
-    // spotlight (4): brighten + saturate the photo inside the lens.
+    // spotlight (4): brighten + saturate the image inside the lens.
     float l = dot(c, vec3(0.299, 0.587, 0.114));
     vec3 boosted = clamp(mix(vec3(l), c, 1.5) * 1.15, 0.0, 1.0);
     outColor = mix(dithered, boosted, lens);
@@ -206,7 +212,7 @@ function compile(gl: WebGLRenderingContext, type: number, src: string) {
   gl.compileShader(sh)
   if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) {
     console.error(
-      '[DitheredHero] shader compile failed:',
+      '[DitheredImage] shader compile failed:',
       gl.getShaderInfoLog(sh)
     )
     gl.deleteShader(sh)
@@ -215,19 +221,21 @@ function compile(gl: WebGLRenderingContext, type: number, src: string) {
   return sh
 }
 
-export function DitheredHero({
+export function DitheredImage({
   src,
+  alt = '',
+  className,
   levels = 6,
   cell = 2,
   revealRadius = 130,
   softness = 0.45,
   weight = 0.5,
   hoverMode = 'reveal',
-}: DitheredHeroProps) {
+}: DitheredImageProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
-  // Read tuning through refs so live changes (e.g. the /dither-lab sliders)
-  // apply on the next animation frame without tearing down the GL context.
+  // Read tuning through refs so live changes (e.g. a controls panel) apply on
+  // the next animation frame without tearing down the GL context.
   const levelsRef = useRef(levels)
   const cellRef = useRef(cell)
   const revealRadiusRef = useRef(revealRadius)
@@ -251,7 +259,7 @@ export function DitheredHero({
       premultipliedAlpha: false,
     })
     if (!gl) {
-      console.warn('[DitheredHero] no WebGL; leaving fallback image visible')
+      console.warn('[DitheredImage] no WebGL; leaving fallback image visible')
       return
     }
 
@@ -263,7 +271,7 @@ export function DitheredHero({
     gl.attachShader(prog, fs)
     gl.linkProgram(prog)
     if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
-      console.error('[DitheredHero] link failed:', gl.getProgramInfoLog(prog))
+      console.error('[DitheredImage] link failed:', gl.getProgramInfoLog(prog))
       return
     }
     gl.useProgram(prog)
@@ -378,9 +386,9 @@ export function DitheredHero({
     ).matches
     const start = performance.now()
 
-    // Cursor reveal lens. Targets are set by pointer events; the smoothed
-    // values trail them so the lens glides (and fades) instead of snapping.
-    // Coordinates are in gl_FragCoord space (device px, origin bottom-left).
+    // Cursor lens. Targets are set by pointer events; the smoothed values trail
+    // them so the lens glides (and fades) instead of snapping. Coordinates are
+    // in gl_FragCoord space (device px, origin bottom-left).
     let targetX = 0
     let targetY = 0
     let smoothX = 0
@@ -488,10 +496,19 @@ export function DitheredHero({
   }, [levels, cell, revealRadius, softness, weight, hoverMode])
 
   return (
-    <canvas
-      ref={canvasRef}
-      className="absolute inset-0 h-full w-full"
-      aria-hidden
-    />
+    <div className={cn('relative overflow-hidden', className)}>
+      <img
+        src={src}
+        alt={alt}
+        className="absolute inset-0 h-full w-full object-cover"
+      />
+      <canvas
+        ref={canvasRef}
+        className="absolute inset-0 h-full w-full"
+        aria-hidden
+      />
+    </div>
   )
 }
+
+export default DitheredImage

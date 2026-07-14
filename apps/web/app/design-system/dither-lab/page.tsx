@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { DitheredHero } from '@/components/DitheredHero'
+import { DitheredImage } from '@paradoxui/ui'
 
 type HoverMode = 'reveal' | 'organic' | 'magnify' | 'coarsen' | 'spotlight'
 
@@ -48,22 +48,16 @@ export default function DitherLabPage() {
       <div className="mt-8 flex flex-col gap-8 md:flex-row">
         {/* Preview panel, matching the login hero framing. */}
         <div className="md:w-[440px] md:shrink-0">
-          <div className="relative aspect-[3/4] overflow-hidden rounded-card-tile bg-accent">
-            <img
-              src="/textures/signup-hero-landscape.jpg"
-              alt=""
-              className="absolute inset-0 h-full w-full object-cover"
-            />
-            <DitheredHero
-              src="/textures/signup-hero-landscape.jpg"
-              levels={levels}
-              cell={cell}
-              revealRadius={radius}
-              softness={softness}
-              weight={weight}
-              hoverMode={mode}
-            />
-          </div>
+          <DitheredImage
+            src="/textures/signup-hero-landscape.jpg"
+            className="aspect-[3/4] rounded-card-tile bg-accent"
+            levels={levels}
+            cell={cell}
+            revealRadius={radius}
+            softness={softness}
+            weight={weight}
+            hoverMode={mode}
+          />
           <p className="mt-2 text-label text-muted">Hover the image ↑</p>
         </div>
 
@@ -142,7 +136,7 @@ export default function DitherLabPage() {
               Current
             </p>
             <code className="mt-2 block text-body text-primary">
-              {`<DitheredHero levels={${levels}} cell={${cell}} hoverMode="${mode}" revealRadius={${radius}} softness={${softness}} weight={${weight}} />`}
+              {`<DitheredImage levels={${levels}} cell={${cell}} hoverMode="${mode}" revealRadius={${radius}} softness={${softness}} weight={${weight}} />`}
             </code>
           </div>
         </div>

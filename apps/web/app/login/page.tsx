@@ -1,7 +1,7 @@
 import { Suspense } from 'react'
 import type { Metadata } from 'next'
+import { DitheredImage } from '@paradoxui/ui'
 import { LoginForm } from '@/components/LoginForm'
-import { DitheredHero } from '@/components/DitheredHero'
 
 export const metadata: Metadata = {
   title: 'Welcome to Santolina',
@@ -18,25 +18,16 @@ export default function LoginPage() {
         </div>
       </div>
       <div className="hidden py-5 pr-5 lg:flex lg:w-1/2">
-        <div className="relative flex-1 overflow-hidden rounded-card-tile bg-accent">
-          {/* Fallback for no-WebGL / no-JS: the plain photo. The shader canvas
-              paints over it (Ken Burns orbit + screen-locked dither) once it
-              initialises. */}
-          <img
-            src="/textures/signup-hero-landscape.jpg"
-            alt=""
-            className="absolute inset-0 h-full w-full object-cover"
-          />
-          <DitheredHero
-            src="/textures/signup-hero-landscape.jpg"
-            levels={14}
-            cell={2}
-            hoverMode="spotlight"
-            revealRadius={100}
-            softness={0.8}
-            weight={0.5}
-          />
-        </div>
+        <DitheredImage
+          src="/textures/signup-hero-landscape.jpg"
+          className="flex-1 rounded-card-tile bg-accent"
+          levels={14}
+          cell={2}
+          hoverMode="spotlight"
+          revealRadius={100}
+          softness={0.8}
+          weight={0.5}
+        />
       </div>
     </main>
   )
