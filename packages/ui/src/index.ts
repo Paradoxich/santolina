@@ -81,4 +81,7 @@ export type { DrawerSectionProps } from './components/DrawerSection'
 export { EmptyState } from './components/EmptyState'
 export type { EmptyStateProps } from './components/EmptyState'
 
+export { DitheredImage } from './components/DitheredImage'
+export type { DitheredImageProps } from './components/DitheredImage'
+
 export { cn } from './utils/cn'
