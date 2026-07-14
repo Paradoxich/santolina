@@ -31,6 +31,8 @@ export interface BloomSpan {
 export interface BloomSeason {
   title: string
   meta: string
+  /** Week label alone (no bloom count), for the empty state's header meta */
+  weekLabel: string
   /** Axis labels, one per track line */
   months: string[]
   /** Index into `months` of the current month */

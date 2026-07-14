@@ -1,5 +1,6 @@
 import { Panel } from '@paradoxui/ui'
 import type { PlantDiary } from '@/types/diary'
+import { CardIllustration } from './CardIllustration'
 import { diaryDotColors } from '@/lib/sample-dashboard'
 import { formatDayLabel, parseISODate } from '@/lib/utils'
 
@@ -22,8 +23,14 @@ export function DiaryRecentCard({ diaries, count = 3 }: DiaryRecentCardProps) {
 
   if (recent.length === 0) {
     return (
-      <Panel title="Diary" meta="0 recent" className="h-full">
-        <p className="text-body-small text-muted">No diary entries yet.</p>
+      <Panel
+        title="Diary"
+        className="relative isolate min-h-[280px] overflow-hidden lg:min-h-0 lg:h-full"
+      >
+        <CardIllustration name="diary" />
+        <p className="mt-auto max-w-[55%] text-body-small text-muted">
+          No diary entries yet.
+        </p>
       </Panel>
     )
   }

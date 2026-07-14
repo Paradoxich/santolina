@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import { Panel } from '@paradoxui/ui'
 import type { DashboardPlant } from '@/types/dashboard'
+import { CardIllustration } from './CardIllustration'
 
 interface MyPlantsCardProps {
   plants: DashboardPlant[]
@@ -12,10 +13,13 @@ export function MyPlantsCard({ plants, totalInGarden }: MyPlantsCardProps) {
     return (
       <Panel
         title="My plants"
-        meta={`${totalInGarden} in garden`}
-        className="h-[220px] lg:h-full"
+        className="relative isolate min-h-[380px] overflow-hidden lg:min-h-0 lg:h-full"
       >
-        <p className="text-body-small text-muted">
+        <CardIllustration name="myPlants" />
+        {/* The bush is centred and runs full-width on a narrow card, so on
+            mobile the hint sits under the title (clear of the art) and only
+            drops to the bottom-left at desktop, matching the comp. */}
+        <p className="max-w-[12rem] text-body-small text-muted lg:mt-auto">
           Find plants you&apos;d like to grow. They&apos;ll show up here.
         </p>
       </Panel>

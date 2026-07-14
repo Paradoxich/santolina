@@ -155,6 +155,7 @@ export function deriveBloomSeason(
   return {
     title: seasonTitle(currentMonth),
     meta: `Week ${isoWeek(today)} · ${bloomingNow} blooming now`,
+    weekLabel: `Week ${isoWeek(today)}`,
     months: windowMonths.map((m, i) =>
       i === CENTER ? monthName(m).slice(0, 3) : monthName(m).slice(0, 1)
     ),
