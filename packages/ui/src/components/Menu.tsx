@@ -9,6 +9,7 @@ export interface MenuItem {
   /** `critical` renders the destructive treatment. */
   tone?: 'default' | 'critical'
   disabled?: boolean
+  icon?: React.ReactNode
 }
 
 export interface MenuProps {
@@ -132,9 +133,9 @@ export function Menu({
           aria-label={label}
           onKeyDown={onMenuKeyDown}
           className={cn(
-            'absolute right-0 z-50 min-w-[10rem]',
+            'absolute right-0 z-50 min-w-[8rem]',
             position === 'bottom' ? 'top-full mt-1' : 'bottom-full mb-1',
-            'rounded-sm border border-card bg-gray-0 p-1 shadow-md'
+            'rounded-md border border-card bg-surface-control p-1 shadow-soft backdrop-blur-md'
           )}
         >
           {items.map((item, i) => (
@@ -152,15 +153,16 @@ export function Menu({
                 item.onSelect()
               }}
               className={cn(
-                'flex h-8 w-full items-center rounded-xs px-row-gap text-left text-body-small',
+                'flex h-10 w-full items-center gap-inline-gap rounded-sm px-inline-gap text-left text-body-small',
                 'transition-colors duration-normal',
                 'focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus',
                 'disabled:cursor-not-allowed disabled:opacity-50',
                 item.tone === 'critical'
                   ? 'text-critical hover:bg-surface-critical'
-                  : 'text-primary hover:bg-surface-overlay'
+                  : 'text-primary hover:bg-surface-sunken'
               )}
             >
+              {item.icon}
               {item.label}
             </button>
           ))}

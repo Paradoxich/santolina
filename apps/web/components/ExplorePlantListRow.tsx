@@ -1,4 +1,4 @@
-import Image from 'next/image'
+import { PlantImage } from '@/components/PlantImage'
 import type { CatalogPlant } from '@/types/garden'
 
 interface ExplorePlantListRowProps {
@@ -23,7 +23,7 @@ export function ExplorePlantListRow({
       ].join(' ')}
     >
       <div className="relative size-[76px] shrink-0 overflow-hidden rounded-sm">
-        <Image
+        <PlantImage
           src={plant.imageUrl}
           alt={plant.commonName}
           fill

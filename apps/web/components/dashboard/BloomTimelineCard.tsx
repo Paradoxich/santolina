@@ -1,5 +1,5 @@
-import Image from 'next/image'
 import { Panel } from '@paradoxui/ui'
+import { PlantImage } from '@/components/PlantImage'
 import type { BloomSeason, BloomSpan } from '@/types/dashboard'
 import { CardIllustration } from './CardIllustration'
 
@@ -85,7 +85,7 @@ export function BloomTimelineCard({
                 className="relative h-full w-full overflow-hidden rounded-full border"
                 style={{ borderColor: span.color }}
               >
-                <Image
+                <PlantImage
                   src={span.imageUrl}
                   alt={span.plantName}
                   fill

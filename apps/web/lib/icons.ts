@@ -10,6 +10,7 @@ export const icons = {
   bloom: '/icons/icon-bloom.svg',
   chat: '/icons/icon-chat.svg',
   close: '/icons/icon-close.svg',
+  copy: '/icons/icon-copy.svg',
   diary: '/icons/icon-diary.svg',
   filter: '/icons/icon-filter.svg',
   grid: '/icons/icon-grid.svg',
@@ -23,6 +24,7 @@ export const icons = {
   search: '/icons/icon-search.svg',
   soil: '/icons/icon-soil.svg',
   trash: '/icons/icon-trash.svg',
+  trashCritical: '/icons/icon-trash-critical.svg',
   water: '/icons/icon-water.svg',
 } as const
 

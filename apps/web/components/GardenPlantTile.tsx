@@ -1,5 +1,5 @@
-import Image from 'next/image'
 import { MediaCard } from '@paradoxui/ui'
+import { PlantImage } from '@/components/PlantImage'
 import { getBloomStatus, type BloomStatus } from '@/lib/bloom-status'
 import type { GardenPlant } from '@/types/garden'
 
@@ -26,7 +26,7 @@ export function GardenPlantTile({ plant, onClick }: GardenPlantTileProps) {
       onClick={onClick}
       image={
         <>
-          <Image
+          <PlantImage
             src={plant.imageUrl}
             alt={plant.name}
             fill

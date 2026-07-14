@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
-import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Drawer, Icon, Modal, Tooltip, useToast } from '@paradoxui/ui'
 import { icons } from '@/lib/icons'
+import { PlantImage } from '@/components/PlantImage'
 import { DRAWER_MOTION } from '@/lib/drawer-motion'
 import type { PlantDetail } from '@/lib/plant-detail'
 import { formatPlantSubtitle } from '@/lib/format-plant'
@@ -427,25 +427,23 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
           )}
         </div>
 
-        {photos.length > 0 && (
-          <div className="flex w-full shrink-0 snap-x snap-mandatory gap-inline-gap overflow-x-auto">
-            {photos.map((src, i) => (
-              <div
-                key={src}
-                className="relative h-[141px] shrink-0 snap-start overflow-hidden rounded-sm"
-                style={{ width: PHOTO_WIDTHS[i % PHOTO_WIDTHS.length] }}
-              >
-                <Image
-                  src={src}
-                  alt={`${plant.common_name} photo ${i + 1}`}
-                  fill
-                  sizes="207px"
-                  className="object-cover"
-                />
-              </div>
-            ))}
-          </div>
-        )}
+        <div className="flex w-full shrink-0 snap-x snap-mandatory gap-inline-gap overflow-x-auto">
+          {(photos.length > 0 ? photos : [null]).map((src, i) => (
+            <div
+              key={src ?? 'placeholder'}
+              className="relative h-[141px] shrink-0 snap-start overflow-hidden rounded-sm"
+              style={{ width: PHOTO_WIDTHS[i % PHOTO_WIDTHS.length] }}
+            >
+              <PlantImage
+                src={src}
+                alt={`${plant.common_name} photo ${i + 1}`}
+                fill
+                sizes="207px"
+                className="object-cover"
+              />
+            </div>
+          ))}
+        </div>
 
         <div className="flex w-full flex-col gap-section-break">
           <AboutSection description={plant.description} />

@@ -1,5 +1,5 @@
-import Image from 'next/image'
 import { Panel } from '@paradoxui/ui'
+import { PlantImage } from '@/components/PlantImage'
 import type { DashboardPlant } from '@/types/dashboard'
 import { CardIllustration } from './CardIllustration'
 
@@ -38,7 +38,7 @@ export function MyPlantsCard({ plants, totalInGarden }: MyPlantsCardProps) {
             key={plant.name}
             className="relative min-w-0 flex-1 overflow-hidden rounded-sm"
           >
-            <Image
+            <PlantImage
               src={plant.imageUrl}
               alt={plant.name}
               fill

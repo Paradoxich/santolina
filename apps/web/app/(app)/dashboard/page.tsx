@@ -35,7 +35,6 @@ export default async function DashboardPage() {
       name: p.plant.common_name,
       imageUrl: p.plant.image_url ?? p.plant.image_urls?.[0] ?? '',
     }))
-    .filter((p) => p.imageUrl)
     .slice(0, 5)
 
   const plannedPlants: PlannedPlant[] = palette
