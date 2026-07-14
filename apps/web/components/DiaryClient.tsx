@@ -5,6 +5,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { AnimatePresence } from 'framer-motion'
 import { EmptyState, Icon, Tooltip } from '@paradoxui/ui'
+import { EmptyStateIllustration } from '@/components/EmptyStateIllustration'
 import { DiaryListRow } from '@/components/DiaryListRow'
 import { DiaryDetailDrawer } from '@/components/DiaryDetailDrawer'
 import { parseISODate } from '@/lib/utils'
@@ -102,7 +103,8 @@ export function DiaryClient({
       {sortedDiaries.length === 0 ? (
         <EmptyState
           className="mt-row-gap"
-          message="Find plants you'd like to grow. Each one keeps its diary here."
+          illustration={<EmptyStateIllustration name="diary" />}
+          message="Add plants to your garden to start tracking their diaries."
           ctaLabel="Explore plants"
           ctaHref="/explore"
           linkComponent={Link}

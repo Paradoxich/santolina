@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { Chip, EmptyState, Tabs, useToast } from '@paradoxui/ui'
+import { EmptyStateIllustration } from '@/components/EmptyStateIllustration'
 import { GardenPlantTile } from '@/components/GardenPlantTile'
 import { PlannedPlantTile } from '@/components/PlannedPlantTile'
 import { PlantDetailDrawer } from '@/components/PlantDetailDrawer'
@@ -250,6 +251,7 @@ export function GardenClient({ palette, detail }: GardenClientProps) {
           ) : planned.length > 0 ? (
             <EmptyState
               className="mt-11"
+              illustration={<EmptyStateIllustration name="growing" />}
               message="Move a planned plant here once it's in the ground."
               ctaLabel="View planned"
               onCtaClick={() => handleTabChange('planned')}
@@ -257,7 +259,8 @@ export function GardenClient({ palette, detail }: GardenClientProps) {
           ) : (
             <EmptyState
               className="mt-11"
-              message="Find plants you'd like to grow and add them to your garden."
+              illustration={<EmptyStateIllustration name="growing" />}
+              message="Find the plants you grow and add them here."
               ctaLabel="Explore plants"
               ctaHref="/explore"
               linkComponent={Link}
@@ -266,7 +269,8 @@ export function GardenClient({ palette, detail }: GardenClientProps) {
         ) : (
           <EmptyState
             className="mt-11"
-            message="Find plants you'd like to grow and add them to your plan."
+            illustration={<EmptyStateIllustration name="planned" />}
+            message="Find the plants you'd like to grow and plan them here."
             ctaLabel="Explore plants"
             ctaHref="/explore"
             linkComponent={Link}
