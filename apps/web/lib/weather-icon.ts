@@ -30,24 +30,8 @@ export function mapWeatherCode(code: number): WeatherIconType {
   return 'cloudy'
 }
 
-/**
- * Only sunny/cloudy/rain have dedicated assets today (public/icons/weather-*.svg).
- * partly-cloudy, foggy, snow, and thunderstorm fall back to the closest existing
- * asset until dedicated icons are added — see docs/architecture.md §17.
- */
 export function getWeatherIconAsset(concept: WeatherIconType): WeatherIcon {
-  switch (concept) {
-    case 'sunny':
-      return 'sunny'
-    case 'rain':
-    case 'thunderstorm':
-      return 'rain'
-    case 'cloudy':
-    case 'partly-cloudy':
-    case 'foggy':
-    case 'snow':
-      return 'cloudy'
-  }
+  return concept
 }
 
 const DESCRIPTIONS: Record<WeatherIconType, string> = {

@@ -40,7 +40,14 @@ export interface BloomSeason {
   spans: BloomSpan[]
 }
 
-export type WeatherIcon = 'cloudy' | 'rain' | 'sunny'
+export type WeatherIcon =
+  | 'sunny'
+  | 'partly-cloudy'
+  | 'cloudy'
+  | 'foggy'
+  | 'rain'
+  | 'snow'
+  | 'thunderstorm'
 
 export interface WeatherDay {
   label: string

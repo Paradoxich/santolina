@@ -1,0 +1,9 @@
+<svg width="100%" height="100%" overflow="visible" style="display: block;" viewBox="0 0 107 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Weather Icon" transform="translate(53.5714 23) scale(1.175) translate(-53.5714 -23)">
+<rect id="Line 1" x="39.5714" y="38" width="29" height="3" rx="1.5" fill="#FFFFFF"/>
+<rect id="Line 2" x="27.5714" y="23" width="45" height="4" rx="2" fill="#FFFFFF"/>
+<rect id="Line 3" width="34" height="3" rx="1.5" transform="matrix(-1 0 0 1 79.5714 31)" fill="#FFFFFF"/>
+<rect id="Line 4" width="12" height="3" rx="1.5" transform="matrix(-1 0 0 1 43.5714 31)" fill="#FFFFFF"/>
+<path id="Cloud" d="M42.5714 5C34.8395 5.00006 28.5714 11.2681 28.5714 19C28.5714 20.9132 28.911 22.4699 29.5335 23.7246C36.0023 23.7246 59.4089 23.7246 71.0968 23.7246C71.0966 18.6023 66.9437 14.4502 61.8214 14.4502C59.7548 14.4502 57.8467 15.1267 56.3048 16.2695C55.0346 9.84471 49.369 5 42.5714 5Z" fill="#FFFFFF"/>
+</g>
+</svg>
