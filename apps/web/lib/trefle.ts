@@ -144,8 +144,9 @@ export interface MappedPlant {
   peak_season: 'spring' | 'summer' | 'autumn' | 'winter' | null
   height_min_cm: number | null
   height_max_cm: number | null
-  hardiness_zone_min: number | null
-  // Trefle max temp doesn't cleanly map to max hardiness zone
+  // Both null from Trefle — it carries no usable hardiness data (see the note
+  // above mapHeight). curate-plants fills these later.
+  hardiness_zone_min: null
   hardiness_zone_max: null
   sun_requirements: Array<'full_sun' | 'partial_sun' | 'shade'>
   image_url: string | null
@@ -229,40 +230,14 @@ function mapLight(light: number | null | undefined): SunValue[] {
   return ['full_sun']
 }
 
-/**
- * USDA Hardiness Zone lookup from minimum tolerable temperature (°C).
- * Zone boundaries (lower temp limit for each zone):
- * https://planthardiness.ars.usda.gov/
- */
-const HARDINESS_ZONE_THRESHOLDS: Array<[number, number]> = [
-  [-51.1, 1],
-  [-45.6, 2],
-  [-40.0, 3],
-  [-34.4, 4],
-  [-28.9, 5],
-  [-23.3, 6],
-  [-17.8, 7],
-  [-12.2, 8],
-  [-6.7, 9],
-  [-1.1, 10],
-  [4.4, 11],
-  [10.0, 12],
-]
-
-function minTempToHardinessZone(tempC: number): number {
-  for (const [threshold, zone] of HARDINESS_ZONE_THRESHOLDS) {
-    if (tempC < threshold) return zone
-  }
-  return 13
-}
-
-function mapHardinessZoneMin(
-  growth: TrefleGrowth | null | undefined
-): number | null {
-  const tempC = growth?.minimum_temperature?.deg_c
-  if (tempC == null) return null
-  return minTempToHardinessZone(tempC)
-}
+// NOTE: Trefle is not a hardiness source. A July 2026 audit fetched
+// growth.minimum_temperature for all 414 Trefle-backed catalog species and
+// found deg_c (and deg_f) null for every one — 0% coverage. The old
+// minimum_temperature -> USDA-zone mapping therefore never produced a value in
+// practice, so it has been removed. Both hardiness bounds are left null here
+// and filled downstream by scripts/curate-plants.ts (a Claude estimate); Trefle
+// never mapped a max zone either. Neither bound has an external anchor — adding
+// a real per-species hardiness source is tracked separately.
 
 function mapHeight(specs: TrefleSpecifications | null | undefined): {
   height_min_cm: number | null
@@ -377,7 +352,7 @@ export function mapTrefleDetail(detail: TrefleDetail): MappedPlant {
     peak_season: derivePeakSeason(bloomMonths),
     height_min_cm,
     height_max_cm,
-    hardiness_zone_min: mapHardinessZoneMin(detail.growth),
+    hardiness_zone_min: null,
     hardiness_zone_max: null,
     sun_requirements: mapLight(detail.growth?.light),
     image_url,
