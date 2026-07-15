@@ -16,6 +16,9 @@ build
 # Script output (cross-check reports etc.)
 apps/web/reports
 
+# Catalog backups (backup-catalog.ts — local safety net, never committed)
+apps/web/backups
+
 # Turbo
 .turbo
 
