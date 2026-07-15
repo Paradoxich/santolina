@@ -105,7 +105,7 @@ Full schema is documented in Notion. Data-layer decisions (provider choice, cura
 - **Anthropic API** — powers a growing set of offline data scripts (`ANTHROPIC_API_KEY`, model `claude-sonnet-4-5`), all under `apps/web/scripts/`, none in the request path. Full current list and run order: `docs/architecture.md` §25. Representative examples:
   - `curate-plants.ts` — fills gaps Trefle can't (care instructions, style tags, seasonal rhythm). Never overwrites existing data.
   - `curate-combinations.ts` — populates `plant_combinations` with companion pairings (see `docs/architecture.md` §19).
-  - `cross-check-plants.ts` — blind second pass that fact-checks botanical fields and flags disagreements; never writes to the DB (see `docs/architecture.md` §20).
+  - `cross-check-plants.ts` — blind second pass that fact-checks botanical fields and flags disagreements; never edits catalog data (writes only its own `botanical_checked_at` stamp — see `docs/architecture.md` §20).
   - `curate-seasonal-care.ts` / `cross-check-seasonal-care.ts` — distills and blind-checks the Care Tips `seasonal_care` field (see `docs/architecture.md` §28).
 - **Vercel AI SDK** — reserved for the deferred agent layer. The `ai` and `openai` packages are installed but nothing imports them yet; model choice is decided when the Agent is built.
 

@@ -161,9 +161,12 @@ async function apply(): Promise<void> {
 
   let ok = 0
   for (const r of results) {
+    // Rewriting native_to invalidates any prior native_to cross-check, so null
+    // the guard's stamp in the same write — cross-check-native-to --new-only
+    // then re-checks this row. (The cascade rule from migration 20260716120000.)
     const { error } = await db
       .from('plants')
-      .update({ native_to: r.after })
+      .update({ native_to: r.after, native_checked_at: null })
       .eq('id', r.id)
     if (error) console.error(`FAILED ${r.common_name}: ${error.message}`)
     else ok++

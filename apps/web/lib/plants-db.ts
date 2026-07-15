@@ -93,6 +93,11 @@ export interface DbPlant {
   seasonal_care: SeasonalCare | null
   garden_use_tags: string[] | null
   ai_drafted_at: string | null
+  // Guard checked-at stamps (operational metadata, not catalog content). Set by
+  // the cross-check guards when they check a row; NULL = never checked, which
+  // is what their --new-only mode targets. See migration 20260716120000.
+  botanical_checked_at: string | null
+  native_checked_at: string | null
   created_at: string
   updated_at: string
 }

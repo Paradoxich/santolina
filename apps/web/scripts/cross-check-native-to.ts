@@ -17,14 +17,15 @@
  * a verdict. A code-level backstop forces "gross" whenever those continent sets
  * are disjoint, so the model can't wave through a cross-continent miss.
  *
- * Default run writes a ranked report and NEVER touches the DB. `--apply` patches
- * ONLY rows the check rated "gross" that carry a suggested replacement phrase —
- * the same generate-then-apply safety split as regenerate-native-to.ts.
+ * Default run writes a ranked report and never EDITS catalog data — it only
+ * stamps the operational native_checked_at column (§20, migration
+ * 20260716120000) per row. `--apply` patches ONLY rows the check rated "gross"
+ * that carry a suggested replacement phrase — the same generate-then-apply
+ * safety split as regenerate-native-to.ts.
  *
- * --new-only scopes the check to the most recent seed batch (rows created on
- * the newest calendar day), so a post-seed run only bills Claude for the fresh
- * phrases instead of re-checking the whole catalog. Same convention as
- * cross-check-plants.ts / curate-plants.ts --new-only.
+ * --new-only scopes the check to rows never checked before (native_checked_at
+ * IS NULL) — state-based, so it's exact and resumable (this guard was once
+ * killed at 279/494; the next run now continues from where it stopped).
  *
  * Usage (from apps/web):
  *   ./node_modules/.bin/tsx --env-file=.env.local scripts/cross-check-native-to.ts
@@ -77,18 +78,22 @@ interface PlantRow {
   created_at: string
 }
 
-// --new-only restricts the check to the most recent seed batch — the rows
-// whose created_at falls on the same calendar day (UTC) as the newest plant.
-// A seed round adds all its rows on one day, so this scopes a post-seed
-// native_to guard to the fresh phrases instead of re-checking (and re-billing
-// Claude for) the whole catalog. Mirrors cross-check-plants.ts --new-only.
-function newestBatchOnly<T extends { created_at: string }>(rows: T[]): T[] {
-  if (!rows.length) return rows
-  const newestDay = rows
-    .map((r) => r.created_at.slice(0, 10))
-    .sort()
-    .at(-1)
-  return rows.filter((r) => r.created_at.slice(0, 10) === newestDay)
+// --new-only restricts the check to rows this guard has never checked —
+// native_checked_at IS NULL. State-based, so it's exact (no UTC-midnight batch
+// split) and resumable — the reason it matters here: this guard was once
+// killed at 279/494, and the next --new-only run now continues from where it
+// stopped instead of re-billing Claude for the rows already checked. Replaced
+// an earlier newest-calendar-day heuristic. Mirrors cross-check-plants.ts.
+
+// Stamp a row as native-checked. Operational metadata only — never touches a
+// catalog field (native_to edits happen only via the explicit --apply path).
+async function stampChecked(id: string): Promise<void> {
+  const db = getSupabaseAdmin()
+  const { error } = await db
+    .from('plants')
+    .update({ native_checked_at: new Date().toISOString() })
+    .eq('id', id)
+  if (error) throw new Error(`Failed to stamp ${id}: ${error.message}`)
 }
 
 type Continent = (typeof CONTINENTS)[number]
@@ -409,9 +414,11 @@ async function apply(): Promise<void> {
   console.log(`Applying ${fixes.length} gross-error fixes...\n`)
   let ok = 0
   for (const r of fixes) {
+    // Patching native_to changes what was checked, so null the stamp too (the
+    // cascade rule) — a later --new-only run re-verifies the replacement phrase.
     const { error } = await db
       .from('plants')
-      .update({ native_to: r.suggested_phrase })
+      .update({ native_to: r.suggested_phrase, native_checked_at: null })
       .eq('id', r.id)
     if (error) console.error(`FAILED ${r.common_name}: ${error.message}`)
     else {
@@ -445,14 +452,13 @@ function loadRawSnapshot(): Map<string, string> {
 
 async function generate(limit: number | null, newOnly: boolean): Promise<void> {
   const db = getSupabaseAdmin()
-  let plants = await fetchAllRows<PlantRow>((from, to) =>
-    db
+  let plants = await fetchAllRows<PlantRow>((from, to) => {
+    let q = db
       .from('plants')
       .select('id, common_name, scientific_name, family, native_to, created_at')
-      .order('id')
-      .range(from, to)
-  )
-  if (newOnly) plants = newestBatchOnly(plants)
+    if (newOnly) q = q.is('native_checked_at', null)
+    return q.order('id').range(from, to)
+  })
   if (limit !== null) plants = plants.slice(0, limit)
 
   const rawByID = loadRawSnapshot()
@@ -488,6 +494,10 @@ async function generate(limit: number | null, newOnly: boolean): Promise<void> {
       console.log(
         `[${pad(i + 1)}/${plants.length}] ${tag.padEnd(7)} ${plant.common_name} — "${plant.native_to}"`
       )
+
+      // Stamp only after a successful check (any verdict). A row that threw
+      // stays unstamped so --new-only retries it next run.
+      await stampChecked(plant.id)
     } catch (err) {
       console.error(
         `[${pad(i + 1)}/${plants.length}] ERROR ${plant.common_name}: ${(err as Error).message}`

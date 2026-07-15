@@ -9,17 +9,19 @@
  * botanical sources legitimately disagree at the margins, so only
  * meaningful disagreements are flagged.
  *
- * NEVER writes to the plants table — output is a terminal report plus a
- * JSON report file for human spot-checking (reports/ is gitignored).
+ * Never EDITS catalog data — output is a terminal report plus a JSON report
+ * file for human spot-checking (reports/ is gitignored). The only column it
+ * writes is the operational botanical_checked_at stamp (§20, migration
+ * 20260716120000), recording when each row was checked.
  *
  * Usage (from apps/web):
  *   ./node_modules/.bin/tsx --env-file=.env.local scripts/cross-check-plants.ts
  *   ./node_modules/.bin/tsx --env-file=.env.local scripts/cross-check-plants.ts --limit 5
  *   ./node_modules/.bin/tsx --env-file=.env.local scripts/cross-check-plants.ts --new-only
  *
- * --new-only scopes the check to the most recent seed batch (rows created on
- * the newest calendar day), so a post-seed run doesn't re-check the whole
- * catalog. Same convention as curate-plants.ts --new-only.
+ * --new-only scopes the check to rows never checked before
+ * (botanical_checked_at IS NULL) — state-based, so it's exact and resumable.
+ * Default re-checks (and re-stamps) the whole is_curated = false catalog.
  */
 
 import { mkdirSync, writeFileSync } from 'node:fs'
@@ -94,19 +96,22 @@ function parseLimit(): number | null {
   return limit
 }
 
-// --new-only restricts the check to the most recent seed batch — the rows
-// whose created_at falls on the same calendar day (UTC) as the newest plant.
-// A seed round adds all its rows on one day, so this scopes a post-seed
-// cross-check to the fresh drafts without re-checking the whole catalog (the
-// costly default, since every row is is_curated = false). Mirrors the
-// curate-plants.ts --new-only convention.
-function newestBatchOnly<T extends { created_at: string }>(rows: T[]): T[] {
-  if (!rows.length) return rows
-  const newestDay = rows
-    .map((r) => r.created_at.slice(0, 10))
-    .sort()
-    .at(-1)
-  return rows.filter((r) => r.created_at.slice(0, 10) === newestDay)
+// --new-only restricts the check to rows this guard has never checked —
+// botanical_checked_at IS NULL. State-based, so it's exact (no UTC-midnight
+// batch split) and resumable (a killed run leaves the rest unstamped for the
+// next pass). Replaced an earlier newest-calendar-day heuristic. Default (no
+// flag) re-checks and re-stamps the whole is_curated = false catalog — the way
+// to re-run after a prompt revision, or filter by date on the column.
+
+// Stamp a row as botanically checked. Operational metadata only — never
+// touches a catalog field, so the flags-only rule (§20) holds.
+async function stampChecked(id: string): Promise<void> {
+  const db = getSupabaseAdmin()
+  const { error } = await db
+    .from('plants')
+    .update({ botanical_checked_at: new Date().toISOString() })
+    .eq('id', id)
+  if (error) throw new Error(`Failed to stamp ${id}: ${error.message}`)
 }
 
 // ---------------------------------------------------------------------------
@@ -326,21 +331,13 @@ async function main() {
   const db = getSupabaseAdmin()
 
   console.log('\nFetching AI-drafted plants from Supabase...')
-  const data = await fetchAllRows<Record<string, unknown>>((from, to) =>
-    db
-      .from('plants')
-      .select('*')
-      .not('ai_drafted_at', 'is', null)
-      .order('id')
-      .range(from, to)
-  )
+  const data = await fetchAllRows<Record<string, unknown>>((from, to) => {
+    let q = db.from('plants').select('*').not('ai_drafted_at', 'is', null)
+    if (newOnly) q = q.is('botanical_checked_at', null)
+    return q.order('id').range(from, to)
+  })
 
-  const scoped = newOnly
-    ? newestBatchOnly(data as Array<{ created_at: string }>)
-    : data
-  const plants = (limit
-    ? scoped.slice(0, limit)
-    : scoped) as unknown as DbPlant[]
+  const plants = (limit ? data.slice(0, limit) : data) as unknown as DbPlant[]
   if (!plants.length) {
     console.log('No AI-drafted plants found — nothing to check.')
     process.exit(0)
@@ -376,6 +373,11 @@ async function main() {
         clean++
         console.log('✓')
       }
+
+      // Stamp only after a successful check (flagged or clean — both mean the
+      // guard ran on this row). A row that threw stays unstamped, so --new-only
+      // picks it up on the next run.
+      await stampChecked(plant.id)
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err)
       console.log(`✗  ${message}`)
