@@ -27,6 +27,7 @@
 import { fetchAndMapSpecies, searchSpeciesByName } from '../lib/trefle'
 import { upsertPlant } from '../lib/plants-db'
 import { getSupabaseAdmin } from '../lib/supabase-admin'
+import { writeRoundManifest, type SeededPlant } from './round-manifest'
 
 // ---------------------------------------------------------------------------
 // Edit this list before running.
@@ -352,7 +353,13 @@ async function main() {
     process.exit(0)
   }
 
-  const includeExisting = process.argv.slice(2).includes('--include-existing')
+  const args = process.argv.slice(2)
+  const includeExisting = args.includes('--include-existing')
+  const roundIdx = args.indexOf('--round')
+  const roundLabel = roundIdx >= 0 ? args[roundIdx + 1] : undefined
+  const startedAt = new Date().toISOString()
+  const seeded: SeededPlant[] = []
+
   const existing = includeExisting
     ? { ids: new Set<number>(), names: new Set<string>() }
     : await fetchExistingCatalog()
@@ -402,6 +409,11 @@ async function main() {
       console.log(
         `${prefix} ✓ Upserted "${saved.common_name}" (id=${saved.id})`
       )
+      seeded.push({
+        id: saved.id,
+        source_species_id: saved.source_species_id,
+        common_name: saved.common_name,
+      })
       succeeded++
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err)
@@ -417,6 +429,15 @@ async function main() {
   console.log(
     `Seeding complete: ${succeeded} succeeded, ${skipped} skipped (already in catalog), ${failures.length} failed`
   )
+
+  // Round manifest — the explicit record of what this run seeded, so the
+  // rest of the pipeline (and future us) never has to infer the batch.
+  if (roundLabel && seeded.length) {
+    const path = writeRoundManifest({ label: roundLabel, startedAt, seeded })
+    console.log(`\nWrote round manifest: ${path}`)
+  } else if (roundLabel) {
+    console.log('\nNothing seeded — no manifest written.')
+  }
 
   if (failures.length) {
     console.log('\nFailed entries:')
