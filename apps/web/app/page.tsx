@@ -45,30 +45,24 @@ export default function InProgressPage() {
       <div className={styles.inner}>
         <h1 className={styles.headline}>Santolina</h1>
         <p className={styles.meta}>
-          Passion project from{' '}
-          <a
-            href="https://www.anabeverin.com/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Ana,
-          </a>{' '}
-          check it out on{' '}
-          <a
-            href="https://github.com/Paradoxich/santolina"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            GitHub,
-          </a>{' '}
-          read about it on{' '}
+          Explore the <a href="/dashboard">live preview</a>, read the
+          development journal on{' '}
           <a
             href="https://paradoxich.substack.com"
             target="_blank"
             rel="noopener noreferrer"
           >
-            Substack.
+            Substack
           </a>
+          , or browse the source on{' '}
+          <a
+            href="https://github.com/Paradoxich/santolina"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            GitHub
+          </a>
+          .
           <br />
         </p>
 
