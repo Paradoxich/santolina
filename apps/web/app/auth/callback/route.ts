@@ -5,7 +5,8 @@ import { createSupabaseServerClient } from '@/lib/supabase-server'
 // Completes sign in for both flows:
 //  - OAuth (Google) and PKCE magic links arrive with `?code=` -> exchange it.
 //  - Email OTP links arrive with `?token_hash=&type=` -> verify it.
-// On success we drop the user at `next` (defaults to home); the first-run
+// On success we drop the user at `next`, defaulting to /dashboard (the app's
+// entry point) rather than the marketing landing page at `/`; the first-run
 // location gate takes over from there once it exists (docs/architecture.md §24).
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
@@ -18,7 +19,7 @@ export async function GET(request: Request) {
   const next =
     rawNext && rawNext.startsWith('/') && !rawNext.startsWith('//')
       ? rawNext
-      : '/'
+      : '/dashboard'
 
   const supabase = await createSupabaseServerClient()
 
