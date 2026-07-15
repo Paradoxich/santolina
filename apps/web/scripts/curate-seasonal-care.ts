@@ -125,7 +125,6 @@ const ACTION_VERBS = new Set([
   'let',
   'check',
   'monitor',
-  'watch',
   'wait',
   'avoid',
   'keep',
@@ -161,7 +160,6 @@ const ACTION_VERBS = new Set([
   'install',
   'control',
   'mark',
-  'observe',
   'top-dress',
   'shape',
 ])
@@ -200,7 +198,8 @@ Rules (strict):
 - Distill from the source only. Do not invent care facts the source doesn't support. If maintenance_notes is thin or null, prefer null over guessing.
 - "Anytime" actions get null, not a season. If an action is done "as needed" / "as required" / whenever you notice it (e.g. "remove dead or damaged leaves as needed") and the source gives it NO season, leave every stage null for it — do not attach it to a stage. (Genuine conditionals tied to a real time, like "stake if needed" in the growing season, are fine.)
 - Assign each seasonal action to its horticulturally CORRECT stage, even when the source states no season. Never place an action in a stage just because that stage is empty. In particular: divide/lift most perennials in EARLY SPRING (not winter — you do not divide into frozen ground); plant spring-flowering bulbs in the AUTUMN stage (October-November), not late_summer; prune spring-flowering shrubs AFTER they flower. If you are unsure of the correct season for an action, use null rather than guessing a stage.
-- One action per line. It must answer "why now?" — a thing you DO, not a description of what the plant is doing.
+- If a line says "after flowering" / "once flowering finishes" / "immediately after blooming", the stage you assign it to must be a stage that comes AFTER this species' actual bloom window ends — never the stage(s) it is still in bloom, and never a stage before bloom starts. Use bloom_months to find when flowering ends. This applies just as much to winter- and early-spring-flowering shrubs (bloom Dec-Mar) as to summer bloomers — an "after flowering" action for a February-blooming shrub belongs in early_spring or later, not before.
+- One action per line. It must answer "why now?" — a thing you DO, not a description of what the plant is doing. Never write a line that only describes the plant's own natural behavior with no action attached (e.g. "Watch for flowers emerging", "Note new foliage appearing") — that is seasonal_rhythm content, not seasonal_care. If there is nothing to DO, the value is null.
 - Start each line with an imperative verb (Water…, Prune…, Mulch…, Deadhead…, Cut back…, Divide…, Protect…).
 - Maximum ${MAX_WORDS} words / ~${MAX_CHARS} characters per line. Terse. Sentence case. End with a period.
 - No em dashes or en dashes anywhere. Plain sentences only.
@@ -337,6 +336,17 @@ function validateLine(stage: string, line: string): Violation | null {
     return {
       stage,
       reason: '"as needed" is an anytime action — use null, not a stage',
+    }
+  // Descriptive-content tell: "Watch for X emerging" etc. is seasonal_rhythm
+  // narrative (what the plant is doing) wearing an imperative verb as a
+  // disguise — it isn't a care action, so grammatically-imperative isn't
+  // enough. Found in editorial review (July 15 2026): every catalog instance
+  // of these five starters was descriptive, none a real task.
+  const leadVerb = imperativeVerb(trimmed)
+  if (['watch', 'look', 'note', 'observe', 'expect'].includes(leadVerb))
+    return {
+      stage,
+      reason: `"${leadVerb}" is descriptive narrative, not a care action — use null`,
     }
   // Length.
   const words = trimmed.split(/\s+/).length
