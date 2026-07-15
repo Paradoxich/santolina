@@ -388,9 +388,9 @@ Toast copy follows the same split: "Added to your garden" only fires for a fresh
 
 **Two sources feed the list:** `lib/diary.ts`'s `getPlantDiaries()` returns one `PlantDiary` per `planted` (growing) row in the _current_ `palette_plants` for the garden (so a freshly-planted plant shows up with an empty thread, ready for its first note) — `planned`/`considering` plants don't get one yet, since a diary is for tracking something you're actually tending, not a plan. It then adds a second bucket: any plant with `diary_entries` in this garden that's no longer in `palette_plants` at all. Those get `paletteId: null`, and `DiaryListRow` renders a small "Removed from garden" tag next to the plant name instead of hiding the thread — removal is destructive to the palette row, not to the plant's history. Still writable: the composer works the same for a removed plant's diary (e.g. a closing note), since `addDiaryEntry`'s `paletteId` is optional and the schema never required a live palette row.
 
-**Storage — superseded:** the original public-bucket posture ("no real per-user privacy boundary yet — revisit once real auth/profiles exist") expired when auth shipped (§24). The bucket is now private with garden-ownership policies and signed-URL reads — see §28, which supersedes this paragraph. The upload path convention `{gardenId}/{plantId}/{timestamp}-{filename}` (set in `addDiaryEntry`, `server/diary-actions.ts`) is unchanged and is what the ownership policies key on.
+**Storage — superseded:** the original public-bucket posture ("no real per-user privacy boundary yet — revisit once real auth/profiles exist") expired when auth shipped (§24). The bucket is now private with garden-ownership policies and signed-URL reads — see §29, which supersedes this paragraph. The upload path convention `{gardenId}/{plantId}/{timestamp}-{filename}` (set in `addDiaryEntry`, `server/diary-actions.ts`) is unchanged and is what the ownership policies key on.
 
-**Not solving now:** ~~`deleteDiaryEntry` removes the `diary_entries` row but leaves its uploaded photos in the bucket — an accepted orphaned-file gap for v1~~ (closed in §28: deletes now remove photo objects best-effort). `deleteDiaryEntry` is also not wired to any UI affordance yet (`NoteCard` has no delete button); it exists in `server/diary-actions.ts` for completeness and future use.
+**Not solving now:** ~~`deleteDiaryEntry` removes the `diary_entries` row but leaves its uploaded photos in the bucket — an accepted orphaned-file gap for v1~~ (closed in §29: deletes now remove photo objects best-effort). `deleteDiaryEntry` is also not wired to any UI affordance yet (`NoteCard` has no delete button); it exists in `server/diary-actions.ts` for completeness and future use.
 
 **Scope cut — no AI synthesis:** the diary drawer's summary paragraph (`diary.summary`) is the plant's static `plants.description` field (Trefle-sourced botanical description), not a synthesized "how this plant did this season" narrative generated from the diary's own notes. Synthesizing across entries is an explicit future Agent feature (deferred per `CLAUDE.md`) — the chat icon in the drawer header stays present but unwired, not faked with static text pretending to be dynamic.
 
@@ -579,7 +579,7 @@ Run the steps **in this order** after choosing a batch of species:
 
 **Follow-ups (not built yet):** (1) the UI gating above; (2) then **drop the legacy `hardiness_zone_min`/`max` columns** — "don't store both" — but only _after_ the render path derives from the rating, or hardiness display breaks; (3) once verification is done, record in the build log **what fraction of AI drafts survived RHS verification unchanged vs. got corrected** — that ratio is the real measure of the draft's quality.
 
-## 28. Diary photos go private: signed URLs on a garden-owned bucket
+## 29. Diary photos go private: signed URLs on a garden-owned bucket
 
 **Decided July 15, 2026.** §18's public-bucket posture was explicitly temporary ("revisit once real auth/profiles exist"); auth shipped (§24), so this is that revisit. This section supersedes §18's storage paragraph.
 

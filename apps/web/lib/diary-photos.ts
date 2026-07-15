@@ -3,7 +3,7 @@
 // {timestamp}-{filename}); renderable URLs are short-lived signed URLs
 // generated per request through the session client, so the storage select
 // policy (garden ownership) is what actually gates access. See
-// docs/architecture.md §28.
+// docs/architecture.md §29.
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 export const DIARY_PHOTOS_BUCKET = 'diary-photos'
