@@ -19,6 +19,7 @@
 
 import { getSupabaseAdmin } from '../lib/supabase-admin'
 import { getAnthropicClient, CURATION_MODEL } from '../lib/anthropic-client'
+import { fetchAllRows } from './paginate'
 
 // ---------------------------------------------------------------------------
 // Config
@@ -221,28 +222,36 @@ async function main() {
   const db = getSupabaseAdmin()
 
   console.log('\nFetching plant catalog from Supabase...')
-  const { data: plantsData, error: plantsError } = await db
-    .from('plants')
-    .select(
-      'id, common_name, scientific_name, plant_type, style_tags, sun_requirements, bloom_months, bloom_color, height_max_cm'
-    )
-    .order('common_name')
-  if (plantsError)
-    throw new Error(`Failed to fetch plants: ${plantsError.message}`)
-  const plants = (plantsData ?? []) as CatalogPlant[]
+  const plants = await fetchAllRows<CatalogPlant>((from, to) =>
+    db
+      .from('plants')
+      .select(
+        'id, common_name, scientific_name, plant_type, style_tags, sun_requirements, bloom_months, bloom_color, height_max_cm'
+      )
+      .order('id')
+      .range(from, to)
+  )
 
   console.log('Fetching existing combinations...')
-  const { data: combosData, error: combosError } = await db
-    .from('plant_combinations')
-    .select('plant_id_a, plant_id_b')
-  if (combosError)
-    throw new Error(`Failed to fetch combinations: ${combosError.message}`)
+  // Paginated: a bare select caps at 1000 rows, and this table is already
+  // past that — an unpaginated read here previously truncated the dedupe set
+  // and the per-plant cap counts, creating duplicate pairs and over-cap rows.
+  const combos = await fetchAllRows<{
+    plant_id_a: string
+    plant_id_b: string
+  }>((from, to) =>
+    db
+      .from('plant_combinations')
+      .select('plant_id_a, plant_id_b')
+      .order('id')
+      .range(from, to)
+  )
 
   // Seed pair set and per-plant companion counts from existing rows
   const existingPairs = new Set<string>()
   const companionCount = new Map<string, number>()
   for (const p of plants) companionCount.set(p.id, 0)
-  for (const c of combosData ?? []) {
+  for (const c of combos) {
     existingPairs.add(pairKey(c.plant_id_a, c.plant_id_b))
     companionCount.set(
       c.plant_id_a,

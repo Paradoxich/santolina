@@ -37,6 +37,7 @@ import { mkdirSync, writeFileSync, readFileSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { getSupabaseAdmin } from '../lib/supabase-admin'
 import { getAnthropicClient, CURATION_MODEL } from '../lib/anthropic-client'
+import { fetchAllRows } from './paginate'
 
 // ---------------------------------------------------------------------------
 // Config
@@ -444,12 +445,13 @@ function loadRawSnapshot(): Map<string, string> {
 
 async function generate(limit: number | null, newOnly: boolean): Promise<void> {
   const db = getSupabaseAdmin()
-  const { data, error } = await db
-    .from('plants')
-    .select('id, common_name, scientific_name, family, native_to, created_at')
-    .order('common_name')
-  if (error) throw new Error(`Failed to fetch plants: ${error.message}`)
-  let plants = (data ?? []) as PlantRow[]
+  let plants = await fetchAllRows<PlantRow>((from, to) =>
+    db
+      .from('plants')
+      .select('id, common_name, scientific_name, family, native_to, created_at')
+      .order('id')
+      .range(from, to)
+  )
   if (newOnly) plants = newestBatchOnly(plants)
   if (limit !== null) plants = plants.slice(0, limit)
 
