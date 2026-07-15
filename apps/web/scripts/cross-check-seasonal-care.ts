@@ -157,6 +157,31 @@ interface CheckedLine {
   note?: string
 }
 
+// Return the first balanced {...} object in a string, respecting string
+// literals and escapes, or null if none. Handles the checker occasionally
+// emitting two concatenated objects.
+function firstJsonObject(s: string): string | null {
+  const start = s.indexOf('{')
+  if (start < 0) return null
+  let depth = 0
+  let inStr = false
+  let esc = false
+  for (let i = start; i < s.length; i++) {
+    const c = s[i]
+    if (inStr) {
+      if (esc) esc = false
+      else if (c === '\\') esc = true
+      else if (c === '"') inStr = false
+    } else if (c === '"') inStr = true
+    else if (c === '{') depth++
+    else if (c === '}') {
+      depth--
+      if (depth === 0) return s.slice(start, i + 1)
+    }
+  }
+  return null
+}
+
 async function checkPlant(target: CheckTarget): Promise<CheckedLine[]> {
   const client = getAnthropicClient()
   const label = `${target.common_name} (${target.scientific_name ?? '—'})`
@@ -173,35 +198,39 @@ For EACH care action below, return the stage key(s) whose months are horticultur
 Actions:
 ${actions}
 
+Use ONLY these six stage keys in correct_stages: ${JSON.stringify(SEASONAL_KEYS)} (never "late_winter" etc. — late winter is "winter", early autumn is "autumn"). Keep each note under 12 words.
+
 Return ONLY JSON: {"results":[{"index":1,"correct_stages":["autumn"],"confidence":"high","note":"optional short reason"}, ...]} with one entry per numbered action.`
 
-  const message = await client.messages.create({
-    model: CURATION_MODEL,
-    max_tokens: 1024,
-    system:
-      'You are a horticultural timing fact-checker. Respond with ONLY valid JSON, no markdown, no code fences, no preamble, no explanation.',
-    messages: [{ role: 'user', content: prompt }],
-  })
-
-  const raw = message.content
-    .filter((b) => b.type === 'text')
-    .map((b) => (b as { type: 'text'; text: string }).text)
-    .join('')
-    .trim()
-  const cleaned = raw
-    .replace(/^```(?:json)?\s*/i, '')
-    .replace(/```\s*$/i, '')
-    .trim()
-
-  let parsed: { results?: CheckedLine[] }
-  try {
-    parsed = JSON.parse(cleaned) as { results?: CheckedLine[] }
-  } catch {
-    throw new Error(`Checker returned invalid JSON: ${cleaned.slice(0, 200)}`)
+  // One retry: the checker occasionally emits malformed JSON (a raw newline in a
+  // verbose note, or trailing prose). A fresh generation almost always fixes it.
+  let lastErr = ''
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const message = await client.messages.create({
+      model: CURATION_MODEL,
+      max_tokens: 2048,
+      system:
+        'You are a horticultural timing fact-checker. Respond with ONLY valid JSON, no markdown, no code fences, no preamble, no explanation.',
+      messages: [{ role: 'user', content: prompt }],
+    })
+    const raw = message.content
+      .filter((b) => b.type === 'text')
+      .map((b) => (b as { type: 'text'; text: string }).text)
+      .join('')
+      .trim()
+    // Extract the FIRST balanced {...} object — the checker sometimes emits two
+    // concatenated objects or trailing prose, which a naive first-to-last slice
+    // would merge into invalid JSON.
+    const cleaned = firstJsonObject(raw) ?? raw
+    try {
+      const parsed = JSON.parse(cleaned) as { results?: CheckedLine[] }
+      if (!Array.isArray(parsed.results)) throw new Error('no results array')
+      return parsed.results
+    } catch (e) {
+      lastErr = e instanceof Error ? e.message : String(e)
+    }
   }
-  if (!Array.isArray(parsed.results))
-    throw new Error('Checker returned no results array')
-  return parsed.results
+  throw new Error(`Checker returned invalid JSON after retry: ${lastErr}`)
 }
 
 // ---------------------------------------------------------------------------
@@ -315,6 +344,7 @@ async function main() {
   const argv = process.argv.slice(2)
   let fromReport: string | null = null
   let limit: number | null = null
+  let names: Set<string> | null = null
   for (let i = 0; i < argv.length; i++) {
     if (argv[i] === '--from-report') {
       fromReport = argv[i + 1] ?? null
@@ -326,15 +356,30 @@ async function main() {
         throw new Error('--limit must be a positive integer')
       limit = parseInt(next, 10)
       i++
+    } else if (argv[i] === '--names') {
+      // Re-check specific plants by common/scientific name (comma-separated).
+      // For closing the gap on rows that errored in a prior full run.
+      const next = argv[i + 1]
+      if (!next) throw new Error('--names requires a comma-separated list')
+      names = new Set(next.split(',').map((s) => s.trim().toLowerCase()))
+      i++
     }
   }
 
   console.log(
     `\nBlind season-sanity check (${fromReport ? `report: ${fromReport}` : 'DB'})...`
   )
-  const targets = fromReport
+  let targets = fromReport
     ? fetchFromReport(fromReport)
     : await fetchFromDb(limit)
+  if (names) {
+    targets = targets.filter(
+      (t) =>
+        names!.has(t.common_name.toLowerCase()) ||
+        (t.scientific_name != null &&
+          names!.has(t.scientific_name.toLowerCase()))
+    )
+  }
 
   if (!targets.length) {
     console.log('No populated seasonal_care found — nothing to check.')
