@@ -21,8 +21,14 @@
  * ONLY rows the check rated "gross" that carry a suggested replacement phrase —
  * the same generate-then-apply safety split as regenerate-native-to.ts.
  *
+ * --new-only scopes the check to the most recent seed batch (rows created on
+ * the newest calendar day), so a post-seed run only bills Claude for the fresh
+ * phrases instead of re-checking the whole catalog. Same convention as
+ * cross-check-plants.ts / curate-plants.ts --new-only.
+ *
  * Usage (from apps/web):
  *   ./node_modules/.bin/tsx --env-file=.env.local scripts/cross-check-native-to.ts
+ *   ./node_modules/.bin/tsx --env-file=.env.local scripts/cross-check-native-to.ts --new-only
  *   ./node_modules/.bin/tsx --env-file=.env.local scripts/cross-check-native-to.ts --limit 10
  *   ./node_modules/.bin/tsx --env-file=.env.local scripts/cross-check-native-to.ts --apply
  */
@@ -67,6 +73,21 @@ interface PlantRow {
   scientific_name: string | null
   family: string | null
   native_to: string | null
+  created_at: string
+}
+
+// --new-only restricts the check to the most recent seed batch — the rows
+// whose created_at falls on the same calendar day (UTC) as the newest plant.
+// A seed round adds all its rows on one day, so this scopes a post-seed
+// native_to guard to the fresh phrases instead of re-checking (and re-billing
+// Claude for) the whole catalog. Mirrors cross-check-plants.ts --new-only.
+function newestBatchOnly<T extends { created_at: string }>(rows: T[]): T[] {
+  if (!rows.length) return rows
+  const newestDay = rows
+    .map((r) => r.created_at.slice(0, 10))
+    .sort()
+    .at(-1)
+  return rows.filter((r) => r.created_at.slice(0, 10) === newestDay)
 }
 
 type Continent = (typeof CONTINENTS)[number]
@@ -421,14 +442,15 @@ function loadRawSnapshot(): Map<string, string> {
   return map
 }
 
-async function generate(limit: number | null): Promise<void> {
+async function generate(limit: number | null, newOnly: boolean): Promise<void> {
   const db = getSupabaseAdmin()
   const { data, error } = await db
     .from('plants')
-    .select('id, common_name, scientific_name, family, native_to')
+    .select('id, common_name, scientific_name, family, native_to, created_at')
     .order('common_name')
   if (error) throw new Error(`Failed to fetch plants: ${error.message}`)
   let plants = (data ?? []) as PlantRow[]
+  if (newOnly) plants = newestBatchOnly(plants)
   if (limit !== null) plants = plants.slice(0, limit)
 
   const rawByID = loadRawSnapshot()
@@ -479,7 +501,7 @@ async function generate(limit: number | null): Promise<void> {
 
 async function main() {
   if (process.argv.includes('--apply')) await apply()
-  else await generate(parseLimit())
+  else await generate(parseLimit(), process.argv.includes('--new-only'))
 }
 
 main().catch((err) => {
