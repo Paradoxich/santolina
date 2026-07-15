@@ -6,9 +6,11 @@ import {
   STATIC_SEASONAL_TIPS,
   getCareTips,
   getEventTips,
+  getGroupedCareTips,
   isPeakHeat,
   type CareEvent,
 } from './care-tips'
+import type { DiaryEventType } from './diary-events'
 
 // --- fixtures --------------------------------------------------------------
 
@@ -49,6 +51,14 @@ function palettePlant(
 
 function plantedEvent(plantId: string, days: number): CareEvent {
   return { plantId, eventType: 'planted', occurredAt: daysAgo(days) }
+}
+
+function careEvent(
+  plantId: string,
+  eventType: DiaryEventType,
+  days: number
+): CareEvent {
+  return { plantId, eventType, occurredAt: daysAgo(days) }
 }
 
 // --- window math -----------------------------------------------------------
@@ -236,6 +246,93 @@ describe('vocabulary ruling', () => {
   it('every rule tip_template uses "Fertilize"/"Water", never "feed"', () => {
     const joined = CARE_EVENT_RULES.map((r) => r.tip_template).join(' ')
     expect(joined).not.toMatch(/feed/i)
+  })
+})
+
+// --- "did it" settles a tip via diary recency ------------------------------
+
+describe('getEventTips — "did it" suppression', () => {
+  it('carries the eventType its "did it" shortcut writes', () => {
+    const p = plant({ plant_type: 'perennial' })
+    const water = getEventTips([palettePlant(p)], [plantedEvent(p.id, 5)], {
+      today: TODAY,
+    })
+    expect(water[0]!.eventType).toBe('watered')
+
+    const fert = getEventTips([palettePlant(p)], [plantedEvent(p.id, 30)], {
+      today: TODAY,
+      peakHeat: false,
+    })
+    expect(fert[0]!.eventType).toBe('fertilized')
+  })
+
+  it('a "fertilized" event after planting settles the fertilizing tip for good', () => {
+    const p = plant({ plant_type: 'perennial' })
+    const tips = getEventTips(
+      [palettePlant(p)],
+      [plantedEvent(p.id, 30), careEvent(p.id, 'fertilized', 1)],
+      { today: TODAY, peakHeat: false }
+    )
+    expect(tips).toHaveLength(0)
+  })
+
+  it('a "fertilized" event before planting does not settle it', () => {
+    const p = plant({ plant_type: 'perennial' })
+    // planted 30d ago, an old fertilizing 40d ago (before this planting)
+    const tips = getEventTips(
+      [palettePlant(p)],
+      [plantedEvent(p.id, 30), careEvent(p.id, 'fertilized', 40)],
+      { today: TODAY, peakHeat: false }
+    )
+    expect(tips).toHaveLength(1)
+  })
+
+  it('a recent "watered" event quiets the watering tip, and it returns after the window', () => {
+    const p = plant({ plant_type: 'perennial' })
+    // Rule 1 (day 2–14) resets for 3 days after watering.
+    const quiet = getEventTips(
+      [palettePlant(p)],
+      [plantedEvent(p.id, 5), careEvent(p.id, 'watered', 1)],
+      { today: TODAY }
+    )
+    expect(quiet).toHaveLength(0)
+
+    const returned = getEventTips(
+      [palettePlant(p)],
+      [plantedEvent(p.id, 5), careEvent(p.id, 'watered', 4)],
+      { today: TODAY }
+    )
+    expect(returned).toHaveLength(1)
+  })
+})
+
+// --- grouping for the drawer -----------------------------------------------
+
+describe('getGroupedCareTips', () => {
+  it('splits event tips into Now / This week by timeframe and puts guidance under Good to know', () => {
+    // A climber at day 30 fires woody-watering ("in the next two weeks") and
+    // fertilizing ("this week"); plus maintenance guidance.
+    const p = plant({
+      plant_type: 'climber',
+      maintenance_notes: 'Tie in new growth.',
+    })
+    const groups = getGroupedCareTips([palettePlant(p)], {
+      events: [plantedEvent(p.id, 30)],
+      today: TODAY,
+      peakHeat: false,
+    })
+    expect(groups.now.map((t) => t.timeframe)).toEqual(['this week'])
+    expect(groups.thisWeek.map((t) => t.timeframe)).toEqual([
+      'in the next two weeks',
+    ])
+    expect(groups.goodToKnow.map((t) => t.text)).toEqual(['Tie in new growth.'])
+  })
+
+  it('falls back to static seasonal tips as Good to know for an empty garden', () => {
+    const groups = getGroupedCareTips([], { today: TODAY })
+    expect(groups.now).toHaveLength(0)
+    expect(groups.thisWeek).toHaveLength(0)
+    expect(groups.goodToKnow).toEqual(STATIC_SEASONAL_TIPS.summer)
   })
 })
 

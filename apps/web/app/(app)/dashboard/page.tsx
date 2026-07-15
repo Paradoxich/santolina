@@ -5,7 +5,12 @@ import { CareTipsCard } from '@/components/dashboard/CareTipsCard'
 import { PlannedCard } from '@/components/dashboard/PlannedCard'
 import { DiaryRecentCard } from '@/components/dashboard/DiaryRecentCard'
 import { ImpactCard } from '@/components/dashboard/ImpactCard'
-import { getCareTips, isPeakHeat, type CareEvent } from '@/lib/care-tips'
+import {
+  getCareTips,
+  getGroupedCareTips,
+  isPeakHeat,
+  type CareEvent,
+} from '@/lib/care-tips'
 import { deriveBloomSeason } from '@/lib/bloom-timeline'
 import { buildDashboardSubtitle, buildGardenImpact } from '@/lib/dashboard-copy'
 import { formatBloomRangeShort } from '@/lib/format-plant'
@@ -65,10 +70,12 @@ export default async function DashboardPage() {
     eventType: e.eventType,
     occurredAt: new Date(e.createdAt),
   }))
-  const careTips = getCareTips(palette, {
+  const careTipOptions = {
     events: careEvents,
     peakHeat: isPeakHeat(weatherDays?.[0]?.high ?? null),
-  })
+  }
+  const careTips = getCareTips(palette, careTipOptions)
+  const careGroups = getGroupedCareTips(palette, careTipOptions)
 
   const subtitle = buildDashboardSubtitle(weatherDays, palette)
   const impact = buildGardenImpact(palette)
@@ -96,7 +103,11 @@ export default async function DashboardPage() {
             country={garden?.country ?? null}
             days={weatherDays}
           />
-          <CareTipsCard tips={careTips} showEmptyHint={palette.length === 0} />
+          <CareTipsCard
+            tips={careTips}
+            groups={careGroups}
+            showEmptyHint={palette.length === 0}
+          />
         </div>
 
         <div className="grid grid-cols-1 gap-section-gap lg:min-h-[234px] lg:grid-cols-3">

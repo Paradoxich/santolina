@@ -43,6 +43,17 @@ export interface CareEventRule {
   timeframe_copy: string
   /** Render-time gates that must all pass for the tip to surface. */
   gates?: CareTipGate[]
+  /**
+   * The "did it" shortcut: the typed diary event tapping it writes, and how
+   * that event settles the tip — the diary is the completion mechanism, no
+   * stored todo state (Care Tips v2 spec). Computed from diary recency:
+   * - no `within_days` → the action is one-off; once logged after planting the
+   *   tip is done (e.g. first fertilizing).
+   * - `within_days` → the action recurs; logging it quiets the tip for that
+   *   many days, then it returns ("resets its cycle" — e.g. establishment
+   *   watering).
+   */
+  did_it?: { event: DiaryEventType; within_days?: number }
 }
 
 /**
@@ -60,6 +71,7 @@ export const CARE_EVENT_RULES: CareEventRule[] = [
     window_end_days: 14,
     tip_template: 'Water {plant} deeply every few days while it settles in.',
     timeframe_copy: 'this week',
+    did_it: { event: 'watered', within_days: 3 },
   },
   {
     event: 'planted',
@@ -69,6 +81,7 @@ export const CARE_EVENT_RULES: CareEventRule[] = [
     tip_template:
       'Keep watering {plant} through its first weeks. Woody plants root slowly.',
     timeframe_copy: 'in the next two weeks',
+    did_it: { event: 'watered', within_days: 7 },
   },
   {
     event: 'planted',
@@ -78,6 +91,8 @@ export const CARE_EVENT_RULES: CareEventRule[] = [
     tip_template: 'Fertilize {plant} for the first time this week.',
     timeframe_copy: 'this week',
     gates: ['no_peak_heat'],
+    // One-off: once fertilized after planting, the first-fertilizing tip is done.
+    did_it: { event: 'fertilized' },
   },
 ]
 
@@ -315,15 +330,43 @@ export function getEventTips(
       if (!occurredAt) continue
       const days = daysSince(occurredAt, today)
       if (!ruleApplies(rule, plantType, days, peakHeat)) continue
+      if (
+        rule.did_it &&
+        isSatisfied(
+          rule.did_it,
+          latest.get(`${p.plantId}:${rule.did_it.event}`),
+          occurredAt,
+          today
+        )
+      )
+        continue
       tips.push({
         plantId: p.plantId,
         plantName: p.plant.common_name,
         text: rule.tip_template.replace('{plant}', p.plant.common_name),
         timeframe: rule.timeframe_copy,
+        eventType: rule.did_it?.event ?? null,
       })
     }
   }
   return tips
+}
+
+/**
+ * Whether a rule's "did it" action has settled its tip, from diary recency:
+ * the satisfying event must have happened after the triggering event, and —
+ * for a recurring action — within the last `within_days`. No `within_days`
+ * means one-off: any occurrence since planting settles it for good.
+ */
+function isSatisfied(
+  didIt: { event: DiaryEventType; within_days?: number },
+  satisfiedAt: Date | undefined,
+  triggeredAt: Date,
+  today: Date
+): boolean {
+  if (!satisfiedAt || satisfiedAt <= triggeredAt) return false
+  if (didIt.within_days === undefined) return true
+  return daysSince(satisfiedAt, today) < didIt.within_days
 }
 
 interface TipOptions {
@@ -335,22 +378,13 @@ interface TipOptions {
 const ACTIVE_STATUSES: PaletteStatus[] = ['planted', 'planned']
 
 /**
- * Up to 5 Care Tips, ranked. Event-relative tips (Tier 3) come first — they
- * are the most time-sensitive — followed by guidance derived from the
- * palette's maintenance_notes, the field actually written as prescriptive
- * care ("deadhead spent blooms"), not seasonal_rhythm (descriptive narrative,
- * not something to act on). Within guidance, currently-blooming/pre-bloom
- * plants sort to the front. Falls back to STATIC_SEASONAL_TIPS only when the
- * garden yields nothing — no events and no usable maintenance notes.
+ * Evergreen guidance tips from the palette's maintenance_notes — the field
+ * actually written as prescriptive care ("deadhead spent blooms"), not
+ * seasonal_rhythm (descriptive narrative, not something to act on).
+ * Currently-blooming/pre-bloom plants sort to the front. Uncapped; callers cap.
  */
-export function getCareTips(
-  palette: PalettePlant[],
-  { events = [], today = new Date(), peakHeat = false }: TipOptions = {}
-): CareTip[] {
-  const season = getCurrentSeason(today)
-  const eventTips = getEventTips(palette, events, { today, peakHeat })
-
-  const guidance = palette
+function buildGuidanceTips(palette: PalettePlant[], today: Date): CareTip[] {
+  const candidates = palette
     .filter((p) => ACTIVE_STATUSES.includes(p.status))
     .map((p) => {
       const text = p.plant.maintenance_notes
@@ -367,19 +401,70 @@ export function getCareTips(
     })
     .filter((c): c is NonNullable<typeof c> => c !== null)
 
-  if (eventTips.length === 0 && guidance.length === 0)
-    return STATIC_SEASONAL_TIPS[season]
-
-  const prioritized = guidance
+  const prioritized = candidates
     .filter(
       (c) => c.bloomStatus === 'blooming' || c.bloomStatus === 'pre-bloom'
     )
     .map((c) => c.tip)
-  const rest = guidance
+  const rest = candidates
     .filter(
       (c) => c.bloomStatus !== 'blooming' && c.bloomStatus !== 'pre-bloom'
     )
     .map((c) => c.tip)
 
-  return [...eventTips, ...prioritized, ...rest].slice(0, MAX_TIPS)
+  return [...prioritized, ...rest]
+}
+
+/**
+ * Up to 5 Care Tips for the dashboard card, ranked. Event-relative tips
+ * (Tier 3) come first — they are the most time-sensitive — then guidance.
+ * Falls back to STATIC_SEASONAL_TIPS only when the garden yields nothing —
+ * no events and no usable maintenance notes.
+ */
+export function getCareTips(
+  palette: PalettePlant[],
+  { events = [], today = new Date(), peakHeat = false }: TipOptions = {}
+): CareTip[] {
+  const eventTips = getEventTips(palette, events, { today, peakHeat })
+  const guidance = buildGuidanceTips(palette, today)
+
+  if (eventTips.length === 0 && guidance.length === 0)
+    return STATIC_SEASONAL_TIPS[getCurrentSeason(today)]
+
+  return [...eventTips, ...guidance].slice(0, MAX_TIPS)
+}
+
+/** The Care Tips full list, grouped for the drawer (Care Tips v2 § Surfaces). */
+export interface GroupedCareTips {
+  /** Actionable right now — dated tips due this week. */
+  now: CareTip[]
+  /** Coming up — dated tips with a longer window. */
+  thisWeek: CareTip[]
+  /** Standing guidance with no deadline. */
+  goodToKnow: CareTip[]
+}
+
+/**
+ * The full, uncapped Care Tips list grouped into Now / This week / Good to
+ * know for the drawer. Actionable event tips split by urgency (their
+ * timeframe), guidance falls under Good to know. When the garden yields
+ * nothing, the generic seasonal tips stand in as Good to know.
+ */
+export function getGroupedCareTips(
+  palette: PalettePlant[],
+  { events = [], today = new Date(), peakHeat = false }: TipOptions = {}
+): GroupedCareTips {
+  const eventTips = getEventTips(palette, events, { today, peakHeat })
+  const guidance = buildGuidanceTips(palette, today)
+
+  const goodToKnow =
+    eventTips.length === 0 && guidance.length === 0
+      ? STATIC_SEASONAL_TIPS[getCurrentSeason(today)]
+      : guidance
+
+  return {
+    now: eventTips.filter((t) => t.timeframe === 'this week'),
+    thisWeek: eventTips.filter((t) => t.timeframe !== 'this week'),
+    goodToKnow,
+  }
 }
