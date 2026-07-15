@@ -59,6 +59,7 @@ export const RAW_TO_BUCKET: Record<string, string> = {
   golden: 'yellow',
   gold: 'yellow',
   'pale yellow': 'yellow',
+  'greenish-yellow': 'yellow',
   // orange
   orange: 'orange',
   'orange-yellow': 'orange',
@@ -104,6 +105,7 @@ export const RAW_TO_BUCKET: Record<string, string> = {
   // lavender
   lavender: 'lavender',
   'lavender-blue': 'lavender',
+  'lavender blue': 'lavender',
   lilac: 'lavender',
   mauve: 'lavender',
   'pale lavender': 'lavender',
@@ -116,6 +118,7 @@ export const RAW_TO_BUCKET: Record<string, string> = {
   // green
   green: 'green',
   'yellow-green': 'green',
+  'red-green': 'green',
   chartreuse: 'green',
   'pale green': 'green',
   'grey-green': 'green',
