@@ -13,6 +13,7 @@ import {
 } from '@/lib/diary-events'
 import type { DiaryNote, PlantDiary } from '@/types/diary'
 import { formatDayLabel, formatMonthLabel } from '@/lib/utils'
+import { processPhotoFiles } from '@/lib/photo-processing'
 import {
   addDiaryEntry,
   deleteDiaryEntry,
@@ -150,6 +151,7 @@ export function DiaryDetailDrawer({ diary, onClose }: DiaryDetailDrawerProps) {
   )
   const [photoFiles, setPhotoFiles] = useState<File[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isProcessingPhotos, setIsProcessingPhotos] = useState(false)
   const [composerError, setComposerError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -260,10 +262,27 @@ export function DiaryDetailDrawer({ diary, onClose }: DiaryDetailDrawerProps) {
     el.style.height = `${Math.min(el.scrollHeight, 140)}px`
   }
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files ? Array.from(e.target.files) : []
-    setPhotoFiles((prev) => [...prev, ...files])
+  // Picked photos are downscaled and re-encoded to JPEG in the browser
+  // before upload — see lib/photo-processing.ts for why (size cap, HEIC,
+  // EXIF). Undecodable files are dropped with a message instead of being
+  // uploaded as photos that would never render.
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const picked = e.target.files ? Array.from(e.target.files) : []
     e.target.value = ''
+    if (picked.length === 0) return
+
+    setIsProcessingPhotos(true)
+    try {
+      const { files, failedNames } = await processPhotoFiles(picked)
+      if (files.length > 0) setPhotoFiles((prev) => [...prev, ...files])
+      setComposerError(
+        failedNames.length > 0
+          ? `Couldn't read ${failedNames.join(', ')}. Try a JPG or PNG.`
+          : null
+      )
+    } finally {
+      setIsProcessingPhotos(false)
+    }
   }
 
   const removePhoto = (index: number) => {
@@ -502,7 +521,8 @@ export function DiaryDetailDrawer({ diary, onClose }: DiaryDetailDrawerProps) {
                   // Enter sends, Shift+Enter inserts a newline — chat convention.
                   if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault()
-                    if (!isSubmitting) void handleSaveNote()
+                    if (!isSubmitting && !isProcessingPhotos)
+                      void handleSaveNote()
                   }
                 }}
                 placeholder={composerPlaceholder}
@@ -512,7 +532,7 @@ export function DiaryDetailDrawer({ diary, onClose }: DiaryDetailDrawerProps) {
               <button
                 type="button"
                 onClick={handleSaveNote}
-                disabled={isSubmitting}
+                disabled={isSubmitting || isProcessingPhotos}
                 aria-label="Add entry"
                 className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent text-on-accent transition-opacity duration-normal hover:opacity-90 disabled:opacity-50"
               >
