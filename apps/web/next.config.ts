@@ -2,6 +2,16 @@ import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
   transpilePackages: ['@paradoxui/ui', '@paradoxui/tokens'],
+  experimental: {
+    serverActions: {
+      // Diary photo uploads travel through a server action; Next's default
+      // 1mb cap rejects most photos with an opaque "unexpected response"
+      // error. 4mb sits just under Vercel's ~4.5mb request-body ceiling —
+      // raising it further has no effect there. Larger photos need
+      // client-side downscaling (future work, pairs with EXIF stripping).
+      bodySizeLimit: '4mb',
+    },
+  },
   images: {
     remotePatterns: [
       {
