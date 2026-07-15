@@ -26,6 +26,12 @@ export interface SeasonalRhythm {
   winter: string
 }
 
+// Prescriptive counterpart to SeasonalRhythm: what you DO per stage, not what
+// the plant is doing. Each value is an imperative one-liner or null ("nothing
+// to do this stage" — the expected value for most plants most stages). Feeds
+// Care Tips v2 Tier 1 (current-stage line, planted plants only).
+export type SeasonalCare = { [K in keyof SeasonalRhythm]: string | null }
+
 export interface DbPlant {
   id: string
   source_species_id: number
@@ -81,6 +87,10 @@ export interface DbPlant {
   best_placement: string | null
   environment_benefits: string | null
   seasonal_rhythm: SeasonalRhythm | null
+  // Prescriptive per-stage care actions (Care Tips v2 Tier 1). Editorial-owned,
+  // distilled from maintenance_notes + seasonal_rhythm + bloom_months by
+  // scripts/curate-seasonal-care.ts. Not in the upsert_trefle_plant path.
+  seasonal_care: SeasonalCare | null
   garden_use_tags: string[] | null
   ai_drafted_at: string | null
   created_at: string
