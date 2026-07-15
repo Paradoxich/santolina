@@ -204,7 +204,7 @@ Rules (strict):
 - Start each line with an imperative verb (Water…, Prune…, Mulch…, Deadhead…, Cut back…, Divide…, Protect…).
 - Maximum ${MAX_WORDS} words / ~${MAX_CHARS} characters per line. Terse. Sentence case. End with a period.
 - No em dashes or en dashes anywhere. Plain sentences only.
-- Vocabulary: use "fertilize", NEVER "feed" or "feeding".
+- Vocabulary: use "fertilize" for applying fertilizer, NEVER "feed" or "feeding". BUT do NOT call the natural process of foliage nourishing a bulb, corm, rhizome, or roots "fertilize" — that is "replenish" (e.g. "Allow foliage to die back to replenish the bulb", never "fertilize the bulb").
 - Keep it plant-agnostic in phrasing (the plant name is shown separately) — say "Prune after flowering.", not "Prune the rose after flowering."
 ${strictReminder ? `\nYour previous attempt failed validation. Fix ONLY these problems and resend the full object:\n${strictReminder}\n` : ''}
 Respond with ONLY the JSON object, no markdown, no code fences, no preamble.`
@@ -318,6 +318,17 @@ function validateLine(stage: string, line: string): Violation | null {
   // Vocabulary ruling: autumn, never the US "fall".
   if (/\bfall\b/i.test(trimmed))
     return { stage, reason: 'uses "fall" (must be "autumn")' }
+  // "feed the bulb" metaphor misfire: foliage nourishing a bulb/rhizome/root is
+  // "replenish", not "fertilize" — the fertilize-not-feed rule over-applied.
+  if (
+    /\bfertiliz(e|es|ing)\b[^.]*\b(bulb|bulbs|corm|corms|rhizome|rhizomes|tuber|tubers|root|roots)\b/i.test(
+      trimmed
+    )
+  )
+    return {
+      stage,
+      reason: 'foliage "fertilize" a bulb/root — use "replenish"',
+    }
   // Busywork guard: an "as needed / as required" action is an anytime task with
   // an invented season attached — it should be null, not tied to a stage. The
   // retry names this so the model nulls the stage. Honest conditionals ("if
