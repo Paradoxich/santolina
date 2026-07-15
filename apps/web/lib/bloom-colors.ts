@@ -44,12 +44,15 @@ export const RAW_TO_BUCKET: Record<string, string> = {
   // white (incl. silver, folded per Ana — 5 mentions, too thin for a bucket)
   white: 'white',
   'green-white': 'white',
+  'greenish-white': 'white',
+  'silvery white': 'white',
   silver: 'white',
   'silver-blue': 'white',
   // cream
   cream: 'cream',
   beige: 'cream',
   tan: 'cream',
+  buff: 'cream',
   // yellow
   yellow: 'yellow',
   'golden yellow': 'yellow',
@@ -79,10 +82,12 @@ export const RAW_TO_BUCKET: Record<string, string> = {
   'dark red-brown': 'burgundy',
   'reddish-brown': 'burgundy',
   'golden-brown': 'burgundy',
+  'rusty brown': 'burgundy',
   // pink
   pink: 'pink',
   'pale pink': 'pink',
   rose: 'pink',
+  coral: 'pink',
   'coral pink': 'pink',
   'magenta-pink': 'pink',
   'pink-bronze': 'pink',
@@ -93,6 +98,8 @@ export const RAW_TO_BUCKET: Record<string, string> = {
   purple: 'purple',
   violet: 'purple',
   'dark purple': 'purple',
+  'deep purple': 'purple',
+  'pale purple': 'purple',
   'purple-tinged': 'purple',
   // lavender
   lavender: 'lavender',
