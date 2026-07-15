@@ -14,10 +14,19 @@
  *   fixes are not a botanical re-verification.
  *
  * Decisions (CSV `decision` column, `value` column):
- *   keep         leave the line where it is (no-op)
- *   null         drop the line from its current stage
- *   move  value  relocate the line to stage `value` (one of the six keys)
- *   edit  value  replace the line text with `value`
+ *   keep             leave the line where it is (no-op)
+ *   null             drop the line from its current stage
+ *   move    value    relocate the line verbatim to stage `value` (one of the
+ *                    six keys); refuses an already-occupied target
+ *   edit    value    replace the line text with `value`, same stage
+ *   replace value    move + reword in one step: `value` is
+ *                    "<target stage>|<new text>" — drops the current stage,
+ *                    writes the new text into the target, and (unlike `move`)
+ *                    is explicitly allowed to overwrite an occupied target.
+ *                    For the case where the checker's suggested target is
+ *                    occupied by a weaker line than the corrected one — an
+ *                    editorial call, not a silent clobber, since it only
+ *                    fires on a row you hand-authored with this decision.
  *
  * Usage (from apps/web):
  *   # Preview (no writes):
@@ -234,6 +243,33 @@ async function main() {
         working[target] = d.line
         working[d.current_stage] = null
         pending.push(`✓ ${label}: ${d.current_stage} → ${target}`)
+        plantApplied++
+      } else if (d.decision === 'replace') {
+        const sep = d.value.indexOf('|')
+        if (sep < 0) {
+          skipped.push(`${label}: replace value must be "stage|new text"`)
+          continue
+        }
+        const target = d.value.slice(0, sep).trim()
+        const newText = d.value.slice(sep + 1).trim()
+        if (!STAGE_SET.has(target)) {
+          skipped.push(`${label}: replace to invalid stage "${target}"`)
+          continue
+        }
+        if (!newText) {
+          skipped.push(`${label}: replace with empty text`)
+          continue
+        }
+        for (const w of copyWarnings(newText))
+          warnings.push(`${label}: ${w} — "${newText}"`)
+        const overwritten = working[target]
+        working[target] = newText
+        if (target !== d.current_stage) working[d.current_stage] = null
+        pending.push(
+          `✓ ${label}: ${d.current_stage} → ${target} (reworded)${
+            overwritten ? ` [replaced: "${overwritten}"]` : ''
+          }`
+        )
         plantApplied++
       } else {
         skipped.push(`${label}: unknown decision "${d.decision}"`)
