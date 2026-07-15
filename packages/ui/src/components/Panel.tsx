@@ -4,8 +4,12 @@ import { cn } from '../utils/cn'
 export interface PanelProps extends React.HTMLAttributes<HTMLElement> {
   /** Panel heading shown at the top left */
   title?: string
-  /** Secondary text shown at the top right, baseline-aligned with the title */
-  meta?: string
+  /**
+   * Secondary content shown at the top right, baseline-aligned with the title.
+   * A plain string renders as muted meta text; pass a node (e.g. a button) when
+   * the header needs an affordance.
+   */
+  meta?: React.ReactNode
   ref?: React.Ref<HTMLElement>
   children: React.ReactNode
 }

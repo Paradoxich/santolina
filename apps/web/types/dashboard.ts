@@ -67,6 +67,12 @@ export interface CareTip {
    * guidance tips, which have no deadline.
    */
   timeframe?: string | null
+  /**
+   * The typed diary event the tip's "did it" shortcut writes (e.g. "watered",
+   * "fertilized"). Present on actionable event-relative tips; null/absent on
+   * evergreen guidance, which has no "did it" action.
+   */
+  eventType?: import('@/lib/diary-events').DiaryEventType | null
 }
 
 export interface PlannedPlant {
