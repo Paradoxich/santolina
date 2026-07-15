@@ -152,6 +152,18 @@ const ACTION_VERBS = new Set([
   'brush',
   'rejuvenate',
   'refresh',
+  // Added after the first full run surfaced these as legitimate garden actions
+  // the allow-set lacked (grasses, seed-saving, structure work).
+  'comb',
+  'collect',
+  'gather',
+  'mow',
+  'install',
+  'control',
+  'mark',
+  'observe',
+  'top-dress',
+  'shape',
 ])
 
 // ---------------------------------------------------------------------------
@@ -266,9 +278,33 @@ interface Violation {
   reason: string
 }
 
-function firstWord(line: string): string {
-  const m = line.trim().match(/^[^A-Za-z]*([A-Za-z][A-Za-z'-]*)/)
-  return (m?.[1] ?? '').toLowerCase()
+// Adverbs a real imperative can legitimately lead with — the verb follows.
+// ("Lightly prune...", "Hard prune...") We check the word after the adverb.
+const LEAD_ADVERBS = new Set([
+  'lightly',
+  'hard',
+  'gently',
+  'carefully',
+  'regularly',
+  'occasionally',
+  'deeply',
+  'thinly',
+])
+
+// The first one or two leading words, lowercased (stripping any leading
+// punctuation). Used to find the imperative verb, allowing one lead adverb.
+function leadingWords(line: string): [string, string] {
+  const m = line
+    .trim()
+    .match(/^[^A-Za-z]*([A-Za-z][A-Za-z'-]*)(?:\s+([A-Za-z][A-Za-z'-]*))?/)
+  return [(m?.[1] ?? '').toLowerCase(), (m?.[2] ?? '').toLowerCase()]
+}
+
+// The imperative verb: the first word, or the second if the first is a lead
+// adverb ("Lightly prune" → "prune").
+function imperativeVerb(line: string): string {
+  const [w1, w2] = leadingWords(line)
+  return LEAD_ADVERBS.has(w1) && w2 ? w2 : w1
 }
 
 function validateLine(stage: string, line: string): Violation | null {
@@ -297,11 +333,12 @@ function validateLine(stage: string, line: string): Violation | null {
     return { stage, reason: `${words} words (max ${MAX_WORDS})` }
   if (trimmed.length > MAX_CHARS)
     return { stage, reason: `${trimmed.length} chars (max ~${MAX_CHARS})` }
-  // Imperative, not descriptive.
-  if (!ACTION_VERBS.has(firstWord(trimmed)))
+  // Imperative, not descriptive (allowing one lead adverb before the verb).
+  const verb = imperativeVerb(trimmed)
+  if (!ACTION_VERBS.has(verb))
     return {
       stage,
-      reason: `not imperative — starts with "${firstWord(trimmed)}"`,
+      reason: `not imperative — starts with "${verb}"`,
     }
   return null
 }
