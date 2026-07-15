@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
 import { requireSessionGarden } from '@/lib/session-garden'
+import { removeDiaryPhotos } from '@/lib/diary-photos'
 
 /** Ends the session (clears the auth cookies) and returns to the sign-in page. */
 export async function signOut(): Promise<void> {
@@ -13,11 +14,11 @@ export async function signOut(): Promise<void> {
 }
 
 /**
- * Reset garden (option A): clears the palette and diary for the signed-in
- * user's garden, keeping the garden row and its location. The easy "start
- * over / wipe test data" path. RLS scopes both deletes to the user's own
- * garden. Uploaded diary photos are left in the bucket (same accepted v1 gap
- * as deleteDiaryThread).
+ * Reset garden (option A): clears the palette, diary, and uploaded diary
+ * photos for the signed-in user's garden, keeping the garden row and its
+ * location. The easy "start over / wipe test data" path. RLS scopes both
+ * deletes to the user's own garden; photo removal is best-effort after the
+ * rows are gone (see removeDiaryPhotos).
  */
 export async function resetGarden(): Promise<void> {
   const { supabase, garden } = await requireSessionGarden()
@@ -29,12 +30,18 @@ export async function resetGarden(): Promise<void> {
   if (paletteError)
     throw new Error(`Failed to clear palette: ${paletteError.message}`)
 
-  const { error: diaryError } = await supabase
+  const { data: diaryRows, error: diaryError } = await supabase
     .from('diary_entries')
     .delete()
     .eq('garden_id', garden.id)
+    .select('photo_urls')
   if (diaryError)
     throw new Error(`Failed to clear diary: ${diaryError.message}`)
+
+  await removeDiaryPhotos(
+    supabase,
+    (diaryRows ?? []).map((row) => row.photo_urls ?? [])
+  )
 }
 
 /**
@@ -43,7 +50,9 @@ export async function resetGarden(): Promise<void> {
  * diary_entries. This is the one request-path use of the service-role client:
  * a user cannot delete their own auth row through the session client. The
  * session id is resolved from the cookie first, so a caller can only ever
- * delete themselves.
+ * delete themselves. Diary photos are removed via the session client first
+ * (the DB cascade can't reach storage), best-effort so a storage hiccup
+ * never blocks account deletion.
  */
 export async function deleteAccount(): Promise<void> {
   const supabase = await createSupabaseServerClient()
@@ -51,6 +60,16 @@ export async function deleteAccount(): Promise<void> {
     data: { user },
   } = await supabase.auth.getUser()
   if (!user) throw new Error('Not signed in')
+
+  // While the session is still valid: RLS scopes this select to the user's
+  // own entries, and the storage delete policy lets them remove the objects.
+  const { data: diaryRows } = await supabase
+    .from('diary_entries')
+    .select('photo_urls')
+  await removeDiaryPhotos(
+    supabase,
+    (diaryRows ?? []).map((row) => row.photo_urls ?? [])
+  )
 
   // Clear the session cookie while it's still valid, then delete the user.
   await supabase.auth.signOut()
