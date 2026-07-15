@@ -92,7 +92,7 @@ Seven tables. All IDs are UUIDs. Row-level security required on all user-owned t
 - `palette_plants` — join table between gardens and plants. User's palette. Includes status (planned/planted) and source (generated/manual/existing). The status check constraint also permits a legacy `considering`, but the product no longer uses it — the app only moves plants between planned and planted (see `docs/architecture.md` §12).
 - `plant_combinations` — which plants work well together. Public read, service role write. Populated by `apps/web/scripts/curate-combinations.ts` (see `docs/architecture.md` §19).
 - `agent_sessions` — rolling agent context summary per garden.
-- `diary_entries` — user's dated notes and photos per plant. Keyed by garden + plant (not the palette row), so a plant's history survives being removed from the palette. User-owned (RLS on garden ownership); photos live in the public `diary-photos` storage bucket. See `docs/architecture.md` §18.
+- `diary_entries` — user's dated notes and photos per plant. Keyed by garden + plant (not the palette row), so a plant's history survives being removed from the palette. User-owned (RLS on garden ownership); photos live in the private `diary-photos` storage bucket (garden-ownership policies, signed-URL reads). See `docs/architecture.md` §18 and §28.
 
 Full schema is documented in Notion. Data-layer decisions (provider choice, curation flow, safe upsert strategy) are recorded in `docs/architecture.md`. Never store passwords — Supabase auth handles that.
 
