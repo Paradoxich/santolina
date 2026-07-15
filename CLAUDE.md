@@ -75,7 +75,7 @@ Full UI-building guidance — tokens, typography, styling patterns, component re
   /styles           ← global styles, Tailwind config
   /types            ← TypeScript type definitions
   /server           ← server actions and API route handlers
-  /scripts          ← data scripts (seed, curate, cross-check, combinations) — run via tsx, see docs/architecture.md §7
+  /scripts          ← data scripts (seed, curate, cross-check, combinations) — run via tsx, see docs/architecture.md §25
 ```
 
 No `/store` yet — the app holds no global client state (see Code conventions). A `/store` directory arrives only if Zustand is adopted. `/reports` may appear at runtime for cross-check output; it is gitignored, not source.
@@ -102,10 +102,11 @@ Full schema is documented in Notion. Data-layer decisions (provider choice, cura
 
 - **Open-Meteo** — weather and climate data. Free, no API key. City-level resolution. Used to derive climate zone, hardiness zone, frost dates, seasonal data from user's city input.
 - **Trefle API** — plant species data (`TREFLE_API_KEY`). Plants are cached in the `plants` table; Trefle populates botanical facts only. Replaced Perenual, whose free tier returned paywalled nulls — see `docs/architecture.md` §1.
-- **Anthropic API** — powers three offline data scripts (`ANTHROPIC_API_KEY`, model `claude-sonnet-4-5`), all under `apps/web/scripts/`, none in the request path:
+- **Anthropic API** — powers a growing set of offline data scripts (`ANTHROPIC_API_KEY`, model `claude-sonnet-4-5`), all under `apps/web/scripts/`, none in the request path. Full current list and run order: `docs/architecture.md` §25. Representative examples:
   - `curate-plants.ts` — fills gaps Trefle can't (care instructions, style tags, seasonal rhythm). Never overwrites existing data.
   - `curate-combinations.ts` — populates `plant_combinations` with companion pairings (see `docs/architecture.md` §19).
   - `cross-check-plants.ts` — blind second pass that fact-checks botanical fields and flags disagreements; never writes to the DB (see `docs/architecture.md` §20).
+  - `curate-seasonal-care.ts` / `cross-check-seasonal-care.ts` — distills and blind-checks the Care Tips `seasonal_care` field (see `docs/architecture.md` §28).
 - **Vercel AI SDK** — agent layer. Streaming responses. Model TBD (Claude or GPT-4o). Key in environment variables.
 
 ---
