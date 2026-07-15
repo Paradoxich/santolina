@@ -101,7 +101,11 @@ keys in `apps/web/.env.local` (`TREFLE_API_KEY`, `ANTHROPIC_API_KEY`):
 ```bash
 cd apps/web
 
-# 1. Seed botanical facts from Trefle (skips already-cataloged species)
+# 0. Back up the two mutable tables first (JSON under backups/; restore-catalog.ts to undo)
+./node_modules/.bin/tsx --env-file=.env.local scripts/backup-catalog.ts
+
+# 1. Seed botanical facts from Trefle (skips already-cataloged species;
+#    tag with --round <label> to record the batch in rounds/<label>/manifest.json)
 ./node_modules/.bin/tsx --env-file=.env.local scripts/seed-plants.ts
 
 # 2. AI curation pass — fills gaps Trefle can't (care, style tags, seasonal rhythm)
@@ -120,13 +124,21 @@ cd apps/web
 
 # 6. Draft RHS hardiness ratings for unrated rows
 ./node_modules/.bin/tsx --env-file=.env.local scripts/draft-hardiness.ts
+
+# 7. Verify the catalog satisfies the round invariants (read-only; exits 1 on any FAIL)
+./node_modules/.bin/tsx --env-file=.env.local scripts/verify-round.ts
+
+#    Then snapshot this round's guard reports into the committed rounds/<label>/ folder
+./node_modules/.bin/tsx --env-file=.env.local scripts/archive-round.ts --round <label>
 ```
 
 Run them in this order — the authoritative runbook, with the rationale for
 each step, is `docs/architecture.md` §25. Individual decisions: provider
 choice and safe upsert (§1, §9), curation (§6), combinations (§19),
 cross-check (§20), native_region (§26), hardiness (§27), seasonal care (§28).
-Reports land in `apps/web/reports/` (gitignored).
+Guard reports land in `apps/web/reports/` (gitignored) and are archived per
+round under `apps/web/rounds/<label>/` (committed); backups under
+`apps/web/backups/` (gitignored).
 
 ## Further reading
 

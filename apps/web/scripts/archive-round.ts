@@ -1,0 +1,76 @@
+/**
+ * Snapshot the current reports/ working area into a round's committed folder,
+ * so a round's guard findings survive as history instead of being overwritten
+ * by the next run (cross-check-native-to writes fixed filenames; the deferred
+ * seasonal_rhythm candidates only ever lived in a report nobody kept).
+ *
+ * Guards keep writing to the gitignored reports/ as before — this is a
+ * separate, dumb one-job step run after a round's checks are done. The round
+ * label ties the archive to that round's seed manifest (round-manifest.ts).
+ *
+ *   ./node_modules/.bin/tsx --env-file=.env.local scripts/archive-round.ts --round 8
+ *
+ * Copies every file currently in reports/ into rounds/<label>/reports/. Stale
+ * files from an earlier run are copied too — clear reports/ before a round's
+ * guards if you want a clean snapshot.
+ */
+
+import {
+  mkdirSync,
+  readdirSync,
+  copyFileSync,
+  statSync,
+  existsSync,
+} from 'node:fs'
+import { join } from 'node:path'
+
+import { roundDir, readRoundManifest } from './round-manifest'
+
+function parseRoundLabel(): string {
+  const args = process.argv.slice(2)
+  const idx = args.indexOf('--round')
+  const label = idx >= 0 ? args[idx + 1] : undefined
+  if (!label) {
+    console.error('Usage: archive-round.ts --round <label>   (e.g. --round 8)')
+    process.exit(1)
+  }
+  return label
+}
+
+function main() {
+  const label = parseRoundLabel()
+  const reportsDir = join(process.cwd(), 'reports')
+
+  if (!existsSync(reportsDir)) {
+    console.error(
+      `No reports/ directory at ${reportsDir} — nothing to archive. ` +
+        'Run the round guards first.'
+    )
+    process.exit(1)
+  }
+
+  const files = readdirSync(reportsDir).filter((f) =>
+    statSync(join(reportsDir, f)).isFile()
+  )
+  if (!files.length) {
+    console.error('reports/ is empty — nothing to archive.')
+    process.exit(1)
+  }
+
+  const dest = join(roundDir(label), 'reports')
+  mkdirSync(dest, { recursive: true })
+  for (const file of files) {
+    copyFileSync(join(reportsDir, file), join(dest, file))
+    console.log(`  ${file}`)
+  }
+
+  const manifest = readRoundManifest(label)
+  console.log(
+    `\nArchived ${files.length} report file(s) to ${dest}` +
+      (manifest
+        ? ` (round seeded ${manifest.seeded_count} plant(s) on ${manifest.started_at.slice(0, 10)}).`
+        : '\nNote: no manifest.json for this round yet — was the seed run tagged with --round?')
+  )
+}
+
+main()
