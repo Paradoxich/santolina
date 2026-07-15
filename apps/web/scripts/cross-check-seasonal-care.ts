@@ -21,6 +21,20 @@
  *   --from-report F  Read seasonal_care from a sample artifact (JSON) rather
  *                    than the DB. For validating a sample before the full run.
  *   --limit N        Cap the number of plants checked (DB mode).
+ *
+ * Known checker biases (found in editorial review of the July 15 2026 run —
+ * read the flags with these in mind, don't take "wrong stage" at face value):
+ * 1. Autumn-ifies spring-divided woodlanders. The checker defaults division to
+ *    autumn even for species RHS documents as spring dividers (e.g.
+ *    Lamprocapnos, Brunnera) — division-in-spring for shallow-rooted woodland
+ *    perennials that dislike autumn disturbance was flagged wrong when it
+ *    was right.
+ * 2. Over-nulls bloom-season deadheading. It reads "as needed during the
+ *    flowering season" as anytime/no-season, but deadheading has a sharp
+ *    trigger (a spent bloom, now) and passes the "why now?" test — it should
+ *    stay attached to the bloom-window stages, not be nulled.
+ * Neither is a reason to distrust the pass wholesale — both are directional
+ * tendencies to weigh against, not blanket overrides.
  */
 
 import { readFileSync, mkdirSync, writeFileSync } from 'node:fs'
