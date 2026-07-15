@@ -421,11 +421,11 @@ Toast copy follows the same split: "Added to your garden" only fires for a fresh
 
 ---
 
-## 20. Botanical cross-check: blind second pass, flags only, never writes
+## 20. Botanical cross-check: blind second pass, flags only, never edits data
 
 **Why (see §3):** `is_curated = true` is an editorial pass, not botanical verification — the reviewer isn't a botanist. Botanical facts drafted by the first AI pass need an independent check.
 
-**Decision:** `scripts/cross-check-plants.ts` re-derives the four load-bearing botanical fields — `plant_type`, `hardiness_zone_min`/`max`, `sun_requirements`, `bloom_months` — for every plant with `ai_drafted_at` set, and flags disagreements. It **never writes to the plants table**; resolving a flag is a human decision.
+**Decision:** `scripts/cross-check-plants.ts` re-derives the four load-bearing botanical fields — `plant_type`, `hardiness_zone_min`/`max`, `sun_requirements`, `bloom_months` — for every plant with `ai_drafted_at` set, and flags disagreements. It **never edits catalog data**; resolving a flag is a human decision. (The one column it does write is the operational `botanical_checked_at` stamp — see below — which is not a botanical or editorial field.)
 
 **Blind by design:** the check prompt contains only the species identity (common name, scientific name, family) — never the stored values — so the second pass can't be anchored by the first pass's answers. Independence comes from blindness, not from a different model (`CURATION_MODEL` is used for both).
 
@@ -447,6 +447,8 @@ Annuals with null zones on both sides are not flagged (nulls are correct there, 
 **Replayable record:** the corrections are captured as a data migration, `supabase/migrations/20260709092512_correct_crosscheck_botanical_fields.sql`, so the diff isn't the only trace of what was applied. It re-keys off `scientific_name` rather than the live UUIDs (portable across environments) and carries the same guards (`is_curated = false` plus an exact prior-value match), so it is idempotent — a no-op against the already-corrected live rows, and against any environment whose values don't match the recorded pre-correction state. It's a one-off record, not part of the seed path; a fresh seed drafts its own values and these specific corrections simply won't match.
 
 **Output:** terminal report grouped disagreements-first, plus a timestamped JSON report in `apps/web/reports/` (gitignored) recording every flag with stored vs checked values — the artifact for Ana's spot-check sweep and the source of record for any bulk correction. `--limit N` for testing.
+
+**Checked-at stamp — guard scoping (July 2026, migration `20260716120000`).** The guard stamps `plants.botanical_checked_at` on each row the moment it finishes checking it (flagged or clean — the stamp records that the check _ran_, not its verdict). This is operational metadata, not catalog content, so the flags-only rule holds — it never touches a botanical or editorial field. The stamp makes `--new-only` state-based (`WHERE botanical_checked_at IS NULL`): exact (no UTC-midnight batch split), and resumable — a killed run leaves the rest unstamped for the next pass, replacing the earlier newest-calendar-day heuristic. It's a timestamp, not a boolean, so a prompt revision can re-scope by date (`... OR botanical_checked_at < '<date>'`). **Cascade rule:** any script that _mutates_ a checked field must null the matching stamp so the guard re-checks — e.g. `regenerate-native-to.ts` nulls `native_checked_at` in the same write that rewrites `native_to`. The sibling `native_to` guard (`cross-check-native-to.ts`) carries its own `native_checked_at` stamp on the identical model; `check-bloom-colors.ts` has none by design (a free local validator with no Claude call, it always runs over the whole catalog).
 
 ---
 
