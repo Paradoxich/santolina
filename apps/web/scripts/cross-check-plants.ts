@@ -27,6 +27,7 @@ import { join } from 'node:path'
 import { getSupabaseAdmin } from '../lib/supabase-admin'
 import { getAnthropicClient, CURATION_MODEL } from '../lib/anthropic-client'
 import type { DbPlant, PlantType } from '../lib/plants-db'
+import { fetchAllRows } from './paginate'
 
 // ---------------------------------------------------------------------------
 // Config
@@ -325,19 +326,21 @@ async function main() {
   const db = getSupabaseAdmin()
 
   console.log('\nFetching AI-drafted plants from Supabase...')
-  const { data, error } = await db
-    .from('plants')
-    .select('*')
-    .not('ai_drafted_at', 'is', null)
-    .order('common_name')
-  if (error) throw new Error(`Failed to fetch plants: ${error.message}`)
+  const data = await fetchAllRows<Record<string, unknown>>((from, to) =>
+    db
+      .from('plants')
+      .select('*')
+      .not('ai_drafted_at', 'is', null)
+      .order('id')
+      .range(from, to)
+  )
 
   const scoped = newOnly
-    ? newestBatchOnly((data ?? []) as Array<{ created_at: string }>)
-    : (data ?? [])
-  const plants = (
-    limit ? scoped.slice(0, limit) : scoped
-  ) as unknown as DbPlant[]
+    ? newestBatchOnly(data as Array<{ created_at: string }>)
+    : data
+  const plants = (limit
+    ? scoped.slice(0, limit)
+    : scoped) as unknown as DbPlant[]
   if (!plants.length) {
     console.log('No AI-drafted plants found — nothing to check.')
     process.exit(0)
