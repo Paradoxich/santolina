@@ -118,7 +118,7 @@ cd apps/web
 #    silently drop out of the "native to my region" filter (review, then --apply)
 ./node_modules/.bin/tsx --env-file=.env.local scripts/regenerate-native-region.ts
 
-# 5. Guards — flag only, never write (pass --new-only so they don't re-bill
+# 5. Guards — flag only, never edit data (pass --new-only so they don't re-bill
 #    Claude for the whole catalog on a post-seed run)
 ./node_modules/.bin/tsx --env-file=.env.local scripts/cross-check-plants.ts --new-only
 ./node_modules/.bin/tsx --env-file=.env.local scripts/cross-check-native-to.ts --new-only
