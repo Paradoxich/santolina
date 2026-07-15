@@ -620,6 +620,8 @@ Run the steps **in this order** after choosing a batch of species:
 - **Mulch rule overrides Ana's own prior "keep" on 3 of the 4 conflicts** (Athyrium niponicum, Chinese rhubarb, Kirengeshoma palmata → nulled): "a consistent catalog-wide bar beats ad-hoc row-by-row judgment, and an earlier call shouldn't be protected once a better general rule lands." Daphne bholua's "keep roots cool" was confirmed to clear the rule's own heat-window clause and stays.
 - **Chinese rhubarb also fails on a second count** — "retain moisture and add compost" packs two actions into one line — but a dedicated feed line for Rheum is explicitly out of scope for this queue (a new-line decision, not a correction to smuggle in); logged as a future idea, not built.
 
+**Chinese rhubarb new-line follow-up (Ana, July 15 2026).** The future idea above was built: Rheum palmatum is a heavy feeder (standard RHS advice is a generous spring compost/manure application), so early_spring — left `null` by the mulch-rule nulling — earned a dedicated line rather than staying empty. Ana signed off on wording (offered three candidates, picked the material-naming one over a "heavy feeder" framing or a dormancy-break trigger) and it was applied via `apply-seasonal-care-fixes.ts` (`edit` decision against the null baseline): early_spring now reads "Fertilize with compost or manure to fuel spring growth."
+
 ## 29. Diary photos go private: signed URLs on a garden-owned bucket
 
 **Decided July 15, 2026.** §18's public-bucket posture was explicitly temporary ("revisit once real auth/profiles exist"); auth shipped (§24), so this is that revisit. This section supersedes §18's storage paragraph.
