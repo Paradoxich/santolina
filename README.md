@@ -101,25 +101,32 @@ keys in `apps/web/.env.local` (`TREFLE_API_KEY`, `ANTHROPIC_API_KEY`):
 ```bash
 cd apps/web
 
-# Seed botanical facts from Trefle
+# 1. Seed botanical facts from Trefle (skips already-cataloged species)
 ./node_modules/.bin/tsx --env-file=.env.local scripts/seed-plants.ts
 
-# AI curation pass — fills gaps Trefle can't (care, style tags, seasonal rhythm)
-./node_modules/.bin/tsx --env-file=.env.local scripts/curate-plants.ts
+# 2. AI curation pass — fills gaps Trefle can't (care, style tags, seasonal rhythm)
+./node_modules/.bin/tsx --env-file=.env.local scripts/curate-plants.ts --new-only
 
-# Companion pairings — populates plant_combinations (idempotent; --limit N, --dry-run)
+# 3. Companion pairings — populates plant_combinations (idempotent; --limit N, --dry-run)
 ./node_modules/.bin/tsx --env-file=.env.local scripts/curate-combinations.ts
 
-# Botanical cross-check — blind fact-check of curated fields; flags only, never writes.
-# Writes a report to apps/web/reports/ (gitignored). Supports --limit N.
-./node_modules/.bin/tsx --env-file=.env.local scripts/cross-check-plants.ts
+# 4. Regenerate native_region — MUST run after every seed, or new plants
+#    silently drop out of the "native to my region" filter (review, then --apply)
+./node_modules/.bin/tsx --env-file=.env.local scripts/regenerate-native-region.ts
+
+# 5. Guards — flag only, never write
+./node_modules/.bin/tsx --env-file=.env.local scripts/cross-check-plants.ts --new-only
+./node_modules/.bin/tsx --env-file=.env.local scripts/check-bloom-colors.ts
+
+# 6. Draft RHS hardiness ratings for unrated rows
+./node_modules/.bin/tsx --env-file=.env.local scripts/draft-hardiness.ts
 ```
 
-Run them in this order: `curate-combinations` expects a curated catalog, and
-`cross-check-plants` reviews what the earlier passes drafted. See
-`docs/architecture.md` for the data-layer decisions behind each — provider
-choice and safe upsert (§1, §9), curation (§6), combinations (§19), and the
-cross-check (§20).
+Run them in this order — the authoritative runbook, with the rationale for
+each step, is `docs/architecture.md` §25. Individual decisions: provider
+choice and safe upsert (§1, §9), curation (§6), combinations (§19),
+cross-check (§20), native_region (§26), hardiness (§27), seasonal care (§28).
+Reports land in `apps/web/reports/` (gitignored).
 
 ## Further reading
 

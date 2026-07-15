@@ -86,8 +86,8 @@ No `/store` yet — the app holds no global client state (see Code conventions).
 
 Seven tables. All IDs are UUIDs. Row-level security required on all user-owned tables.
 
-- `users` — extends Supabase auth.users
-- `gardens` — garden profile (location, space type, sun, style, size). One per user in v1.
+- `users` — extends Supabase auth.users; created (with an empty garden) by the `handle_new_user` trigger on signup
+- `gardens` — garden profile (location + lat/lon, space type, sun, style, size). One per user in v1; only location is populated until the onboarding wizard ships.
 - `plants` — shared plant catalog cached from the Trefle API, enriched by an AI curation pass. Public read, service role write.
 - `palette_plants` — join table between gardens and plants. User's palette. Includes status (planned/planted) and source (generated/manual/existing). The status check constraint also permits a legacy `considering`, but the product no longer uses it — the app only moves plants between planned and planted (see `docs/architecture.md` §12).
 - `plant_combinations` — which plants work well together. Public read, service role write. Populated by `apps/web/scripts/curate-combinations.ts` (see `docs/architecture.md` §19).
@@ -100,14 +100,14 @@ Full schema is documented in Notion. Data-layer decisions (provider choice, cura
 
 ## External APIs
 
-- **Open-Meteo** — weather and climate data. Free, no API key. City-level resolution. Used to derive climate zone, hardiness zone, frost dates, seasonal data from user's city input.
+- **Open-Meteo** — weather data. Free, no API key. City-level resolution. Used today for two things only: geocoding the location picker (`/welcome`, dashboard modal) and the dashboard's 7-day forecast. Climate zone / frost-date derivation from location is a future idea, not built; hardiness is modelled via editorial RHS ratings instead (`docs/architecture.md` §27, currently parked).
 - **Trefle API** — plant species data (`TREFLE_API_KEY`). Plants are cached in the `plants` table; Trefle populates botanical facts only. Replaced Perenual, whose free tier returned paywalled nulls — see `docs/architecture.md` §1.
 - **Anthropic API** — powers a growing set of offline data scripts (`ANTHROPIC_API_KEY`, model `claude-sonnet-4-5`), all under `apps/web/scripts/`, none in the request path. Full current list and run order: `docs/architecture.md` §25. Representative examples:
   - `curate-plants.ts` — fills gaps Trefle can't (care instructions, style tags, seasonal rhythm). Never overwrites existing data.
   - `curate-combinations.ts` — populates `plant_combinations` with companion pairings (see `docs/architecture.md` §19).
   - `cross-check-plants.ts` — blind second pass that fact-checks botanical fields and flags disagreements; never writes to the DB (see `docs/architecture.md` §20).
   - `curate-seasonal-care.ts` / `cross-check-seasonal-care.ts` — distills and blind-checks the Care Tips `seasonal_care` field (see `docs/architecture.md` §28).
-- **Vercel AI SDK** — agent layer. Streaming responses. Model TBD (Claude or GPT-4o). Key in environment variables.
+- **Vercel AI SDK** — reserved for the deferred agent layer. The `ai` and `openai` packages are installed but nothing imports them yet; model choice is decided when the Agent is built.
 
 ---
 
@@ -133,8 +133,8 @@ Never commit `.env.local`. Never expose service role key to the client.
 
 - **Web first** — desktop optimised, mobile responsive. No native mobile app in v1.
 - **Ornamental-first, not ornamental-only** — the vision is "a small home garden I want to be beautiful," not farm management. Herbs and a few edibles are welcome; dedicated edible-growing features are a later phase.
-- **Progressive onboarding** — 5 steps (location, space type, sun, style, size). No forced completion. Value shown immediately. _Deferred post-test — see scope below._
-- **No account creation during onboarding** — prompted when user first tries to save. _Deferred post-test along with onboarding._
+- **Accounts shipped July 2026, gating the whole app** — magic link (default) + Google OAuth, no passwords anywhere. Middleware redirects unauthenticated requests to `/login`; only the landing page, `/login`, `/auth/*`, and `/design-system` stay public. A garden is auto-created on signup (trigger), never "set up." This consciously reversed the earlier "no account gate, prompt at first save" plan — see `docs/architecture.md` §24.
+- **Onboarding wizard deferred, location step is not** — the 5-step wizard (space type, sun, style, size) stays post-test, but location is collected in a required first-run step (`/welcome`, gated on null garden location) because the entire climate layer depends on it. The one deliberate exception to never-forced inputs (`docs/architecture.md` §24).
 - **Logging is in scope for the test version** — the Diary is the baseline "memory" of a user's plants. Still never required, never pushed.
 - **Agent = invisible wiring + summonable sidekick** — it quietly powers seasonal logic, memory, and recommendations, and never pops up uninvited. But it does have a visible entry point (sidebar "Agent ⌘K" button; chat icons in the plant/diary drawers open plant-scoped conversations) and, once built, can take or surface actions you discuss with it (e.g. add a plant to Planned). Exact chat behavior is not fully decided. _Deferred post-test — see scope below._
 - **Profile changes never override palette** — system suggests, user decides.
@@ -151,10 +151,11 @@ Scope changed during design from the original five-feature plan. Current phase i
 2. Plant Library / Explore
 3. My Garden / Palette (growing + planned)
 4. Diary
+5. Auth + account settings — pulled forward from post-test in July 2026 (magic link + Google, full-app gate, required location step; see `docs/architecture.md` §24)
 
 **Deferred to post-test (expected a few weeks out):**
 
-- Garden Profile / onboarding (5-step wizard)
+- Garden Profile / onboarding wizard (space type, sun, style, size — auth and the location step already shipped, see above)
 - The Agent
 
 Everything else is deferred. Do not build edible growing or multiple gardens in this phase.

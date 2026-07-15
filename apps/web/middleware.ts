@@ -1,9 +1,9 @@
 import { type NextRequest } from 'next/server'
 import { updateSession } from '@/lib/supabase-middleware'
 
-// Keeps the Supabase auth session fresh on every request. Redirect-based
-// gating (protect the app, keep the landing public) is added later in the
-// auth epic — see docs/architecture.md §24.
+// Keeps the Supabase auth session fresh on every request and gates protected
+// routes — updateSession redirects unauthenticated requests to /login; the
+// landing and auth routes stay public. See docs/architecture.md §24.
 export async function middleware(request: NextRequest) {
   return await updateSession(request)
 }
