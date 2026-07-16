@@ -1,4 +1,4 @@
-import { MediaCard, Icon, Tooltip } from '@paradoxui/ui'
+import { Button, IconButton, MediaCard, Icon, Tooltip } from '@paradoxui/ui'
 import { icons } from '@/lib/icons'
 import { PlantImage } from '@/components/PlantImage'
 import type { GardenPlant } from '@/types/garden'
@@ -38,42 +38,40 @@ export function PlannedPlantTile({
       footer={
         <>
           <Tooltip content="Remove from planned">
-            {/* rounded-[6px] (here and on the details button) sits between
-                radius-xs (4px) and radius-sm (8px) — kept literal pending
-                Ana's ruling on whether it should snap or become a token. */}
             {/* Span carries the hover handlers: a disabled button doesn't
                 reliably fire mouse events. */}
             <span className="inline-flex">
-              <button
-                type="button"
+              <IconButton
+                variant="control"
+                size="sm"
                 onClick={() => onRemove?.(plant.id)}
                 disabled={disabled}
                 aria-label={`Remove ${plant.name} from planned`}
-                className="flex h-8 items-center justify-center rounded-[6px] border border-card p-inline-gap transition-colors duration-normal hover:bg-surface-overlay disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <Icon src={icons.trash} />
-              </button>
+              </IconButton>
             </span>
           </Tooltip>
           <Tooltip content="View details">
-            <button
-              type="button"
+            <IconButton
+              variant="control"
+              size="sm"
               onClick={() => onOpenDetails?.(plant.id)}
               aria-label={`View details for ${plant.name}`}
-              className="flex h-8 items-center justify-center rounded-[6px] border border-card p-inline-gap transition-colors duration-normal hover:bg-surface-overlay"
             >
               <Icon src={icons.info} />
-            </button>
+            </IconButton>
           </Tooltip>
-          <button
-            type="button"
+          <Button
+            variant="control"
+            size="sm"
             onClick={() => onMoveToGrowing?.(plant.id)}
             disabled={disabled}
-            className="flex h-8 flex-1 items-center gap-inline-gap rounded-sm bg-surface-control p-inline-gap text-body-small text-primary transition-colors duration-normal hover:bg-gray-0 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex-1 justify-between"
           >
-            <span className="flex-1 text-left">Move to growing</span>
+            Move to growing
             <Icon src={icons.arrowRight} />
-          </button>
+          </Button>
         </>
       }
     />

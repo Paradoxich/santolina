@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Drawer, Icon, Tabs, useToast } from '@paradoxui/ui'
+import { Button, Drawer, Icon, Tabs, useToast } from '@paradoxui/ui'
 import { icons } from '@/lib/icons'
 import { DRAWER_MOTION } from '@/lib/drawer-motion'
 import { DIARY_EVENT_LABELS } from '@/lib/diary-events'
@@ -139,15 +139,16 @@ function TipRow({
         {tip.text}
       </span>
       {eventLabel && tip.plantId ? (
-        <button
-          type="button"
+        <Button
+          variant="control"
+          size="sm"
           onClick={onDidIt}
           disabled={pending}
+          className="shrink-0"
           aria-label={`Log ${eventLabel.toLowerCase()} for ${tip.plantName ?? 'this plant'}`}
-          className="shrink-0 rounded-full border border-card bg-surface-control px-item-gap py-1 text-label font-medium text-secondary transition-colors duration-normal hover:bg-surface-overlay hover:text-primary disabled:cursor-not-allowed disabled:opacity-50"
         >
           {pending ? 'Logging…' : eventLabel}
-        </button>
+        </Button>
       ) : (
         tip.plantName && (
           <span className="shrink-0 whitespace-nowrap text-label text-muted">

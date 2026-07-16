@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { AnimatePresence } from 'framer-motion'
-import { EmptyState, Icon, Tooltip } from '@paradoxui/ui'
+import { EmptyState, Icon, IconButton, Tooltip } from '@paradoxui/ui'
 import { EmptyStateIllustration } from '@/components/EmptyStateIllustration'
 import { DiaryListRow } from '@/components/DiaryListRow'
 import { DiaryDetailDrawer } from '@/components/DiaryDetailDrawer'
@@ -88,13 +88,13 @@ export function DiaryClient({
       <div className="mt-8 flex items-center justify-between md:mt-12">
         <h2 className="text-subheading font-semibold text-primary">Notes</h2>
         <Tooltip content="Filter diary entries" position="bottom">
-          <button
-            type="button"
+          <IconButton
+            variant="ghost"
+            size="sm"
             aria-label="Filter diary entries"
-            className="flex size-8 items-center justify-center rounded-sm transition-colors duration-normal hover:bg-surface-overlay"
           >
             <Icon src={icons.filter} />
-          </button>
+          </IconButton>
         </Tooltip>
       </div>
 
