@@ -35,7 +35,7 @@ export function Chip({
         'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus',
         selected
           ? 'border-transparent bg-accent text-on-accent hover:bg-accent-hover'
-          : 'border-card bg-surface-chip text-primary hover:bg-gray-0',
+          : 'border-card bg-transparent text-primary hover:bg-surface-hover',
         className
       )}
       {...props}

@@ -29,79 +29,265 @@ import { Label, Section, type Chapter } from '../chapter-helpers'
 
 const placeholderImage = <div className="size-full bg-sage-300" aria-hidden />
 
+// ---------------------------------------------------------------------------
+// State matrix — documents each control across its real interaction states.
+//
+// Hover and Focus are frozen previews: the same resolved utility a real
+// pointer/keyboard would trigger, applied at rest via className. cn() runs
+// tailwind-merge, so the override cleanly replaces the variant's base class.
+// The maps below MIRROR the components' own variantStyles — keep them in sync.
+// There is no distinct pressed/"active" state by design (hover shifts the
+// background; keyboard focus shows a ring), so no such column exists.
+// ---------------------------------------------------------------------------
+
+type BtnVariant =
+  | 'primary'
+  | 'secondary'
+  | 'control'
+  | 'ghost'
+  | 'destructive'
+  | 'destructive-ghost'
+
+const BUTTON_VARIANTS: { key: BtnVariant; label: string }[] = [
+  { key: 'primary', label: 'Primary' },
+  { key: 'secondary', label: 'Secondary' },
+  { key: 'control', label: 'Control' },
+  { key: 'ghost', label: 'Ghost' },
+  { key: 'destructive', label: 'Destructive' },
+  { key: 'destructive-ghost', label: 'Destructive ghost' },
+]
+
+// Hover background per variant, mirrored from Button/IconButton variantStyles.
+const HOVER_BG: Record<BtnVariant, string> = {
+  primary: 'bg-accent-hover',
+  secondary: 'bg-surface-positive',
+  control: 'bg-surface-hover',
+  ghost: 'bg-surface-hover',
+  destructive: 'bg-fill-critical-hover',
+  'destructive-ghost': 'bg-surface-critical',
+}
+
+// Focus ring — critical variants ring critical, everything else rings focus.
+const focusRing = (v: BtnVariant) =>
+  `ring-2 ring-offset-2 ${v.startsWith('destructive') ? 'ring-critical' : 'ring-focus'}`
+
+const BUTTON_STATES = ['Default', 'Hover', 'Focus', 'Disabled', 'Loading']
+const ICON_VARIANTS = BUTTON_VARIANTS.filter((v) => v.key !== 'secondary')
+const CHIP_STATES = ['Default', 'Hover', 'Focus']
+
+const SIZES: { key: 'sm' | 'md' | 'lg'; label: string }[] = [
+  { key: 'sm', label: 'sm · 32px' },
+  { key: 'md', label: 'md · 40px' },
+  { key: 'lg', label: 'lg · 48px' },
+]
+
+/** A labelled row × column grid, horizontally scrollable on narrow screens. */
+function StateMatrix({
+  columns,
+  rows,
+  minWidth = 600,
+}: {
+  columns: string[]
+  rows: { label: string; render: (column: string) => React.ReactNode }[]
+  minWidth?: number
+}) {
+  const template = `minmax(112px, 150px) repeat(${columns.length}, minmax(88px, 1fr))`
+  return (
+    <div className="overflow-x-auto">
+      <div style={{ minWidth }}>
+        <div
+          className="grid items-center gap-item-gap border-b border-divider pb-tight-gap"
+          style={{ gridTemplateColumns: template }}
+        >
+          <span />
+          {columns.map((c) => (
+            <span
+              key={c}
+              className="text-label uppercase tracking-label text-muted"
+            >
+              {c}
+            </span>
+          ))}
+        </div>
+        {rows.map((row) => (
+          <div
+            key={row.label}
+            className="grid items-center gap-item-gap border-b border-divider py-item-gap last:border-b-0"
+            style={{ gridTemplateColumns: template }}
+          >
+            <span className="text-body-small text-secondary">{row.label}</span>
+            {columns.map((c) => (
+              <div key={c} className="flex">
+                {row.render(c)}
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function buttonCell(variant: BtnVariant, state: string) {
+  const label = 'Button'
+  switch (state) {
+    case 'Hover':
+      return (
+        <Button variant={variant} className={HOVER_BG[variant]}>
+          {label}
+        </Button>
+      )
+    case 'Focus':
+      return (
+        <Button variant={variant} className={focusRing(variant)}>
+          {label}
+        </Button>
+      )
+    case 'Disabled':
+      return (
+        <Button variant={variant} disabled>
+          {label}
+        </Button>
+      )
+    case 'Loading':
+      return (
+        <Button variant={variant} isLoading>
+          {label}
+        </Button>
+      )
+    default:
+      return <Button variant={variant}>{label}</Button>
+  }
+}
+
+type IconBtnVariant = Exclude<BtnVariant, 'secondary'>
+
+function iconButtonCell(variant: IconBtnVariant, state: string) {
+  const glyph = <Icon src={icons.plus} />
+  const label = `${variant} ${state}`
+  switch (state) {
+    case 'Hover':
+      return (
+        <IconButton
+          variant={variant}
+          className={HOVER_BG[variant]}
+          aria-label={label}
+        >
+          {glyph}
+        </IconButton>
+      )
+    case 'Focus':
+      return (
+        <IconButton
+          variant={variant}
+          className={focusRing(variant)}
+          aria-label={label}
+        >
+          {glyph}
+        </IconButton>
+      )
+    case 'Disabled':
+      return (
+        <IconButton variant={variant} disabled aria-label={label}>
+          {glyph}
+        </IconButton>
+      )
+    case 'Loading':
+      return (
+        <IconButton variant={variant} isLoading aria-label={label}>
+          {glyph}
+        </IconButton>
+      )
+    default:
+      return (
+        <IconButton variant={variant} aria-label={label}>
+          {glyph}
+        </IconButton>
+      )
+  }
+}
+
+function chipCell(selected: boolean, state: string) {
+  const hover = selected ? 'bg-accent-hover' : 'bg-surface-hover'
+  const focus = 'outline outline-2 outline-offset-2 outline-focus'
+  const className =
+    state === 'Hover' ? hover : state === 'Focus' ? focus : undefined
+  return (
+    <Chip selected={selected} className={className}>
+      Chip
+    </Chip>
+  )
+}
+
 function Actions() {
   return (
     <Section
       title="Actions"
-      intro="Buttons drive every committed change in the product — a plant added, a note saved, an item removed."
+      intro="Buttons and chips drive every committed change and filter in the product. Each control is shown across its interaction states — hover and focus are frozen previews of the styles a real pointer or keyboard triggers. There is no separate pressed state by design."
     >
       <div className="flex flex-col gap-section-break">
         <div className="flex flex-col gap-inline-gap">
-          <Label>Button — variant</Label>
-          <div className="flex flex-wrap items-center gap-item-gap">
-            <Button variant="primary">Primary</Button>
-            <Button variant="secondary">Secondary</Button>
-            <Button variant="control">Control</Button>
-            <Button variant="ghost">Ghost</Button>
-            <Button variant="destructive">Destructive</Button>
-            <Button variant="destructive-ghost">Destructive ghost</Button>
-            <Button variant="primary" isLoading>
-              Loading
-            </Button>
-            <Button variant="primary" disabled>
-              Disabled
-            </Button>
-          </div>
-          <Label>Button — size (32 / 40 / 48)</Label>
-          <div className="flex flex-wrap items-center gap-item-gap">
-            <Button size="sm">Small</Button>
-            <Button size="md">Medium</Button>
-            <Button size="lg">Large</Button>
-          </div>
+          <Label>Button — variant × state</Label>
+          <StateMatrix
+            columns={BUTTON_STATES}
+            rows={BUTTON_VARIANTS.map((v) => ({
+              label: v.label,
+              render: (state) => buttonCell(v.key, state),
+            }))}
+          />
         </div>
 
         <div className="flex flex-col gap-inline-gap">
-          <Label>IconButton — variant (shares Button's vocabulary)</Label>
-          <div className="flex flex-wrap items-center gap-item-gap">
-            <IconButton variant="primary" aria-label="Primary example">
-              <Icon src={icons.arrowRight} />
-            </IconButton>
-            <IconButton variant="control" aria-label="Control example">
-              <Icon src={icons.trash} />
-            </IconButton>
-            <IconButton variant="ghost" aria-label="Ghost example">
-              <Icon src={icons.filter} />
-            </IconButton>
-            <IconButton variant="destructive" aria-label="Destructive example">
-              <Icon src={icons.trash} />
-            </IconButton>
-            <IconButton
-              variant="primary"
-              isLoading
-              aria-label="Loading example"
-            >
-              <Icon src={icons.arrowRight} />
-            </IconButton>
-            <IconButton
-              variant="control"
-              disabled
-              aria-label="Disabled example"
-            >
-              <Icon src={icons.trash} />
-            </IconButton>
-          </div>
-          <Label>IconButton — size (32 / 40 / 48, radius fixed at 8px)</Label>
-          <div className="flex flex-wrap items-center gap-item-gap">
-            <IconButton variant="control" size="sm" aria-label="Small example">
-              <Icon src={icons.trash} />
-            </IconButton>
-            <IconButton variant="control" size="md" aria-label="Medium example">
-              <Icon src={icons.trash} />
-            </IconButton>
-            <IconButton variant="control" size="lg" aria-label="Large example">
-              <Icon src={icons.trash} />
-            </IconButton>
-          </div>
+          <Label>
+            IconButton — variant × state (shares Button&apos;s vocabulary)
+          </Label>
+          <StateMatrix
+            columns={BUTTON_STATES}
+            rows={ICON_VARIANTS.map((v) => ({
+              label: v.label,
+              render: (state) => iconButtonCell(v.key as IconBtnVariant, state),
+            }))}
+          />
+        </div>
+
+        <div className="flex flex-col gap-inline-gap">
+          <Label>Chip — selectable filter pill, resting vs selected</Label>
+          <StateMatrix
+            columns={CHIP_STATES}
+            rows={[
+              { label: 'Resting', render: (state) => chipCell(false, state) },
+              { label: 'Selected', render: (state) => chipCell(true, state) },
+            ]}
+          />
+        </div>
+
+        <div className="flex flex-col gap-inline-gap">
+          <Label>
+            Size — Button &amp; IconButton share one 32 / 40 / 48px scale
+          </Label>
+          <StateMatrix
+            minWidth={380}
+            columns={['Button', 'IconButton']}
+            rows={SIZES.map((s) => ({
+              label: s.label,
+              render: (column) =>
+                column === 'Button' ? (
+                  <Button size={s.key}>Button</Button>
+                ) : (
+                  <IconButton
+                    size={s.key}
+                    variant="control"
+                    aria-label={`${s.key} icon button`}
+                  >
+                    <Icon src={icons.plus} />
+                  </IconButton>
+                ),
+            }))}
+          />
+          <p className="text-body-small text-muted">
+            Button radius steps 8 → 12 → 12px; IconButton stays 8px at every
+            size. Chip is a single fixed size — 32px, matching sm.
+          </p>
         </div>
       </div>
     </Section>
