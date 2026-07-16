@@ -1,7 +1,15 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Drawer, Icon, Modal, Tooltip, useToast } from '@paradoxui/ui'
+import {
+  Button,
+  Drawer,
+  Icon,
+  IconButton,
+  Modal,
+  Tooltip,
+  useToast,
+} from '@paradoxui/ui'
 import { icons } from '@/lib/icons'
 import { PlantImage } from '@/components/PlantImage'
 import { DRAWER_MOTION } from '@/lib/drawer-motion'
@@ -353,14 +361,14 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
       headerActions={
         <>
           {palette?.status !== 'planted' && (
-            <button
-              type="button"
+            <Button
+              variant="control"
+              size="sm"
               onClick={handleAddToPlan}
               disabled={controlsDisabled}
-              className="flex h-8 items-center rounded-sm border border-card bg-surface-inverse px-item-gap text-body-small text-on-accent disabled:cursor-not-allowed disabled:opacity-50"
             >
               {addToPlanLabel}
-            </button>
+            </Button>
           )}
           {palette?.status === 'planted' ? (
             <>
@@ -368,43 +376,39 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
                 {/* Span carries the hover handlers: a disabled button doesn't
                     reliably fire mouse events, and this button disables mid-action. */}
                 <span className="inline-flex">
-                  <button
-                    type="button"
+                  <IconButton
+                    variant="control"
+                    size="sm"
                     onClick={handleRemoveClick}
                     disabled={controlsDisabled || isCheckingDiary}
                     aria-label="Remove from garden"
-                    className="flex size-8 items-center justify-center rounded-full border border-card bg-surface-control transition-opacity duration-normal hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <Icon src={icons.trash} />
-                  </button>
+                  </IconButton>
                 </span>
               </Tooltip>
-              <button
-                type="button"
-                onClick={handleOpenDiary}
-                className="flex h-8 items-center rounded-sm border border-card bg-surface-control px-inline-gap text-body-small text-secondary"
-              >
+              <Button variant="control" size="sm" onClick={handleOpenDiary}>
                 Open diary
-              </button>
+              </Button>
             </>
           ) : (
-            <button
-              type="button"
+            <Button
+              variant="control"
+              size="sm"
               onClick={handleSecondaryAction}
               disabled={controlsDisabled}
-              className="flex h-8 items-center rounded-sm border border-card bg-surface-control px-inline-gap text-body-small text-secondary disabled:cursor-not-allowed disabled:opacity-50"
             >
               {secondaryActionLabel}
-            </button>
+            </Button>
           )}
           <Tooltip content="Chat about this plant" position="bottom">
-            <button
-              type="button"
+            <IconButton
+              variant="control"
+              size="sm"
               aria-label="Chat about this plant"
-              className="flex size-8 items-center justify-center rounded-full border border-card bg-surface-control"
             >
               <Icon src={icons.chat} />
-            </button>
+            </IconButton>
           </Tooltip>
         </>
       }
@@ -465,22 +469,22 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
         size="sm"
         footer={
           <>
-            <button
-              type="button"
+            <Button
+              variant="control"
+              size="sm"
               onClick={closeRemoveDialog}
               disabled={pendingAction === 'garden'}
-              className="flex h-8 items-center rounded-sm border border-card bg-surface-control px-inline-gap text-body-small text-secondary disabled:cursor-not-allowed disabled:opacity-50"
             >
               Cancel
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
+              variant="control"
+              size="sm"
               onClick={handleConfirmRemove}
               disabled={pendingAction === 'garden'}
-              className="flex h-8 items-center rounded-sm border border-card bg-surface-inverse px-item-gap text-body-small text-on-accent disabled:cursor-not-allowed disabled:opacity-50"
             >
               {pendingAction === 'garden' ? 'Removing…' : 'Remove from garden'}
-            </button>
+            </Button>
           </>
         }
       >

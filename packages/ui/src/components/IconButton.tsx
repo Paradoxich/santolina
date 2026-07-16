@@ -1,35 +1,41 @@
 import React from 'react'
 import { cn } from '../utils/cn'
 
-export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+export interface IconButtonProps extends Omit<
+  React.ButtonHTMLAttributes<HTMLButtonElement>,
+  'aria-label'
+> {
   variant?:
     | 'primary'
-    | 'secondary'
     | 'control'
     | 'ghost'
     | 'destructive'
     | 'destructive-ghost'
-  /** Fixed heights: sm 32px, md 40px, lg 48px. */
+  /** Fixed square sizes: sm 32px, md 40px, lg 48px. */
   size?: 'sm' | 'md' | 'lg'
   isLoading?: boolean
   ref?: React.Ref<HTMLButtonElement>
+  /** Icon-only — always required so the control has an accessible name. */
+  'aria-label': string
   children: React.ReactNode
 }
 
-const variantStyles: Record<NonNullable<ButtonProps['variant']>, string> = {
+// Icon assets are <img>-loaded SVGs with a hardcoded stroke color, so they
+// can't pick up text-on-accent via currentColor the way an inline SVG would.
+// Filtering to white is the pragmatic fix for the two filled/on-accent
+// variants — every current icon is single-color line art, so this is safe.
+const onAccentIconFilter = '[&_img]:brightness-0 [&_img]:invert'
+
+// Shares Button's variant vocabulary so the two read as one system — only
+// shape differs (icon-only square vs. labeled pill).
+const variantStyles: Record<NonNullable<IconButtonProps['variant']>, string> = {
   primary: [
     'bg-accent',
     'text-on-accent',
     'hover:bg-accent-hover',
     'focus-visible:ring-focus',
     'border-transparent',
-  ].join(' '),
-  secondary: [
-    'bg-transparent',
-    'text-accent',
-    'border-accent',
-    'hover:bg-surface-positive',
-    'focus-visible:ring-focus',
+    onAccentIconFilter,
   ].join(' '),
   control: [
     'bg-surface-control',
@@ -51,6 +57,7 @@ const variantStyles: Record<NonNullable<ButtonProps['variant']>, string> = {
     'border-transparent',
     'hover:bg-fill-critical-hover',
     'focus-visible:ring-critical',
+    onAccentIconFilter,
   ].join(' '),
   'destructive-ghost': [
     'bg-transparent',
@@ -61,29 +68,27 @@ const variantStyles: Record<NonNullable<ButtonProps['variant']>, string> = {
   ].join(' '),
 }
 
-// Heights are fixed (32/40/48px) rather than padding-derived, matching what
-// the app's hand-rolled buttons already do. Type stays text-body-small at
-// every size — nothing in the app currently scales button text with height.
-// Radius: 32 -> 8px, 40 & 48 -> 12px (lg does not step up to rounded-lg).
-const sizeStyles: Record<NonNullable<ButtonProps['size']>, string> = {
-  sm: 'h-8 px-3 text-body-small rounded-sm',
-  md: 'h-10 px-4 text-body-small rounded-md',
-  lg: 'h-12 px-6 text-body-small rounded-md',
+// Radius is fixed at rounded-sm (8px) for every size — unifies what used to
+// be a mix of rounded-full and an arbitrary rounded-[6px] across the app.
+const sizeStyles: Record<NonNullable<IconButtonProps['size']>, string> = {
+  sm: 'size-8 rounded-sm',
+  md: 'size-10 rounded-sm',
+  lg: 'size-12 rounded-sm',
 }
 
-export function Button({
-  variant = 'primary',
-  size = 'md',
+export function IconButton({
+  variant = 'control',
+  size = 'sm',
   isLoading = false,
   disabled,
   className,
   children,
   ref,
   ...props
-}: ButtonProps) {
+}: IconButtonProps) {
   const baseStyles = [
-    'inline-flex items-center justify-center gap-2',
-    'font-medium border',
+    'inline-flex shrink-0 items-center justify-center',
+    'border',
     'transition-colors duration-normal',
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
     'disabled:pointer-events-none disabled:opacity-50',
@@ -103,15 +108,16 @@ export function Button({
       aria-busy={isLoading}
       {...props}
     >
-      {isLoading && (
+      {isLoading ? (
         <span
-          className="inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"
+          className="inline-block size-4 animate-spin rounded-full border-2 border-current border-t-transparent"
           aria-hidden="true"
         />
+      ) : (
+        children
       )}
-      {children}
     </button>
   )
 }
 
-export default Button
+export default IconButton

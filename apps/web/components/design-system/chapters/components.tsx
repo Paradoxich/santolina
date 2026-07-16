@@ -12,6 +12,7 @@ import {
   DetailRow,
   EmptyState,
   Icon,
+  IconButton,
   Input,
   MediaCard,
   Panel,
@@ -34,20 +35,73 @@ function Actions() {
       title="Actions"
       intro="Buttons drive every committed change in the product — a plant added, a note saved, an item removed."
     >
-      <div className="flex flex-col gap-inline-gap">
-        <Label>Button</Label>
-        <div className="flex flex-wrap items-center gap-item-gap">
-          <Button variant="primary">Primary</Button>
-          <Button variant="secondary">Secondary</Button>
-          <Button variant="ghost">Ghost</Button>
-          <Button variant="destructive">Destructive</Button>
-          <Button variant="destructive-ghost">Destructive ghost</Button>
-          <Button variant="primary" isLoading>
-            Loading
-          </Button>
-          <Button variant="primary" disabled>
-            Disabled
-          </Button>
+      <div className="flex flex-col gap-section-break">
+        <div className="flex flex-col gap-inline-gap">
+          <Label>Button — variant</Label>
+          <div className="flex flex-wrap items-center gap-item-gap">
+            <Button variant="primary">Primary</Button>
+            <Button variant="secondary">Secondary</Button>
+            <Button variant="control">Control</Button>
+            <Button variant="ghost">Ghost</Button>
+            <Button variant="destructive">Destructive</Button>
+            <Button variant="destructive-ghost">Destructive ghost</Button>
+            <Button variant="primary" isLoading>
+              Loading
+            </Button>
+            <Button variant="primary" disabled>
+              Disabled
+            </Button>
+          </div>
+          <Label>Button — size (32 / 40 / 48)</Label>
+          <div className="flex flex-wrap items-center gap-item-gap">
+            <Button size="sm">Small</Button>
+            <Button size="md">Medium</Button>
+            <Button size="lg">Large</Button>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-inline-gap">
+          <Label>IconButton — variant (shares Button's vocabulary)</Label>
+          <div className="flex flex-wrap items-center gap-item-gap">
+            <IconButton variant="primary" aria-label="Primary example">
+              <Icon src={icons.arrowRight} />
+            </IconButton>
+            <IconButton variant="control" aria-label="Control example">
+              <Icon src={icons.trash} />
+            </IconButton>
+            <IconButton variant="ghost" aria-label="Ghost example">
+              <Icon src={icons.filter} />
+            </IconButton>
+            <IconButton variant="destructive" aria-label="Destructive example">
+              <Icon src={icons.trash} />
+            </IconButton>
+            <IconButton
+              variant="primary"
+              isLoading
+              aria-label="Loading example"
+            >
+              <Icon src={icons.arrowRight} />
+            </IconButton>
+            <IconButton
+              variant="control"
+              disabled
+              aria-label="Disabled example"
+            >
+              <Icon src={icons.trash} />
+            </IconButton>
+          </div>
+          <Label>IconButton — size (32 / 40 / 48, radius fixed at 8px)</Label>
+          <div className="flex flex-wrap items-center gap-item-gap">
+            <IconButton variant="control" size="sm" aria-label="Small example">
+              <Icon src={icons.trash} />
+            </IconButton>
+            <IconButton variant="control" size="md" aria-label="Medium example">
+              <Icon src={icons.trash} />
+            </IconButton>
+            <IconButton variant="control" size="lg" aria-label="Large example">
+              <Icon src={icons.trash} />
+            </IconButton>
+          </div>
         </div>
       </div>
     </Section>

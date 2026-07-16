@@ -95,6 +95,7 @@ const preset = {
         field: 'var(--color-surface-field)',
         overlay: 'var(--color-surface-overlay)',
         control: 'var(--color-surface-control)',
+        chip: 'var(--color-surface-chip)',
         hover: 'var(--color-surface-hover)',
         active: 'var(--color-surface-active)',
         'card-translucent': 'var(--color-surface-card-translucent)',
