@@ -28,13 +28,14 @@ export function Chip({
         'inline-flex h-8 items-center justify-center',
         'px-row-gap',
         'rounded-chip',
+        'border',
         'text-body-small',
         'whitespace-nowrap select-none',
         'transition-colors duration-normal',
         'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus',
         selected
-          ? 'bg-accent text-on-accent hover:bg-accent-hover'
-          : 'bg-surface-control text-primary hover:bg-gray-0',
+          ? 'border-transparent bg-accent text-on-accent hover:bg-accent-hover'
+          : 'border-card bg-transparent text-primary hover:bg-surface-hover',
         className
       )}
       {...props}

@@ -11,6 +11,7 @@ const meta: Meta<typeof Button> = {
       options: [
         'primary',
         'secondary',
+        'control',
         'ghost',
         'destructive',
         'destructive-ghost',
@@ -33,6 +34,10 @@ export const Secondary: Story = {
   args: { variant: 'secondary', children: 'Button' },
 }
 
+export const Control: Story = {
+  args: { variant: 'control', children: 'Cancel' },
+}
+
 export const Ghost: Story = {
   args: { variant: 'ghost', children: 'Button' },
 }
@@ -46,11 +51,15 @@ export const DestructiveGhost: Story = {
 }
 
 export const Small: Story = {
-  args: { variant: 'primary', size: 'sm', children: 'Small' },
+  args: { variant: 'primary', size: 'sm', children: 'Small · 32' },
+}
+
+export const Medium: Story = {
+  args: { variant: 'primary', size: 'md', children: 'Medium · 40' },
 }
 
 export const Large: Story = {
-  args: { variant: 'primary', size: 'lg', children: 'Large' },
+  args: { variant: 'primary', size: 'lg', children: 'Large · 48' },
 }
 
 export const Loading: Story = {

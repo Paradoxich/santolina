@@ -2,7 +2,17 @@ import { useRef, useState } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Drawer, Icon, Menu, Modal, Tooltip, useToast } from '@paradoxui/ui'
+import {
+  Button,
+  Chip,
+  Drawer,
+  Icon,
+  IconButton,
+  Menu,
+  Modal,
+  Tooltip,
+  useToast,
+} from '@paradoxui/ui'
 import type { MenuItem } from '@paradoxui/ui'
 import { icons } from '@/lib/icons'
 import { DRAWER_MOTION } from '@/lib/drawer-motion'
@@ -334,23 +344,23 @@ export function DiaryDetailDrawer({ diary, onClose }: DiaryDetailDrawerProps) {
       panelProps={DRAWER_MOTION}
       headerActions={
         <>
-          <button
-            type="button"
+          <Button
+            variant="control"
+            size="sm"
             onClick={() =>
               router.push(`/plants?tab=growing&plant=${diary.plantId}`)
             }
-            className="flex h-8 items-center rounded-sm border border-card bg-surface-control px-inline-gap text-body-small text-secondary"
           >
             Open plant details
-          </button>
+          </Button>
           <Tooltip content="Chat about this plant" position="bottom">
-            <button
-              type="button"
+            <IconButton
+              variant="control"
+              size="sm"
               aria-label="Chat about this plant"
-              className="flex size-8 items-center justify-center rounded-full border border-card bg-surface-control"
             >
               <Icon src={icons.chat} />
-            </button>
+            </IconButton>
           </Tooltip>
         </>
       }
@@ -375,12 +385,12 @@ export function DiaryDetailDrawer({ diary, onClose }: DiaryDetailDrawerProps) {
                 buttons don't reliably fire mouse events, and this is exactly
                 the state where the tooltip is most useful. */}
             <span className="inline-flex">
-              <button
-                type="button"
+              <IconButton
+                variant="ghost"
+                size="sm"
                 onClick={() => setIsDeleteDialogOpen(true)}
                 disabled={noteCount === 0}
                 aria-label={isGrowing ? 'Clear diary' : 'Delete diary'}
-                className="flex size-8 items-center justify-center rounded-full transition-all duration-normal hover:bg-surface-overlay focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isGrowing ? (
                   <svg
@@ -415,7 +425,7 @@ export function DiaryDetailDrawer({ diary, onClose }: DiaryDetailDrawerProps) {
                 ) : (
                   <Icon src={icons.trash} />
                 )}
-              </button>
+              </IconButton>
             </span>
           </Tooltip>
         </div>
@@ -451,19 +461,13 @@ export function DiaryDetailDrawer({ diary, onClose }: DiaryDetailDrawerProps) {
               {DIARY_EVENT_TYPES.map((event) => {
                 const active = selectedEvent === event
                 return (
-                  <button
+                  <Chip
                     key={event}
-                    type="button"
-                    aria-pressed={active}
+                    selected={active}
                     onClick={() => setSelectedEvent(active ? null : event)}
-                    className={`rounded-full border px-item-gap py-0.5 text-label font-medium transition-colors duration-normal ${
-                      active
-                        ? 'border-transparent bg-accent text-on-accent'
-                        : 'border-card bg-surface-control text-secondary hover:bg-surface-overlay'
-                    }`}
                   >
                     {DIARY_EVENT_LABELS[event]}
-                  </button>
+                  </Chip>
                 )
               })}
             </div>
@@ -502,14 +506,14 @@ export function DiaryDetailDrawer({ diary, onClose }: DiaryDetailDrawerProps) {
                 onChange={handleFileChange}
                 className="hidden"
               />
-              <button
-                type="button"
+              <IconButton
+                variant="ghost"
+                size="sm"
                 onClick={() => fileInputRef.current?.click()}
                 aria-label="Add photo"
-                className="flex size-8 shrink-0 items-center justify-center rounded-full text-secondary transition-colors duration-normal hover:bg-surface-control hover:text-primary"
               >
                 <Icon src={icons.plus} />
-              </button>
+              </IconButton>
               <textarea
                 ref={textareaRef}
                 value={noteText}
@@ -529,15 +533,15 @@ export function DiaryDetailDrawer({ diary, onClose }: DiaryDetailDrawerProps) {
                 rows={1}
                 className="min-h-8 w-full flex-1 resize-none self-center bg-transparent py-1 text-body text-primary placeholder:text-muted focus:outline-none"
               />
-              <button
-                type="button"
+              <IconButton
+                variant="primary"
+                size="sm"
                 onClick={handleSaveNote}
                 disabled={isSubmitting || isProcessingPhotos}
                 aria-label="Add entry"
-                className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent text-on-accent transition-opacity duration-normal hover:opacity-90 disabled:opacity-50"
               >
                 <Icon src={icons.arrowRight} />
-              </button>
+              </IconButton>
             </div>
           </>
         ) : (
@@ -545,17 +549,16 @@ export function DiaryDetailDrawer({ diary, onClose }: DiaryDetailDrawerProps) {
             <p className="text-body-small text-muted">
               No longer in your garden. Notes are read-only.
             </p>
-            <button
-              type="button"
+            <Button
+              variant="control"
+              size="sm"
               onClick={handleAddBackToGarden}
               disabled={isReAdding}
-              className="flex w-full items-center gap-inline-gap rounded-sm bg-surface-control p-inline-gap text-body-small text-primary transition-colors duration-normal hover:bg-gray-0 disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-full justify-between"
             >
-              <span className="flex-1 text-left">
-                {isReAdding ? 'Adding back…' : 'Add back to garden'}
-              </span>
+              {isReAdding ? 'Adding back…' : 'Add back to garden'}
               <Icon src={icons.arrowRight} />
-            </button>
+            </Button>
             {reAddError && (
               <p className="text-body-small text-critical">{reAddError}</p>
             )}
@@ -574,19 +577,19 @@ export function DiaryDetailDrawer({ diary, onClose }: DiaryDetailDrawerProps) {
         size="sm"
         footer={
           <>
-            <button
-              type="button"
+            <Button
+              variant="control"
+              size="sm"
               onClick={() => setIsDeleteDialogOpen(false)}
               disabled={isDeleting}
-              className="flex h-8 items-center rounded-sm border border-card bg-surface-control px-inline-gap text-body-small text-secondary disabled:cursor-not-allowed disabled:opacity-50"
             >
               Cancel
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
               onClick={handleConfirmDelete}
               disabled={isDeleting}
-              className="flex h-8 items-center rounded-sm border border-transparent bg-fill-critical px-inline-gap text-body-small text-on-accent hover:bg-fill-critical-hover disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isGrowing
                 ? isDeleting
@@ -595,7 +598,7 @@ export function DiaryDetailDrawer({ diary, onClose }: DiaryDetailDrawerProps) {
                 : isDeleting
                   ? 'Deleting…'
                   : 'Delete diary'}
-            </button>
+            </Button>
           </>
         }
       >
@@ -618,22 +621,22 @@ export function DiaryDetailDrawer({ diary, onClose }: DiaryDetailDrawerProps) {
         size="sm"
         footer={
           <>
-            <button
-              type="button"
+            <Button
+              variant="control"
+              size="sm"
               onClick={() => setNoteToDelete(null)}
               disabled={isDeletingNote}
-              className="flex h-8 items-center rounded-sm border border-card bg-surface-control px-inline-gap text-body-small text-secondary disabled:cursor-not-allowed disabled:opacity-50"
             >
               Cancel
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
               onClick={handleConfirmDeleteNote}
               disabled={isDeletingNote}
-              className="flex h-8 items-center rounded-sm border border-transparent bg-fill-critical px-inline-gap text-body-small text-on-accent hover:bg-fill-critical-hover disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isDeletingNote ? 'Deleting…' : 'Delete note'}
-            </button>
+            </Button>
           </>
         }
       >

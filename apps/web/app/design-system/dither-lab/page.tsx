@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { DitheredImage } from '@paradoxui/ui'
+import { Chip, DitheredImage } from '@paradoxui/ui'
 
 type HoverMode = 'reveal' | 'organic' | 'magnify' | 'coarsen' | 'spotlight'
 
@@ -70,19 +70,13 @@ export default function DitherLabPage() {
             </span>
             <div className="flex flex-wrap gap-2">
               {MODES.map((m) => (
-                <button
+                <Chip
                   key={m.id}
-                  type="button"
+                  selected={mode === m.id}
                   onClick={() => setMode(m.id)}
-                  aria-pressed={mode === m.id}
-                  className={
-                    mode === m.id
-                      ? 'rounded-full border border-accent bg-accent px-3 py-1 text-label text-on-accent'
-                      : 'rounded-full border border-card px-3 py-1 text-label text-primary transition-colors hover:bg-surface-hover'
-                  }
                 >
                   {m.label}
-                </button>
+                </Chip>
               ))}
             </div>
             <span className="text-label text-muted">{activeHint}</span>

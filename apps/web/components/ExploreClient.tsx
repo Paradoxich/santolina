@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Icon, SearchField } from '@paradoxui/ui'
+import { Icon, IconButton, SearchField } from '@paradoxui/ui'
 import { ExploreFilters } from '@/components/ExploreFilters'
 import { ExplorePlantTile } from '@/components/ExplorePlantTile'
 import { ExplorePlantListRow } from '@/components/ExplorePlantListRow'
@@ -78,16 +78,13 @@ export function ExploreClient({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             trailingAction={
-              <button
-                type="button"
+              <IconButton
+                variant={filtersOpen ? 'control' : 'ghost'}
+                size="sm"
                 aria-label="Filter plants"
                 aria-expanded={filtersOpen}
                 onClick={() => setFiltersOpen((v) => !v)}
-                className={[
-                  'relative flex size-8 items-center justify-center rounded-full',
-                  'transition-colors duration-normal hover:bg-surface-overlay',
-                  filtersOpen ? 'bg-surface-overlay' : '',
-                ].join(' ')}
+                className="relative"
               >
                 <Icon src={icons.filter} />
                 {activeFilterCount > 0 && (
@@ -96,7 +93,7 @@ export function ExploreClient({
                     className="absolute right-1 top-1 size-1.5 rounded-full bg-accent"
                   />
                 )}
-              </button>
+              </IconButton>
             }
           />
           <AnimatePresence initial={false}>
