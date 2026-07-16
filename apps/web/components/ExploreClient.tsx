@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { AnimatePresence, motion } from 'framer-motion'
-import { Icon, IconButton, SearchField } from '@paradoxui/ui'
+import { AnimatePresence } from 'framer-motion'
+import { SearchField } from '@paradoxui/ui'
 import { ExploreFilters } from '@/components/ExploreFilters'
 import { ExplorePlantTile } from '@/components/ExplorePlantTile'
 import { ExplorePlantListRow } from '@/components/ExplorePlantListRow'
@@ -13,7 +13,6 @@ import {
   countActiveFilters,
   matchesFilters,
 } from '@/lib/explore-filters'
-import { icons } from '@/lib/icons'
 import type { PlantDetail } from '@/lib/plant-detail'
 import type { CatalogPlant } from '@/types/garden'
 
@@ -31,7 +30,6 @@ export function ExploreClient({
 }: ExploreClientProps) {
   const router = useRouter()
   const [query, setQuery] = useState('')
-  const [filtersOpen, setFiltersOpen] = useState(false)
   const [filters, setFilters] = useState(EMPTY_FILTERS)
 
   const openPlant = (id: string) =>
@@ -67,52 +65,21 @@ export function ExploreClient({
       ].join(' ')}
     >
       <div className={detail ? 'w-full max-w-[680px] shrink-0' : 'flex-1'}>
-        <h1 className="text-title font-semibold text-primary">
-          What to plant next?
-        </h1>
+        <h1 className="text-title font-semibold text-primary">Plant library</h1>
 
         <div className="mt-6">
           <SearchField
-            placeholder="Search plants..."
+            placeholder="Search plants"
             label="Search plants"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            trailingAction={
-              <IconButton
-                variant={filtersOpen ? 'control' : 'ghost'}
-                size="sm"
-                aria-label="Filter plants"
-                aria-expanded={filtersOpen}
-                onClick={() => setFiltersOpen((v) => !v)}
-                className="relative"
-              >
-                <Icon src={icons.filter} />
-                {activeFilterCount > 0 && (
-                  <span
-                    aria-hidden="true"
-                    className="absolute right-1 top-1 size-1.5 rounded-full bg-accent"
-                  />
-                )}
-              </IconButton>
-            }
+            className="border border-card bg-[rgba(255,255,255,0.2)] !shadow-none focus-within:!shadow-soft"
           />
-          <AnimatePresence initial={false}>
-            {filtersOpen && (
-              <motion.div
-                key="explore-filters"
-                initial={{ opacity: 0, y: -4 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -4 }}
-                transition={{ duration: 0.15, ease: 'easeOut' }}
-              >
-                <ExploreFilters
-                  filters={filters}
-                  onChange={setFilters}
-                  canFilterNative={gardenRegions.length > 0}
-                />
-              </motion.div>
-            )}
-          </AnimatePresence>
+          <ExploreFilters
+            filters={filters}
+            onChange={setFilters}
+            canFilterNative={gardenRegions.length > 0}
+          />
         </div>
 
         <p className="mt-8 text-body text-secondary md:mt-16">
