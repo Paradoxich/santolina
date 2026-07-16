@@ -54,9 +54,9 @@ export function Avatar({
           }}
         />
       ) : (
-        <span aria-hidden="true">
-          {initials?.slice(0, 2).toUpperCase() ?? '?'}
-        </span>
+        initials && (
+          <span aria-hidden="true">{initials.slice(0, 2).toUpperCase()}</span>
+        )
       )}
     </div>
   )
