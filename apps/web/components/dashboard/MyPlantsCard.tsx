@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { Panel } from '@paradoxui/ui'
 import { PlantImage } from '@/components/PlantImage'
 import type { DashboardPlant } from '@/types/dashboard'
@@ -27,35 +28,40 @@ export function MyPlantsCard({ plants, totalInGarden }: MyPlantsCardProps) {
   }
 
   return (
-    <Panel
-      title="My plants"
-      meta={`${totalInGarden} in garden`}
-      className="h-[220px] lg:h-full"
+    <Link
+      href="/plants"
+      className="flex h-[220px] rounded-card-dashboard transition-colors duration-normal focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus lg:h-full"
     >
-      <div className="flex min-h-0 flex-1 gap-tight-gap">
-        {plants.map((plant) => (
-          <div
-            key={plant.name}
-            className="relative min-w-0 flex-1 overflow-hidden rounded-sm"
-          >
-            <PlantImage
-              src={plant.imageUrl}
-              alt={plant.name}
-              fill
-              sizes="110px"
-              className="object-cover"
-            />
+      <Panel
+        title="My plants"
+        meta={`${totalInGarden} in garden`}
+        className="h-full w-full cursor-pointer"
+      >
+        <div className="flex min-h-0 flex-1 gap-tight-gap">
+          {plants.map((plant) => (
             <div
-              aria-hidden="true"
-              className="absolute inset-0 bg-[image:var(--thumbnail-scrim)]"
-            />
-            <span className="absolute bottom-inline-gap left-item-gap text-label text-inverse">
-              {plant.name}
-            </span>
-          </div>
-        ))}
-      </div>
-    </Panel>
+              key={plant.name}
+              className="relative min-w-0 flex-1 overflow-hidden rounded-sm"
+            >
+              <PlantImage
+                src={plant.imageUrl}
+                alt={plant.name}
+                fill
+                sizes="110px"
+                className="object-cover"
+              />
+              <div
+                aria-hidden="true"
+                className="absolute inset-0 bg-[image:var(--thumbnail-scrim)]"
+              />
+              <span className="absolute bottom-inline-gap left-item-gap text-label text-inverse">
+                {plant.name}
+              </span>
+            </div>
+          ))}
+        </div>
+      </Panel>
+    </Link>
   )
 }
 
