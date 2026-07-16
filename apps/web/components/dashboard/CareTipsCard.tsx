@@ -21,26 +21,24 @@ export function CareTipsCard({
   showEmptyHint = false,
 }: CareTipsCardProps) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
-  const hasMore =
-    groups.now.length + groups.thisWeek.length + groups.goodToKnow.length >
-    tips.length
+  const totalTips =
+    groups.now.length + groups.thisWeek.length + groups.goodToKnow.length
 
   return (
     <>
       <Panel
         title="Plant care"
-        meta={
-          // The count is the door to the full list (Care Tips v2 § Surfaces).
-          <button
-            type="button"
-            onClick={() => setIsDrawerOpen(true)}
-            className="rounded-full text-body text-muted transition-colors duration-normal hover:text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
-          >
-            {tips.length} tips
-            {hasMore ? ' · View all' : ''}
-          </button>
-        }
-        className="relative h-full overflow-hidden"
+        meta={`${totalTips} tips`}
+        role="button"
+        tabIndex={0}
+        onClick={() => setIsDrawerOpen(true)}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault()
+            setIsDrawerOpen(true)
+          }
+        }}
+        className="relative h-full cursor-pointer overflow-hidden focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
       >
         {showEmptyHint && (
           <p className="mb-inline-gap text-body-small text-muted">
@@ -48,15 +46,16 @@ export function CareTipsCard({
             growing.
           </p>
         )}
-        {/* flex-1 (basis 0) + min-h-0 + overflow-hidden: the list fills whatever
-            height the row settles at and clips under the fade, instead of its
+        {/* flex-1 (basis 0) + min-h-0 + overflow-y-auto: the list fills whatever
+            height the row settles at and scrolls internally instead of its
             full 5-tip height inflating the row now that row heights are min-h
-            floors. This card's design is "show what fits, fade the rest". */}
-        <ul className="flex min-h-0 w-full flex-1 basis-0 flex-col gap-tight-gap overflow-hidden">
+            floors. Scrolling browses the tips shown here; clicking the card
+            opens the drawer for the full ranked list. */}
+        <ul className="flex min-h-0 w-full flex-1 basis-0 flex-col gap-tight-gap overflow-y-auto">
           {tips.map((tip, index) => (
             <li
               key={`${tip.plantId ?? 'general'}-${index}`}
-              className="flex h-10 w-full items-center justify-between gap-row-gap rounded-sm bg-surface-subtle px-item-gap py-inline-gap"
+              className="flex h-10 w-full shrink-0 items-center justify-between gap-row-gap rounded-sm bg-surface-subtle px-item-gap py-inline-gap"
             >
               <span className="truncate text-body text-primary">
                 {tip.text}
@@ -71,10 +70,6 @@ export function CareTipsCard({
             </li>
           ))}
         </ul>
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-[71px] bg-gradient-to-t from-[var(--color-surface-card)] to-transparent"
-        />
       </Panel>
       {isDrawerOpen && (
         <CareTipsDrawer

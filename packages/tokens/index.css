@@ -200,6 +200,9 @@
   --color-surface-hover: rgb(255 255 255 / 0.7);
   --color-surface-active: rgb(153 189 157 / 0.5); /* green-300 @ 50% */
   --color-surface-card-translucent: rgb(237 242 238 / 0.7); /* sage-100 @ 70% */
+  --color-surface-nav-active: rgb(
+    237 242 238 / 0.5
+  ); /* sage-100 @ 50% — quieter than card-translucent, for sidebar nav active/hover */
   --color-scrim: rgb(0 0 0 / 0.5); /* modal/drawer backdrop */
 
   /* Tone kits — surface / icon / text / border per tone.

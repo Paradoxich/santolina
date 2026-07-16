@@ -98,6 +98,7 @@ const preset = {
         hover: 'var(--color-surface-hover)',
         active: 'var(--color-surface-active)',
         'card-translucent': 'var(--color-surface-card-translucent)',
+        'nav-active': 'var(--color-surface-nav-active)',
         positive: 'var(--color-surface-positive)',
         warning: 'var(--color-surface-warning)',
         critical: 'var(--color-surface-critical)',

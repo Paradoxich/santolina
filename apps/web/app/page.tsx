@@ -29,7 +29,7 @@ const items: TrackItem[] = [
   {
     label: 'Build core experience',
     status: 'active',
-    href: 'https://santolina.app/dashboard',
+    href: 'https://santolina.app/overview',
     tag: 'Building',
   },
   { label: 'Set up the database', status: 'active', tag: 'Wiring' },
@@ -45,8 +45,8 @@ export default function InProgressPage() {
       <div className={styles.inner}>
         <h1 className={styles.headline}>Santolina</h1>
         <p className={styles.meta}>
-          Explore the <a href="/dashboard">live preview</a>, read the
-          development journal on{' '}
+          Explore the <a href="/overview">live preview</a>,{' '}
+          <a href="/login">log in</a>, read the development journal on{' '}
           <a
             href="https://paradoxich.substack.com"
             target="_blank"

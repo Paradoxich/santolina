@@ -76,22 +76,22 @@ export function GardenClient({ palette, detail }: GardenClientProps) {
   const handleTabChange = (value: string) => {
     setTab(value)
     setFilter('all')
-    router.replace(`/garden?tab=${value}`, { scroll: false })
+    router.replace(`/plants?tab=${value}`, { scroll: false })
   }
 
   const openPlant = (plantId: string) =>
-    router.push(`/garden?tab=${tab}&plant=${plantId}`, { scroll: false })
+    router.push(`/plants?tab=${tab}&plant=${plantId}`, { scroll: false })
   const openPlantByPaletteId = (paletteId: string) => {
     const row = palette.find((p) => p.id === paletteId)
     if (row) openPlant(row.plantId)
   }
-  const closeDrawer = () => router.push(`/garden?tab=${tab}`, { scroll: false })
+  const closeDrawer = () => router.push(`/plants?tab=${tab}`, { scroll: false })
 
   useEffect(() => {
     if (!detail) return
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape')
-        router.push(`/garden?tab=${tab}`, { scroll: false })
+        router.push(`/plants?tab=${tab}`, { scroll: false })
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)

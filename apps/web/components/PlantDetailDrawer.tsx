@@ -131,7 +131,7 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
           actions: [
             {
               label: 'See planned',
-              onClick: () => router.push('/garden?tab=planned'),
+              onClick: () => router.push('/plants?tab=planned'),
             },
             {
               label: 'Undo',

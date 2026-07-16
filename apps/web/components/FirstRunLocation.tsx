@@ -24,7 +24,7 @@ export function FirstRunLocation() {
         lon: city.longitude,
       })
       // Location set — the app is now reachable; the gate will let us through.
-      router.replace('/dashboard')
+      router.replace('/overview')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong.')
       setSelectingId(null)

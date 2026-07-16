@@ -12,8 +12,8 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { label: 'Dashboard', href: '/dashboard', icon: 'grid' },
-  { label: 'Garden', href: '/garden', icon: 'leaf' },
+  { label: 'Overview', href: '/overview', icon: 'grid' },
+  { label: 'My Plants', href: '/plants', icon: 'leaf' },
   { label: 'Diary', href: '/diary', icon: 'diary' },
   { label: 'Explore', href: '/explore', icon: 'search' },
 ]

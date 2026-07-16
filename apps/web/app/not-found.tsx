@@ -53,10 +53,10 @@ export default function NotFound() {
         </h1>
       </div>
       <Link
-        href="/dashboard"
+        href="/overview"
         className="mt-8 flex h-8 items-center justify-center rounded-sm bg-accent px-inline-gap text-body-small text-on-accent transition-colors duration-normal hover:bg-accent-hover"
       >
-        Back to Dashboard
+        Back to Overview
       </Link>
     </main>
   )

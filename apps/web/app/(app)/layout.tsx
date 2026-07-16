@@ -9,12 +9,7 @@ import {
 
 function toSidebarIdentity(profile: SessionProfile): SidebarIdentity {
   const name = profile.displayName?.trim() || profile.email || 'Your account'
-  const parts = name.split(/\s+/).filter(Boolean)
-  const initials =
-    parts.length >= 2
-      ? parts[0]!.charAt(0) + parts[1]!.charAt(0)
-      : (name.split('@')[0] ?? name).slice(0, 2)
-  return { name, initials, avatarUrl: profile.avatarUrl }
+  return { name, avatarUrl: profile.avatarUrl }
 }
 
 export default async function AppLayout({

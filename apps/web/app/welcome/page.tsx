@@ -17,7 +17,7 @@ export default async function WelcomePage() {
   if (!ctx) redirect('/login?next=/welcome')
 
   // Location already captured — first run is done.
-  if (ctx.garden?.city) redirect('/dashboard')
+  if (ctx.garden?.city) redirect('/overview')
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-surface-page px-4 py-12">
