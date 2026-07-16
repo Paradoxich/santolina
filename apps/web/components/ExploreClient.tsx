@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { AnimatePresence } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import { Icon, SearchField } from '@paradoxui/ui'
 import { ExploreFilters } from '@/components/ExploreFilters'
 import { ExplorePlantTile } from '@/components/ExplorePlantTile'
@@ -99,13 +99,23 @@ export function ExploreClient({
               </button>
             }
           />
-          {filtersOpen && (
-            <ExploreFilters
-              filters={filters}
-              onChange={setFilters}
-              canFilterNative={gardenRegions.length > 0}
-            />
-          )}
+          <AnimatePresence initial={false}>
+            {filtersOpen && (
+              <motion.div
+                key="explore-filters"
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.15, ease: 'easeOut' }}
+              >
+                <ExploreFilters
+                  filters={filters}
+                  onChange={setFilters}
+                  canFilterNative={gardenRegions.length > 0}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         <p className="mt-8 text-body text-secondary md:mt-16">
