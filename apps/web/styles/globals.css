@@ -56,6 +56,33 @@ body {
   }
 }
 
+/* Thin scrollbar in the accent green, everywhere, instead of the bulky OS
+   default. green-300 (not accent-muted/green-200) so the thumb holds its
+   own against both the sage-200 page background and the sage-100 card
+   background instead of reading as a different shade on each. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-green-300) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--color-green-300);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-accent);
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .animate-ken-burns {
     animation: ken-burns-x 40s ease-in-out infinite;
