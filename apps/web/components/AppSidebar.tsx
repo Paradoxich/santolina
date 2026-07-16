@@ -17,8 +17,8 @@ export interface SidebarIdentity {
 }
 
 const navItems: NavItem[] = [
-  { label: 'Overview', href: '/dashboard', icon: 'grid' },
-  { label: 'My Plants', href: '/garden', icon: 'leaf' },
+  { label: 'Overview', href: '/overview', icon: 'grid' },
+  { label: 'My Plants', href: '/plants', icon: 'leaf' },
   { label: 'Diary', href: '/diary', icon: 'diary' },
   { label: 'Explore', href: '/explore', icon: 'search' },
 ]

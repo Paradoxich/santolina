@@ -307,7 +307,7 @@ Loading/error feedback while a request is in flight is local component state: bu
 
 | Action                                         | Toast                      | Extra action                          | Undo does                                                                                              |
 | ---------------------------------------------- | -------------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| Add to plan                                    | "Added to your plan"       | See planned (→ `/garden?tab=planned`) | `removeFromPalette` (delete the row just created)                                                      |
+| Add to plan                                    | "Added to your plan"       | See planned (→ `/plants?tab=planned`) | `removeFromPalette` (delete the row just created)                                                      |
 | Remove from plan                               | "Removed from plan"        | —                                     | `addToPalette` (re-insert with the captured prior status/source/notes)                                 |
 | Add to garden (fresh)                          | "Added to your garden"     | —                                     | `removeFromPalette`                                                                                    |
 | Move to growing (drawer, promote from planned) | "Moved to growing"         | —                                     | `updateStatus(status: 'planned')` — reverts in place, doesn't delete                                   |

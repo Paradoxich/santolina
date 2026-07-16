@@ -337,7 +337,7 @@ export function DiaryDetailDrawer({ diary, onClose }: DiaryDetailDrawerProps) {
           <button
             type="button"
             onClick={() =>
-              router.push(`/garden?tab=growing&plant=${diary.plantId}`)
+              router.push(`/plants?tab=growing&plant=${diary.plantId}`)
             }
             className="flex h-8 items-center rounded-sm border border-card bg-surface-control px-inline-gap text-body-small text-secondary"
           >

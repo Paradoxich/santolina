@@ -33,7 +33,7 @@ const copy = {
 export function LoginForm() {
   const searchParams = useSearchParams()
   const rawNext = searchParams.get('next')
-  const next = rawNext && rawNext.startsWith('/') ? rawNext : '/dashboard'
+  const next = rawNext && rawNext.startsWith('/') ? rawNext : '/overview'
   const callbackFailed = searchParams.get('error') === 'auth'
 
   const [mode, setMode] = useState<'signup' | 'login'>('signup')
