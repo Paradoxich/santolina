@@ -43,15 +43,10 @@ export function CollectionShelf({
   } 0, #000 ${FADE}, #000 100%)`
 
   return (
-    <section className="mt-12 first:mt-10">
-      <h2 className="text-subheading font-semibold text-primary">
+    <section className="mt-14">
+      <h2 className="text-[0.75rem] font-semibold uppercase tracking-label text-secondary">
         {collection.title}
       </h2>
-      {collection.subtitle && (
-        <p className="mt-1 text-body-small text-secondary">
-          {collection.subtitle}
-        </p>
-      )}
 
       <div
         ref={scrollRef}
@@ -60,7 +55,7 @@ export function CollectionShelf({
         className="mt-4 -mr-4 flex gap-item-gap overflow-x-auto pr-4 [scrollbar-width:none] md:-mr-12 md:pr-12 [&::-webkit-scrollbar]:hidden"
       >
         {collection.plants.map((plant) => (
-          <div key={plant.id} className="w-[300px] shrink-0">
+          <div key={plant.id} className="w-[330px] shrink-0">
             <CollectionCard
               plant={plant}
               onClick={() => onOpenPlant(plant.id)}

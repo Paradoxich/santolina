@@ -20,7 +20,7 @@ const SHELF_CAP = 15
 const FEATURED_STYLE = { value: 'cottage', title: 'Cottage garden' }
 const COLOUR_STORY = {
   id: 'cool',
-  title: 'Cool blues & purples',
+  title: 'Blues & Purples',
   buckets: ['blue', 'purple', 'lavender'],
 }
 
@@ -79,7 +79,7 @@ export function buildCollections(
   if (gardenRegions.length > 0) {
     collections.push({
       id: 'native',
-      title: 'Native to your region',
+      title: 'Native to you',
       subtitle: 'Plants that belong where you garden',
       plants: take((p) =>
         p.nativeRegion.some((r) => gardenRegions.includes(r))
@@ -90,7 +90,7 @@ export function buildCollections(
   // In bloom right now — seasonal.
   collections.push({
     id: 'in-bloom',
-    title: 'In bloom right now',
+    title: 'In bloom',
     subtitle: 'Flowering this month',
     plants: take((p) => p.bloomMonths.includes(month)),
   })

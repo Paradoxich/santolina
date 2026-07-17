@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { AnimatePresence } from 'framer-motion'
-import { SearchField } from '@paradoxui/ui'
+import { Icon, IconButton, SearchField } from '@paradoxui/ui'
 import { ExploreCollections } from '@/components/ExploreCollections'
 import { ExploreFilters } from '@/components/ExploreFilters'
 import { ExplorePlantTile } from '@/components/ExplorePlantTile'
@@ -14,6 +14,7 @@ import {
   countActiveFilters,
   matchesFilters,
 } from '@/lib/explore-filters'
+import { icons } from '@/lib/icons'
 import type { PlantDetail } from '@/lib/plant-detail'
 import type { CatalogPlant } from '@/types/garden'
 
@@ -32,6 +33,7 @@ export function ExploreClient({
   const router = useRouter()
   const [query, setQuery] = useState('')
   const [filters, setFilters] = useState(EMPTY_FILTERS)
+  const [filtersOpen, setFiltersOpen] = useState(false)
 
   const openPlant = (id: string) =>
     router.push(`/explore?plant=${id}`, { scroll: false })
@@ -83,12 +85,33 @@ export function ExploreClient({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className="border border-card bg-[rgba(255,255,255,0.2)] !shadow-none focus-within:!shadow-soft"
+            trailingAction={
+              <IconButton
+                variant={filtersOpen ? 'control' : 'ghost'}
+                size="sm"
+                aria-label="Filter plants"
+                aria-expanded={filtersOpen}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => setFiltersOpen((v) => !v)}
+                className="relative"
+              >
+                <Icon src={icons.filter} />
+                {activeFilterCount > 0 && (
+                  <span
+                    aria-hidden="true"
+                    className="absolute right-1 top-1 size-1.5 rounded-full bg-accent"
+                  />
+                )}
+              </IconButton>
+            }
           />
-          <ExploreFilters
-            filters={filters}
-            onChange={setFilters}
-            canFilterNative={gardenRegions.length > 0}
-          />
+          {filtersOpen && (
+            <ExploreFilters
+              filters={filters}
+              onChange={setFilters}
+              canFilterNative={gardenRegions.length > 0}
+            />
+          )}
         </div>
 
         {browsing && !detail ? (
@@ -100,9 +123,15 @@ export function ExploreClient({
           />
         ) : (
           <>
-            <p className="mt-8 text-body text-secondary md:mt-16">
-              Recommended plants
-            </p>
+            {visible.length > 0 && (
+              <p className="mt-8 text-body text-secondary md:mt-16">
+                {browsing
+                  ? 'Recommended plants'
+                  : `${visible.length} ${
+                      visible.length === 1 ? 'plant' : 'plants'
+                    } found`}
+              </p>
+            )}
 
             {detail ? (
               <div className="mt-4 flex flex-col gap-item-gap">
