@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { AnimatePresence } from 'framer-motion'
 import { SearchField } from '@paradoxui/ui'
+import { ExploreCollections } from '@/components/ExploreCollections'
 import { ExploreFilters } from '@/components/ExploreFilters'
 import { ExplorePlantTile } from '@/components/ExplorePlantTile'
 import { ExplorePlantListRow } from '@/components/ExplorePlantListRow'
@@ -57,6 +58,12 @@ export function ExploreClient({
     (p) => matchesSearch(p) && matchesFilters(p, filters, gardenRegions)
   )
 
+  // Browse view (collection shelves) until the user searches or filters; then
+  // it swaps to the flat results. Opening a plant also leaves browse (the
+  // drawer + list layout takes over).
+  const browsing = !q && activeFilterCount === 0
+  const currentMonth = new Date().getMonth() + 1
+
   return (
     <div
       className={[
@@ -64,7 +71,9 @@ export function ExploreClient({
         detail ? 'lg:pr-[480px]' : '',
       ].join(' ')}
     >
-      <div className={detail ? 'w-full max-w-[680px] shrink-0' : 'flex-1'}>
+      <div
+        className={detail ? 'w-full max-w-[680px] shrink-0' : 'min-w-0 flex-1'}
+      >
         <h1 className="text-title font-semibold text-primary">Plant library</h1>
 
         <div className="mt-6">
@@ -82,43 +91,54 @@ export function ExploreClient({
           />
         </div>
 
-        <p className="mt-8 text-body text-secondary md:mt-16">
-          Recommended plants
-        </p>
-
-        {detail ? (
-          <div className="mt-4 flex flex-col gap-item-gap">
-            {visible.map((plant) => (
-              <ExplorePlantListRow
-                key={plant.id}
-                plant={plant}
-                selected={plant.id === detail.plant.id}
-                onClick={() => openPlant(plant.id)}
-              />
-            ))}
-          </div>
+        {browsing && !detail ? (
+          <ExploreCollections
+            plants={plants}
+            gardenRegions={gardenRegions}
+            month={currentMonth}
+            onOpenPlant={openPlant}
+          />
         ) : (
-          <div className="mt-4 grid grid-cols-1 gap-item-gap md:grid-cols-2 xl:grid-cols-3">
-            {visible.map((plant) => (
-              <ExplorePlantTile
-                key={plant.id}
-                plant={plant}
-                onClick={() => openPlant(plant.id)}
-              />
-            ))}
-          </div>
-        )}
+          <>
+            <p className="mt-8 text-body text-secondary md:mt-16">
+              Recommended plants
+            </p>
 
-        {visible.length === 0 &&
-          (activeFilterCount > 0 ? (
-            <p className="mt-8 text-body text-muted">
-              No plants match these filters. Clear a filter to see more.
-            </p>
-          ) : (
-            <p className="mt-8 text-body text-muted">
-              No plants found for &ldquo;{query}&rdquo;.
-            </p>
-          ))}
+            {detail ? (
+              <div className="mt-4 flex flex-col gap-item-gap">
+                {visible.map((plant) => (
+                  <ExplorePlantListRow
+                    key={plant.id}
+                    plant={plant}
+                    selected={plant.id === detail.plant.id}
+                    onClick={() => openPlant(plant.id)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="mt-4 grid grid-cols-1 gap-item-gap md:grid-cols-2 xl:grid-cols-3">
+                {visible.map((plant) => (
+                  <ExplorePlantTile
+                    key={plant.id}
+                    plant={plant}
+                    onClick={() => openPlant(plant.id)}
+                  />
+                ))}
+              </div>
+            )}
+
+            {visible.length === 0 &&
+              (activeFilterCount > 0 ? (
+                <p className="mt-8 text-body text-muted">
+                  No plants match these filters. Clear a filter to see more.
+                </p>
+              ) : (
+                <p className="mt-8 text-body text-muted">
+                  No plants found for &ldquo;{query}&rdquo;.
+                </p>
+              ))}
+          </>
+        )}
       </div>
 
       <AnimatePresence>
