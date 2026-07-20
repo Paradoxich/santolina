@@ -1,6 +1,6 @@
 # Santolina
 
-A garden planning and management app for people who want a beautiful, well-considered outdoor space. Built as a monorepo alongside Paradox UI, an open source design system extracted from the product as it's built.
+An AI-native garden planning platform that combines horticultural knowledge, structured plant data, and intelligent recommendations to help people design and manage beautiful outdoor spaces. Built as a monorepo alongside Paradox UI, an open source design system extracted from the product as it's built.
 
 ## Overview
 
