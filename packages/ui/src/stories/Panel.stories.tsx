@@ -14,7 +14,7 @@ type Story = StoryObj<typeof Panel>
 
 export const Default: Story = {
   args: {
-    title: 'Care tips',
+    title: 'Reminders',
     meta: '4 tasks',
     children: (
       <p
@@ -55,7 +55,7 @@ export const Grid: Story = {
         maxWidth: 720,
       }}
     >
-      <Panel title="My plants" meta="12 in garden">
+      <Panel title="Projects" meta="12 active">
         <p style={{ fontSize: 'var(--font-size-body)' }}>Left panel</p>
       </Panel>
       <Panel title="Weather" meta="Opatija">

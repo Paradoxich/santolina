@@ -21,17 +21,17 @@ export const Default: Story = {
             fontWeight: 'var(--font-weight-semibold)',
           }}
         >
-          Monstera Deliciosa
+          Field Notes
         </h3>
       </CardHeader>
       <CardBody>
         <p style={{ margin: 0, color: 'var(--color-text-secondary)' }}>
-          Tropical plant with large, glossy leaves. Thrives in indirect light.
+          A quiet home for drafts, clippings, and half-formed ideas.
         </p>
       </CardBody>
       <CardFooter>
         <Button size="sm" variant="secondary">
-          View care guide
+          Open notebook
         </Button>
       </CardFooter>
     </Card>

@@ -28,11 +28,11 @@ export const Accent: Story = {
 }
 
 export const Positive: Story = {
-  args: { tone: 'positive', children: 'Healthy' },
+  args: { tone: 'positive', children: 'On track' },
 }
 
 export const Warning: Story = {
-  args: { tone: 'warning', children: 'Needs water' },
+  args: { tone: 'warning', children: 'Due soon' },
 }
 
 export const Critical: Story = {

@@ -11,8 +11,8 @@ type Story = StoryObj<typeof Input>
 
 export const Default: Story = {
   args: {
-    label: 'Plant name',
-    placeholder: 'e.g. Monstera Deliciosa',
+    label: 'Project name',
+    placeholder: 'e.g. Field Notes',
   },
 }
 

@@ -10,7 +10,7 @@ export default meta
 type Story = StoryObj<typeof SearchField>
 
 export const Default: Story = {
-  args: { placeholder: 'Search plants...' },
+  args: { placeholder: 'Search notes...' },
 }
 
 export const WithLabel: Story = {

@@ -13,7 +13,7 @@ export default meta
 type Story = StoryObj<typeof Chip>
 
 export const Default: Story = {
-  args: { children: 'Blooming' },
+  args: { children: 'Active' },
 }
 
 export const Selected: Story = {
@@ -24,9 +24,9 @@ export const Group: Story = {
   render: () => (
     <div style={{ display: 'flex', gap: 'var(--space-inline-gap)' }}>
       <Chip selected>All</Chip>
-      <Chip>Blooming</Chip>
-      <Chip>Pre-bloom</Chip>
-      <Chip>Resting</Chip>
+      <Chip>Active</Chip>
+      <Chip>Upcoming</Chip>
+      <Chip>Paused</Chip>
       <Chip>Done</Chip>
     </div>
   ),

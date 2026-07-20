@@ -9,12 +9,12 @@ const meta: Meta<typeof Thumbnail> = {
 export default meta
 type Story = StoryObj<typeof Thumbnail>
 
-const src = 'https://picsum.photos/seed/plant/200/300'
+const src = 'https://picsum.photos/seed/coast/200/300'
 
 export const Default: Story = {
   render: () => (
     <div style={{ height: 105, width: 90, display: 'flex' }}>
-      <Thumbnail src={src} label="Lavender" />
+      <Thumbnail src={src} label="Lisbon" />
     </div>
   ),
 }
@@ -29,10 +29,10 @@ export const Row: Story = {
         gap: 'var(--space-tight-gap)',
       }}
     >
-      <Thumbnail src={src} label="Santolina" />
-      <Thumbnail src={src} label="Salvia" />
-      <Thumbnail src={src} label="Rosemary" />
-      <Thumbnail src={src} label="Lavender" />
+      <Thumbnail src={src} label="Trieste" />
+      <Thumbnail src={src} label="Split" />
+      <Thumbnail src={src} label="Kotor" />
+      <Thumbnail src={src} label="Lisbon" />
     </div>
   ),
 }
