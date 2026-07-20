@@ -10,16 +10,16 @@ export default meta
 type Story = StoryObj<typeof DetailRow>
 
 export const Default: Story = {
-  args: { label: 'Height', value: '30–90 cm' },
+  args: { label: 'Width', value: '80 cm' },
 }
 
 export const List: Story = {
   render: () => (
     <div style={{ maxWidth: 400 }}>
-      <DetailRow label="Plant type" value="Herbaceous perennial" />
-      <DetailRow label="Height" value="30–90 cm" />
-      <DetailRow label="Exposure" value="Full sun" />
-      <DetailRow label="Family" value="Lamiaceae" />
+      <DetailRow label="Material" value="Solid oak" />
+      <DetailRow label="Width" value="80 cm" />
+      <DetailRow label="Finish" value="Natural oil" />
+      <DetailRow label="Made in" value="Copenhagen" />
     </div>
   ),
 }
@@ -30,18 +30,18 @@ export const Timeline: Story = {
     <div style={{ maxWidth: 400 }}>
       <DetailRow
         labelWidth="sm"
-        label="Spring"
-        value="Fresh growth emerges and clumps begin to form."
+        label="Day 1"
+        value="Kickoff. Scope agreed and the first drafts shared."
       />
       <DetailRow
         labelWidth="sm"
-        label="Summer"
-        value="Peak season. Regular attention keeps things going."
+        label="Week 2"
+        value="First review. Direction locked, details still moving."
       />
       <DetailRow
         labelWidth="sm"
-        label="Winter"
-        value="Dormant. Structure disappears until regrowth."
+        label="Week 6"
+        value="Handoff. Final files delivered and archived."
       />
     </div>
   ),

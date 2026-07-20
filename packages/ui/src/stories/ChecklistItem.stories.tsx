@@ -20,23 +20,23 @@ export default meta
 type Story = StoryObj<typeof ChecklistItem>
 
 export const Positive: Story = {
-  args: { children: 'Matches your sunny Mediterranean conditions' },
+  args: { children: 'Works with the tools you already use' },
 }
 
 export const Caution: Story = {
   args: {
     tone: 'warning',
-    children: 'Needs more sun than your garden currently gets',
+    children: 'Needs more storage than your current plan includes',
   },
 }
 
 export const List: Story = {
   render: () => (
     <ul role="list" style={{ maxWidth: 400, listStyle: 'none', padding: 0 }}>
-      <ChecklistItem>Low maintenance once established</ChecklistItem>
-      <ChecklistItem>Excellent pollinator support</ChecklistItem>
+      <ChecklistItem>Low maintenance once set up</ChecklistItem>
+      <ChecklistItem>Excellent keyboard support</ChecklistItem>
       <ChecklistItem tone="warning">
-        May outgrow a balcony or container
+        May outgrow the free tier quickly
       </ChecklistItem>
     </ul>
   ),

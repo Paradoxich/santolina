@@ -27,28 +27,28 @@ const dropIcon = (
 
 export const Default: Story = {
   args: {
-    label: 'Water',
+    label: 'Humidity',
     icon: dropIcon,
     children:
-      'Moderate watering while establishing. Drought tolerant once mature.',
+      'Comfortable range through the afternoon. Expect a drier evening.',
   },
 }
 
 export const Caution: Story = {
   args: {
     tone: 'warning',
-    label: 'Common issues',
+    label: 'Wind',
     children:
-      'Can become floppy in overly rich soil or too much shade. Poor drainage may cause crown rot during winter.',
+      'Strong gusts expected after sunset. Secure anything loose on the balcony.',
   },
 }
 
 export const Positive: Story = {
   args: {
     tone: 'positive',
-    label: 'Environment benefits',
+    label: 'Air quality',
     children:
-      'Highly attractive to bees and other pollinators during peak bloom weeks.',
+      'Clear and clean all week. A good stretch for keeping the windows open.',
   },
 }
 
@@ -62,18 +62,14 @@ export const Grid: Story = {
         maxWidth: 400,
       }}
     >
-      <StatCard label="Water" icon={dropIcon}>
-        Moderate watering while establishing.
+      <StatCard label="Humidity" icon={dropIcon}>
+        Comfortable range through the afternoon.
       </StatCard>
       <StatCard label="Light" icon={dropIcon}>
-        Performs best in full sun.
+        Golden hour starts around seven.
       </StatCard>
-      <StatCard
-        tone="warning"
-        label="Common issues"
-        style={{ gridColumn: 'span 2' }}
-      >
-        Can become floppy in overly rich soil or too much shade.
+      <StatCard tone="warning" label="Wind" style={{ gridColumn: 'span 2' }}>
+        Strong gusts expected after sunset.
       </StatCard>
     </div>
   ),

@@ -56,7 +56,7 @@ export const Primary: Story = {
 export const Control: Story = {
   args: {
     variant: 'control',
-    'aria-label': 'Remove from garden',
+    'aria-label': 'Remove item',
     children: <TrashIcon />,
   },
 }
@@ -64,7 +64,7 @@ export const Control: Story = {
 export const Ghost: Story = {
   args: {
     variant: 'ghost',
-    'aria-label': 'Clear diary',
+    'aria-label': 'Clear history',
     children: <TrashIcon />,
   },
 }

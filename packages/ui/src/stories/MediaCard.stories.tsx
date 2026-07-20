@@ -26,9 +26,9 @@ export const Default: Story = {
   args: {
     image: placeholderImage,
     imageHeight: 162,
-    title: 'Lavender',
-    subtitle: 'Lavandula angustifolia',
-    body: 'A fragrant, drought-tolerant perennial that draws pollinators all summer.',
+    title: 'Kotor',
+    subtitle: 'Bay of Kotor, Montenegro',
+    body: 'Steep alleys, quiet courtyards, and the best light an hour before sunset.',
   },
 }
 
@@ -36,7 +36,7 @@ export const WithBadgeAndFooter: Story = {
   args: {
     image: placeholderImage,
     imageHeight: 200,
-    title: 'Lavender',
+    title: 'Kotor',
     titleAdornment: (
       <span
         style={{
@@ -49,10 +49,10 @@ export const WithBadgeAndFooter: Story = {
           padding: '2px 8px',
         }}
       >
-        blooming
+        new
       </span>
     ),
-    body: '❋ Deadhead spent blooms to encourage a second flush.',
+    body: '❋ Saved as a highlight in your latest collection.',
   },
 }
 
@@ -60,9 +60,9 @@ export const Dashed: Story = {
   args: {
     image: placeholderImage,
     imageHeight: 148,
-    title: 'Lavender',
-    subtitle: 'Part shade · Aug–Oct',
-    body: 'A fragrant, drought-tolerant perennial that draws pollinators all summer.',
+    title: 'Kotor',
+    subtitle: 'Old town · Best in May',
+    body: 'Steep alleys, quiet courtyards, and the best light an hour before sunset.',
     border: 'dashed',
     footer: (
       <button
@@ -74,7 +74,7 @@ export const Dashed: Story = {
           background: 'var(--color-surface-control)',
         }}
       >
-        Mark as planted
+        Add to trip
       </button>
     ),
   },
@@ -84,9 +84,9 @@ export const Clickable: Story = {
   args: {
     image: placeholderImage,
     imageHeight: 162,
-    title: 'Lavender',
-    subtitle: 'Lavandula angustifolia',
-    body: 'A fragrant, drought-tolerant perennial that draws pollinators all summer.',
+    title: 'Kotor',
+    subtitle: 'Bay of Kotor, Montenegro',
+    body: 'Steep alleys, quiet courtyards, and the best light an hour before sunset.',
     as: 'button',
   },
 }

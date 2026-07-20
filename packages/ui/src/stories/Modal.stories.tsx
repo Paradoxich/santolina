@@ -19,7 +19,7 @@ function DefaultModalStory() {
       <Modal
         isOpen={open}
         onClose={() => setOpen(false)}
-        title="Water your plants"
+        title="Archive all entries"
         footer={
           <>
             <Button variant="ghost" onClick={() => setOpen(false)}>
@@ -30,7 +30,7 @@ function DefaultModalStory() {
         }
       >
         <p style={{ color: 'var(--color-text-secondary)', margin: 0 }}>
-          Are you sure you want to mark all plants as watered today?
+          Are you sure you want to archive all entries from today?
         </p>
       </Modal>
     </>

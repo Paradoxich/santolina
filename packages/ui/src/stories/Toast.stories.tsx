@@ -19,7 +19,7 @@ export const Default: Story = {
   args: {
     tone: 'default',
     title: 'Notification',
-    description: 'Your plant has been updated.',
+    description: 'Your changes have been saved.',
   },
 }
 
@@ -27,7 +27,7 @@ export const Positive: Story = {
   args: {
     tone: 'positive',
     title: 'Positive',
-    description: 'Plant watered successfully!',
+    description: 'Entry added to your journal.',
   },
 }
 
@@ -35,7 +35,7 @@ export const Warning: Story = {
   args: {
     tone: 'warning',
     title: 'Heads up',
-    description: 'Your Cactus needs water in 2 days.',
+    description: 'Your trial ends in 2 days.',
   },
 }
 
@@ -43,6 +43,6 @@ export const Critical: Story = {
   args: {
     tone: 'critical',
     title: 'Critical',
-    description: 'Failed to save your plant data.',
+    description: 'Failed to save your changes.',
   },
 }
