@@ -273,7 +273,7 @@
   --card-tile-radius: 1.25rem; /* 20px — confirmed, deliberate change from the original 24px */
   --card-dashboard-radius: var(
     --card-tile-radius
-  ); /* same shape as card-tile, used on the My Garden dashboard tabs */
+  ); /* same shape as card-tile, used on dashboard-style tab cards */
   --card-row-radius: var(--radius-lg);
   --modal-radius: 1.25rem; /* 20px — dialog / modal surface */
   --sidebar-surface: rgb(

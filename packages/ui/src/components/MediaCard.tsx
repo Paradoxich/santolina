@@ -7,7 +7,7 @@ export interface MediaCardProps {
   image: React.ReactNode
   imageHeight: number | string
   title: React.ReactNode
-  /** Secondary line under the title, e.g. a botanical name or planting caption. */
+  /** Secondary line under the title, e.g. a subtitle or short caption. */
   subtitle?: React.ReactNode
   /** Rendered inline next to the title, e.g. a status badge. */
   titleAdornment?: React.ReactNode
