@@ -276,10 +276,15 @@
   ); /* same shape as card-tile, used on the My Garden dashboard tabs */
   --card-row-radius: var(--radius-lg);
   --modal-radius: 1.25rem; /* 20px — dialog / modal surface */
-  --sidebar-surface: rgb(178 209 184 / 0.3);
-  --sidebar-width: 14rem; /* 224px — app sidebar */
-  /* main content clearance: sidebar width + 8px viewport inset + 40px gutter */
-  --sidebar-offset: calc(var(--sidebar-width) + var(--spacing-12));
+  --sidebar-surface: rgb(
+    178 209 184 / 0.3
+  ); /* legacy tint — still used by MobileTabBar */
+  --sidebar-divider: var(
+    --color-gray-0
+  ); /* white hairline separating the flush sidebar from content */
+  --sidebar-width: 14.5rem; /* 232px — app sidebar */
+  /* main content clearance: sidebar width + 40px gutter (sidebar is flush to the viewport edge) */
+  --sidebar-offset: calc(var(--sidebar-width) + var(--spacing-10));
   --login-border: var(--color-green-500);
   /* gray-900 @ 20% — translucent composition, light-mode assumption baked in */
   --login-hairline: rgb(17 17 17 / 0.2);

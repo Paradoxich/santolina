@@ -27,17 +27,11 @@ export function AppSidebar({ identity }: { identity: SidebarIdentity }) {
   const pathname = usePathname()
 
   return (
-    <aside className="fixed bottom-2 left-2 top-2 z-10 hidden w-sidebar flex-col overflow-hidden rounded-md border border-card-translucent bg-[var(--sidebar-surface)] md:flex">
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-cover bg-center opacity-15"
-        style={{ backgroundImage: "url('/textures/sidebar-texture.png')" }}
-      />
-
+    <aside className="fixed inset-y-0 left-0 z-10 hidden w-sidebar flex-col border-r border-[var(--sidebar-divider)] bg-surface-page md:flex">
       <Link
         href="/settings"
         aria-current={pathname.startsWith('/settings') ? 'page' : undefined}
-        className="relative flex items-center gap-inline-gap px-section-gap py-row-gap"
+        className="flex items-center gap-inline-gap px-section-gap py-row-gap"
       >
         <Avatar
           size="xs"
@@ -55,7 +49,7 @@ export function AppSidebar({ identity }: { identity: SidebarIdentity }) {
         </Badge>
       </Link>
 
-      <nav className="relative flex min-h-0 flex-1 flex-col gap-tight-gap p-inline-gap">
+      <nav className="flex min-h-0 flex-1 flex-col gap-tight-gap p-inline-gap">
         {navItems.map((item) => {
           const active = pathname.startsWith(item.href)
           return (
@@ -64,7 +58,7 @@ export function AppSidebar({ identity }: { identity: SidebarIdentity }) {
               href={item.href}
               aria-current={active ? 'page' : undefined}
               className={[
-                'flex items-center gap-item-gap rounded-md p-row-gap',
+                'flex items-center gap-item-gap rounded-lg p-row-gap',
                 'text-body text-primary',
                 'transition-colors duration-normal',
                 active
@@ -81,7 +75,7 @@ export function AppSidebar({ identity }: { identity: SidebarIdentity }) {
 
       <button
         type="button"
-        className="relative flex h-14 shrink-0 items-center gap-item-gap border-t border-card-translucent px-section-gap py-inline-gap text-left transition-colors duration-normal hover:bg-surface-nav-active"
+        className="flex h-14 shrink-0 items-center gap-item-gap px-section-gap py-inline-gap text-left transition-colors duration-normal hover:bg-surface-nav-active"
       >
         <Icon src={icons.agent} />
         <span className="flex-1 text-body text-primary">Agent</span>
