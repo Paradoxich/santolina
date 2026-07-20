@@ -23,3 +23,26 @@ export const List: Story = {
     </div>
   ),
 }
+
+/** Narrow label column for timeline-style lists of short stage labels. */
+export const Timeline: Story = {
+  render: () => (
+    <div style={{ maxWidth: 400 }}>
+      <DetailRow
+        labelWidth="sm"
+        label="Spring"
+        value="Fresh growth emerges and clumps begin to form."
+      />
+      <DetailRow
+        labelWidth="sm"
+        label="Summer"
+        value="Peak season. Regular attention keeps things going."
+      />
+      <DetailRow
+        labelWidth="sm"
+        label="Winter"
+        value="Dormant. Structure disappears until regrowth."
+      />
+    </div>
+  ),
+}

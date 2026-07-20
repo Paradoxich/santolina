@@ -1,7 +1,7 @@
 import React from 'react'
 import { cn } from '../utils/cn'
 
-export interface CompanionThumbnailProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface ThumbnailProps extends React.HTMLAttributes<HTMLDivElement> {
   /** Image URL */
   src: string
   /** Label shown over the image; also used as the image alt text */
@@ -16,14 +16,14 @@ export interface CompanionThumbnailProps extends React.HTMLAttributes<HTMLDivEle
  * to the bottom-left corner. Sized by its parent (give the container
  * a height; tiles flex to fill the row).
  */
-export function CompanionThumbnail({
+export function Thumbnail({
   src,
   label,
   alt,
   className,
   ref,
   ...props
-}: CompanionThumbnailProps) {
+}: ThumbnailProps) {
   return (
     <div
       ref={ref}
@@ -51,4 +51,4 @@ export function CompanionThumbnail({
   )
 }
 
-export default CompanionThumbnail
+export default Thumbnail

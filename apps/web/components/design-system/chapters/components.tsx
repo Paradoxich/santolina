@@ -8,7 +8,7 @@ import {
   CardHeader,
   ChecklistItem,
   Chip,
-  CompanionThumbnail,
+  Thumbnail,
   DetailRow,
   EmptyState,
   Icon,
@@ -17,7 +17,6 @@ import {
   MediaCard,
   Panel,
   SearchField,
-  SeasonalStageRow,
   Spinner,
   StatCard,
   Tabs,
@@ -484,7 +483,7 @@ function Display() {
 
         <div className="grid grid-cols-1 gap-section-gap sm:grid-cols-2">
           <div className="flex flex-col gap-inline-gap">
-            <Label>ChecklistItem · DetailRow · SeasonalStageRow</Label>
+            <Label>ChecklistItem · DetailRow</Label>
             <ul className="flex flex-col" role="list">
               <ChecklistItem>Thrives in your sun conditions</ChecklistItem>
               <ChecklistItem tone="warning">
@@ -496,22 +495,23 @@ function Display() {
               <DetailRow label="Height" value="40–60 cm" />
             </div>
             <div>
-              <SeasonalStageRow stage="Spring">
-                New growth emerges; feed once.
-              </SeasonalStageRow>
-              <SeasonalStageRow stage="Summer">
-                Deadhead to extend blooming.
-              </SeasonalStageRow>
+              <DetailRow
+                labelWidth="sm"
+                label="Spring"
+                value="New growth emerges; feed once."
+              />
+              <DetailRow
+                labelWidth="sm"
+                label="Summer"
+                value="Deadhead to extend blooming."
+              />
             </div>
           </div>
           <div className="flex flex-col gap-inline-gap">
-            <Label>CompanionThumbnail</Label>
+            <Label>Thumbnail</Label>
             <div className="flex h-20 gap-inline-gap">
-              <CompanionThumbnail src="/plants/plant-01.png" label="Lavender" />
-              <CompanionThumbnail
-                src="/plants/plant-02.png"
-                label="Echinacea"
-              />
+              <Thumbnail src="/plants/plant-01.png" label="Lavender" />
+              <Thumbnail src="/plants/plant-02.png" label="Echinacea" />
             </div>
           </div>
         </div>
