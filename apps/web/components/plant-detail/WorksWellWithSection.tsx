@@ -1,4 +1,4 @@
-import { CompanionThumbnail } from '@paradoxui/ui'
+import { Thumbnail } from '@paradoxui/ui'
 import type { CompanionPlant } from '@/lib/plant-detail'
 import { DrawerSection } from '@paradoxui/ui'
 
@@ -14,7 +14,7 @@ export function WorksWellWithSection({
     <DrawerSection label="Works well with">
       <div className="flex h-[105px] w-full items-center gap-tight-gap">
         {companions.slice(0, 5).map((companion) => (
-          <CompanionThumbnail
+          <Thumbnail
             key={companion.id}
             src={companion.image_url}
             label={companion.common_name}

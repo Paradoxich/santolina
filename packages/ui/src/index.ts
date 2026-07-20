@@ -59,11 +59,8 @@ export type { ChecklistItemProps } from './components/ChecklistItem'
 export { DetailRow } from './components/DetailRow'
 export type { DetailRowProps } from './components/DetailRow'
 
-export { SeasonalStageRow } from './components/SeasonalStageRow'
-export type { SeasonalStageRowProps } from './components/SeasonalStageRow'
-
-export { CompanionThumbnail } from './components/CompanionThumbnail'
-export type { CompanionThumbnailProps } from './components/CompanionThumbnail'
+export { Thumbnail } from './components/Thumbnail'
+export type { ThumbnailProps } from './components/Thumbnail'
 
 export { Panel } from './components/Panel'
 export type { PanelProps } from './components/Panel'

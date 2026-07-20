@@ -1,4 +1,4 @@
-import { SeasonalStageRow } from '@paradoxui/ui'
+import { DetailRow } from '@paradoxui/ui'
 import type { SeasonalRhythm } from '@/lib/plants-db'
 import { DrawerSection } from '@paradoxui/ui'
 
@@ -24,9 +24,12 @@ export function SeasonalRhythmSection({ rhythm }: SeasonalRhythmSectionProps) {
     <DrawerSection label="Seasonal rhythm">
       <div className="flex w-full flex-col">
         {stages.map((stage) => (
-          <SeasonalStageRow key={stage.key} stage={stage.label}>
-            {rhythm[stage.key]}
-          </SeasonalStageRow>
+          <DetailRow
+            key={stage.key}
+            labelWidth="sm"
+            label={stage.label}
+            value={rhythm[stage.key]}
+          />
         ))}
       </div>
     </DrawerSection>

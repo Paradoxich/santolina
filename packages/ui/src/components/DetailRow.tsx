@@ -6,6 +6,11 @@ export interface DetailRowProps extends React.HTMLAttributes<HTMLDivElement> {
   label: string
   /** Right-hand value */
   value: React.ReactNode
+  /**
+   * Width of the label column. 'md' suits word-length labels;
+   * 'sm' suits short stage/step labels in timeline-style lists.
+   */
+  labelWidth?: 'sm' | 'md'
   ref?: React.Ref<HTMLDivElement>
 }
 
@@ -16,6 +21,7 @@ export interface DetailRowProps extends React.HTMLAttributes<HTMLDivElement> {
 export function DetailRow({
   label,
   value,
+  labelWidth = 'md',
   className,
   ref,
   ...props
@@ -31,7 +37,14 @@ export function DetailRow({
       )}
       {...props}
     >
-      <span className="w-[100px] shrink-0 text-label text-muted">{label}</span>
+      <span
+        className={cn(
+          'shrink-0 text-label text-muted',
+          labelWidth === 'sm' ? 'w-12' : 'w-[100px]'
+        )}
+      >
+        {label}
+      </span>
       <span className="min-w-0 flex-1 text-body text-primary">{value}</span>
     </div>
   )
