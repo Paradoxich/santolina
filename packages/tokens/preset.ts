@@ -13,7 +13,7 @@ import type { Config } from 'tailwindcss'
  * `theme` keys here REPLACE Tailwind defaults on purpose: the stock palette
  * is removed so hardcodes like `bg-white` fail visibly instead of shipping
  * off-system colors. Escape hatch for genuinely new needs: the primitive
- * ramps (e.g. `bg-green-200`) — but reach for a semantic role first.
+ * ramps (e.g. `bg-fern-200`) — but reach for a semantic role first.
  *
  * Naming: utilities read as roles — `text-primary`, `bg-surface-card`,
  * `border-divider`, `ring-focus` — matching docs/token-taxonomy.md.
@@ -30,9 +30,9 @@ const ramps = {
   inherit: 'inherit',
   white: 'var(--color-white)',
   sage: ramp('sage'),
-  green: ramp('green'),
-  gold: ramp('gold'),
-  red: ramp('red'),
+  fern: ramp('fern'),
+  honey: ramp('honey'),
+  brick: ramp('brick'),
 }
 
 const preset = {

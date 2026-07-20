@@ -6,7 +6,7 @@
  * are synced FROM this structure, not the other way around.
  *
  * Taxonomy: docs/token-taxonomy.md. Three tiers:
- *   1. Primitives — hue/scale names (--color-green-600). Raw values live
+ *   1. Primitives — hue/scale names (--color-fern-600). Raw values live
  *      ONLY here.
  *   2. Semantic — role names (--color-text-muted). Always aliases of tier 1
  *      (translucent compositions excepted, marked inline). Components
@@ -55,44 +55,44 @@
   --color-sage-900: #2f3330;
   --color-sage-950: #111411; /* ~was gray-900 */
 
-  /* Green — brand accent (H 151). Chroma peaks at 500. */
-  --color-green-50: #e5f0e7;
-  --color-green-100: #cfe5d6; /* shipped — positive surface */
-  --color-green-200: #b1d7bc; /* shipped — accent-muted */
-  --color-green-300: #99bd9d; /* shipped — surface-active base */
-  --color-green-400: #6ea87c;
-  --color-green-500: #3b9255; /* shipped — vivid mid; not for body text */
-  --color-green-600: #327f4a; /* fills/large accents; not for body text */
-  --color-green-700: #2b6e3f; /* shipped — THE brand green, accent */
-  --color-green-800: #1f5430; /* accent-hover */
-  --color-green-900: #0f3119;
-  --color-green-950: #020e03; /* shipped — surface-inverse */
+  /* Fern — brand accent (H 151). Chroma peaks at 500. */
+  --color-fern-50: #e5f0e7;
+  --color-fern-100: #cfe5d6; /* shipped — positive surface */
+  --color-fern-200: #b1d7bc; /* shipped — accent-muted */
+  --color-fern-300: #99bd9d; /* shipped — surface-active base */
+  --color-fern-400: #6ea87c;
+  --color-fern-500: #3b9255; /* shipped — vivid mid; not for body text */
+  --color-fern-600: #327f4a; /* fills/large accents; not for body text */
+  --color-fern-700: #2b6e3f; /* shipped — THE brand green, accent */
+  --color-fern-800: #1f5430; /* accent-hover */
+  --color-fern-900: #0f3119;
+  --color-fern-950: #020e03; /* shipped — surface-inverse */
 
-  /* Gold — warning (H 78, warm ochre; replaced the unreviewed olive). */
-  --color-gold-50: #f9f2e9;
-  --color-gold-100: #f4e6d1; /* warning surface */
-  --color-gold-200: #ecd4af;
-  --color-gold-300: #debb86;
-  --color-gold-400: #c79d59;
-  --color-gold-500: #ac7c26;
-  --color-gold-600: #8e6201;
-  --color-gold-700: #714d00; /* warning text — 6.2:1 on gold-100 */
-  --color-gold-800: #593c00;
-  --color-gold-900: #382500;
-  --color-gold-950: #1b0f00;
+  /* Honey — warning (H 78, warm ochre; replaced the unreviewed olive). */
+  --color-honey-50: #f9f2e9;
+  --color-honey-100: #f4e6d1; /* warning surface */
+  --color-honey-200: #ecd4af;
+  --color-honey-300: #debb86;
+  --color-honey-400: #c79d59;
+  --color-honey-500: #ac7c26;
+  --color-honey-600: #8e6201;
+  --color-honey-700: #714d00; /* warning text — 6.2:1 on honey-100 */
+  --color-honey-800: #593c00;
+  --color-honey-900: #382500;
+  --color-honey-950: #1b0f00;
 
-  /* Red — critical (H 28, brand chroma; replaced stock Tailwind values). */
-  --color-red-50: #fbf1ef;
-  --color-red-100: #edd8d4; /* shipped — critical surface */
-  --color-red-200: #eabfb9;
-  --color-red-300: #e09e95;
-  --color-red-400: #d47d72;
-  --color-red-500: #c45c51; /* border-critical */
-  --color-red-600: #a73f36; /* fill-critical */
-  --color-red-700: #89322a; /* critical text */
-  --color-red-800: #6b2620;
-  --color-red-900: #451914;
-  --color-red-950: #200a07;
+  /* Brick — critical (H 28, brand chroma; replaced stock Tailwind values). */
+  --color-brick-50: #fbf1ef;
+  --color-brick-100: #edd8d4; /* shipped — critical surface */
+  --color-brick-200: #eabfb9;
+  --color-brick-300: #e09e95;
+  --color-brick-400: #d47d72;
+  --color-brick-500: #c45c51; /* border-critical */
+  --color-brick-600: #a73f36; /* fill-critical */
+  --color-brick-700: #89322a; /* critical text */
+  --color-brick-800: #6b2620;
+  --color-brick-900: #451914;
+  --color-brick-950: #200a07;
 
   /* Font families */
   --font-family-sans:
@@ -219,7 +219,7 @@
   --color-surface-card: var(--color-sage-100);
   --color-surface-subtle: var(--color-sage-50);
   --color-surface-sunken: var(--color-sage-200); /* page color inside a card */
-  --color-surface-inverse: var(--color-green-950);
+  --color-surface-inverse: var(--color-fern-950);
   /* Translucent compositions — light-mode assumption baked in; these need
    * real values (not re-aliases) in any dark theme. */
   --color-surface-field: rgb(255 255 255 / 0.6);
@@ -228,7 +228,7 @@
     255 255 255 / 0.7
   ); /* resting translucent small controls (Button/IconButton control variant) */
   --color-surface-hover: rgb(255 255 255 / 0.7);
-  --color-surface-active: rgb(153 189 157 / 0.5); /* green-300 @ 50% */
+  --color-surface-active: rgb(153 189 157 / 0.5); /* fern-300 @ 50% */
   --color-surface-card-translucent: rgb(237 242 238 / 0.7); /* sage-100 @ 70% */
   --color-surface-nav-active: rgb(
     237 242 238 / 0.5
@@ -238,33 +238,33 @@
   /* Tone kits — surface / icon / text / border per tone.
    * Vocabulary: positive | warning | critical (info added when needed).
    * A new stateful component composes a kit; it never mints a hex. */
-  --color-surface-positive: var(--color-green-100);
-  --color-icon-positive: var(--color-green-700);
-  --color-text-positive: var(--color-green-700);
-  --color-border-positive: var(--color-green-700);
+  --color-surface-positive: var(--color-fern-100);
+  --color-icon-positive: var(--color-fern-700);
+  --color-text-positive: var(--color-fern-700);
+  --color-border-positive: var(--color-fern-700);
 
-  --color-surface-warning: var(--color-gold-100);
-  --color-icon-warning: var(--color-gold-700);
-  --color-text-warning: var(--color-gold-700);
-  --color-border-warning: var(--color-gold-700);
+  --color-surface-warning: var(--color-honey-100);
+  --color-icon-warning: var(--color-honey-700);
+  --color-text-warning: var(--color-honey-700);
+  --color-border-warning: var(--color-honey-700);
 
-  --color-surface-critical: var(--color-red-100);
-  --color-icon-critical: var(--color-red-600);
-  --color-text-critical: var(--color-red-700);
-  --color-border-critical: var(--color-red-500);
+  --color-surface-critical: var(--color-brick-100);
+  --color-icon-critical: var(--color-brick-600);
+  --color-text-critical: var(--color-brick-700);
+  --color-border-critical: var(--color-brick-500);
 
   /* Solid fills — filled controls and toasts per tone.
    * fill-positive moved 600 -> 700: old 600/700 were perceptually identical,
    * so this is invisible; 600 is now a genuinely lighter step. */
-  --color-fill-positive: var(--color-green-700);
-  --color-fill-warning: var(--color-gold-700);
-  --color-fill-critical: var(--color-red-600);
-  --color-fill-critical-hover: var(--color-red-700);
+  --color-fill-positive: var(--color-fern-700);
+  --color-fill-warning: var(--color-honey-700);
+  --color-fill-critical: var(--color-brick-600);
+  --color-fill-critical-hover: var(--color-brick-700);
 
   /* Accent — hover now darkens (800); the old 600 alias was a no-op. */
-  --color-accent: var(--color-green-700);
-  --color-accent-hover: var(--color-green-800);
-  --color-accent-muted: var(--color-green-200);
+  --color-accent: var(--color-fern-700);
+  --color-accent-hover: var(--color-fern-800);
+  --color-accent-muted: var(--color-fern-200);
 
   /* Borders */
   --color-border-card: var(--color-white);
@@ -273,7 +273,7 @@
   --color-border-divider-subtle: rgb(209 224 211 / 0.3); /* sage-300 @ 30% */
 
   /* Focus */
-  --color-focus-ring: var(--color-green-700);
+  --color-focus-ring: var(--color-fern-700);
 
   /* Typography roles — size and color are separate axes: "card title" =
    * text-primary (color) x heading (size) x semibold (weight). */
@@ -317,10 +317,10 @@
   --sidebar-width: 14.5rem; /* 232px — app sidebar */
   /* main content clearance: sidebar width + 40px gutter (sidebar is flush to the viewport edge) */
   --sidebar-offset: calc(var(--sidebar-width) + var(--spacing-10));
-  --login-border: var(--color-green-500);
+  --login-border: var(--color-fern-500);
   /* gray-900 @ 20% — translucent composition, light-mode assumption baked in */
   --login-hairline: rgb(17 17 17 / 0.2);
-  --avatar-fill: var(--color-green-700); /* was 600, visually identical */
+  --avatar-fill: var(--color-fern-700); /* was 600, visually identical */
   --thumbnail-scrim: linear-gradient(
     to top,
     rgb(0 0 0 / 0.49),

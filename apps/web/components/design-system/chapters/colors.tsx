@@ -51,44 +51,44 @@ const RAMP_CLASSES = {
     'bg-sage-900',
     'bg-sage-950',
   ],
-  green: [
-    'bg-green-50',
-    'bg-green-100',
-    'bg-green-200',
-    'bg-green-300',
-    'bg-green-400',
-    'bg-green-500',
-    'bg-green-600',
-    'bg-green-700',
-    'bg-green-800',
-    'bg-green-900',
-    'bg-green-950',
+  fern: [
+    'bg-fern-50',
+    'bg-fern-100',
+    'bg-fern-200',
+    'bg-fern-300',
+    'bg-fern-400',
+    'bg-fern-500',
+    'bg-fern-600',
+    'bg-fern-700',
+    'bg-fern-800',
+    'bg-fern-900',
+    'bg-fern-950',
   ],
-  gold: [
-    'bg-gold-50',
-    'bg-gold-100',
-    'bg-gold-200',
-    'bg-gold-300',
-    'bg-gold-400',
-    'bg-gold-500',
-    'bg-gold-600',
-    'bg-gold-700',
-    'bg-gold-800',
-    'bg-gold-900',
-    'bg-gold-950',
+  honey: [
+    'bg-honey-50',
+    'bg-honey-100',
+    'bg-honey-200',
+    'bg-honey-300',
+    'bg-honey-400',
+    'bg-honey-500',
+    'bg-honey-600',
+    'bg-honey-700',
+    'bg-honey-800',
+    'bg-honey-900',
+    'bg-honey-950',
   ],
-  red: [
-    'bg-red-50',
-    'bg-red-100',
-    'bg-red-200',
-    'bg-red-300',
-    'bg-red-400',
-    'bg-red-500',
-    'bg-red-600',
-    'bg-red-700',
-    'bg-red-800',
-    'bg-red-900',
-    'bg-red-950',
+  brick: [
+    'bg-brick-50',
+    'bg-brick-100',
+    'bg-brick-200',
+    'bg-brick-300',
+    'bg-brick-400',
+    'bg-brick-500',
+    'bg-brick-600',
+    'bg-brick-700',
+    'bg-brick-800',
+    'bg-brick-900',
+    'bg-brick-950',
   ],
 }
 
@@ -125,9 +125,9 @@ function Primitives() {
     >
       <div className="flex flex-col gap-6">
         <Ramp label="sage — neutral" hue="sage" />
-        <Ramp label="green — accent" hue="green" />
-        <Ramp label="gold — warning" hue="gold" />
-        <Ramp label="red — critical" hue="red" />
+        <Ramp label="fern — accent" hue="fern" />
+        <Ramp label="honey — warning" hue="honey" />
+        <Ramp label="brick — critical" hue="brick" />
         <div className="flex flex-col gap-inline-gap sm:flex-row sm:items-center">
           <div className="w-full shrink-0 sm:w-36">
             <Label>white</Label>

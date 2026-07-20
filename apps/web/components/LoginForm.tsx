@@ -202,7 +202,7 @@ export function LoginForm() {
   )
 }
 
-// Rendered on the solid-green button, so the mark is flattened to white
+// Rendered on the solid-fern button, so the mark is flattened to white
 // instead of Google's brand colors — those only read against a light background.
 function GoogleMark() {
   return (

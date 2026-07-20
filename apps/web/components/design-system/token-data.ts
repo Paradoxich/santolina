@@ -60,16 +60,16 @@ export const allTokens: TokenTier[] = [
         entries: c(...rampNames('sage')),
       },
       {
-        title: 'Green — brand accent',
-        entries: c(...rampNames('green')),
+        title: 'Fern — brand accent',
+        entries: c(...rampNames('fern')),
       },
       {
-        title: 'Gold — warning',
-        entries: c(...rampNames('gold')),
+        title: 'Honey — warning',
+        entries: c(...rampNames('honey')),
       },
       {
-        title: 'Red — critical',
-        entries: c(...rampNames('red')),
+        title: 'Brick — critical',
+        entries: c(...rampNames('brick')),
       },
       {
         title: 'Font families',
