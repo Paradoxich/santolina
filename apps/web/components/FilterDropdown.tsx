@@ -150,7 +150,7 @@ export function FilterDropdown({
                 className={[
                   'flex h-9 w-full items-center gap-2 rounded-sm px-2 text-left',
                   'text-body-small text-primary',
-                  'transition-colors duration-normal hover:bg-surface-sunken',
+                  'transition-colors duration-normal hover:bg-surface-row-hover',
                   'focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus',
                 ].join(' ')}
               >

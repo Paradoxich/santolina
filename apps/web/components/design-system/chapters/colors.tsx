@@ -184,7 +184,7 @@ function Surfaces() {
         <Swatch name="surface-page" className="bg-surface-page" />
         <Swatch name="surface-card" className="bg-surface-card" />
         <Swatch name="surface-subtle" className="bg-surface-subtle" />
-        <Swatch name="surface-sunken" className="bg-surface-sunken" />
+        <Swatch name="surface-inset" className="bg-surface-inset" />
         <Swatch name="surface-inverse" className="bg-surface-inverse" />
         <Swatch name="surface-field" className="bg-surface-field" />
         <Swatch name="surface-overlay" className="bg-surface-overlay" />
