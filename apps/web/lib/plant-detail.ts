@@ -1,5 +1,6 @@
 // SERVER-ONLY — fetches plant detail data for the drawer.
 import { getSupabase } from './supabase'
+import { fetchAllRows } from './paginate'
 import { getSessionGardenContext } from './session-garden'
 import type { DbPlant } from './plants-db'
 import type { CatalogPlant, Garden } from '@/types/garden'
@@ -19,16 +20,33 @@ export interface PlantDetail {
 /** All catalog plants, shaped for the explore grid/list and its filter row. */
 export async function getExplorePlants(): Promise<CatalogPlant[]> {
   const supabase = getSupabase()
-  const { data, error } = await supabase
-    .from('plants')
-    .select(
-      'id, common_name, scientific_name, description, image_url, image_urls, common_name_aliases, plant_type, style_tags, sun_thrives, bloom_months, bloom_color, native_region'
-    )
-    .order('common_name')
+  const data = await fetchAllRows<{
+    id: string
+    common_name: string
+    scientific_name: string | null
+    description: string | null
+    image_url: string | null
+    image_urls: string[] | null
+    common_name_aliases: string[] | null
+    plant_type: string | null
+    style_tags: string[] | null
+    sun_thrives: string[] | null
+    bloom_months: number[] | null
+    bloom_color: string[] | null
+    native_region: string[] | null
+  }>((from, to) =>
+    supabase
+      .from('plants')
+      .select(
+        'id, common_name, scientific_name, description, image_url, image_urls, common_name_aliases, plant_type, style_tags, sun_thrives, bloom_months, bloom_color, native_region'
+      )
+      .order('common_name')
+      // common_name isn't unique — the id tiebreak keeps paging stable
+      .order('id')
+      .range(from, to)
+  )
 
-  if (error) throw new Error(`Failed to load plants: ${error.message}`)
-
-  return (data ?? []).map((p) => ({
+  return data.map((p) => ({
     id: p.id,
     commonName: p.common_name,
     botanicalName: p.scientific_name ?? '',

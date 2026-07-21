@@ -38,4 +38,13 @@ describe('cn', () => {
     const base = 'rounded-chip bg-surface-card p-card-padding'
     expect(cn(base, 'p-8')).toBe('rounded-chip bg-surface-card p-8')
   })
+
+  it('resolves conflicts between the custom shadow key and stock shadows', () => {
+    expect(cn('shadow-soft', 'shadow-none')).toBe('shadow-none')
+    expect(cn('shadow-sm', 'shadow-soft')).toBe('shadow-soft')
+  })
+
+  it('recognises the modal radius key from the preset', () => {
+    expect(cn('rounded-modal', 'rounded-chip')).toBe('rounded-chip')
+  })
 })

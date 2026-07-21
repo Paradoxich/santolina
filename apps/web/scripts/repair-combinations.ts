@@ -22,7 +22,7 @@
  */
 
 import { getSupabaseAdmin } from '../lib/supabase-admin'
-import { fetchAllRows } from './paginate'
+import { fetchAllRows } from '../lib/paginate'
 
 const COMPANION_CAP = 5
 const STRENGTH_RANK: Record<string, number> = {

@@ -38,7 +38,7 @@ import { mkdirSync, writeFileSync, readFileSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { getSupabaseAdmin } from '../lib/supabase-admin'
 import { getAnthropicClient, CURATION_MODEL } from '../lib/anthropic-client'
-import { fetchAllRows } from './paginate'
+import { fetchAllRows } from '../lib/paginate'
 
 // ---------------------------------------------------------------------------
 // Config

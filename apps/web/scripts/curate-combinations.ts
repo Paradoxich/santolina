@@ -19,7 +19,7 @@
 
 import { getSupabaseAdmin } from '../lib/supabase-admin'
 import { getAnthropicClient, CURATION_MODEL } from '../lib/anthropic-client'
-import { fetchAllRows } from './paginate'
+import { fetchAllRows } from '../lib/paginate'
 
 // ---------------------------------------------------------------------------
 // Config
