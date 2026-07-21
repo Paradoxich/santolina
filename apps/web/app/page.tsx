@@ -6,7 +6,7 @@ import { icons } from '@/lib/icons'
 export const metadata: Metadata = {
   title: 'Santolina',
   description:
-    'An AI-native garden planning platform that combines horticultural knowledge, structured plant data, and intelligent recommendations to help people design and manage beautiful outdoor spaces.',
+    "Santolina is an intelligent gardening platform currently in active development. It's an exploration of how structured plant knowledge, thoughtful design, and AI can come together to help people plan, understand, and care for their gardens over time.",
 }
 
 const focusRing =
@@ -36,11 +36,10 @@ export default function LandingPage() {
               Santolina
             </h1>
             <p className="max-w-3xl text-lg leading-normal text-sage-300">
-              An AI-native garden planning platform that combines horticultural
-              knowledge, structured plant data, and intelligent recommendations
-              to help people design and manage beautiful outdoor spaces. Built
-              as a monorepo alongside Paradox UI, an open source design system
-              extracted from the product as it's built.
+              Santolina is an intelligent gardening platform currently in active
+              development. It's an exploration of how structured plant
+              knowledge, thoughtful design, and AI can come together to help
+              people plan, understand, and care for their gardens over time.
             </p>
           </div>
           {/* Links and CTA share one row so their centres line up; they stack
