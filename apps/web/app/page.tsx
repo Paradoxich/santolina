@@ -69,8 +69,13 @@ export default function LandingPage() {
               className={`group inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-md border border-card bg-surface-subtle px-5 text-base font-medium text-primary transition-colors duration-normal hover:bg-white ${focusRing}`}
             >
               Live preview
+              {/* 20px, not the default 16: the stroke lives in the SVG's
+                  viewBox, so scaling the box scales the 1.2 stroke to an
+                  effective 1.5px — the stem width of the 16px/500 label
+                  beside it. Sizing up is what matches the weight. */}
               <Icon
                 src={icons.arrowRight}
+                size={20}
                 className="transition-transform duration-normal ease-out group-hover:translate-x-1 motion-reduce:transition-none"
               />
             </Link>
