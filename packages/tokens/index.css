@@ -219,6 +219,9 @@
   --color-surface-card: var(--color-sage-200);
   --color-surface-drawer: var(--color-sage-200);
   --color-surface-subtle: var(--color-sage-50);
+  --color-surface-illustration: var(
+    --color-sage-100
+  ); /* tinted ground behind a decorative illustration */
   --color-surface-inset: var(
     --color-sage-300
   ); /* a quieter surface nested inside a card or panel — never placed directly on the page, where it would be invisible */
@@ -277,6 +280,9 @@
   --color-border-card-translucent: rgb(255 255 255 / 0.5);
   --color-border-divider: var(--color-sage-300);
   --color-border-divider-subtle: rgb(209 224 211 / 0.3); /* sage-300 @ 30% */
+  --color-border-placeholder: var(
+    --color-sage-100
+  ); /* dashed outline of a panel awaiting content */
 
   /* Focus */
   --color-focus-ring: var(--color-fern-700);

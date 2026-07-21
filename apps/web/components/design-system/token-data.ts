@@ -276,7 +276,8 @@ export const allTokens: TokenTier[] = [
           '--color-border-card',
           '--color-border-card-translucent',
           '--color-border-divider',
-          '--color-border-divider-subtle'
+          '--color-border-divider-subtle',
+          '--color-border-placeholder'
         ),
       },
       {

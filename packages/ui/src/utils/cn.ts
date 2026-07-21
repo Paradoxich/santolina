@@ -60,6 +60,7 @@ const COLORS = [
   'surface-page',
   'surface-card',
   'surface-subtle',
+  'surface-illustration',
   'surface-inset',
   'surface-drawer',
   'surface-inverse',
@@ -101,6 +102,7 @@ const COLORS = [
   'card-translucent',
   'divider',
   'divider-subtle',
+  'placeholder',
   // ring / outline
   'focus',
 ]
