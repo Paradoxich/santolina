@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { DbPlant } from './plants-db'
+import type { DbPlant, SeasonalCare } from './plants-db'
 import type { PalettePlant, PaletteStatus } from '@/server/palette-actions'
 import {
   CARE_EVENT_RULES,
@@ -28,9 +28,24 @@ function plant(overrides: Partial<DbPlant> = {}): DbPlant {
     common_name: `Plant ${seq}`,
     plant_type: null,
     maintenance_notes: null,
+    seasonal_care: null,
     bloom_months: [],
     ...overrides,
   } as DbPlant
+}
+
+/** A seasonal_care object with the given stage lines set, the rest null.
+ * TODAY (July 14) falls in the summer stage. */
+function care(lines: Partial<SeasonalCare>): SeasonalCare {
+  return {
+    early_spring: null,
+    late_spring: null,
+    summer: null,
+    late_summer: null,
+    autumn: null,
+    winter: null,
+    ...lines,
+  }
 }
 
 function palettePlant(
@@ -196,11 +211,11 @@ describe('getEventTips — exclusions', () => {
 // --- getCareTips ordering + fallback ---------------------------------------
 
 describe('getCareTips', () => {
-  it('ranks event tips ahead of maintenance guidance', () => {
+  it('ranks event tips ahead of seasonal_care guidance', () => {
     const p = plant({
       common_name: 'Salvia',
       plant_type: 'perennial',
-      maintenance_notes: 'Deadhead spent blooms.',
+      seasonal_care: care({ summer: 'Deadhead spent blooms.' }),
     })
     const tips = getCareTips([palettePlant(p)], {
       events: [plantedEvent(p.id, 5)],
@@ -213,9 +228,57 @@ describe('getCareTips', () => {
 
   it('caps the list at 5 tips', () => {
     const plants = Array.from({ length: 8 }, () =>
-      palettePlant(plant({ maintenance_notes: 'Water regularly.' }))
+      palettePlant(plant({ seasonal_care: care({ summer: 'Water deeply.' }) }))
     )
     expect(getCareTips(plants, { today: TODAY })).toHaveLength(5)
+  })
+
+  it('surfaces only the current stage line, never another stage', () => {
+    const p = plant({
+      seasonal_care: care({
+        summer: 'Water containers daily in heat.',
+        autumn: 'Plant out rooted cuttings.',
+      }),
+    })
+    const tips = getCareTips([palettePlant(p)], { today: TODAY })
+    expect(tips.map((t) => t.text)).toEqual(['Water containers daily in heat.'])
+  })
+
+  it('a plant with a null current stage contributes nothing (resting plant says nothing)', () => {
+    const p = plant({
+      seasonal_care: care({ winter: 'Protect the crown with mulch.' }),
+    })
+    // Nothing usable → static seasonal fallback, not the winter line.
+    expect(getCareTips([palettePlant(p)], { today: TODAY })).toEqual(
+      STATIC_SEASONAL_TIPS.summer
+    )
+  })
+
+  it('planned plants contribute no guidance line (planted only)', () => {
+    const p = plant({
+      seasonal_care: care({ summer: 'Pinch back leggy growth.' }),
+    })
+    expect(getCareTips([palettePlant(p, 'planned')], { today: TODAY })).toEqual(
+      STATIC_SEASONAL_TIPS.summer
+    )
+  })
+
+  it('sorts currently-blooming plants ahead of resting ones', () => {
+    const resting = plant({
+      seasonal_care: care({ summer: 'Tidy fading foliage.' }),
+      bloom_months: [3, 4], // spring bloomer, long done by July
+    })
+    const blooming = plant({
+      seasonal_care: care({ summer: 'Deadhead to extend the display.' }),
+      bloom_months: [7, 8],
+    })
+    const tips = getCareTips([palettePlant(resting), palettePlant(blooming)], {
+      today: TODAY,
+    })
+    expect(tips.map((t) => t.text)).toEqual([
+      'Deadhead to extend the display.',
+      'Tidy fading foliage.',
+    ])
   })
 
   it('falls back to the static seasonal tips when the garden yields nothing', () => {
@@ -224,7 +287,7 @@ describe('getCareTips', () => {
   })
 
   it('does not fall back to static tips when only event tips exist', () => {
-    const p = plant({ plant_type: 'perennial' }) // no maintenance_notes
+    const p = plant({ plant_type: 'perennial' }) // no seasonal_care
     const tips = getCareTips([palettePlant(p)], {
       events: [plantedEvent(p.id, 5)],
       today: TODAY,
@@ -309,12 +372,12 @@ describe('getEventTips — "did it" suppression', () => {
 // --- grouping for the drawer -----------------------------------------------
 
 describe('getGroupedCareTips', () => {
-  it('splits event tips into Now / This week by timeframe and puts guidance under Good to know', () => {
+  it('splits event tips into Now / This week and builds Good to know from care lines + static tips', () => {
     // A climber at day 30 fires woody-watering ("in the next two weeks") and
-    // fertilizing ("this week"); plus maintenance guidance.
+    // fertilizing ("this week"); plus its current-stage seasonal_care line.
     const p = plant({
       plant_type: 'climber',
-      maintenance_notes: 'Tie in new growth.',
+      seasonal_care: care({ summer: 'Tie in new growth.' }),
     })
     const groups = getGroupedCareTips([palettePlant(p)], {
       events: [plantedEvent(p.id, 30)],
@@ -325,10 +388,15 @@ describe('getGroupedCareTips', () => {
     expect(groups.thisWeek.map((t) => t.timeframe)).toEqual([
       'in the next two weeks',
     ])
-    expect(groups.goodToKnow.map((t) => t.text)).toEqual(['Tie in new growth.'])
+    // Drawer mapping after the Tier 1 swap: per-plant current-stage lines
+    // first, then the garden-level static seasonal tips.
+    expect(groups.goodToKnow.map((t) => t.text)).toEqual([
+      'Tie in new growth.',
+      ...STATIC_SEASONAL_TIPS.summer.map((t) => t.text),
+    ])
   })
 
-  it('falls back to static seasonal tips as Good to know for an empty garden', () => {
+  it('shows only the static seasonal tips as Good to know for an empty garden', () => {
     const groups = getGroupedCareTips([], { today: TODAY })
     expect(groups.now).toHaveLength(0)
     expect(groups.thisWeek).toHaveLength(0)
