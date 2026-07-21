@@ -13,6 +13,7 @@ import {
 import { icons } from '@/lib/icons'
 import { PlantImage } from '@/components/PlantImage'
 import { DRAWER_MOTION } from '@/lib/drawer-motion'
+import { creditLine } from '@/lib/image-attribution'
 import type { PlantDetail } from '@/lib/plant-detail'
 import { formatPlantSubtitle } from '@/lib/format-plant'
 import { buildGoodForYourGarden } from '@/lib/good-for-your-garden'
@@ -48,7 +49,15 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
     plant.scientific_name,
     plant.common_name_aliases ?? []
   )
-  const photos = (plant.image_urls ?? []).slice(0, 3)
+  // Lead with the curated hero (getPlantDetail resolves plant.image_url to it),
+  // so the drawer shows the same photo the browse card does — including a
+  // Wikimedia pick, which isn't in the raw image_urls list. Dedupe so the hero
+  // doesn't repeat when it also happens to be a Trefle image.
+  const photos = [
+    ...(plant.image_url ? [plant.image_url] : []),
+    ...(plant.image_urls ?? []).filter((u) => u !== plant.image_url),
+  ].slice(0, 3)
+  const credit = creditLine(plant.image_attribution)
   const bullets = buildGoodForYourGarden(plant, garden, companions)
 
   const router = useRouter()
@@ -449,6 +458,38 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
             </div>
           ))}
         </div>
+
+        {credit && (
+          <p className="w-full text-body-small text-muted">
+            {credit}
+            {plant.image_attribution?.source_url && (
+              <>
+                {' · '}
+                <a
+                  href={plant.image_attribution.source_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline"
+                >
+                  source
+                </a>
+              </>
+            )}
+            {plant.image_attribution?.license_url && (
+              <>
+                {' · '}
+                <a
+                  href={plant.image_attribution.license_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline"
+                >
+                  licence
+                </a>
+              </>
+            )}
+          </p>
+        )}
 
         <div className="flex w-full flex-col gap-section-break">
           <AboutSection description={plant.description} />
