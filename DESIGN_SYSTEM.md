@@ -188,6 +188,34 @@ MediaCard, Icon.
 - Sample/mock data lives in `apps/web/lib/`, typed against `apps/web/types/`,
   structured so Supabase data can replace it 1:1.
 
+### Icon export checklist (Figma → `/public/icons`)
+
+Icons render through `Icon`, a plain `<img>` wrapper — so whatever the SVG
+file contains is exactly what ships. Nothing in the pipeline catches a bad
+export, so check each of these before committing (origin incident:
+`weather-partly-cloudy.svg` shipped with baked-in frame artwork and stale
+surface hexes, fixed in `eb4b922`):
+
+- **Export the glyph, not its Figma frame.** Selecting the frame bakes in
+  surrounding artwork: background rects, drop-shadow filters, clip paths with
+  off-viewBox geometry. The file should contain only the glyph's paths —
+  delete any `<defs>` (filters, clipPaths) the paths don't reference.
+- **Transparent background.** No background rect, no hardcoded surface hexes.
+  The icon must sit on any surface token without carrying its own.
+- **No off-viewBox paths.** Every path lives inside the `viewBox`; anything
+  outside it is frame residue.
+- **Root attributes**: `width="100%" height="100%" overflow="visible"`, to
+  match the six weather icons. Fixed pixel width/height fights `Icon`'s
+  `object-contain` sizing.
+- **Strip `var(--stroke-0, #hex)` wrappers.** Figma exports them, but CSS
+  custom properties never resolve inside an `<img>` — the fallback hex is
+  what renders, so keep just the hex.
+- **Stroke/fill hexes must be current token values, written as plain hexes.**
+  An `<img>`-loaded SVG can't reference tokens, so each hex is a frozen copy
+  of one (e.g. `#111411` sage-950, `#A73F36` brick-600, `#2B6E3F` fern-700).
+  That copy goes stale silently the next time the token moves — when a color
+  ramp changes, re-check every hex in `/public/icons`.
+
 ### Drawers / slide-in edge panels
 
 `PlantDetailDrawer` and `DiaryDetailDrawer` establish the pattern — follow it
