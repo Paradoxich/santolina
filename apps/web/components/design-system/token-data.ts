@@ -287,6 +287,7 @@ export const allTokens: TokenTier[] = [
       {
         title: 'Typography roles (composite type sizes)',
         entries: n(
+          '--font-size-display',
           '--font-size-title',
           '--font-size-stat',
           '--font-size-subheading',
@@ -332,7 +333,7 @@ export const allTokens: TokenTier[] = [
       },
       {
         title: 'Effects',
-        entries: n('--thumbnail-scrim'),
+        entries: n('--thumbnail-scrim', '--landing-scrim'),
       },
     ],
   },

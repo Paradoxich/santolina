@@ -66,3 +66,17 @@ export const Spotlight: Story = {
     weight: 0.5,
   },
 }
+
+/**
+ * Live footage through the same shader: `videoSrc` feeds the texture a video
+ * frame per tick and turns the Ken Burns orbit off (the footage moves on its
+ * own). `src` remains the poster for reduced motion and failed loads. Unlike
+ * the other stories this one fetches a sample video (CC0, MDN shared assets)
+ * over the network — offline it degrades to the dithered poster.
+ */
+export const Video: Story = {
+  args: {
+    videoSrc: 'https://mdn.github.io/shared-assets/videos/flower.webm',
+    levels: 10,
+  },
+}
