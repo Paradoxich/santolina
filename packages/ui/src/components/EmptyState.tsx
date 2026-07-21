@@ -51,12 +51,12 @@ export function EmptyState({
     <div
       ref={ref}
       className={cn(
-        'flex w-full max-w-[411px] flex-col gap-section-gap rounded-card-tile border border-dashed border-card p-card-padding',
+        'flex w-full max-w-[411px] flex-col gap-section-gap rounded-card-tile border-[1.5px] border-dashed border-placeholder p-card-padding',
         className
       )}
     >
       {illustration && (
-        <div className="relative aspect-[726/557] w-full overflow-hidden rounded-md bg-surface-subtle">
+        <div className="relative aspect-[726/557] w-full overflow-hidden rounded-md bg-surface-illustration">
           {illustration}
         </div>
       )}

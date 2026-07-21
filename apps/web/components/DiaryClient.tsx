@@ -3,12 +3,11 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { AnimatePresence } from 'framer-motion'
-import { EmptyState, Icon, IconButton, Tooltip } from '@paradoxui/ui'
+import { EmptyState } from '@paradoxui/ui'
 import { EmptyStateIllustration } from '@/components/EmptyStateIllustration'
 import { DiaryListRow } from '@/components/DiaryListRow'
 import { DiaryDetailDrawer } from '@/components/DiaryDetailDrawer'
 import { parseISODate } from '@/lib/utils'
-import { icons } from '@/lib/icons'
 import type { PlantDiary } from '@/types/diary'
 
 interface DiaryClientProps {
@@ -52,18 +51,9 @@ export function DiaryClient({
         </p>
       </header>
 
-      <div className="mt-8 flex items-center justify-between md:mt-12">
-        <h2 className="text-subheading font-semibold text-primary">Notes</h2>
-        <Tooltip content="Filter diary entries" position="bottom">
-          <IconButton
-            variant="ghost"
-            size="sm"
-            aria-label="Filter diary entries"
-          >
-            <Icon src={icons.filter} />
-          </IconButton>
-        </Tooltip>
-      </div>
+      <h2 className="mt-8 text-subheading font-semibold text-primary md:mt-12">
+        Notes
+      </h2>
 
       {sortedDiaries.length === 0 ? (
         <EmptyState

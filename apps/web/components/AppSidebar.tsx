@@ -20,8 +20,8 @@ const navItems: NavItem[] = [
   { label: 'Overview', href: '/overview', icon: 'grid' },
   { label: 'My Plants', href: '/plants', icon: 'leaf' },
   { label: 'Diary', href: '/diary', icon: 'diary' },
-  { label: 'Reflections', href: '/reflections', icon: 'reflections' },
   { label: 'Explore', href: '/explore', icon: 'search' },
+  { label: 'Reflections', href: '/reflections', icon: 'reflections' },
 ]
 
 export function AppSidebar({ identity }: { identity: SidebarIdentity }) {
@@ -59,7 +59,7 @@ export function AppSidebar({ identity }: { identity: SidebarIdentity }) {
               href={item.href}
               aria-current={active ? 'page' : undefined}
               className={[
-                'flex items-center gap-item-gap rounded-md p-row-gap',
+                'flex items-center gap-item-gap rounded-md px-row-gap py-item-gap',
                 'text-body text-primary',
                 'transition-colors duration-normal',
                 active

@@ -15,8 +15,8 @@ const navItems: NavItem[] = [
   { label: 'Overview', href: '/overview', icon: 'grid' },
   { label: 'My Plants', href: '/plants', icon: 'leaf' },
   { label: 'Diary', href: '/diary', icon: 'diary' },
-  { label: 'Reflections', href: '/reflections', icon: 'reflections' },
   { label: 'Explore', href: '/explore', icon: 'search' },
+  { label: 'Reflections', href: '/reflections', icon: 'reflections' },
 ]
 
 export function MobileTabBar() {
