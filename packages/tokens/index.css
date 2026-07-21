@@ -44,8 +44,8 @@
    * under 4.5:1 (3.9 on card, 3.6 on page) and the sage-600 icon step
    * under 3:1 (2.76) until the semantic remap addresses it. */
   --color-sage-50: #f4f9f5;
-  --color-sage-100: #edf2ee; /* shipped — sidebar nav hover/selected */
-  --color-sage-200: #e1ebe3; /* shipped — surface-card, surface-drawer, divider */
+  --color-sage-100: #e8f2ea; /* shipped — sidebar nav hover/selected */
+  --color-sage-200: #dfebe0; /* shipped — surface-card, surface-drawer, divider */
   --color-sage-300: #d1e0d3; /* shipped — surface-page, hover tints */
   --color-sage-400: #c4d0c6;
   --color-sage-500: #adb8ae; /* ~was gray-100 — disabled/faint only */
@@ -57,12 +57,12 @@
 
   /* Fern — brand accent (H 151). Chroma peaks at 500. */
   --color-fern-50: #e5f0e7;
-  --color-fern-100: #cfe5d6; /* shipped — positive surface */
-  --color-fern-200: #b1d7bc; /* shipped — accent-muted */
+  --color-fern-100: #c1dbc9; /* shipped — positive surface */
+  --color-fern-200: #abd6b8; /* shipped — accent-muted */
   --color-fern-300: #99bd9d; /* shipped — surface-active base */
   --color-fern-400: #6ea87c;
   --color-fern-500: #3b9255; /* shipped — vivid mid; not for body text */
-  --color-fern-600: #327f4a; /* fills/large accents; not for body text */
+  --color-fern-600: #197f39; /* fills/large accents; not for body text */
   --color-fern-700: #2b6e3f; /* shipped — THE brand green, accent */
   --color-fern-800: #1f5430; /* accent-hover */
   --color-fern-900: #0f3119;
@@ -70,8 +70,8 @@
 
   /* Honey — warning (H 78, warm ochre; replaced the unreviewed olive). */
   --color-honey-50: #f9f2e9;
-  --color-honey-100: #f4e6d1; /* warning surface */
-  --color-honey-200: #ecd4af;
+  --color-honey-100: #eddabe; /* warning surface */
+  --color-honey-200: #e8d0ac;
   --color-honey-300: #debb86;
   --color-honey-400: #c79d59;
   --color-honey-500: #ac7c26;
@@ -83,8 +83,8 @@
 
   /* Brick — critical (H 28, brand chroma; replaced stock Tailwind values). */
   --color-brick-50: #fbf1ef;
-  --color-brick-100: #edd8d4; /* shipped — critical surface */
-  --color-brick-200: #eabfb9;
+  --color-brick-100: #e5d0cd; /* shipped — critical surface */
+  --color-brick-200: #eabdb7;
   --color-brick-300: #e09e95;
   --color-brick-400: #d47d72;
   --color-brick-500: #c45c51; /* border-critical */
