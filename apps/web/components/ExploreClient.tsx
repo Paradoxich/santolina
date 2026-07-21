@@ -10,10 +10,14 @@ import { ExplorePlantTile } from '@/components/ExplorePlantTile'
 import { ExplorePlantListRow } from '@/components/ExplorePlantListRow'
 import { PlantDetailDrawer } from '@/components/PlantDetailDrawer'
 import { useHideOnScroll } from '@/hooks/useHideOnScroll'
+import { BLOOM_COLOR_BUCKETS } from '@/lib/bloom-colors'
 import {
   EMPTY_FILTERS,
+  STYLE_OPTIONS,
+  SUN_OPTIONS,
   countActiveFilters,
   matchesFilters,
+  matchesSearchTerm,
 } from '@/lib/explore-filters'
 import { icons } from '@/lib/icons'
 import type { PlantDetail } from '@/lib/plant-detail'
@@ -36,8 +40,21 @@ export function ExploreClient({
   const [filters, setFilters] = useState(EMPTY_FILTERS)
   const [filtersOpen, setFiltersOpen] = useState(false)
   const searchRef = useRef<HTMLDivElement>(null)
+  const searchInputRef = useRef<HTMLInputElement>(null)
   const { hidden: searchHidden, pinned: searchPinned } =
     useHideOnScroll(searchRef)
+
+  // Browse tiles (style / colour / condition) are represented as plain
+  // search text rather than the `filters` state — matchesSearchTerm already
+  // understands these facet labels, so dropping one into the search box
+  // both filters the catalogue and gives the user a familiar, single-click
+  // way back to browse (clear the search). This is deliberately separate
+  // from the multi-select filter panel, which stays the tool for combining
+  // more than one facet at once.
+  const selectSearchTerm = (label: string) => {
+    setQuery(label)
+    searchInputRef.current?.focus()
+  }
 
   const openPlant = (id: string) =>
     router.push(`/explore?plant=${id}`, { scroll: false })
@@ -52,22 +69,16 @@ export function ExploreClient({
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [detail, router])
 
-  const q = query.trim().toLowerCase()
-  const matchesSearch = (p: CatalogPlant) =>
-    !q ||
-    p.commonName.toLowerCase().includes(q) ||
-    p.botanicalName.toLowerCase().includes(q) ||
-    p.aliases.some((a) => a.toLowerCase().includes(q))
-
   const activeFilterCount = countActiveFilters(filters)
   const visible = plants.filter(
-    (p) => matchesSearch(p) && matchesFilters(p, filters, gardenRegions)
+    (p) =>
+      matchesSearchTerm(p, query) && matchesFilters(p, filters, gardenRegions)
   )
 
   // Browse view (style / colour / condition) until the user searches or
   // filters; then it swaps to the flat results. Opening a plant also leaves
   // browse (the drawer + list layout takes over).
-  const browsing = !q && activeFilterCount === 0
+  const browsing = !query.trim() && activeFilterCount === 0
 
   return (
     <div
@@ -120,20 +131,42 @@ export function ExploreClient({
           />
           {/* Search sits on the page ground with a sage-100 hairline and a 12px
               radius, rather than the kit's translucent pill. The border reaches
-              for a primitive because no border token sits at sage-100 yet. */}
-          <SearchField
-            placeholder="Search plants"
-            label="Search plants"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className="h-10 rounded-md border bg-surface-card pl-item-gap pr-tight-gap !shadow-none [border-color:var(--color-sage-100)] focus-within:!shadow-soft"
-            trailingAction={
+              for a primitive because no border token sits at sage-100 yet. The
+              filter toggle is its own bordered box to the right, matching the
+              search field's border treatment, rather than living inside the
+              search pill. */}
+          <div className="flex items-center gap-inline-gap">
+            <SearchField
+              ref={searchInputRef}
+              placeholder="Search plants"
+              label="Search plants"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              iconClassName="text-primary"
+              className="h-10 flex-1 rounded-md border bg-surface-card pl-item-gap pr-tight-gap !shadow-none [border-color:var(--color-sage-100)] hover:[border-color:var(--color-sage-50)] focus-within:!bg-surface-card focus-within:[border-color:var(--color-sage-50)] focus-within:![box-shadow:0_0_0_1px_var(--color-sage-50)]"
+              trailingAction={
+                query && (
+                  <IconButton
+                    variant="ghost"
+                    size="sm"
+                    aria-label="Clear search"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => {
+                      setQuery('')
+                      searchInputRef.current?.focus()
+                    }}
+                  >
+                    <Icon src={icons.close} />
+                  </IconButton>
+                )
+              }
+            />
+            <div className="flex h-10 shrink-0 items-center justify-center rounded-md border bg-surface-card px-tight-gap [border-color:var(--color-sage-100)] transition-colors duration-normal hover:[border-color:var(--color-sage-50)]">
               <IconButton
                 variant={filtersOpen ? 'control' : 'ghost'}
                 size="sm"
                 aria-label="Filter plants"
                 aria-expanded={filtersOpen}
-                onMouseDown={(e) => e.preventDefault()}
                 onClick={() => setFiltersOpen((v) => !v)}
                 className="relative"
               >
@@ -145,8 +178,8 @@ export function ExploreClient({
                   />
                 )}
               </IconButton>
-            }
-          />
+            </div>
+          </div>
           {filtersOpen && (
             <ExploreFilters
               filters={filters}
@@ -168,13 +201,20 @@ export function ExploreClient({
               <ExploreBrowse
                 plants={plants}
                 onSelectStyle={(style) =>
-                  setFilters({ ...EMPTY_FILTERS, styles: [style] })
+                  selectSearchTerm(
+                    STYLE_OPTIONS.find((o) => o.value === style)?.label ?? style
+                  )
                 }
                 onSelectColor={(bucket) =>
-                  setFilters({ ...EMPTY_FILTERS, colors: [bucket] })
+                  selectSearchTerm(
+                    BLOOM_COLOR_BUCKETS.find((b) => b.value === bucket)
+                      ?.label ?? bucket
+                  )
                 }
                 onSelectSun={(sun) =>
-                  setFilters({ ...EMPTY_FILTERS, sun: [sun] })
+                  selectSearchTerm(
+                    SUN_OPTIONS.find((o) => o.value === sun)?.label ?? sun
+                  )
                 }
               />
             </div>

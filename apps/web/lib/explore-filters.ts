@@ -7,7 +7,7 @@
 // (never `peak_season`, which is only ~22% filled). Native-to-my-region is
 // an optional discovery lens per the Region Data Model decision — the chip
 // only renders when the garden's region resolves (see lib/native-to-me.ts).
-import { bucketsForPlant } from '@/lib/bloom-colors'
+import { BLOOM_COLOR_BUCKETS, bucketsForPlant } from '@/lib/bloom-colors'
 import type { CatalogPlant } from '@/types/garden'
 
 export interface ExploreFilterState {
@@ -98,6 +98,57 @@ export function toggleValue(list: string[], value: string): string[] {
   return list.includes(value)
     ? list.filter((v) => v !== value)
     : [...list, value]
+}
+
+/**
+ * Whether typed search text matches this plant — by name, or by any facet
+ * label (style, colour, sun, season, type) the catalog tags it with. Lets
+ * the plain search box double as a lightweight single-facet filter (e.g.
+ * typing "modern" or "shade") independent of the multi-select filter panel,
+ * and is how a browse-collection tile is represented once clicked (its
+ * label is dropped straight into the search box rather than the `filters`
+ * state — see ExploreClient).
+ */
+export function matchesSearchTerm(plant: CatalogPlant, query: string): boolean {
+  const q = query.trim().toLowerCase()
+  if (!q) return true
+
+  if (
+    plant.commonName.toLowerCase().includes(q) ||
+    plant.botanicalName.toLowerCase().includes(q) ||
+    plant.aliases.some((a) => a.toLowerCase().includes(q))
+  )
+    return true
+
+  const facetMatches = (options: FilterOption[], values: string[]) =>
+    options.some(
+      (o) => o.label.toLowerCase().includes(q) && values.includes(o.value)
+    )
+
+  if (facetMatches(STYLE_OPTIONS, plant.styleTags)) return true
+  if (facetMatches(SUN_OPTIONS, plant.sunThrives)) return true
+  if (facetMatches(TYPE_OPTIONS, [plant.plantType])) return true
+
+  const colorBuckets = bucketsForPlant(plant.bloomColor)
+  if (
+    BLOOM_COLOR_BUCKETS.some(
+      (b) => b.label.toLowerCase().includes(q) && colorBuckets.includes(b.value)
+    )
+  )
+    return true
+
+  if (
+    SEASON_OPTIONS.some(
+      (s) =>
+        s.label.toLowerCase().includes(q) &&
+        plant.bloomMonths.some((m) =>
+          (SEASON_MONTHS[s.value] ?? []).includes(m)
+        )
+    )
+  )
+    return true
+
+  return false
 }
 
 /**
