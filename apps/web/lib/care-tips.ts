@@ -1,5 +1,5 @@
 // Pure logic for the Dashboard's Care Tips card. Client-safe.
-import type { PalettePlant, PaletteStatus } from '@/server/palette-actions'
+import type { PalettePlant } from '@/server/palette-actions'
 import type { PlantType } from './plants-db'
 import type { CareTip } from '@/types/dashboard'
 import type { DiaryEventType } from './diary-events'
@@ -375,19 +375,20 @@ interface TipOptions {
   peakHeat?: boolean
 }
 
-const ACTIVE_STATUSES: PaletteStatus[] = ['planted', 'planned']
-
 /**
- * Evergreen guidance tips from the palette's maintenance_notes — the field
- * actually written as prescriptive care ("deadhead spent blooms"), not
- * seasonal_rhythm (descriptive narrative, not something to act on).
- * Currently-blooming/pre-bloom plants sort to the front. Uncapped; callers cap.
+ * Per-plant guidance tips: the current stage's `seasonal_care` line (Care
+ * Tips v2 Tier 1 — one action, one plant, one timeframe; null is the normal
+ * value and means nothing to do this stage, so volume self-limits to plants
+ * with a current-stage action). Planted plants only — a plant not in the
+ * ground has no "now". Currently-blooming/pre-bloom plants sort to the
+ * front. Uncapped; callers cap.
  */
 function buildGuidanceTips(palette: PalettePlant[], today: Date): CareTip[] {
+  const stage = getCurrentSeason(today)
   const candidates = palette
-    .filter((p) => ACTIVE_STATUSES.includes(p.status))
+    .filter((p) => p.status === 'planted')
     .map((p) => {
-      const text = p.plant.maintenance_notes
+      const text = p.plant.seasonal_care?.[stage]
       if (!text) return null
       return {
         tip: {
@@ -419,7 +420,7 @@ function buildGuidanceTips(palette: PalettePlant[], today: Date): CareTip[] {
  * Up to 5 Care Tips for the dashboard card, ranked. Event-relative tips
  * (Tier 3) come first — they are the most time-sensitive — then guidance.
  * Falls back to STATIC_SEASONAL_TIPS only when the garden yields nothing —
- * no events and no usable maintenance notes.
+ * no events and no current-stage seasonal_care lines.
  */
 export function getCareTips(
   palette: PalettePlant[],
@@ -447,8 +448,9 @@ export interface GroupedCareTips {
 /**
  * The full, uncapped Care Tips list grouped into Now / This week / Good to
  * know for the drawer. Actionable event tips split by urgency (their
- * timeframe), guidance falls under Good to know. When the garden yields
- * nothing, the generic seasonal tips stand in as Good to know.
+ * timeframe); Good to know is the standing guidance — each planted plant's
+ * current-stage seasonal_care line, then the garden-level static seasonal
+ * tips (Care Tips v2 § drawer mapping after the Tier 1 swap).
  */
 export function getGroupedCareTips(
   palette: PalettePlant[],
@@ -457,14 +459,9 @@ export function getGroupedCareTips(
   const eventTips = getEventTips(palette, events, { today, peakHeat })
   const guidance = buildGuidanceTips(palette, today)
 
-  const goodToKnow =
-    eventTips.length === 0 && guidance.length === 0
-      ? STATIC_SEASONAL_TIPS[getCurrentSeason(today)]
-      : guidance
-
   return {
     now: eventTips.filter((t) => t.timeframe === 'this week'),
     thisWeek: eventTips.filter((t) => t.timeframe !== 'this week'),
-    goodToKnow,
+    goodToKnow: [...guidance, ...STATIC_SEASONAL_TIPS[getCurrentSeason(today)]],
   }
 }
