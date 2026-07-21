@@ -17,8 +17,8 @@ export interface MediaCardProps {
   bodyClassName?: string
   footer?: React.ReactNode
   border?: 'solid' | 'dashed'
-  /** Card surface tone. 'sunken' recedes toward the page background — use for lower-emphasis/draft cards. */
-  surface?: 'card' | 'sunken'
+  /** Card surface tone. 'inset' recedes toward the page background — use for lower-emphasis/draft cards nested inside a card. */
+  surface?: 'card' | 'inset'
   as?: 'article' | 'button'
   onClick?: () => void
   className?: string
@@ -28,7 +28,7 @@ export interface MediaCardProps {
 
 const surfaceStyles: Record<NonNullable<MediaCardProps['surface']>, string> = {
   card: 'bg-surface-card',
-  sunken: 'bg-surface-sunken',
+  inset: 'bg-surface-inset',
 }
 
 export function MediaCard({

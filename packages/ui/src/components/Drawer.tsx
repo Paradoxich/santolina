@@ -75,9 +75,9 @@ export function Drawer({
     <Panel
       aria-label={label}
       {...panelProps}
-      className="fixed inset-0 z-20 flex w-full flex-col overflow-hidden bg-surface-card lg:inset-x-auto lg:top-2 lg:bottom-2 lg:right-0 lg:w-[440px] lg:rounded-l-lg lg:border-l lg:border-y lg:border-card"
+      className="fixed inset-0 z-20 flex w-full flex-col overflow-hidden bg-surface-drawer lg:inset-x-auto lg:top-2 lg:bottom-2 lg:right-0 lg:w-[440px] lg:rounded-l-lg lg:border-l lg:border-y lg:border-card-translucent"
     >
-      <div className="flex w-full shrink-0 items-center justify-between border-b border-card p-card-padding">
+      <div className="flex w-full shrink-0 items-center justify-between border-b border-card-translucent p-card-padding">
         <button
           type="button"
           onClick={onClose}

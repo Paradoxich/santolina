@@ -44,9 +44,9 @@
    * under 4.5:1 (3.9 on card, 3.6 on page) and the sage-600 icon step
    * under 3:1 (2.76) until the semantic remap addresses it. */
   --color-sage-50: #f4f9f5;
-  --color-sage-100: #edf2ee; /* shipped — surface-card */
-  --color-sage-200: #e1ebe3; /* shipped — surface-page */
-  --color-sage-300: #d1e0d3; /* shipped — hover tints, divider */
+  --color-sage-100: #edf2ee; /* shipped — sidebar nav hover/selected */
+  --color-sage-200: #e1ebe3; /* shipped — surface-card, surface-drawer, divider */
+  --color-sage-300: #d1e0d3; /* shipped — surface-page, hover tints */
   --color-sage-400: #c4d0c6;
   --color-sage-500: #adb8ae; /* ~was gray-100 — disabled/faint only */
   --color-sage-600: #8b948c; /* icon/large-text de-emphasis — now 2.76:1, below 3:1 */
@@ -216,9 +216,12 @@
 
   /* Surface roles — elevation/function axis */
   --color-surface-page: var(--color-sage-300);
-  --color-surface-card: var(--color-sage-100);
+  --color-surface-card: var(--color-sage-200);
+  --color-surface-drawer: var(--color-sage-200);
   --color-surface-subtle: var(--color-sage-50);
-  --color-surface-sunken: var(--color-sage-300); /* page color inside a card */
+  --color-surface-inset: var(
+    --color-sage-300
+  ); /* a quieter surface nested inside a card or panel — never placed directly on the page, where it would be invisible */
   --color-surface-inverse: var(--color-fern-950);
   /* Translucent compositions — light-mode assumption baked in; these need
    * real values (not re-aliases) in any dark theme. */
@@ -228,11 +231,14 @@
     255 255 255 / 0.7
   ); /* resting translucent small controls (Button/IconButton control variant) */
   --color-surface-hover: rgb(255 255 255 / 0.7);
+  --color-surface-row-hover: var(
+    --color-sage-300
+  ); /* hover feedback for rows in menus and dropdowns — lands on translucent white, not a card */
   --color-surface-active: rgb(153 189 157 / 0.5); /* fern-300 @ 50% */
-  --color-surface-card-translucent: rgb(237 242 238 / 0.7); /* sage-100 @ 70% */
-  --color-surface-nav-active: rgb(
-    237 242 238 / 0.5
-  ); /* sage-100 @ 50% — quieter than card-translucent, for sidebar nav active/hover */
+  --color-surface-card-translucent: rgb(225 235 227 / 0.7); /* sage-200 @ 70% */
+  --color-surface-nav-active: var(
+    --color-sage-100
+  ); /* sidebar nav item hover/selected */
   --color-scrim: rgb(0 0 0 / 0.5); /* modal/drawer backdrop */
 
   /* Tone kits — surface / icon / text / border per tone.

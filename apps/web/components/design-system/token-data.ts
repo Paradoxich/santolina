@@ -212,13 +212,15 @@ export const allTokens: TokenTier[] = [
         entries: c(
           '--color-surface-page',
           '--color-surface-card',
+          '--color-surface-drawer',
           '--color-surface-subtle',
-          '--color-surface-sunken',
+          '--color-surface-inset',
           '--color-surface-inverse',
           '--color-surface-field',
           '--color-surface-overlay',
           '--color-surface-control',
           '--color-surface-hover',
+          '--color-surface-row-hover',
           '--color-surface-active',
           '--color-surface-card-translucent',
           '--color-scrim'

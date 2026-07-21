@@ -20,7 +20,7 @@ export function PlannedPlantTile({
 }: PlannedPlantTileProps) {
   return (
     <MediaCard
-      surface="sunken"
+      surface="inset"
       image={
         <PlantImage
           src={plant.imageUrl}

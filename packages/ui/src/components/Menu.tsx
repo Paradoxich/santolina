@@ -159,7 +159,7 @@ export function Menu({
                 'disabled:cursor-not-allowed disabled:opacity-50',
                 item.tone === 'critical'
                   ? 'text-critical hover:bg-surface-critical'
-                  : 'text-primary hover:bg-surface-sunken'
+                  : 'text-primary hover:bg-surface-row-hover'
               )}
             >
               {item.icon}

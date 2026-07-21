@@ -19,7 +19,7 @@ export interface StatCardProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 const toneStyles: Record<NonNullable<StatCardProps['tone']>, string> = {
-  neutral: 'bg-surface-sunken',
+  neutral: 'bg-surface-inset',
   soft: 'bg-surface-card',
   warning: 'bg-surface-warning',
   positive: 'bg-surface-positive',
