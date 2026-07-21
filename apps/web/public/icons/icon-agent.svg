@@ -1,24 +1,8 @@
 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
 <g id="Icon">
 <g id="Group">
-<path id="Vector" d="M9.33331 12.6667C11.8473 12.6667 13.1046 12.6667 13.8853 11.8853C14.666 11.104 14.6666 9.84733 14.6666 7.33333C14.6666 4.81933 14.6666 3.562 13.8853 2.78133C13.104 2.00067 11.8473 2 9.33331 2H6.66665C4.15265 2 2.89531 2 2.11465 2.78133C1.33398 3.56267 1.33331 4.81933 1.33331 7.33333C1.33331 9.84733 1.33331 11.1047 2.11465 11.8853C2.54998 12.3213 3.13331 12.514 3.99998 12.5987" stroke="#111111" stroke-width="1.33333" stroke-linecap="round" stroke-linejoin="round"/>
-<path id="Vector_2" d="M9.33331 12.6665C8.50931 12.6665 7.60131 12.9998 6.77264 13.4298C5.44064 14.1212 4.77464 14.4672 4.44664 14.2465C4.11864 14.0258 4.18064 13.3432 4.30531 11.9772L4.33331 11.6665" stroke="#111111" stroke-width="1.33333" stroke-linecap="round"/>
+<path id="Vector" d="M9.33331 12.6667C11.8473 12.6667 13.1046 12.6667 13.8853 11.8853C14.666 11.104 14.6666 9.84733 14.6666 7.33333C14.6666 4.81933 14.6666 3.562 13.8853 2.78133C13.104 2.00067 11.8473 2 9.33331 2H6.66665C4.15265 2 2.89531 2 2.11465 2.78133C1.33398 3.56267 1.33331 4.81933 1.33331 7.33333C1.33331 9.84733 1.33331 11.1047 2.11465 11.8853C2.54998 12.3213 3.13331 12.514 3.99998 12.5987" stroke="#111411" stroke-width="1.33333" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="Vector_2" d="M9.33331 12.6665C8.50931 12.6665 7.60131 12.9998 6.77264 13.4298C5.44064 14.1212 4.77464 14.4672 4.44664 14.2465C4.11864 14.0258 4.18064 13.3432 4.30531 11.9772L4.33331 11.6665" stroke="#111411" stroke-width="1.33333" stroke-linecap="round"/>
 </g>
 </g>
-<defs>
-<filter id="filter0_d_456_1079" x="-44" y="-40" width="256" height="104" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-<feFlood flood-opacity="0" result="BackgroundImageFix"/>
-<feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
-<feOffset dy="4"/>
-<feGaussianBlur stdDeviation="12"/>
-<feComposite in2="hardAlpha" operator="out"/>
-<feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.05 0"/>
-<feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_456_1079"/>
-<feBlend mode="normal" in="BackgroundImageFix" in2="effect1_dropShadow_456_1079" result="BackgroundImageFix"/>
-<feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
-</filter>
-<clipPath id="clip0_456_1079">
-<path d="M-28 -84.3037C-28 -90.9311 -22.6274 -96.3037 -16 -96.3037H184C190.627 -96.3037 196 -90.9311 196 -84.3037V831.696C196 838.324 190.627 843.696 184 843.696H-16C-22.6274 843.696 -28 838.324 -28 831.696V-84.3037Z" fill="white"/>
-</clipPath>
-</defs>
 </svg>
