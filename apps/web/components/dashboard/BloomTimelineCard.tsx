@@ -28,7 +28,7 @@ export function BloomTimelineCard({
       >
         <CardIllustration name="bloom" />
         <p className="mt-auto max-w-[55%] text-body-small text-muted">
-          Once you add plants, you&apos;ll see their bloom season here.
+          Nothing blooming yet.
         </p>
       </Panel>
     )

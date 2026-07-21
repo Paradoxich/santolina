@@ -74,7 +74,7 @@ export function WeatherCard({ location, country, days }: WeatherCardProps) {
           <p className="text-body text-secondary">
             {location
               ? 'Weather is unavailable right now.'
-              : 'Add your location to see weather for your garden.'}
+              : 'Add a location to see your forecast.'}
           </p>
         </div>
       )}

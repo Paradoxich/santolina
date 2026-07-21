@@ -64,8 +64,7 @@ export function CareTipsCard({
       >
         {showEmptyHint && (
           <p className="mb-inline-gap text-body-small text-muted">
-            Add plants to your garden for tips tailored to what you&apos;re
-            growing.
+            Tailored tips show up when you have plants growing.
           </p>
         )}
         {/* flex-1 (basis 0) + min-h-0 + overflow-y-auto: the list fills whatever

@@ -112,6 +112,16 @@ export function GardenClient({ palette, detail }: GardenClientProps) {
 
   const activeTabLabel = tab === 'growing' ? 'Growing' : 'Planned'
 
+  const plantCount = (n: number) => `${n} ${n === 1 ? 'plant' : 'plants'}`
+  const tabSubtitle =
+    tab === 'growing'
+      ? growing.length === 0
+        ? 'Nothing growing in your garden yet.'
+        : `You are growing ${plantCount(growing.length)} in your garden.`
+      : planned.length === 0
+        ? 'Nothing planned yet.'
+        : `You planned ${plantCount(planned.length)}.`
+
   const handleRemove = async (paletteId: string) => {
     const row = palette.find((p) => p.id === paletteId)
     setActionError(null)
@@ -196,11 +206,7 @@ export function GardenClient({ palette, detail }: GardenClientProps) {
       <h1 className="mt-8 text-title font-semibold text-primary md:mt-12">
         {activeTabLabel}
       </h1>
-      <p className="mt-3 text-body text-secondary">
-        {tab === 'growing'
-          ? 'Plants currently in your garden. Sorted by status.'
-          : "Plants you want to add. Move into Growing once they're in the ground."}
-      </p>
+      <p className="mt-3 text-body text-secondary">{tabSubtitle}</p>
 
       {actionError && (
         <p role="alert" className="mt-4 text-label text-critical">
@@ -263,7 +269,7 @@ export function GardenClient({ palette, detail }: GardenClientProps) {
             <EmptyState
               className="mt-11"
               illustration={<EmptyStateIllustration name="growing" />}
-              message="Find the plants you grow and add them here."
+              message="Add the plants you already grow here."
               ctaLabel="Explore plants"
               ctaHref="/explore"
               linkComponent={Link}
@@ -273,7 +279,7 @@ export function GardenClient({ palette, detail }: GardenClientProps) {
           <EmptyState
             className="mt-11"
             illustration={<EmptyStateIllustration name="planned" />}
-            message="Find the plants you'd like to grow and plan them here."
+            message="Add the plants you'd like to grow here."
             ctaLabel="Explore plants"
             ctaHref="/explore"
             linkComponent={Link}
