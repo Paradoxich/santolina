@@ -182,7 +182,7 @@ export function GardenClient({ palette, detail }: GardenClientProps) {
 
   return (
     <div className="pb-16">
-      <header className="border-b border-sage-200 pt-8">
+      <header className="border-b border-sage-200 pt-8 md:ml-[calc(-1*var(--sidebar-offset))] md:mr-[-3rem] md:pl-[var(--sidebar-offset)] md:pr-12">
         <Tabs
           items={[
             { value: 'growing', label: 'Growing', count: growing.length },
