@@ -162,6 +162,10 @@ const ACTION_VERBS = new Set([
   'mark',
   'top-dress',
   'shape',
+  // Added after the round-7 herb run: annual clear-out and overwintering
+  // tender plants in pots are legitimate garden actions.
+  'pull',
+  'bring',
 ])
 
 // ---------------------------------------------------------------------------
