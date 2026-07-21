@@ -21,7 +21,7 @@ export function MyPlantsCard({ plants, totalInGarden }: MyPlantsCardProps) {
             mobile the hint sits under the title (clear of the art) and only
             drops to the bottom-left at desktop, matching the comp. */}
         <p className="max-w-48 text-body-small text-muted lg:mt-auto">
-          Find plants you&apos;d like to grow. They&apos;ll show up here.
+          Nothing growing yet.
         </p>
       </Panel>
     )

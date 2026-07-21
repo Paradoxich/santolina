@@ -69,7 +69,7 @@ export function DiaryClient({
         <EmptyState
           className="mt-row-gap"
           illustration={<EmptyStateIllustration name="diary" />}
-          message="Add plants to your garden to start tracking their diaries."
+          message="Keep diaries for plants you are growing."
           ctaLabel="Explore plants"
           ctaHref="/explore"
           linkComponent={Link}
