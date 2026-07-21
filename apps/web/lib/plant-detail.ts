@@ -17,6 +17,26 @@ export interface PlantDetail {
   garden: Garden
 }
 
+/**
+ * Resolve a plant's hero image, preferring the editorial pick.
+ *
+ * image_url is Trefle's own choice — the first image of its highest-priority
+ * category, which is not a curation decision and often lands on a herbarium
+ * sheet or a potted nursery shot. image_url_curated is what the vision pass
+ * chose (scripts/pick-plant-images.ts), so it wins wherever it exists. Falling
+ * back through image_url to image_urls[0] keeps every plant rendering exactly
+ * as it did before the pass ran, so this is safe to ship ahead of the data.
+ */
+export function heroImageUrl(plant: {
+  image_url_curated?: string | null
+  image_url?: string | null
+  image_urls?: string[] | null
+}): string {
+  return (
+    plant.image_url_curated ?? plant.image_url ?? plant.image_urls?.[0] ?? ''
+  )
+}
+
 /** All catalog plants, shaped for the explore grid/list and its filter row. */
 export async function getExplorePlants(): Promise<CatalogPlant[]> {
   const supabase = getSupabase()
@@ -26,6 +46,7 @@ export async function getExplorePlants(): Promise<CatalogPlant[]> {
     scientific_name: string | null
     description: string | null
     image_url: string | null
+    image_url_curated: string | null
     image_urls: string[] | null
     common_name_aliases: string[] | null
     plant_type: string | null
@@ -38,7 +59,7 @@ export async function getExplorePlants(): Promise<CatalogPlant[]> {
     supabase
       .from('plants')
       .select(
-        'id, common_name, scientific_name, description, image_url, image_urls, common_name_aliases, plant_type, style_tags, sun_thrives, bloom_months, bloom_color, native_region'
+        'id, common_name, scientific_name, description, image_url, image_url_curated, image_urls, common_name_aliases, plant_type, style_tags, sun_thrives, bloom_months, bloom_color, native_region'
       )
       .order('common_name')
       // common_name isn't unique — the id tiebreak keeps paging stable
@@ -50,7 +71,7 @@ export async function getExplorePlants(): Promise<CatalogPlant[]> {
     id: p.id,
     commonName: p.common_name,
     botanicalName: p.scientific_name ?? '',
-    imageUrl: p.image_url ?? p.image_urls?.[0] ?? '',
+    imageUrl: heroImageUrl(p),
     description: p.description ?? '',
     aliases: p.common_name_aliases ?? [],
     plantType: p.plant_type ?? '',
@@ -96,12 +117,27 @@ export async function getPlantDetail(
   if (companionIds.length > 0) {
     const { data } = await supabase
       .from('plants')
-      .select('id, common_name, image_url')
+      .select('id, common_name, image_url, image_url_curated, image_urls')
       .in('id', companionIds)
-    companions = (data ?? []).filter((c): c is CompanionPlant =>
-      Boolean(c.image_url)
-    )
+    // Resolve to the editorial pick before the has-an-image filter, so a plant
+    // whose only usable photo is the curated one still shows as a companion.
+    companions = (data ?? [])
+      .map((c) => ({
+        id: c.id,
+        common_name: c.common_name,
+        image_url: heroImageUrl(c),
+      }))
+      .filter((c) => Boolean(c.image_url))
   }
 
-  return { plant: plantRes.data as DbPlant, companions, garden }
+  // Resolve the hero once, here, rather than asking every drawer section to
+  // remember the curated-then-Trefle precedence. Consumers read plant.image_url
+  // and get the editorial pick; image_url_curated stays on the row for anyone
+  // who needs to know whether a pick exists.
+  const plant = plantRes.data as DbPlant
+  return {
+    plant: { ...plant, image_url: heroImageUrl(plant) },
+    companions,
+    garden,
+  }
 }

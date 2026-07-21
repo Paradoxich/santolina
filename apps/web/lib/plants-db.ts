@@ -68,6 +68,15 @@ export interface DbPlant {
   sun_tolerates: string[] | null
   image_url: string | null
   image_urls: string[] | null
+  // Editorial image layer — written only by the vision pass
+  // (scripts/pick-plant-images.ts), never by upsert_trefle_plant. Read paths go
+  // through heroImageUrl() in lib/plant-detail.ts, which prefers the curated
+  // pick over Trefle's own.
+  image_candidates: { url: string; category: string }[] | null
+  image_url_curated: string | null
+  image_pick_confidence: 'high' | 'medium' | 'low' | null
+  image_pick_reason: string | null
+  image_checked_at: string | null
   is_curated: boolean
   // AI-drafted curation fields — never overwrite with Trefle data
   plant_type: PlantType | null
