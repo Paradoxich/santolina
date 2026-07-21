@@ -225,14 +225,14 @@ export function ExploreClient({
               <p className="mt-4 text-body text-secondary md:mt-12">
                 {browsing
                   ? 'Recommended plants'
-                  : `${visible.length} ${
+                  : `Showing ${visible.length} ${
                       visible.length === 1 ? 'plant' : 'plants'
-                    } found`}
+                    }`}
               </p>
             )}
 
             {detail ? (
-              <div className="mt-4 flex flex-col gap-item-gap">
+              <div className="mt-4 flex flex-col gap-inline-gap">
                 {visible.map((plant) => (
                   <ExplorePlantListRow
                     key={plant.id}
