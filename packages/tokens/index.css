@@ -215,10 +215,10 @@
   --color-text-on-accent: var(--color-white);
 
   /* Surface roles — elevation/function axis */
-  --color-surface-page: var(--color-sage-200);
+  --color-surface-page: var(--color-sage-300);
   --color-surface-card: var(--color-sage-100);
   --color-surface-subtle: var(--color-sage-50);
-  --color-surface-sunken: var(--color-sage-200); /* page color inside a card */
+  --color-surface-sunken: var(--color-sage-300); /* page color inside a card */
   --color-surface-inverse: var(--color-fern-950);
   /* Translucent compositions — light-mode assumption baked in; these need
    * real values (not re-aliases) in any dark theme. */
@@ -312,8 +312,8 @@
     178 209 184 / 0.3
   ); /* legacy tint — still used by MobileTabBar */
   --sidebar-divider: var(
-    --color-white
-  ); /* white hairline separating the flush sidebar from content */
+    --color-sage-200
+  ); /* soft hairline separating the flush sidebar from content — was white, too harsh against surface-page (sage-300) */
   --sidebar-width: 14.5rem; /* 232px — app sidebar */
   /* main content clearance: sidebar width + 40px gutter (sidebar is flush to the viewport edge) */
   --sidebar-offset: calc(var(--sidebar-width) + var(--spacing-10));

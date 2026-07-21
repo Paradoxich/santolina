@@ -82,7 +82,7 @@ export function Swatch({
       onClick={handleCopy}
       aria-label={value ? `Copy ${name}, ${value}` : `Copy ${name}`}
       className={cn(
-        'group relative h-20 w-full overflow-hidden rounded-sm border border-card-translucent transition-transform hover:scale-[1.04] focus-visible:scale-[1.04] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus active:scale-[0.97]',
+        'group relative h-20 w-full overflow-hidden rounded-sm shadow-[0_0_0_1px_rgba(255,255,255,0.2)] transition-transform hover:scale-[1.04] focus-visible:scale-[1.04] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus active:scale-[0.97]',
         className
       )}
     >
