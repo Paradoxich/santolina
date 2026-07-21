@@ -18,29 +18,29 @@ export function ExplorePlantListRow({
       onClick={onClick}
       aria-current={selected ? 'true' : undefined}
       className={[
-        'flex w-full items-start gap-item-gap rounded-card-row border border-card p-item-gap text-left transition-colors duration-normal',
+        'flex w-full items-stretch gap-item-gap rounded-card-row border border-card p-row-gap text-left transition-colors duration-normal',
         selected ? 'bg-surface-card shadow-soft' : 'hover:bg-surface-subtle',
       ].join(' ')}
     >
-      <div className="relative size-[76px] shrink-0 overflow-hidden rounded-sm">
+      <div className="relative w-[60px] shrink-0 overflow-hidden rounded-sm">
         <PlantImage
           src={plant.imageUrl}
           alt={plant.commonName}
           fill
-          sizes="76px"
+          sizes="60px"
           className="object-cover"
         />
       </div>
-      <div className="flex min-w-0 flex-1 flex-col gap-inline-gap">
-        <div className="flex flex-col gap-tight-gap">
-          <h3 className="text-heading font-semibold text-primary">
+      <div className="flex min-w-0 flex-1 flex-col gap-tight-gap">
+        <div className="flex items-baseline gap-item-gap">
+          <h3 className="min-w-0 flex-1 truncate text-heading font-semibold text-primary">
             {plant.commonName}
           </h3>
-          <p className="text-body-small italic leading-compact tracking-compact text-muted">
+          <p className="shrink-0 text-body-small italic leading-compact tracking-compact text-muted">
             {plant.botanicalName}
           </p>
         </div>
-        <p className="line-clamp-1 text-body-small leading-compact tracking-compact text-body-secondary">
+        <p className="line-clamp-2 text-body-small leading-compact tracking-compact text-body-secondary">
           {plant.description}
         </p>
       </div>

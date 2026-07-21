@@ -243,7 +243,7 @@ export function ExploreClient({
                 ))}
               </div>
             ) : (
-              <div className="mt-4 grid grid-cols-1 gap-item-gap md:grid-cols-2 xl:grid-cols-3">
+              <div className="mt-4 grid grid-cols-1 gap-item-gap md:grid-cols-2 xl:grid-cols-4">
                 {visible.map((plant) => (
                   <ExplorePlantTile
                     key={plant.id}

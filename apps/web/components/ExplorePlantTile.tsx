@@ -17,15 +17,13 @@ export function ExplorePlantTile({ plant, onClick }: ExplorePlantTileProps) {
           src={plant.imageUrl}
           alt={plant.commonName}
           fill
-          sizes="(max-width: 1280px) 50vw, 360px"
+          sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 25vw"
           className="object-cover"
         />
       }
-      imageHeight={200}
+      imageHeight={250}
       title={plant.commonName}
       subtitle={plant.botanicalName}
-      body={plant.description}
-      bodyClassName="line-clamp-1"
     />
   )
 }
