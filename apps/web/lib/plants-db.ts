@@ -1,6 +1,7 @@
 // SERVER-ONLY — never import this file in client components.
 import { getSupabaseAdmin } from './supabase-admin'
 import type { MappedPlant } from './trefle'
+import type { ImageAttribution } from './image-attribution'
 
 // ---------------------------------------------------------------------------
 // DB row type — mirrors the Supabase plants table
@@ -74,6 +75,7 @@ export interface DbPlant {
   // pick over Trefle's own.
   image_candidates: { url: string; category: string }[] | null
   image_url_curated: string | null
+  image_attribution: ImageAttribution | null
   image_pick_confidence: 'high' | 'medium' | 'low' | null
   image_pick_reason: string | null
   image_checked_at: string | null
