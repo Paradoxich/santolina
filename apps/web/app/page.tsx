@@ -66,10 +66,13 @@ export default function LandingPage() {
             </div>
             <Link
               href="/overview"
-              className={`inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-md border border-card bg-surface-subtle px-4 text-body text-primary transition-colors duration-normal hover:bg-white ${focusRing}`}
+              className={`group inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-md border border-card bg-surface-subtle px-5 text-base font-medium text-primary transition-colors duration-normal hover:bg-white ${focusRing}`}
             >
               Live preview
-              <Icon src={icons.arrowRight} />
+              <Icon
+                src={icons.arrowRight}
+                className="transition-transform duration-normal ease-out group-hover:translate-x-1 motion-reduce:transition-none"
+              />
             </Link>
           </div>
         </div>
