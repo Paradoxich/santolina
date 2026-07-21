@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { DitheredImage } from '@paradoxui/ui'
+import { DitheredImage, Icon } from '@paradoxui/ui'
+import { icons } from '@/lib/icons'
 
 export const metadata: Metadata = {
   title: 'Santolina',
@@ -65,9 +66,10 @@ export default function LandingPage() {
           </div>
           <Link
             href="/overview"
-            className={`inline-flex h-14 shrink-0 items-center justify-center rounded-md border border-card bg-surface-subtle px-4 text-body text-primary transition-colors duration-normal hover:bg-white ${focusRing}`}
+            className={`inline-flex h-14 shrink-0 items-center justify-center gap-2 rounded-md border border-card bg-surface-subtle px-4 text-body text-primary transition-colors duration-normal hover:bg-white ${focusRing}`}
           >
-            Check out live preview
+            Live preview
+            <Icon src={icons.arrowRight} />
           </Link>
         </div>
       </div>
