@@ -30,21 +30,22 @@ export default function LandingPage() {
           revealRadius={0}
         />
         <div className="absolute inset-0 bg-[image:var(--landing-scrim)]" />
-        <div className="relative flex w-full flex-col items-start gap-8 p-6 sm:p-10 lg:flex-row lg:items-end lg:gap-5 lg:px-14 lg:py-12">
-          <div className="flex min-w-0 flex-1 flex-col gap-8">
-            <div className="flex flex-col gap-3">
-              <h1 className="text-4xl font-semibold leading-none tracking-heading text-white md:text-display">
-                Santolina
-              </h1>
-              <p className="max-w-3xl text-lg leading-normal text-sage-300">
-                An AI-native garden planning platform that combines
-                horticultural knowledge, structured plant data, and intelligent
-                recommendations to help people design and manage beautiful
-                outdoor spaces. Built as a monorepo alongside Paradox UI, an
-                open source design system extracted from the product as it's
-                built.
-              </p>
-            </div>
+        <div className="relative flex w-full flex-col gap-8 p-6 sm:p-10 lg:px-14 lg:py-12">
+          <div className="flex min-w-0 flex-col gap-3">
+            <h1 className="text-4xl font-semibold leading-none tracking-heading text-white md:text-display">
+              Santolina
+            </h1>
+            <p className="max-w-3xl text-lg leading-normal text-sage-300">
+              An AI-native garden planning platform that combines horticultural
+              knowledge, structured plant data, and intelligent recommendations
+              to help people design and manage beautiful outdoor spaces. Built
+              as a monorepo alongside Paradox UI, an open source design system
+              extracted from the product as it's built.
+            </p>
+          </div>
+          {/* Links and CTA share one row so their centres line up; they stack
+              below the sm breakpoint, where the button goes full width. */}
+          <div className="flex flex-col items-stretch gap-6 sm:flex-row sm:items-center sm:justify-between sm:gap-5">
             <div className="flex gap-5 text-lg leading-normal">
               <a
                 href="https://paradoxich.substack.com"
@@ -63,14 +64,14 @@ export default function LandingPage() {
                 GitHub
               </a>
             </div>
+            <Link
+              href="/overview"
+              className={`inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-md border border-card bg-surface-subtle px-4 text-body text-primary transition-colors duration-normal hover:bg-white ${focusRing}`}
+            >
+              Live preview
+              <Icon src={icons.arrowRight} />
+            </Link>
           </div>
-          <Link
-            href="/overview"
-            className={`inline-flex h-14 shrink-0 items-center justify-center gap-2 rounded-md border border-card bg-surface-subtle px-4 text-body text-primary transition-colors duration-normal hover:bg-white ${focusRing}`}
-          >
-            Live preview
-            <Icon src={icons.arrowRight} />
-          </Link>
         </div>
       </div>
     </main>
