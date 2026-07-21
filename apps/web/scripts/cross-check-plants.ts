@@ -29,7 +29,7 @@ import { join } from 'node:path'
 import { getSupabaseAdmin } from '../lib/supabase-admin'
 import { getAnthropicClient, CURATION_MODEL } from '../lib/anthropic-client'
 import type { DbPlant, PlantType } from '../lib/plants-db'
-import { fetchAllRows } from './paginate'
+import { fetchAllRows } from '../lib/paginate'
 
 // ---------------------------------------------------------------------------
 // Config

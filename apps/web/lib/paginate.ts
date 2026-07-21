@@ -1,5 +1,5 @@
 /**
- * Paginated fetch for the data scripts.
+ * Paginated fetch for full-table Supabase reads (data scripts and app code).
  *
  * A bare Supabase `.select()` silently caps at 1000 rows. plant_combinations
  * passed that in round 6, so any script that read the whole table in one call
