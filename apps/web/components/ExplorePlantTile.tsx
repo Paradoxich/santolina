@@ -21,11 +21,11 @@ export function ExplorePlantTile({ plant, onClick }: ExplorePlantTileProps) {
           className="object-cover"
         />
       }
-      imageHeight={162}
+      imageHeight={200}
       title={plant.commonName}
       subtitle={plant.botanicalName}
       body={plant.description}
-      bodyClassName="line-clamp-2"
+      bodyClassName="line-clamp-1"
     />
   )
 }

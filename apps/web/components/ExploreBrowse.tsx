@@ -209,24 +209,24 @@ export function ExploreBrowse({
                 onClick={() => onSelectColor(bucket.value)}
                 className="group relative flex aspect-[174/153] flex-col justify-end overflow-hidden rounded-md p-inline-gap text-left"
               >
-                {/* Stack, bottom up: greyscale photo, bucket colour at 50%,
+                {/* Stack, bottom up: full-colour photo, bucket colour at 50%,
                     dark scrim for the label.
 
                     Normal blend, not multiply. Multiply can only darken, so
-                    the two pale buckets (white #f7f5ee, cream #f0e3b8) left
-                    the greyscale photo untouched and rendered as identical
-                    grey tiles. 50% is the point where the photograph still
-                    carries the composition and every bucket still reads as
-                    itself; higher flattens the tiles into swatches. Greyscale
-                    first so the tint lands the same way whatever plant photo
-                    a bucket happens to borrow. */}
+                    the two pale buckets (white #f7f5ee, cream #f0e3b8) would
+                    leave the photo untouched. 50% is the point where the
+                    photograph still carries the composition and every bucket
+                    still reads as itself; higher flattens the tiles into
+                    swatches. The photo keeps its natural colour: each hero is
+                    hand-picked to already sit in its bucket's hue, so the
+                    tint reinforces rather than fights it. */}
                 <DitheredImage
                   src={sameOrigin(heroSrc)}
                   levels={14}
                   cell={2}
                   revealRadius={0}
                   motion={false}
-                  className="absolute inset-0 h-full w-full grayscale transition-transform duration-slow group-hover:scale-[1.04]"
+                  className="absolute inset-0 h-full w-full transition-transform duration-slow group-hover:scale-[1.04]"
                 />
                 <span
                   aria-hidden="true"
@@ -246,7 +246,7 @@ export function ExploreBrowse({
       {/* ---------- Conditions ---------- */}
       <section className="flex flex-col gap-section-gap lg:flex-row lg:items-center lg:gap-card-padding">
         <div className="flex flex-col gap-tight-gap lg:w-[271px] lg:shrink-0">
-          <h2 className="text-title font-semibold tracking-title text-primary">
+          <h2 className="text-title font-semibold leading-none tracking-title text-primary">
             Different conditions
           </h2>
           <p className="text-body leading-normal text-secondary">
