@@ -22,14 +22,31 @@ import { cn } from '../utils/cn'
  * when WebGL or JavaScript is unavailable, and while the texture loads) with
  * the shader canvas painted over it. Size and style it via `className`.
  *
+ * With `videoSrc` the texture is live footage instead of a still: every frame
+ * of the loop re-uploads the current video frame, the Ken Burns orbit turns
+ * off (the footage brings its own motion; the dither grid stays screen-locked
+ * on top of it), and `src` serves as the poster — what reduced-motion users,
+ * `motion={false}`, autoplay refusals, and failed loads see, dithered, static.
+ *
  * The Bayer matrix rides in as an 8x8 texture (unit 1) rather than a GLSL
  * array: large local arrays with computed indices are a portability trap in
  * GLSL ES 1.00 and silently misbehave on some drivers.
  */
 
 export interface DitheredImageProps {
-  /** Image URL. For a WebGL texture from another origin it must be CORS-enabled. */
+  /**
+   * Image URL. For a WebGL texture from another origin it must be CORS-enabled.
+   * When `videoSrc` is set this is the poster: the fallback element, the
+   * static frame for reduced-motion users, and what remains if the video
+   * fails to load or autoplay.
+   */
   src: string
+  /**
+   * Video URL (same CORS caveat). Plays muted, looping, inline, feeding the
+   * shader a live frame each tick. Disables the Ken Burns orbit — the footage
+   * supplies the motion, and the dither stays screen-locked over it.
+   */
+  videoSrc?: string
   /** Alt text for the fallback image. Defaults to '' (decorative). */
   alt?: string
   /** Classes for the root box (sizing, radius, background). */
@@ -62,8 +79,10 @@ export interface DitheredImageProps {
   /**
    * Whether the image drifts (the Ken Burns orbit). `false` keeps the dither
    * and renders one static frame, which also stops the animation loop — worth
-   * reaching for when several instances share a page. Users who prefer reduced
-   * motion always get the static frame regardless of this setting.
+   * reaching for when several instances share a page. With `videoSrc` it
+   * gates playback instead: `false` leaves the video untouched and shows the
+   * dithered poster. Users who prefer reduced motion always get the static
+   * frame regardless of this setting.
    */
   motion?: boolean
 }
@@ -108,6 +127,7 @@ uniform float u_soft;           // edge feather 0 (hard) .. 1 (very soft)
 uniform float u_mode;           // 0 reveal, 1 organic, 2 magnify, 3 coarsen, 4 spotlight
 uniform vec2 u_velocity;        // lens velocity, device px/frame (for the smear)
 uniform float u_weight;         // 0 weightless .. 1 heavy/viscous
+uniform float u_orbit;          // 1 Ken Burns orbit, 0 plain cover fit (video)
 
 void main() {
   // Velocity-stretched distance: while the lens moves it elongates along the
@@ -152,10 +172,12 @@ void main() {
   vec2 cover = (uv - 0.5) * scale + 0.5;
 
   // Ken Burns orbit: breathing zoom + quarter-period-offset x/y drift, so the
-  // loop closes on itself with no cut. Slack comes from the >1 zoom.
+  // loop closes on itself with no cut. Slack comes from the >1 zoom. Video
+  // sources set u_orbit to 0 for a plain cover fit — the footage moves on
+  // its own, and stacking a drift on top would read as swimming.
   float t = u_time * 0.157; // ~40s period
-  float zoom = 1.2 + 0.1 * sin(t);
-  vec2 drift = vec2(0.11 * sin(t), 0.06 * sin(t - 1.5708));
+  float zoom = mix(1.0, 1.2 + 0.1 * sin(t), u_orbit);
+  vec2 drift = vec2(0.11 * sin(t), 0.06 * sin(t - 1.5708)) * u_orbit;
   vec2 img = (cover - 0.5) / zoom + 0.5 + drift;
 
   vec3 c = texture2D(u_image, img).rgb;
@@ -230,6 +252,7 @@ function compile(gl: WebGLRenderingContext, type: number, src: string) {
 
 export function DitheredImage({
   src,
+  videoSrc,
   alt = '',
   className,
   levels = 6,
@@ -241,6 +264,7 @@ export function DitheredImage({
   motion = true,
 }: DitheredImageProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const videoRef = useRef<HTMLVideoElement>(null)
 
   // Read tuning through refs so live changes (e.g. a controls panel) apply on
   // the next animation frame without tearing down the GL context.
@@ -311,9 +335,13 @@ export function DitheredImage({
       mode: gl.getUniformLocation(prog, 'u_mode'),
       velocity: gl.getUniformLocation(prog, 'u_velocity'),
       weight: gl.getUniformLocation(prog, 'u_weight'),
+      orbit: gl.getUniformLocation(prog, 'u_orbit'),
     }
     gl.uniform1i(u.image, 0)
     gl.uniform1i(u.bayer, 1)
+    // The orbit exists to animate a still; footage moves on its own. Off for
+    // video even when the video itself ends up not playing (poster stays put).
+    gl.uniform1f(u.orbit, videoSrc ? 0 : 1)
 
     // Unit 1: the 8x8 Bayer matrix as a LUMINANCE texture, tiled with REPEAT.
     const bayerTex = gl.createTexture()
@@ -393,9 +421,25 @@ export function DitheredImage({
       '(prefers-reduced-motion: reduce)'
     ).matches
     // A caller opting out of motion takes the same path as a reader who has
-    // asked for less of it: one static frame, no animation loop.
+    // asked for less of it: one static frame, no animation loop. For video
+    // that means the footage never plays — the dithered poster stands in.
     const still = reduced || !motion
     const start = performance.now()
+
+    // Live footage. The element carries `autoplay` and lives in the DOM below
+    // the canvas: muted autoplay is only reliable declaratively, since an
+    // imperative play() on load has no user activation behind it, and a
+    // detached element is "video-only background media" Chrome power-saves.
+    // A reader who asked for less motion gets it stopped here instead —
+    // prefers-reduced-motion can't be known at render time, only now.
+    const video: HTMLVideoElement | null = still ? null : videoRef.current
+    if (still && videoRef.current) {
+      videoRef.current.pause()
+      videoRef.current.currentTime = 0
+    }
+    // Belt and braces: some engines honour the attribute, others the call.
+    // Either way a refusal is survivable — the dithered poster stands in.
+    video?.play().catch(() => {})
 
     // Cursor lens. Targets are set by pointer events; the smoothed values trail
     // them so the lens glides (and fades) instead of snapping. Coordinates are
@@ -428,6 +472,22 @@ export function DitheredImage({
     const render = (now: number) => {
       resize()
       if (canvas.width === 0 || canvas.height === 0) return
+      // Video frames overwrite the poster once actual frame data exists.
+      if (video && video.readyState >= video.HAVE_CURRENT_DATA) {
+        imgW = video.videoWidth
+        imgH = video.videoHeight
+        gl.activeTexture(gl.TEXTURE0)
+        gl.bindTexture(gl.TEXTURE_2D, tex)
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false)
+        gl.texImage2D(
+          gl.TEXTURE_2D,
+          0,
+          gl.RGBA,
+          gl.RGBA,
+          gl.UNSIGNED_BYTE,
+          video
+        )
+      }
       // Critically-damped glide toward the cursor. Heavier weight = longer
       // smoothTime, so the lens lags and eases in slowly, but never overshoots
       // or oscillates (that ringing was what read as "jumpy"). Real frame dt
@@ -492,6 +552,7 @@ export function DitheredImage({
       canvas.removeEventListener('pointerleave', onPointerLeave)
       cancelAnimationFrame(raf)
       ro.disconnect()
+      video?.pause()
       gl.deleteTexture(tex)
       gl.deleteTexture(bayerTex)
       gl.deleteBuffer(buf)
@@ -501,7 +562,8 @@ export function DitheredImage({
     }
     // `motion` is a dependency rather than a ref: it decides whether the rAF
     // loop exists at all, so it has to rebuild rather than be read per frame.
-  }, [src, motion])
+    // `videoSrc` likewise owns a per-effect resource (the video element).
+  }, [src, videoSrc, motion])
 
   // When motion is off, the rAF loop isn't running, so nudge a repaint after a
   // tuning change (harmless while animating).
@@ -516,6 +578,23 @@ export function DitheredImage({
         alt={alt}
         className="absolute inset-0 h-full w-full object-cover"
       />
+      {videoSrc && (
+        // In the DOM so Chrome keeps playing it (detached video-only media is
+        // power-save paused), under the canvas so the shader is what shows.
+        // Playback starts from the effect, never here — reduced motion and
+        // motion={false} leave it paused behind the dithered poster.
+        <video
+          ref={videoRef}
+          src={videoSrc}
+          autoPlay={motion}
+          muted
+          loop
+          playsInline
+          crossOrigin="anonymous"
+          className="absolute inset-0 h-full w-full object-cover"
+          aria-hidden
+        />
+      )}
       <canvas
         ref={canvasRef}
         className="absolute inset-0 h-full w-full"

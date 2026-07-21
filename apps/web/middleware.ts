@@ -12,6 +12,6 @@ export const config = {
   matcher: [
     // Run on everything except Next.js internals and static assets, so the
     // session cookie is refreshed wherever the user navigates.
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|mp4|webm)$).*)',
   ],
 }

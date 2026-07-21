@@ -1,99 +1,76 @@
-import styles from './page.module.css'
-import { LatestPrLine } from '@/components/LatestPrLine'
+import type { Metadata } from 'next'
+import Link from 'next/link'
+import { DitheredImage } from '@paradoxui/ui'
 
-type ItemStatus = 'done' | 'active' | 'pending'
-
-interface TrackItem {
-  label: string
-  status: ItemStatus
-  href?: string
-  tag?: string
+export const metadata: Metadata = {
+  title: 'Santolina',
+  description:
+    'An AI-native garden planning platform that combines horticultural knowledge, structured plant data, and intelligent recommendations to help people design and manage beautiful outdoor spaces.',
 }
 
-const items: TrackItem[] = [
-  { label: 'Product research & definition', status: 'done' },
-  { label: 'Information architecture', status: 'done' },
-  { label: 'Product name & domains', status: 'done' },
-  { label: 'Define architecture & stack', status: 'done' },
-  { label: 'Set up monorepo', status: 'done' },
-  { label: 'Define data sources', status: 'done' },
-  { label: 'User flows & states', status: 'done' },
-  { label: 'UI & interaction design', status: 'done' },
-  { label: 'Visual direction & branding', status: 'done' },
-  {
-    label: 'Design system',
-    status: 'active',
-    href: '/design-system',
-    tag: 'Building',
-  },
-  {
-    label: 'Build core experience',
-    status: 'active',
-    href: 'https://santolina.app/overview',
-    tag: 'Building',
-  },
-  { label: 'Set up the database', status: 'active', tag: 'Wiring' },
-  { label: 'Landing page', status: 'pending' },
-  { label: 'Alpha: test & validate', status: 'pending' },
-  { label: 'Build additional features', status: 'pending' },
-  { label: 'Public launch', status: 'pending' },
-]
+const focusRing =
+  'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white'
 
-export default function InProgressPage() {
+// On hover the rule brightens and drops 2px away from the text.
+const heroLink = `rounded-xs text-white underline decoration-sage-600 underline-offset-4 transition-all duration-normal ease-out hover:decoration-white hover:underline-offset-[6px] motion-reduce:transition-none ${focusRing}`
+
+export default function LandingPage() {
   return (
-    <div className={styles.root}>
-      <div className={styles.inner}>
-        <h1 className={styles.headline}>Santolina</h1>
-        <p className={styles.meta}>
-          Explore the <a href="/overview">live preview</a>,{' '}
-          <a href="/login">log in</a>, read the development journal on{' '}
-          <a
-            href="https://paradoxich.substack.com"
-            target="_blank"
-            rel="noopener noreferrer"
+    <main className="h-dvh bg-surface-page p-3">
+      <div className="relative flex h-full flex-col justify-end overflow-hidden rounded-card-tile bg-surface-inverse">
+        {/* The still is the poster: reduced motion, a refused autoplay, or a
+            failed load all fall back to it, dithered. */}
+        <DitheredImage
+          src="/textures/signup-hero-landscape.jpg"
+          videoSrc="/textures/landing-hero.mp4"
+          className="absolute inset-0"
+          levels={12}
+          cell={2}
+          revealRadius={0}
+        />
+        <div className="absolute inset-0 bg-[image:var(--landing-scrim)]" />
+        <div className="relative flex w-full flex-col items-start gap-8 p-6 sm:p-10 lg:flex-row lg:items-end lg:gap-5 lg:px-14 lg:py-12">
+          <div className="flex min-w-0 flex-1 flex-col gap-8">
+            <div className="flex flex-col gap-3">
+              <h1 className="text-4xl font-semibold leading-none tracking-heading text-white md:text-display">
+                Santolina
+              </h1>
+              <p className="max-w-3xl text-lg leading-normal text-sage-300">
+                An AI-native garden planning platform that combines
+                horticultural knowledge, structured plant data, and intelligent
+                recommendations to help people design and manage beautiful
+                outdoor spaces. Built as a monorepo alongside Paradox UI, an
+                open source design system extracted from the product as it's
+                built.
+              </p>
+            </div>
+            <div className="flex gap-5 text-lg leading-normal">
+              <a
+                href="https://paradoxich.substack.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={heroLink}
+              >
+                Substack
+              </a>
+              <a
+                href="https://github.com/Paradoxich/santolina"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={heroLink}
+              >
+                GitHub
+              </a>
+            </div>
+          </div>
+          <Link
+            href="/overview"
+            className={`inline-flex h-14 shrink-0 items-center justify-center rounded-md border border-card bg-surface-subtle px-4 text-body text-primary transition-colors duration-normal hover:bg-white ${focusRing}`}
           >
-            Substack
-          </a>
-          , or browse the source on{' '}
-          <a
-            href="https://github.com/Paradoxich/santolina"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            GitHub
-          </a>
-          .
-          <br />
-        </p>
-
-        <LatestPrLine />
-
-        <p className={styles.label}>How's it going</p>
-
-        <ul className={styles.track}>
-          {items.map((item) => (
-            <li
-              key={item.label}
-              className={`${styles.item} ${styles[item.status]}`}
-            >
-              {item.href ? (
-                <a href={item.href} className={styles.text}>
-                  {item.label}
-                </a>
-              ) : (
-                <span className={styles.text}>{item.label}</span>
-              )}
-              {item.status === 'active' && item.tag && (
-                <span className={`${styles.tag} ${styles.tagNow}`}>
-                  {item.tag}
-                </span>
-              )}
-            </li>
-          ))}
-        </ul>
-
-        <p className={styles.footer}>Last updated July 6, 2026</p>
+            Check out live preview
+          </Link>
+        </div>
       </div>
-    </div>
+    </main>
   )
 }

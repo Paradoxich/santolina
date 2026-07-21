@@ -145,6 +145,13 @@ const preset = {
       '3xl': 'var(--font-size-3xl)',
       '4xl': 'var(--font-size-4xl)',
       /* type roles — composite "text styles" (size + leading + tracking) */
+      display: [
+        'var(--font-size-display)',
+        {
+          lineHeight: 'var(--line-height-none)',
+          letterSpacing: 'var(--tracking-heading)',
+        },
+      ],
       title: [
         'var(--font-size-title)',
         {

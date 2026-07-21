@@ -159,10 +159,10 @@ MediaCard, Icon.
   interactivity requires it.
 - **The app shell** lives in `app/(app)/layout.tsx` — sage page background +
   fixed `AppSidebar`. Every product page goes inside the `(app)` route group.
-- **The root page (`/`) is the in-progress landing page** and a documented
-  exception zone: self-contained CSS module, hardcoded values allowed, no new
-  tokens minted for it. It will be replaced at launch. See the exemption
-  comment in `app/page.module.css`.
+- **The root page (`/`) is the public landing page** and no longer an
+  exception zone. It was the in-progress roadmap page with a self-contained
+  CSS module and hardcoded values; since the July 2026 rebuild it is fully
+  tokenised like any other screen, so hold it to the same rules.
 - **`/design-system` is the living reference** — it renders tokens and
   components straight from the packages and reads resolved values from the
   rendered CSS. When tokens change, it updates itself. Keep it current when
