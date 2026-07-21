@@ -33,12 +33,6 @@ export function MobileTabBar() {
       }}
       className="fixed left-1/2 z-10 flex h-14 w-fit -translate-x-1/2 items-stretch gap-inline-gap overflow-hidden rounded-full border border-card-translucent bg-[var(--sidebar-surface)] p-tight-gap shadow-lg backdrop-blur-md md:hidden"
     >
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-cover bg-center opacity-15"
-        style={{ backgroundImage: "url('/textures/sidebar-texture.png')" }}
-      />
-
       {navItems.map((item) => {
         const active = pathname.startsWith(item.href)
         return (
@@ -56,15 +50,6 @@ export function MobileTabBar() {
           </Link>
         )
       })}
-
-      <button
-        type="button"
-        disabled
-        aria-label="Open agent"
-        className="flex w-16 items-center justify-center rounded-full opacity-50"
-      >
-        <Icon src={icons.agent} />
-      </button>
     </nav>
   )
 }

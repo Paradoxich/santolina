@@ -29,6 +29,24 @@ export const Default: Story = {
   },
 }
 
+export const WithDescription: Story = {
+  args: {
+    title: 'Plant care',
+    meta: '5 tips',
+    description: 'Tailored tips show up when you have plants growing.',
+    children: (
+      <p
+        style={{
+          fontSize: 'var(--font-size-body)',
+          color: 'var(--color-text-body-secondary)',
+        }}
+      >
+        The description tucks under the title; the body keeps its own gap below.
+      </p>
+    ),
+  },
+}
+
 export const WithoutHeader: Story = {
   args: {
     children: (

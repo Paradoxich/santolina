@@ -99,10 +99,18 @@ export function CareTipsDrawer({ groups, onClose }: CareTipsDrawerProps) {
           }))}
           value={activeKey}
           onChange={(v) => setActiveKey(v as keyof GroupedCareTips)}
+          className="gap-card-padding"
         />
       </div>
 
-      <div className="flex w-full flex-1 flex-col gap-tight-gap overflow-y-auto p-card-padding">
+      <div
+        className={[
+          'flex w-full flex-1 flex-col overflow-y-auto p-card-padding',
+          activeTips.length === 0
+            ? 'items-center justify-center text-center'
+            : 'gap-tight-gap',
+        ].join(' ')}
+      >
         {activeTips.length === 0 ? (
           <p className="text-body-small text-muted">{active.emptyText}</p>
         ) : (

@@ -88,8 +88,8 @@ export default async function DashboardPage() {
       {/* Row heights are design floors (min-h), not fixed: a card whose content
           runs a line taller (e.g. a two-line weather description) grows its row
           and pushes the next row down, instead of overflowing the card. */}
-      <div className="mt-8 flex flex-col gap-section-gap">
-        <div className="grid grid-cols-1 gap-section-gap lg:min-h-[276px] lg:grid-cols-[592fr_420fr]">
+      <div className="mt-8 flex flex-col gap-item-gap">
+        <div className="grid grid-cols-1 gap-item-gap lg:min-h-[276px] lg:grid-cols-[592fr_420fr]">
           <MyPlantsCard plants={myPlants} totalInGarden={growing.length} />
           <BloomTimelineCard
             season={deriveBloomSeason(palette)}
@@ -97,7 +97,7 @@ export default async function DashboardPage() {
           />
         </div>
 
-        <div className="grid grid-cols-1 gap-section-gap lg:min-h-[272px] lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-item-gap lg:min-h-[272px] lg:grid-cols-2">
           <WeatherCard
             location={garden?.city ?? null}
             country={garden?.country ?? null}
@@ -110,7 +110,7 @@ export default async function DashboardPage() {
           />
         </div>
 
-        <div className="grid grid-cols-1 gap-section-gap lg:min-h-[234px] lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-item-gap lg:min-h-[234px] lg:grid-cols-3">
           <PlannedCard plants={plannedPlants} />
           <DiaryRecentCard diaries={diaries} />
           <ImpactCard text={impact} />
