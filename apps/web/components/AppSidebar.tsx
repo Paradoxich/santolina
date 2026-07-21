@@ -20,6 +20,7 @@ const navItems: NavItem[] = [
   { label: 'Overview', href: '/overview', icon: 'grid' },
   { label: 'My Plants', href: '/plants', icon: 'leaf' },
   { label: 'Diary', href: '/diary', icon: 'diary' },
+  { label: 'Reflections', href: '/reflections', icon: 'reflections' },
   { label: 'Explore', href: '/explore', icon: 'search' },
 ]
 
@@ -58,7 +59,7 @@ export function AppSidebar({ identity }: { identity: SidebarIdentity }) {
               href={item.href}
               aria-current={active ? 'page' : undefined}
               className={[
-                'flex items-center gap-item-gap rounded-lg p-row-gap',
+                'flex items-center gap-item-gap rounded-md p-row-gap',
                 'text-body text-primary',
                 'transition-colors duration-normal',
                 active
@@ -75,7 +76,8 @@ export function AppSidebar({ identity }: { identity: SidebarIdentity }) {
 
       <button
         type="button"
-        className="flex h-14 shrink-0 items-center gap-item-gap px-section-gap py-inline-gap text-left transition-colors duration-normal hover:bg-surface-nav-active"
+        disabled
+        className="flex h-14 shrink-0 items-center gap-item-gap border-t border-[var(--sidebar-divider)] px-section-gap py-inline-gap text-left opacity-50"
       >
         <Icon src={icons.agent} />
         <span className="flex-1 text-body text-primary">Agent</span>

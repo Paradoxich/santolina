@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Panel } from '@paradoxui/ui'
 import { CareTipsDrawer } from '@/components/CareTipsDrawer'
 import type { GroupedCareTips } from '@/lib/care-tips'
@@ -15,14 +15,36 @@ interface CareTipsCardProps {
   showEmptyHint?: boolean
 }
 
+// How far the list dissolves into the background at its scrolled-past edge.
+const FADE = '32px'
+
 export function CareTipsCard({
   tips,
   groups,
   showEmptyHint = false,
 }: CareTipsCardProps) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
+  const listRef = useRef<HTMLUListElement>(null)
+  const [canScrollDown, setCanScrollDown] = useState(false)
+
+  const updateScrollState = useCallback(() => {
+    const el = listRef.current
+    if (!el) return
+    const next = el.scrollHeight - el.scrollTop - el.clientHeight > 1
+    setCanScrollDown((prev) => (prev === next ? prev : next))
+  }, [])
+
+  useEffect(() => {
+    updateScrollState()
+    window.addEventListener('resize', updateScrollState)
+    return () => window.removeEventListener('resize', updateScrollState)
+  }, [updateScrollState, tips])
+
   const totalTips =
     groups.now.length + groups.thisWeek.length + groups.goodToKnow.length
+  const maskImage = `linear-gradient(to bottom, #000 0, #000 calc(100% - ${FADE}), ${
+    canScrollDown ? 'transparent' : '#000'
+  } 100%)`
 
   return (
     <>
@@ -50,8 +72,15 @@ export function CareTipsCard({
             height the row settles at and scrolls internally instead of its
             full 5-tip height inflating the row now that row heights are min-h
             floors. Scrolling browses the tips shown here; clicking the card
-            opens the drawer for the full ranked list. */}
-        <ul className="flex min-h-0 w-full flex-1 basis-0 flex-col gap-tight-gap overflow-y-auto">
+            opens the drawer for the full ranked list. The mask dissolves a
+            cut-off row into the card instead of hard-clipping it against the
+            rounded corner, and lifts once there's nothing left to scroll to. */}
+        <ul
+          ref={listRef}
+          onScroll={updateScrollState}
+          style={{ maskImage, WebkitMaskImage: maskImage }}
+          className="flex min-h-0 w-full flex-1 basis-0 flex-col gap-tight-gap overflow-y-auto"
+        >
           {tips.map((tip, index) => (
             <li
               key={`${tip.plantId ?? 'general'}-${index}`}

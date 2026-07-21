@@ -3,7 +3,8 @@ import { cn } from '../utils/cn'
 
 export interface EmptyStateProps {
   message: string
-  ctaLabel: string
+  /** Omit to render the message alone, with no action row — e.g. a state with nothing yet to do. */
+  ctaLabel?: string
   /**
    * Optional illustration rendered inside the tile above the message — an
    * inline SVG or `<img>`. Decorative by contract: the message carries the
@@ -50,7 +51,7 @@ export function EmptyState({
     <div
       ref={ref}
       className={cn(
-        'flex w-full max-w-[411px] flex-col gap-section-gap rounded-md border border-dashed border-card p-card-padding',
+        'flex w-full max-w-[411px] flex-col gap-section-gap rounded-card-tile border border-dashed border-card p-card-padding',
         className
       )}
     >
@@ -61,15 +62,16 @@ export function EmptyState({
       )}
       <div className="flex items-center justify-between gap-row-gap">
         <p className="text-body-small text-secondary">{message}</p>
-        {ctaHref ? (
-          <LinkComponent href={ctaHref} className={ctaClasses}>
-            {ctaLabel}
-          </LinkComponent>
-        ) : (
-          <button type="button" onClick={onCtaClick} className={ctaClasses}>
-            {ctaLabel}
-          </button>
-        )}
+        {ctaLabel &&
+          (ctaHref ? (
+            <LinkComponent href={ctaHref} className={ctaClasses}>
+              {ctaLabel}
+            </LinkComponent>
+          ) : (
+            <button type="button" onClick={onCtaClick} className={ctaClasses}>
+              {ctaLabel}
+            </button>
+          ))}
       </div>
     </div>
   )

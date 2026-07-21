@@ -83,7 +83,7 @@ export function CareTipsDrawer({ groups, onClose }: CareTipsDrawerProps) {
       panelComponent={motion.aside}
       panelProps={DRAWER_MOTION}
     >
-      <div className="flex w-full shrink-0 flex-col gap-card-padding border-b border-card p-card-padding">
+      <div className="flex w-full shrink-0 flex-col gap-card-padding border-b border-card-translucent px-card-padding pt-card-padding">
         <div className="flex w-full flex-col gap-item-gap">
           <h2 className="text-title font-semibold text-primary">Plant care</h2>
           <p className="text-body leading-normal text-secondary">
