@@ -76,7 +76,8 @@ export function AppSidebar({ identity }: { identity: SidebarIdentity }) {
 
       <button
         type="button"
-        className="flex h-14 shrink-0 items-center gap-item-gap px-section-gap py-inline-gap text-left transition-colors duration-normal hover:bg-surface-nav-active"
+        disabled
+        className="flex h-14 shrink-0 items-center gap-item-gap border-t border-[var(--sidebar-divider)] px-section-gap py-inline-gap text-left opacity-50"
       >
         <Icon src={icons.agent} />
         <span className="flex-1 text-body text-primary">Agent</span>

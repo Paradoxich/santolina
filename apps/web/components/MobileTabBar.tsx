@@ -59,8 +59,9 @@ export function MobileTabBar() {
 
       <button
         type="button"
+        disabled
         aria-label="Open agent"
-        className="flex w-16 items-center justify-center rounded-full"
+        className="flex w-16 items-center justify-center rounded-full opacity-50"
       >
         <Icon src={icons.agent} />
       </button>
