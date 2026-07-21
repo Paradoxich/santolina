@@ -36,7 +36,17 @@ const SPACING = [
   'section-break',
 ]
 
-const BORDER_RADIUS = ['chip', 'card-dashboard', 'card-tile', 'card-row']
+const BORDER_RADIUS = [
+  'chip',
+  'card-dashboard',
+  'card-tile',
+  'card-row',
+  'modal',
+]
+
+// Custom boxShadow keys beyond Tailwind's stock scale (none/sm/md/lg are
+// already in tailwind-merge's default shadow group).
+const BOX_SHADOW = ['soft']
 
 // Composite type-role scale (text-body-small, text-heading, …). Registered as
 // font-size so it never collides with the semantic text COLOUR roles below.
@@ -116,6 +126,7 @@ const twMerge = extendTailwindMerge({
     },
     classGroups: {
       'font-size': [{ text: FONT_SIZE }],
+      shadow: [{ shadow: BOX_SHADOW }],
     },
   },
 })
