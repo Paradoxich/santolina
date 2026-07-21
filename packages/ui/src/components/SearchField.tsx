@@ -40,7 +40,7 @@ export function SearchField({
         'px-section-gap',
         'shadow-soft',
         'transition-colors duration-normal',
-        'focus-within:bg-gray-0',
+        'focus-within:bg-white',
         className
       )}
     >

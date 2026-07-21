@@ -182,7 +182,7 @@ export function GardenClient({ palette, detail }: GardenClientProps) {
 
   return (
     <div className="pb-16">
-      <header className="border-b border-sage-50 pt-8">
+      <header className="border-b border-sage-200 pt-8 md:ml-[calc(-1*var(--sidebar-offset))] md:mr-[-3rem] md:pl-[var(--sidebar-offset)] md:pr-12">
         <Tabs
           items={[
             { value: 'growing', label: 'Growing', count: growing.length },
@@ -208,7 +208,7 @@ export function GardenClient({ palette, detail }: GardenClientProps) {
         </p>
       )}
 
-      {tab === 'growing' && (
+      {tab === 'growing' && growing.length > 0 && (
         <div className="mt-11 flex items-center gap-inline-gap overflow-x-auto pb-1">
           {statusFilters.map((s) => (
             <Chip
@@ -222,26 +222,28 @@ export function GardenClient({ palette, detail }: GardenClientProps) {
         </div>
       )}
 
-      <div className="mt-6 grid grid-cols-1 gap-item-gap md:grid-cols-2 xl:grid-cols-3">
-        {visible.map((plant) =>
-          tab === 'growing' ? (
-            <GardenPlantTile
-              key={plant.id}
-              plant={plant}
-              onClick={() => openPlantByPaletteId(plant.id)}
-            />
-          ) : (
-            <PlannedPlantTile
-              key={plant.id}
-              plant={plant}
-              onRemove={handleRemove}
-              onMoveToGrowing={handleMoveToGrowing}
-              onOpenDetails={openPlantByPaletteId}
-              disabled={pendingId === plant.id}
-            />
-          )
-        )}
-      </div>
+      {visible.length > 0 && (
+        <div className="mt-6 grid grid-cols-1 gap-item-gap md:grid-cols-2 xl:grid-cols-3">
+          {visible.map((plant) =>
+            tab === 'growing' ? (
+              <GardenPlantTile
+                key={plant.id}
+                plant={plant}
+                onClick={() => openPlantByPaletteId(plant.id)}
+              />
+            ) : (
+              <PlannedPlantTile
+                key={plant.id}
+                plant={plant}
+                onRemove={handleRemove}
+                onMoveToGrowing={handleMoveToGrowing}
+                onOpenDetails={openPlantByPaletteId}
+                disabled={pendingId === plant.id}
+              />
+            )
+          )}
+        </div>
+      )}
 
       {visible.length === 0 &&
         (tab === 'growing' ? (

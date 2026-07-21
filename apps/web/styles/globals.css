@@ -57,12 +57,12 @@ body {
 }
 
 /* Thin scrollbar in the accent green, everywhere, instead of the bulky OS
-   default. green-300 (not accent-muted/green-200) so the thumb holds its
+   default. fern-300 (not accent-muted/fern-200) so the thumb holds its
    own against both the sage-200 page background and the sage-100 card
    background instead of reading as a different shade on each. */
 * {
   scrollbar-width: thin;
-  scrollbar-color: var(--color-green-300) transparent;
+  scrollbar-color: var(--color-fern-300) transparent;
 }
 
 ::-webkit-scrollbar {
@@ -75,7 +75,7 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: var(--color-green-300);
+  background-color: var(--color-fern-300);
   border-radius: 9999px;
 }
 

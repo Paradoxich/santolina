@@ -36,47 +36,104 @@ function ToneKit({
   )
 }
 
+/* Literal class lists — Tailwind's scanner can't see interpolated names. */
+const RAMP_CLASSES = {
+  sage: [
+    'bg-sage-50',
+    'bg-sage-100',
+    'bg-sage-200',
+    'bg-sage-300',
+    'bg-sage-400',
+    'bg-sage-500',
+    'bg-sage-600',
+    'bg-sage-700',
+    'bg-sage-800',
+    'bg-sage-900',
+    'bg-sage-950',
+  ],
+  fern: [
+    'bg-fern-50',
+    'bg-fern-100',
+    'bg-fern-200',
+    'bg-fern-300',
+    'bg-fern-400',
+    'bg-fern-500',
+    'bg-fern-600',
+    'bg-fern-700',
+    'bg-fern-800',
+    'bg-fern-900',
+    'bg-fern-950',
+  ],
+  honey: [
+    'bg-honey-50',
+    'bg-honey-100',
+    'bg-honey-200',
+    'bg-honey-300',
+    'bg-honey-400',
+    'bg-honey-500',
+    'bg-honey-600',
+    'bg-honey-700',
+    'bg-honey-800',
+    'bg-honey-900',
+    'bg-honey-950',
+  ],
+  brick: [
+    'bg-brick-50',
+    'bg-brick-100',
+    'bg-brick-200',
+    'bg-brick-300',
+    'bg-brick-400',
+    'bg-brick-500',
+    'bg-brick-600',
+    'bg-brick-700',
+    'bg-brick-800',
+    'bg-brick-900',
+    'bg-brick-950',
+  ],
+}
+
+function Ramp({
+  label,
+  hue,
+}: {
+  label: string
+  hue: keyof typeof RAMP_CLASSES
+}) {
+  return (
+    <div className="flex flex-col gap-inline-gap sm:flex-row sm:items-center">
+      <div className="w-full shrink-0 sm:w-36">
+        <Label>{label}</Label>
+      </div>
+      <div className="flex flex-1 gap-inline-gap">
+        {RAMP_CLASSES[hue].map((cls) => (
+          <Swatch
+            key={cls}
+            name={cls.replace('bg-', '')}
+            className={`flex-1 ${cls}`}
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
+
 function Primitives() {
   return (
     <Section
       title="Primitive ramps"
-      intro="Hue-named, raw values live only here. Reach for a semantic role first; ramps are the escape hatch."
+      intro="Hue-named, raw values live only here. Reach for a semantic role first; ramps are the escape hatch. Hover a step for its name and value, click to copy."
     >
-      <div className="flex flex-col gap-section-break">
-        <div>
-          <Label>green — brand</Label>
-          <div className="mt-2 grid grid-cols-3 gap-item-gap sm:grid-cols-6">
-            <Swatch name="green-100" className="bg-green-100" />
-            <Swatch name="green-200" className="bg-green-200" />
-            <Swatch name="green-300" className="bg-green-300" />
-            <Swatch name="green-600" className="bg-green-600" />
-            <Swatch name="green-700" className="bg-green-700" />
-            <Swatch name="green-950" className="bg-green-950" />
+      <div className="flex flex-col gap-6">
+        <Ramp label="sage — neutral" hue="sage" />
+        <Ramp label="fern — accent" hue="fern" />
+        <Ramp label="honey — warning" hue="honey" />
+        <Ramp label="brick — critical" hue="brick" />
+        <div className="flex flex-col gap-inline-gap sm:flex-row sm:items-center">
+          <div className="w-full shrink-0 sm:w-36">
+            <Label>white</Label>
           </div>
-        </div>
-        <div>
-          <Label>sage — surface neutrals</Label>
-          <div className="mt-2 grid grid-cols-3 gap-item-gap sm:grid-cols-6">
-            <Swatch name="sage-50" className="bg-sage-50" />
-            <Swatch name="sage-100" className="bg-sage-100" />
-            <Swatch name="sage-150" className="bg-sage-150" />
-            <Swatch name="sage-200" className="bg-sage-200" />
-            <Swatch name="sage-300" className="bg-sage-300" />
-          </div>
-        </div>
-        <div>
-          <Label>gold · gray · red</Label>
-          <div className="mt-2 grid grid-cols-3 gap-item-gap sm:grid-cols-6">
-            <Swatch name="gold-100" className="bg-gold-100" />
-            <Swatch name="gold-700" className="bg-gold-700" />
-            <Swatch name="gray-0" className="bg-gray-0" />
-            <Swatch name="gray-100" className="bg-gray-100" />
-            <Swatch name="gray-500" className="bg-gray-500" />
-            <Swatch name="gray-900" className="bg-gray-900" />
-            <Swatch name="red-100" className="bg-red-100" />
-            <Swatch name="red-500" className="bg-red-500" />
-            <Swatch name="red-600" className="bg-red-600" />
-            <Swatch name="red-700" className="bg-red-700" />
+          <div className="w-16">
+            <Swatch name="white" className="bg-white" />
           </div>
         </div>
       </div>

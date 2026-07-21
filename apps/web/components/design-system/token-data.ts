@@ -25,6 +25,10 @@ export interface TokenTier {
 
 const c = (...names: string[]): TokenEntry[] =>
   names.map((name) => ({ name, kind: 'color' }))
+const rampNames = (hue: string): string[] =>
+  [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950].map(
+    (step) => `--color-${hue}-${step}`
+  )
 const sp = (...names: string[]): TokenEntry[] =>
   names.map((name) => ({ name, kind: 'space' }))
 const r = (...names: string[]): TokenEntry[] =>
@@ -48,48 +52,24 @@ export const allTokens: TokenTier[] = [
       'Hue/scale names. Raw values live only here — everything else aliases these.',
     groups: [
       {
-        title: 'Green — brand',
-        entries: c(
-          '--color-green-100',
-          '--color-green-200',
-          '--color-green-300',
-          '--color-green-600',
-          '--color-green-700',
-          '--color-green-950'
-        ),
+        title: 'White',
+        entries: c('--color-white'),
       },
       {
-        title: 'Sage — surface neutrals',
-        entries: c(
-          '--color-sage-50',
-          '--color-sage-100',
-          '--color-sage-150',
-          '--color-sage-200',
-          '--color-sage-300'
-        ),
+        title: 'Sage — neutral (surfaces to text)',
+        entries: c(...rampNames('sage')),
       },
       {
-        title: 'Gold — warning warmth',
-        entries: c('--color-gold-100', '--color-gold-700'),
+        title: 'Fern — brand accent',
+        entries: c(...rampNames('fern')),
       },
       {
-        title: 'Gray — true neutrals',
-        entries: c(
-          '--color-gray-0',
-          '--color-gray-100',
-          '--color-gray-500',
-          '--color-gray-600',
-          '--color-gray-900'
-        ),
+        title: 'Honey — warning',
+        entries: c(...rampNames('honey')),
       },
       {
-        title: 'Red — critical (placeholder ramp)',
-        entries: c(
-          '--color-red-100',
-          '--color-red-500',
-          '--color-red-600',
-          '--color-red-700'
-        ),
+        title: 'Brick — critical',
+        entries: c(...rampNames('brick')),
       },
       {
         title: 'Font families',

@@ -81,7 +81,7 @@ export function Tabs({
                 ? 'font-semibold text-primary'
                 : 'font-normal text-muted hover:text-primary',
               active
-                ? 'after:absolute after:bottom-0 after:left-0 after:h-px after:w-full after:bg-current after:content-[""]'
+                ? 'after:absolute after:-bottom-px after:left-0 after:h-px after:w-full after:bg-current after:content-[""]'
                 : ''
             )}
           >

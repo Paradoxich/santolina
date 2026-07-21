@@ -141,7 +141,7 @@ export function LoginForm() {
 
         <form
           onSubmit={handleMagicLink}
-          className="flex h-12 w-full items-center gap-2 rounded-md bg-gray-0 py-2 pl-3 pr-2 focus-within:ring-2 focus-within:ring-focus"
+          className="flex h-12 w-full items-center gap-2 rounded-md bg-white py-2 pl-3 pr-2 focus-within:ring-2 focus-within:ring-focus"
         >
           <label htmlFor="email" className="sr-only">
             Email
@@ -202,7 +202,7 @@ export function LoginForm() {
   )
 }
 
-// Rendered on the solid-green button, so the mark is flattened to white
+// Rendered on the solid-fern button, so the mark is flattened to white
 // instead of Google's brand colors — those only read against a light background.
 function GoogleMark() {
   return (

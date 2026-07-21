@@ -160,7 +160,7 @@ export function FilterDropdown({
                     className={[
                       'size-6 shrink-0 rounded-md border border-divider',
                       'transition-shadow duration-normal',
-                      isSelected ? 'ring-2 ring-green-500 ring-offset-2' : '',
+                      isSelected ? 'ring-2 ring-fern-500 ring-offset-2' : '',
                     ].join(' ')}
                     style={{ backgroundColor: o.swatch }}
                   />

@@ -41,11 +41,11 @@ Dependencies flow one way only: web → ui → tokens. Never the reverse.
 Full taxonomy and rationale: `docs/token-taxonomy.md`. Live visual reference:
 `/design-system` in the running app. The short version:
 
-| Tier          | Vocabulary      | Examples                                          | Raw values allowed?  |
-| ------------- | --------------- | ------------------------------------------------- | -------------------- |
-| 1 — Primitive | hue/scale names | `--color-green-700`, `--spacing-4`, `--radius-lg` | **Only here**        |
-| 2 — Semantic  | role names      | `--color-text-muted`, `--color-surface-card`      | No — always aliases  |
-| 3 — Component | component names | `--chip-radius`, `--thumbnail-scrim`              | Measured values only |
+| Tier          | Vocabulary      | Examples                                         | Raw values allowed?  |
+| ------------- | --------------- | ------------------------------------------------ | -------------------- |
+| 1 — Primitive | hue/scale names | `--color-fern-700`, `--spacing-4`, `--radius-lg` | **Only here**        |
+| 2 — Semantic  | role names      | `--color-text-muted`, `--color-surface-card`     | No — always aliases  |
+| 3 — Component | component names | `--chip-radius`, `--thumbnail-scrim`             | Measured values only |
 
 You can tell a token's tier by reading it. Components consume tier 2 ~95% of
 the time. Dark mode (later) overrides tier 2 and nothing else.

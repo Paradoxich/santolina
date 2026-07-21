@@ -13,49 +13,26 @@ import type { Config } from 'tailwindcss'
  * `theme` keys here REPLACE Tailwind defaults on purpose: the stock palette
  * is removed so hardcodes like `bg-white` fail visibly instead of shipping
  * off-system colors. Escape hatch for genuinely new needs: the primitive
- * ramps (e.g. `bg-green-200`) — but reach for a semantic role first.
+ * ramps (e.g. `bg-fern-200`) — but reach for a semantic role first.
  *
  * Naming: utilities read as roles — `text-primary`, `bg-surface-card`,
  * `border-divider`, `ring-focus` — matching docs/token-taxonomy.md.
  */
 
+const steps = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950] as const
+
+const ramp = (hue: string) =>
+  Object.fromEntries(steps.map((s) => [s, `var(--color-${hue}-${s})`]))
+
 const ramps = {
   transparent: 'transparent',
   current: 'currentColor',
   inherit: 'inherit',
-  green: {
-    100: 'var(--color-green-100)',
-    200: 'var(--color-green-200)',
-    300: 'var(--color-green-300)',
-    500: 'var(--color-green-500)',
-    600: 'var(--color-green-600)',
-    700: 'var(--color-green-700)',
-    950: 'var(--color-green-950)',
-  },
-  sage: {
-    50: 'var(--color-sage-50)',
-    100: 'var(--color-sage-100)',
-    150: 'var(--color-sage-150)',
-    200: 'var(--color-sage-200)',
-    300: 'var(--color-sage-300)',
-  },
-  gold: {
-    100: 'var(--color-gold-100)',
-    700: 'var(--color-gold-700)',
-  },
-  gray: {
-    0: 'var(--color-gray-0)',
-    100: 'var(--color-gray-100)',
-    500: 'var(--color-gray-500)',
-    600: 'var(--color-gray-600)',
-    900: 'var(--color-gray-900)',
-  },
-  red: {
-    100: 'var(--color-red-100)',
-    500: 'var(--color-red-500)',
-    600: 'var(--color-red-600)',
-    700: 'var(--color-red-700)',
-  },
+  white: 'var(--color-white)',
+  sage: ramp('sage'),
+  fern: ramp('fern'),
+  honey: ramp('honey'),
+  brick: ramp('brick'),
 }
 
 const preset = {

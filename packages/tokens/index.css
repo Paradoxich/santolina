@@ -6,7 +6,7 @@
  * are synced FROM this structure, not the other way around.
  *
  * Taxonomy: docs/token-taxonomy.md. Three tiers:
- *   1. Primitives — hue/scale names (--color-green-600). Raw values live
+ *   1. Primitives — hue/scale names (--color-fern-600). Raw values live
  *      ONLY here.
  *   2. Semantic — role names (--color-text-muted). Always aliases of tier 1
  *      (translucent compositions excepted, marked inline). Components
@@ -31,38 +31,68 @@
    * TIER 1 — PRIMITIVES
    * ========================================================= */
 
-  /* Green — brand */
-  --color-green-100: #cfe5d6;
-  --color-green-200: #b1d7bc;
-  --color-green-300: #99bd9d;
-  --color-green-500: #3b9255;
-  --color-green-600: #386b41;
-  --color-green-700: #2b6e3f;
-  --color-green-950: #020e03;
+  /* Four 11-step ramps built in OKLCH: per ramp a fixed hue, strictly
+   * descending lightness, chroma peaking mid-ramp. Steps that shipped
+   * before the rebuild keep their exact hex (marked "shipped"). */
 
-  /* Sage — tinted neutrals for surfaces */
-  --color-sage-50: #f8f8f8;
-  --color-sage-100: #edf2ee;
-  --color-sage-150: #e1e5e2;
-  --color-sage-200: #dfe8e1;
-  --color-sage-300: #d1e0d3;
+  /* White — its own token, not a gray step */
+  --color-white: #ffffff;
 
-  /* Gold — warm family for warning tones */
-  --color-gold-100: #eee8da;
-  --color-gold-700: #9a7b2d;
+  /* Sage — THE neutral ramp (H 152). Light end carries surfaces, dark end
+   * carries text. Hand-tuned by Ana in Figma (see docs/architecture.md);
+   * 700/600 now read lighter than the OKLCH draft — text-muted is back
+   * under 4.5:1 (3.9 on card, 3.6 on page) and the sage-600 icon step
+   * under 3:1 (2.76) until the semantic remap addresses it. */
+  --color-sage-50: #f4f9f5;
+  --color-sage-100: #edf2ee; /* shipped — surface-card */
+  --color-sage-200: #e1ebe3; /* shipped — surface-page */
+  --color-sage-300: #d1e0d3; /* shipped — hover tints, divider */
+  --color-sage-400: #c4d0c6;
+  --color-sage-500: #adb8ae; /* ~was gray-100 — disabled/faint only */
+  --color-sage-600: #8b948c; /* icon/large-text de-emphasis — now 2.76:1, below 3:1 */
+  --color-sage-700: #727a73; /* ~was gray-500 — now 3.9:1 on card, below 4.5:1 */
+  --color-sage-800: #464d47; /* ~was gray-600 */
+  --color-sage-900: #2f3330;
+  --color-sage-950: #111411; /* ~was gray-900 */
 
-  /* Gray — true neutrals for text */
-  --color-gray-0: #ffffff;
-  --color-gray-100: #afafaf;
-  --color-gray-500: #6b6b6b;
-  --color-gray-600: #555555;
-  --color-gray-900: #111111;
+  /* Fern — brand accent (H 151). Chroma peaks at 500. */
+  --color-fern-50: #e5f0e7;
+  --color-fern-100: #cfe5d6; /* shipped — positive surface */
+  --color-fern-200: #b1d7bc; /* shipped — accent-muted */
+  --color-fern-300: #99bd9d; /* shipped — surface-active base */
+  --color-fern-400: #6ea87c;
+  --color-fern-500: #3b9255; /* shipped — vivid mid; not for body text */
+  --color-fern-600: #327f4a; /* fills/large accents; not for body text */
+  --color-fern-700: #2b6e3f; /* shipped — THE brand green, accent */
+  --color-fern-800: #1f5430; /* accent-hover */
+  --color-fern-900: #0f3119;
+  --color-fern-950: #020e03; /* shipped — surface-inverse */
 
-  /* Red — critical tone (placeholder steps until a ramp is designed) */
-  --color-red-100: #edd8d4;
-  --color-red-500: #ef4444;
-  --color-red-600: #dc2626;
-  --color-red-700: #b91c1c;
+  /* Honey — warning (H 78, warm ochre; replaced the unreviewed olive). */
+  --color-honey-50: #f9f2e9;
+  --color-honey-100: #f4e6d1; /* warning surface */
+  --color-honey-200: #ecd4af;
+  --color-honey-300: #debb86;
+  --color-honey-400: #c79d59;
+  --color-honey-500: #ac7c26;
+  --color-honey-600: #8e6201;
+  --color-honey-700: #714d00; /* warning text — 6.2:1 on honey-100 */
+  --color-honey-800: #593c00;
+  --color-honey-900: #382500;
+  --color-honey-950: #1b0f00;
+
+  /* Brick — critical (H 28, brand chroma; replaced stock Tailwind values). */
+  --color-brick-50: #fbf1ef;
+  --color-brick-100: #edd8d4; /* shipped — critical surface */
+  --color-brick-200: #eabfb9;
+  --color-brick-300: #e09e95;
+  --color-brick-400: #d47d72;
+  --color-brick-500: #c45c51; /* border-critical */
+  --color-brick-600: #a73f36; /* fill-critical */
+  --color-brick-700: #89322a; /* critical text */
+  --color-brick-800: #6b2620;
+  --color-brick-900: #451914;
+  --color-brick-950: #200a07;
 
   /* Font families */
   --font-family-sans:
@@ -176,20 +206,20 @@
    * on-accent      — text on accent-filled controls
    * (body-secondary and muted share a primitive today; they are separate
    *  roles so they can diverge without touching components.) */
-  --color-text-primary: var(--color-gray-900);
-  --color-text-secondary: var(--color-gray-600);
-  --color-text-body-secondary: var(--color-gray-500);
-  --color-text-muted: var(--color-gray-500);
-  --color-text-faint: var(--color-gray-100);
+  --color-text-primary: var(--color-sage-950);
+  --color-text-secondary: var(--color-sage-800);
+  --color-text-body-secondary: var(--color-sage-700);
+  --color-text-muted: var(--color-sage-700);
+  --color-text-faint: var(--color-sage-500);
   --color-text-inverse: var(--color-sage-50);
-  --color-text-on-accent: var(--color-gray-0);
+  --color-text-on-accent: var(--color-white);
 
   /* Surface roles — elevation/function axis */
-  --color-surface-page: var(--color-sage-200);
+  --color-surface-page: var(--color-sage-300);
   --color-surface-card: var(--color-sage-100);
   --color-surface-subtle: var(--color-sage-50);
-  --color-surface-sunken: var(--color-sage-200); /* page color inside a card */
-  --color-surface-inverse: var(--color-green-950);
+  --color-surface-sunken: var(--color-sage-300); /* page color inside a card */
+  --color-surface-inverse: var(--color-fern-950);
   /* Translucent compositions — light-mode assumption baked in; these need
    * real values (not re-aliases) in any dark theme. */
   --color-surface-field: rgb(255 255 255 / 0.6);
@@ -198,7 +228,7 @@
     255 255 255 / 0.7
   ); /* resting translucent small controls (Button/IconButton control variant) */
   --color-surface-hover: rgb(255 255 255 / 0.7);
-  --color-surface-active: rgb(153 189 157 / 0.5); /* green-300 @ 50% */
+  --color-surface-active: rgb(153 189 157 / 0.5); /* fern-300 @ 50% */
   --color-surface-card-translucent: rgb(237 242 238 / 0.7); /* sage-100 @ 70% */
   --color-surface-nav-active: rgb(
     237 242 238 / 0.5
@@ -208,40 +238,42 @@
   /* Tone kits — surface / icon / text / border per tone.
    * Vocabulary: positive | warning | critical (info added when needed).
    * A new stateful component composes a kit; it never mints a hex. */
-  --color-surface-positive: var(--color-green-100);
-  --color-icon-positive: var(--color-green-700);
-  --color-text-positive: var(--color-green-700);
-  --color-border-positive: var(--color-green-700);
+  --color-surface-positive: var(--color-fern-100);
+  --color-icon-positive: var(--color-fern-700);
+  --color-text-positive: var(--color-fern-700);
+  --color-border-positive: var(--color-fern-700);
 
-  --color-surface-warning: var(--color-gold-100);
-  --color-icon-warning: var(--color-gold-700);
-  --color-text-warning: var(--color-gold-700);
-  --color-border-warning: var(--color-gold-700);
+  --color-surface-warning: var(--color-honey-100);
+  --color-icon-warning: var(--color-honey-700);
+  --color-text-warning: var(--color-honey-700);
+  --color-border-warning: var(--color-honey-700);
 
-  --color-surface-critical: var(--color-red-100);
-  --color-icon-critical: var(--color-red-600);
-  --color-text-critical: var(--color-red-700);
-  --color-border-critical: var(--color-red-500);
+  --color-surface-critical: var(--color-brick-100);
+  --color-icon-critical: var(--color-brick-600);
+  --color-text-critical: var(--color-brick-700);
+  --color-border-critical: var(--color-brick-500);
 
-  /* Solid fills — filled controls and toasts per tone */
-  --color-fill-positive: var(--color-green-600);
-  --color-fill-warning: var(--color-gold-700);
-  --color-fill-critical: var(--color-red-600);
-  --color-fill-critical-hover: var(--color-red-700);
+  /* Solid fills — filled controls and toasts per tone.
+   * fill-positive moved 600 -> 700: old 600/700 were perceptually identical,
+   * so this is invisible; 600 is now a genuinely lighter step. */
+  --color-fill-positive: var(--color-fern-700);
+  --color-fill-warning: var(--color-honey-700);
+  --color-fill-critical: var(--color-brick-600);
+  --color-fill-critical-hover: var(--color-brick-700);
 
-  /* Accent */
-  --color-accent: var(--color-green-700);
-  --color-accent-hover: var(--color-green-600);
-  --color-accent-muted: var(--color-green-200);
+  /* Accent — hover now darkens (800); the old 600 alias was a no-op. */
+  --color-accent: var(--color-fern-700);
+  --color-accent-hover: var(--color-fern-800);
+  --color-accent-muted: var(--color-fern-200);
 
   /* Borders */
-  --color-border-card: var(--color-gray-0);
+  --color-border-card: var(--color-white);
   --color-border-card-translucent: rgb(255 255 255 / 0.5);
-  --color-border-divider: var(--color-sage-150);
-  --color-border-divider-subtle: rgb(225 229 226 / 0.3); /* sage-150 @ 30% */
+  --color-border-divider: var(--color-sage-300);
+  --color-border-divider-subtle: rgb(209 224 211 / 0.3); /* sage-300 @ 30% */
 
   /* Focus */
-  --color-focus-ring: var(--color-green-700);
+  --color-focus-ring: var(--color-fern-700);
 
   /* Typography roles — size and color are separate axes: "card title" =
    * text-primary (color) x heading (size) x semibold (weight). */
@@ -280,15 +312,15 @@
     178 209 184 / 0.3
   ); /* legacy tint — still used by MobileTabBar */
   --sidebar-divider: var(
-    --color-gray-0
-  ); /* white hairline separating the flush sidebar from content */
+    --color-sage-200
+  ); /* soft hairline separating the flush sidebar from content — was white, too harsh against surface-page (sage-300) */
   --sidebar-width: 14.5rem; /* 232px — app sidebar */
   /* main content clearance: sidebar width + 40px gutter (sidebar is flush to the viewport edge) */
   --sidebar-offset: calc(var(--sidebar-width) + var(--spacing-10));
-  --login-border: var(--color-green-500);
+  --login-border: var(--color-fern-500);
   /* gray-900 @ 20% — translucent composition, light-mode assumption baked in */
   --login-hairline: rgb(17 17 17 / 0.2);
-  --avatar-fill: var(--color-green-600);
+  --avatar-fill: var(--color-fern-700); /* was 600, visually identical */
   --thumbnail-scrim: linear-gradient(
     to top,
     rgb(0 0 0 / 0.49),
