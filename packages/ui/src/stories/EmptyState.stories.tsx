@@ -17,6 +17,12 @@ export const Default: Story = {
   },
 }
 
+export const NoAction: Story = {
+  args: {
+    message: 'Reflections are on their way.',
+  },
+}
+
 export const WithAction: Story = {
   args: {
     message: 'No results for this filter.',

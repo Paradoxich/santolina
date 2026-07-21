@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import Image from 'next/image'
 import Link from 'next/link'
 import { AnimatePresence } from 'framer-motion'
 import { EmptyState, Icon, IconButton, Tooltip } from '@paradoxui/ui'
@@ -46,43 +45,11 @@ export function DiaryClient({
 
   return (
     <div className="max-w-[669px] pb-16 pt-8 md:pt-12">
-      <header className="flex flex-col gap-card-padding">
-        <div className="flex flex-col gap-item-gap">
-          <h1 className="text-title font-semibold text-primary">Plant Diary</h1>
-          <p className="text-body text-secondary">
-            Save notes, photos, and seasonal changes as your plants evolve.
-          </p>
-        </div>
-
-        <button
-          type="button"
-          className="flex h-11 w-[222px] items-center gap-tight-gap rounded-md border border-card bg-surface-card p-item-gap text-left transition-colors duration-normal hover:bg-surface-control"
-        >
-          <span className="flex h-5 shrink-0 items-center">
-            <span className="relative -mr-2 h-5 w-[14px] overflow-hidden rounded-xs border border-card">
-              <Image
-                src="/diary/note-photo-01.png"
-                alt=""
-                fill
-                sizes="14px"
-                className="object-cover"
-              />
-            </span>
-            <span className="relative h-5 w-[19px] overflow-hidden rounded-xs border border-card">
-              <Image
-                src="/diary/note-photo-02.png"
-                alt=""
-                fill
-                sizes="19px"
-                className="object-cover"
-              />
-            </span>
-          </span>
-          <span className="flex-1 text-body leading-normal text-secondary">
-            Garden reflections
-          </span>
-          <Icon src={icons.arrowRight} />
-        </button>
+      <header className="flex flex-col gap-item-gap">
+        <h1 className="text-title font-semibold text-primary">Plant Diary</h1>
+        <p className="text-body text-secondary">
+          Save notes, photos, and seasonal changes as your plants evolve.
+        </p>
       </header>
 
       <div className="mt-8 flex items-center justify-between md:mt-12">
