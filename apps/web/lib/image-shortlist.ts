@@ -1,0 +1,126 @@
+/**
+ * Choosing which candidate photos are worth paying a vision call to look at.
+ *
+ * Pure selection logic, kept out of the scripts that use it so it can be tested
+ * directly — the round-robin and the incumbent pinning below are both subtle
+ * enough to have already shipped one bug between them.
+ *
+ * Used by scripts/pick-plant-images.ts (and written by
+ * scripts/recover-image-categories.ts).
+ */
+
+/** One candidate image plus the category Trefle filed it under. */
+export interface ImageCandidate {
+  url: string
+  category: string
+}
+
+/** A candidate that survived probing, with its measured pixel dimensions. */
+export interface Measured {
+  url: string
+  category: string
+  width: number
+  height: number
+  isIncumbent: boolean
+}
+
+// A hero is either the bloom or the whole plant; everything else is a detail
+// shot that reads as a mystery at card size.
+export const PRIMARY_CATEGORIES = ['flower', 'habit']
+// Used only to top up a plant with too few primaries to choose between.
+export const FALLBACK_CATEGORIES = ['unknown', 'other', 'leaf', 'fruit', 'bark']
+
+export const MAX_FOR_VISION = 6
+export const MIN_SHORTLIST = 4
+
+/**
+ * Narrow a plant's candidates to the ones worth paying to look at.
+ *
+ * Primary categories first, interleaved so a plant with five bloom shots and
+ * five habit shots offers the model both framings rather than five near-
+ * duplicates of one. The incumbent image_url is always included when it is a
+ * known candidate, so the model chooses against the current pick rather than
+ * in ignorance of it.
+ */
+export function shortlist(
+  candidates: ImageCandidate[],
+  incumbent: string | null
+): ImageCandidate[] {
+  const byCategory = new Map<string, ImageCandidate[]>()
+  for (const c of candidates) {
+    if (!byCategory.has(c.category)) byCategory.set(c.category, [])
+    byCategory.get(c.category)!.push(c)
+  }
+
+  const picked: ImageCandidate[] = []
+  const seen = new Set<string>()
+
+  const take = (c: ImageCandidate | undefined) => {
+    if (!c || seen.has(c.url)) return
+    seen.add(c.url)
+    picked.push(c)
+  }
+
+  // Round-robin across flower/habit so neither framing crowds the other out.
+  const depth = Math.max(
+    ...PRIMARY_CATEGORIES.map((c) => byCategory.get(c)?.length ?? 0),
+    0
+  )
+  for (let i = 0; i < depth; i++) {
+    for (const category of PRIMARY_CATEGORIES) {
+      take(byCategory.get(category)?.[i])
+    }
+  }
+
+  // Top up only when there is barely anything to choose between — a plant with
+  // no habit shots (Actaea simplex, for one) should still get a real comparison.
+  if (picked.length < MIN_SHORTLIST) {
+    for (const category of FALLBACK_CATEGORIES) {
+      for (const c of byCategory.get(category) ?? []) {
+        if (picked.length >= MIN_SHORTLIST) break
+        take(c)
+      }
+    }
+  }
+
+  // The incumbent earns a slot even if its category ranks low, so the pass can
+  // confirm a good existing pick instead of replacing it blindly.
+  if (incumbent) {
+    const match = candidates.find((c) => c.url === incumbent)
+    if (match && !seen.has(match.url)) picked.unshift(match)
+  }
+
+  return picked
+}
+
+/**
+ * Rank probed candidates and cut the list down to what we will actually send.
+ *
+ * Ranked by short edge rather than total pixels: the short edge decides how
+ * much detail survives a full-bleed card crop, whereas pixel count flatters
+ * extreme panoramas that lose most of their area to the crop.
+ *
+ * The incumbent is then pinned inside the cap. Without this a low-resolution
+ * current pick gets sorted below six sharper alternatives and sliced away —
+ * so the pass would "upgrade" that plant without ever having compared the two,
+ * and could never confirm an already-good hero.
+ */
+export function rankAndCap(
+  measured: Measured[],
+  max = MAX_FOR_VISION
+): { kept: Measured[]; capped: number } {
+  const ranked = [...measured].sort(
+    (a, b) => Math.min(b.width, b.height) - Math.min(a.width, a.height)
+  )
+
+  const incumbentIndex = ranked.findIndex((m) => m.isIncumbent)
+  if (incumbentIndex >= max) {
+    const [pinned] = ranked.splice(incumbentIndex, 1)
+    ranked.splice(max - 1, 0, pinned!)
+  }
+
+  return {
+    kept: ranked.slice(0, max),
+    capped: Math.max(0, ranked.length - max),
+  }
+}
