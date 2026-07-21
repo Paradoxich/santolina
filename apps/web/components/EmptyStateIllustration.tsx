@@ -12,6 +12,7 @@ const illustrations = {
   growing: '/illustrations/illustration-growing.png',
   planned: '/illustrations/illustration-planned-2.png',
   diary: '/illustrations/illustration-diary-2.png',
+  reflections: '/illustrations/illustration-reflections.png',
 } as const
 
 export type EmptyStateIllustrationName = keyof typeof illustrations

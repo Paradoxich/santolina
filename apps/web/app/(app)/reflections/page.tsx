@@ -1,4 +1,5 @@
 import { EmptyState } from '@paradoxui/ui'
+import { EmptyStateIllustration } from '@/components/EmptyStateIllustration'
 
 export default function ReflectionsPage() {
   return (
@@ -12,7 +13,11 @@ export default function ReflectionsPage() {
         </p>
       </header>
 
-      <EmptyState className="mt-11" message="Reflections are on their way." />
+      <EmptyState
+        className="mt-11"
+        illustration={<EmptyStateIllustration name="reflections" />}
+        message="Reflections are on their way."
+      />
     </div>
   )
 }

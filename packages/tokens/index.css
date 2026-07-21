@@ -220,7 +220,7 @@
   --color-surface-drawer: var(--color-sage-200);
   --color-surface-subtle: var(--color-sage-50);
   --color-surface-illustration: var(
-    --color-sage-100
+    --color-sage-200
   ); /* tinted ground behind a decorative illustration */
   --color-surface-inset: var(
     --color-sage-300

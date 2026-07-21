@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { AnimatePresence } from 'framer-motion'
 import { Icon, IconButton, SearchField } from '@paradoxui/ui'
-import { ExploreCollections } from '@/components/ExploreCollections'
+import { ExploreBrowse } from '@/components/ExploreBrowse'
 import { ExploreFilters } from '@/components/ExploreFilters'
 import { ExplorePlantTile } from '@/components/ExplorePlantTile'
 import { ExplorePlantListRow } from '@/components/ExplorePlantListRow'
@@ -60,11 +60,10 @@ export function ExploreClient({
     (p) => matchesSearch(p) && matchesFilters(p, filters, gardenRegions)
   )
 
-  // Browse view (collection shelves) until the user searches or filters; then
-  // it swaps to the flat results. Opening a plant also leaves browse (the
-  // drawer + list layout takes over).
+  // Browse view (style / colour / condition) until the user searches or
+  // filters; then it swaps to the flat results. Opening a plant also leaves
+  // browse (the drawer + list layout takes over).
   const browsing = !q && activeFilterCount === 0
-  const currentMonth = new Date().getMonth() + 1
 
   return (
     <div
@@ -76,15 +75,25 @@ export function ExploreClient({
       <div
         className={detail ? 'w-full max-w-[680px] shrink-0' : 'min-w-0 flex-1'}
       >
-        <h1 className="text-title font-semibold text-primary">Plant library</h1>
+        <header className="flex flex-col gap-tight-gap">
+          <h1 className="text-title font-semibold tracking-title text-primary">
+            Plant library
+          </h1>
+          <p className="text-body text-secondary">
+            Find plants that fit your conditions, style or region.
+          </p>
+        </header>
 
-        <div className="mt-6">
+        <div className="mt-8">
+          {/* Search sits on the page ground with a sage-100 hairline and a 12px
+              radius, rather than the kit's translucent pill. The border reaches
+              for a primitive because no border token sits at sage-100 yet. */}
           <SearchField
             placeholder="Search plants"
             label="Search plants"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="border border-card bg-[rgba(255,255,255,0.2)] !shadow-none focus-within:!shadow-soft"
+            className="h-10 rounded-md border bg-surface-card !shadow-none [border-color:var(--color-sage-100)] focus-within:!shadow-soft"
             trailingAction={
               <IconButton
                 variant={filtersOpen ? 'control' : 'ghost'}
@@ -115,12 +124,20 @@ export function ExploreClient({
         </div>
 
         {browsing && !detail ? (
-          <ExploreCollections
-            plants={plants}
-            gardenRegions={gardenRegions}
-            month={currentMonth}
-            onOpenPlant={openPlant}
-          />
+          <div className="mt-12 border-t border-card-translucent pt-12">
+            <ExploreBrowse
+              plants={plants}
+              onSelectStyle={(style) =>
+                setFilters({ ...EMPTY_FILTERS, styles: [style] })
+              }
+              onSelectColor={(bucket) =>
+                setFilters({ ...EMPTY_FILTERS, colors: [bucket] })
+              }
+              onSelectSun={(sun) =>
+                setFilters({ ...EMPTY_FILTERS, sun: [sun] })
+              }
+            />
+          </div>
         ) : (
           <>
             {visible.length > 0 && (
