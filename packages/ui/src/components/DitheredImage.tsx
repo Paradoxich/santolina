@@ -59,6 +59,13 @@ export interface DitheredImageProps {
    * - spotlight: brighten and saturate the image inside the lens
    */
   hoverMode?: 'reveal' | 'organic' | 'magnify' | 'coarsen' | 'spotlight'
+  /**
+   * Whether the image drifts (the Ken Burns orbit). `false` keeps the dither
+   * and renders one static frame, which also stops the animation loop — worth
+   * reaching for when several instances share a page. Users who prefer reduced
+   * motion always get the static frame regardless of this setting.
+   */
+  motion?: boolean
 }
 
 const HOVER_MODES = {
@@ -231,6 +238,7 @@ export function DitheredImage({
   softness = 0.45,
   weight = 0.5,
   hoverMode = 'reveal',
+  motion = true,
 }: DitheredImageProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
@@ -384,6 +392,9 @@ export function DitheredImage({
     const reduced = window.matchMedia(
       '(prefers-reduced-motion: reduce)'
     ).matches
+    // A caller opting out of motion takes the same path as a reader who has
+    // asked for less of it: one static frame, no animation loop.
+    const still = reduced || !motion
     const start = performance.now()
 
     // Cursor lens. Targets are set by pointer events; the smoothed values trail
@@ -405,11 +416,11 @@ export function DitheredImage({
       targetX = (e.clientX - rect.left) * r
       targetY = canvas.height - (e.clientY - rect.top) * r
       targetHover = 1
-      if (reduced) render(performance.now())
+      if (still) render(performance.now())
     }
     const onPointerLeave = () => {
       targetHover = 0
-      if (reduced) render(performance.now())
+      if (still) render(performance.now())
     }
     canvas.addEventListener('pointermove', onPointerMove)
     canvas.addEventListener('pointerleave', onPointerLeave)
@@ -423,7 +434,7 @@ export function DitheredImage({
       // keeps it smooth across frame rates. Reduced motion snaps (no rAF loop).
       const dt = Math.min((now - lastMs) / 1000, 0.05)
       lastMs = now
-      if (reduced || dt <= 0) {
+      if (still || dt <= 0) {
         smoothX = targetX
         smoothY = targetY
         velX = 0
@@ -434,7 +445,7 @@ export function DitheredImage({
         ;[smoothX, velX] = smoothDamp(smoothX, targetX, velX, smoothTime, dt)
         ;[smoothY, velY] = smoothDamp(smoothY, targetY, velY, smoothTime, dt)
       }
-      smoothHover += (targetHover - smoothHover) * (reduced ? 1 : 0.12)
+      smoothHover += (targetHover - smoothHover) * (still ? 1 : 0.12)
       gl.viewport(0, 0, canvas.width, canvas.height)
       gl.uniform2f(u.resolution, canvas.width, canvas.height)
       gl.uniform2f(u.imageSize, imgW, imgH)
@@ -448,25 +459,26 @@ export function DitheredImage({
       // velX/velY are px/second; the shader smear expects ~px/frame, so scale.
       gl.uniform2f(u.velocity, velX / 60, velY / 60)
       gl.uniform1f(u.weight, weightRef.current)
-      gl.uniform1f(u.time, reduced ? 0 : (now - start) / 1000)
+      gl.uniform1f(u.time, still ? 0 : (now - start) / 1000)
       gl.drawArrays(gl.TRIANGLES, 0, 3)
     }
 
-    // Animate continuously unless the user prefers reduced motion, in which
-    // case we render on demand (resize / image load) to a static frame.
+    // Animate continuously unless motion is off — either by prop or because
+    // the user prefers reduced motion — in which case we render on demand
+    // (resize / image load / pointer) to a static frame.
     let raf = 0
     const loop = (now: number) => {
       render(now)
       raf = requestAnimationFrame(loop)
     }
-    if (reduced) {
+    if (still) {
       render(performance.now())
     } else {
       raf = requestAnimationFrame(loop)
     }
 
     const ro = new ResizeObserver(() => {
-      if (reduced) render(performance.now())
+      if (still) render(performance.now())
     })
     ro.observe(canvas)
     if (loaded) render(performance.now())
@@ -487,7 +499,9 @@ export function DitheredImage({
       gl.deleteShader(vs)
       gl.deleteShader(fs)
     }
-  }, [src])
+    // `motion` is a dependency rather than a ref: it decides whether the rAF
+    // loop exists at all, so it has to rebuild rather than be read per frame.
+  }, [src, motion])
 
   // When motion is off, the rAF loop isn't running, so nudge a repaint after a
   // tuning change (harmless while animating).
