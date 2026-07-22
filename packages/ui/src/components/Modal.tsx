@@ -17,6 +17,11 @@ export interface ModalProps {
   bodyClassName?: string
   /** Class applied to the dialog surface — use to retone it. */
   className?: string
+  /**
+   * Blurs whatever sits behind the scrim. Use when this dialog opens on top
+   * of another one, so the modal underneath recedes instead of competing.
+   */
+  blurBackdrop?: boolean
 }
 
 const sizeStyles: Record<NonNullable<ModalProps['size']>, string> = {
@@ -35,6 +40,7 @@ export function Modal({
   size = 'md',
   bodyClassName,
   className,
+  blurBackdrop = false,
 }: ModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null)
   const titleId = useId()
@@ -72,6 +78,7 @@ export function Modal({
         'w-full rounded-modal shadow-lg',
         'p-0 bg-surface-card border border-card',
         'backdrop:bg-scrim',
+        blurBackdrop && 'backdrop:backdrop-blur-sm',
         sizeStyles[size],
         className
       )}

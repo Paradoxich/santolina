@@ -227,6 +227,7 @@ export function SettingsModal({
         onClose={() => setLocationOpen(false)}
         currentCity={city}
         currentCountry={country}
+        blurBackdrop
       />
 
       <Modal
@@ -234,6 +235,7 @@ export function SettingsModal({
         onClose={() => setResetOpen(false)}
         title="Reset your garden?"
         size="sm"
+        blurBackdrop
         footer={
           <div className="flex justify-end gap-2">
             <Button
@@ -265,6 +267,7 @@ export function SettingsModal({
         onClose={() => setDeleteOpen(false)}
         title="Delete your account?"
         size="sm"
+        blurBackdrop
         footer={
           <div className="flex justify-end gap-2">
             <Button

@@ -56,13 +56,13 @@ export const WithDisabledItem: Story = {
   },
 }
 
-/** Hover-opened, left-aligned, stretched to a full-width row trigger. */
-export const OpensOnHover: Story = {
+/** Left-aligned, stretched to a full-width row trigger with a matching panel. */
+export const FullWidthRow: Story = {
   args: {
     label: 'Your account',
-    openOnHover: true,
     align: 'start',
     className: 'w-[220px]',
+    menuClassName: 'w-full',
     trigger: (
       <>
         <span className="flex-1 text-left text-body text-primary">

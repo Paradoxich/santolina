@@ -36,13 +36,17 @@ export function AppSidebar({ identity }: { identity: SidebarIdentity }) {
 
   return (
     <aside className="fixed inset-y-0 left-0 z-10 hidden w-sidebar flex-col border-r border-[var(--sidebar-divider)] bg-surface-page md:flex">
-      <div className="px-section-gap py-row-gap">
+      {/* Inline-gap here plus row-gap on the trigger lands the avatar on the
+          same x as the nav icons below, and gives the hover fill room. */}
+      <div className="px-inline-gap py-row-gap">
         <Menu
           label="Your account"
-          openOnHover
           align="start"
           className="w-full"
-          triggerClassName="flex w-full items-center gap-inline-gap rounded-md text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+          // Panel spans the trigger, so the dropdown reads as part of the row
+          // it drops from rather than a narrow tag beside it.
+          menuClassName="w-full"
+          triggerClassName="flex w-full items-center gap-inline-gap rounded-md px-row-gap py-item-gap text-left transition-colors duration-normal hover:bg-surface-nav-active focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
           items={[
             {
               label: 'Settings',

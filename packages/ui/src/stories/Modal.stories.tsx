@@ -77,3 +77,49 @@ function TwoPaneModalStory() {
 export const TwoPane: Story = {
   render: () => <TwoPaneModalStory />,
 }
+
+/** A confirm opening on top of a panel — `blurBackdrop` sinks the one below. */
+function StackedModalStory() {
+  const [panel, setPanel] = useState(false)
+  const [confirm, setConfirm] = useState(false)
+  return (
+    <>
+      <Button onClick={() => setPanel(true)}>Open settings</Button>
+      <Modal
+        isOpen={panel}
+        onClose={() => setPanel(false)}
+        size="xl"
+        className="border-card-translucent bg-surface-card"
+      >
+        <div className="min-h-[320px]">
+          <h2 className="text-section font-medium text-primary">Garden</h2>
+          <Button
+            variant="destructive-ghost"
+            className="mt-row-gap"
+            onClick={() => setConfirm(true)}
+          >
+            Reset
+          </Button>
+        </div>
+      </Modal>
+      <Modal
+        isOpen={confirm}
+        onClose={() => setConfirm(false)}
+        title="Reset your garden?"
+        size="sm"
+        blurBackdrop
+        footer={
+          <Button variant="destructive" onClick={() => setConfirm(false)}>
+            Reset garden
+          </Button>
+        }
+      >
+        <p className="text-body text-secondary">This cannot be undone.</p>
+      </Modal>
+    </>
+  )
+}
+
+export const StackedBlurredBackdrop: Story = {
+  render: () => <StackedModalStory />,
+}
