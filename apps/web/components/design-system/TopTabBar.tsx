@@ -28,7 +28,11 @@ export function TopTabBar() {
   // tab's underline must sit directly on the border.
   return (
     <div className="border-b border-card px-card-padding pt-item-gap lg:px-section-break lg:pt-section-gap">
-      <div className="overflow-x-auto">
+      {/* no-scrollbar: overflow-x-auto forces overflow-y to compute to auto,
+          and the active tab's 1px underline (after:-bottom-px) overflows just
+          enough to summon a stray fern-green vertical scrollbar. Hide it —
+          horizontal scroll still works, the underline is untouched. */}
+      <div className="no-scrollbar overflow-x-auto">
         <Tabs
           items={chapter.sections.map(({ slug: s, label }) => ({
             value: s,
