@@ -51,6 +51,11 @@ export function CareTipsCard({
       <Panel
         title="Plant care"
         meta={`${totalTips} tips`}
+        description={
+          showEmptyHint
+            ? 'Tailored tips show up when you have plants growing.'
+            : undefined
+        }
         role="button"
         tabIndex={0}
         onClick={() => setIsDrawerOpen(true)}
@@ -62,11 +67,6 @@ export function CareTipsCard({
         }}
         className="relative h-full cursor-pointer overflow-hidden focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
       >
-        {showEmptyHint && (
-          <p className="mb-inline-gap text-body-small text-muted">
-            Tailored tips show up when you have plants growing.
-          </p>
-        )}
         {/* flex-1 (basis 0) + min-h-0 + overflow-y-auto: the list fills whatever
             height the row settles at and scrolls internally instead of its
             full 5-tip height inflating the row now that row heights are min-h

@@ -40,6 +40,8 @@ export type { SpinnerProps } from './components/Spinner'
 
 export { Modal } from './components/Modal'
 export type { ModalProps } from './components/Modal'
+export { Lightbox } from './components/Lightbox'
+export type { LightboxProps, LightboxImage } from './components/Lightbox'
 
 export { Toast } from './components/Toast'
 export type { ToastProps, ToastAction } from './components/Toast'

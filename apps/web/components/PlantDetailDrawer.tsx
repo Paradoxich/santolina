@@ -6,6 +6,7 @@ import {
   Drawer,
   Icon,
   IconButton,
+  Lightbox,
   Modal,
   Tooltip,
   useToast,
@@ -52,16 +53,24 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
   // Lead with the curated hero (getPlantDetail resolves plant.image_url to it),
   // so the drawer shows the same photo the browse card does — including a
   // Wikimedia pick, which isn't in the raw image_urls list. Dedupe so the hero
-  // doesn't repeat when it also happens to be a Trefle image.
-  const photos = [
+  // doesn't repeat when it also happens to be a Trefle image. The full-size
+  // viewer pages through this same ordering, not just the 3 shown in the strip.
+  const allPhotos = [
     ...(plant.image_url ? [plant.image_url] : []),
     ...(plant.image_urls ?? []).filter((u) => u !== plant.image_url),
-  ].slice(0, 3)
+  ]
+  const photos = allPhotos.slice(0, 3)
+  const galleryImages = allPhotos.map((src, i) => ({
+    src,
+    alt: `${plant.common_name} photo ${i + 1}`,
+  }))
   const credit = creditLine(plant.image_attribution)
   const bullets = buildGoodForYourGarden(plant, garden, companions)
 
   const router = useRouter()
   const { toast } = useToast()
+
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
 
   const [palette, setPalette] = useState<{
     paletteId: string
@@ -442,12 +451,11 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
         </div>
 
         <div className="flex w-full shrink-0 snap-x snap-mandatory gap-inline-gap overflow-x-auto">
-          {(photos.length > 0 ? photos : [null]).map((src, i) => (
-            <div
-              key={src ?? 'placeholder'}
-              className="relative h-[141px] shrink-0 snap-start overflow-hidden rounded-sm"
-              style={{ width: PHOTO_WIDTHS[i % PHOTO_WIDTHS.length] }}
-            >
+          {(photos.length > 0 ? photos : [null]).map((src, i) => {
+            const imageClass =
+              'relative h-[141px] shrink-0 snap-start overflow-hidden rounded-sm'
+            const style = { width: PHOTO_WIDTHS[i % PHOTO_WIDTHS.length] }
+            const image = (
               <PlantImage
                 src={src}
                 alt={`${plant.common_name} photo ${i + 1}`}
@@ -455,8 +463,25 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
                 sizes="207px"
                 className="object-cover"
               />
-            </div>
-          ))}
+            )
+            // Only real photos open the viewer; the placeholder stays inert.
+            return src ? (
+              <button
+                key={src}
+                type="button"
+                onClick={() => setLightboxIndex(i)}
+                aria-label={`View ${plant.common_name} photo ${i + 1}`}
+                className={`${imageClass} cursor-pointer transition-opacity duration-normal hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus`}
+                style={style}
+              >
+                {image}
+              </button>
+            ) : (
+              <div key="placeholder" className={imageClass} style={style}>
+                {image}
+              </div>
+            )
+          })}
         </div>
 
         {credit && (
@@ -502,6 +527,13 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
           <DetailsSection plant={plant} />
         </div>
       </div>
+
+      <Lightbox
+        images={galleryImages}
+        isOpen={lightboxIndex !== null}
+        initialIndex={lightboxIndex ?? 0}
+        onClose={() => setLightboxIndex(null)}
+      />
 
       <Modal
         isOpen={isRemoveDialogOpen}

@@ -51,8 +51,8 @@ export function MediaCard({
     'flex flex-col gap-section-gap rounded-card-tile p-card-padding',
     surfaceStyles[surface],
     border === 'dashed'
-      ? 'border border-dashed border-card'
-      : 'border border-card',
+      ? 'border border-dashed border-card-translucent'
+      : 'border border-card-translucent',
     className
   )
 

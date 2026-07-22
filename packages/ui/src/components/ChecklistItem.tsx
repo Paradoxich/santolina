@@ -68,10 +68,9 @@ export function ChecklistItem({
     <li
       ref={ref}
       className={cn(
-        'flex w-full items-center gap-inline-gap',
-        'border-b border-divider-subtle',
-        'first:border-t',
-        'p-inline-gap',
+        'flex w-full items-center gap-row-gap',
+        'border-b border-divider',
+        'p-item-gap',
         className
       )}
       {...props}

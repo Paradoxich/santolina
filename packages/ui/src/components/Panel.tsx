@@ -10,6 +10,11 @@ export interface PanelProps extends React.HTMLAttributes<HTMLElement> {
    * the header needs an affordance.
    */
   meta?: React.ReactNode
+  /**
+   * Optional muted line tucked directly under the title (tight gap), for a
+   * subtitle or hint that belongs to the header rather than the body.
+   */
+  description?: React.ReactNode
   ref?: React.Ref<HTMLElement>
   children: React.ReactNode
 }
@@ -21,6 +26,7 @@ export interface PanelProps extends React.HTMLAttributes<HTMLElement> {
 export function Panel({
   title,
   meta,
+  description,
   className,
   ref,
   children,
@@ -38,17 +44,24 @@ export function Panel({
       )}
       {...props}
     >
-      {(title || meta) && (
-        <div className="flex w-full items-baseline justify-between gap-row-gap">
-          {title && (
-            <h2 className="min-w-0 flex-1 text-section font-medium text-primary">
-              {title}
-            </h2>
+      {(title || meta || description) && (
+        <div className="flex flex-col gap-tight-gap">
+          {(title || meta) && (
+            <div className="flex w-full items-baseline justify-between gap-row-gap">
+              {title && (
+                <h2 className="min-w-0 flex-1 text-section font-medium text-primary">
+                  {title}
+                </h2>
+              )}
+              {meta && (
+                <span className="shrink-0 whitespace-nowrap text-body text-muted">
+                  {meta}
+                </span>
+              )}
+            </div>
           )}
-          {meta && (
-            <span className="shrink-0 whitespace-nowrap text-body text-muted">
-              {meta}
-            </span>
+          {description && (
+            <p className="text-body-small text-muted">{description}</p>
           )}
         </div>
       )}
