@@ -21,9 +21,21 @@ export interface MenuProps {
   trigger: React.ReactNode
   /** Where the panel opens relative to the trigger. */
   position?: 'bottom' | 'top'
+  /** Which trigger edge the panel lines up with. */
+  align?: 'start' | 'end'
   /** Class applied to the trigger button. */
   triggerClassName?: string
+  /** Class applied to the wrapper — use to stretch the trigger. */
+  className?: string
+  /**
+   * Open on pointer hover as well as click. Pointer-only: keyboard and touch
+   * still go through the trigger.
+   */
+  openOnHover?: boolean
 }
+
+/** Grace period so the pointer can cross the gap to the panel. */
+const HOVER_CLOSE_DELAY = 150
 
 /**
  * A small dropdown action menu — a trigger button that opens a `role="menu"`
@@ -36,13 +48,17 @@ export function Menu({
   label,
   trigger,
   position = 'bottom',
+  align = 'end',
   triggerClassName,
+  className,
+  openOnHover = false,
 }: MenuProps) {
   const [open, setOpen] = useState(false)
   const menuId = useId()
   const containerRef = useRef<HTMLSpanElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
   const itemRefs = useRef<(HTMLButtonElement | null)[]>([])
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const enabledIndexes = items
     .map((item, i) => (item.disabled ? -1 : i))
@@ -65,6 +81,33 @@ export function Menu({
     setOpen(false)
     if (returnFocus) triggerRef.current?.focus()
   }
+
+  const cancelHoverClose = () => {
+    if (closeTimer.current) {
+      clearTimeout(closeTimer.current)
+      closeTimer.current = null
+    }
+  }
+
+  const hoverProps = openOnHover
+    ? {
+        onPointerEnter: (e: React.PointerEvent) => {
+          if (e.pointerType === 'touch') return
+          cancelHoverClose()
+          setOpen(true)
+        },
+        onPointerLeave: (e: React.PointerEvent) => {
+          if (e.pointerType === 'touch') return
+          cancelHoverClose()
+          closeTimer.current = setTimeout(
+            () => setOpen(false),
+            HOVER_CLOSE_DELAY
+          )
+        },
+      }
+    : {}
+
+  useEffect(() => cancelHoverClose, [])
 
   useEffect(() => {
     if (!open) return
@@ -112,7 +155,11 @@ export function Menu({
   }
 
   return (
-    <span ref={containerRef} className="relative inline-flex">
+    <span
+      ref={containerRef}
+      className={cn('relative inline-flex', className)}
+      {...hoverProps}
+    >
       <button
         ref={triggerRef}
         type="button"
@@ -133,7 +180,8 @@ export function Menu({
           aria-label={label}
           onKeyDown={onMenuKeyDown}
           className={cn(
-            'absolute right-0 z-50 min-w-[8rem]',
+            'absolute z-50 min-w-[8rem]',
+            align === 'end' ? 'right-0' : 'left-0',
             position === 'bottom' ? 'top-full mt-1' : 'bottom-full mb-1',
             'rounded-md border border-card bg-surface-control p-1 shadow-soft backdrop-blur-md'
           )}

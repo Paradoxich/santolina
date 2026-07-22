@@ -56,6 +56,30 @@ export const WithDisabledItem: Story = {
   },
 }
 
+/** Hover-opened, left-aligned, stretched to a full-width row trigger. */
+export const OpensOnHover: Story = {
+  args: {
+    label: 'Your account',
+    openOnHover: true,
+    align: 'start',
+    className: 'w-[220px]',
+    trigger: (
+      <>
+        <span className="flex-1 text-left text-body text-primary">
+          Ana Beverin
+        </span>
+        {chevron}
+      </>
+    ),
+    triggerClassName:
+      'flex w-full items-center gap-inline-gap rounded-md px-row-gap py-item-gap transition-colors duration-normal hover:bg-surface-overlay',
+    items: [
+      { label: 'Settings', onSelect: () => {} },
+      { label: 'Log out', onSelect: () => {} },
+    ],
+  },
+}
+
 export const OpensUpward: Story = {
   args: {
     label: 'Item actions',

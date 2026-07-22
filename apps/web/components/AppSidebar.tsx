@@ -1,9 +1,12 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Avatar, Badge, Icon } from '@paradoxui/ui'
+import { Avatar, Badge, Icon, Menu } from '@paradoxui/ui'
 import { icons, type IconName } from '@/lib/icons'
+import { SettingsModal } from '@/components/SettingsModal'
+import { signOut } from '@/server/account-actions'
 
 interface NavItem {
   label: string
@@ -14,6 +17,9 @@ interface NavItem {
 export interface SidebarIdentity {
   name: string
   avatarUrl: string | null
+  email: string | null
+  city: string | null
+  country: string | null
 }
 
 const navItems: NavItem[] = [
@@ -26,29 +32,49 @@ const navItems: NavItem[] = [
 
 export function AppSidebar({ identity }: { identity: SidebarIdentity }) {
   const pathname = usePathname()
+  const [settingsOpen, setSettingsOpen] = useState(false)
 
   return (
     <aside className="fixed inset-y-0 left-0 z-10 hidden w-sidebar flex-col border-r border-[var(--sidebar-divider)] bg-surface-page md:flex">
-      <Link
-        href="/settings"
-        aria-current={pathname.startsWith('/settings') ? 'page' : undefined}
-        className="flex items-center gap-inline-gap px-section-gap py-row-gap"
-      >
-        <Avatar
-          size="xs"
-          src={identity.avatarUrl ?? undefined}
-          alt={identity.name}
+      <div className="px-section-gap py-row-gap">
+        <Menu
+          label="Your account"
+          openOnHover
+          align="start"
+          className="w-full"
+          triggerClassName="flex w-full items-center gap-inline-gap rounded-md text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+          items={[
+            {
+              label: 'Settings',
+              icon: <Icon src={icons.settings} />,
+              onSelect: () => setSettingsOpen(true),
+            },
+            {
+              label: 'Log out',
+              icon: <Icon src={icons.logout} />,
+              onSelect: () => signOut(),
+            },
+          ]}
+          trigger={
+            <>
+              <Avatar
+                size="xs"
+                src={identity.avatarUrl ?? undefined}
+                alt={identity.name}
+              />
+              <span className="flex-1 truncate text-body text-primary">
+                {identity.name}
+              </span>
+              <Badge
+                tone="positive"
+                className="shrink-0 whitespace-nowrap uppercase tracking-wide"
+              >
+                WIP
+              </Badge>
+            </>
+          }
         />
-        <span className="flex-1 truncate text-body text-primary">
-          {identity.name}
-        </span>
-        <Badge
-          tone="positive"
-          className="shrink-0 whitespace-nowrap uppercase tracking-wide"
-        >
-          WIP
-        </Badge>
-      </Link>
+      </div>
 
       <nav className="flex min-h-0 flex-1 flex-col gap-tight-gap p-inline-gap">
         {navItems.map((item) => {
@@ -83,6 +109,14 @@ export function AppSidebar({ identity }: { identity: SidebarIdentity }) {
         <span className="flex-1 text-body text-primary">Agent</span>
         <span className="text-label text-accent">⌘K</span>
       </button>
+
+      <SettingsModal
+        isOpen={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        email={identity.email}
+        city={identity.city}
+        country={identity.country}
+      />
     </aside>
   )
 }
