@@ -1,10 +1,18 @@
 # Santolina
 
-An AI-native garden planning platform that combines horticultural knowledge, structured plant data, and intelligent recommendations to help people design and manage beautiful outdoor spaces. Built as a monorepo alongside Paradox UI, an open source design system extracted from the product as it's built.
+An AI-native garden planning platform that combines horticultural knowledge, structured plant data, and intelligent recommendations to help people design and manage beautiful outdoor spaces. Built as a monorepo alongside Paradox UI, a design system extracted from the product as it's built, headed for a separate MIT license once it's ready for external use.
+
+![Santolina dashboard](docs/santolina-interface.png)
+
+[santolina.app](https://santolina.app) · [Paradox UI Storybook](https://paradoxich.github.io/paradoxui) · [Build log](https://paradoxich.substack.com)
 
 ## Overview
 
 Santolina helps beginner to intermediate gardeners design and manage ornamental gardens. Users describe their conditions and style preferences and get a curated plant palette with seasonal guidance.
+
+The app runs entirely on Supabase: magic-link and Google auth, row-level security on every user-owned table, and private photo storage behind signed URLs.
+
+![Santolina landing page](docs/santolina-lp.png)
 
 The monorepo contains the Next.js web app and the Paradox UI packages (@paradoxui/ui, @paradoxui/tokens), kept deliberately separate so the design system stays extractable.
 
@@ -29,7 +37,8 @@ santolina/
 - **Package manager**: pnpm with workspaces
 - **Monorepo orchestration**: Turborepo
 - **Node version**: 20 LTS
-- **App**: Next.js 15, TypeScript, Tailwind CSS, Framer Motion, Supabase, Vercel AI SDK
+- **App**: Next.js 15, TypeScript, Tailwind CSS, Framer Motion, Supabase
+- **Plant data pipeline**: Trefle API + Anthropic API (Claude) — offline curation and cross-check scripts, see below
 - **UI library**: React 19, TypeScript, Tailwind CSS, Storybook 8
 - **Tokens**: Pure CSS custom properties
 
