@@ -204,7 +204,7 @@ export function ExploreBrowse({
                 key={bucket.value}
                 type="button"
                 onClick={() => onSelectColor(bucket.value)}
-                className="group relative isolate flex aspect-[174/153] flex-col justify-end overflow-hidden rounded-md p-inline-gap text-left"
+                className="group relative isolate flex aspect-[174/153] flex-col justify-end overflow-hidden rounded-md p-inline-gap text-left [clip-path:inset(0_round_var(--radius-md))]"
               >
                 {/* Stack, bottom up: full-colour photo, bucket colour at 50%,
                     dark scrim for the label.
@@ -223,7 +223,7 @@ export function ExploreBrowse({
                   cell={2}
                   revealRadius={0}
                   motion={false}
-                  className="absolute inset-0 h-full w-full transition-transform duration-slow group-hover:scale-[1.04]"
+                  className="absolute inset-0 h-full w-full rounded-[inherit] transition-transform duration-slow group-hover:scale-[1.04]"
                 />
                 <span
                   aria-hidden="true"

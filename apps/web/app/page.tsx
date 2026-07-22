@@ -24,7 +24,7 @@ export default function LandingPage() {
         <DitheredImage
           src="/textures/signup-hero-landscape.jpg"
           videoSrc="/textures/landing-hero.mp4"
-          className="absolute inset-0"
+          className="absolute inset-0 rounded-[inherit]"
           levels={12}
           cell={2}
           revealRadius={0}
