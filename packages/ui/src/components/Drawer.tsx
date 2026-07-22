@@ -61,11 +61,22 @@ export function Drawer({
     // Mirrors the lg breakpoint: below it the drawer is a full-screen
     // sheet, so the page underneath must not scroll behind it.
     const mq = window.matchMedia('(max-width: 1023px)')
-    if (!mq.matches) return
-    const original = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
+    if (mq.matches) {
+      const original = document.body.style.overflow
+      document.body.style.overflow = 'hidden'
+      return () => {
+        document.body.style.overflow = original
+      }
+    }
+    // At lg+ the page behind stays scrollable, but a classic (space-taking)
+    // page scrollbar would sit between the right-0 panel and the screen
+    // edge. Hide the bar while the drawer is open — scrolling still works,
+    // and the panel sits flush against the viewport.
+    const root = document.documentElement
+    const original = root.style.scrollbarWidth
+    root.style.scrollbarWidth = 'none'
     return () => {
-      document.body.style.overflow = original
+      root.style.scrollbarWidth = original
     }
   }, [])
 
