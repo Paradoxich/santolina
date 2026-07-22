@@ -265,6 +265,30 @@ export function DitheredImage({
 }: DitheredImageProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
+  const wrapperRef = useRef<HTMLDivElement>(null)
+
+  // Firefox's GPU compositor (seen on 153, macOS) ignores border-radius on
+  // accelerated layers — the WebGL canvas and the video paint square corners
+  // no matter where the radius sits, wrapper or the elements themselves.
+  // clip-path is applied by the compositor and does clip those layers, so
+  // mirror whatever radius the wrapper was given into an equivalent
+  // inset(0 round …). Runs before the canvas ever paints (the shader only
+  // draws from the GL effect below), so nothing flashes square; the SSR'd
+  // <img> fallback is a plain layer that border-radius already clips.
+  useEffect(() => {
+    const el = wrapperRef.current
+    if (!el) return
+    const s = window.getComputedStyle(el)
+    const corners = [
+      s.borderTopLeftRadius,
+      s.borderTopRightRadius,
+      s.borderBottomRightRadius,
+      s.borderBottomLeftRadius,
+    ]
+    if (corners.some((r) => r && r !== '0px')) {
+      el.style.clipPath = `inset(0 round ${corners.join(' ')})`
+    }
+  }, [className])
 
   // Read tuning through refs so live changes (e.g. a controls panel) apply on
   // the next animation frame without tearing down the GL context.
@@ -577,7 +601,7 @@ export function DitheredImage({
   // painted elements themselves. Inherit keeps the component agnostic — pass
   // any radius via className and all three layers follow it.
   return (
-    <div className={cn('relative overflow-hidden', className)}>
+    <div ref={wrapperRef} className={cn('relative overflow-hidden', className)}>
       <img
         src={src}
         alt={alt}
