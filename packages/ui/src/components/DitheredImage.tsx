@@ -128,6 +128,7 @@ uniform float u_mode;           // 0 reveal, 1 organic, 2 magnify, 3 coarsen, 4 
 uniform vec2 u_velocity;        // lens velocity, device px/frame (for the smear)
 uniform float u_weight;         // 0 weightless .. 1 heavy/viscous
 uniform float u_orbit;          // 1 Ken Burns orbit, 0 plain cover fit (video)
+uniform float u_corner;         // rounded-corner radius, device px (0 = square)
 
 void main() {
   // Velocity-stretched distance: while the lens moves it elongates along the
@@ -210,7 +211,20 @@ void main() {
     outColor = mix(dithered, boosted, lens);
   }
 
-  gl_FragColor = vec4(outColor, 1.0);
+  // Rounded corners baked into the pixels. Some compositors (Firefox
+  // WebRender on certain configs) ignore both border-radius and clip-path on
+  // an accelerated canvas layer, but no compositor can ignore alpha that was
+  // never drawn: outside the rounded rect we output transparent, with a
+  // ~1.5px feather as anti-aliasing.
+  float aCorner = 1.0;
+  if (u_corner > 0.0) {
+    vec2 halfRes = u_resolution * 0.5;
+    vec2 q = abs(gl_FragCoord.xy - halfRes) - (halfRes - vec2(u_corner));
+    float dCorner = length(max(q, 0.0)) - u_corner;
+    aCorner = 1.0 - smoothstep(-0.75, 0.75, dCorner);
+  }
+
+  gl_FragColor = vec4(outColor, aCorner);
 }
 `
 
@@ -360,6 +374,7 @@ export function DitheredImage({
       velocity: gl.getUniformLocation(prog, 'u_velocity'),
       weight: gl.getUniformLocation(prog, 'u_weight'),
       orbit: gl.getUniformLocation(prog, 'u_orbit'),
+      corner: gl.getUniformLocation(prog, 'u_corner'),
     }
     gl.uniform1i(u.image, 0)
     gl.uniform1i(u.bayer, 1)
@@ -411,6 +426,18 @@ export function DitheredImage({
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+
+    // CSS-pixel corner radius of the wrapper, fed to the shader mask. Read
+    // from computed style so it tracks whatever radius class the consumer
+    // passed; re-read on resize in case a breakpoint changes it.
+    let cornerCss = 0
+    const readCorner = () => {
+      const parent = canvas.parentElement
+      if (!parent) return
+      cornerCss =
+        parseFloat(window.getComputedStyle(parent).borderTopLeftRadius) || 0
+    }
+    readCorner()
 
     let imgW = 1
     let imgH = 1
@@ -544,6 +571,7 @@ export function DitheredImage({
       gl.uniform2f(u.velocity, velX / 60, velY / 60)
       gl.uniform1f(u.weight, weightRef.current)
       gl.uniform1f(u.time, still ? 0 : (now - start) / 1000)
+      gl.uniform1f(u.corner, cornerCss * (window.devicePixelRatio || 1))
       gl.drawArrays(gl.TRIANGLES, 0, 3)
     }
 
@@ -562,6 +590,7 @@ export function DitheredImage({
     }
 
     const ro = new ResizeObserver(() => {
+      readCorner()
       if (still) render(performance.now())
     })
     ro.observe(canvas)
@@ -612,6 +641,10 @@ export function DitheredImage({
         // power-save paused), under the canvas so the shader is what shows.
         // Playback starts from the effect, never here — reduced motion and
         // motion={false} leave it paused behind the dithered poster.
+        // opacity-0, not hidden: it is purely a texture source for the
+        // shader, and its accelerated layer is exactly the kind Firefox
+        // refuses to round — invisible, it can't betray a square corner
+        // through the canvas's transparent ones.
         <video
           ref={videoRef}
           src={videoSrc}
@@ -620,7 +653,7 @@ export function DitheredImage({
           loop
           playsInline
           crossOrigin="anonymous"
-          className="absolute inset-0 h-full w-full rounded-[inherit] object-cover"
+          className="absolute inset-0 h-full w-full rounded-[inherit] object-cover opacity-0"
           aria-hidden
         />
       )}
