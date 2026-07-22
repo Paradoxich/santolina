@@ -17,14 +17,12 @@ function callbackUrl(next: string) {
 
 const copy = {
   signup: {
-    title: 'Welcome to Santolina',
-    subtitle: 'Keep track of your plants through every season.',
+    title: 'Santolina',
     footerQuestion: 'Already have an account?',
     footerAction: 'Log in',
   },
   login: {
     title: 'Welcome back',
-    subtitle: 'Pick up where you left off.',
     footerQuestion: 'New to Santolina?',
     footerAction: 'Sign up',
   },
@@ -109,11 +107,10 @@ export function LoginForm() {
 
   return (
     <div className="flex w-full flex-col items-center gap-8">
-      <div className="flex flex-col items-center gap-3 text-center">
+      <div className="flex flex-col items-center text-center">
         <h1 className="text-title font-semibold text-primary">
           {copy[mode].title}
         </h1>
-        <p className="text-body text-secondary">{copy[mode].subtitle}</p>
       </div>
 
       {(error || callbackFailed) && (
@@ -125,7 +122,7 @@ export function LoginForm() {
       <div className="flex w-full flex-col gap-5">
         <Button
           type="button"
-          className="h-12 w-full rounded-md border-login text-body-small"
+          className="h-12 w-full gap-item-gap rounded-md border-login text-body-small"
           isLoading={googleLoading}
           onClick={handleGoogle}
         >
@@ -134,9 +131,9 @@ export function LoginForm() {
         </Button>
 
         <div className="flex items-center gap-5 px-3" aria-hidden="true">
-          <span className="flex-1 border-t border-dashed border-login-hairline" />
+          <span className="flex-1 border-t border-card-translucent" />
           <span className="text-body-small text-secondary">or</span>
-          <span className="flex-1 border-t border-dashed border-login-hairline" />
+          <span className="flex-1 border-t border-card-translucent" />
         </div>
 
         <form
