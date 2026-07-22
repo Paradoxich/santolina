@@ -22,6 +22,11 @@ export interface SidebarIdentity {
   country: string | null
 }
 
+// The avatar is deliberately larger than the nav icons, so every row's glyph
+// sits in an avatar-wide slot. That keeps the icons centred on the avatar's
+// axis and starts every label at the same x.
+const glyphSlot = 'flex w-6 shrink-0 justify-center'
+
 const navItems: NavItem[] = [
   { label: 'Overview', href: '/overview', icon: 'grid' },
   { label: 'My Plants', href: '/plants', icon: 'leaf' },
@@ -36,8 +41,9 @@ export function AppSidebar({ identity }: { identity: SidebarIdentity }) {
 
   return (
     <aside className="fixed inset-y-0 left-0 z-10 hidden w-sidebar flex-col border-r border-[var(--sidebar-divider)] bg-surface-page md:flex">
-      {/* Inline-gap here plus row-gap on the trigger lands the avatar on the
-          same x as the nav icons below, and gives the hover fill room. */}
+      {/* Inline-gap here plus row-gap on the trigger matches the nav's own
+          8 + 16, so the avatar starts where the icon slots below do — and it
+          gives the hover fill room. */}
       <div className="px-inline-gap py-row-gap">
         <Menu
           label="Your account"
@@ -89,7 +95,7 @@ export function AppSidebar({ identity }: { identity: SidebarIdentity }) {
               href={item.href}
               aria-current={active ? 'page' : undefined}
               className={[
-                'flex items-center gap-item-gap rounded-md px-row-gap py-item-gap',
+                'flex items-center gap-inline-gap rounded-md px-row-gap py-item-gap',
                 'text-body text-primary',
                 'transition-colors duration-normal',
                 active
@@ -97,7 +103,9 @@ export function AppSidebar({ identity }: { identity: SidebarIdentity }) {
                   : 'hover:bg-surface-nav-active',
               ].join(' ')}
             >
-              <Icon src={icons[item.icon]} />
+              <span className={glyphSlot}>
+                <Icon src={icons[item.icon]} />
+              </span>
               {item.label}
             </Link>
           )
@@ -107,9 +115,11 @@ export function AppSidebar({ identity }: { identity: SidebarIdentity }) {
       <button
         type="button"
         disabled
-        className="flex h-14 shrink-0 items-center gap-item-gap border-t border-[var(--sidebar-divider)] px-section-gap py-inline-gap text-left opacity-50"
+        className="flex h-14 shrink-0 items-center gap-inline-gap border-t border-[var(--sidebar-divider)] px-card-padding py-inline-gap text-left opacity-50"
       >
-        <Icon src={icons.agent} />
+        <span className={glyphSlot}>
+          <Icon src={icons.agent} />
+        </span>
         <span className="flex-1 text-body text-primary">Agent</span>
         <span className="text-label text-accent">⌘K</span>
       </button>
