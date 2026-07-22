@@ -14,6 +14,7 @@ import {
 import { deriveBloomSeason } from '@/lib/bloom-timeline'
 import { buildDashboardSubtitle, buildGardenImpact } from '@/lib/dashboard-copy'
 import { formatBloomRangeShort } from '@/lib/format-plant'
+import { heroImageUrl } from '@/lib/plant-detail'
 import { listPalette } from '@/server/palette-actions'
 import { listGardenCareEvents } from '@/server/diary-actions'
 import { getSessionGardenContext } from '@/lib/session-garden'
@@ -38,7 +39,7 @@ export default async function DashboardPage() {
   const myPlants: DashboardPlant[] = growing
     .map((p) => ({
       name: p.plant.common_name,
-      imageUrl: p.plant.image_url ?? p.plant.image_urls?.[0] ?? '',
+      imageUrl: heroImageUrl(p.plant),
     }))
     .slice(0, 5)
 
@@ -46,7 +47,7 @@ export default async function DashboardPage() {
     .filter((p) => p.status === 'planned')
     .map((p) => ({
       name: p.plant.common_name,
-      imageUrl: p.plant.image_url ?? p.plant.image_urls?.[0] ?? '',
+      imageUrl: heroImageUrl(p.plant),
       months: formatBloomRangeShort(p.plant.bloom_months) ?? '',
     }))
 

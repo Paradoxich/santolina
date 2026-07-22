@@ -7,6 +7,7 @@
 import type { PalettePlant } from '@/server/palette-actions'
 import type { BloomSeason, BloomSpan } from '@/types/dashboard'
 import { monthName } from './format-plant'
+import { heroImageUrl } from './plant-image'
 
 /** Must match BloomTimelineCard's h-[147px] chart area. */
 const CHART_HEIGHT = 147
@@ -89,7 +90,7 @@ export function deriveBloomSeason(
   const drafts: SpanDraft[] = []
   for (const [plantIndex, row] of growing.entries()) {
     const { plant } = row
-    const imageUrl = plant.image_url ?? plant.image_urls?.[0] ?? ''
+    const imageUrl = heroImageUrl(plant)
     const bloomSet = new Set(plant.bloom_months ?? [])
     if (!imageUrl || bloomSet.size === 0) continue
 
