@@ -199,7 +199,6 @@ export function ExploreClient({
             <hr className="-mx-4 border-[var(--sidebar-divider)] md:-ml-10 md:-mr-12" />
             <div className="pt-12">
               <ExploreBrowse
-                plants={plants}
                 onSelectStyle={(style) =>
                   selectSearchTerm(
                     STYLE_OPTIONS.find((o) => o.value === style)?.label ?? style

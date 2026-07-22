@@ -10,8 +10,7 @@
 
 import { DitheredImage } from '@paradoxui/ui'
 import { PlantImage } from '@/components/PlantImage'
-import { BLOOM_COLOR_BUCKETS, bucketsForPlant } from '@/lib/bloom-colors'
-import type { CatalogPlant } from '@/types/garden'
+import { BLOOM_COLOR_BUCKETS } from '@/lib/bloom-colors'
 
 /**
  * WebGL cannot texture a cross-origin image without CORS headers, and
@@ -27,7 +26,6 @@ function sameOrigin(src: string | undefined): string {
 }
 
 interface ExploreBrowseProps {
-  plants: CatalogPlant[]
   onSelectStyle: (style: string) => void
   onSelectColor: (bucket: string) => void
   onSelectSun: (sun: string) => void
@@ -105,36 +103,46 @@ const CONDITIONS: { value: string; label: string; image: string }[] = [
 ]
 
 /**
- * Hand-picked photo per colour bucket, chosen with the tint applied. Plant ids rather than names
- * because names are not unique in the catalogue; comments carry the name so a
- * reader does not have to look ids up.
- *
- * `image` overrides which photo of that plant to use. Without it the tile takes
- * the plant's default (`image_url`, i.e. the first of `image_urls`). Lavender
- * needs the override because the shot Ana wanted is the third in the array.
+ * Hand-picked photo per colour bucket, chosen with the tint applied. Fixed
+ * URLs on purpose: these are editorial picks for the tiles, decided
+ * separately from any plant's hero image, so re-picking a hero in the
+ * catalogue never changes a tile. Comments carry the plant the photo is of.
  */
-const COLOR_HERO: Record<string, { plant: string; image?: string }> = {
-  white: { plant: '2ba33cdb-11c7-41d0-9f69-3c3d671548e4' }, // Asian bleeding-heart
-  cream: { plant: 'aa20f336-813d-49d0-b057-8c6ea8f2f7bf' }, // Primrose
-  yellow: { plant: 'e4570de1-14da-4d19-9e98-a6af343881f3' }, // Common sneezeweed
-  orange: { plant: '3614be73-e555-4641-bc8e-46402240b850' }, // Calendula
-  red: { plant: '4b599dbe-f860-449f-9fa5-e7e838a4a077' }, // Dahlia-flowered zinnia
-  burgundy: { plant: '1302f404-4913-4cb9-a9c6-944f42e06eda' }, // Hollyhock
-  pink: { plant: 'f0fcab50-b94f-4915-adfe-6a4a47bde5c4' }, // Astrantia
-  magenta: { plant: '63e7315f-2a38-4c32-b3bb-bc68fc0d8276' }, // Everlasting-pea
-  purple: { plant: '7c176431-b727-4e3c-b324-a3eb622d24bd' }, // Adria bellflower
-  lavender: {
-    plant: '0e369364-220d-440a-9797-50907aab5949', // Lavender
-    image:
-      'https://bs.plantnet.org/image/o/5a5ace80216cd8376fe03d0bc07ff3941918ed5e',
-  },
-  blue: { plant: '38c7c233-c4f4-40a3-acf2-71e993cb0bcc' }, // Blue eryngo
-  green: { plant: 'e7a6ad2e-938a-46a8-9bd0-39e4b6a79400' }, // Ivy (Hedera helix)
-}
-
-/** First plant in the set with a usable photo — deterministic, so tiles don't shuffle on re-render. */
-function pickImage(pool: CatalogPlant[]): CatalogPlant | undefined {
-  return pool.find((p) => p.imageUrl) ?? pool[0]
+const COLOR_HERO: Record<string, string> = {
+  // Asian bleeding-heart
+  white:
+    'https://bs.plantnet.org/image/o/fe29eabfdd58dd98be18210d3ed4a89f91fb8286',
+  // Primrose
+  cream:
+    'https://bs.plantnet.org/image/o/d5dd720f7e2a23c677b067c06223a28c8f703932',
+  // Falling stars (Ana also shortlisted an amur adonis shot; this one holds
+  // up better under the tint at tile size)
+  yellow:
+    'https://bs.plantnet.org/image/o/190e3342f601c5edfc1c4f45ba8d53fcd5fe684a',
+  // California poppy
+  orange:
+    'https://bs.plantnet.org/image/o/757ff42cbc2a89dff00169aea2e19eb07d00dc52',
+  // Dahlia-flowered zinnia
+  red: 'https://bs.plantnet.org/image/o/8d574fb571cfdd616d1af06c5db6f84735f71e37',
+  // Korean angelica
+  burgundy:
+    'https://bs.plantnet.org/image/o/cfaf3a5c7a03af2fd40389aa2e5eaaae107f2bc0',
+  // Camellia
+  pink: 'https://bs.plantnet.org/image/o/ab337d3a85d41a1917d1a4434e2ed354df446e84',
+  // Everlasting-pea
+  magenta:
+    'https://bs.plantnet.org/image/o/8876edab80e1649e97543a3b7a7f11b64ab15f9b',
+  // Adria bellflower
+  purple:
+    'https://bs.plantnet.org/image/o/3c13a605622068993cd625eaadf5b92c6d1feb68',
+  // Lavender
+  lavender:
+    'https://bs.plantnet.org/image/o/5a5ace80216cd8376fe03d0bc07ff3941918ed5e',
+  // Great forget-me-not
+  blue: 'https://bs.plantnet.org/image/o/9f3b3dd049bf523513ae0f44145cd43069ff8610',
+  // Ivy (Hedera helix)
+  green:
+    'https://bs.plantnet.org/image/o/63e30359aa2bb71ae903d0aaadee660aabec8754',
 }
 
 /** Overlay that lifts white type off the photo. Matches the Figma gradient. */
@@ -142,7 +150,6 @@ const SCRIM =
   'pointer-events-none absolute inset-0 bg-gradient-to-t from-[rgba(17,20,17,0.8)] to-[rgba(17,20,17,0)] to-70%'
 
 export function ExploreBrowse({
-  plants,
   onSelectStyle,
   onSelectColor,
   onSelectSun,
@@ -192,22 +199,13 @@ export function ExploreBrowse({
 
         <div className="grid grid-cols-3 gap-item-gap sm:grid-cols-4 lg:grid-cols-6">
           {BLOOM_COLOR_BUCKETS.map((bucket) => {
-            const pool = plants.filter((p) =>
-              bucketsForPlant(p.bloomColor).includes(bucket.value)
-            )
-            // Hand-picked photo: the explicit override if there is one, else
-            // the chosen plant's default, else the first photo in the bucket
-            // if that plant ever leaves the catalogue.
-            const choice = COLOR_HERO[bucket.value]
-            const heroPlant =
-              plants.find((p) => p.id === choice?.plant) ?? pickImage(pool)
-            const heroSrc = choice?.image ?? heroPlant?.imageUrl
+            const heroSrc = COLOR_HERO[bucket.value]
             return (
               <button
                 key={bucket.value}
                 type="button"
                 onClick={() => onSelectColor(bucket.value)}
-                className="group relative flex aspect-[174/153] flex-col justify-end overflow-hidden rounded-md p-inline-gap text-left"
+                className="group relative isolate flex aspect-[174/153] flex-col justify-end overflow-hidden rounded-md p-inline-gap text-left"
               >
                 {/* Stack, bottom up: full-colour photo, bucket colour at 50%,
                     dark scrim for the label.
