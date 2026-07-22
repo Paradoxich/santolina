@@ -7,9 +7,18 @@ import {
   type SessionProfile,
 } from '@/lib/session-garden'
 
-function toSidebarIdentity(profile: SessionProfile): SidebarIdentity {
+function toSidebarIdentity(
+  profile: SessionProfile,
+  garden: { city: string | null; country: string | null } | null
+): SidebarIdentity {
   const name = profile.displayName?.trim() || profile.email || 'Your account'
-  return { name, avatarUrl: profile.avatarUrl }
+  return {
+    name,
+    avatarUrl: profile.avatarUrl,
+    email: profile.email,
+    city: garden?.city ?? null,
+    country: garden?.country ?? null,
+  }
 }
 
 export default async function AppLayout({
@@ -24,7 +33,7 @@ export default async function AppLayout({
   if (!ctx) redirect('/login')
   if (!ctx.garden?.city) redirect('/welcome')
 
-  const identity = toSidebarIdentity(ctx.profile)
+  const identity = toSidebarIdentity(ctx.profile, ctx.garden)
 
   return (
     <ToastProvider>

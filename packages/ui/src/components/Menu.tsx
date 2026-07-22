@@ -21,8 +21,14 @@ export interface MenuProps {
   trigger: React.ReactNode
   /** Where the panel opens relative to the trigger. */
   position?: 'bottom' | 'top'
+  /** Which trigger edge the panel lines up with. */
+  align?: 'start' | 'end'
   /** Class applied to the trigger button. */
   triggerClassName?: string
+  /** Class applied to the wrapper — use to stretch the trigger. */
+  className?: string
+  /** Class applied to the panel — use to widen it past the 8rem minimum. */
+  menuClassName?: string
 }
 
 /**
@@ -36,7 +42,10 @@ export function Menu({
   label,
   trigger,
   position = 'bottom',
+  align = 'end',
   triggerClassName,
+  className,
+  menuClassName,
 }: MenuProps) {
   const [open, setOpen] = useState(false)
   const menuId = useId()
@@ -112,7 +121,7 @@ export function Menu({
   }
 
   return (
-    <span ref={containerRef} className="relative inline-flex">
+    <span ref={containerRef} className={cn('relative inline-flex', className)}>
       <button
         ref={triggerRef}
         type="button"
@@ -133,9 +142,11 @@ export function Menu({
           aria-label={label}
           onKeyDown={onMenuKeyDown}
           className={cn(
-            'absolute right-0 z-50 min-w-[8rem]',
+            'absolute z-50 min-w-[8rem]',
+            align === 'end' ? 'right-0' : 'left-0',
             position === 'bottom' ? 'top-full mt-1' : 'bottom-full mb-1',
-            'rounded-md border border-card bg-surface-control p-1 shadow-soft backdrop-blur-md'
+            'rounded-md border border-card bg-surface-control p-1 shadow-soft backdrop-blur-md',
+            menuClassName
           )}
         >
           {items.map((item, i) => (

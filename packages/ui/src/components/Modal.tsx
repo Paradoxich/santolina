@@ -9,13 +9,26 @@ export interface ModalProps {
   title?: string
   children: React.ReactNode
   footer?: React.ReactNode
-  size?: 'sm' | 'md' | 'lg'
+  size?: 'sm' | 'md' | 'lg' | 'xl'
+  /**
+   * Replaces the body's default padding — pass this when the children own
+   * their own layout (e.g. a two-pane panel that runs to the edges).
+   */
+  bodyClassName?: string
+  /** Class applied to the dialog surface — use to retone it. */
+  className?: string
+  /**
+   * Blurs whatever sits behind the scrim. Use when this dialog opens on top
+   * of another one, so the modal underneath recedes instead of competing.
+   */
+  blurBackdrop?: boolean
 }
 
 const sizeStyles: Record<NonNullable<ModalProps['size']>, string> = {
   sm: 'max-w-sm',
   md: 'max-w-md',
   lg: 'max-w-lg',
+  xl: 'max-w-3xl',
 }
 
 export function Modal({
@@ -25,6 +38,9 @@ export function Modal({
   children,
   footer,
   size = 'md',
+  bodyClassName,
+  className,
+  blurBackdrop = false,
 }: ModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null)
   const titleId = useId()
@@ -62,7 +78,9 @@ export function Modal({
         'w-full rounded-modal shadow-lg',
         'p-0 bg-surface-card border border-card',
         'backdrop:bg-scrim',
-        sizeStyles[size]
+        blurBackdrop && 'backdrop:backdrop-blur-sm',
+        sizeStyles[size],
+        className
       )}
       onClick={handleOverlayClick}
       aria-modal="true"
@@ -105,11 +123,10 @@ export function Modal({
       )}
 
       <div
-        className={cn(
-          'px-6',
-          title ? 'pt-3' : 'pt-6',
-          footer ? 'pb-3' : 'pb-6'
-        )}
+        className={
+          bodyClassName ??
+          cn('px-6', title ? 'pt-3' : 'pt-6', footer ? 'pb-3' : 'pb-6')
+        }
       >
         {children}
       </div>

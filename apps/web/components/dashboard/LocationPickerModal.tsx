@@ -12,6 +12,8 @@ interface LocationPickerModalProps {
   onClose: () => void
   currentCity: string | null
   currentCountry: string | null
+  /** Set when this opens on top of another modal (the settings panel). */
+  blurBackdrop?: boolean
 }
 
 export function LocationPickerModal({
@@ -19,6 +21,7 @@ export function LocationPickerModal({
   onClose,
   currentCity,
   currentCountry,
+  blurBackdrop = false,
 }: LocationPickerModalProps) {
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
@@ -54,6 +57,7 @@ export function LocationPickerModal({
       onClose={onClose}
       title="Set your garden's location"
       size="sm"
+      blurBackdrop={blurBackdrop}
     >
       <div className="flex flex-col gap-item-gap">
         {currentCity && (

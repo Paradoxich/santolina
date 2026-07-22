@@ -56,6 +56,30 @@ export const WithDisabledItem: Story = {
   },
 }
 
+/** Left-aligned, stretched to a full-width row trigger with a matching panel. */
+export const FullWidthRow: Story = {
+  args: {
+    label: 'Your account',
+    align: 'start',
+    className: 'w-[220px]',
+    menuClassName: 'w-full',
+    trigger: (
+      <>
+        <span className="flex-1 text-left text-body text-primary">
+          Ana Beverin
+        </span>
+        {chevron}
+      </>
+    ),
+    triggerClassName:
+      'flex w-full items-center gap-inline-gap rounded-md px-row-gap py-item-gap transition-colors duration-normal hover:bg-surface-overlay',
+    items: [
+      { label: 'Settings', onSelect: () => {} },
+      { label: 'Log out', onSelect: () => {} },
+    ],
+  },
+}
+
 export const OpensUpward: Story = {
   args: {
     label: 'Item actions',
