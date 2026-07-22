@@ -142,7 +142,7 @@ export function Lightbox({
         <img
           src={current.src}
           alt={current.alt}
-          className="max-h-full max-w-full object-contain"
+          className="max-h-full max-w-full rounded-lg object-contain"
         />
 
         <button
@@ -152,7 +152,7 @@ export function Lightbox({
           className={cn(
             'absolute right-card-padding top-card-padding',
             'flex size-10 items-center justify-center rounded-full',
-            'bg-surface-overlay text-inverse',
+            'bg-fern-900 text-fern-100',
             'transition-colors duration-normal hover:bg-surface-hover',
             'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus'
           )}
@@ -169,7 +169,7 @@ export function Lightbox({
               className={cn(
                 'absolute left-card-padding top-1/2 -translate-y-1/2',
                 'flex size-10 items-center justify-center rounded-full',
-                'bg-surface-overlay text-inverse',
+                'bg-fern-900 text-fern-100',
                 'transition-colors duration-normal hover:bg-surface-hover',
                 'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus'
               )}
@@ -183,7 +183,7 @@ export function Lightbox({
               className={cn(
                 'absolute right-card-padding top-1/2 -translate-y-1/2',
                 'flex size-10 items-center justify-center rounded-full',
-                'bg-surface-overlay text-inverse',
+                'bg-fern-900 text-fern-100',
                 'transition-colors duration-normal hover:bg-surface-hover',
                 'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus'
               )}
@@ -194,8 +194,8 @@ export function Lightbox({
             <div
               className={cn(
                 'absolute bottom-card-padding left-1/2 -translate-x-1/2',
-                'rounded-full bg-surface-overlay px-item-gap py-tight-gap',
-                'text-body-small text-inverse'
+                'rounded-full bg-fern-900 px-item-gap py-tight-gap',
+                'text-body-small text-fern-100'
               )}
               aria-live="polite"
             >
