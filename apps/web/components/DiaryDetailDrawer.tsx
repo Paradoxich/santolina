@@ -79,7 +79,7 @@ function NoteCard({
       icon: <Icon src={icons.copy} size={16} />,
       onSelect: () => {
         void navigator.clipboard.writeText(note.text)
-        toast({ groupKey: note.id, title: 'Note copied' })
+        toast({ groupKey: note.id, message: 'Note copied' })
       },
     })
   }
@@ -220,19 +220,12 @@ export function DiaryDetailDrawer({ diary, onClose }: DiaryDetailDrawerProps) {
     try {
       await deleteDiaryThread({ plantId: diary.plantId })
       router.refresh()
-      toast(
-        isGrowing
-          ? {
-              groupKey: diary.plantId,
-              title: 'Entries cleared',
-              description: `${diary.plantName}'s diary entries were cleared.`,
-            }
-          : {
-              groupKey: diary.plantId,
-              title: 'Diary deleted',
-              description: `${diary.plantName}'s diary entries were deleted.`,
-            }
-      )
+      toast({
+        groupKey: diary.plantId,
+        message: isGrowing
+          ? `${diary.plantName}'s diary entries were cleared.`
+          : `${diary.plantName}'s diary entries were deleted.`,
+      })
       onClose()
     } catch (err) {
       setDeleteError(
@@ -252,8 +245,7 @@ export function DiaryDetailDrawer({ diary, onClose }: DiaryDetailDrawerProps) {
       router.refresh()
       toast({
         groupKey: diary.plantId,
-        title: 'Note deleted',
-        description: `A note was deleted from ${diary.plantName}'s diary.`,
+        message: `A note was deleted from ${diary.plantName}'s diary.`,
       })
       setNoteToDelete(null)
     } catch (err) {

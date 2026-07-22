@@ -96,6 +96,12 @@ const preset = {
         critical: 'var(--color-fill-critical)',
         'critical-hover': 'var(--color-fill-critical-hover)',
       },
+      toast: {
+        neutral: 'var(--color-toast-surface-neutral)',
+        positive: 'var(--color-toast-surface-positive)',
+        warning: 'var(--color-toast-surface-warning)',
+        critical: 'var(--color-toast-surface-critical)',
+      },
     },
     borderColor: {
       ...ramps,
@@ -114,6 +120,12 @@ const preset = {
       positive: 'var(--color-border-positive)',
       warning: 'var(--color-border-warning)',
       critical: 'var(--color-border-critical)',
+      toast: {
+        neutral: 'var(--color-toast-border-neutral)',
+        positive: 'var(--color-toast-border-positive)',
+        warning: 'var(--color-toast-border-warning)',
+        critical: 'var(--color-toast-border-critical)',
+      },
       accent: 'var(--color-accent)',
       login: {
         DEFAULT: 'var(--login-border)',

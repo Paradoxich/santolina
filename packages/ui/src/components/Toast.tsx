@@ -7,55 +7,99 @@ export interface ToastAction {
 }
 
 export interface ToastProps extends React.HTMLAttributes<HTMLDivElement> {
-  tone?: 'default' | 'positive' | 'warning' | 'critical'
-  title?: string
-  description?: string
+  tone?: 'neutral' | 'positive' | 'warning' | 'critical'
+  message: string
   actions?: ToastAction[]
-  onClose?: () => void
   ref?: React.Ref<HTMLDivElement>
 }
 
 const toneStyles: Record<NonNullable<ToastProps['tone']>, string> = {
-  default: ['bg-surface-inverse', 'text-inverse', 'border-transparent'].join(
-    ' '
-  ),
-  positive: ['bg-fill-positive', 'text-on-accent', 'border-transparent'].join(
-    ' '
-  ),
-  warning: ['bg-fill-warning', 'text-on-accent', 'border-transparent'].join(
-    ' '
-  ),
-  critical: ['bg-fill-critical', 'text-on-accent', 'border-transparent'].join(
-    ' '
-  ),
+  neutral: ['bg-toast-neutral', 'border-toast-neutral'].join(' '),
+  positive: ['bg-toast-positive', 'border-toast-positive'].join(' '),
+  warning: ['bg-toast-warning', 'border-toast-warning'].join(' '),
+  critical: ['bg-toast-critical', 'border-toast-critical'].join(' '),
 }
 
-const iconMap: Record<NonNullable<ToastProps['tone']>, string> = {
-  default: 'ℹ',
-  positive: '✓',
-  warning: '⚠',
-  critical: '✕',
+function WarningIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      className="size-4 shrink-0 text-primary"
+      aria-hidden="true"
+    >
+      <g stroke="currentColor" strokeLinecap="round" strokeWidth="2">
+        <path d="M12 9v5m0 3.5v.5" />
+        <path
+          strokeLinejoin="round"
+          d="M2.232 19.016L10.35 3.052c.713-1.403 2.59-1.403 3.302 0l8.117 15.964C22.45 20.36 21.544 22 20.116 22H3.883c-1.427 0-2.334-1.64-1.65-2.984"
+        />
+      </g>
+    </svg>
+  )
+}
+
+function PositiveIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      className="size-4 shrink-0 text-primary"
+      aria-hidden="true"
+    >
+      <path
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="2"
+        d="m4 12l6 6L20 6"
+      />
+    </svg>
+  )
+}
+
+function CriticalIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      className="size-4 shrink-0 text-primary"
+      aria-hidden="true"
+    >
+      <g stroke="currentColor" strokeWidth="2">
+        <path strokeLinecap="round" d="M15 15L9 9m6 0l-6 6" />
+        <circle cx="12" cy="12" r="10" />
+      </g>
+    </svg>
+  )
+}
+
+const icons: Partial<
+  Record<NonNullable<ToastProps['tone']>, () => React.JSX.Element>
+> = {
+  positive: PositiveIcon,
+  warning: WarningIcon,
+  critical: CriticalIcon,
 }
 
 export function Toast({
-  tone = 'default',
-  title,
-  description,
+  tone = 'neutral',
+  message,
   actions = [],
-  onClose,
   className,
   ref,
   ...props
 }: ToastProps) {
+  const ToneIcon = icons[tone]
+
   return (
     <div
       ref={ref}
       className={cn(
-        'flex items-start gap-3',
-        'px-4 py-3',
-        'rounded-lg',
-        'border',
-        'shadow-lg',
+        'flex items-center gap-3',
+        'p-4',
+        'rounded-md border backdrop-blur',
+        'text-body-small text-primary',
         'min-w-[280px] max-w-sm',
         toneStyles[tone],
         className
@@ -64,51 +108,21 @@ export function Toast({
       aria-live="assertive"
       {...props}
     >
-      <span className="text-base flex-shrink-0 mt-0.5" aria-hidden="true">
-        {iconMap[tone]}
-      </span>
-      <div className="flex-1 min-w-0">
-        {title && (
-          <p className="font-semibold text-sm leading-tight">{title}</p>
-        )}
-        {description && (
-          <p className="text-sm opacity-90 mt-0.5">{description}</p>
-        )}
-        {actions.length > 0 && (
-          <div className="mt-2 flex items-center gap-4">
-            {actions.map((action) => (
-              <button
-                key={action.label}
-                type="button"
-                onClick={action.onClick}
-                className="text-sm font-semibold underline underline-offset-2 hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current rounded"
-              >
-                {action.label}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-      {onClose && (
-        <button
-          onClick={onClose}
-          className="flex-shrink-0 opacity-80 hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current rounded"
-          aria-label="Dismiss notification"
-        >
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-            aria-hidden="true"
-          >
-            <path
-              fillRule="evenodd"
-              d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-              clipRule="evenodd"
-            />
-          </svg>
-        </button>
+      {ToneIcon && <ToneIcon />}
+      <p className="min-w-0 flex-1 [word-break:break-word]">{message}</p>
+      {actions.length > 0 && (
+        <div className="flex shrink-0 items-center gap-4">
+          {actions.map((action) => (
+            <button
+              key={action.label}
+              type="button"
+              onClick={action.onClick}
+              className="whitespace-nowrap font-medium hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current rounded"
+            >
+              {action.label}
+            </button>
+          ))}
+        </div>
       )}
     </div>
   )
