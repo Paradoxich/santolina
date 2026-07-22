@@ -32,6 +32,17 @@ function measured(
   }))
 }
 
+function wikimedia(url: string, short: number): Measured {
+  return {
+    url,
+    category: 'wikimedia',
+    width: short * 2,
+    height: short,
+    isIncumbent: false,
+    source: 'wikimedia',
+  }
+}
+
 describe('shortlist', () => {
   it('interleaves flower and habit rather than exhausting one first', () => {
     const picked = shortlist(candidates({ flower: 5, habit: 5 }), null)
@@ -79,6 +90,27 @@ describe('shortlist', () => {
   it('ignores an incumbent that is not among the candidates', () => {
     const picked = shortlist(candidates({ flower: 2 }), 'https://gone.example')
     expect(picked.map((c) => c.url)).not.toContain('https://gone.example')
+  })
+
+  it('always includes a Wikimedia candidate even when primaries are plentiful', () => {
+    const all: ImageCandidate[] = [
+      ...candidates({ flower: 5, habit: 5 }),
+      { url: 'wm-p18', category: 'wikimedia', source: 'wikimedia' },
+    ]
+    expect(shortlist(all, null).map((c) => c.url)).toContain('wm-p18')
+  })
+
+  it('caps how many Wikimedia candidates it force-includes', () => {
+    const all: ImageCandidate[] = [
+      ...candidates({ flower: 3 }),
+      ...Array.from({ length: 8 }, (_, i) => ({
+        url: `wm-${i}`,
+        category: 'wikimedia',
+        source: 'wikimedia' as const,
+      })),
+    ]
+    const picked = shortlist(all, null)
+    expect(picked.filter((c) => c.source === 'wikimedia')).toHaveLength(4)
   })
 })
 
@@ -130,6 +162,42 @@ describe('rankAndCap', () => {
       ])
     )
     expect(kept[0]!.url).toBe('incumbent')
+  })
+
+  it('pins a lower-resolution Wikimedia photo inside the cap', () => {
+    // A curated Wikimedia image behind a burst of sharp Trefle snapshots must
+    // still reach the vision call, the same guarantee the incumbent gets.
+    const { kept } = rankAndCap([
+      ...measured([
+        ['a', 1000],
+        ['b', 900],
+        ['c', 800],
+        ['d', 700],
+        ['e', 600],
+        ['f', 500],
+      ]),
+      wikimedia('wm', 400),
+    ])
+    expect(kept).toHaveLength(MAX_FOR_VISION)
+    expect(kept.map((k) => k.url)).toContain('wm')
+  })
+
+  it('keeps the incumbent and a Wikimedia photo together under the cap', () => {
+    const { kept } = rankAndCap([
+      ...measured([
+        ['a', 1000],
+        ['b', 900],
+        ['c', 800],
+        ['d', 700],
+        ['e', 600],
+        ['incumbent', 200, true],
+      ]),
+      wikimedia('wm', 150),
+    ])
+    expect(kept).toHaveLength(MAX_FOR_VISION)
+    expect(kept.map((k) => k.url)).toEqual(
+      expect.arrayContaining(['incumbent', 'wm'])
+    )
   })
 
   it('does not lose a candidate while pinning', () => {

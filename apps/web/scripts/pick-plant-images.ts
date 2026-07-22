@@ -62,7 +62,12 @@ import type Anthropic from '@anthropic-ai/sdk'
 import { getSupabaseAdmin } from '../lib/supabase-admin'
 import { getAnthropicClient, VISION_MODEL } from '../lib/anthropic-client'
 import { fetchAllRows } from '../lib/paginate'
-import { probeImage, type ProbeResult } from '../lib/image-probe'
+import {
+  fetchImageBlob,
+  probeImage,
+  type ImageBlob,
+  type ProbeResult,
+} from '../lib/image-probe'
 import {
   MAX_FOR_VISION,
   rankAndCap,
@@ -269,6 +274,10 @@ async function measure(
       width: probe.width,
       height: probe.height,
       isIncumbent: candidate.url === incumbent,
+      // Carry source + attribution through so a Wikimedia winner can be
+      // credited when it is written back.
+      source: candidate.source,
+      attribution: candidate.attribution,
     })
   }
 
@@ -326,10 +335,43 @@ Confidence: "high" when the pick is clearly good and clearly the best available;
 Be honest and be specific. Low-confidence picks get a human review, so a truthful "low" is more useful than a generous "high". In your reason, describe what is actually in the frame rather than what a good photo would contain — if there is a pot or a background object, say so instead of calling the background uncluttered.`
 }
 
+/**
+ * Build one batch request for a plant.
+ *
+ * Trefle/PlantNet/CloudFront images go by URL (Anthropic fetches them fine and
+ * it keeps the payload small). Wikimedia images must be sent as base64 — the
+ * upload host rejects Anthropic's fetcher, so a Wikimedia URL block silently
+ * fails the whole request. `blobs` holds the pre-fetched base64 for those,
+ * keyed by url; a Wikimedia image whose fetch failed is dropped from the set so
+ * the request still succeeds on the rest.
+ */
 function buildRequest(
   plant: PlantRow,
-  images: Measured[]
-): Anthropic.Messages.Batches.BatchCreateParams.Request {
+  images: Measured[],
+  blobs: Map<string, ImageBlob>
+): Anthropic.Messages.Batches.BatchCreateParams.Request | null {
+  const usable = images.filter(
+    (img) => img.source !== 'wikimedia' || blobs.has(img.url)
+  )
+  if (usable.length === 0) return null
+
+  const imageBlocks = usable.map((img) => {
+    const blob = blobs.get(img.url)
+    return blob
+      ? {
+          type: 'image' as const,
+          source: {
+            type: 'base64' as const,
+            media_type: blob.mediaType,
+            data: blob.data,
+          },
+        }
+      : {
+          type: 'image' as const,
+          source: { type: 'url' as const, url: img.url },
+        }
+  })
+
   return {
     custom_id: plant.id,
     params: {
@@ -346,7 +388,7 @@ function buildRequest(
         effort: 'medium',
         format: {
           type: 'json_schema',
-          schema: buildSchema(images.length) as unknown as Record<
+          schema: buildSchema(usable.length) as unknown as Record<
             string,
             unknown
           >,
@@ -356,11 +398,8 @@ function buildRequest(
         {
           role: 'user',
           content: [
-            ...images.map((img) => ({
-              type: 'image' as const,
-              source: { type: 'url' as const, url: img.url },
-            })),
-            { type: 'text' as const, text: buildPrompt(plant, images) },
+            ...imageBlocks,
+            { type: 'text' as const, text: buildPrompt(plant, usable) },
           ],
         },
       ],
@@ -464,11 +503,37 @@ async function main() {
       for (const r of rejected) console.log(`          drop: ${r}`)
     }
 
-    requests.push(buildRequest(plant, kept))
+    // Pre-fetch Wikimedia images as base64 (Anthropic can't fetch the upload
+    // host). A fetch that fails drops that candidate from the request, so build
+    // the manifest from the SAME set the request is built from — the label the
+    // model returns indexes that exact list, and a mismatch resolves the wrong
+    // photo.
+    const blobs = new Map<string, ImageBlob>()
+    for (const img of kept) {
+      if (img.source !== 'wikimedia') continue
+      const blob = await fetchImageBlob(img.url)
+      if (blob) blobs.set(img.url, blob)
+      else
+        console.log(
+          `        (wikimedia image unfetchable, dropping: ${img.url})`
+        )
+    }
+
+    const request = buildRequest(plant, kept, blobs)
+    if (!request) {
+      console.log(`${label} — no sendable images after fetch, skipping`)
+      skipped.push(plant.common_name)
+      continue
+    }
+    const sent = kept.filter(
+      (img) => img.source !== 'wikimedia' || blobs.has(img.url)
+    )
+
+    requests.push(request)
     manifestPlants[plant.id] = {
       commonName: plant.common_name,
       incumbent: plant.image_url,
-      images: kept,
+      images: sent,
     }
   }
 
@@ -620,6 +685,10 @@ async function collectResults(
       .from('plants')
       .update({
         image_url_curated: chosen.url,
+        // Credit the source when it requires one (Wikimedia); a Trefle pick
+        // carries no attribution, so this clears any stale credit from a prior
+        // Wikimedia pick that has since been beaten by a Trefle photo.
+        image_attribution: chosen.attribution ?? null,
         image_pick_confidence: pick.confidence,
         image_pick_reason: pick.reason,
         image_checked_at: new Date().toISOString(),

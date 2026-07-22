@@ -32,8 +32,11 @@ const nextConfig: NextConfig = {
         pathname: '/powop-assets/**',
       },
       {
+        // Editorial hero images sourced from Wikimedia Commons (the vision pass
+        // + feeder). next/image fetches the original and serves it resized.
         protocol: 'https',
         hostname: 'upload.wikimedia.org',
+        pathname: '/wikipedia/commons/**',
       },
     ],
   },

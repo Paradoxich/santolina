@@ -9,10 +9,19 @@
  * scripts/recover-image-categories.ts).
  */
 
+import type { ImageAttribution } from './image-attribution'
+
+/** Where a candidate came from — governs how it is prioritised and credited. */
+export type ImageSource = 'trefle' | 'wikimedia'
+
 /** One candidate image plus the category Trefle filed it under. */
 export interface ImageCandidate {
   url: string
   category: string
+  // Absent means Trefle (the original, un-migrated shape). Wikimedia candidates
+  // are curated best-images and carry the attribution their licence requires.
+  source?: ImageSource
+  attribution?: ImageAttribution
 }
 
 /** A candidate that survived probing, with its measured pixel dimensions. */
@@ -22,6 +31,8 @@ export interface Measured {
   width: number
   height: number
   isIncumbent: boolean
+  source?: ImageSource
+  attribution?: ImageAttribution
 }
 
 // A hero is either the bloom or the whole plant; everything else is a detail
@@ -32,6 +43,11 @@ export const FALLBACK_CATEGORIES = ['unknown', 'other', 'leaf', 'fruit', 'bark']
 
 export const MAX_FOR_VISION = 6
 export const MIN_SHORTLIST = 4
+// Cap on Wikimedia candidates per plant, so a large Commons category can't
+// crowd Trefle's options out of the shortlist entirely.
+export const MAX_WIKIMEDIA = 4
+
+const isWikimedia = (c: { source?: ImageSource }) => c.source === 'wikimedia'
 
 /**
  * Narrow a plant's candidates to the ones worth paying to look at.
@@ -40,7 +56,9 @@ export const MIN_SHORTLIST = 4
  * five habit shots offers the model both framings rather than five near-
  * duplicates of one. The incumbent image_url is always included when it is a
  * known candidate, so the model chooses against the current pick rather than
- * in ignorance of it.
+ * in ignorance of it. Wikimedia candidates are always included too — they are
+ * curated best-images, so they must reach the vision call regardless of how
+ * many Trefle snapshots a plant already has.
  */
 export function shortlist(
   candidates: ImageCandidate[],
@@ -59,6 +77,13 @@ export function shortlist(
     if (!c || seen.has(c.url)) return
     seen.add(c.url)
     picked.push(c)
+  }
+
+  // Wikimedia first — a Wikidata P18 / Commons photo is a hand-picked best
+  // image, so it always earns a shortlist slot (rankAndCap then pins it past
+  // the resolution cut). Capped so a big Commons category can't dominate.
+  for (const c of candidates.filter(isWikimedia).slice(0, MAX_WIKIMEDIA)) {
+    take(c)
   }
 
   // Round-robin across flower/habit so neither framing crowds the other out.
@@ -100,27 +125,34 @@ export function shortlist(
  * much detail survives a full-bleed card crop, whereas pixel count flatters
  * extreme panoramas that lose most of their area to the crop.
  *
- * The incumbent is then pinned inside the cap. Without this a low-resolution
- * current pick gets sorted below six sharper alternatives and sliced away —
- * so the pass would "upgrade" that plant without ever having compared the two,
- * and could never confirm an already-good hero.
+ * Pinned candidates — the incumbent, and any Wikimedia photo — are then
+ * guaranteed a place inside the cap. Without this a low-resolution current pick
+ * gets sorted below six sharper alternatives and sliced away, so the pass would
+ * "upgrade" that plant without ever having compared the two and could never
+ * confirm an already-good hero; the same reasoning protects a curated Wikimedia
+ * image whose resolution happens to trail a burst of sharp Trefle snapshots.
  */
 export function rankAndCap(
   measured: Measured[],
   max = MAX_FOR_VISION
 ): { kept: Measured[]; capped: number } {
-  const ranked = [...measured].sort(
-    (a, b) => Math.min(b.width, b.height) - Math.min(a.width, a.height)
-  )
+  const byShortEdge = (a: Measured, b: Measured) =>
+    Math.min(b.width, b.height) - Math.min(a.width, a.height)
+  const isPinned = (m: Measured) => m.isIncumbent || isWikimedia(m)
 
-  const incumbentIndex = ranked.findIndex((m) => m.isIncumbent)
-  if (incumbentIndex >= max) {
-    const [pinned] = ranked.splice(incumbentIndex, 1)
-    ranked.splice(max - 1, 0, pinned!)
-  }
+  const ranked = [...measured].sort(byShortEdge)
 
-  return {
-    kept: ranked.slice(0, max),
-    capped: Math.max(0, ranked.length - max),
+  // Guarantee every pinned candidate survives, then fill the rest by
+  // resolution. When pinned candidates exceed the cap, the highest-resolution
+  // ones win — pinning is a floor on inclusion, not a bypass of ranking.
+  const pinned = ranked.filter(isPinned)
+  const rest = ranked.filter((m) => !isPinned(m))
+  const kept = [...pinned.slice(0, max)]
+  for (const m of rest) {
+    if (kept.length >= max) break
+    kept.push(m)
   }
+  kept.sort(byShortEdge)
+
+  return { kept, capped: Math.max(0, measured.length - kept.length) }
 }

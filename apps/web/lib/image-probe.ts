@@ -164,6 +164,16 @@ function readGifDimensions(buf: Uint8Array): ImageDimensions | null {
 const PROBE_BYTES = 65_536
 
 /**
+ * Descriptive User-Agent for image fetches.
+ *
+ * Not optional politeness: Wikimedia's upload host returns HTTP 400 to a range
+ * request with no UA (which is what silently rejected every Wikimedia candidate
+ * on the first run). Harmless for Trefle/PlantNet/CloudFront, required here.
+ */
+export const IMAGE_FETCH_UA =
+  'Santolina/0.1 (garden planning app; hero-image sourcing) contact: ana.beverin@gmail.com'
+
+/**
  * Validate a candidate image URL and measure it, transferring only the header.
  *
  * Servers that ignore Range return the full body; we cap what we read anyway.
@@ -186,7 +196,10 @@ export async function probeImage(
 
   try {
     const res = await fetch(url, {
-      headers: { Range: `bytes=0-${PROBE_BYTES - 1}` },
+      headers: {
+        Range: `bytes=0-${PROBE_BYTES - 1}`,
+        'User-Agent': IMAGE_FETCH_UA,
+      },
       signal: controller.signal,
     })
 
@@ -222,6 +235,63 @@ export async function probeImage(
           ? err.message
           : String(err)
     return { ok: false, url, reason }
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
+/** The four media types the Messages API accepts for image blocks. */
+export type ImageMediaType =
+  | 'image/jpeg'
+  | 'image/png'
+  | 'image/gif'
+  | 'image/webp'
+
+export interface ImageBlob {
+  data: string
+  mediaType: ImageMediaType
+}
+
+const SUPPORTED_MEDIA: Record<string, ImageMediaType> = {
+  'image/jpeg': 'image/jpeg',
+  'image/png': 'image/png',
+  'image/gif': 'image/gif',
+  'image/webp': 'image/webp',
+}
+
+// Anthropic caps image blocks near 5MB of base64; stay clear of it.
+const MAX_IMAGE_BYTES = 4_500_000
+
+/**
+ * Download an image and return it base64-encoded for a Messages API image
+ * block.
+ *
+ * Used for images Anthropic's URL fetcher can't reliably reach — chiefly
+ * Wikimedia's upload host, which failed on both direct fetches and the model's
+ * own URL fetch. Fetching here (with a real User-Agent) removes the dependency
+ * on Anthropic reaching the origin. Returns null on any failure so the caller
+ * can fall back or skip rather than crash.
+ */
+export async function fetchImageBlob(
+  url: string,
+  timeoutMs = 15_000
+): Promise<ImageBlob | null> {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), timeoutMs)
+  try {
+    const res = await fetch(url, {
+      headers: { 'User-Agent': IMAGE_FETCH_UA },
+      signal: controller.signal,
+    })
+    if (!res.ok) return null
+    const ct = (res.headers.get('content-type') ?? '').split(';')[0]!.trim()
+    // CloudFront serves valid JPEGs as octet-stream, so default to JPEG.
+    const mediaType = SUPPORTED_MEDIA[ct] ?? 'image/jpeg'
+    const buf = Buffer.from(await res.arrayBuffer())
+    if (buf.byteLength > MAX_IMAGE_BYTES) return null
+    return { data: buf.toString('base64'), mediaType }
+  } catch {
+    return null
   } finally {
     clearTimeout(timer)
   }
