@@ -571,12 +571,17 @@ export function DitheredImage({
     requestRenderRef.current?.()
   }, [levels, cell, revealRadius, softness, weight, hoverMode])
 
+  // rounded-[inherit] on every layer, not just overflow-hidden on the box:
+  // Firefox does not clip a hardware-accelerated canvas (or video) through an
+  // ancestor's border-radius, so the wrapper's radius must land on the
+  // painted elements themselves. Inherit keeps the component agnostic — pass
+  // any radius via className and all three layers follow it.
   return (
     <div className={cn('relative overflow-hidden', className)}>
       <img
         src={src}
         alt={alt}
-        className="absolute inset-0 h-full w-full object-cover"
+        className="absolute inset-0 h-full w-full rounded-[inherit] object-cover"
       />
       {videoSrc && (
         // In the DOM so Chrome keeps playing it (detached video-only media is
@@ -591,13 +596,13 @@ export function DitheredImage({
           loop
           playsInline
           crossOrigin="anonymous"
-          className="absolute inset-0 h-full w-full object-cover"
+          className="absolute inset-0 h-full w-full rounded-[inherit] object-cover"
           aria-hidden
         />
       )}
       <canvas
         ref={canvasRef}
-        className="absolute inset-0 h-full w-full"
+        className="absolute inset-0 h-full w-full rounded-[inherit]"
         aria-hidden
       />
     </div>
