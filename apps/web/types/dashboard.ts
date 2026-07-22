@@ -37,6 +37,8 @@ export interface BloomSeason {
   months: string[]
   /** Index into `months` of the current month */
   currentMonth: number
+  /** Height in px of the scrollable chart content — >= the viewport height */
+  contentHeight: number
   spans: BloomSpan[]
 }
 

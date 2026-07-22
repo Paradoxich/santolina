@@ -9,6 +9,9 @@ const emphasisOpacity: Record<BloomSpan['emphasis'], string> = {
   past: 'opacity-30',
 }
 
+/** Visible height of the chart's scroll viewport — matches the h-[147px] below. */
+const CHART_VIEWPORT_HEIGHT = 147
+
 interface BloomTimelineCardProps {
   season: BloomSeason
   /** False when the garden has no growing plants — shows the empty hint instead of the chart. */
@@ -34,74 +37,96 @@ export function BloomTimelineCard({
     )
   }
 
+  const scrollable = season.contentHeight > CHART_VIEWPORT_HEIGHT
+
   return (
     <Panel
       title={season.title}
       meta={season.meta}
       className="h-full overflow-hidden"
     >
-      <div className="relative h-[147px] w-full">
+      <div className="relative">
         <div
-          aria-hidden="true"
-          className="absolute inset-0 flex justify-between"
+          className={[
+            'h-[147px] w-full',
+            scrollable
+              ? 'no-scrollbar overflow-y-auto overflow-x-hidden'
+              : 'overflow-visible',
+          ].join(' ')}
         >
-          {season.months.map((month, i) => (
-            <span
-              key={month + i}
-              className={[
-                'h-full w-px bg-accent',
-                i === season.currentMonth ? '' : 'opacity-10',
-              ].join(' ')}
-            />
-          ))}
-        </div>
-
-        {season.spans.map((span) => (
           <div
-            key={span.id}
-            className={[
-              'absolute inset-x-0',
-              emphasisOpacity[span.emphasis],
-            ].join(' ')}
-            style={{ top: span.y }}
+            className="relative w-full"
+            style={{ height: season.contentHeight }}
           >
             <div
-              className="absolute h-[4px] -translate-y-1/2 rounded-full"
-              style={{
-                left: `${span.x}%`,
-                width: `${span.width}%`,
-                backgroundColor: span.color,
-              }}
-            />
-            <div
-              className="group absolute -translate-x-1/2 -translate-y-1/2"
-              style={{
-                left: `${span.thumbAt}%`,
-                width: span.thumbSize,
-                height: span.thumbSize,
-              }}
+              aria-hidden="true"
+              className="absolute inset-0 flex justify-between"
             >
-              <div
-                className="relative h-full w-full overflow-hidden rounded-full border"
-                style={{ borderColor: span.color }}
-              >
-                <PlantImage
-                  src={span.imageUrl}
-                  alt={span.plantName}
-                  fill
-                  sizes="24px"
-                  className="object-cover"
+              {season.months.map((month, i) => (
+                <span
+                  key={month + i}
+                  className={[
+                    'h-full w-px bg-accent',
+                    i === season.currentMonth ? '' : 'opacity-10',
+                  ].join(' ')}
                 />
-              </div>
-              <span
-                role="tooltip"
-                className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-1 -translate-x-1/2 whitespace-nowrap rounded-md bg-surface-inverse px-2 py-1 text-micro font-medium text-inverse opacity-0 shadow-md transition-opacity duration-normal group-hover:opacity-100"
-              >
-                {span.plantName}
-              </span>
+              ))}
             </div>
+
+            {season.spans.map((span) => (
+              <div
+                key={span.id}
+                className={[
+                  'absolute inset-x-0',
+                  emphasisOpacity[span.emphasis],
+                ].join(' ')}
+                style={{ top: span.y }}
+              >
+                <div
+                  className="absolute h-[4px] -translate-y-1/2 rounded-full"
+                  style={{
+                    left: `${span.x}%`,
+                    width: `${span.width}%`,
+                    backgroundColor: span.color,
+                  }}
+                />
+                <div
+                  className="group absolute -translate-x-1/2 -translate-y-1/2"
+                  style={{
+                    left: `${span.thumbAt}%`,
+                    width: span.thumbSize,
+                    height: span.thumbSize,
+                  }}
+                >
+                  <div
+                    className="relative h-full w-full overflow-hidden rounded-full border"
+                    style={{ borderColor: span.color }}
+                  >
+                    <PlantImage
+                      src={span.imageUrl}
+                      alt={span.plantName}
+                      fill
+                      sizes="24px"
+                      className="object-cover"
+                    />
+                  </div>
+                  <span
+                    role="tooltip"
+                    className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-1 -translate-x-1/2 whitespace-nowrap rounded-md bg-surface-inverse px-2 py-1 text-micro font-medium text-inverse opacity-0 shadow-md transition-opacity duration-normal group-hover:opacity-100"
+                  >
+                    {span.plantName}
+                  </span>
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
+        </div>
+        {scrollable && (
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-6 bg-gradient-to-t from-[var(--color-surface-card)] to-transparent"
+          />
+        )}
       </div>
 
       <div className="flex w-full items-center justify-between text-center text-micro">

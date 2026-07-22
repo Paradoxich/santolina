@@ -9,14 +9,19 @@ import type { BloomSeason, BloomSpan } from '@/types/dashboard'
 import { monthName } from './format-plant'
 import { heroImageUrl } from './plant-image'
 
-/** Must match BloomTimelineCard's h-[147px] chart area. */
+/** Visible height of the chart's scroll viewport, in px. */
 const CHART_HEIGHT = 147
 /** Vertical padding so spans don't clip at the chart edges. */
 const Y_PAD = 12
-/** Keeps the chart legible; the Figma design tops out around this. */
-const MAX_SPANS = 7
+/**
+ * Rows that fit in the viewport before the chart scrolls. Sets the row
+ * pitch: up to this many spans spread to fill the height; beyond it, rows
+ * keep the same pitch and the extra ones overflow into a vertical scroll.
+ */
+const VISIBLE_ROWS = 5
 
 const WINDOW_SIZE = 5
+/** Index of the current month within the window — the emphasized center line. */
 const CENTER = Math.floor(WINDOW_SIZE / 2)
 /** % of chart width from one month gridline to the next. */
 const MONTH_STEP = 100 / (WINDOW_SIZE - 1)
@@ -45,6 +50,13 @@ const THUMB_SIZE: Record<BloomSpan['emphasis'], number> = {
   now: 24,
   upcoming: 16,
   past: 12,
+}
+
+/** Row order, top to bottom — blooming now first, spent blooms last. */
+const EMPHASIS_RANK: Record<BloomSpan['emphasis'], number> = {
+  now: 0,
+  upcoming: 1,
+  past: 2,
 }
 
 function normalizeMonth(month: number): number {
@@ -108,6 +120,8 @@ export function deriveBloomSeason(
 
       const x = Math.max(0, runStart * MONTH_STEP - MONTH_STEP / 2)
       const right = Math.min(100, runEnd * MONTH_STEP + MONTH_STEP / 2)
+      // A run covering the current month is 'now'; one entirely before it is
+      // 'past' (spent); one entirely after is 'upcoming'.
       const emphasis: BloomSpan['emphasis'] =
         runStart <= CENTER && runEnd >= CENTER
           ? 'now'
@@ -127,7 +141,7 @@ export function deriveBloomSeason(
         width: right - x,
         thumbAt:
           emphasis === 'now'
-            ? CENTER * MONTH_STEP
+            ? x + (right - x) / 2
             : emphasis === 'upcoming'
               ? Math.min(x + 3, 97)
               : Math.max(right - 3, 3),
@@ -140,18 +154,37 @@ export function deriveBloomSeason(
     }
   }
 
-  // Lay the spans out top-to-bottom in reading order, evenly spread.
-  const kept = drafts
-    .sort((a, b) => a.startIndex - b.startIndex || a.x - b.x)
-    .slice(0, MAX_SPANS)
+  // Order rows top to bottom by relevance — blooming now first, then
+  // upcoming, then spent — so the current blooms sit at the top of the
+  // viewport and anything past falls below the fold, reachable by scrolling.
+  const kept = [...drafts].sort(
+    (a, b) =>
+      EMPHASIS_RANK[a.emphasis] - EMPHASIS_RANK[b.emphasis] ||
+      a.startIndex - b.startIndex ||
+      a.x - b.x
+  )
+
+  // Up to VISIBLE_ROWS spans spread to fill the viewport; beyond that, rows
+  // keep that same pitch so the extras overflow into the scroll rather than
+  // squeezing everything tighter. `contentHeight` is how tall the scrolling
+  // inner area must be to hold every row.
   const usable = CHART_HEIGHT - 2 * Y_PAD
+  const rowPitch = usable / (VISIBLE_ROWS - 1)
+  const rowY = (i: number): number => {
+    if (kept.length === 1) return Math.round(CHART_HEIGHT / 2)
+    if (kept.length <= VISIBLE_ROWS) {
+      return Math.round(Y_PAD + (i * usable) / (kept.length - 1))
+    }
+    return Math.round(Y_PAD + i * rowPitch)
+  }
   const spans: BloomSpan[] = kept.map(({ startIndex: _, ...span }, i) => ({
     ...span,
-    y:
-      kept.length === 1
-        ? Math.round(CHART_HEIGHT / 2)
-        : Math.round(Y_PAD + (i * usable) / (kept.length - 1)),
+    y: rowY(i),
   }))
+  const contentHeight =
+    kept.length <= VISIBLE_ROWS
+      ? CHART_HEIGHT
+      : Math.round(2 * Y_PAD + (kept.length - 1) * rowPitch)
 
   return {
     title: seasonTitle(currentMonth),
@@ -161,6 +194,7 @@ export function deriveBloomSeason(
       i === CENTER ? monthName(m).slice(0, 3) : monthName(m).slice(0, 1)
     ),
     currentMonth: CENTER,
+    contentHeight,
     spans,
   }
 }

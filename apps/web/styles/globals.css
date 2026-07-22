@@ -83,6 +83,17 @@ body {
   background-color: var(--color-accent);
 }
 
+/* Opt out of the scrollbar entirely on elements that carry their own scroll
+   affordance (e.g. the bloom timeline's fade edge). Firefox honours
+   scrollbar-width; Chromium/WebKit need the pseudo-element hidden. */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .animate-ken-burns {
     animation: ken-burns-x 40s ease-in-out infinite;
