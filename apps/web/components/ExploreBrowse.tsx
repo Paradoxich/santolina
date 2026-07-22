@@ -115,10 +115,9 @@ const COLOR_HERO: Record<string, string> = {
   // Primrose
   cream:
     'https://bs.plantnet.org/image/o/d5dd720f7e2a23c677b067c06223a28c8f703932',
-  // Falling stars (Ana also shortlisted an amur adonis shot; this one holds
-  // up better under the tint at tile size)
+  // Amur adonis (Ana's pick over a falling stars shot that cropped badly)
   yellow:
-    'https://bs.plantnet.org/image/o/190e3342f601c5edfc1c4f45ba8d53fcd5fe684a',
+    'https://d2seqvvyy3b8p2.cloudfront.net/12ba5c2912abeb046e038ccfe89fd6be.jpg',
   // California poppy
   orange:
     'https://bs.plantnet.org/image/o/757ff42cbc2a89dff00169aea2e19eb07d00dc52',
