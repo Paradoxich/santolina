@@ -6,6 +6,7 @@ import {
   Drawer,
   Icon,
   IconButton,
+  Lightbox,
   Modal,
   Tooltip,
   useToast,
@@ -48,11 +49,18 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
     plant.scientific_name,
     plant.common_name_aliases ?? []
   )
-  const photos = (plant.image_urls ?? []).slice(0, 3)
+  const allPhotos = plant.image_urls ?? []
+  const photos = allPhotos.slice(0, 3)
+  const galleryImages = allPhotos.map((src, i) => ({
+    src,
+    alt: `${plant.common_name} photo ${i + 1}`,
+  }))
   const bullets = buildGoodForYourGarden(plant, garden, companions)
 
   const router = useRouter()
   const { toast } = useToast()
+
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
 
   const [palette, setPalette] = useState<{
     paletteId: string
@@ -433,12 +441,11 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
         </div>
 
         <div className="flex w-full shrink-0 snap-x snap-mandatory gap-inline-gap overflow-x-auto">
-          {(photos.length > 0 ? photos : [null]).map((src, i) => (
-            <div
-              key={src ?? 'placeholder'}
-              className="relative h-[141px] shrink-0 snap-start overflow-hidden rounded-sm"
-              style={{ width: PHOTO_WIDTHS[i % PHOTO_WIDTHS.length] }}
-            >
+          {(photos.length > 0 ? photos : [null]).map((src, i) => {
+            const imageClass =
+              'relative h-[141px] shrink-0 snap-start overflow-hidden rounded-sm'
+            const style = { width: PHOTO_WIDTHS[i % PHOTO_WIDTHS.length] }
+            const image = (
               <PlantImage
                 src={src}
                 alt={`${plant.common_name} photo ${i + 1}`}
@@ -446,8 +453,25 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
                 sizes="207px"
                 className="object-cover"
               />
-            </div>
-          ))}
+            )
+            // Only real photos open the viewer; the placeholder stays inert.
+            return src ? (
+              <button
+                key={src}
+                type="button"
+                onClick={() => setLightboxIndex(i)}
+                aria-label={`View ${plant.common_name} photo ${i + 1}`}
+                className={`${imageClass} cursor-pointer transition-opacity duration-normal hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus`}
+                style={style}
+              >
+                {image}
+              </button>
+            ) : (
+              <div key="placeholder" className={imageClass} style={style}>
+                {image}
+              </div>
+            )
+          })}
         </div>
 
         <div className="flex w-full flex-col gap-section-break">
@@ -461,6 +485,13 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
           <DetailsSection plant={plant} />
         </div>
       </div>
+
+      <Lightbox
+        images={galleryImages}
+        isOpen={lightboxIndex !== null}
+        initialIndex={lightboxIndex ?? 0}
+        onClose={() => setLightboxIndex(null)}
+      />
 
       <Modal
         isOpen={isRemoveDialogOpen}

@@ -31,6 +31,10 @@ const nextConfig: NextConfig = {
         hostname: 'storage.googleapis.com',
         pathname: '/powop-assets/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'upload.wikimedia.org',
+      },
     ],
   },
 }
