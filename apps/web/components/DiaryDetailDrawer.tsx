@@ -8,6 +8,7 @@ import {
   Drawer,
   Icon,
   IconButton,
+  Lightbox,
   Menu,
   Modal,
   Tooltip,
@@ -58,10 +59,16 @@ function groupNotesByMonth(notes: DiaryNote[]): [string, DiaryNote[]][] {
 function NoteCard({
   note,
   onDelete,
+  onPhotoClick,
+  photoOffset,
 }: {
   note: DiaryNote
   /** Present only when the note can be deleted (growing threads). */
   onDelete?: (note: DiaryNote) => void
+  /** Called with the photo's index into the plant's full photo list. */
+  onPhotoClick: (index: number) => void
+  /** This note's first photo's index into the plant's full photo list. */
+  photoOffset: number
 }) {
   const { toast } = useToast()
 
@@ -98,10 +105,13 @@ function NoteCard({
         )}
         {note.photos && note.photos.length > 0 && (
           <div className="flex gap-inline-gap">
-            {note.photos.map((photo) => (
-              <div
+            {note.photos.map((photo, i) => (
+              <button
                 key={photo.src}
-                className="relative h-[79px] shrink-0 overflow-hidden rounded-xs"
+                type="button"
+                onClick={() => onPhotoClick(photoOffset + i)}
+                aria-label={`View photo ${photoOffset + i + 1}`}
+                className="relative h-[79px] shrink-0 cursor-pointer overflow-hidden rounded-xs transition-opacity duration-normal hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
                 style={{ width: photo.width }}
               >
                 <Image
@@ -111,7 +121,7 @@ function NoteCard({
                   sizes="93px"
                   className="object-cover"
                 />
-              </div>
+              </button>
             ))}
           </div>
         )}
@@ -177,11 +187,29 @@ export function DiaryDetailDrawer({ diary, onClose }: DiaryDetailDrawerProps) {
   const [isReAdding, setIsReAdding] = useState(false)
   const [reAddError, setReAddError] = useState<string | null>(null)
 
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
+
   const noteCount = diary.notes.length
   const photoCount = diary.notes.reduce(
     (sum, note) => sum + (note.photos?.length ?? 0),
     0
   )
+
+  // Flattens every note's photos into one ordered list so the viewer can page
+  // across the whole plant's diary, not just the note a photo was opened
+  // from. photoOffsetByNoteId records where each note's photos start in
+  // that list, so a click inside a NoteCard can resolve to a global index.
+  const allPhotos: { src: string; alt: string }[] = []
+  const photoOffsetByNoteId = new Map<string, number>()
+  for (const note of diary.notes) {
+    photoOffsetByNoteId.set(note.id, allPhotos.length)
+    for (const photo of note.photos ?? []) {
+      allPhotos.push({
+        src: photo.src,
+        alt: `${diary.plantName} diary photo ${allPhotos.length + 1}`,
+      })
+    }
+  }
 
   /** Still in the palette — clearing entries here leaves the thread open for new ones, unlike the removed-plant case where it's gone for good. */
   const isGrowing = diary.paletteId !== null
@@ -444,6 +472,8 @@ export function DiaryDetailDrawer({ diary, onClose }: DiaryDetailDrawerProps) {
                   key={note.id}
                   note={note}
                   onDelete={isGrowing ? setNoteToDelete : undefined}
+                  onPhotoClick={setLightboxIndex}
+                  photoOffset={photoOffsetByNoteId.get(note.id) ?? 0}
                 />
               ))}
             </div>
@@ -565,6 +595,13 @@ export function DiaryDetailDrawer({ diary, onClose }: DiaryDetailDrawerProps) {
           </div>
         )}
       </div>
+
+      <Lightbox
+        images={allPhotos}
+        isOpen={lightboxIndex !== null}
+        initialIndex={lightboxIndex ?? 0}
+        onClose={() => setLightboxIndex(null)}
+      />
 
       <Modal
         isOpen={isDeleteDialogOpen}
