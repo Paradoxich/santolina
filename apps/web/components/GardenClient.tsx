@@ -132,8 +132,7 @@ export function GardenClient({ palette, detail }: GardenClientProps) {
       if (row) {
         toast({
           groupKey: row.plantId,
-          title: 'Removed from plan',
-          description: `${row.plant.common_name} removed from your planned list.`,
+          message: `${row.plant.common_name} removed from your planned list.`,
           actions: [
             {
               label: 'Undo',
@@ -168,8 +167,7 @@ export function GardenClient({ palette, detail }: GardenClientProps) {
       router.refresh()
       toast({
         groupKey: row?.plantId,
-        title: 'Moved to growing',
-        description: `${row?.plant.common_name ?? 'Plant'} is now growing in your garden.`,
+        message: `${row?.plant.common_name ?? 'Plant'} is now growing in your garden.`,
         tone: 'positive',
         actions: [
           {

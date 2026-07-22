@@ -413,26 +413,10 @@ function Feedback() {
         <div className="flex flex-col gap-inline-gap">
           <Label>Toast</Label>
           <div className="grid grid-cols-1 gap-item-gap sm:grid-cols-2">
-            <Toast
-              tone="default"
-              title="Default"
-              description="Neutral information."
-            />
-            <Toast
-              tone="positive"
-              title="Positive"
-              description="Plant added to your palette."
-            />
-            <Toast
-              tone="warning"
-              title="Warning"
-              description="Frost expected this week."
-            />
-            <Toast
-              tone="critical"
-              title="Critical"
-              description="Could not save your note."
-            />
+            <Toast tone="neutral" message="Removed from your planned list." />
+            <Toast tone="positive" message="Plant added to your palette." />
+            <Toast tone="warning" message="Frost expected this week." />
+            <Toast tone="critical" message="Could not save your note." />
           </div>
         </div>
 

@@ -54,20 +54,19 @@ export function CareTipsDrawer({ groups, onClose }: CareTipsDrawerProps) {
     try {
       await addDiaryEntry({ plantId: tip.plantId, eventType: tip.eventType })
       router.refresh()
+      const eventLabel = DIARY_EVENT_LABELS[tip.eventType].toLowerCase()
       toast({
         groupKey: key,
-        title: `Logged as ${DIARY_EVENT_LABELS[tip.eventType].toLowerCase()}`,
-        description: tip.plantName
-          ? `Added to ${tip.plantName}'s diary.`
-          : 'Added to the diary.',
+        message: tip.plantName
+          ? `Logged as ${eventLabel} and added to ${tip.plantName}'s diary.`
+          : `Logged as ${eventLabel}.`,
         tone: 'positive',
       })
-    } catch (err) {
+    } catch {
       toast({
         groupKey: key,
-        title: 'Could not log that',
-        description:
-          err instanceof Error ? err.message : 'Something went wrong.',
+        message: 'Could not log that.',
+        tone: 'critical',
       })
     } finally {
       setPending(null)

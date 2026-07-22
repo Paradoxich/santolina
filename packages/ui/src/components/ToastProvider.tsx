@@ -10,8 +10,7 @@ import React, {
 import { Toast, type ToastAction, type ToastProps } from './Toast'
 
 export interface ToastOptions {
-  title?: string
-  description?: string
+  message: string
   tone?: ToastProps['tone']
   actions?: ToastAction[]
   /** Milliseconds before auto-dismiss. Defaults to 6000. */
@@ -77,7 +76,6 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                   dismiss(id)
                 },
               }))}
-              onClose={() => dismiss(id)}
             />
           </div>
         ))}

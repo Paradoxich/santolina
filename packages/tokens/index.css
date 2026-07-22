@@ -262,13 +262,25 @@
   --color-text-critical: var(--color-brick-700);
   --color-border-critical: var(--color-brick-500);
 
-  /* Solid fills — filled controls and toasts per tone.
+  /* Solid fills — filled controls per tone.
    * fill-positive moved 600 -> 700: old 600/700 were perceptually identical,
    * so this is invisible; 600 is now a genuinely lighter step. */
   --color-fill-positive: var(--color-fern-700);
   --color-fill-warning: var(--color-honey-700);
   --color-fill-critical: var(--color-brick-600);
   --color-fill-critical-hover: var(--color-brick-700);
+
+  /* Toast surfaces — translucent tinted glass (ramp step @ 80%), sitting
+   * over a backdrop-blur rather than the opaque tone kits above. Text and
+   * icon stay text-primary on every tone; only the tint changes. */
+  --color-toast-surface-neutral: rgb(196 208 198 / 0.8); /* sage-400 @ 80% */
+  --color-toast-border-neutral: rgb(139 148 140 / 0.2); /* sage-600 @ 20% */
+  --color-toast-surface-positive: rgb(153 189 157 / 0.8); /* fern-300 @ 80% */
+  --color-toast-border-positive: rgb(15 49 25 / 0.1); /* fern-900 @ 10% */
+  --color-toast-surface-warning: rgb(222 187 134 / 0.8); /* honey-300 @ 80% */
+  --color-toast-border-warning: rgb(89 60 0 / 0.1); /* honey-800 @ 10% */
+  --color-toast-surface-critical: rgb(224 158 149 / 0.8); /* brick-300 @ 80% */
+  --color-toast-border-critical: rgb(167 63 54 / 0.2); /* brick-600 @ 20% */
 
   /* Accent — hover now darkens (800); the old 600 alias was a no-op. */
   --color-accent: var(--color-fern-700);

@@ -8,41 +8,38 @@ const meta: Meta<typeof Toast> = {
   argTypes: {
     tone: {
       control: 'select',
-      options: ['default', 'positive', 'warning', 'critical'],
+      options: ['neutral', 'positive', 'warning', 'critical'],
     },
   },
 }
 export default meta
 type Story = StoryObj<typeof Toast>
 
-export const Default: Story = {
+export const Neutral: Story = {
   args: {
-    tone: 'default',
-    title: 'Notification',
-    description: 'Your changes have been saved.',
+    tone: 'neutral',
+    message: 'Removed from your planned list.',
+    actions: [{ label: 'Undo', onClick: () => {} }],
   },
 }
 
 export const Positive: Story = {
   args: {
     tone: 'positive',
-    title: 'Positive',
-    description: 'Entry added to your journal.',
+    message: 'Entry added to your journal.',
   },
 }
 
 export const Warning: Story = {
   args: {
     tone: 'warning',
-    title: 'Heads up',
-    description: 'Your trial ends in 2 days.',
+    message: 'Frost expected this week.',
   },
 }
 
 export const Critical: Story = {
   args: {
     tone: 'critical',
-    title: 'Critical',
-    description: 'Failed to save your changes.',
+    message: 'Could not save your note.',
   },
 }

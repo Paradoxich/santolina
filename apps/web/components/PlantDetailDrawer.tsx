@@ -118,8 +118,7 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
         router.refresh()
         toast({
           groupKey: plant.id,
-          title: 'Removed from plan',
-          description: `${plant.common_name} removed from your planned list.`,
+          message: `${plant.common_name} removed from your planned list.`,
           actions: [
             {
               label: 'Undo',
@@ -151,8 +150,7 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
         router.refresh()
         toast({
           groupKey: plant.id,
-          title: 'Added to your plan',
-          description: `${plant.common_name} is on your planned list.`,
+          message: `${plant.common_name} is on your planned list.`,
           tone: 'positive',
           actions: [
             {
@@ -194,8 +192,7 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
     router.refresh()
     toast({
       groupKey: plant.id,
-      title: 'Removed from your garden',
-      description: `${plant.common_name} removed from your garden.`,
+      message: `${plant.common_name} removed from your garden.`,
       actions: [
         {
           label: 'Undo',
@@ -288,8 +285,7 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
         router.refresh()
         toast({
           groupKey: plant.id,
-          title: 'Moved to growing',
-          description: `${plant.common_name} is now growing in your garden.`,
+          message: `${plant.common_name} is now growing in your garden.`,
           tone: 'positive',
           actions: [
             {
@@ -318,8 +314,7 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
         router.refresh()
         toast({
           groupKey: plant.id,
-          title: 'Added to your garden',
-          description: `${plant.common_name} is now growing in your garden.`,
+          message: `${plant.common_name} is now growing in your garden.`,
           tone: 'positive',
           actions: [
             {
