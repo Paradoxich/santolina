@@ -1,8 +1,9 @@
-// Shown instantly on every navigation between app routes while the server
-// renders the real page. The sidebar lives in the layout and stays put; only
+// Fallback navigation skeleton for app routes without their own loading.tsx
+// (overview, plants, diary, and explore each ship a route-specific one with
+// their real header text). The sidebar lives in the layout and stays put; only
 // this content area swaps to the skeleton, so a click feels immediate even
 // while data loads. Deliberately generic (title + a few blocks) so it reads as
-// "loading" on any route without pretending to be a specific layout.
+// "loading" on any remaining route without pretending to be a specific layout.
 export default function AppLoading() {
   return (
     <div className="max-w-[1032px] pb-16 pt-8 md:pt-12" aria-hidden="true">

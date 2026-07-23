@@ -1,120 +1,63 @@
-import { MyPlantsCard } from '@/components/dashboard/MyPlantsCard'
-import { BloomTimelineCard } from '@/components/dashboard/BloomTimelineCard'
-import { WeatherCard } from '@/components/dashboard/WeatherCard'
-import { CareTipsCard } from '@/components/dashboard/CareTipsCard'
-import { PlannedCard } from '@/components/dashboard/PlannedCard'
-import { DiaryRecentCard } from '@/components/dashboard/DiaryRecentCard'
-import { ImpactCard } from '@/components/dashboard/ImpactCard'
+import { Suspense } from 'react'
 import {
-  getCareTips,
-  getGroupedCareTips,
-  isPeakHeat,
-  type CareEvent,
-} from '@/lib/care-tips'
-import { deriveBloomSeason } from '@/lib/bloom-timeline'
-import { buildDashboardSubtitle, buildGardenImpact } from '@/lib/dashboard-copy'
-import { formatBloomRangeShort } from '@/lib/format-plant'
-import { heroImageUrl } from '@/lib/plant-detail'
-import { listPalette } from '@/server/palette-actions'
-import { listGardenCareEvents } from '@/server/diary-actions'
-import { getSessionGardenContext } from '@/lib/session-garden'
-import { getForecast } from '@/lib/open-meteo'
-import { getPlantDiaries } from '@/lib/diary'
-import type {
-  DashboardPlant,
-  PlannedPlant,
-  WeatherDay,
-} from '@/types/dashboard'
+  DashboardSubtitle,
+  MyPlantsSection,
+  BloomTimelineSection,
+  WeatherSection,
+  CareTipsSection,
+  PlannedSection,
+  DiarySection,
+  ImpactSection,
+} from './cards'
+import { CardSkeleton, SubtitleSkeleton, dashboardRows } from './skeletons'
 
 export const dynamic = 'force-dynamic'
 
-export default async function DashboardPage() {
+// The page itself is sync: only the date heading renders here, so the shell
+// (heading + card skeletons) hits the browser on first flush. Every card
+// streams in independently via its Suspense boundary — see cards.tsx.
+export default function DashboardPage() {
   const today = new Intl.DateTimeFormat('en-US', {
     month: 'long',
     day: 'numeric',
   }).format(new Date())
-  const palette = await listPalette()
-
-  const growing = palette.filter((p) => p.status === 'planted')
-  const myPlants: DashboardPlant[] = growing
-    .map((p) => ({
-      name: p.plant.common_name,
-      imageUrl: heroImageUrl(p.plant),
-    }))
-    .slice(0, 5)
-
-  const plannedPlants: PlannedPlant[] = palette
-    .filter((p) => p.status === 'planned')
-    .map((p) => ({
-      name: p.plant.common_name,
-      imageUrl: heroImageUrl(p.plant),
-      months: formatBloomRangeShort(p.plant.bloom_months) ?? '',
-    }))
-
-  const garden = (await getSessionGardenContext())?.garden ?? null
-  let weatherDays: WeatherDay[] | null = null
-  if (garden?.lat != null && garden?.lon != null) {
-    try {
-      weatherDays = await getForecast(garden.lat, garden.lon)
-    } catch {
-      weatherDays = null
-    }
-  }
-
-  const diaries = await getPlantDiaries()
-
-  // Care Tips fold in Tier 3 event-relative tips (from typed diary events) and
-  // let weather push the no_peak_heat gate — so this runs after the palette,
-  // diary events, and forecast are all in hand.
-  const careEvents: CareEvent[] = (await listGardenCareEvents()).map((e) => ({
-    plantId: e.plantId,
-    eventType: e.eventType,
-    occurredAt: new Date(e.createdAt),
-  }))
-  const careTipOptions = {
-    events: careEvents,
-    peakHeat: isPeakHeat(weatherDays?.[0]?.high ?? null),
-  }
-  const careTips = getCareTips(palette, careTipOptions)
-  const careGroups = getGroupedCareTips(palette, careTipOptions)
-
-  const subtitle = buildDashboardSubtitle(weatherDays, palette)
-  const impact = buildGardenImpact(palette)
 
   return (
     <div className="max-w-[1032px] pb-16 pt-8 md:pt-12">
       <h1 className="text-title font-semibold text-primary">{today}</h1>
-      <p className="mt-3 text-body text-secondary">{subtitle}</p>
+      <Suspense fallback={<SubtitleSkeleton />}>
+        <DashboardSubtitle />
+      </Suspense>
 
-      {/* Row heights are design floors (min-h), not fixed: a card whose content
-          runs a line taller (e.g. a two-line weather description) grows its row
-          and pushes the next row down, instead of overflowing the card. */}
       <div className="mt-8 flex flex-col gap-item-gap">
-        <div className="grid grid-cols-1 gap-item-gap lg:min-h-[276px] lg:grid-cols-[592fr_420fr]">
-          <MyPlantsCard plants={myPlants} totalInGarden={growing.length} />
-          <BloomTimelineCard
-            season={deriveBloomSeason(palette)}
-            hasPlants={growing.length > 0}
-          />
+        <div className={dashboardRows.top}>
+          <Suspense fallback={<CardSkeleton title="My plants" />}>
+            <MyPlantsSection />
+          </Suspense>
+          <Suspense fallback={<CardSkeleton />}>
+            <BloomTimelineSection />
+          </Suspense>
         </div>
 
-        <div className="grid grid-cols-1 gap-item-gap lg:min-h-[272px] lg:grid-cols-2">
-          <WeatherCard
-            location={garden?.city ?? null}
-            country={garden?.country ?? null}
-            days={weatherDays}
-          />
-          <CareTipsCard
-            tips={careTips}
-            groups={careGroups}
-            showEmptyHint={palette.length === 0}
-          />
+        <div className={dashboardRows.middle}>
+          <Suspense fallback={<CardSkeleton />}>
+            <WeatherSection />
+          </Suspense>
+          <Suspense fallback={<CardSkeleton title="Plant care" />}>
+            <CareTipsSection />
+          </Suspense>
         </div>
 
-        <div className="grid grid-cols-1 gap-item-gap lg:min-h-[234px] lg:grid-cols-3">
-          <PlannedCard plants={plannedPlants} />
-          <DiaryRecentCard diaries={diaries} />
-          <ImpactCard text={impact} />
+        <div className={dashboardRows.bottom}>
+          <Suspense fallback={<CardSkeleton title="Planned" />}>
+            <PlannedSection />
+          </Suspense>
+          <Suspense fallback={<CardSkeleton title="Diary" />}>
+            <DiarySection />
+          </Suspense>
+          <Suspense fallback={<CardSkeleton />}>
+            <ImpactSection />
+          </Suspense>
         </div>
       </div>
     </div>
