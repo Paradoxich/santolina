@@ -12,7 +12,8 @@ import { PlantDetailDrawer } from '@/components/PlantDetailDrawer'
 import {
   getBloomStatus,
   getStageNote,
-  type BloomStatus,
+  toDisplayStatus,
+  type DisplayBloomStatus,
 } from '@/lib/bloom-status'
 import { formatExposure, formatBloomRange } from '@/lib/format-plant'
 import type { PlantDetail } from '@/lib/plant-detail'
@@ -25,14 +26,13 @@ import {
 } from '@/server/palette-actions'
 import type { GardenPlant } from '@/types/garden'
 
-type StatusFilter = 'all' | BloomStatus
+type StatusFilter = 'all' | DisplayBloomStatus
 
 const statusFilters: { value: StatusFilter; label: string }[] = [
   { value: 'all', label: 'All' },
   { value: 'blooming', label: 'Blooming' },
   { value: 'pre-bloom', label: 'Pre-bloom' },
   { value: 'resting', label: 'Resting' },
-  { value: 'done', label: 'Done' },
   { value: 'evergreen', label: 'Evergreen' },
 ]
 
@@ -107,7 +107,9 @@ export function GardenClient({ palette, detail }: GardenClientProps) {
     tab === 'growing'
       ? filter === 'all'
         ? growing
-        : growing.filter((p) => getBloomStatus(p.bloomMonths) === filter)
+        : growing.filter(
+            (p) => toDisplayStatus(getBloomStatus(p.bloomMonths)) === filter
+          )
       : planned
 
   const activeTabLabel = tab === 'growing' ? 'Growing' : 'Planned'

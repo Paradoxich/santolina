@@ -41,6 +41,16 @@ export function getBloomStatus(
   return 'resting'
 }
 
+// The UI merges 'done' into Resting (a five-way status vocabulary wasn't
+// earning its keep, and "Done" reads ambiguously on a card). The internal
+// status keeps the distinction — dashboard copy and stage notes rely on it —
+// so anything user-facing maps through here first.
+export type DisplayBloomStatus = Exclude<BloomStatus, 'done'>
+
+export function toDisplayStatus(status: BloomStatus): DisplayBloomStatus {
+  return status === 'done' ? 'resting' : status
+}
+
 // Evergreens have no bloom window, so their note is anchored to the moment —
 // what the plant is doing this season, not what it definitionally is. Keyed by
 // the 6-stage season vocabulary for a Mediterranean-adjacent climate.
