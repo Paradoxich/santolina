@@ -11,7 +11,7 @@ export type StatusFilter = 'all' | DisplayBloomStatus
 // Small solid dot echoing each status chip's hue, so the menu reads as a
 // colour legend. 'all' gets a hollow ring — "no filter".
 const dotColors: Record<StatusFilter, string> = {
-  all: 'border border-placeholder',
+  all: 'border border-sage-600',
   blooming: 'bg-brick-500',
   'pre-bloom': 'bg-honey-500',
   resting: 'bg-sage-500',
@@ -32,7 +32,7 @@ const labels: Record<StatusFilter, string> = {
 }
 
 const Dot = ({ status }: { status: StatusFilter }) => (
-  <span className={`inline-block size-2.5 rounded-full ${dotColors[status]}`} />
+  <span className={`inline-block size-2 rounded-full ${dotColors[status]}`} />
 )
 
 interface StatusFilterMenuProps {

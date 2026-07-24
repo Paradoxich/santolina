@@ -103,7 +103,7 @@ export function FilterDropdown({
           'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus',
           active
             ? 'border-transparent bg-accent text-on-accent hover:bg-accent-hover'
-            : 'border-card bg-transparent text-primary hover:bg-surface-hover',
+            : 'border-card-translucent bg-transparent text-primary hover:bg-surface-hover',
         ].join(' ')}
       >
         {label}
@@ -135,7 +135,7 @@ export function FilterDropdown({
           aria-label={label}
           className={[
             'absolute left-0 top-full z-50 mt-1 min-w-[12rem]',
-            'rounded-md border border-card bg-surface-control p-1 shadow-soft backdrop-blur-md',
+            'rounded-md border border-card bg-sage-100 p-1 shadow-soft',
           ].join(' ')}
         >
           {options.map((o) => {

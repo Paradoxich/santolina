@@ -94,6 +94,28 @@ body {
   display: none;
 }
 
+/* Keep the scroll track quiet until the user is actually on it: the thumb is
+   transparent at rest and only picks up its fern colour on hover/focus. Used
+   on in-card scroll areas (e.g. the dashboard Plant care list) so a permanent
+   scrollbar doesn't sit on an otherwise calm panel. */
+.scrollbar-hover {
+  scrollbar-color: transparent transparent;
+}
+
+.scrollbar-hover:hover,
+.scrollbar-hover:focus-within {
+  scrollbar-color: var(--color-fern-300) transparent;
+}
+
+.scrollbar-hover::-webkit-scrollbar-thumb {
+  background-color: transparent;
+}
+
+.scrollbar-hover:hover::-webkit-scrollbar-thumb,
+.scrollbar-hover:focus-within::-webkit-scrollbar-thumb {
+  background-color: var(--color-fern-300);
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .animate-ken-burns {
     animation: ken-burns-x 40s ease-in-out infinite;

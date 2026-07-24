@@ -145,7 +145,7 @@ export function Menu({
             'absolute z-50 min-w-[8rem]',
             align === 'end' ? 'right-0' : 'left-0',
             position === 'bottom' ? 'top-full mt-1' : 'bottom-full mb-1',
-            'rounded-md border border-card bg-surface-control p-1 shadow-soft backdrop-blur-md',
+            'rounded-md border border-card bg-sage-100 p-1 shadow-soft',
             menuClassName
           )}
         >

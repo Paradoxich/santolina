@@ -75,10 +75,7 @@ export function AppSidebar({ identity }: { identity: SidebarIdentity }) {
               <span className="flex-1 truncate text-body text-primary">
                 {identity.name}
               </span>
-              <Badge
-                tone="positive"
-                className="shrink-0 whitespace-nowrap uppercase tracking-wide"
-              >
+              <Badge className="shrink-0 whitespace-nowrap border-transparent bg-honey-300 uppercase tracking-wide text-honey-600">
                 WIP
               </Badge>
             </>
