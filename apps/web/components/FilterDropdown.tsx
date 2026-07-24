@@ -103,7 +103,7 @@ export function FilterDropdown({
           'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus',
           active
             ? 'border-transparent bg-accent text-on-accent hover:bg-accent-hover'
-            : 'border-card bg-transparent text-primary hover:bg-surface-hover',
+            : 'border-card-translucent bg-transparent text-primary hover:bg-surface-hover',
         ].join(' ')}
       >
         {label}
