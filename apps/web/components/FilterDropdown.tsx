@@ -135,7 +135,7 @@ export function FilterDropdown({
           aria-label={label}
           className={[
             'absolute left-0 top-full z-50 mt-1 min-w-[12rem]',
-            'rounded-md border border-card bg-surface-control p-1 shadow-soft backdrop-blur-md',
+            'rounded-md border border-card bg-sage-100 p-1 shadow-soft',
           ].join(' ')}
         >
           {options.map((o) => {
