@@ -108,7 +108,7 @@ export function buildGardenImpact(
 ): string {
   const planted = palette.filter((p) => p.status === 'planted')
   if (planted.length === 0)
-    return 'Every plant you add becomes part of the local ecosystem. Start with one and it begins.'
+    return 'Every plant you add becomes part of the local ecosystem.'
 
   const benefits = (row: PalettePlant) => row.plant.environment_benefits ?? ''
   const groups = groupByBloomStatus(palette, today)
@@ -119,20 +119,20 @@ export function buildGardenImpact(
     POLLINATOR_PATTERN.test(benefits(r))
   )
   if (feeding.length >= 2)
-    return 'Your plants are feeding bees and butterflies right now, right when colonies need it most.'
+    return 'Your garden is feeding bees and butterflies right when they need it most.'
   if (feeding.length === 1) {
     const row = feeding[0]!
     if (EARLY_NECTAR_PATTERN.test(benefits(row)))
-      return `${row.plant.common_name} is one of the few nectar sources available this early. Pollinators are already finding it.`
+      return `${row.plant.common_name} is one of the first reliable nectar sources of the season.`
     if (LATE_NECTAR_PATTERN.test(benefits(row)))
-      return `${row.plant.common_name} is one of the last nectar sources still going as other gardens wind down.`
-    return `${row.plant.common_name} is feeding local pollinators right now, in a landscape where that's increasingly rare.`
+      return `${row.plant.common_name} is helping carry pollinators into autumn, when fewer flowers remain.`
+    return `${row.plant.common_name} is supporting bees and butterflies while it's in bloom.`
   }
 
   // Seasonal benefits that don't need anything in bloom.
   const forBirds = planted.filter((r) => BIRD_PATTERN.test(benefits(r)))
   if (forBirds.length > 0 && (season === 'late_summer' || season === 'autumn'))
-    return `${forBirds[0]!.plant.common_name} will keep garden birds fed well into autumn, when food sources are getting scarce.`
+    return `${forBirds[0]!.plant.common_name} will provide food for garden birds well into autumn.`
 
   const sheltering = planted.filter(
     (r) =>
@@ -140,7 +140,7 @@ export function buildGardenImpact(
       (r.plant.bloom_months ?? []).length === 0
   )
   if (sheltering.length > 0 && season === 'winter')
-    return 'Your evergreens are sheltering birds and overwintering insects through the coldest months.'
+    return 'Your evergreens are giving birds and overwintering insects a place to shelter through winter.'
 
   // Upcoming benefit: a pollinator plant with a bloom window ahead.
   const upcoming = [...groups.preBloom, ...planted].find(
@@ -151,15 +151,15 @@ export function buildGardenImpact(
   )
   if (upcoming) {
     const nextMonth = nextBloomMonth(upcoming.plant.bloom_months ?? [], today)
-    return `When ${upcoming.plant.common_name} blooms in ${monthName(nextMonth)}, it'll be a reliable food source for local pollinators.`
+    return `When ${upcoming.plant.common_name} blooms in ${monthName(nextMonth)}, it'll become an important nectar source for bees and butterflies.`
   }
 
   // "Resting" only when nothing is in bloom; a garden can reach here while
   // blooming if none of its plants carry ecosystem keywords (rare: 177/201
   // catalog plants mention pollinators).
   return groups.blooming.length > 0
-    ? 'Your garden is quietly supporting the local ecosystem, even now.'
-    : 'Even resting, your garden is habitat. The quiet work continues.'
+    ? 'Your garden is quietly supporting more life than it lets on.'
+    : 'Even at rest, your garden still provides habitat for local wildlife.'
 }
 
 /** The next month (1-12) a bloom window opens, relative to today. */
