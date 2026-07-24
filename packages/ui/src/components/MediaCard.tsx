@@ -48,7 +48,7 @@ export function MediaCard({
   ref,
 }: MediaCardProps) {
   const chrome = cn(
-    'flex flex-col gap-section-gap rounded-card-tile p-card-padding',
+    'flex flex-col gap-row-gap rounded-card-tile p-card-padding',
     surfaceStyles[surface],
     border === 'dashed'
       ? 'border border-dashed border-card-translucent'

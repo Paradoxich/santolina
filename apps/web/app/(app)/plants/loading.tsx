@@ -48,7 +48,7 @@ export default function PlantsLoading() {
         {Array.from({ length: 6 }).map((_, i) => (
           <div
             key={i}
-            className="flex animate-pulse flex-col gap-section-gap rounded-card-tile border border-card-translucent bg-surface-card p-card-padding"
+            className="flex animate-pulse flex-col gap-row-gap rounded-card-tile border border-card-translucent bg-surface-card p-card-padding"
           >
             <div className="h-44 w-full rounded-sm bg-surface-page" />
             <div className="flex flex-col gap-tight-gap">
