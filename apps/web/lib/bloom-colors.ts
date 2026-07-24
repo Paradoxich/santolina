@@ -32,7 +32,7 @@ export interface BloomColorBucket {
 
 export const BLOOM_COLOR_BUCKETS: BloomColorBucket[] = [
   { value: 'white', label: 'White', swatch: '#f7f5ee' },
-  { value: 'silver', label: 'Silver', swatch: '#aebbb1' },
+  { value: 'silver', label: 'Silver', swatch: '#a7b2bd' },
   { value: 'yellow', label: 'Yellow', swatch: '#f0ca3c' },
   { value: 'orange', label: 'Orange', swatch: '#e88a3a' },
   { value: 'red', label: 'Red', swatch: '#c03a2b' },
