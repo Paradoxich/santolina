@@ -24,7 +24,7 @@ export interface PlantDiary {
   /** The live palette_plants row id, or null if this plant isn't currently in the garden. */
   paletteId: string | null
   plantName: string
-  /** Season summary shown at the top of the diary drawer — the plant's static description. */
+  /** Shown at the top of the diary drawer — first sentence of the plant's static description. */
   summary: string
   /** Thumbnail shown in the diary list when the latest note has photos. */
   thumbnailUrl?: string

@@ -16,6 +16,7 @@ export const icons = {
   filter: '/icons/icon-filter.svg',
   garden: '/icons/icon-garden.svg',
   grid: '/icons/icon-grid.svg',
+  image: '/icons/icon-image.svg',
   info: '/icons/icon-info.svg',
   issues: '/icons/icon-issues.svg',
   leaf: '/icons/icon-leaf.svg',
