@@ -1,5 +1,5 @@
 <svg width="100%" height="100%" overflow="visible" style="display: block;" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
 <g id="Icon">
-<path id="Vector" d="M13.3333 13.3333L2.66667 2.66667M13.3333 2.66667L2.66667 13.3333" stroke="var(--stroke-0, black)" stroke-width="1.33333" stroke-linecap="round"/>
+<path id="Vector" d="M13.3333 13.3333L2.66667 2.66667M13.3333 2.66667L2.66667 13.3333" stroke="#111411" stroke-width="1.33333" stroke-linecap="round"/>
 </g>
 </svg>
