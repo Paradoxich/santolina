@@ -211,14 +211,19 @@ export function GardenClient({ palette, detail }: GardenClientProps) {
       <h1 className="mt-8 text-title font-semibold text-primary md:mt-12">
         {activeTabLabel}
       </h1>
-      <div className="mt-3 flex items-center justify-between gap-inline-gap">
+      {/* The filter trigger is absolutely positioned so its 40px height doesn't
+          inflate the row and push the description down — the subtitle keeps the
+          same mt-3 spacing as every other tab (Planned, dashboard). */}
+      <div className="relative mt-3">
         <p className="text-body text-secondary">{tabSubtitle}</p>
         {tab === 'growing' && growing.length > 0 && (
-          <StatusFilterMenu
-            value={filter}
-            onChange={setFilter}
-            counts={statusCounts}
-          />
+          <div className="absolute right-0 top-1/2 -translate-y-1/2">
+            <StatusFilterMenu
+              value={filter}
+              onChange={setFilter}
+              counts={statusCounts}
+            />
+          </div>
         )}
       </div>
 
