@@ -42,7 +42,7 @@ async function toPlantDiary(
  * One PlantDiary per plant currently growing in the garden, plus one for
  * any plant that was removed from the palette but still has notes from
  * when it was — `paletteId` is null for those, and the UI marks them
- * "Removed from garden" rather than hiding them. `planned`/`considering`
+ * "Removed from garden" rather than hiding them. `planned`
  * palette plants don't get a diary until they're moved to `planted` — a
  * diary is for tracking something you're actually tending, not a plan.
  */

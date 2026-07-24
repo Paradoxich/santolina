@@ -7,7 +7,7 @@
 import { requireSessionGarden } from '@/lib/session-garden'
 import type { DbPlant } from '@/lib/plants-db'
 
-export type PaletteStatus = 'planned' | 'planted' | 'considering'
+export type PaletteStatus = 'planned' | 'planted'
 export type PaletteSource = 'generated' | 'manual' | 'existing'
 
 export interface PalettePlant {

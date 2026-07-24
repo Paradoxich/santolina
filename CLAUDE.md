@@ -89,7 +89,7 @@ Seven tables. All IDs are UUIDs. Row-level security required on all user-owned t
 - `users` — extends Supabase auth.users; created (with an empty garden) by the `handle_new_user` trigger on signup
 - `gardens` — garden profile (location + lat/lon, space type, sun, style, size). One per user in v1; only location is populated until the onboarding wizard ships.
 - `plants` — shared plant catalog cached from the Trefle API, enriched by an AI curation pass. Public read, service role write.
-- `palette_plants` — join table between gardens and plants. User's palette. Includes status (planned/planted) and source (generated/manual/existing). The status check constraint also permits a legacy `considering`, but the product no longer uses it — the app only moves plants between planned and planted (see `docs/architecture.md` §12).
+- `palette_plants` — join table between gardens and plants. User's palette. Includes status (planned/planted) and source (generated/manual/existing). The app only moves plants between planned and planted; a legacy `considering` status was dropped from the check constraint July 2026 (see `docs/architecture.md` §12).
 - `plant_combinations` — which plants work well together. Public read, service role write. Populated by `apps/web/scripts/curate-combinations.ts` (see `docs/architecture.md` §19).
 - `agent_sessions` — rolling agent context summary per garden.
 - `diary_entries` — user's dated notes and photos per plant. Keyed by garden + plant (not the palette row), so a plant's history survives being removed from the palette. User-owned (RLS on garden ownership); photos live in the private `diary-photos` storage bucket (garden-ownership policies, signed-URL reads). See `docs/architecture.md` §18 and §29.
