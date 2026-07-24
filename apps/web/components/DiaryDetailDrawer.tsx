@@ -332,7 +332,7 @@ export function DiaryDetailDrawer({ diary, onClose }: DiaryDetailDrawerProps) {
     // (the auto "planted" event is exactly this shape), so a note or photo
     // isn't required when one or more event chips are selected.
     if (!trimmed && photoFiles.length === 0 && selectedEvents.length === 0) {
-      setComposerError('Add a note, a photo, or an event first.')
+      setComposerError('Add a note')
       return
     }
 
@@ -363,13 +363,9 @@ export function DiaryDetailDrawer({ diary, onClose }: DiaryDetailDrawerProps) {
   }
 
   const composerPlaceholder =
-    selectedEvents.length === 1
-      ? `Add a note about ${DIARY_EVENT_LABELS[
-          selectedEvents[0]!
-        ].toLowerCase()} (optional)`
-      : selectedEvents.length > 1
-        ? 'Add a note (optional)'
-        : "What's new with this plant?"
+    selectedEvents.length > 0
+      ? 'Add an optional note.'
+      : "What's new with this plant?"
 
   return (
     <Drawer
