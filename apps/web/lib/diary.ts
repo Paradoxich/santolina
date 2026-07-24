@@ -2,6 +2,7 @@
 import { requireSessionGarden } from './session-garden'
 import { listDiaryEntries, type DiaryEntry } from '@/server/diary-actions'
 import type { DbPlant } from './plants-db'
+import { firstSentence } from './format-plant'
 import type { DiaryNote, PlantDiary } from '@/types/diary'
 
 /** Uploaded photos don't carry a natural display width — the mock's mixed widths were purely decorative. */
@@ -32,7 +33,9 @@ async function toPlantDiary(
     plantId: plant.id,
     paletteId,
     plantName: plant.common_name,
-    summary: plant.description ?? 'No description yet for this plant.',
+    summary: plant.description
+      ? firstSentence(plant.description)
+      : 'No description yet for this plant.',
     thumbnailUrl: notes[0]?.photos?.[0]?.src,
     notes,
   }

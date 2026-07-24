@@ -125,6 +125,13 @@ export function formatPlantType(plant: DbPlant): string | null {
   return null
 }
 
+/** The first sentence of `text`, truncated with an ellipsis past `maxLength`. */
+export function firstSentence(text: string, maxLength = 160): string {
+  const sentence = text.split(/(?<=\.)\s/)[0]!
+  if (sentence.length <= maxLength) return sentence
+  return `${sentence.slice(0, maxLength - 3).trimEnd()}…`
+}
+
 /**
  * water_needs_summary with fallback to the first sentence of the
  * longer water_needs prose, truncated if that's still too long.
@@ -132,9 +139,7 @@ export function formatPlantType(plant: DbPlant): string | null {
 export function formatWaterNeedsSummary(plant: DbPlant): string | null {
   if (plant.water_needs_summary) return plant.water_needs_summary
   if (!plant.water_needs) return null
-  const firstSentence = plant.water_needs.split(/(?<=\.)\s/)[0]!
-  if (firstSentence.length <= 60) return firstSentence
-  return `${firstSentence.slice(0, 57).trimEnd()}…`
+  return firstSentence(plant.water_needs, 60)
 }
 
 const LIGHT_SENTENCES: Record<string, string> = {

@@ -93,22 +93,22 @@ function NoteCard({
   }
 
   return (
-    <article className="group flex w-full items-start gap-item-gap rounded-sm bg-surface-page p-inline-gap">
+    <article className="group relative flex w-full items-end gap-item-gap rounded-md bg-fern-100 p-inline-gap">
       <div className="flex min-w-0 flex-1 flex-col gap-inline-gap">
+        {note.text && (
+          <p className="text-body leading-normal text-primary">{note.text}</p>
+        )}
         {note.eventTypes.length > 0 && (
           <div className="flex flex-wrap gap-tight-gap">
             {note.eventTypes.map((event) => (
               <span
                 key={event}
-                className="w-fit rounded-full bg-surface-control px-tight-gap py-0.5 text-label font-medium text-secondary"
+                className="w-fit rounded-full bg-surface-overlay px-1.5 py-0.5 text-label text-muted"
               >
                 {DIARY_EVENT_LABELS[event]}
               </span>
             ))}
           </div>
-        )}
-        {note.text && (
-          <p className="text-body leading-normal text-primary">{note.text}</p>
         )}
         {note.photos && note.photos.length > 0 && (
           <div className="flex gap-inline-gap">
@@ -133,11 +133,11 @@ function NoteCard({
           </div>
         )}
       </div>
-      <div className="flex shrink-0 items-start gap-tight-gap">
-        <span className="w-[60px] text-right text-label leading-6 text-muted">
-          {formatDayLabel(note.date)}
-        </span>
-        {menuItems.length > 0 && (
+      <span className="w-[60px] shrink-0 text-right text-label leading-6 text-muted">
+        {formatDayLabel(note.date)}
+      </span>
+      {menuItems.length > 0 && (
+        <div className="absolute right-inline-gap top-inline-gap">
           <Menu
             label="Note actions"
             items={menuItems}
@@ -159,10 +159,10 @@ function NoteCard({
                 />
               </svg>
             }
-            triggerClassName="flex size-6 items-center justify-center rounded-full transition-all duration-normal hover:bg-surface-overlay focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100 md:aria-expanded:opacity-100"
+            triggerClassName="flex size-6 items-center justify-center rounded-sm border bg-surface-card [border-color:var(--color-sage-100)] transition-colors duration-normal hover:[border-color:var(--color-sage-50)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100 md:aria-expanded:opacity-100"
           />
-        )}
-      </div>
+        </div>
+      )}
     </article>
   )
 }
@@ -408,82 +408,84 @@ export function DiaryDetailDrawer({ diary, onClose }: DiaryDetailDrawerProps) {
           </p>
         </div>
 
-        <div className="flex w-full shrink-0 items-center justify-between gap-inline-gap">
-          <h3 className="text-body font-semibold text-primary">Your notes</h3>
-          <Tooltip
-            content={isGrowing ? 'Clear diary' : 'Delete diary'}
-            position="bottom"
-          >
-            {/* Hover handlers go on this span, not the button — disabled
-                buttons don't reliably fire mouse events, and this is exactly
-                the state where the tooltip is most useful. */}
-            <span className="inline-flex">
-              <IconButton
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsDeleteDialogOpen(true)}
-                disabled={noteCount === 0}
-                aria-label={isGrowing ? 'Clear diary' : 'Delete diary'}
-              >
-                {isGrowing ? (
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    aria-hidden="true"
-                  >
-                    <path
-                      d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"
-                      stroke="var(--stroke-0, black)"
-                      strokeWidth="1.8"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                    <path
-                      d="M22 21H7"
-                      stroke="var(--stroke-0, black)"
-                      strokeWidth="1.8"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                    <path
-                      d="m5 11 9 9"
-                      stroke="var(--stroke-0, black)"
-                      strokeWidth="1.8"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                ) : (
-                  <Icon src={icons.trash} />
-                )}
-              </IconButton>
-            </span>
-          </Tooltip>
-        </div>
+        <div className="flex w-full flex-1 flex-col gap-item-gap">
+          <div className="flex w-full shrink-0 items-center justify-between gap-inline-gap">
+            <h3 className="text-body font-semibold text-primary">Notes</h3>
+            <Tooltip
+              content={isGrowing ? 'Clear diary' : 'Delete diary'}
+              position="bottom"
+            >
+              {/* Hover handlers go on this span, not the button — disabled
+                  buttons don't reliably fire mouse events, and this is exactly
+                  the state where the tooltip is most useful. */}
+              <span className="inline-flex">
+                <IconButton
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsDeleteDialogOpen(true)}
+                  disabled={noteCount === 0}
+                  aria-label={isGrowing ? 'Clear diary' : 'Delete diary'}
+                >
+                  {isGrowing ? (
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"
+                        stroke="var(--stroke-0, black)"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <path
+                        d="M22 21H7"
+                        stroke="var(--stroke-0, black)"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <path
+                        d="m5 11 9 9"
+                        stroke="var(--stroke-0, black)"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  ) : (
+                    <Icon src={icons.trash} />
+                  )}
+                </IconButton>
+              </span>
+            </Tooltip>
+          </div>
 
-        {monthGroups.map(([month, notes]) => (
-          <section
-            key={month}
-            className="flex w-full shrink-0 flex-col gap-item-gap"
-          >
-            <h4 className="text-label font-medium uppercase tracking-label text-muted">
-              {month}
-            </h4>
-            <div className="flex w-full flex-col gap-tight-gap">
-              {notes.map((note) => (
-                <NoteCard
-                  key={note.id}
-                  note={note}
-                  onDelete={isGrowing ? setNoteToDelete : undefined}
-                  onPhotoClick={setLightboxIndex}
-                  photoOffset={photoOffsetByNoteId.get(note.id) ?? 0}
-                />
-              ))}
-            </div>
-          </section>
-        ))}
+          {monthGroups.map(([month, notes]) => (
+            <section
+              key={month}
+              className="flex w-full shrink-0 flex-col gap-item-gap"
+            >
+              <h4 className="text-label font-medium uppercase tracking-label text-muted">
+                {month}
+              </h4>
+              <div className="flex w-full flex-col gap-tight-gap">
+                {notes.map((note) => (
+                  <NoteCard
+                    key={note.id}
+                    note={note}
+                    onDelete={isGrowing ? setNoteToDelete : undefined}
+                    onPhotoClick={setLightboxIndex}
+                    photoOffset={photoOffsetByNoteId.get(note.id) ?? 0}
+                  />
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
       </div>
 
       {/* Pinned composer — chat-style input anchored to the bottom of the
@@ -538,7 +540,7 @@ export function DiaryDetailDrawer({ diary, onClose }: DiaryDetailDrawerProps) {
               <p className="text-body-small text-critical">{composerError}</p>
             )}
 
-            <div className="flex w-full items-end gap-tight-gap rounded-sm border border-card bg-surface-overlay p-tight-gap">
+            <div className="flex w-full items-end gap-tight-gap rounded-md border border-card bg-surface-overlay p-tight-gap">
               <input
                 ref={fileInputRef}
                 type="file"
@@ -553,7 +555,7 @@ export function DiaryDetailDrawer({ diary, onClose }: DiaryDetailDrawerProps) {
                 onClick={() => fileInputRef.current?.click()}
                 aria-label="Add photo"
               >
-                <Icon src={icons.plus} />
+                <Icon src={icons.image} />
               </IconButton>
               <textarea
                 ref={textareaRef}
@@ -572,7 +574,7 @@ export function DiaryDetailDrawer({ diary, onClose }: DiaryDetailDrawerProps) {
                 }}
                 placeholder={composerPlaceholder}
                 rows={1}
-                className="min-h-8 w-full flex-1 resize-none self-center bg-transparent py-1 text-body text-primary placeholder:text-muted focus:outline-none"
+                className="w-full flex-1 resize-none self-center bg-transparent py-1 text-body text-primary placeholder:text-muted focus:outline-none"
               />
               <IconButton
                 variant="primary"
