@@ -42,6 +42,14 @@ export function DiaryClient({
     (a, b) => latestNoteTime(b) - latestNoteTime(a)
   )
 
+  // Plants with at least one entry lead the page as its real content; plants
+  // still awaiting their first note sink into a quieter group below rather
+  // than repeating the same empty-state line once per plant. Removed plants
+  // always carry notes (that's why they're listed at all), so they never
+  // land in the waiting group.
+  const withNotes = sortedDiaries.filter((d) => d.notes.length > 0)
+  const awaiting = sortedDiaries.filter((d) => d.notes.length === 0)
+
   return (
     <div className="max-w-[669px] pb-16 pt-8 md:pt-12">
       <header className="flex flex-col gap-item-gap">
@@ -51,13 +59,9 @@ export function DiaryClient({
         </p>
       </header>
 
-      <h2 className="mt-8 text-subheading font-semibold text-primary md:mt-12">
-        Notes
-      </h2>
-
       {sortedDiaries.length === 0 ? (
         <EmptyState
-          className="mt-row-gap"
+          className="mt-8 md:mt-12"
           illustration={<EmptyStateIllustration name="diary" />}
           message="Keep diaries for plants you are growing."
           ctaLabel="Explore plants"
@@ -65,16 +69,48 @@ export function DiaryClient({
           linkComponent={Link}
         />
       ) : (
-        <div className="mt-row-gap flex flex-col gap-inline-gap">
-          {sortedDiaries.map((diary) => (
-            <DiaryListRow
-              key={diary.id}
-              diary={diary}
-              selected={diary.id === selectedId}
-              onClick={() => setSelectedId(diary.id)}
-            />
-          ))}
-        </div>
+        <>
+          {withNotes.length > 0 && (
+            <div className="mt-8 divide-y divide-card-translucent overflow-hidden rounded-card-tile border border-card-translucent bg-surface-card md:mt-12">
+              {withNotes.map((diary) => (
+                <DiaryListRow
+                  key={diary.id}
+                  diary={diary}
+                  selected={diary.id === selectedId}
+                  onClick={() => setSelectedId(diary.id)}
+                />
+              ))}
+            </div>
+          )}
+
+          {awaiting.length > 0 && (
+            <>
+              <h2 className="mt-8 text-body-small font-medium text-muted md:mt-12">
+                Waiting for their first note
+              </h2>
+              <div className="mt-item-gap divide-y divide-card-translucent overflow-hidden rounded-card-tile border border-card-translucent bg-surface-card-translucent">
+                {awaiting.map((diary) => (
+                  <button
+                    key={diary.id}
+                    type="button"
+                    aria-current={diary.id === selectedId ? 'true' : undefined}
+                    onClick={() => setSelectedId(diary.id)}
+                    className={[
+                      'flex w-full items-center px-row-gap py-item-gap text-left transition-colors duration-normal',
+                      diary.id === selectedId
+                        ? 'bg-surface-inset'
+                        : 'hover:bg-surface-subtle',
+                    ].join(' ')}
+                  >
+                    <span className="text-body font-medium text-secondary">
+                      {diary.plantName}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </>
       )}
 
       <AnimatePresence>
