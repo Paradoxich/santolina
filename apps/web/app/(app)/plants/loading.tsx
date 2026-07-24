@@ -23,22 +23,14 @@ export default function PlantsLoading() {
       <h1 className="mt-8 text-title font-semibold text-primary md:mt-12">
         Growing
       </h1>
+      {/* Description line + the status filter trigger (a 40x40 icon button),
+          mirroring GardenClient's justify-between row. */}
       <div
-        className="mt-3 h-5 w-64 max-w-full animate-pulse rounded bg-surface-card"
-        aria-hidden="true"
-      />
-
-      <div
-        className="mt-11 flex items-center gap-inline-gap overflow-x-auto pb-1"
+        className="mt-3 flex items-center justify-between gap-inline-gap"
         aria-hidden="true"
       >
-        {[56, 88, 92, 64, 96].map((w, i) => (
-          <div
-            key={i}
-            style={{ width: `${w}px` }}
-            className="h-8 shrink-0 animate-pulse rounded-chip bg-surface-card"
-          />
-        ))}
+        <div className="h-5 w-64 max-w-full animate-pulse rounded bg-surface-card" />
+        <div className="size-10 shrink-0 animate-pulse rounded-md bg-surface-card" />
       </div>
 
       <div
@@ -50,7 +42,7 @@ export default function PlantsLoading() {
             key={i}
             className="flex animate-pulse flex-col gap-row-gap rounded-card-tile border border-card-translucent bg-surface-card p-card-padding"
           >
-            <div className="h-44 w-full rounded-sm bg-surface-page" />
+            <div className="h-60 w-full rounded-sm bg-surface-page" />
             <div className="flex flex-col gap-tight-gap">
               <div className="h-5 w-1/2 rounded bg-surface-page" />
               <div className="h-4 w-3/4 rounded bg-surface-page" />
