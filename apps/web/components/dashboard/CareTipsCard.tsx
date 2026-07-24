@@ -78,7 +78,7 @@ export function CareTipsCard({
           ref={listRef}
           onScroll={updateScrollState}
           style={{ maskImage, WebkitMaskImage: maskImage }}
-          className="flex min-h-0 w-full flex-1 basis-0 flex-col gap-tight-gap overflow-y-auto"
+          className="scrollbar-hover flex min-h-0 w-full flex-1 basis-0 flex-col gap-tight-gap overflow-y-auto"
         >
           {tips.map((tip, index) => (
             <li
