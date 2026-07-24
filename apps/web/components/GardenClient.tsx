@@ -217,7 +217,10 @@ export function GardenClient({ palette, detail }: GardenClientProps) {
       <div className="relative mt-3">
         <p className="text-body text-secondary">{tabSubtitle}</p>
         {tab === 'growing' && growing.length > 0 && (
-          <div className="absolute right-0 top-1/2 -translate-y-1/2">
+          // Flex-centered, not translate-centered: a transform would create a
+          // stacking context and trap the open dropdown's z-index behind the
+          // card grid below.
+          <div className="absolute inset-y-0 right-0 flex items-center">
             <StatusFilterMenu
               value={filter}
               onChange={setFilter}
