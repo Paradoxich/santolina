@@ -40,6 +40,10 @@ export interface CatalogPlant {
   bloomMonths: number[]
   /** Raw bloom color values — bucketed for filtering by lib/bloom-colors.ts. */
   bloomColor: string[]
+  /** Distinctive foliage colour, or null for typical green — bucketed by lib/foliage-colors.ts. */
+  foliageColor: string | null
+  /** Curated greenery identity (plants.is_greenery) — Green bucket membership beyond green blooms. */
+  greenery: boolean
   /** WGSRPD Level-2 native region tags — powers the native-to-me lens. */
   nativeRegion: string[]
 }

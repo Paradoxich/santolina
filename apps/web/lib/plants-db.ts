@@ -87,6 +87,11 @@ export interface DbPlant {
   space_types: string[] | null
   bloom_color: string[] | null
   foliage_color: string | null
+  // Greenery identity — grown for green mass/form rather than blooms. Drives
+  // Green-bucket membership in the Explore colour filter (lib/plant-colors.ts)
+  // alongside green blooms. Curated by scripts/curate-greenery.ts; editorial-
+  // owned, not in the upsert_trefle_plant path. See migration 20260724120000.
+  is_greenery: boolean
   spread_min_cm: number | null
   spread_max_cm: number | null
   water_needs: string | null
@@ -109,6 +114,7 @@ export interface DbPlant {
   // is what their --new-only mode targets. See migration 20260716120000.
   botanical_checked_at: string | null
   native_checked_at: string | null
+  greenery_checked_at: string | null
   created_at: string
   updated_at: string
 }

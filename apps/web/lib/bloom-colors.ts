@@ -3,8 +3,17 @@
 // Curation writes free descriptive values into plants.bloom_color ("lavender-
 // blue", "rusty copper") — charming on a plant card, useless as filter chips.
 // This maps every raw value to one of 12 canonical buckets (Ana, July 13
-// 2026: magenta stays its own bucket, silver folds into white). Raw values
-// stay untouched in the DB; the bucketing is presentation-tier only.
+// 2026: magenta stays its own bucket). Raw values stay untouched in the DB;
+// the bucketing is presentation-tier only.
+//
+// Colour model revision (Ana, July 24 2026): cream folds into white — the
+// cream-bucket plants read as white to human eyes, and a filter where users
+// can't predict which of two twin tiles a plant falls under isn't a taxonomy.
+// Silver returns as a bucket, now carried almost entirely by foliage (72+
+// silver-foliage plants incl. the app's namesake vs 8 silver-ish blooms — the
+// original July fold into white was bloom-data-only). The silver-ish bloom
+// raws migrate from white to the revived bucket. Foliage's own mapping lives
+// in lib/foliage-colors.ts; the two axes combine in lib/plant-colors.ts.
 //
 // The swatch hexes are DATA (approximations of real flower colors shown as
 // filter swatches), not UI styling — they deliberately live here and not in
@@ -23,7 +32,7 @@ export interface BloomColorBucket {
 
 export const BLOOM_COLOR_BUCKETS: BloomColorBucket[] = [
   { value: 'white', label: 'White', swatch: '#f7f5ee' },
-  { value: 'cream', label: 'Cream', swatch: '#f0e3b8' },
+  { value: 'silver', label: 'Silver', swatch: '#aebbb1' },
   { value: 'yellow', label: 'Yellow', swatch: '#f0ca3c' },
   { value: 'orange', label: 'Orange', swatch: '#e88a3a' },
   { value: 'red', label: 'Red', swatch: '#c03a2b' },
@@ -41,18 +50,18 @@ export const BLOOM_COLOR_BUCKETS: BloomColorBucket[] = [
  * here or in IGNORED_BLOOM_COLORS — the check script enforces it.
  */
 export const RAW_TO_BUCKET: Record<string, string> = {
-  // white (incl. silver, folded per Ana — 5 mentions, too thin for a bucket)
+  // white (incl. cream, folded per Ana July 2026 — reads as white to the eye)
   white: 'white',
   'green-white': 'white',
   'greenish-white': 'white',
-  'silvery white': 'white',
-  silver: 'white',
-  'silver-blue': 'white',
-  // cream
-  cream: 'cream',
-  beige: 'cream',
-  tan: 'cream',
-  buff: 'cream',
+  cream: 'white',
+  beige: 'white',
+  tan: 'white',
+  buff: 'white',
+  // silver — revived July 2026; these bloom raws moved back out of white
+  'silvery white': 'silver',
+  silver: 'silver',
+  'silver-blue': 'silver',
   // yellow
   yellow: 'yellow',
   'golden yellow': 'yellow',
