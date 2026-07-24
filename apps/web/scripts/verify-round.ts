@@ -24,6 +24,10 @@
  */
 
 import { IGNORED_BLOOM_COLORS, RAW_TO_BUCKET } from '../lib/bloom-colors'
+import {
+  FOLIAGE_RAW_TO_BUCKET,
+  IGNORED_FOLIAGE_COLORS,
+} from '../lib/foliage-colors'
 import { getSupabaseAdmin } from '../lib/supabase-admin'
 
 const COMPANION_CAP = 5
@@ -35,6 +39,7 @@ interface PlantRow {
   ai_drafted_at: string | null
   native_region: string[] | null
   bloom_color: string[] | null
+  foliage_color: string | null
   plant_type: string | null
   plant_type_label: string | null
   style_tags: string[] | null
@@ -100,7 +105,7 @@ async function fetchAllPlants(): Promise<PlantRow[]> {
   const rows: PlantRow[] = []
   const columns =
     'id, common_name, scientific_name, ai_drafted_at, native_region, ' +
-    'bloom_color, plant_type, plant_type_label, style_tags, space_types, ' +
+    'bloom_color, foliage_color, plant_type, plant_type_label, style_tags, space_types, ' +
     'description, care_level, seasonal_rhythm, seasonal_care, sun_thrives, ' +
     'sun_tolerates, hardiness_rating, image_url'
   for (let from = 0; ; from += pageSize) {
@@ -169,6 +174,17 @@ function checkPlants(plants: PlantRow[]): Finding[] {
           level: 'FAIL',
           check: 'bloom_color mapping',
           detail: `${p.common_name} — "${raw}" not in lib/bloom-colors.ts`,
+        })
+      }
+    }
+
+    if (p.foliage_color) {
+      const value = p.foliage_color.trim().toLowerCase()
+      if (!FOLIAGE_RAW_TO_BUCKET[value] && !IGNORED_FOLIAGE_COLORS.has(value)) {
+        findings.push({
+          level: 'FAIL',
+          check: 'foliage_color mapping',
+          detail: `${p.common_name} — "${p.foliage_color}" not in lib/foliage-colors.ts`,
         })
       }
     }

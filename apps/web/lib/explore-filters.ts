@@ -7,7 +7,11 @@
 // (never `peak_season`, which is only ~22% filled). Native-to-my-region is
 // an optional discovery lens per the Region Data Model decision — the chip
 // only renders when the garden's region resolves (see lib/native-to-me.ts).
-import { BLOOM_COLOR_BUCKETS, bucketsForPlant } from '@/lib/bloom-colors'
+// Colour semantics (Ana, July 24 2026): the colour axis matches plant colour
+// across both axes — blooms OR distinctive foliage — via colorBucketsForPlant;
+// Green additionally means curated greenery. See lib/plant-colors.ts.
+import { BLOOM_COLOR_BUCKETS } from '@/lib/bloom-colors'
+import { colorBucketsForPlant } from '@/lib/plant-colors'
 import type { CatalogPlant } from '@/types/garden'
 
 export interface ExploreFilterState {
@@ -129,7 +133,7 @@ export function matchesSearchTerm(plant: CatalogPlant, query: string): boolean {
   if (facetMatches(SUN_OPTIONS, plant.sunThrives)) return true
   if (facetMatches(TYPE_OPTIONS, [plant.plantType])) return true
 
-  const colorBuckets = bucketsForPlant(plant.bloomColor)
+  const colorBuckets = colorBucketsForPlant(plant)
   if (
     BLOOM_COLOR_BUCKETS.some(
       (b) => b.label.toLowerCase().includes(q) && colorBuckets.includes(b.value)
@@ -175,7 +179,7 @@ export function matchesFilters(
     return false
 
   if (f.colors.length > 0) {
-    const buckets = bucketsForPlant(plant.bloomColor)
+    const buckets = colorBucketsForPlant(plant)
     if (!f.colors.some((c) => buckets.includes(c))) return false
   }
 

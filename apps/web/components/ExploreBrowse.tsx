@@ -112,9 +112,10 @@ const COLOR_HERO: Record<string, string> = {
   // Asian bleeding-heart
   white:
     'https://bs.plantnet.org/image/o/fe29eabfdd58dd98be18210d3ed4a89f91fb8286',
-  // Primrose
-  cream:
-    'https://bs.plantnet.org/image/o/d5dd720f7e2a23c677b067c06223a28c8f703932',
+  // Lavender cotton (santolina, the namesake) — Ana's pick: frosted silver
+  // foliage on a dark ground, reads unmistakably silver against the tint
+  silver:
+    'https://d2seqvvyy3b8p2.cloudfront.net/ea6d31a8af6019ef11632e876947fbf3.jpg',
   // Amur adonis (Ana's pick over a falling stars shot that cropped badly)
   yellow:
     'https://d2seqvvyy3b8p2.cloudfront.net/12ba5c2912abeb046e038ccfe89fd6be.jpg',
@@ -210,7 +211,7 @@ export function ExploreBrowse({
                     dark scrim for the label.
 
                     Normal blend, not multiply. Multiply can only darken, so
-                    the two pale buckets (white #f7f5ee, cream #f0e3b8) would
+                    the pale buckets (white #f7f5ee, silver #a7b2bd) would
                     leave the photo untouched. 50% is the point where the
                     photograph still carries the composition and every bucket
                     still reads as itself; higher flattens the tiles into

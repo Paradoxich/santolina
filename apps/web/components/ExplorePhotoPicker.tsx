@@ -13,7 +13,8 @@
 
 import { useState } from 'react'
 import { PlantImage } from '@/components/PlantImage'
-import { BLOOM_COLOR_BUCKETS, bucketsForPlant } from '@/lib/bloom-colors'
+import { BLOOM_COLOR_BUCKETS } from '@/lib/bloom-colors'
+import { colorBucketsForPlant } from '@/lib/plant-colors'
 import type { CatalogPlant } from '@/types/garden'
 
 /** Candidates shown per bucket. White has 200; a wall of them helps nobody. */
@@ -65,7 +66,7 @@ export function ExplorePhotoPicker({ plants }: { plants: CatalogPlant[] }) {
 
       {BLOOM_COLOR_BUCKETS.map((bucket) => {
         const pool = plants
-          .filter((p) => bucketsForPlant(p.bloomColor).includes(bucket.value))
+          .filter((p) => colorBucketsForPlant(p).includes(bucket.value))
           .filter((p) => p.imageUrl)
           .slice(0, PER_BUCKET)
 

@@ -39,12 +39,14 @@ export async function getExplorePlants(): Promise<CatalogPlant[]> {
     sun_thrives: string[] | null
     bloom_months: number[] | null
     bloom_color: string[] | null
+    foliage_color: string | null
+    is_greenery: boolean
     native_region: string[] | null
   }>((from, to) =>
     supabase
       .from('plants')
       .select(
-        'id, common_name, scientific_name, description, image_url, image_url_curated, image_urls, common_name_aliases, plant_type, style_tags, sun_thrives, bloom_months, bloom_color, native_region'
+        'id, common_name, scientific_name, description, image_url, image_url_curated, image_urls, common_name_aliases, plant_type, style_tags, sun_thrives, bloom_months, bloom_color, foliage_color, is_greenery, native_region'
       )
       .order('common_name')
       // common_name isn't unique — the id tiebreak keeps paging stable
@@ -64,6 +66,8 @@ export async function getExplorePlants(): Promise<CatalogPlant[]> {
     sunThrives: p.sun_thrives ?? [],
     bloomMonths: p.bloom_months ?? [],
     bloomColor: p.bloom_color ?? [],
+    foliageColor: p.foliage_color,
+    greenery: p.is_greenery ?? false,
     nativeRegion: p.native_region ?? [],
   }))
 }
