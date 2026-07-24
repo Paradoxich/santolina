@@ -1,16 +1,8 @@
 import { MediaCard } from '@paradoxui/ui'
 import { PlantImage } from '@/components/PlantImage'
-import { getBloomStatus, type BloomStatus } from '@/lib/bloom-status'
+import { BloomStatusBadge } from '@/components/BloomStatusBadge'
+import { getBloomStatus, toDisplayStatus } from '@/lib/bloom-status'
 import type { GardenPlant } from '@/types/garden'
-
-// Matches the Growing tab's filter chip labels exactly.
-const statusLabels: Record<BloomStatus, string> = {
-  blooming: 'Blooming',
-  'pre-bloom': 'Pre-bloom',
-  resting: 'Resting',
-  done: 'Done',
-  evergreen: 'Evergreen',
-}
 
 interface GardenPlantTileProps {
   plant: GardenPlant
@@ -18,36 +10,31 @@ interface GardenPlantTileProps {
 }
 
 export function GardenPlantTile({ plant, onClick }: GardenPlantTileProps) {
-  const bloomStatus = getBloomStatus(plant.bloomMonths)
+  const bloomStatus = toDisplayStatus(getBloomStatus(plant.bloomMonths))
 
   return (
     <MediaCard
       as="button"
       onClick={onClick}
       image={
-        <>
-          <PlantImage
-            src={plant.imageUrl}
-            alt={plant.name}
-            fill
-            sizes="(max-width: 1280px) 50vw, 360px"
-            className="object-cover"
-          />
-          {/* Bloom status sits on the photo (frosted for contrast over any
-              image) rather than by the title. Not the kit Badge: an
-              on-media overlay is a distinct treatment, and Badge's variant
-              bg can't be reliably overridden until tailwind-merge lands. */}
-          <span className="absolute right-inline-gap top-inline-gap inline-flex items-center whitespace-nowrap rounded-full bg-surface-card-translucent px-item-gap py-tight-gap text-label font-medium text-primary shadow-sm backdrop-blur-md">
-            {statusLabels[bloomStatus]}
-          </span>
-        </>
+        <PlantImage
+          src={plant.imageUrl}
+          alt={plant.name}
+          fill
+          sizes="(max-width: 1280px) 50vw, 360px"
+          className="object-cover"
+        />
       }
-      imageHeight={200}
+      imageHeight={240}
       title={plant.name}
-      // Terse field note on where the plant sits within its stage, or what's
-      // next for it (see getStageNote). Says what the status chip can't; always
-      // present, so it reads as a real line rather than an orphan marker.
-      body={plant.stageNote}
+      // Description line: the status as a compact chip, then the terse field
+      // note the status alone can't carry (see getStageNote).
+      body={
+        <span className="inline-flex items-center gap-inline-gap">
+          <BloomStatusBadge status={bloomStatus} />
+          {plant.stageNote}
+        </span>
+      }
     />
   )
 }

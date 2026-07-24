@@ -4,17 +4,22 @@ import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
-import { Chip, EmptyState, Tabs, useToast } from '@paradoxui/ui'
+import { EmptyState, Tabs, useToast } from '@paradoxui/ui'
 import { EmptyStateIllustration } from '@/components/EmptyStateIllustration'
 import { GardenPlantTile } from '@/components/GardenPlantTile'
 import { PlannedPlantTile } from '@/components/PlannedPlantTile'
 import { PlantDetailDrawer } from '@/components/PlantDetailDrawer'
 import {
+  StatusFilterMenu,
+  type StatusFilter,
+} from '@/components/StatusFilterMenu'
+import {
   getBloomStatus,
   getStageNote,
-  type BloomStatus,
+  toDisplayStatus,
 } from '@/lib/bloom-status'
 import { formatExposure, formatBloomRange } from '@/lib/format-plant'
+import { heroImageUrl } from '@/lib/plant-image'
 import type { PlantDetail } from '@/lib/plant-detail'
 import {
   addToPalette,
@@ -24,17 +29,6 @@ import {
   type PalettePlant,
 } from '@/server/palette-actions'
 import type { GardenPlant } from '@/types/garden'
-
-type StatusFilter = 'all' | BloomStatus
-
-const statusFilters: { value: StatusFilter; label: string }[] = [
-  { value: 'all', label: 'All' },
-  { value: 'blooming', label: 'Blooming' },
-  { value: 'pre-bloom', label: 'Pre-bloom' },
-  { value: 'resting', label: 'Resting' },
-  { value: 'done', label: 'Done' },
-  { value: 'evergreen', label: 'Evergreen' },
-]
 
 function toGardenPlant(row: PalettePlant): GardenPlant {
   const { plant } = row
@@ -48,7 +42,7 @@ function toGardenPlant(row: PalettePlant): GardenPlant {
   return {
     id: row.id,
     name: plant.common_name,
-    imageUrl: plant.image_url ?? plant.image_urls?.[0] ?? '',
+    imageUrl: heroImageUrl(plant),
     bloomMonths: plant.bloom_months ?? [],
     note: row.notes ?? '',
     planned: row.status === 'planned',
@@ -107,8 +101,21 @@ export function GardenClient({ palette, detail }: GardenClientProps) {
     tab === 'growing'
       ? filter === 'all'
         ? growing
-        : growing.filter((p) => getBloomStatus(p.bloomMonths) === filter)
+        : growing.filter(
+            (p) => toDisplayStatus(getBloomStatus(p.bloomMonths)) === filter
+          )
       : planned
+
+  const statusCounts: Record<StatusFilter, number> = {
+    all: growing.length,
+    blooming: 0,
+    'pre-bloom': 0,
+    resting: 0,
+    evergreen: 0,
+  }
+  for (const p of growing) {
+    statusCounts[toDisplayStatus(getBloomStatus(p.bloomMonths))]++
+  }
 
   const activeTabLabel = tab === 'growing' ? 'Growing' : 'Planned'
 
@@ -204,26 +211,21 @@ export function GardenClient({ palette, detail }: GardenClientProps) {
       <h1 className="mt-8 text-title font-semibold text-primary md:mt-12">
         {activeTabLabel}
       </h1>
-      <p className="mt-3 text-body text-secondary">{tabSubtitle}</p>
+      <div className="mt-3 flex items-center justify-between gap-inline-gap">
+        <p className="text-body text-secondary">{tabSubtitle}</p>
+        {tab === 'growing' && growing.length > 0 && (
+          <StatusFilterMenu
+            value={filter}
+            onChange={setFilter}
+            counts={statusCounts}
+          />
+        )}
+      </div>
 
       {actionError && (
         <p role="alert" className="mt-4 text-label text-critical">
           {actionError}
         </p>
-      )}
-
-      {tab === 'growing' && growing.length > 0 && (
-        <div className="mt-11 flex items-center gap-inline-gap overflow-x-auto pb-1">
-          {statusFilters.map((s) => (
-            <Chip
-              key={s.value}
-              selected={filter === s.value}
-              onClick={() => setFilter(s.value)}
-            >
-              {s.label}
-            </Chip>
-          ))}
-        </div>
       )}
 
       {visible.length > 0 && (
