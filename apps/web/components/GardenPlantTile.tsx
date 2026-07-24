@@ -1,19 +1,8 @@
 import { MediaCard } from '@paradoxui/ui'
 import { PlantImage } from '@/components/PlantImage'
-import {
-  getBloomStatus,
-  toDisplayStatus,
-  type DisplayBloomStatus,
-} from '@/lib/bloom-status'
+import { BloomStatusBadge } from '@/components/BloomStatusBadge'
+import { getBloomStatus, toDisplayStatus } from '@/lib/bloom-status'
 import type { GardenPlant } from '@/types/garden'
-
-// Matches the Growing tab's filter chip labels exactly.
-const statusLabels: Record<DisplayBloomStatus, string> = {
-  blooming: 'Blooming',
-  'pre-bloom': 'Pre-bloom',
-  resting: 'Resting',
-  evergreen: 'Evergreen',
-}
 
 interface GardenPlantTileProps {
   plant: GardenPlant
@@ -36,17 +25,15 @@ export function GardenPlantTile({ plant, onClick }: GardenPlantTileProps) {
           className="object-cover"
         />
       }
-      imageHeight={200}
+      imageHeight={240}
       title={plant.name}
-      // Status + terse field note in one line (see getStageNote). The note says
-      // what the status label alone can't; always present, so the line never
-      // reads as an orphan marker.
+      // Description line: the status as a compact chip, then the terse field
+      // note the status alone can't carry (see getStageNote).
       body={
-        <>
-          {statusLabels[bloomStatus]}
-          <span aria-hidden="true"> · </span>
+        <span className="inline-flex items-center gap-inline-gap">
+          <BloomStatusBadge status={bloomStatus} />
           {plant.stageNote}
-        </>
+        </span>
       }
     />
   )
