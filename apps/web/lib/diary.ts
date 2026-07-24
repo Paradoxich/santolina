@@ -16,7 +16,7 @@ function toDiaryNote(entry: DiaryEntry): DiaryNote {
       entry.photoUrls.length > 0
         ? entry.photoUrls.map((src) => ({ src, width: PHOTO_WIDTH }))
         : undefined,
-    eventType: entry.eventType,
+    eventTypes: entry.eventTypes,
   }
 }
 

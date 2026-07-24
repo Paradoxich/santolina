@@ -153,7 +153,7 @@ export async function markPlanted({
         garden_id: gardenId,
         plant_id: row.plant_id,
         palette_plant_id: paletteId,
-        event_type: 'planted',
+        event_types: ['planted'],
         note: null,
         photo_urls: [],
       })

@@ -12,8 +12,8 @@ export interface DiaryNote {
   /** ISO date, e.g. "2026-05-08" */
   date: string
   photos?: DiaryNotePhoto[]
-  /** Typed care event this entry logged, or null for a freeform note. */
-  eventType?: DiaryEventType | null
+  /** Typed care events this entry logged; empty for a freeform note. */
+  eventTypes: DiaryEventType[]
 }
 
 /** One diary per palette plant — thread identity is (garden, plant), not the palette row itself. */

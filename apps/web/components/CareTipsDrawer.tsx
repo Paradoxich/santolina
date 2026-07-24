@@ -52,7 +52,7 @@ export function CareTipsDrawer({ groups, onClose }: CareTipsDrawerProps) {
     const key = `${tip.plantId}:${tip.eventType}`
     setPending(key)
     try {
-      await addDiaryEntry({ plantId: tip.plantId, eventType: tip.eventType })
+      await addDiaryEntry({ plantId: tip.plantId, eventTypes: [tip.eventType] })
       router.refresh()
       const eventLabel = DIARY_EVENT_LABELS[tip.eventType].toLowerCase()
       toast({
