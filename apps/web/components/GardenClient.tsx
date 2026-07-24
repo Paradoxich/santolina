@@ -19,6 +19,7 @@ import {
   toDisplayStatus,
 } from '@/lib/bloom-status'
 import { formatExposure, formatBloomRange } from '@/lib/format-plant'
+import { heroImageUrl } from '@/lib/plant-image'
 import type { PlantDetail } from '@/lib/plant-detail'
 import {
   addToPalette,
@@ -41,7 +42,7 @@ function toGardenPlant(row: PalettePlant): GardenPlant {
   return {
     id: row.id,
     name: plant.common_name,
-    imageUrl: plant.image_url ?? plant.image_urls?.[0] ?? '',
+    imageUrl: heroImageUrl(plant),
     bloomMonths: plant.bloom_months ?? [],
     note: row.notes ?? '',
     planned: row.status === 'planned',
