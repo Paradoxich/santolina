@@ -210,26 +210,26 @@ async function main() {
     try {
       const judgment = await judgePlant(plant)
 
-      // A distinctive-foliage plant is by rule not greenery; a contradiction
-      // means the model ignored the rule. Flag it and skip the write — a
-      // wrong judgment is worse than a missing one. "Distinctive" means the
-      // value MAPS to a bucket: plain greens and seasonal turns (the ignore
-      // set) don't contradict greenery — a bright-green hedging shrub is
-      // exactly what the flag is for.
+      // A distinctive-foliage plant is by rule not greenery: its identity is
+      // that colour (Silver/Burgundy/Orange), and it already matches the
+      // colour filter through its foliage bucket. If the model says greenery
+      // anyway, we override to false rather than trust it — but we still write
+      // and stamp, so the row is recorded and --new-only converges.
+      // "Distinctive" means the value MAPS to a bucket: plain greens and
+      // seasonal turns (the ignore set) don't contradict greenery — a
+      // bright-green hedging shrub is exactly what the flag is for.
       const effectiveFoliage =
         plant.foliage_color ?? judgment.foliage_color ?? null
       const distinctive = foliageBucketsForPlant(effectiveFoliage).length > 0
-      if (judgment.greenery && distinctive) {
+      const contradicts = judgment.greenery && distinctive
+      if (contradicts) {
         contradictions.push(
-          `${plant.common_name} — greenery=true with foliage "${effectiveFoliage}"`
+          `${plant.common_name} — model said greenery=true with foliage "${effectiveFoliage}"; overridden to false`
         )
-        console.log(
-          `  [${i + 1}/${selected.length}] ${plant.common_name}: CONTRADICTION, skipped`
-        )
-        continue
       }
+      const greenery = contradicts ? false : judgment.greenery
 
-      if (judgment.greenery) greeneryCount++
+      if (greenery) greeneryCount++
       const newFoliage = judgment.foliage_color ?? null
       if (newFoliage) {
         foliageFilled++
@@ -244,12 +244,12 @@ async function main() {
       }
 
       console.log(
-        `  [${i + 1}/${selected.length}] ${plant.common_name}: greenery=${judgment.greenery}${newFoliage ? `, foliage="${newFoliage}"` : ''}`
+        `  [${i + 1}/${selected.length}] ${plant.common_name}: greenery=${greenery}${contradicts ? ' (overridden from true)' : ''}${newFoliage ? `, foliage="${newFoliage}"` : ''}`
       )
 
       if (!DRY_RUN) {
         const patch: Record<string, unknown> = {
-          is_greenery: judgment.greenery,
+          is_greenery: greenery,
           greenery_checked_at: new Date().toISOString(),
         }
         // Fill-only: never overwrite a populated foliage_color
@@ -281,7 +281,9 @@ async function main() {
       console.log(`  "${value}" — ${carriers.join(', ')}`)
   }
   if (contradictions.length) {
-    console.log(`\n${contradictions.length} contradiction(s), NOT written:`)
+    console.log(
+      `\n${contradictions.length} contradiction(s) overridden to greenery=false (matched via foliage bucket instead):`
+    )
     for (const c of contradictions) console.log(`  ${c}`)
   }
   if (failed.length) {
