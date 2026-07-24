@@ -30,13 +30,18 @@ export function PlannedPlantTile({
           className="object-cover"
         />
       }
-      imageHeight={148}
+      imageHeight={200}
       title={plant.name}
       subtitle={plant.caption}
       body={plant.note}
       border="dashed"
+      // Match the empty-state cards' dashed border (1.5px, placeholder) rather
+      // than MediaCard's thinner translucent default.
+      className="border-[1.5px] border-placeholder"
       footer={
-        <>
+        // Own row so the action gap is 0.5rem (gap-inline-gap) here without
+        // changing MediaCard's shared footer gap.
+        <div className="flex w-full items-center gap-inline-gap">
           <Tooltip content="Remove from planned">
             {/* Span carries the hover handlers: a disabled button doesn't
                 reliably fire mouse events. */}
@@ -72,7 +77,7 @@ export function PlannedPlantTile({
             Move to growing
             <Icon src={icons.arrowRight} />
           </Button>
-        </>
+        </div>
       }
     />
   )
