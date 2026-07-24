@@ -95,10 +95,17 @@ function NoteCard({
   return (
     <article className="group flex w-full items-start gap-item-gap rounded-sm bg-surface-page p-inline-gap">
       <div className="flex min-w-0 flex-1 flex-col gap-inline-gap">
-        {note.eventType && (
-          <span className="w-fit rounded-full bg-surface-control px-tight-gap py-0.5 text-label font-medium text-secondary">
-            {DIARY_EVENT_LABELS[note.eventType]}
-          </span>
+        {note.eventTypes.length > 0 && (
+          <div className="flex flex-wrap gap-tight-gap">
+            {note.eventTypes.map((event) => (
+              <span
+                key={event}
+                className="w-fit rounded-full bg-surface-control px-tight-gap py-0.5 text-label font-medium text-secondary"
+              >
+                {DIARY_EVENT_LABELS[event]}
+              </span>
+            ))}
+          </div>
         )}
         {note.text && (
           <p className="text-body leading-normal text-primary">{note.text}</p>
@@ -166,9 +173,9 @@ export function DiaryDetailDrawer({ diary, onClose }: DiaryDetailDrawerProps) {
   const monthGroups = groupNotesByMonth(diary.notes)
 
   const [noteText, setNoteText] = useState('')
-  const [selectedEvent, setSelectedEvent] = useState<DiaryEventType | null>(
-    null
-  )
+  // Multi-select: more than one care event can be true of a single visit
+  // (watered and pruned on the same day), so an entry carries a set of events.
+  const [selectedEvents, setSelectedEvents] = useState<DiaryEventType[]>([])
   const [photoFiles, setPhotoFiles] = useState<File[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isProcessingPhotos, setIsProcessingPhotos] = useState(false)
@@ -279,7 +286,7 @@ export function DiaryDetailDrawer({ diary, onClose }: DiaryDetailDrawerProps) {
 
   const resetComposer = () => {
     setNoteText('')
-    setSelectedEvent(null)
+    setSelectedEvents([])
     setPhotoFiles([])
     setComposerError(null)
     const el = textareaRef.current
@@ -323,11 +330,16 @@ export function DiaryDetailDrawer({ diary, onClose }: DiaryDetailDrawerProps) {
     const trimmed = noteText.trim()
     // Event-only entries are valid — a typed event carries its own meaning
     // (the auto "planted" event is exactly this shape), so a note or photo
-    // isn't required when an event chip is selected.
-    if (!trimmed && photoFiles.length === 0 && !selectedEvent) {
+    // isn't required when one or more event chips are selected.
+    if (!trimmed && photoFiles.length === 0 && selectedEvents.length === 0) {
       setComposerError('Add a note, a photo, or an event first.')
       return
     }
+
+    // Store events in the canonical vocabulary order regardless of click order.
+    const eventTypes = DIARY_EVENT_TYPES.filter((e) =>
+      selectedEvents.includes(e)
+    )
 
     setIsSubmitting(true)
     setComposerError(null)
@@ -336,7 +348,7 @@ export function DiaryDetailDrawer({ diary, onClose }: DiaryDetailDrawerProps) {
         plantId: diary.plantId,
         paletteId: diary.paletteId,
         note: trimmed || undefined,
-        eventType: selectedEvent,
+        eventTypes,
         photoFiles: photoFiles.length > 0 ? photoFiles : undefined,
       })
       router.refresh()
@@ -350,9 +362,14 @@ export function DiaryDetailDrawer({ diary, onClose }: DiaryDetailDrawerProps) {
     }
   }
 
-  const composerPlaceholder = selectedEvent
-    ? `Add a note about ${DIARY_EVENT_LABELS[selectedEvent].toLowerCase()} (optional)`
-    : "What's new with this plant?"
+  const composerPlaceholder =
+    selectedEvents.length === 1
+      ? `Add a note about ${DIARY_EVENT_LABELS[
+          selectedEvents[0]!
+        ].toLowerCase()} (optional)`
+      : selectedEvents.length > 1
+        ? 'Add a note (optional)'
+        : "What's new with this plant?"
 
   return (
     <Drawer
@@ -481,12 +498,18 @@ export function DiaryDetailDrawer({ diary, onClose }: DiaryDetailDrawerProps) {
           <>
             <div className="flex flex-wrap gap-tight-gap">
               {DIARY_EVENT_TYPES.map((event) => {
-                const active = selectedEvent === event
+                const active = selectedEvents.includes(event)
                 return (
                   <Chip
                     key={event}
                     selected={active}
-                    onClick={() => setSelectedEvent(active ? null : event)}
+                    onClick={() =>
+                      setSelectedEvents((prev) =>
+                        active
+                          ? prev.filter((e) => e !== event)
+                          : [...prev, event]
+                      )
+                    }
                   >
                     {DIARY_EVENT_LABELS[event]}
                   </Chip>

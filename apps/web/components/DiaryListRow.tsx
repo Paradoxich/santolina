@@ -22,7 +22,7 @@ export function DiaryListRow({
   const photoCount = latest?.photos?.length ?? 0
   const preview = latest
     ? latest.text ||
-      (latest.eventType ? DIARY_EVENT_LABELS[latest.eventType] : '') ||
+      latest.eventTypes.map((e) => DIARY_EVENT_LABELS[e]).join(', ') ||
       (photoCount > 0
         ? photoCount === 1
           ? 'Added a new photo'

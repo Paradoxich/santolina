@@ -11,8 +11,9 @@ const MAX_TIPS = 5
 const MS_PER_DAY = 1000 * 60 * 60 * 24
 
 /**
- * A logged typed diary event, reduced to what tip ranking needs. Built from
- * diary_entries rows (event_type not null) — see listGardenCareEvents.
+ * A logged typed diary event, reduced to what tip ranking needs. One per
+ * entry per logged event — a multi-event entry fans out into several — see
+ * listGardenCareEvents.
  */
 export interface CareEvent {
   plantId: string

@@ -20,8 +20,8 @@ export interface DiaryEntry {
   /** The live palette_plants row id, or null if the plant has since been removed from the garden. */
   paletteId: string | null
   note: string | null
-  /** Typed care event this entry logged, or null for a freeform note. */
-  eventType: DiaryEventType | null
+  /** Typed care events this entry logged; empty for a freeform note. */
+  eventTypes: DiaryEventType[]
   /** Renderable (signed, short-lived) URLs — the DB stores storage paths, not URLs. */
   photoUrls: string[]
   createdAt: string
@@ -34,7 +34,7 @@ interface DiaryEntryRow {
   plant_id: string
   palette_plant_id: string | null
   note: string | null
-  event_type: DiaryEventType | null
+  event_types: DiaryEventType[]
   photo_urls: string[]
   created_at: string
   updated_at: string
@@ -47,7 +47,7 @@ function toDiaryEntry(row: DiaryEntryRow, photoUrls: string[]): DiaryEntry {
     plantId: row.plant_id,
     paletteId: row.palette_plant_id,
     note: row.note,
-    eventType: row.event_type,
+    eventTypes: row.event_types ?? [],
     photoUrls,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -91,9 +91,10 @@ export async function listDiaryEntries({
 
 /**
  * Every typed care event in the signed-in user's garden — the raw material
- * for Tier 3 event-relative Care Tips. Freeform notes (event_type null) are
- * excluded. Kept lean (three columns) since the dashboard reads it on every
- * render alongside the palette.
+ * for Tier 3 event-relative Care Tips. An entry can log several events at
+ * once, so each row's event_types array is fanned out into one flat event per
+ * type; freeform notes (empty array) contribute nothing. Kept lean (three
+ * columns) since the dashboard reads it on every render alongside the palette.
  */
 export async function listGardenCareEvents(): Promise<
   { plantId: string; eventType: DiaryEventType; createdAt: string }[]
@@ -102,17 +103,18 @@ export async function listGardenCareEvents(): Promise<
 
   const { data, error } = await db
     .from('diary_entries')
-    .select('plant_id, event_type, created_at')
+    .select('plant_id, event_types, created_at')
     .eq('garden_id', garden.id)
-    .not('event_type', 'is', null)
 
   if (error) throw new Error(`Failed to load care events: ${error.message}`)
 
-  return (data ?? []).map((row) => ({
-    plantId: row.plant_id,
-    eventType: row.event_type as DiaryEventType,
-    createdAt: row.created_at,
-  }))
+  return (data ?? []).flatMap((row) =>
+    ((row.event_types ?? []) as DiaryEventType[]).map((eventType) => ({
+      plantId: row.plant_id,
+      eventType,
+      createdAt: row.created_at,
+    }))
+  )
 }
 
 /**
@@ -125,13 +127,13 @@ export async function addDiaryEntry({
   plantId,
   paletteId,
   note,
-  eventType,
+  eventTypes,
   photoFiles,
 }: {
   plantId: string
   paletteId?: string | null
   note?: string
-  eventType?: DiaryEventType | null
+  eventTypes?: DiaryEventType[]
   photoFiles?: File[]
 }): Promise<DiaryEntry> {
   const { supabase: db, garden } = await requireSessionGarden()
@@ -161,7 +163,7 @@ export async function addDiaryEntry({
       plant_id: plantId,
       palette_plant_id: paletteId ?? null,
       note: note ?? null,
-      event_type: eventType ?? null,
+      event_types: eventTypes ?? [],
       photo_urls: photoPaths,
     })
     .select('*')
