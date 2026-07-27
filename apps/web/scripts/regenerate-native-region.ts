@@ -220,6 +220,23 @@ type TrefleCache = Record<
   { sci?: string; native?: NativeZone[]; error?: unknown }
 >
 
+// Trefle allows 120 req/min (§1). This makes ONE call per species, so 600ms
+// (~100/min) sits under the ceiling with headroom.
+//
+// THE BUG THIS REPLACED (found round 8, July 27 2026): the delay was 120ms —
+// roughly 500 req/min — so a cold cache 429'd after about the first 120
+// species. The catch below stored the 429 as a cache entry, and downstream an
+// errored entry is treated the same as an empty native list, which routes the
+// plant to the `native_to` prose fallback. The run then reported SUCCESS with
+// "trefle-l3=121, native_to-fallback=469" — a plausible-looking source mix
+// that was really 466 rate-limit errors laundered into model-derived guesses.
+// Applying it would have overwritten most of the catalog's authoritative
+// regions. Hence both halves of the fix: pace + retry so the fetch succeeds,
+// and throw if any fetch is still errored rather than silently degrade.
+const TREFLE_DELAY_MS = 600
+const TREFLE_MAX_ATTEMPTS = 4
+const TREFLE_BACKOFF_MS = 5000
+
 async function loadTrefleNative(sids: number[]): Promise<TrefleCache> {
   const cache: TrefleCache = existsSync(TREFLE_CACHE)
     ? JSON.parse(readFileSync(TREFLE_CACHE, 'utf8'))
@@ -233,32 +250,63 @@ async function loadTrefleNative(sids: number[]): Promise<TrefleCache> {
     )
     for (let i = 0; i < missing.length; i++) {
       const sid = missing[i]!
-      try {
-        // Trefle's native zone objects carry the TDWG code under `tdwg_code`
-        // and the level under `tdwg_level` — NOT `code`/`level`. Reading the
-        // wrong field names leaves `code` undefined, so every zone falls
-        // through as unmapped-L3 and the plant ends up untagged.
-        const detail = (await getSpeciesBySlug(sid)) as unknown as {
-          scientific_name?: string
-          distributions?: {
-            native?:
-              | Array<{ name: string; tdwg_code?: string; tdwg_level?: number }>
-              | null
-          } | null
+      for (let attempt = 0; attempt < TREFLE_MAX_ATTEMPTS; attempt++) {
+        try {
+          // Trefle's native zone objects carry the TDWG code under `tdwg_code`
+          // and the level under `tdwg_level` — NOT `code`/`level`. Reading the
+          // wrong field names leaves `code` undefined, so every zone falls
+          // through as unmapped-L3 and the plant ends up untagged.
+          const detail = (await getSpeciesBySlug(sid)) as unknown as {
+            scientific_name?: string
+            distributions?: {
+              native?: Array<{
+                name: string
+                tdwg_code?: string
+                tdwg_level?: number
+              }> | null
+            } | null
+          }
+          const native = (detail.distributions?.native ?? []).map((z) => ({
+            name: z.name,
+            code: z.tdwg_code ?? '',
+            level: z.tdwg_level ?? 0,
+          }))
+          cache[String(sid)] = { sci: detail.scientific_name, native }
+          delete cache[String(sid)]!.error
+          break
+        } catch (e) {
+          cache[String(sid)] = { error: String(e) }
+          // A 429 is a throttle, not an answer. Back off and retry rather than
+          // letting it settle into the cache as "no distribution" — see the
+          // rate-limit note above loadTrefleNative.
+          if (String(e).includes('429') && attempt < TREFLE_MAX_ATTEMPTS - 1) {
+            await sleep(TREFLE_BACKOFF_MS * Math.pow(2, attempt))
+            continue
+          }
+          break
         }
-        const native = (detail.distributions?.native ?? []).map((z) => ({
-          name: z.name,
-          code: z.tdwg_code ?? '',
-          level: z.tdwg_level ?? 0,
-        }))
-        cache[String(sid)] = { sci: detail.scientific_name, native }
-      } catch (e) {
-        cache[String(sid)] = { error: String(e) }
       }
       if ((i + 1) % 20 === 0) writeFileSync(TREFLE_CACHE, JSON.stringify(cache))
-      await sleep(120)
+      await sleep(TREFLE_DELAY_MS)
     }
     writeFileSync(TREFLE_CACHE, JSON.stringify(cache))
+  }
+
+  // Fail loudly rather than degrade. An errored fetch is indistinguishable
+  // downstream from a genuine empty distribution, so it would silently route
+  // the plant to the model fallback and the run would look like a success.
+  const errored = sids.filter((s) => cache[String(s)]?.error)
+  if (errored.length) {
+    const sample = errored
+      .slice(0, 3)
+      .map((s) => String(cache[String(s)]?.error))
+    throw new Error(
+      `${errored.length} of ${sids.length} Trefle distribution fetches failed. ` +
+        `Refusing to build a plan on them: an errored fetch looks exactly like an ` +
+        `empty native list, so every one would silently become a model-derived ` +
+        `guess. Errored species are cached as errors and a re-run retries only ` +
+        `those.\nFirst errors:\n  ${sample.join('\n  ')}`
+    )
   }
   return cache
 }
