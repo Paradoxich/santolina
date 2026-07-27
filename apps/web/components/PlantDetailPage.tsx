@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react'
+'use client'
+
+import { useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { motion } from 'framer-motion'
 import {
   Button,
-  Drawer,
   Icon,
   IconButton,
   Lightbox,
@@ -13,7 +14,6 @@ import {
 } from '@paradoxui/ui'
 import { icons } from '@/lib/icons'
 import { PlantImage } from '@/components/PlantImage'
-import { DRAWER_MOTION } from '@/lib/drawer-motion'
 import { creditLine } from '@/lib/image-attribution'
 import type { PlantDetail } from '@/lib/plant-detail'
 import { formatPlantSubtitle } from '@/lib/format-plant'
@@ -23,10 +23,9 @@ import {
   markPlanted,
   undoMarkPlanted,
   removeFromPalette,
-  getPaletteStatus,
   type PaletteStatus,
 } from '@/server/palette-actions'
-import { listDiaryEntries } from '@/server/diary-actions'
+import type { DiaryNote } from '@/types/diary'
 import { AboutSection } from './plant-detail/AboutSection'
 import { GoodForYourGardenSection } from './plant-detail/GoodForYourGardenSection'
 import { CareSection } from './plant-detail/CareSection'
@@ -35,26 +34,38 @@ import { InYourGardenSection } from './plant-detail/InYourGardenSection'
 import { WorksWellWithSection } from './plant-detail/WorksWellWithSection'
 import { GoodForSection } from './plant-detail/GoodForSection'
 import { DetailsSection } from './plant-detail/DetailsSection'
-
-interface PlantDetailDrawerProps {
-  detail: PlantDetail
-  onClose: () => void
-}
+import { StorySection } from './plant-detail/StorySection'
+import { StoryComposer } from './plant-detail/StoryComposer'
 
 /** Photo widths cycle to match the Figma strip (third photo clips at the edge). */
 const PHOTO_WIDTHS = [131, 175, 207]
 
-export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
+interface PlantDetailPageProps {
+  detail: PlantDetail
+  initialPalette: { paletteId: string; status: PaletteStatus } | null
+  /** Server-fetched once by the page; a note add/delete refreshes it via router.refresh(). */
+  notes: DiaryNote[]
+  /** Where "My Plants" points back to — preserves the Growing/Planned tab. */
+  backHref: string
+}
+
+/**
+ * The plant you own: reference info plus its story (notes, photos, care
+ * events) — the one place that content lives. The Explore drawer shows the
+ * same reference sections for the species, but never the story; see
+ * docs/architecture.md for the one-home principle behind the split.
+ */
+export function PlantDetailPage({
+  detail,
+  initialPalette,
+  notes,
+  backHref,
+}: PlantDetailPageProps) {
   const { plant, companions, garden } = detail
   const subtitle = formatPlantSubtitle(
     plant.scientific_name,
     plant.common_name_aliases ?? []
   )
-  // Lead with the curated hero (getPlantDetail resolves plant.image_url to it),
-  // so the drawer shows the same photo the browse card does — including a
-  // Wikimedia pick, which isn't in the raw image_urls list. Dedupe so the hero
-  // doesn't repeat when it also happens to be a Trefle image. The full-size
-  // viewer pages through this same ordering, not just the 3 shown in the strip.
   const allPhotos = [
     ...(plant.image_url ? [plant.image_url] : []),
     ...(plant.image_urls ?? []).filter((u) => u !== plant.image_url),
@@ -72,40 +83,15 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
 
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
 
-  const [palette, setPalette] = useState<{
-    paletteId: string
-    status: PaletteStatus
-  } | null>(null)
-  const [isStatusLoading, setIsStatusLoading] = useState(true)
+  const [palette, setPalette] = useState(initialPalette)
   const [pendingAction, setPendingAction] = useState<'plan' | 'garden' | null>(
     null
   )
   const [actionError, setActionError] = useState<string | null>(null)
-
-  const [isCheckingDiary, setIsCheckingDiary] = useState(false)
   const [isRemoveDialogOpen, setIsRemoveDialogOpen] = useState(false)
 
-  useEffect(() => {
-    let cancelled = false
-    setIsStatusLoading(true)
-    setActionError(null)
-    getPaletteStatus({ plantId: plant.id })
-      .then((result) => {
-        if (!cancelled) setPalette(result)
-      })
-      .catch((err) => {
-        if (!cancelled)
-          setActionError(
-            err instanceof Error ? err.message : 'Failed to load palette status'
-          )
-      })
-      .finally(() => {
-        if (!cancelled) setIsStatusLoading(false)
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [plant.id])
+  const isGrowing = palette?.status === 'planted'
+  const showStory = isGrowing || notes.length > 0
 
   const handleAddToPlan = async () => {
     setActionError(null)
@@ -183,7 +169,7 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
     }
   }
 
-  /** The actual removal — shared by the no-diary immediate path and the confirmation dialog. */
+  /** The actual removal — shared by the no-notes immediate path and the confirmation dialog. */
   const performRemoveFromGarden = async () => {
     if (!palette) return
     const removedId = palette.paletteId
@@ -217,36 +203,31 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
   }
 
   /**
-   * Clicking the trash icon (planted state only). Checks for existing
-   * diary content first — zero entries removes immediately, one or more
-   * opens the confirmation dialog instead so removal never silently
-   * implies the notes are gone too.
+   * Clicking the trash icon (planted state only). Notes are already loaded
+   * (the `notes` prop), so — unlike the old drawer — there's no extra fetch
+   * here: zero notes removes immediately, one or more opens the
+   * confirmation dialog so removal never silently implies the notes are
+   * gone too (they aren't — see StorySection/StoryComposer's read-only
+   * "Add back to garden" state for a removed plant with history).
    */
-  const handleRemoveClick = async () => {
+  const handleRemoveClick = () => {
     if (!palette) return
     setActionError(null)
-    setIsCheckingDiary(true)
-    try {
-      const entries = await listDiaryEntries({ plantId: plant.id })
-      if (entries.length === 0) {
-        setPendingAction('garden')
-        await performRemoveFromGarden()
-        setPendingAction(null)
-      } else {
-        setIsRemoveDialogOpen(true)
-      }
-    } catch (err) {
-      setActionError(
-        err instanceof Error ? err.message : 'Something went wrong.'
-      )
-    } finally {
-      setIsCheckingDiary(false)
+    if (notes.length === 0) {
+      setPendingAction('garden')
+      performRemoveFromGarden()
+        .catch((err) => {
+          setActionError(
+            err instanceof Error ? err.message : 'Something went wrong.'
+          )
+        })
+        .finally(() => setPendingAction(null))
+    } else {
+      setIsRemoveDialogOpen(true)
     }
   }
 
-  const closeRemoveDialog = () => {
-    setIsRemoveDialogOpen(false)
-  }
+  const closeRemoveDialog = () => setIsRemoveDialogOpen(false)
 
   const handleConfirmRemove = async () => {
     setPendingAction('garden')
@@ -263,7 +244,7 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
   }
 
   /**
-   * Handles the drawer's second button for the two non-removal states.
+   * Handles the page's second button for the two non-removal states.
    * Removal (planted -> not-in-palette) goes through the trash icon and
    * performRemoveFromGarden instead — see docs/architecture.md §14 for
    * why "Add to garden" and "Move to growing" have to stay distinct
@@ -356,18 +337,19 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
         ? 'Move to growing'
         : 'Add to garden'
 
-  const controlsDisabled = isStatusLoading || pendingAction !== null
+  const controlsDisabled = pendingAction !== null
 
   return (
-    <Drawer
-      label={`${plant.common_name} details`}
-      onClose={onClose}
-      closeLabel="Close plant details"
-      closeIcon={<Icon src={icons.close} />}
-      panelComponent={motion.aside}
-      panelProps={DRAWER_MOTION}
-      headerActions={
-        <>
+    <div className="mx-auto flex w-full max-w-[640px] flex-col pb-16">
+      <div className="flex w-full items-center justify-between gap-inline-gap pt-8 md:pt-12">
+        <Link
+          href={backHref}
+          className="flex items-center gap-tight-gap text-body text-secondary transition-colors duration-normal hover:text-primary"
+        >
+          <Icon src={icons.arrowRight} className="rotate-180" />
+          My Plants
+        </Link>
+        <div className="flex items-center gap-inline-gap">
           {palette?.status !== 'planted' && (
             <Button
               variant="control"
@@ -387,7 +369,7 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
                   variant="control"
                   size="sm"
                   onClick={handleRemoveClick}
-                  disabled={controlsDisabled || isCheckingDiary}
+                  disabled={controlsDisabled}
                   aria-label="Remove from garden"
                 >
                   <Icon src={icons.trash} />
@@ -413,105 +395,123 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
               <Icon src={icons.chat} />
             </IconButton>
           </Tooltip>
-        </>
-      }
-    >
+        </div>
+      </div>
+
       {actionError && (
         <p
           role="alert"
-          className="w-full shrink-0 border-b border-card bg-surface-critical px-card-padding py-inline-gap text-label text-critical"
+          className="mt-4 w-full shrink-0 rounded-sm bg-surface-critical px-card-padding py-inline-gap text-label text-critical"
         >
           {actionError}
         </p>
       )}
 
-      <div className="flex w-full flex-1 flex-col gap-section-break overflow-y-auto p-card-padding">
-        <div className="flex w-full shrink-0 flex-col gap-item-gap">
-          <h2 className="w-full text-title font-semibold text-primary">
-            {plant.common_name}
-          </h2>
-          {subtitle && (
-            <p className="w-full text-body italic text-muted">{subtitle}</p>
-          )}
-        </div>
-
-        <div className="flex w-full shrink-0 snap-x snap-mandatory gap-inline-gap overflow-x-auto">
-          {(photos.length > 0 ? photos : [null]).map((src, i) => {
-            const imageClass =
-              'relative h-[141px] shrink-0 snap-start overflow-hidden rounded-sm'
-            const style = { width: PHOTO_WIDTHS[i % PHOTO_WIDTHS.length] }
-            const image = (
-              <PlantImage
-                src={src}
-                alt={`${plant.common_name} photo ${i + 1}`}
-                fill
-                sizes="207px"
-                className="object-cover"
-              />
-            )
-            // Only real photos open the viewer; the placeholder stays inert.
-            return src ? (
-              <button
-                key={src}
-                type="button"
-                onClick={() => setLightboxIndex(i)}
-                aria-label={`View ${plant.common_name} photo ${i + 1}`}
-                className={`${imageClass} cursor-pointer transition-opacity duration-normal hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus`}
-                style={style}
-              >
-                {image}
-              </button>
-            ) : (
-              <div key="placeholder" className={imageClass} style={style}>
-                {image}
-              </div>
-            )
-          })}
-        </div>
-
-        {credit && (
-          <p className="w-full text-body-small text-muted">
-            {credit}
-            {plant.image_attribution?.source_url && (
-              <>
-                {' · '}
-                <a
-                  href={plant.image_attribution.source_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="underline"
-                >
-                  source
-                </a>
-              </>
-            )}
-            {plant.image_attribution?.license_url && (
-              <>
-                {' · '}
-                <a
-                  href={plant.image_attribution.license_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="underline"
-                >
-                  licence
-                </a>
-              </>
-            )}
-          </p>
+      <div className="mt-6 flex w-full flex-col gap-item-gap">
+        <h1 className="w-full text-title font-semibold text-primary">
+          {plant.common_name}
+        </h1>
+        {subtitle && (
+          <p className="w-full text-body italic text-muted">{subtitle}</p>
         )}
-
-        <div className="flex w-full flex-col gap-section-break">
-          <AboutSection description={plant.description} />
-          <GoodForYourGardenSection bullets={bullets} />
-          <CareSection plant={plant} />
-          <SeasonalRhythmSection rhythm={plant.seasonal_rhythm} />
-          <InYourGardenSection plant={plant} />
-          <WorksWellWithSection companions={companions} />
-          <GoodForSection tags={plant.garden_use_tags} />
-          <DetailsSection plant={plant} />
-        </div>
       </div>
+
+      <div className="mt-4 flex w-full shrink-0 snap-x snap-mandatory gap-inline-gap overflow-x-auto">
+        {(photos.length > 0 ? photos : [null]).map((src, i) => {
+          const imageClass =
+            'relative h-[141px] shrink-0 snap-start overflow-hidden rounded-sm'
+          const style = { width: PHOTO_WIDTHS[i % PHOTO_WIDTHS.length] }
+          const image = (
+            <PlantImage
+              src={src}
+              alt={`${plant.common_name} photo ${i + 1}`}
+              fill
+              sizes="207px"
+              className="object-cover"
+            />
+          )
+          return src ? (
+            <button
+              key={src}
+              type="button"
+              onClick={() => setLightboxIndex(i)}
+              aria-label={`View ${plant.common_name} photo ${i + 1}`}
+              className={`${imageClass} cursor-pointer transition-opacity duration-normal hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus`}
+              style={style}
+            >
+              {image}
+            </button>
+          ) : (
+            <div key="placeholder" className={imageClass} style={style}>
+              {image}
+            </div>
+          )
+        })}
+      </div>
+
+      {credit && (
+        <p className="mt-2 w-full text-body-small text-muted">
+          {credit}
+          {plant.image_attribution?.source_url && (
+            <>
+              {' · '}
+              <a
+                href={plant.image_attribution.source_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline"
+              >
+                source
+              </a>
+            </>
+          )}
+          {plant.image_attribution?.license_url && (
+            <>
+              {' · '}
+              <a
+                href={plant.image_attribution.license_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline"
+              >
+                licence
+              </a>
+            </>
+          )}
+        </p>
+      )}
+
+      <div className="mt-section-break flex w-full flex-col gap-section-break">
+        <AboutSection description={plant.description} />
+        {showStory && (
+          <StorySection
+            plantId={plant.id}
+            plantName={plant.common_name}
+            notes={notes}
+            isGrowing={isGrowing}
+          />
+        )}
+        <GoodForYourGardenSection bullets={bullets} />
+        <CareSection plant={plant} />
+        <SeasonalRhythmSection rhythm={plant.seasonal_rhythm} />
+        <InYourGardenSection plant={plant} />
+        <WorksWellWithSection companions={companions} />
+        <GoodForSection tags={plant.garden_use_tags} />
+        <DetailsSection plant={plant} />
+      </div>
+
+      {showStory && (
+        <div className="mt-section-break">
+          <StoryComposer
+            plantId={plant.id}
+            paletteId={palette?.paletteId ?? null}
+            isGrowing={isGrowing}
+            onAddedBackToGarden={({ paletteId }) =>
+              setPalette({ paletteId, status: 'planted' })
+            }
+          />
+        </div>
+      )}
 
       <Lightbox
         images={galleryImages}
@@ -547,12 +547,12 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
         }
       >
         <p className="text-body text-secondary">
-          Your notes for this plant will stay — you can view or delete them from
-          its page in My Plants.
+          Your notes for this plant will stay. Find it again in Explore to add
+          it back.
         </p>
       </Modal>
-    </Drawer>
+    </div>
   )
 }
 
-export default PlantDetailDrawer
+export default PlantDetailPage

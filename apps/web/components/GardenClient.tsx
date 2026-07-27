@@ -1,14 +1,12 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { EmptyState, Tabs, useToast } from '@paradoxui/ui'
 import { EmptyStateIllustration } from '@/components/EmptyStateIllustration'
 import { GardenPlantTile } from '@/components/GardenPlantTile'
 import { PlannedPlantTile } from '@/components/PlannedPlantTile'
-import { PlantDetailDrawer } from '@/components/PlantDetailDrawer'
 import {
   StatusFilterMenu,
   type StatusFilter,
@@ -20,7 +18,6 @@ import {
 } from '@/lib/bloom-status'
 import { formatExposure, formatBloomRange } from '@/lib/format-plant'
 import { heroImageUrl } from '@/lib/plant-image'
-import type { PlantDetail } from '@/lib/plant-detail'
 import {
   addToPalette,
   markPlanted,
@@ -53,10 +50,9 @@ function toGardenPlant(row: PalettePlant): GardenPlant {
 
 interface GardenClientProps {
   palette: PalettePlant[]
-  detail: PlantDetail | null
 }
 
-export function GardenClient({ palette, detail }: GardenClientProps) {
+export function GardenClient({ palette }: GardenClientProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { toast } = useToast()
@@ -73,23 +69,13 @@ export function GardenClient({ palette, detail }: GardenClientProps) {
     router.replace(`/plants?tab=${value}`, { scroll: false })
   }
 
+  // Navigates to the plant's own page — not an overlay, a real route swap.
   const openPlant = (plantId: string) =>
-    router.push(`/plants?tab=${tab}&plant=${plantId}`, { scroll: false })
+    router.push(`/plants?tab=${tab}&plant=${plantId}`)
   const openPlantByPaletteId = (paletteId: string) => {
     const row = palette.find((p) => p.id === paletteId)
     if (row) openPlant(row.plantId)
   }
-  const closeDrawer = () => router.push(`/plants?tab=${tab}`, { scroll: false })
-
-  useEffect(() => {
-    if (!detail) return
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape')
-        router.push(`/plants?tab=${tab}`, { scroll: false })
-    }
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [detail, tab, router])
 
   const growing = palette
     .filter((p) => p.status === 'planted')
@@ -293,16 +279,6 @@ export function GardenClient({ palette, detail }: GardenClientProps) {
             linkComponent={Link}
           />
         ))}
-
-      <AnimatePresence>
-        {detail && (
-          <PlantDetailDrawer
-            key="plant-detail-drawer"
-            detail={detail}
-            onClose={closeDrawer}
-          />
-        )}
-      </AnimatePresence>
     </div>
   )
 }
