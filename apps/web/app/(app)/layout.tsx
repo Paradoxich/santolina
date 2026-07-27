@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { ToastProvider } from '@paradoxui/ui'
 import { AppSidebar, type SidebarIdentity } from '@/components/AppSidebar'
+import { AddNoteProvider } from '@/components/AddNoteProvider'
 import { MobileTabBar } from '@/components/MobileTabBar'
 import {
   getSessionGardenContext,
@@ -37,13 +38,15 @@ export default async function AppLayout({
 
   return (
     <ToastProvider>
-      <div className="min-h-screen bg-surface-page">
-        <AppSidebar identity={identity} />
-        <main className="px-4 pb-20 md:ml-sidebar-offset md:mr-12 md:px-0 md:pb-0">
-          {children}
-        </main>
-        <MobileTabBar />
-      </div>
+      <AddNoteProvider>
+        <div className="min-h-screen bg-surface-page">
+          <AppSidebar identity={identity} />
+          <main className="px-4 pb-20 md:ml-sidebar-offset md:mr-12 md:px-0 md:pb-0">
+            {children}
+          </main>
+          <MobileTabBar />
+        </div>
+      </AddNoteProvider>
     </ToastProvider>
   )
 }

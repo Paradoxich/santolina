@@ -3,9 +3,10 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Avatar, Badge, Icon, Menu } from '@paradoxui/ui'
+import { Avatar, Badge, Button, Icon, Menu } from '@paradoxui/ui'
 import { icons, type IconName } from '@/lib/icons'
 import { SettingsModal } from '@/components/SettingsModal'
+import { useAddNote } from '@/components/AddNoteProvider'
 import { signOut } from '@/server/account-actions'
 
 interface NavItem {
@@ -37,6 +38,7 @@ const navItems: NavItem[] = [
 export function AppSidebar({ identity }: { identity: SidebarIdentity }) {
   const pathname = usePathname()
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const { openAddNote } = useAddNote()
 
   return (
     <aside className="fixed inset-y-0 left-0 z-10 hidden w-sidebar flex-col border-r border-[var(--sidebar-divider)] bg-surface-page md:flex">
@@ -80,6 +82,22 @@ export function AppSidebar({ identity }: { identity: SidebarIdentity }) {
             </>
           }
         />
+      </div>
+
+      {/* An action, not a destination — kept visually distinct from the nav
+          rows below so it doesn't read as a fifth place to go. */}
+      <div className="px-inline-gap pb-inline-gap">
+        <Button
+          variant="control"
+          size="sm"
+          onClick={openAddNote}
+          className="w-full justify-start gap-inline-gap px-row-gap"
+        >
+          <span className={glyphSlot}>
+            <Icon src={icons.plus} />
+          </span>
+          Add note
+        </Button>
       </div>
 
       <nav className="flex min-h-0 flex-1 flex-col gap-tight-gap p-inline-gap">
