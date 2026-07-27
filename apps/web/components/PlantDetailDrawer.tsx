@@ -7,7 +7,6 @@ import {
   Icon,
   IconButton,
   Lightbox,
-  Modal,
   Tooltip,
   useToast,
 } from '@paradoxui/ui'
@@ -26,7 +25,7 @@ import {
   getPaletteStatus,
   type PaletteStatus,
 } from '@/server/palette-actions'
-import { listDiaryEntries } from '@/server/diary-actions'
+import { hasDiaryEntries } from '@/server/diary-actions'
 import { AboutSection } from './plant-detail/AboutSection'
 import { GoodForYourGardenSection } from './plant-detail/GoodForYourGardenSection'
 import { CareSection } from './plant-detail/CareSection'
@@ -76,22 +75,27 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
     paletteId: string
     status: PaletteStatus
   } | null>(null)
+  /** Whether this plant has any story history from a previous stint in the garden — decides the "you grew this before" CTA below. */
+  const [hasHistory, setHasHistory] = useState(false)
   const [isStatusLoading, setIsStatusLoading] = useState(true)
   const [pendingAction, setPendingAction] = useState<'plan' | 'garden' | null>(
     null
   )
   const [actionError, setActionError] = useState<string | null>(null)
 
-  const [isCheckingDiary, setIsCheckingDiary] = useState(false)
-  const [isRemoveDialogOpen, setIsRemoveDialogOpen] = useState(false)
-
   useEffect(() => {
     let cancelled = false
     setIsStatusLoading(true)
     setActionError(null)
-    getPaletteStatus({ plantId: plant.id })
-      .then((result) => {
-        if (!cancelled) setPalette(result)
+    Promise.all([
+      getPaletteStatus({ plantId: plant.id }),
+      hasDiaryEntries({ plantId: plant.id }),
+    ])
+      .then(([status, history]) => {
+        if (!cancelled) {
+          setPalette(status)
+          setHasHistory(history)
+        }
       })
       .catch((err) => {
         if (!cancelled)
@@ -183,91 +187,13 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
     }
   }
 
-  /** The actual removal — shared by the no-diary immediate path and the confirmation dialog. */
-  const performRemoveFromGarden = async () => {
-    if (!palette) return
-    const removedId = palette.paletteId
-    await removeFromPalette({ paletteId: removedId })
-    setPalette(null)
-    router.refresh()
-    toast({
-      groupKey: plant.id,
-      message: `${plant.common_name} removed from your garden.`,
-      actions: [
-        {
-          label: 'Undo',
-          onClick: async () => {
-            try {
-              const result = await addToPalette({
-                plantId: plant.id,
-                status: 'planted',
-                source: 'manual',
-              })
-              setPalette({ paletteId: result.id, status: result.status })
-              router.refresh()
-            } catch (err) {
-              setActionError(
-                err instanceof Error ? err.message : 'Undo failed.'
-              )
-            }
-          },
-        },
-      ],
-    })
-  }
-
-  /**
-   * Clicking the trash icon (planted state only). Checks for existing
-   * diary content first — zero entries removes immediately, one or more
-   * opens the confirmation dialog instead so removal never silently
-   * implies the notes are gone too.
-   */
-  const handleRemoveClick = async () => {
-    if (!palette) return
-    setActionError(null)
-    setIsCheckingDiary(true)
-    try {
-      const entries = await listDiaryEntries({ plantId: plant.id })
-      if (entries.length === 0) {
-        setPendingAction('garden')
-        await performRemoveFromGarden()
-        setPendingAction(null)
-      } else {
-        setIsRemoveDialogOpen(true)
-      }
-    } catch (err) {
-      setActionError(
-        err instanceof Error ? err.message : 'Something went wrong.'
-      )
-    } finally {
-      setIsCheckingDiary(false)
-    }
-  }
-
-  const closeRemoveDialog = () => {
-    setIsRemoveDialogOpen(false)
-  }
-
-  const handleConfirmRemove = async () => {
-    setPendingAction('garden')
-    try {
-      await performRemoveFromGarden()
-      closeRemoveDialog()
-    } catch (err) {
-      setActionError(
-        err instanceof Error ? err.message : 'Something went wrong.'
-      )
-    } finally {
-      setPendingAction(null)
-    }
-  }
-
   /**
    * Handles the drawer's second button for the two non-removal states.
-   * Removal (planted -> not-in-palette) goes through the trash icon and
-   * performRemoveFromGarden instead — see docs/architecture.md §14 for
-   * why "Add to garden" and "Move to growing" have to stay distinct
-   * labels rather than one button always saying the same thing.
+   * Removing an owned plant now happens on its subpage, not here — see
+   * docs/architecture.md for why this drawer (the species) never mutates
+   * the owned instance, only links to the page that does. "Add to garden"
+   * and "Move to growing" have to stay distinct labels rather than one
+   * button always saying the same thing — see docs/architecture.md §14.
    */
   const handleSecondaryAction = async () => {
     setActionError(null)
@@ -379,21 +305,24 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
             </Button>
           )}
           {palette?.status === 'planted' ? (
-            <Tooltip content="Remove from garden" position="bottom">
-              {/* Span carries the hover handlers: a disabled button doesn't
-                  reliably fire mouse events, and this button disables mid-action. */}
-              <span className="inline-flex">
-                <IconButton
-                  variant="control"
-                  size="sm"
-                  onClick={handleRemoveClick}
-                  disabled={controlsDisabled || isCheckingDiary}
-                  aria-label="Remove from garden"
-                >
-                  <Icon src={icons.trash} />
-                </IconButton>
-              </span>
-            </Tooltip>
+            <>
+              <span className="text-label text-muted">In your garden</span>
+              <Button
+                variant="control"
+                size="sm"
+                onClick={() => router.push(`/plants?plant=${plant.id}`)}
+              >
+                View in My Plants
+              </Button>
+            </>
+          ) : !palette && hasHistory ? (
+            <Button
+              variant="control"
+              size="sm"
+              onClick={() => router.push(`/plants?plant=${plant.id}`)}
+            >
+              You grew this before. View its story
+            </Button>
           ) : (
             <Button
               variant="control"
@@ -519,38 +448,6 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
         initialIndex={lightboxIndex ?? 0}
         onClose={() => setLightboxIndex(null)}
       />
-
-      <Modal
-        isOpen={isRemoveDialogOpen}
-        onClose={closeRemoveDialog}
-        title={`Remove ${plant.common_name} from your garden?`}
-        size="sm"
-        footer={
-          <>
-            <Button
-              variant="control"
-              size="sm"
-              onClick={closeRemoveDialog}
-              disabled={pendingAction === 'garden'}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="control"
-              size="sm"
-              onClick={handleConfirmRemove}
-              disabled={pendingAction === 'garden'}
-            >
-              {pendingAction === 'garden' ? 'Removing…' : 'Remove from garden'}
-            </Button>
-          </>
-        }
-      >
-        <p className="text-body text-secondary">
-          Your notes for this plant will stay — you can view or delete them from
-          its page in My Plants.
-        </p>
-      </Modal>
     </Drawer>
   )
 }

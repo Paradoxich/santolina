@@ -274,7 +274,7 @@ export function StorySection({
 
         {noteCount === 0 ? (
           <p className="text-body-small text-muted">
-            No notes yet — add one below.
+            No notes yet. Add one below.
           </p>
         ) : (
           monthGroups.map(([month, monthNotes]) => (
