@@ -1,1 +1,2 @@
+sh "$(dirname "$0")/check-db-log.sh"
 pnpm exec lint-staged

@@ -18,10 +18,14 @@
  *   ./node_modules/.bin/tsx --env-file=.env.local scripts/cross-check-plants.ts
  *   ./node_modules/.bin/tsx --env-file=.env.local scripts/cross-check-plants.ts --limit 5
  *   ./node_modules/.bin/tsx --env-file=.env.local scripts/cross-check-plants.ts --new-only
+ *   ./node_modules/.bin/tsx --env-file=.env.local scripts/cross-check-plants.ts --round 8
  *
- * --new-only scopes the check to rows never checked before
- * (botanical_checked_at IS NULL) — state-based, so it's exact and resumable.
- * Default re-checks (and re-stamps) the whole is_curated = false catalog.
+ * --round <label> is the preferred post-seed scope: exactly the ids the seed
+ * run recorded in rounds/<label>/manifest.json. --new-only scopes to rows
+ * never checked before (botanical_checked_at IS NULL), which is only a batch
+ * once the rest of the catalog is stamped — see the parseRound note below for
+ * why that baseline does not exist. Default re-checks (and re-stamps) the
+ * whole is_curated = false catalog.
  */
 
 import { mkdirSync, writeFileSync } from 'node:fs'
@@ -30,6 +34,7 @@ import { getSupabaseAdmin } from '../lib/supabase-admin'
 import { getAnthropicClient, CURATION_MODEL } from '../lib/anthropic-client'
 import type { DbPlant, PlantType } from '../lib/plants-db'
 import { fetchAllRows } from '../lib/paginate'
+import { readRoundManifest } from './round-manifest'
 
 // ---------------------------------------------------------------------------
 // Config
@@ -94,6 +99,33 @@ function parseLimit(): number | null {
     throw new Error('--limit must be a positive integer')
   }
   return limit
+}
+
+// --round <label> scopes the check to exactly the ids a seed run recorded in
+// rounds/<label>/manifest.json.
+//
+// WHY this exists alongside --new-only. --new-only is state-based
+// (botanical_checked_at IS NULL), which only narrows to the fresh batch once
+// every OTHER row already carries a stamp. That baseline was never
+// established: the stamp column shipped mid-history and the rows seeded before
+// it were never backfilled, so at round 8 the catalog held 494 unstamped rows
+// and `--new-only` selected all 595 — silently re-billing the whole catalog,
+// the exact waste the runbook warns about. Manifest scoping doesn't depend on
+// a baseline, which is what manifests were introduced for: nothing downstream
+// should have to infer "this round's plants".
+//
+// Backfilling the 494 was considered and rejected: there is no per-row
+// evidence they were ever checked, and stamping them on an assumption would
+// hide any genuinely unchecked plant from this guard permanently.
+function parseRound(): string | null {
+  const args = process.argv.slice(2)
+  const idx = args.indexOf('--round')
+  if (idx < 0) return null
+  const label = args[idx + 1]
+  if (!label || label.startsWith('--')) {
+    throw new Error('--round requires a label, e.g. --round 8')
+  }
+  return label
 }
 
 // --new-only restricts the check to rows this guard has never checked —
@@ -328,12 +360,33 @@ function sleep(ms: number): Promise<void> {
 async function main() {
   const limit = parseLimit()
   const newOnly = process.argv.slice(2).includes('--new-only')
+  const roundLabel = parseRound()
   const db = getSupabaseAdmin()
+
+  // --round is the exact scope: the ids the seed run recorded. Prefer it to
+  // --new-only whenever a manifest exists, because --new-only's state guard
+  // only narrows to a batch once the REST of the catalog carries a stamp, and
+  // rows seeded before the stamp column shipped never got backfilled (see the
+  // --round note in this file's header).
+  let roundIds: string[] | null = null
+  if (roundLabel) {
+    const manifest = readRoundManifest(roundLabel)
+    if (!manifest) {
+      throw new Error(
+        `No manifest for round "${roundLabel}" — expected rounds/${roundLabel}/manifest.json`
+      )
+    }
+    roundIds = manifest.seeded_ids
+    console.log(
+      `\nScoping to round ${manifest.label}: ${roundIds.length} seeded plant(s).`
+    )
+  }
 
   console.log('\nFetching AI-drafted plants from Supabase...')
   const data = await fetchAllRows<Record<string, unknown>>((from, to) => {
     let q = db.from('plants').select('*').not('ai_drafted_at', 'is', null)
     if (newOnly) q = q.is('botanical_checked_at', null)
+    if (roundIds) q = q.in('id', roundIds)
     return q.order('id').range(from, to)
   })
 

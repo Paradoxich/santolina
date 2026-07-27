@@ -1,0 +1,415 @@
+{
+  "ran_at": "2026-07-27T17:01:50.188Z",
+  "model": "claude-sonnet-4-5",
+  "checked": 101,
+  "clean": 73,
+  "flagged": [
+    {
+      "id": "05c8112f-3ccd-4fd4-990c-ba82e459cf57",
+      "common_name": "Butcher's broom",
+      "scientific_name": "Ruscus aculeatus",
+      "flags": [
+        {
+          "field": "bloom_months",
+          "severity": "minor",
+          "stored": [1, 2, 3, 4, 9, 10, 11, 12],
+          "checked": [2, 3, 4],
+          "detail": "window boundaries drift 8 month(s)"
+        }
+      ]
+    },
+    {
+      "id": "0ac3e107-ebf1-4356-a58f-f6a94f364177",
+      "common_name": "Japanese crab apple",
+      "scientific_name": "Malus × floribunda",
+      "flags": [
+        {
+          "field": "sun_requirements",
+          "severity": "minor",
+          "stored": ["full_sun", "partial_sun"],
+          "checked": ["full_sun"],
+          "detail": "partial overlap"
+        }
+      ]
+    },
+    {
+      "id": "1402a29f-2648-4197-a70e-f45fe52bbebe",
+      "common_name": "Persian ivy",
+      "scientific_name": "Hedera colchica",
+      "flags": [
+        {
+          "field": "bloom_months",
+          "severity": "minor",
+          "stored": [],
+          "checked": [9, 10],
+          "detail": "one side reports no bloom"
+        }
+      ]
+    },
+    {
+      "id": "154d7279-5a5d-4426-9aee-93f72f8490cb",
+      "common_name": "Drooping sedge",
+      "scientific_name": "Carex pendula",
+      "flags": [
+        {
+          "field": "plant_type",
+          "severity": "disagree",
+          "stored": "grass",
+          "checked": "perennial",
+          "detail": "classification mismatch"
+        }
+      ]
+    },
+    {
+      "id": "1aefdeef-0015-4f06-a2a6-496f2f476767",
+      "common_name": "Yellow azalea",
+      "scientific_name": "Rhododendron luteum",
+      "flags": [
+        {
+          "field": "sun_requirements",
+          "severity": "minor",
+          "stored": ["full_sun", "partial_sun", "shade"],
+          "checked": ["full_sun", "partial_sun"],
+          "detail": "partial overlap"
+        }
+      ]
+    },
+    {
+      "id": "1d0901e2-4506-47ee-a685-1eb2ff1cbf48",
+      "common_name": "Parry's agave",
+      "scientific_name": "Agave parryi",
+      "flags": [
+        {
+          "field": "hardiness_zone_min",
+          "severity": "disagree",
+          "stored": "7",
+          "checked": 5,
+          "detail": "2 zones apart"
+        }
+      ]
+    },
+    {
+      "id": "262a7d7f-4a27-49a1-9585-87b988394197",
+      "common_name": "Spanish-dagger",
+      "scientific_name": "Yucca gloriosa",
+      "flags": [
+        {
+          "field": "plant_type",
+          "severity": "disagree",
+          "stored": "shrub",
+          "checked": "succulent",
+          "detail": "classification mismatch"
+        }
+      ]
+    },
+    {
+      "id": "2ddf666a-bf56-4e2f-aa01-3f5065ae5dcd",
+      "common_name": "European hornbeam",
+      "scientific_name": "Carpinus betulus",
+      "flags": [
+        {
+          "field": "sun_requirements",
+          "severity": "minor",
+          "stored": ["full_sun", "partial_sun", "shade"],
+          "checked": ["full_sun", "partial_sun"],
+          "detail": "partial overlap"
+        }
+      ]
+    },
+    {
+      "id": "2de8108a-2a76-40a5-8286-3b36bd1e2460",
+      "common_name": "Spotted-laurel",
+      "scientific_name": "Aucuba japonica",
+      "flags": [
+        {
+          "field": "sun_requirements",
+          "severity": "minor",
+          "stored": ["full_sun", "partial_sun", "shade"],
+          "checked": ["partial_sun", "shade"],
+          "detail": "partial overlap"
+        }
+      ]
+    },
+    {
+      "id": "2ededc19-4198-4df9-b06e-fc25eb5b1d71",
+      "common_name": "Chinese rice-paper plant",
+      "scientific_name": "Tetrapanax papyrifer",
+      "flags": [
+        {
+          "field": "sun_requirements",
+          "severity": "disagree",
+          "stored": ["partial_sun", "shade"],
+          "checked": ["full_sun", "partial_sun", "shade"],
+          "detail": "stored range narrower than check (under-reported tolerance)"
+        },
+        {
+          "field": "bloom_months",
+          "severity": "minor",
+          "stored": [8, 9, 10],
+          "checked": [10, 11, 12],
+          "detail": "window boundaries drift 2 month(s)"
+        }
+      ]
+    },
+    {
+      "id": "34d78cfd-86d8-4039-b4b3-0c1d495e33d7",
+      "common_name": "David viburnum",
+      "scientific_name": "Viburnum davidii",
+      "flags": [
+        {
+          "field": "sun_requirements",
+          "severity": "minor",
+          "stored": ["full_sun", "partial_sun", "shade"],
+          "checked": ["partial_sun", "shade"],
+          "detail": "partial overlap"
+        }
+      ]
+    },
+    {
+      "id": "3d74ea7b-19d8-452a-a275-817f2111fe77",
+      "common_name": "Japanese banana",
+      "scientific_name": "Musa basjoo",
+      "flags": [
+        {
+          "field": "hardiness_zone_min",
+          "severity": "disagree",
+          "stored": "7",
+          "checked": 5,
+          "detail": "2 zones apart"
+        }
+      ]
+    },
+    {
+      "id": "3da5aa8c-cc44-4f84-ad15-33d7b01a8178",
+      "common_name": "Elephant ear",
+      "scientific_name": "Colocasia esculenta",
+      "flags": [
+        {
+          "field": "bloom_months",
+          "severity": "minor",
+          "stored": [],
+          "checked": [6, 7, 8],
+          "detail": "one side reports no bloom"
+        }
+      ]
+    },
+    {
+      "id": "3e21dd88-6be2-4337-ac00-a3fb3b4e86f5",
+      "common_name": "Coralbells",
+      "scientific_name": "Heuchera sanguinea",
+      "flags": [
+        {
+          "field": "sun_requirements",
+          "severity": "minor",
+          "stored": ["full_sun", "partial_sun", "shade"],
+          "checked": ["partial_sun", "shade"],
+          "detail": "partial overlap"
+        }
+      ]
+    },
+    {
+      "id": "5071e9a7-7fa8-43ca-b20b-fde8d220a08c",
+      "common_name": "Snowy wood-rush",
+      "scientific_name": "Luzula nivea",
+      "flags": [
+        {
+          "field": "plant_type",
+          "severity": "disagree",
+          "stored": "grass",
+          "checked": "perennial",
+          "detail": "classification mismatch"
+        },
+        {
+          "field": "sun_requirements",
+          "severity": "minor",
+          "stored": ["full_sun", "partial_sun", "shade"],
+          "checked": ["partial_sun", "shade"],
+          "detail": "partial overlap"
+        }
+      ]
+    },
+    {
+      "id": "680ec25e-79a0-4294-b92f-2e40e245e3f1",
+      "common_name": "Sichuan aconite",
+      "scientific_name": "Aconitum carmichaelii",
+      "flags": [
+        {
+          "field": "sun_requirements",
+          "severity": "minor",
+          "stored": ["full_sun", "partial_sun", "shade"],
+          "checked": ["partial_sun", "shade"],
+          "detail": "partial overlap"
+        }
+      ]
+    },
+    {
+      "id": "6db37674-a64a-4205-9678-d6b48eee3bde",
+      "common_name": "Lavender mist meadow rue",
+      "scientific_name": "Thalictrum rochebruneanum",
+      "flags": [
+        {
+          "field": "sun_requirements",
+          "severity": "minor",
+          "stored": ["full_sun", "partial_sun", "shade"],
+          "checked": ["full_sun", "partial_sun"],
+          "detail": "partial overlap"
+        }
+      ]
+    },
+    {
+      "id": "8d1f1623-90b1-49e1-98b5-2eae930ad0c8",
+      "common_name": "American agave",
+      "scientific_name": "Agave americana",
+      "flags": [
+        {
+          "field": "sun_requirements",
+          "severity": "minor",
+          "stored": ["full_sun", "partial_sun"],
+          "checked": ["full_sun"],
+          "detail": "partial overlap"
+        }
+      ]
+    },
+    {
+      "id": "a38f06e0-e04d-45d5-9a2a-9bddb01da8bf",
+      "common_name": "Striped-squill",
+      "scientific_name": "Puschkinia scilloides",
+      "flags": [
+        {
+          "field": "sun_requirements",
+          "severity": "minor",
+          "stored": ["full_sun", "partial_sun", "shade"],
+          "checked": ["full_sun", "partial_sun"],
+          "detail": "partial overlap"
+        }
+      ]
+    },
+    {
+      "id": "a8a34437-b24b-4fd8-a2c6-bd833876a7ed",
+      "common_name": "Portugal laurel",
+      "scientific_name": "Prunus lusitanica",
+      "flags": [
+        {
+          "field": "plant_type",
+          "severity": "disagree",
+          "stored": "shrub",
+          "checked": "tree",
+          "detail": "classification mismatch"
+        }
+      ]
+    },
+    {
+      "id": "acefcf9d-e361-4bf2-9da3-8957f33aa383",
+      "common_name": "Palm sedge",
+      "scientific_name": "Carex muskingumensis",
+      "flags": [
+        {
+          "field": "plant_type",
+          "severity": "disagree",
+          "stored": "grass",
+          "checked": "perennial",
+          "detail": "classification mismatch"
+        }
+      ]
+    },
+    {
+      "id": "d0c599a9-8a85-4b52-adcb-3aaf1970fe57",
+      "common_name": "Bird-in-a-bush",
+      "scientific_name": "Corydalis solida",
+      "flags": [
+        {
+          "field": "plant_type",
+          "severity": "disagree",
+          "stored": "bulb",
+          "checked": "perennial",
+          "detail": "classification mismatch"
+        }
+      ]
+    },
+    {
+      "id": "d8a00a75-b0d3-4f1d-8960-2ce2fd2f5d87",
+      "common_name": "Himalayan sweet box",
+      "scientific_name": "Sarcococca hookeriana",
+      "flags": [
+        {
+          "field": "bloom_months",
+          "severity": "minor",
+          "stored": [12, 1, 2, 3],
+          "checked": [1, 2, 3],
+          "detail": "window boundaries drift 9 month(s)"
+        }
+      ]
+    },
+    {
+      "id": "dfe5f194-4830-4b58-89af-796d20647f8a",
+      "common_name": "French meadow-rue",
+      "scientific_name": "Thalictrum aquilegiifolium",
+      "flags": [
+        {
+          "field": "sun_requirements",
+          "severity": "minor",
+          "stored": ["full_sun", "partial_sun", "shade"],
+          "checked": ["full_sun", "partial_sun"],
+          "detail": "partial overlap"
+        }
+      ]
+    },
+    {
+      "id": "e2577f77-e234-44d8-aa9b-5c2fa9f5a35a",
+      "common_name": "Star of Persia",
+      "scientific_name": "Allium cristophii",
+      "flags": [
+        {
+          "field": "sun_requirements",
+          "severity": "minor",
+          "stored": ["full_sun", "partial_sun"],
+          "checked": ["full_sun"],
+          "detail": "partial overlap"
+        }
+      ]
+    },
+    {
+      "id": "e4a205b1-f5c7-402f-9682-1dc983fd07da",
+      "common_name": "Siberian squill",
+      "scientific_name": "Scilla siberica",
+      "flags": [
+        {
+          "field": "sun_requirements",
+          "severity": "minor",
+          "stored": ["full_sun", "partial_sun", "shade"],
+          "checked": ["full_sun", "partial_sun"],
+          "detail": "partial overlap"
+        }
+      ]
+    },
+    {
+      "id": "f3ab43f2-d176-4bbf-b0a4-61a026f7d662",
+      "common_name": "Red turtlehead",
+      "scientific_name": "Chelone obliqua",
+      "flags": [
+        {
+          "field": "sun_requirements",
+          "severity": "minor",
+          "stored": ["full_sun", "partial_sun", "shade"],
+          "checked": ["partial_sun", "shade"],
+          "detail": "partial overlap"
+        }
+      ]
+    },
+    {
+      "id": "f6fa98f7-2c9f-44a6-8e59-0d6ae6d9a621",
+      "common_name": "Sensitive fern",
+      "scientific_name": "Onoclea sensibilis",
+      "flags": [
+        {
+          "field": "sun_requirements",
+          "severity": "minor",
+          "stored": ["full_sun", "partial_sun", "shade"],
+          "checked": ["partial_sun", "shade"],
+          "detail": "partial overlap"
+        }
+      ]
+    }
+  ],
+  "failures": []
+}

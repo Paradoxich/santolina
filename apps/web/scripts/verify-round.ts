@@ -8,6 +8,8 @@
  *     · every non-hybrid plant has a non-empty native_region (regeneration ran)
  *     · every bloom_color value is mapped in lib/bloom-colors.ts
  *     · no duplicate scientific_name (the cultivar-collision trap)
+ *     · no duplicate common_name (two species sharing a display name are
+ *       indistinguishable in search — the round-8 trap)
  *     · required curation fields non-null on drafted rows
  *     · sun_thrives non-empty and disjoint from sun_tolerates
  *     · every plant has ≥1 combination; no self/duplicate/reversed-duplicate
@@ -29,6 +31,8 @@ import {
   IGNORED_FOLIAGE_COLORS,
 } from '../lib/foliage-colors'
 import { getSupabaseAdmin } from '../lib/supabase-admin'
+import { readRoundManifest } from './round-manifest'
+import { roundStatus, formatStatus } from './round-status'
 
 const COMPANION_CAP = 5
 
@@ -248,6 +252,31 @@ function checkPlants(plants: PlantRow[]): Finding[] {
     }
   }
 
+  // Duplicate common names — two species sharing a display name are
+  // indistinguishable in search and on a card, which is a user-facing defect
+  // even though the rows themselves are valid. Trefle hands these out freely
+  // (round 8: Acer japonicum arrived as "Japanese maple" alongside the
+  // existing A. palmatum), and a name-fix pass can introduce one by accident,
+  // so it is checked rather than trusted.
+  const byCommon = new Map<string, string[]>()
+  for (const p of plants) {
+    if (!p.common_name) continue
+    const key = p.common_name.trim().toLowerCase()
+    byCommon.set(key, [
+      ...(byCommon.get(key) ?? []),
+      p.scientific_name ?? '(no scientific name)',
+    ])
+  }
+  for (const [name, carriers] of byCommon) {
+    if (carriers.length > 1) {
+      findings.push({
+        level: 'FAIL',
+        check: 'duplicate common_name',
+        detail: `"${name}" — ${carriers.join(' / ')}`,
+      })
+    }
+  }
+
   return findings
 }
 
@@ -322,7 +351,53 @@ function report(findings: Finding[], group: 'FAIL' | 'WARN'): void {
   }
 }
 
+/**
+ * Per-round completeness. The catalog checks above ask "is this data valid?";
+ * this asks "did every pipeline step actually run for this round's plants?" —
+ * the question nothing used to ask, which is how three separate steps silently
+ * didn't run before round 8 (see scripts/round-status.ts).
+ */
+async function checkRoundCompleteness(label: string): Promise<Finding[]> {
+  const manifest = readRoundManifest(label)
+  if (!manifest) {
+    return [
+      {
+        level: 'FAIL',
+        check: 'round manifest',
+        detail: `no rounds/${label}/manifest.json — was the seed run tagged with --round ${label}?`,
+      },
+    ]
+  }
+
+  const rows = await roundStatus(manifest.seeded_ids)
+  console.log(
+    `\nRound ${manifest.label} — ${manifest.seeded_ids.length} seeded plant(s):`
+  )
+  for (const line of formatStatus(rows)) console.log(`  ${line}`)
+
+  return rows
+    .filter((r) => !r.complete)
+    .map((r) => ({
+      level: r.level,
+      check: `step did not run: ${r.step}`,
+      detail: `${r.done}/${r.total} of the round's plants have ${r.evidence}`,
+    }))
+}
+
+function parseRound(): string | null {
+  const args = process.argv.slice(2)
+  const idx = args.indexOf('--round')
+  if (idx < 0) return null
+  const label = args[idx + 1]
+  if (!label || label.startsWith('--')) {
+    throw new Error('--round requires a label, e.g. --round 8')
+  }
+  return label
+}
+
 async function main() {
+  const roundLabel = parseRound()
+
   console.log('Fetching catalog...')
   const [plants, combos] = await Promise.all([
     fetchAllPlants(),
@@ -331,6 +406,13 @@ async function main() {
   console.log(`${plants.length} plants, ${combos.length} combinations.`)
 
   const findings = [...checkPlants(plants), ...checkCombos(plants, combos)]
+  if (roundLabel) findings.push(...(await checkRoundCompleteness(roundLabel)))
+  else
+    console.log(
+      '\nNote: no --round given, so per-step completeness was NOT checked.\n' +
+        'After a seed, run `verify-round.ts --round <label>` — the catalog can be\n' +
+        'entirely valid while a pipeline step silently never ran.'
+    )
   const fails = findings.filter((f) => f.level === 'FAIL')
   const warns = findings.filter((f) => f.level === 'WARN')
 

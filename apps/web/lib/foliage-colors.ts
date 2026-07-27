@@ -48,10 +48,15 @@ export const FOLIAGE_RAW_TO_BUCKET: Record<string, string> = {
   'silver-spotted green': 'silver',
   'grey-green with silver undersides': 'silver',
   'silvery grey-green with burgundy': 'silver',
+  'dark green with silver veining': 'silver',
   // burgundy — dark/moody standing foliage
   'near-black': 'burgundy',
   'bronze-purple': 'burgundy',
   'mottled bronze-maroon': 'burgundy',
+  'burgundy and silver markings': 'burgundy',
+  // pink — variegation that is the species' own standing colour, not a
+  // cultivar selection (Actinidia kolomikta colours its own leaf tips)
+  'variegated pink and white': 'pink',
   // orange — coppery standing foliage (e.g. the bronze sedges)
   'copper-orange': 'orange',
   'bronze-green': 'orange',
@@ -72,9 +77,13 @@ export const IGNORED_FOLIAGE_COLORS = new Set([
   'soft green',
   'golden-green',
   'yellow-green',
+  'bronze-tinted green',
+  'dark green with golden scales',
+  'spotted green',
   // underside-only
   'dark green with grey undersides',
   'silvery-white underside',
+  'variegated green with burgundy undersides',
   // seasonal turns / indeterminate
   'bright green turning golden-yellow',
   'bronze when young',
@@ -93,6 +102,12 @@ export const IGNORED_FOLIAGE_COLORS = new Set([
   'purple-red or green',
   'glossy green, bronze-purple in winter',
   'mottled brown-green',
+  'bronze-purple in winter',
+  'bronze-red in winter',
+  'bronze-red new growth',
+  // the gold splashing is a cultivar selection (Aucuba japonica 'Variegata');
+  // the species this row keys on is plain green
+  'variegated green and gold',
 ])
 
 /** The buckets a plant's foliage_color falls into ([] for typical green). */

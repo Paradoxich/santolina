@@ -88,6 +88,7 @@ export const RAW_TO_BUCKET: Record<string, string> = {
   black: 'burgundy',
   'black-purple': 'burgundy',
   'purple-brown': 'burgundy',
+  'brownish-purple': 'burgundy',
   'purple-red': 'burgundy',
   'dark red-brown': 'burgundy',
   'reddish-brown': 'burgundy',
