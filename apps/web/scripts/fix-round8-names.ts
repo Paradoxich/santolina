@@ -365,14 +365,46 @@ const WRONG: Fix[] = [
   },
 ]
 
-const FIXES: Fix[] = [...MISSING, ...WRONG]
+// --- display-name collisions: two rows sharing one common_name. Found by
+// --- querying for duplicates AFTER the first two groups were applied, which
+// --- is how the third entry was caught — the rename below created it.
+// --- verify-round.ts now fails on duplicate common_name so this is checked,
+// --- not remembered.
+const COLLISIONS: Fix[] = [
+  {
+    scientific_name: 'Acer japonicum',
+    from: 'Japanese maple',
+    to: 'Fullmoon maple',
+    why: 'collided with A. palmatum, the true Japanese maple, already held',
+  },
+  {
+    scientific_name: 'Anemone quinquefolia',
+    from: 'Wood anemone',
+    to: 'American wood anemone',
+    why: 'SELF-INFLICTED — renaming Anemonoides nemorosa to "Wood anemone" above collided with this pre-existing row; the American species takes the qualifier',
+  },
+  {
+    scientific_name: 'Muscari botryoides',
+    from: 'Grape-hyacinth',
+    to: 'Italian grape hyacinth',
+    why: 'pre-existing collision with M. neglectum, not from this round',
+  },
+  {
+    scientific_name: 'Muscari neglectum',
+    from: 'Grape-hyacinth',
+    to: 'Southern grape hyacinth',
+    why: 'pre-existing collision with M. botryoides, not from this round',
+  },
+]
+
+const FIXES: Fix[] = [...MISSING, ...WRONG, ...COLLISIONS]
 
 async function main() {
   const apply = process.argv.slice(2).includes('--apply')
   const db = getSupabaseAdmin()
 
   console.log(
-    `\n${FIXES.length} name fixes (${MISSING.length} missing, ${WRONG.length} wrong).` +
+    `\n${FIXES.length} name fixes (${MISSING.length} missing, ${WRONG.length} wrong, ${COLLISIONS.length} collisions).` +
       (apply ? '\n' : ' DRY RUN — pass --apply to write.\n')
   )
 

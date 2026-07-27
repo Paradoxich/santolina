@@ -8,6 +8,8 @@
  *     · every non-hybrid plant has a non-empty native_region (regeneration ran)
  *     · every bloom_color value is mapped in lib/bloom-colors.ts
  *     · no duplicate scientific_name (the cultivar-collision trap)
+ *     · no duplicate common_name (two species sharing a display name are
+ *       indistinguishable in search — the round-8 trap)
  *     · required curation fields non-null on drafted rows
  *     · sun_thrives non-empty and disjoint from sun_tolerates
  *     · every plant has ≥1 combination; no self/duplicate/reversed-duplicate
@@ -243,6 +245,31 @@ function checkPlants(plants: PlantRow[]): Finding[] {
       findings.push({
         level: 'FAIL',
         check: 'duplicate scientific_name',
+        detail: `"${name}" — ${carriers.join(' / ')}`,
+      })
+    }
+  }
+
+  // Duplicate common names — two species sharing a display name are
+  // indistinguishable in search and on a card, which is a user-facing defect
+  // even though the rows themselves are valid. Trefle hands these out freely
+  // (round 8: Acer japonicum arrived as "Japanese maple" alongside the
+  // existing A. palmatum), and a name-fix pass can introduce one by accident,
+  // so it is checked rather than trusted.
+  const byCommon = new Map<string, string[]>()
+  for (const p of plants) {
+    if (!p.common_name) continue
+    const key = p.common_name.trim().toLowerCase()
+    byCommon.set(key, [
+      ...(byCommon.get(key) ?? []),
+      p.scientific_name ?? '(no scientific name)',
+    ])
+  }
+  for (const [name, carriers] of byCommon) {
+    if (carriers.length > 1) {
+      findings.push({
+        level: 'FAIL',
+        check: 'duplicate common_name',
         detail: `"${name}" — ${carriers.join(' / ')}`,
       })
     }
