@@ -23,12 +23,16 @@
  * that carry a suggested replacement phrase — the same generate-then-apply
  * safety split as regenerate-native-to.ts.
  *
- * --new-only scopes the check to rows never checked before (native_checked_at
- * IS NULL) — state-based, so it's exact and resumable (this guard was once
- * killed at 279/494; the next run now continues from where it stopped).
+ * --round <label> is the preferred post-seed scope: exactly the ids the seed
+ * run recorded in rounds/<label>/manifest.json. --new-only scopes to rows
+ * never checked before (native_checked_at IS NULL) — state-based and
+ * resumable (this guard was once killed at 279/494; the next run continues
+ * from where it stopped), but it only narrows to a batch once the rest of the
+ * catalog is stamped, and that baseline does not exist (see generate()).
  *
  * Usage (from apps/web):
  *   ./node_modules/.bin/tsx --env-file=.env.local scripts/cross-check-native-to.ts
+ *   ./node_modules/.bin/tsx --env-file=.env.local scripts/cross-check-native-to.ts --round 8
  *   ./node_modules/.bin/tsx --env-file=.env.local scripts/cross-check-native-to.ts --new-only
  *   ./node_modules/.bin/tsx --env-file=.env.local scripts/cross-check-native-to.ts --limit 10
  *   ./node_modules/.bin/tsx --env-file=.env.local scripts/cross-check-native-to.ts --apply
@@ -39,6 +43,7 @@ import { join } from 'node:path'
 import { getSupabaseAdmin } from '../lib/supabase-admin'
 import { getAnthropicClient, CURATION_MODEL } from '../lib/anthropic-client'
 import { fetchAllRows } from '../lib/paginate'
+import { readRoundManifest } from './round-manifest'
 
 // ---------------------------------------------------------------------------
 // Config
@@ -450,13 +455,38 @@ function loadRawSnapshot(): Map<string, string> {
   return map
 }
 
-async function generate(limit: number | null, newOnly: boolean): Promise<void> {
+async function generate(
+  limit: number | null,
+  newOnly: boolean,
+  roundLabel: string | null
+): Promise<void> {
   const db = getSupabaseAdmin()
+
+  // --round is the exact post-seed scope. --new-only only narrows to a batch
+  // once every other row carries a stamp, and that baseline was never
+  // established here either — native_checked_at was NULL catalog-wide at round
+  // 8, so --new-only would have re-billed all 595. See the same note in
+  // cross-check-plants.ts.
+  let roundIds: string[] | null = null
+  if (roundLabel) {
+    const manifest = readRoundManifest(roundLabel)
+    if (!manifest) {
+      throw new Error(
+        `No manifest for round "${roundLabel}" — expected rounds/${roundLabel}/manifest.json`
+      )
+    }
+    roundIds = manifest.seeded_ids
+    console.log(
+      `Scoping to round ${manifest.label}: ${roundIds.length} seeded plant(s).`
+    )
+  }
+
   let plants = await fetchAllRows<PlantRow>((from, to) => {
     let q = db
       .from('plants')
       .select('id, common_name, scientific_name, family, native_to, created_at')
     if (newOnly) q = q.is('native_checked_at', null)
+    if (roundIds) q = q.in('id', roundIds)
     return q.order('id').range(from, to)
   })
   if (limit !== null) plants = plants.slice(0, limit)
@@ -511,9 +541,25 @@ async function generate(limit: number | null, newOnly: boolean): Promise<void> {
 
 // ---------------------------------------------------------------------------
 
+function parseRound(): string | null {
+  const args = process.argv.slice(2)
+  const idx = args.indexOf('--round')
+  if (idx < 0) return null
+  const label = args[idx + 1]
+  if (!label || label.startsWith('--')) {
+    throw new Error('--round requires a label, e.g. --round 8')
+  }
+  return label
+}
+
 async function main() {
   if (process.argv.includes('--apply')) await apply()
-  else await generate(parseLimit(), process.argv.includes('--new-only'))
+  else
+    await generate(
+      parseLimit(),
+      process.argv.includes('--new-only'),
+      parseRound()
+    )
 }
 
 main().catch((err) => {
