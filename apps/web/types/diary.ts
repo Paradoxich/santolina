@@ -16,7 +16,12 @@ export interface DiaryNote {
   eventTypes: DiaryEventType[]
 }
 
-/** One diary per palette plant — thread identity is (garden, plant), not the palette row itself. */
+/**
+ * One diary per palette plant — thread identity is (garden, plant), not the
+ * palette row itself. Retired alongside the Diary page and its Overview
+ * card (stage 2 + stage 4 of the diary-to-plant-story migration); kept
+ * until then so every commit in that sequence leaves the app working.
+ */
 export interface PlantDiary {
   id: string
   /** The plants table id — pairs with the garden as this thread's real identity. */

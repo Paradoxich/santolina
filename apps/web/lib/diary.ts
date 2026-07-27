@@ -1,4 +1,8 @@
-// SERVER-ONLY — builds the Diary page's PlantDiary list from real data.
+// SERVER-ONLY — diary data helpers shared across the Diary page, the plant
+// subpage, and Overview. getPlantDiaries/toPlantDiary/PlantDiary are retired
+// alongside the Diary page and its Overview card (stage 2 + stage 4 of the
+// diary-to-plant-story migration) — kept here in the meantime so every
+// commit in that sequence leaves the app fully working.
 import { requireSessionGarden } from './session-garden'
 import { listDiaryEntries, type DiaryEntry } from '@/server/diary-actions'
 import type { DbPlant } from './plants-db'
@@ -8,7 +12,7 @@ import type { DiaryNote, PlantDiary } from '@/types/diary'
 /** Uploaded photos don't carry a natural display width — the mock's mixed widths were purely decorative. */
 const PHOTO_WIDTH = 93
 
-function toDiaryNote(entry: DiaryEntry): DiaryNote {
+export function toDiaryNote(entry: DiaryEntry): DiaryNote {
   return {
     id: entry.id,
     text: entry.note ?? '',
@@ -81,7 +85,10 @@ export async function getPlantDiaries(): Promise<PlantDiary[]> {
     ...new Set(
       (entryRows ?? [])
         .map((row) => row.plant_id)
-        .filter((plantId) => !palettePlantIds.has(plantId))
+        .filter(
+          (plantId): plantId is string =>
+            plantId != null && !palettePlantIds.has(plantId)
+        )
     ),
   ]
 
@@ -103,4 +110,49 @@ export async function getPlantDiaries(): Promise<PlantDiary[]> {
   ])
 
   return [...activeDiaries, ...removedDiaries]
+}
+
+export interface RecentActivityEntry {
+  id: string
+  text: string | null
+  date: string
+  /** Null for a garden-level entry (weather, first frost, general observations). */
+  plantName: string | null
+}
+
+/**
+ * The most recent entries across the whole garden, plant-attached and
+ * garden-level alike, for the Overview "Recent activity" card. A direct
+ * query ordered/limited at the DB — no need to pull every plant's full
+ * diary just to take the newest few, the way getPlantDiaries above does for
+ * the (retiring) Diary page.
+ */
+export async function getRecentActivity(
+  limit = 5
+): Promise<RecentActivityEntry[]> {
+  const { supabase: db, garden } = await requireSessionGarden()
+
+  const { data, error } = await db
+    .from('diary_entries')
+    .select('id, note, created_at, plants(common_name)')
+    .eq('garden_id', garden.id)
+    .order('created_at', { ascending: false })
+    .limit(limit)
+
+  if (error) throw new Error(`Failed to load recent activity: ${error.message}`)
+
+  return (data ?? []).map((row) => {
+    // Untyped client can't tell this embed is to-one — normalize either shape.
+    const plants = row.plants as
+      | { common_name: string }
+      | { common_name: string }[]
+      | null
+    const plant = Array.isArray(plants) ? (plants[0] ?? null) : plants
+    return {
+      id: row.id,
+      text: row.note,
+      date: row.created_at.slice(0, 10),
+      plantName: plant?.common_name ?? null,
+    }
+  })
 }
