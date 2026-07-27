@@ -51,4 +51,8 @@ storybook-static
 *.tsbuildinfo
 
 # Claude Code
-.claude
+# Local and machine-specific by default (settings.local.json, launch.json).
+# Skills are the exception: they are shared workflow rather than local config,
+# and are no use if every session has to be handed them out of band.
+.claude/*
+!.claude/skills/
