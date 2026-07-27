@@ -6,7 +6,7 @@ import {
   WeatherSection,
   CareTipsSection,
   PlannedSection,
-  DiarySection,
+  RecentActivitySection,
   ImpactSection,
 } from './cards'
 import { CardSkeleton, SubtitleSkeleton, dashboardRows } from './skeletons'
@@ -52,8 +52,8 @@ export default function DashboardPage() {
           <Suspense fallback={<CardSkeleton title="Planned" />}>
             <PlannedSection />
           </Suspense>
-          <Suspense fallback={<CardSkeleton title="Diary" />}>
-            <DiarySection />
+          <Suspense fallback={<CardSkeleton title="Recent activity" />}>
+            <RecentActivitySection />
           </Suspense>
           <Suspense fallback={<CardSkeleton />}>
             <ImpactSection />

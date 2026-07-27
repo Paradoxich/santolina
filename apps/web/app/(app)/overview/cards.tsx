@@ -3,7 +3,7 @@ import { BloomTimelineCard } from '@/components/dashboard/BloomTimelineCard'
 import { WeatherCard } from '@/components/dashboard/WeatherCard'
 import { CareTipsCard } from '@/components/dashboard/CareTipsCard'
 import { PlannedCard } from '@/components/dashboard/PlannedCard'
-import { DiaryRecentCard } from '@/components/dashboard/DiaryRecentCard'
+import { RecentActivityCard } from '@/components/dashboard/RecentActivityCard'
 import { ImpactCard } from '@/components/dashboard/ImpactCard'
 import {
   getCareTips,
@@ -15,7 +15,7 @@ import { deriveBloomSeason } from '@/lib/bloom-timeline'
 import { buildDashboardSubtitle, buildGardenImpact } from '@/lib/dashboard-copy'
 import { formatBloomRangeShort } from '@/lib/format-plant'
 import { heroImageUrl } from '@/lib/plant-detail'
-import { getPlantDiaries } from '@/lib/diary'
+import { getRecentActivity } from '@/lib/diary'
 import {
   getPaletteCached,
   getCareEventsCached,
@@ -114,9 +114,9 @@ export async function PlannedSection() {
   return <PlannedCard plants={plants} />
 }
 
-export async function DiarySection() {
-  const diaries = await getPlantDiaries()
-  return <DiaryRecentCard diaries={diaries} />
+export async function RecentActivitySection() {
+  const entries = await getRecentActivity()
+  return <RecentActivityCard entries={entries} />
 }
 
 export async function ImpactSection() {
