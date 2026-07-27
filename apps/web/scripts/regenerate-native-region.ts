@@ -33,9 +33,12 @@
  *                  THEN --apply.
  *
  * Usage (from apps/web):
- *   ./node_modules/.bin/tsx --env-file=.env.local scripts/regenerate-native-region.ts
- *   ./node_modules/.bin/tsx --env-file=.env.local scripts/regenerate-native-region.ts --limit 20
+ *   ./node_modules/.bin/tsx --env-file=.env.local scripts/regenerate-native-region.ts --round 8
+ *   ./node_modules/.bin/tsx --env-file=.env.local scripts/regenerate-native-region.ts --all
+ *   ./node_modules/.bin/tsx --env-file=.env.local scripts/regenerate-native-region.ts --round 8 --limit 20
  *   ./node_modules/.bin/tsx --env-file=.env.local scripts/regenerate-native-region.ts --apply
+ *
+ * A scope (--round or --all) is REQUIRED; there is no default. See parseScope.
  */
 
 import { mkdirSync, writeFileSync, readFileSync, existsSync } from 'node:fs'
@@ -43,6 +46,8 @@ import { join } from 'node:path'
 import { getSupabaseAdmin } from '../lib/supabase-admin'
 import { getSpeciesBySlug } from '../lib/trefle'
 import { getAnthropicClient, CURATION_MODEL } from '../lib/anthropic-client'
+import { fetchAllRows } from '../lib/paginate'
+import { readRoundManifest } from './round-manifest'
 
 // ---------------------------------------------------------------------------
 // Paths
@@ -396,16 +401,44 @@ interface PlanEntry {
 // ---------------------------------------------------------------------------
 // Generate
 // ---------------------------------------------------------------------------
-async function generate(limit: number | null): Promise<PlanEntry[]> {
+async function generate(
+  limit: number | null,
+  scope: Scope
+): Promise<PlanEntry[]> {
   const supabase = getSupabaseAdmin()
-  const { data, error } = await supabase
-    .from('plants')
-    .select(
-      'id, source_species_id, common_name, scientific_name, native_to, native_region'
+
+  let roundIds: string[] | null = null
+  if (scope.kind === 'round') {
+    const manifest = readRoundManifest(scope.label)
+    if (!manifest) {
+      throw new Error(
+        `No manifest for round "${scope.label}" — expected rounds/${scope.label}/manifest.json`
+      )
+    }
+    roundIds = manifest.seeded_ids
+    console.log(
+      `Scoping to round ${manifest.label}: ${roundIds.length} seeded plant(s).`
     )
-    .order('common_name')
-  if (error) throw error
-  let plants = (data ?? []) as PlantRow[]
+  } else {
+    console.log(
+      'FULL CATALOG regeneration (--all). This re-derives every plant, including\n' +
+        'rows tagged in earlier rounds, and can change settled data. Use --round\n' +
+        'after a seed; --all only when the region model itself changes.'
+    )
+  }
+
+  // Paginated: a bare .select() silently caps at 1000 rows, which would quietly
+  // drop plants from the plan once the catalog passes that mark (it is at 595).
+  const data = await fetchAllRows<PlantRow>((from, to) => {
+    let q = supabase
+      .from('plants')
+      .select(
+        'id, source_species_id, common_name, scientific_name, native_to, native_region'
+      )
+    if (roundIds) q = q.in('id', roundIds)
+    return q.order('common_name').range(from, to)
+  })
+  let plants = data as PlantRow[]
   if (limit) plants = plants.slice(0, limit)
 
   const wgsrpd = await loadWgsrpdMap()
@@ -601,6 +634,41 @@ async function apply(): Promise<void> {
 }
 
 // ---------------------------------------------------------------------------
+/**
+ * Scope is REQUIRED and has no default, deliberately.
+ *
+ * This script began as a one-time migration: the original region tags were an
+ * unreliable prompt artifact, so every plant had to be re-derived from one
+ * consistent source. That migration finished several rounds ago, but the
+ * full-catalog scope stayed, so each round re-derived all ~600 plants when only
+ * the new ones needed it. Two consequences, both found in round 8:
+ *
+ *   · It is the reason the Trefle rate limit was reachable at all. ~600 cold
+ *     fetches tripped it; ~100 never would have.
+ *   · It silently rewrites settled data. Round 8's full run changed 20
+ *     PRE-EXISTING plants alongside its own 101 — nobody asked for those, and
+ *     nothing separated them from the round's real work. The hand-maintained
+ *     MANUAL_OVERRIDES table above exists precisely because corrections were
+ *     being clobbered by re-generation; it patches the symptom one plant at a
+ *     time.
+ *
+ * So there is no bare default: pass `--round <label>` after a seed, or `--all`
+ * when the region model itself changes. An expensive, data-moving run should
+ * be something you asked for, not something you got.
+ */
+type Scope = { kind: 'round'; label: string } | { kind: 'all' }
+
+function parseScope(args: string[]): Scope | null {
+  if (args.includes('--all')) return { kind: 'all' }
+  const idx = args.indexOf('--round')
+  if (idx < 0) return null
+  const label = args[idx + 1]
+  if (!label || label.startsWith('--')) {
+    throw new Error('--round requires a label, e.g. --round 8')
+  }
+  return { kind: 'round', label }
+}
+
 async function main() {
   mkdirSync(REPORTS_DIR, { recursive: true })
   const args = process.argv.slice(2)
@@ -609,10 +677,23 @@ async function main() {
   const limit = li >= 0 && args[li + 1] ? parseInt(args[li + 1]!, 10) : null
 
   if (isApply) {
+    // --apply replays the plan JSON, so it inherits whatever scope generated it.
     await apply()
-  } else {
-    await generate(limit)
+    return
   }
+
+  const scope = parseScope(args)
+  if (!scope) {
+    console.error(
+      'Refusing to run without a scope.\n\n' +
+        '  --round <label>   the plants that round seeded (use this after a seed)\n' +
+        '  --all             re-derive the ENTIRE catalog (only when the region\n' +
+        '                    model changes — it can move data settled in earlier rounds)\n\n' +
+        'See the parseScope note in this file for why there is no default.'
+    )
+    process.exit(1)
+  }
+  await generate(limit, scope)
 }
 
 main().catch((e) => {

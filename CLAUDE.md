@@ -84,6 +84,12 @@ No `/store` yet — the app holds no global client state (see Code conventions).
 
 ## Database — Supabase
 
+> **Before touching the catalog, read `docs/database-log.md`. Append an entry when you are done.**
+>
+> It is the operational record of what has been done to the database and, more importantly, the list of traps that have already cost someone time, money, or nearly cost data — silent rate-limit fallbacks, flags that don't scope the way their docs claim, pipeline steps that quietly never ran. Several were live for multiple rounds before anyone noticed. Do not rediscover them.
+>
+> `scripts/log-db-session.ts --round <label>` writes the factual half of an entry for you.
+
 Seven tables. All IDs are UUIDs. Row-level security required on all user-owned tables.
 
 - `users` — extends Supabase auth.users; created (with an empty garden) by the `handle_new_user` trigger on signup

@@ -31,6 +31,8 @@ import {
   IGNORED_FOLIAGE_COLORS,
 } from '../lib/foliage-colors'
 import { getSupabaseAdmin } from '../lib/supabase-admin'
+import { readRoundManifest } from './round-manifest'
+import { roundStatus, formatStatus } from './round-status'
 
 const COMPANION_CAP = 5
 
@@ -349,7 +351,53 @@ function report(findings: Finding[], group: 'FAIL' | 'WARN'): void {
   }
 }
 
+/**
+ * Per-round completeness. The catalog checks above ask "is this data valid?";
+ * this asks "did every pipeline step actually run for this round's plants?" —
+ * the question nothing used to ask, which is how three separate steps silently
+ * didn't run before round 8 (see scripts/round-status.ts).
+ */
+async function checkRoundCompleteness(label: string): Promise<Finding[]> {
+  const manifest = readRoundManifest(label)
+  if (!manifest) {
+    return [
+      {
+        level: 'FAIL',
+        check: 'round manifest',
+        detail: `no rounds/${label}/manifest.json — was the seed run tagged with --round ${label}?`,
+      },
+    ]
+  }
+
+  const rows = await roundStatus(manifest.seeded_ids)
+  console.log(
+    `\nRound ${manifest.label} — ${manifest.seeded_ids.length} seeded plant(s):`
+  )
+  for (const line of formatStatus(rows)) console.log(`  ${line}`)
+
+  return rows
+    .filter((r) => !r.complete)
+    .map((r) => ({
+      level: r.level,
+      check: `step did not run: ${r.step}`,
+      detail: `${r.done}/${r.total} of the round's plants have ${r.evidence}`,
+    }))
+}
+
+function parseRound(): string | null {
+  const args = process.argv.slice(2)
+  const idx = args.indexOf('--round')
+  if (idx < 0) return null
+  const label = args[idx + 1]
+  if (!label || label.startsWith('--')) {
+    throw new Error('--round requires a label, e.g. --round 8')
+  }
+  return label
+}
+
 async function main() {
+  const roundLabel = parseRound()
+
   console.log('Fetching catalog...')
   const [plants, combos] = await Promise.all([
     fetchAllPlants(),
@@ -358,6 +406,13 @@ async function main() {
   console.log(`${plants.length} plants, ${combos.length} combinations.`)
 
   const findings = [...checkPlants(plants), ...checkCombos(plants, combos)]
+  if (roundLabel) findings.push(...(await checkRoundCompleteness(roundLabel)))
+  else
+    console.log(
+      '\nNote: no --round given, so per-step completeness was NOT checked.\n' +
+        'After a seed, run `verify-round.ts --round <label>` — the catalog can be\n' +
+        'entirely valid while a pipeline step silently never ran.'
+    )
   const fails = findings.filter((f) => f.level === 'FAIL')
   const warns = findings.filter((f) => f.level === 'WARN')
 
