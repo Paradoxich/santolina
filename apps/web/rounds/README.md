@@ -29,9 +29,19 @@ tsx --env-file=.env.local scripts/restore-catalog.ts rounds/8/catalog --phase be
 ```
 
 `--phase` is required and has no default, because picking the wrong one silently
-reverts or re-applies an entire round. `check-round-scope.ts` also falls back to
-this archive when `backups/` is absent, which is what lets it run in a fresh
-clone or worktree.
+reverts or re-applies an entire round.
+
+**A snapshot goes stale.** The catalog keeps moving after a round ends — corrections,
+backfills — so the committed `after-*` copy drifts from live and stops being a usable
+recovery point for the current catalog. Two things handle that:
+
+- `archive-round.ts --round <n> --catalog-only` refreshes the snapshot **without**
+  re-copying reports. Re-running the full archive would sweep in whatever is sitting in
+  the gitignored `reports/` by then, which is usually unrelated later work.
+- `restore-catalog.ts` warns when live rows were modified after the snapshot was taken,
+  so a stale restore cannot quietly revert work while looking like it succeeded. `check-round-scope.ts` also falls back to
+  this archive when `backups/` is absent, which is what lets it run in a fresh
+  clone or worktree.
 
 The manifest is the explicit record of a round's batch — it exists so nothing
 downstream has to infer "this round's plants" from a `created_at` heuristic.

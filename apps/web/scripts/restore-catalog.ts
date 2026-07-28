@@ -81,6 +81,19 @@ function loadBackup(dir: string, table: string, phase?: string): Row[] {
   return rows
 }
 
+/** When the snapshot was taken: round archives record it, plain backups don't. */
+function snapshotCapturedAt(dir: string): string | null {
+  try {
+    const meta = JSON.parse(readFileSync(join(dir, 'meta.json'), 'utf8')) as {
+      captured_at?: string
+      created_at?: string
+    }
+    return meta.captured_at ?? meta.created_at ?? null
+  } catch {
+    return null
+  }
+}
+
 async function fetchCurrent(table: string): Promise<Map<string, Row>> {
   const db = getSupabaseAdmin()
   const pageSize = 1000
@@ -119,6 +132,23 @@ async function restoreTable(
   console.log(
     `  ${changed.length} row(s) differ (${missing} deleted since backup)`
   )
+
+  // A snapshot is a picture of one moment, and the catalog keeps moving after
+  // it — corrections, backfills. Restoring a stale snapshot silently reverts
+  // everything done since, which looks like a successful restore. Say so.
+  const newestLive = [...current.values()]
+    .map((r) => String(r.updated_at ?? ''))
+    .filter(Boolean)
+    .sort()
+    .at(-1)
+  const snapshotAt = snapshotCapturedAt(dir)
+  if (newestLive && snapshotAt && newestLive > snapshotAt) {
+    console.log(
+      `  ⚠ live rows were modified after this snapshot was taken ` +
+        `(snapshot ${snapshotAt.slice(0, 19)}, newest live change ` +
+        `${newestLive.slice(0, 19)}) — restoring would revert that work`
+    )
+  }
   if (createdSince.length) {
     console.log(
       `  ${createdSince.length} row(s) created since backup — left untouched`
