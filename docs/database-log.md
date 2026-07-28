@@ -19,16 +19,17 @@ If a fact belongs in two places, it goes here as the short operational version a
 
 ## Standing rules
 
-1. **Back up before any bulk write.** `scripts/backup-catalog.ts`. Non-negotiable.
-2. **Scope every script to a round.** Use `--round <label>`, which reads `rounds/<label>/manifest.json`. Never rely on `created_at` heuristics, and see trap 2 before trusting `--new-only`.
-3. **Generate, review, then apply.** Any script offering `--apply` writes nothing until you have read its report. This split is the single reason trap 1 did not corrupt the catalog.
-4. **Never bare `.select()` on a full table.** It silently caps at 1000 rows. Use `fetchAllRows` from `lib/paginate.ts`. The catalog is at 595 and climbing.
-5. **Never flip `is_curated`.** It means "Ana has editorially reviewed this row" and is hers alone. Scripts draft; they do not sign off.
-6. **After any schema or request-shape change, run `--limit 3` first.** A green typecheck does not verify a runtime API contract.
-7. **Finish with `verify-round.ts --round <label>`.** Without `--round` it checks that data is _valid_ but not that the pipeline actually _ran_.
-8. **Append an entry here.** `scripts/log-db-session.ts --round <label>` writes the factual part for you.
+1. **Back up before any bulk write.** `scripts/backup-catalog.ts`. Non-negotiable. `backups/` is gitignored and local-only, and **Free-plan projects cannot download or restore Supabase's own daily backups** — so the durable copy is `archive-round.ts`, which commits the catalog gzipped into `rounds/<n>/catalog/` (`before-*` = the round's rollback point, `after-*` = what it left behind, ~2.3MB a round). Restore from either with `restore-catalog.ts <dir> [--phase before|after]`.
+2. **Storage is in NO database backup, on any plan.** The database holds only metadata about bucket objects, so `backup-catalog.ts`, the committed round archives and Supabase's own daily backups all leave the buckets uncovered. Run `scripts/backup-storage.ts`. **`diary-photos` is private user data and must never be committed** — git history is forever; sync it somewhere private instead. `plant-images` is public product data (`image_url_curated` points at it, so a lost object 404s a plant page).
+3. **Scope every script to a round.** Use `--round <label>`, which reads `rounds/<label>/manifest.json`. Never rely on `created_at` heuristics, and see trap 2 before trusting `--new-only`.
+4. **Generate, review, then apply.** Any script offering `--apply` writes nothing until you have read its report. This split is the single reason trap 1 did not corrupt the catalog.
+5. **Never bare `.select()` on a full table.** It silently caps at 1000 rows. Use `fetchAllRows` from `lib/paginate.ts`. The catalog is at 595 and climbing.
+6. **Never flip `is_curated`.** It means "Ana has editorially reviewed this row" and is hers alone. Scripts draft; they do not sign off.
+7. **After any schema or request-shape change, run `--limit 3` first.** A green typecheck does not verify a runtime API contract.
+8. **Finish with `verify-round.ts --round <label>`.** Without `--round` it checks that data is _valid_ but not that the pipeline actually _ran_.
+9. **Append an entry here.** `scripts/log-db-session.ts --round <label>` writes the factual part for you.
 
-**Rule 8 is enforced, not encouraged.** `.husky/check-db-log.sh` runs on every commit and blocks it if a round directory is committed without an entry naming that round, if a migration is committed without touching this file, or if this file still contains the `TODO —` placeholders the script writes. Git cannot see what you ran against Supabase — only what you commit — so the hook checks the artifacts database work leaves behind, and the honest reading of a green hook is "you recorded something", not "you recorded enough". `--no-verify` exists and is occasionally right (a revert, a docs fixup). It is not the normal path, and whatever you skip is inherited by whoever comes next.
+**Rule 9 is enforced, not encouraged.** `.husky/check-db-log.sh` runs on every commit and blocks it if a round directory is committed without an entry naming that round, if a migration is committed without touching this file, or if this file still contains the `TODO —` placeholders the script writes. Git cannot see what you ran against Supabase — only what you commit — so the hook checks the artifacts database work leaves behind, and the honest reading of a green hook is "you recorded something", not "you recorded enough". `--no-verify` exists and is occasionally right (a revert, a docs fixup). It is not the normal path, and whatever you skip is inherited by whoever comes next.
 
 ---
 
@@ -104,11 +105,83 @@ Rounds are run in `git worktree` checkouts to avoid clashing with other sessions
 
 Reading the wrong field names leaves the code undefined, every zone falls through as unmapped, and the plant ends up untagged. See `architecture.md` §26.
 
+### 10. Trefle's `distributions.native[]` includes INTRODUCED range — MOSTLY OPEN
+
+Traps 1 and 9 are the pipeline failing to fetch. This one is the fetch succeeding and the answer being wrong, which no amount of pipeline hardening finds. Trefle does not reliably separate where a plant is _from_ from where it now _grows_, so `native_region` has been answering the wrong question — and that field is the entire basis of the "native to my region" filter.
+
+`Imperata cylindrica` was tagged China / Eastern Asia / Indo-China, which is exactly the range it was **introduced** into; it is native to Africa, the Mediterranean and West Asia. Sixteen regions wrong, and inverted.
+
+**Validate with `cross-check-native-region.ts` against WCVP** (Kew's checklist, read through GBIF). Report-only by default. Two refusals are deliberate: "no WCVP rows" is treated as no-data rather than as an empty native range (trap 1's lesson), and a region name it cannot map is an error, never a silent omission. Clearing a row needs `--allow-empty` on top of `--apply`.
+
+Two WCVP quirks worth knowing. It occasionally **omits the establishment marker**, so a single unmarked Level 3 row invents a whole Level 2 region — `Galium verum` read as native to Australia off one Tasmania row, while GBIF's own GRIIS-Australia dataset lists it as introduced. And a reviewed decision must outrank it: `Rosmarinus officinalis` has Western Asia deliberately cut and WCVP disagrees, which is why `MANUAL_OVERRIDES` now lives in `lib/native-region-overrides.ts` and is read by both the generator and the checker.
+
+**Status: 20 rows validated (7 corrected), ~575 not.** A 60-plant sample scored 56 clean against 1 genuinely wrong, so the tail is real but small. Do not point `--apply` at `--all`.
+
+### 11. GBIF's `species/match` fails UPWARD, into a genus
+
+Hand it a binomial it does not know and it climbs the taxonomy rather than returning nothing: `Pennisetum alopecuroides` comes back as the **genus `Cenchrus`**, `matchType: HIGHERRANK`. Accepting that fetches an entire genus's distribution — it was about to widen one grass from "Eastern Asia" to 41 regions including Brazil and New Zealand.
+
+This is trap 7 in different clothes: **an external name lookup that guesses is more dangerous than one that fails.** Require `EXACT` at species rank _and_ that the canonical name returned is the one you asked for. Normalise the `×` away first, or every hybrid in the catalog reads as unmatched.
+
+### 13. Applying a migration through the API stamps its OWN version — FIXED July 28 2026
+
+`apply_migration` (the Supabase MCP tool / Management API) records the migration under a version it generates, **not** under your local filename. Four migrations had been applied that way, so the remote ledger and `supabase/migrations/` held the same 26 migrations under four different version stamps:
+
+| local file       | remote version   | migration               |
+| ---------------- | ---------------- | ----------------------- |
+| `20260721210000` | `20260721204551` | add_curated_plant_image |
+| `20260722120000` | `20260721230049` | add_image_attribution   |
+| `20260724120000` | `20260724120842` | add_is_greenery         |
+| `20260724120500` | `20260724120938` | add_greenery_checked_at |
+
+**The schema was never wrong — this is ledger drift, not data drift.** The danger is `supabase db push`: it would not recognise those four local filenames as applied and would try to re-run them against production.
+
+**Fixed by renaming the local files to the remote versions**, not by repairing the remote ledger. The remote versions record when the migrations actually ran, so they are the truthful record, and renaming touches **no production state at all**. Relative apply order was preserved (checked explicitly — `add_is_greenery` still precedes `add_greenery_checked_at`), and local now matches the remote ledger exactly, 26 for 26.
+
+**The durable rule:** if you apply a migration through the API or MCP rather than `supabase db push`, reconcile the filename to the version the remote recorded in the same session. `supabase migration repair --status applied <version>` is the other direction and is the right tool when the local filename is the truthful one.
+
+### 12. A round manifest records names as SEEDED, before the name pass
+
+`rounds/<n>/manifest.json` is written by the seed run, so its `common_name` values predate `fix-round8-names.ts`. Per trap 6, Trefle gave no English name to 18 of round 8's 101 rows, and those sit in the manifest under their bare scientific name. Grepping a manifest by common name therefore returns a confidently wrong answer: it is how a review concluded round 8 had seeded nothing that could collide, when it had seeded `Anemonoides nemorosa` — the direct cause of a rename. **Search a manifest by `scientific_name`**, and cross-read the round's name-fix script.
+
 ---
 
 ## Sessions
 
 <!-- Newest first. Append with: scripts/log-db-session.ts --round <label> -->
+
+### 2026-07-28 — Round 8 follow-up: scope guard, and native_region validated against WCVP
+
+**Branch** `chore/round-scope-check` (worktree `santolina-round-scope`, off `origin/main`). No new species. Catalog unchanged at **595 / 1485**. Written by hand: `log-db-session.ts` refuses a second entry for an already-logged round, correctly — this is a follow-up session, not a round.
+
+**Why this session happened.** The round-8 entry below records that `native_region` was rewritten catalog-wide, "121 changed — 101 new plus 20 pre-existing". Nobody had looked at those 20. Looking at them turned up something larger than the overreach itself.
+
+**Built: `check-round-scope.ts`.** The mirror of `round-status.ts` — that asks whether every step ran for the round's plants, this asks whether any step ran on plants that were _not_ the round's. Diffs the round's pre-seed backup against the live catalog; FAILs on a data column changed on an unmanifested row, on an unmanifested insert or delete, and on a companion pair added or removed between two plants that both predate the round. Bookkeeping stamps WARN. Works off DB state, not any script's report, so it covers steps that write no report and steps not yet written.
+
+Over round 8 it found **101 out-of-scope writes**, every one since traced:
+
+| what               | count | cause                                                                                           |
+| ------------------ | ----: | ----------------------------------------------------------------------------------------------- |
+| `hardiness_rating` |    76 | `draft-hardiness` backfilling round 7's never-drafted batch (trap 4) — remediation, not a stray |
+| `native_region`    |    20 | the known regeneration overreach (trap 3), now validated — see below                            |
+| `common_name`      |     3 | `fix-round8-names.ts`; 1 self-inflicted collision, 2 pre-existing (trap 12 bit the review here) |
+| pairings           |     2 | `curate-combinations` topping up under-cap plants from the whole roster, by design (§19)        |
+
+All waived in `rounds/8/scope-allow.json`, each entry carrying its cause, so round 8 exits clean and the next round starts from a green baseline instead of a permanently red check. **Exactly one of the 101 was a genuine mistake** — the `native_region` overreach that started this.
+
+**Built: `cross-check-native-region.ts`, and trap 10 with it.** Validating those 20 against WCVP showed Trefle conflates native with introduced range (details in trap 10; `Imperata cylindrica` was 16 regions wrong and inverted). **13 of the 20 already matched WCVP; 7 did not and were corrected.**
+
+**Data written:** `native_region` on 7 rows — Solomon's-seal (+Indo-China), Snowy mespilus (5→2 regions), Lady's bedstraw (−Australia), American wood anemone (−South-Central U.S.A., +Western Canada), Summer savory (rebuilt), Biquinho pepper (Western→Northern South America), and **Lemon cleared to empty**: `Citrus limon` is a cultigen whose 94 WCVP rows are every one introduced, so it is now a `noWildRange` override plus a `verify-round` hybrid exemption rather than a permanent gap. `verify-round`: **0 failures**, 44 image warnings.
+
+**Also found:** traps 11 and 12, both caught by _reading a report_ rather than by anything failing — which is the standing argument for report-then-apply. `MANUAL_OVERRIDES` moved to `lib/native-region-overrides.ts` so the generator and the checker cannot drift apart.
+
+**Deliberately not done:**
+
+- **Migration ledger drift reconciled** (trap 13): four local migration filenames renamed to the versions the remote actually recorded, after `apply_migration` had stamped its own. No production state touched; local and remote now match 26 for 26. `supabase db push` is safe again.
+- **Storage buckets now backed up** — `scripts/backup-storage.ts` pulls every bucket to the gitignored `backups/storage/<stamp>/`. First run: 3 objects, 305 KB (`plant-images` 1 real hero; `diary-photos` 2 leftover 68-byte test PNGs from July 8). **This gets the objects off Supabase, not off the laptop** — `diary-photos` is private user data and cannot be committed, so syncing it somewhere private stays manual.
+- **~575 plants still unvalidated against WCVP.** Sample says ~2% are wrong. Run in reviewed batches; do not point `--apply` at `--all`
+- the 405 `updated_at` / `*_checked_at` stamps on unseeded rows left as WARN — guards re-stamp by design
+- nothing pushed, no PR opened, `is_curated` untouched throughout
 
 ### 2026-07-27 — Round 8 (shade & structure), 494 → 595 species
 

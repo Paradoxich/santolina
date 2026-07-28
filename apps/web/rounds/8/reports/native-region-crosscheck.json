@@ -1,0 +1,844 @@
+{
+  "findings": [
+    {
+      "id": "1354305f-b15b-4436-82cd-774cf7275a22",
+      "common_name": "Solomon's-seal",
+      "scientific_name": "Polygonatum odoratum",
+      "stored": [
+        "Caucasus",
+        "China",
+        "Eastern Asia",
+        "Eastern Europe",
+        "Indo-China",
+        "Middle Asia",
+        "Middle Europe",
+        "Mongolia",
+        "Northern Africa",
+        "Northern Europe",
+        "Russian Far East",
+        "Siberia",
+        "Southeastern Europe",
+        "Southwestern Europe"
+      ],
+      "wcvp_native": [
+        "Caucasus",
+        "China",
+        "Eastern Asia",
+        "Eastern Europe",
+        "Indo-China",
+        "Middle Asia",
+        "Middle Europe",
+        "Mongolia",
+        "Northern Africa",
+        "Northern Europe",
+        "Russian Far East",
+        "Siberia",
+        "Southeastern Europe",
+        "Southwestern Europe"
+      ],
+      "wcvp_introduced_only": [],
+      "native_l3_count": 59,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": [
+        "Caucasus",
+        "Indo-China",
+        "Middle Asia",
+        "Mongolia",
+        "Northern Africa"
+      ],
+      "verdict": "match"
+    },
+    {
+      "id": "167a6c88-66dd-4c6b-9962-19a5c0f4ab10",
+      "common_name": "Pot marjoram",
+      "scientific_name": "Origanum onites",
+      "stored": [
+        "Southeastern Europe",
+        "Western Asia"
+      ],
+      "wcvp_native": [
+        "Southeastern Europe",
+        "Western Asia"
+      ],
+      "wcvp_introduced_only": [
+        "Northern Africa"
+      ],
+      "native_l3_count": 5,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": [],
+      "verdict": "match"
+    },
+    {
+      "id": "17cc8633-d753-4d0f-993d-a1e4aa5caf19",
+      "common_name": "Snowy mespilus",
+      "scientific_name": "Amelanchier lamarckii",
+      "stored": [
+        "Eastern Canada",
+        "Northeastern U.S.A."
+      ],
+      "wcvp_native": [
+        "Eastern Canada",
+        "Northeastern U.S.A."
+      ],
+      "wcvp_introduced_only": [
+        "Middle Europe",
+        "Northern Europe",
+        "Southeastern Europe",
+        "Southwestern Europe"
+      ],
+      "native_l3_count": 3,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": [
+        "Eastern Canada"
+      ],
+      "verdict": "match"
+    },
+    {
+      "id": "423d69ee-9a52-4009-9ea3-dfdbd3c6e5ff",
+      "common_name": "Sharp grass",
+      "scientific_name": "Imperata cylindrica",
+      "stored": [
+        "Arabian Peninsula",
+        "East Tropical Africa",
+        "Macaronesia",
+        "Northeast Tropical Africa",
+        "Northern Africa",
+        "South Tropical Africa",
+        "Southeastern Europe",
+        "Southern Africa",
+        "Southwestern Europe",
+        "West Tropical Africa",
+        "West-Central Tropical Africa",
+        "Western Asia",
+        "Western Indian Ocean"
+      ],
+      "wcvp_native": [
+        "Arabian Peninsula",
+        "East Tropical Africa",
+        "Macaronesia",
+        "Northeast Tropical Africa",
+        "Northern Africa",
+        "South Tropical Africa",
+        "Southeastern Europe",
+        "Southern Africa",
+        "Southwestern Europe",
+        "West Tropical Africa",
+        "West-Central Tropical Africa",
+        "Western Asia",
+        "Western Indian Ocean"
+      ],
+      "wcvp_introduced_only": [
+        "Australia",
+        "Caucasus",
+        "China",
+        "Eastern Asia",
+        "Indian Subcontinent",
+        "Indo-China",
+        "Malesia",
+        "Mexico",
+        "Middle Asia",
+        "New Zealand",
+        "Northwestern Pacific",
+        "Northwestern U.S.A.",
+        "Papuasia",
+        "South-Central U.S.A.",
+        "Southeastern U.S.A.",
+        "Southwestern Pacific"
+      ],
+      "native_l3_count": 81,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": [],
+      "verdict": "match"
+    },
+    {
+      "id": "44593c4c-17ab-4f51-a5d4-c9bb4b766def",
+      "common_name": "Sweet-pea",
+      "scientific_name": "Lathyrus odoratus",
+      "stored": [
+        "Southeastern Europe"
+      ],
+      "wcvp_native": [
+        "Southeastern Europe"
+      ],
+      "wcvp_introduced_only": [
+        "Australia",
+        "Caribbean",
+        "Caucasus",
+        "Central America",
+        "Eastern Asia",
+        "Eastern Canada",
+        "Eastern Europe",
+        "Indian Subcontinent",
+        "Macaronesia",
+        "Malesia",
+        "Mexico",
+        "Middle Asia",
+        "Middle Europe",
+        "New Zealand",
+        "North-Central U.S.A.",
+        "Northeastern U.S.A.",
+        "Northern Africa",
+        "Northern Europe",
+        "Northwestern U.S.A.",
+        "Papuasia",
+        "Russian Far East",
+        "South-Central U.S.A.",
+        "Southeastern U.S.A.",
+        "Southwestern Europe",
+        "Southwestern U.S.A.",
+        "West-Central Tropical Africa",
+        "Western Asia",
+        "Western Canada",
+        "Western South America"
+      ],
+      "native_l3_count": 2,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": [],
+      "verdict": "match"
+    },
+    {
+      "id": "4ef8e07d-a5a5-40e7-839b-e2000223ed6d",
+      "common_name": "Lady's bedstraw",
+      "scientific_name": "Galium verum",
+      "stored": [
+        "Caucasus",
+        "China",
+        "Eastern Asia",
+        "Eastern Europe",
+        "Indian Subcontinent",
+        "Middle Asia",
+        "Middle Europe",
+        "Mongolia",
+        "Northern Africa",
+        "Northern Europe",
+        "Russian Far East",
+        "Siberia",
+        "Southeastern Europe",
+        "Southwestern Europe",
+        "Western Asia"
+      ],
+      "wcvp_native": [
+        "Caucasus",
+        "China",
+        "Eastern Asia",
+        "Eastern Europe",
+        "Indian Subcontinent",
+        "Middle Asia",
+        "Middle Europe",
+        "Mongolia",
+        "Northern Africa",
+        "Northern Europe",
+        "Russian Far East",
+        "Siberia",
+        "Southeastern Europe",
+        "Southwestern Europe",
+        "Western Asia"
+      ],
+      "wcvp_introduced_only": [
+        "Eastern Canada",
+        "New Zealand",
+        "North-Central U.S.A.",
+        "Northeastern U.S.A.",
+        "Northwestern U.S.A.",
+        "Southeastern U.S.A.",
+        "Southern South America",
+        "Southwestern U.S.A.",
+        "Subarctic America"
+      ],
+      "native_l3_count": 76,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": [
+        "Mongolia"
+      ],
+      "excluded": {
+        "regions": [
+          "Australia"
+        ],
+        "why": "only backing row is Tasmania with no establishment marker; GBIF GRIIS-Australia lists the species as INTRODUCED"
+      },
+      "verdict": "match"
+    },
+    {
+      "id": "578a6525-9258-46b8-80b3-b48b4b6fc6cc",
+      "common_name": "American wood anemone",
+      "scientific_name": "Anemone quinquefolia",
+      "stored": [
+        "Eastern Canada",
+        "North-Central U.S.A.",
+        "Northeastern U.S.A.",
+        "Southeastern U.S.A.",
+        "Western Canada"
+      ],
+      "wcvp_native": [
+        "Eastern Canada",
+        "North-Central U.S.A.",
+        "Northeastern U.S.A.",
+        "Southeastern U.S.A.",
+        "Western Canada"
+      ],
+      "wcvp_introduced_only": [],
+      "native_l3_count": 38,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": [],
+      "verdict": "match"
+    },
+    {
+      "id": "634ac422-3f23-4d96-a55b-54c203d83f21",
+      "common_name": "Wild clary",
+      "scientific_name": "Salvia viridis",
+      "stored": [
+        "Caucasus",
+        "Eastern Europe",
+        "Middle Asia",
+        "Northern Africa",
+        "Southeastern Europe",
+        "Southwestern Europe",
+        "Western Asia"
+      ],
+      "wcvp_native": [
+        "Caucasus",
+        "Eastern Europe",
+        "Middle Asia",
+        "Northern Africa",
+        "Southeastern Europe",
+        "Southwestern Europe",
+        "Western Asia"
+      ],
+      "wcvp_introduced_only": [
+        "Middle Europe",
+        "Northern Europe"
+      ],
+      "native_l3_count": 24,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": [
+        "Eastern Europe",
+        "Middle Asia"
+      ],
+      "verdict": "match"
+    },
+    {
+      "id": "64e1a536-3aea-4213-8d0e-194c9d97162e",
+      "common_name": "Lemon",
+      "scientific_name": "Citrus limon",
+      "stored": [],
+      "wcvp_native": [],
+      "wcvp_introduced_only": [
+        "Arabian Peninsula",
+        "Brazil",
+        "Caribbean",
+        "Central America",
+        "China",
+        "Eastern Asia",
+        "Indian Subcontinent",
+        "Indo-China",
+        "Macaronesia",
+        "Malesia",
+        "Mexico",
+        "Middle Asia",
+        "Northeast Tropical Africa",
+        "Northern Africa",
+        "South Tropical Africa",
+        "South-Central U.S.A.",
+        "Southeastern Europe",
+        "Southeastern U.S.A.",
+        "Southwestern Europe",
+        "Southwestern Pacific",
+        "West Tropical Africa",
+        "West-Central Tropical Africa",
+        "Western South America"
+      ],
+      "native_l3_count": 0,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": [],
+      "note": "reviewed override: cultigen — WCVP records no native range, only introduced",
+      "verdict": "reviewed"
+    },
+    {
+      "id": "6ec8cc94-1670-4406-bd3d-847ff437b634",
+      "common_name": "Summer savory",
+      "scientific_name": "Satureja hortensis",
+      "stored": [
+        "Caucasus",
+        "Eastern Europe",
+        "Middle Asia",
+        "Southeastern Europe",
+        "Western Asia"
+      ],
+      "wcvp_native": [
+        "Caucasus",
+        "Eastern Europe",
+        "Middle Asia",
+        "Southeastern Europe",
+        "Western Asia"
+      ],
+      "wcvp_introduced_only": [
+        "Arabian Peninsula",
+        "Caribbean",
+        "China",
+        "Indian Subcontinent",
+        "Middle Europe",
+        "North-Central U.S.A.",
+        "Northeastern U.S.A.",
+        "Russian Far East",
+        "Siberia",
+        "South-Central U.S.A.",
+        "Southwestern Europe"
+      ],
+      "native_l3_count": 7,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": [
+        "Caucasus",
+        "Eastern Europe",
+        "Middle Asia",
+        "Western Asia"
+      ],
+      "verdict": "match"
+    },
+    {
+      "id": "7446ac5e-a786-4857-95f4-e6b6c1341478",
+      "common_name": "White-leaf rock-rose",
+      "scientific_name": "Cistus albidus",
+      "stored": [
+        "Northern Africa",
+        "Southeastern Europe",
+        "Southwestern Europe"
+      ],
+      "wcvp_native": [
+        "Northern Africa",
+        "Southeastern Europe",
+        "Southwestern Europe"
+      ],
+      "wcvp_introduced_only": [],
+      "native_l3_count": 9,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": [
+        "Southeastern Europe"
+      ],
+      "verdict": "match"
+    },
+    {
+      "id": "9fe98215-8beb-4fc1-a1d5-715dcbfd3473",
+      "common_name": "Biquinho pepper",
+      "scientific_name": "Capsicum chinense",
+      "stored": [
+        "Brazil",
+        "Northern South America"
+      ],
+      "wcvp_native": [
+        "Brazil",
+        "Northern South America"
+      ],
+      "wcvp_introduced_only": [
+        "Caribbean",
+        "Central America",
+        "Mexico",
+        "West Tropical Africa",
+        "Western South America"
+      ],
+      "native_l3_count": 3,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": [
+        "Brazil"
+      ],
+      "verdict": "match"
+    },
+    {
+      "id": "a39ac5e3-a00f-48fa-b55e-bfac66b448b9",
+      "common_name": "Wood millet",
+      "scientific_name": "Milium effusum",
+      "stored": [
+        "Caucasus",
+        "China",
+        "Eastern Asia",
+        "Eastern Canada",
+        "Eastern Europe",
+        "Indian Subcontinent",
+        "Middle Asia",
+        "Middle Europe",
+        "Mongolia",
+        "North-Central U.S.A.",
+        "Northeastern U.S.A.",
+        "Northern Europe",
+        "Russian Far East",
+        "Siberia",
+        "Southeastern Europe",
+        "Southeastern U.S.A.",
+        "Southwestern Europe",
+        "Western Asia",
+        "Western Canada"
+      ],
+      "wcvp_native": [
+        "Caucasus",
+        "China",
+        "Eastern Asia",
+        "Eastern Canada",
+        "Eastern Europe",
+        "Indian Subcontinent",
+        "Middle Asia",
+        "Middle Europe",
+        "Mongolia",
+        "North-Central U.S.A.",
+        "Northeastern U.S.A.",
+        "Northern Europe",
+        "Russian Far East",
+        "Siberia",
+        "Southeastern Europe",
+        "Southeastern U.S.A.",
+        "Southwestern Europe",
+        "Western Asia",
+        "Western Canada"
+      ],
+      "wcvp_introduced_only": [],
+      "native_l3_count": 100,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": [
+        "Mongolia"
+      ],
+      "verdict": "match"
+    },
+    {
+      "id": "a66aed4c-5a57-45b5-bbca-3025d3ee6a85",
+      "common_name": "Spearmint",
+      "scientific_name": "Mentha spicata",
+      "stored": [
+        "Caucasus",
+        "China",
+        "Eastern Europe",
+        "Indian Subcontinent",
+        "Middle Asia",
+        "Middle Europe",
+        "Northern Africa",
+        "Northern Europe",
+        "Southeastern Europe",
+        "Southwestern Europe",
+        "Western Asia"
+      ],
+      "wcvp_native": [
+        "Caucasus",
+        "China",
+        "Eastern Europe",
+        "Indian Subcontinent",
+        "Middle Asia",
+        "Middle Europe",
+        "Northern Africa",
+        "Northern Europe",
+        "Southeastern Europe",
+        "Southwestern Europe",
+        "Western Asia"
+      ],
+      "wcvp_introduced_only": [
+        "Australia",
+        "Brazil",
+        "Caribbean",
+        "Eastern Asia",
+        "Eastern Canada",
+        "Macaronesia",
+        "Mexico",
+        "New Zealand",
+        "North-Central Pacific",
+        "North-Central U.S.A.",
+        "Northeast Tropical Africa",
+        "Northeastern U.S.A.",
+        "Northern South America",
+        "Northwestern U.S.A.",
+        "Siberia",
+        "South-Central Pacific",
+        "South-Central U.S.A.",
+        "Southeastern U.S.A.",
+        "Southern Africa",
+        "Southern South America",
+        "Southwestern U.S.A.",
+        "Subantarctic Islands",
+        "Subarctic America",
+        "West Tropical Africa",
+        "Western Canada"
+      ],
+      "native_l3_count": 41,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": [
+        "Eastern Europe",
+        "Middle Asia",
+        "Northern Africa"
+      ],
+      "verdict": "match"
+    },
+    {
+      "id": "aabfdaca-5e4e-471a-8537-ad7f3ec4b114",
+      "common_name": "Snapdragon",
+      "scientific_name": "Antirrhinum majus",
+      "stored": [
+        "Southwestern Europe"
+      ],
+      "wcvp_native": [
+        "Southwestern Europe"
+      ],
+      "wcvp_introduced_only": [
+        "Australia",
+        "Caribbean",
+        "Central America",
+        "Eastern Asia",
+        "Eastern Canada",
+        "Eastern Europe",
+        "Indian Subcontinent",
+        "Indo-China",
+        "Macaronesia",
+        "Mexico",
+        "Middle Asia",
+        "Middle Europe",
+        "New Zealand",
+        "North-Central U.S.A.",
+        "Northeastern U.S.A.",
+        "Northern Africa",
+        "Northern Europe",
+        "Northern South America",
+        "Northwestern U.S.A.",
+        "South-Central Pacific",
+        "South-Central U.S.A.",
+        "Southeastern Europe",
+        "Southeastern U.S.A.",
+        "Southern South America",
+        "Southwestern U.S.A.",
+        "Western Asia",
+        "Western Canada",
+        "Western South America"
+      ],
+      "native_l3_count": 2,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": [],
+      "verdict": "match"
+    },
+    {
+      "id": "d33da23f-7e3b-4dbc-9bc7-bfd75662f0d7",
+      "common_name": "Spanish artichoke",
+      "scientific_name": "Cynara cardunculus",
+      "stored": [
+        "Macaronesia",
+        "Northern Africa",
+        "Southeastern Europe",
+        "Southwestern Europe"
+      ],
+      "wcvp_native": [
+        "Macaronesia",
+        "Northern Africa",
+        "Southeastern Europe",
+        "Southwestern Europe"
+      ],
+      "wcvp_introduced_only": [
+        "Australia",
+        "Caucasus",
+        "Central America",
+        "Eastern Europe",
+        "Indian Subcontinent",
+        "Indo-China",
+        "Malesia",
+        "Mexico",
+        "Middle Europe",
+        "Northeast Tropical Africa",
+        "Northern Europe",
+        "Northern South America",
+        "Northwestern Pacific",
+        "Southern South America",
+        "Southwestern U.S.A.",
+        "Western Asia",
+        "Western Indian Ocean",
+        "Western South America"
+      ],
+      "native_l3_count": 14,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": [],
+      "verdict": "match"
+    },
+    {
+      "id": "d61119c1-bc9e-4cce-b1a9-7f3c868b2c64",
+      "common_name": "Woodland tobacco",
+      "scientific_name": "Nicotiana sylvestris",
+      "stored": [
+        "Southern South America",
+        "Western South America"
+      ],
+      "wcvp_native": [
+        "Southern South America",
+        "Western South America"
+      ],
+      "wcvp_introduced_only": [
+        "Australia",
+        "Middle Europe",
+        "Northeastern U.S.A.",
+        "Northern Europe",
+        "Southwestern Europe",
+        "Southwestern U.S.A."
+      ],
+      "native_l3_count": 2,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": [
+        "Southern South America",
+        "Western South America"
+      ],
+      "verdict": "match"
+    },
+    {
+      "id": "d92c9418-7472-4cdc-b9e6-18e74df95d6d",
+      "common_name": "Woodruff",
+      "scientific_name": "Galium odoratum",
+      "stored": [
+        "Caucasus",
+        "China",
+        "Eastern Asia",
+        "Eastern Europe",
+        "Middle Europe",
+        "Northern Africa",
+        "Northern Europe",
+        "Russian Far East",
+        "Siberia",
+        "Southeastern Europe",
+        "Southwestern Europe",
+        "Western Asia"
+      ],
+      "wcvp_native": [
+        "Caucasus",
+        "China",
+        "Eastern Asia",
+        "Eastern Europe",
+        "Middle Europe",
+        "Northern Africa",
+        "Northern Europe",
+        "Russian Far East",
+        "Siberia",
+        "Southeastern Europe",
+        "Southwestern Europe",
+        "Western Asia"
+      ],
+      "wcvp_introduced_only": [
+        "North-Central U.S.A.",
+        "Northeastern U.S.A.",
+        "Northwestern U.S.A."
+      ],
+      "native_l3_count": 52,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": [
+        "Northern Africa"
+      ],
+      "verdict": "match"
+    },
+    {
+      "id": "ef90486b-0e27-4911-8d74-87d7a651e830",
+      "common_name": "Sunflower",
+      "scientific_name": "Helianthus annuus",
+      "stored": [
+        "Mexico",
+        "Southwestern U.S.A."
+      ],
+      "wcvp_native": [
+        "Mexico",
+        "Southwestern U.S.A."
+      ],
+      "wcvp_introduced_only": [
+        "Australia",
+        "Caribbean",
+        "Caucasus",
+        "Central America",
+        "China",
+        "Eastern Asia",
+        "Eastern Canada",
+        "Eastern Europe",
+        "Indian Subcontinent",
+        "Indo-China",
+        "Macaronesia",
+        "Middle Asia",
+        "Middle Europe",
+        "New Zealand",
+        "North-Central U.S.A.",
+        "Northeastern U.S.A.",
+        "Northern Africa",
+        "Northern Europe",
+        "Northwestern U.S.A.",
+        "Russian Far East",
+        "Siberia",
+        "South-Central U.S.A.",
+        "Southeastern Europe",
+        "Southeastern U.S.A.",
+        "Southern Africa",
+        "Southern South America",
+        "Southwestern Europe",
+        "Subarctic America",
+        "Western Asia",
+        "Western Canada",
+        "Western South America"
+      ],
+      "native_l3_count": 7,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": [],
+      "verdict": "match"
+    },
+    {
+      "id": "fb4004b5-4210-4c37-a377-e61f3aced828",
+      "common_name": "Signet marigold",
+      "scientific_name": "Tagetes tenuifolia",
+      "stored": [
+        "Central America",
+        "Mexico",
+        "Western South America"
+      ],
+      "wcvp_native": [
+        "Central America",
+        "Mexico",
+        "Western South America"
+      ],
+      "wcvp_introduced_only": [
+        "Eastern Europe",
+        "Indian Subcontinent",
+        "Indo-China",
+        "Malesia",
+        "Middle Asia",
+        "Middle Europe",
+        "Northern Europe",
+        "Southeastern Europe",
+        "Southwestern Europe"
+      ],
+      "native_l3_count": 15,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": [],
+      "verdict": "match"
+    }
+  ]
+}

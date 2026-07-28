@@ -87,7 +87,12 @@ const REQUIRED_DRAFTED_FIELDS: Array<keyof PlantRow> = [
 // wild native range; an empty native_region is correct for them. Trefle
 // sometimes stores a hybrid's name without the × marker, so known cases are
 // exempted by name.
-const KNOWN_HYBRID_EXEMPTIONS = new Set(['cistus purpureus'])
+// Citrus limon is the same case one step further out: a cultivated hybrid
+// (C. medica × C. aurantium) whose accepted name carries no × marker at all.
+// WCVP records 94 distribution rows for it and marks every single one
+// INTRODUCED, so empty is the right answer rather than a gap — established by
+// cross-check-native-region.ts, not assumed.
+const KNOWN_HYBRID_EXEMPTIONS = new Set(['cistus purpureus', 'citrus limon'])
 
 function isHybrid(scientificName: string | null): boolean {
   if (!scientificName) return false

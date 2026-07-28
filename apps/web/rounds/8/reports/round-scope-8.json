@@ -1,0 +1,4232 @@
+{
+  "round": "8",
+  "baseline": "/Users/paradoxich/Desktop/Coding/santolina-round-scope/apps/web/backups/2026-07-27T15-40-14-161Z",
+  "seeded_count": 101,
+  "plants_before": 494,
+  "plants_after": 595,
+  "counts": {
+    "fail": 0,
+    "allowed": 101,
+    "warn": 405
+  },
+  "findings": [
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Jerusalem pine",
+      "id": "001976ad-759e-44fa-b9d1-152b97263adc",
+      "detail": "Jerusalem pine — botanical_checked_at, updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Mandarin",
+      "id": "008d86e9-7f7a-4b18-a3a9-a1174fc5d17b",
+      "detail": "Mandarin — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H1c",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Chinese fountain grass",
+      "id": "00b65ac6-1627-437c-b859-00290fcd7fa0",
+      "detail": "Chinese fountain grass — botanical_checked_at, updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "King's-spear",
+      "id": "0213aabd-2db1-464c-ba71-70d30b7f2c47",
+      "detail": "King's-spear — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Sage-leaf rock-rose",
+      "id": "022cf4d4-e7ee-484c-b0de-97498e897342",
+      "detail": "Sage-leaf rock-rose — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Garden cosmos",
+      "id": "0262177b-b5f0-4cfe-af0d-26c062a985a2",
+      "detail": "Garden cosmos — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Common gum cistus",
+      "id": "038520c5-b015-4b70-96db-c6e87d252551",
+      "detail": "Common gum cistus — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Eriocapitella hupehensis",
+      "id": "053b5b38-570b-469c-a65c-ede52ad153c9",
+      "detail": "Eriocapitella hupehensis — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Lily-of-the-field",
+      "id": "054df5cc-854f-4be9-8008-cfceb10a2625",
+      "detail": "Lily-of-the-field — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Amur adonis",
+      "id": "056b8d4b-cd63-4fca-a8d5-dfdd9fcfb886",
+      "detail": "Amur adonis — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Topped lavender",
+      "id": "05e905a2-0512-4f9f-ba88-359473828a3f",
+      "detail": "Topped lavender — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Fragrant hellebore",
+      "id": "067d9fab-61fb-4d85-ba35-aedc7478d8f3",
+      "detail": "Fragrant hellebore — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Plume poppy",
+      "id": "06dc0aad-17fa-4ec4-a477-57ef8c7a9739",
+      "detail": "Plume poppy — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Barren strawberry",
+      "id": "0707503c-7fee-47ad-b72e-403735cf0db6",
+      "detail": "Barren strawberry — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Autumn sage",
+      "id": "074e73c9-2802-4cf3-b1d6-9bdf79d73067",
+      "detail": "Autumn sage — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Common polypody",
+      "id": "09fccd66-8c78-42aa-a2a9-703971d3ce9e",
+      "detail": "Common polypody — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Perfumed cherry",
+      "id": "0ac983d8-fe51-409c-a9d0-305662a3d5e2",
+      "detail": "Perfumed cherry — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Hepatica",
+      "id": "0b00e204-ce43-4c4a-a289-b64fe191e1e2",
+      "detail": "Hepatica — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "European hop-hornbeam",
+      "id": "0b2f1e4d-8412-4f4f-9d03-8c3ed5fd9abf",
+      "detail": "European hop-hornbeam — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Ají pepper",
+      "id": "0b2faf2c-f33e-4687-8382-32432581a163",
+      "detail": "Ají pepper — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H1c",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Peach-bells",
+      "id": "0b321484-ee0b-499b-975d-de01982e7a05",
+      "detail": "Peach-bells — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Korean angelica",
+      "id": "0c39969e-7d35-4f33-b4c2-d72afce7f7a6",
+      "detail": "Korean angelica — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Lavender",
+      "id": "0e369364-220d-440a-9797-50907aab5949",
+      "detail": "Lavender — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Cretan dittany",
+      "id": "0ed707f6-61e6-4339-a94a-62571745f56b",
+      "detail": "Cretan dittany — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H3",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Redcurrant",
+      "id": "0f9537ea-d36b-4c37-9427-3bb1d6b527f8",
+      "detail": "Redcurrant — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H7",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Rosemary",
+      "id": "0faccb2d-2ef3-45fe-9b3f-76337c797482",
+      "detail": "Rosemary — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Rodgersia",
+      "id": "1033396b-f6eb-4aaa-8cea-28c47c8f5963",
+      "detail": "Rodgersia — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Early virgin's-bower",
+      "id": "103abe35-9426-4b0b-b0e4-a4aadc4d914c",
+      "detail": "Early virgin's-bower — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Coriander",
+      "id": "1173d8d3-8c11-40fa-a2b6-f110b1a9f06b",
+      "detail": "Coriander — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H2",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Purple clematis",
+      "id": "118a7f09-98bb-46d6-bcb7-e0da579c8277",
+      "detail": "Purple clematis — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Sweet cicely",
+      "id": "11e5d85a-7bad-4dc5-aafa-d4e2634318e3",
+      "detail": "Sweet cicely — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H7",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Lovage",
+      "id": "12cf3773-69ed-4075-a1b3-823a8f0836a8",
+      "detail": "Lovage — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H7",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Hollyhock",
+      "id": "1302f404-4913-4cb9-a9c6-944f42e06eda",
+      "detail": "Hollyhock — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Turkish sage",
+      "id": "130db3f0-106a-4fac-8fd9-5680c3070a10",
+      "detail": "Turkish sage — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: native_region",
+      "plant": "Solomon's-seal",
+      "id": "1354305f-b15b-4436-82cd-774cf7275a22",
+      "detail": "Solomon's-seal — native_region rewritten though the round never seeded it",
+      "column": "native_region",
+      "before": [
+        "Arabian Peninsula",
+        "Caucasus",
+        "China",
+        "Eastern Asia",
+        "Eastern Europe",
+        "Indian Subcontinent",
+        "Indo-China",
+        "Malesia",
+        "Middle Asia",
+        "Middle Europe",
+        "Mongolia",
+        "Northern Europe",
+        "Papuasia",
+        "Russian Far East",
+        "Siberia",
+        "Southeastern Europe",
+        "Southwestern Europe",
+        "Western Asia"
+      ],
+      "after": [
+        "Caucasus",
+        "China",
+        "Eastern Asia",
+        "Eastern Europe",
+        "Indo-China",
+        "Middle Asia",
+        "Middle Europe",
+        "Mongolia",
+        "Northern Africa",
+        "Northern Europe",
+        "Russian Far East",
+        "Siberia",
+        "Southeastern Europe",
+        "Southwestern Europe"
+      ],
+      "why": "the 20 rows round 8's full-catalog regeneration rewrote, since validated against WCVP by cross-check-native-region.ts: 13 were already correct and 7 were corrected on July 28. The regeneration overreach itself is fixed upstream, where --round or --all is now required (§26)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Camellia",
+      "id": "13b63dcc-a6dd-4431-85e6-817b36f4c450",
+      "detail": "Camellia — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Peppermint",
+      "id": "13e2672d-7868-4071-a5e5-4cdfa6b1e3b6",
+      "detail": "Peppermint — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H5",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Jerusalem cowslip",
+      "id": "16451b8e-9915-442b-8973-5e79e107b665",
+      "detail": "Jerusalem cowslip — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: native_region",
+      "plant": "Pot marjoram",
+      "id": "167a6c88-66dd-4c6b-9962-19a5c0f4ab10",
+      "detail": "Pot marjoram — native_region rewritten though the round never seeded it",
+      "column": "native_region",
+      "before": [
+        "Northern Africa",
+        "Southeastern Europe",
+        "Western Asia"
+      ],
+      "after": [
+        "Southeastern Europe",
+        "Western Asia"
+      ],
+      "why": "the 20 rows round 8's full-catalog regeneration rewrote, since validated against WCVP by cross-check-native-region.ts: 13 were already correct and 7 were corrected on July 28. The regeneration overreach itself is fixed upstream, where --round or --all is now required (§26)."
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Pot marjoram",
+      "id": "167a6c88-66dd-4c6b-9962-19a5c0f4ab10",
+      "detail": "Pot marjoram — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H3",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "African marigold",
+      "id": "16c3fcf5-ab80-485e-a883-1c62a21a6373",
+      "detail": "African marigold — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H2",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: native_region",
+      "plant": "Snowy mespilus",
+      "id": "17cc8633-d753-4d0f-993d-a1e4aa5caf19",
+      "detail": "Snowy mespilus — native_region rewritten though the round never seeded it",
+      "column": "native_region",
+      "before": [
+        "Eastern Canada",
+        "Northeastern U.S.A.",
+        "Southeastern U.S.A."
+      ],
+      "after": [
+        "Eastern Canada",
+        "Northeastern U.S.A."
+      ],
+      "why": "the 20 rows round 8's full-catalog regeneration rewrote, since validated against WCVP by cross-check-native-region.ts: 13 were already correct and 7 were corrected on July 28. The regeneration overreach itself is fixed upstream, where --round or --all is now required (§26)."
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Korean mint",
+      "id": "17ee913d-b05f-4a96-b8ca-86090bc85b0d",
+      "detail": "Korean mint — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H5",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Autumn moor grass",
+      "id": "199c1fb3-023d-4822-a74f-0e1d0054becf",
+      "detail": "Autumn moor grass — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Comfrey",
+      "id": "1ea0895a-a94d-4564-9bcd-51298812b7a4",
+      "detail": "Comfrey — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H7",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Betony",
+      "id": "1eb61c57-2ab9-44d7-8f92-053390486de3",
+      "detail": "Betony — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Loddon-lily",
+      "id": "1fbdd333-f221-4bc1-b7fe-a094d23a1f75",
+      "detail": "Loddon-lily — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Borage",
+      "id": "1fee38ad-b73a-4c08-b027-d78c5a64f1ad",
+      "detail": "Borage — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H4",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Goldenrain-tree",
+      "id": "1ffbd89d-d67d-4985-a97c-298a09511e57",
+      "detail": "Goldenrain-tree — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Prairie beard grass",
+      "id": "210a2405-8faf-40f6-a48d-0db957ddc2af",
+      "detail": "Prairie beard grass — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Garden phlox",
+      "id": "212f2e99-2f72-40cc-9240-7e537144cdec",
+      "detail": "Garden phlox — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Broadleaf chasmanthium",
+      "id": "217d3982-7c17-4296-8346-ed9eb51e445a",
+      "detail": "Broadleaf chasmanthium — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Blue spurge",
+      "id": "22841928-bc1f-4a99-b4e1-28f75a534309",
+      "detail": "Blue spurge — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "European michaelmas daisy",
+      "id": "22aff557-46f8-4118-b953-91888d1a12ea",
+      "detail": "European michaelmas daisy — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Jack-in-the-green",
+      "id": "22c7e298-d570-469f-a11b-5fae5771b1c1",
+      "detail": "Jack-in-the-green — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Sweet bay",
+      "id": "22f349ac-71b1-415c-91d3-58a8decdd71a",
+      "detail": "Sweet bay — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Tall cape honey-flower",
+      "id": "24daf1de-2abc-4032-8d7b-08786395b8ca",
+      "detail": "Tall cape honey-flower — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Early green hellebore",
+      "id": "24f1fc16-b227-4ddb-8e11-4dc15a108152",
+      "detail": "Early green hellebore — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Fustet",
+      "id": "25367b53-80cc-4386-b266-54752c8c3e9f",
+      "detail": "Fustet — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Whorled tickseed",
+      "id": "25956abf-1e46-40af-9941-8aff560e2fdf",
+      "detail": "Whorled tickseed — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Mediterranean buckthorn",
+      "id": "259605b7-0a97-423c-a40f-6c75862376b3",
+      "detail": "Mediterranean buckthorn — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Alumroot",
+      "id": "25bebb47-4e90-43f9-9751-a6b53beb0c22",
+      "detail": "Alumroot — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "White asphodel",
+      "id": "25ffb594-1770-476e-832a-7ed78c924ca2",
+      "detail": "White asphodel — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Cowslip",
+      "id": "26aba4c8-86bc-4f3d-828d-0f0b9138c6a1",
+      "detail": "Cowslip — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Alpine clematis",
+      "id": "2807dba8-5b88-4290-80a8-71d5a6f39762",
+      "detail": "Alpine clematis — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Raceme catnip",
+      "id": "289f01ed-a646-4bea-af75-b011bd16d189",
+      "detail": "Raceme catnip — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Japanese maple",
+      "id": "28f73dfc-f242-457d-8a7f-ac6261991a7c",
+      "detail": "Japanese maple — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Pink rockrose",
+      "id": "2916412a-3a9b-4c4e-baf2-8cfa702f08c0",
+      "detail": "Pink rockrose — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Lenten-rose",
+      "id": "2a2be75b-4d3c-49fa-9b12-d7a5dc381d2a",
+      "detail": "Lenten-rose — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Sweet marjoram",
+      "id": "2a7d2465-40ef-4c10-8500-c7056f841fc7",
+      "detail": "Sweet marjoram — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H2",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Stevia",
+      "id": "2a88d673-cc42-47aa-9f45-3c8442312268",
+      "detail": "Stevia — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H1c",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Beardlip penstemon",
+      "id": "2ac65106-95ec-47ce-b17b-431868d38a5e",
+      "detail": "Beardlip penstemon — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Asian bleeding-heart",
+      "id": "2ba33cdb-11c7-41d0-9f69-3c3d671548e4",
+      "detail": "Asian bleeding-heart — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Chinese star-jessamine",
+      "id": "2bb78dc8-255c-4f0c-a429-dd68a732b02e",
+      "detail": "Chinese star-jessamine — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Pomegranate",
+      "id": "2c110fb0-d5a2-4b55-bd1d-3b7f3ae5b1f8",
+      "detail": "Pomegranate — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H3",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "European hackberry",
+      "id": "2c21e57d-53d8-406d-8b53-ed1005a099da",
+      "detail": "European hackberry — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Kirengeshoma palmata",
+      "id": "2c283739-d3f0-4af6-abd5-7051d570f057",
+      "detail": "Kirengeshoma palmata — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Burnet bloodwort",
+      "id": "2ca4943f-35e8-4de7-a01a-67a0e73c3bcb",
+      "detail": "Burnet bloodwort — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Green olive tree",
+      "id": "2d305b30-cbdf-4b63-92d0-c45aa98fe6f0",
+      "detail": "Green olive tree — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Caraway thyme",
+      "id": "2d4368f8-4673-4247-9fd8-9d6ece3e6a5d",
+      "detail": "Caraway thyme — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H5",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Vervain",
+      "id": "2dba8b7b-dbd1-4a17-9c76-5c4764867cec",
+      "detail": "Vervain — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H5",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Purslane",
+      "id": "2dc4a7a8-933e-4c10-b9b7-362c141a8e0e",
+      "detail": "Purslane — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H2",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Orange coneflower",
+      "id": "2e07992c-3e57-45f9-b0ec-3bf751118e94",
+      "detail": "Orange coneflower — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Golden crocus",
+      "id": "2ee7595d-d8de-4d10-921d-55dc585cfc19",
+      "detail": "Golden crocus — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Chinese rhubarb",
+      "id": "2f8251d8-44e7-4ed8-8c4c-009a335a3fce",
+      "detail": "Chinese rhubarb — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Blackwell switch grass",
+      "id": "2fdc0800-d548-4779-8c3b-dcefc897bf5c",
+      "detail": "Blackwell switch grass — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Blue false indigo",
+      "id": "2feb03c4-7eec-4541-ad04-fb9f772afd32",
+      "detail": "Blue false indigo — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Common lilac",
+      "id": "3067dfb5-c320-4b1b-b171-af787f92be78",
+      "detail": "Common lilac — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Washington lupin",
+      "id": "30c1f07f-fc9a-4537-8f3b-94465be45f20",
+      "detail": "Washington lupin — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Orange-peel clematis",
+      "id": "3152e355-056e-40c3-9ec2-88292f482e7c",
+      "detail": "Orange-peel clematis — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Clary",
+      "id": "318d5ab0-49f8-4073-beb4-b8b6f4f2fa98",
+      "detail": "Clary — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Winter-aconite",
+      "id": "319a76f9-1829-4fd5-9158-8429c173aab0",
+      "detail": "Winter-aconite — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Lesser calamint",
+      "id": "31b439e8-2439-41fa-aee7-c6a5b0737e98",
+      "detail": "Lesser calamint — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H5",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Skimmia",
+      "id": "323f531f-b0d0-4ecf-b2df-9a86055d3775",
+      "detail": "Skimmia — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Chinese-bamboo",
+      "id": "3286d5bc-52df-4f84-9b9f-47fbda10ce44",
+      "detail": "Chinese-bamboo — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Black cohosh",
+      "id": "339b1786-45b2-405a-8cdb-0b24f2e1ef23",
+      "detail": "Black cohosh — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Climbing hydrangea",
+      "id": "339d1235-f8fe-445d-a062-6051c218493d",
+      "detail": "Climbing hydrangea — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Chinese wisteria",
+      "id": "33e898e5-54f6-4d2a-9b7b-04facb49d0dc",
+      "detail": "Chinese wisteria — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Rattlesnake-master",
+      "id": "35d3c997-e7b2-4d14-8a3b-b9b2571e418f",
+      "detail": "Rattlesnake-master — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Calendula",
+      "id": "3614be73-e555-4641-bc8e-46402240b850",
+      "detail": "Calendula — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Japanese spiraea",
+      "id": "36d7d035-ee05-4354-89c7-2fd587a838e1",
+      "detail": "Japanese spiraea — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Chilli pepper",
+      "id": "375e5167-f270-4e3e-ad0d-7cdf7d309a98",
+      "detail": "Chilli pepper — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H1c",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Woodbine",
+      "id": "377cfcff-785d-4484-ac3c-267537222c89",
+      "detail": "Woodbine — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Shirley poppy",
+      "id": "3804ece0-64ea-4dfa-be4d-d177249e7302",
+      "detail": "Shirley poppy — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Golden chamomile",
+      "id": "3874a632-a5f7-4c11-a678-fd9531accd1c",
+      "detail": "Golden chamomile — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Blue eryngo",
+      "id": "38c7c233-c4f4-40a3-acf2-71e993cb0bcc",
+      "detail": "Blue eryngo — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Katsura tree",
+      "id": "38d595c6-d2b3-4627-b4c4-40c6e22af265",
+      "detail": "Katsura tree — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Red-osier dogwood",
+      "id": "394dbc06-8d55-4365-af8a-f97de39f5897",
+      "detail": "Red-osier dogwood — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Spiny bear's-breeches",
+      "id": "396dd875-18ff-4c59-ad08-115234b14352",
+      "detail": "Spiny bear's-breeches — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Adriatic bellflower",
+      "id": "398e1503-fe3c-4214-9052-12071797ec61",
+      "detail": "Adriatic bellflower — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Broad-leaved thyme",
+      "id": "3a4b12dd-f8a1-49c1-a43b-1c8b43a1a3dc",
+      "detail": "Broad-leaved thyme — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H5",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Purple mullein",
+      "id": "3ae87e9a-e707-4eed-a6cd-1ddac46ce8eb",
+      "detail": "Purple mullein — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Chess-apple",
+      "id": "3bc3aca4-b22b-4b2d-a008-11dc5d2ec2a7",
+      "detail": "Chess-apple — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Early crocus",
+      "id": "3c934891-9364-4247-b59a-aee5f1b4fb86",
+      "detail": "Early crocus — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Mediterranean spurge",
+      "id": "3d1acd38-9f82-4ad4-940f-5a9276964a7e",
+      "detail": "Mediterranean spurge — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Cephalaria leucantha",
+      "id": "3d4ffdef-a2da-45df-b974-99dd89f70847",
+      "detail": "Cephalaria leucantha — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Fingerleaf rodgersia",
+      "id": "3da4177f-45ba-427b-af99-ccbc3ed0f5c3",
+      "detail": "Fingerleaf rodgersia — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "English holly",
+      "id": "3fdd51cc-f5c1-430f-a93c-6fb7b4400e1d",
+      "detail": "English holly — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Wild marjoram",
+      "id": "3ff01199-2c78-43ac-8c79-bec833d8134b",
+      "detail": "Wild marjoram — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Clematis armandii",
+      "id": "4048fc56-4367-4d54-9d48-f6960be7ef6e",
+      "detail": "Clematis armandii — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Biting stonecrop",
+      "id": "4058044c-e868-49a8-b510-6b92f8b37884",
+      "detail": "Biting stonecrop — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Royal fern",
+      "id": "40d4a355-87f5-443e-a64b-79c392834bd6",
+      "detail": "Royal fern — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Tansy",
+      "id": "41dfdb88-85a3-4f6c-955c-be24e420161d",
+      "detail": "Tansy — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H7",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: native_region",
+      "plant": "Sharp grass",
+      "id": "423d69ee-9a52-4009-9ea3-dfdbd3c6e5ff",
+      "detail": "Sharp grass — native_region rewritten though the round never seeded it",
+      "column": "native_region",
+      "before": [
+        "China",
+        "Eastern Asia",
+        "Indo-China"
+      ],
+      "after": [
+        "Arabian Peninsula",
+        "East Tropical Africa",
+        "Macaronesia",
+        "Northeast Tropical Africa",
+        "Northern Africa",
+        "South Tropical Africa",
+        "Southeastern Europe",
+        "Southern Africa",
+        "Southwestern Europe",
+        "West Tropical Africa",
+        "West-Central Tropical Africa",
+        "Western Asia",
+        "Western Indian Ocean"
+      ],
+      "why": "the 20 rows round 8's full-catalog regeneration rewrote, since validated against WCVP by cross-check-native-region.ts: 13 were already correct and 7 were corrected on July 28. The regeneration overreach itself is fixed upstream, where --round or --all is now required (§26)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Elder",
+      "id": "42bf09d2-bced-40fb-bb9f-d9f9cfa05196",
+      "detail": "Elder — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Verbascum olympicum",
+      "id": "432cf01f-974a-4d60-b828-50cb626982f3",
+      "detail": "Verbascum olympicum — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Chicory",
+      "id": "43d0cf3e-44dd-4964-9b73-9683c17640e7",
+      "detail": "Chicory — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H7",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Salad burnet",
+      "id": "4424bbb8-157a-4a05-b30f-452136122306",
+      "detail": "Salad burnet — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H7",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Dahlia",
+      "id": "44311783-076f-4147-a0ad-f4af78c84a13",
+      "detail": "Dahlia — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: native_region",
+      "plant": "Sweet-pea",
+      "id": "44593c4c-17ab-4f51-a5d4-c9bb4b766def",
+      "detail": "Sweet-pea — native_region rewritten though the round never seeded it",
+      "column": "native_region",
+      "before": [
+        "Northern Africa",
+        "Southeastern Europe",
+        "Southwestern Europe",
+        "Western Asia"
+      ],
+      "after": [
+        "Southeastern Europe"
+      ],
+      "why": "the 20 rows round 8's full-catalog regeneration rewrote, since validated against WCVP by cross-check-native-region.ts: 13 were already correct and 7 were corrected on July 28. The regeneration overreach itself is fixed upstream, where --round or --all is now required (§26)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Common periwinkle",
+      "id": "453ffe93-4eb0-48d4-90c6-a658aff15fee",
+      "detail": "Common periwinkle — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Southernwood",
+      "id": "455d645e-5870-41cc-b2ea-c34c04ecf318",
+      "detail": "Southernwood — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H5",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Pennyroyal",
+      "id": "46108fa2-1422-4e9c-aa43-b6cbd12c3d2e",
+      "detail": "Pennyroyal — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H5",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Pigeon's scabious",
+      "id": "46c9f0ce-b734-4189-9bbb-0ecc07097683",
+      "detail": "Pigeon's scabious — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Kumquat",
+      "id": "474501ab-bc67-41cc-a12d-91f07d4f046c",
+      "detail": "Kumquat — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H2",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Cape gooseberry",
+      "id": "475e9583-924e-4743-91e7-b982509010cc",
+      "detail": "Cape gooseberry — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H2",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Athyrium niponicum",
+      "id": "47771ab2-fd8c-4364-9149-cc55e83fe1af",
+      "detail": "Athyrium niponicum — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Tufted hairgrass",
+      "id": "48e1cce3-7a8d-4c89-a235-345c7360968b",
+      "detail": "Tufted hairgrass — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Fringecups",
+      "id": "499a10e0-c3ef-4142-a188-5d96006a56c2",
+      "detail": "Fringecups — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Common dogwood",
+      "id": "49ef8f32-deef-4859-bb9c-42afb65aabe9",
+      "detail": "Common dogwood — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Carthusian pink",
+      "id": "4a3ac314-6c66-4db3-9adb-3406866b9167",
+      "detail": "Carthusian pink — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Canary spurge",
+      "id": "4aa658ae-b95d-4640-bcd5-f4301a570f4f",
+      "detail": "Canary spurge — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Weigelia",
+      "id": "4b424daa-f782-49d9-88dd-f5c8fbc75b37",
+      "detail": "Weigelia — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Dahlia-flowered zinnia",
+      "id": "4b599dbe-f860-449f-9fa5-e7e838a4a077",
+      "detail": "Dahlia-flowered zinnia — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Indian-rhubarb",
+      "id": "4b739a61-baed-423c-bc2d-3ca123a60924",
+      "detail": "Indian-rhubarb — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Chinese meadow-rue",
+      "id": "4db620e0-2af7-4b88-86ec-d2fd4ae6dfdd",
+      "detail": "Chinese meadow-rue — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Lilac sage",
+      "id": "4e8944e5-753c-4def-b595-09c80f91a83f",
+      "detail": "Lilac sage — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: native_region",
+      "plant": "Lady's bedstraw",
+      "id": "4ef8e07d-a5a5-40e7-839b-e2000223ed6d",
+      "detail": "Lady's bedstraw — native_region rewritten though the round never seeded it",
+      "column": "native_region",
+      "before": [
+        "Arabian Peninsula",
+        "Caucasus",
+        "China",
+        "Eastern Asia",
+        "Eastern Europe",
+        "Indian Subcontinent",
+        "Indo-China",
+        "Middle Asia",
+        "Middle Europe",
+        "Mongolia",
+        "Northern Africa",
+        "Northern Europe",
+        "Russian Far East",
+        "Siberia",
+        "Southeastern Europe",
+        "Southwestern Europe",
+        "Western Asia"
+      ],
+      "after": [
+        "Caucasus",
+        "China",
+        "Eastern Asia",
+        "Eastern Europe",
+        "Indian Subcontinent",
+        "Middle Asia",
+        "Middle Europe",
+        "Mongolia",
+        "Northern Africa",
+        "Northern Europe",
+        "Russian Far East",
+        "Siberia",
+        "Southeastern Europe",
+        "Southwestern Europe",
+        "Western Asia"
+      ],
+      "why": "the 20 rows round 8's full-catalog regeneration rewrote, since validated against WCVP by cross-check-native-region.ts: 13 were already correct and 7 were corrected on July 28. The regeneration overreach itself is fixed upstream, where --round or --all is now required (§26)."
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Lady's bedstraw",
+      "id": "4ef8e07d-a5a5-40e7-839b-e2000223ed6d",
+      "detail": "Lady's bedstraw — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H7",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "California-poppy",
+      "id": "50f9e963-010f-4ae7-a042-4f49547ff918",
+      "detail": "California-poppy — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Pulsatilla montana",
+      "id": "5297a190-04f3-4407-a769-ba8d0787240f",
+      "detail": "Pulsatilla montana — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Blackcurrant",
+      "id": "53187fa7-6701-447f-971e-08fb767f9c9d",
+      "detail": "Blackcurrant — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H7",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Ball-head onion",
+      "id": "5335f275-a50c-4977-ad75-7c52f40be4d8",
+      "detail": "Ball-head onion — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Elecampane",
+      "id": "53611b76-ea49-4389-9909-c177dd5f808b",
+      "detail": "Elecampane — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Turk's-cap",
+      "id": "54525b0f-ba31-4690-abc7-d1d0154d1be0",
+      "detail": "Turk's-cap — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Falling stars",
+      "id": "5452d8d1-8a7b-43bc-a71a-6fa7f0103c9d",
+      "detail": "Falling stars — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Creeping-forget-me-not",
+      "id": "5508c172-a0c8-412a-a1e5-b2934d73a6a9",
+      "detail": "Creeping-forget-me-not — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Upright myrtle spurge",
+      "id": "55fa362c-c663-4210-abbb-ad8eacd736a4",
+      "detail": "Upright myrtle spurge — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Garden star-of-bethlehem",
+      "id": "568d9630-25e9-4b4b-968f-7adf157c6399",
+      "detail": "Garden star-of-bethlehem — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Brazilian passionflower",
+      "id": "569da4fc-e155-4102-a85e-8cfc6793900c",
+      "detail": "Brazilian passionflower — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Hylotelephium telephium",
+      "id": "56e80b43-795e-4e20-9a46-89b2fceda862",
+      "detail": "Hylotelephium telephium — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Savory",
+      "id": "575738f0-8718-4596-9ca1-309f5b44b7d1",
+      "detail": "Savory — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Large-flower orlaya",
+      "id": "575ddb2b-23e4-49f6-9b8f-109a63e1b5ad",
+      "detail": "Large-flower orlaya — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: common_name",
+      "plant": "American wood anemone",
+      "id": "578a6525-9258-46b8-80b3-b48b4b6fc6cc",
+      "detail": "American wood anemone — common_name rewritten though the round never seeded it",
+      "column": "common_name",
+      "before": "Wood anemone",
+      "after": "American wood anemone",
+      "why": "self-inflicted by this round: seeding Anemonoides nemorosa and naming it 'Wood anemone' collided with this pre-existing row, so the American species took the qualifier. scripts/fix-round8-names.ts records it."
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: native_region",
+      "plant": "American wood anemone",
+      "id": "578a6525-9258-46b8-80b3-b48b4b6fc6cc",
+      "detail": "American wood anemone — native_region rewritten though the round never seeded it",
+      "column": "native_region",
+      "before": [
+        "Eastern Canada",
+        "Northeastern U.S.A.",
+        "Southeastern U.S.A."
+      ],
+      "after": [
+        "Eastern Canada",
+        "North-Central U.S.A.",
+        "Northeastern U.S.A.",
+        "Southeastern U.S.A.",
+        "Western Canada"
+      ],
+      "why": "the 20 rows round 8's full-catalog regeneration rewrote, since validated against WCVP by cross-check-native-region.ts: 13 were already correct and 7 were corrected on July 28. The regeneration overreach itself is fixed upstream, where --round or --all is now required (§26)."
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Rocoto",
+      "id": "57a3aa6d-ad41-4b03-a0d7-faafaa764d5c",
+      "detail": "Rocoto — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H1c",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Burningbush",
+      "id": "588f765b-0da7-4dac-8692-f056fd47a409",
+      "detail": "Burningbush — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Fennel",
+      "id": "59fbcc74-aef7-4cf5-8b0a-6fcd78bc2445",
+      "detail": "Fennel — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Barrenwort",
+      "id": "5a4a5f23-0fa8-45dd-b73f-9a9d4225c433",
+      "detail": "Barrenwort — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Dogtooth-violet",
+      "id": "5a535570-caa0-4ce2-86fa-901422a4e340",
+      "detail": "Dogtooth-violet — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Cherry-laurel",
+      "id": "5b778e61-f4f2-474d-9028-50e6042c62c8",
+      "detail": "Cherry-laurel — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Gooseberry",
+      "id": "5bf82728-2115-4792-a7e1-fb34f1a45060",
+      "detail": "Gooseberry — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H7",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Common snowdrop",
+      "id": "5c6ffee9-58b9-4d39-bfef-49b9b776f6ac",
+      "detail": "Common snowdrop — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Maidenhair spleenwort",
+      "id": "5cbf11ed-6d28-4615-b5c2-1cd50df427c3",
+      "detail": "Maidenhair spleenwort — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Stipa gigantea",
+      "id": "5e27fdb3-4366-4158-b405-b64c5bd2a84f",
+      "detail": "Stipa gigantea — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "New zealand flax",
+      "id": "5ec57f8c-1269-4220-9200-95c637d20d77",
+      "detail": "New zealand flax — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Garden solomon's-seal",
+      "id": "5f136573-96a4-4a9f-91a3-54d082ef8829",
+      "detail": "Garden solomon's-seal — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Blue giant-hyssop",
+      "id": "6015c402-8e4a-49b7-a121-698c36c030bd",
+      "detail": "Blue giant-hyssop — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "German iris",
+      "id": "613d5685-3b60-4c03-afbb-445746f9c5cf",
+      "detail": "German iris — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Bloody crane's-bill",
+      "id": "61650ff0-9cc3-4ba7-86fd-a90240b784fe",
+      "detail": "Bloody crane's-bill — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Edgeworthia chrysantha",
+      "id": "61d56fbc-8571-49e6-ad6a-3fb1387b7cb5",
+      "detail": "Edgeworthia chrysantha — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Common hop",
+      "id": "622474f3-5515-408d-930d-ff34a460dad7",
+      "detail": "Common hop — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Paperbark maple",
+      "id": "62354e25-2d40-49b9-87f6-da817b32d8a7",
+      "detail": "Paperbark maple — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Netted iris",
+      "id": "6261df46-79d0-470f-9f78-2378523b6b09",
+      "detail": "Netted iris — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Woodland sage",
+      "id": "62a5994c-420e-441d-80bd-b61e488cfd4b",
+      "detail": "Woodland sage — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: native_region",
+      "plant": "Wild clary",
+      "id": "634ac422-3f23-4d96-a55b-54c203d83f21",
+      "detail": "Wild clary — native_region rewritten though the round never seeded it",
+      "column": "native_region",
+      "before": [
+        "Northern Africa",
+        "Southeastern Europe",
+        "Southwestern Europe",
+        "Western Asia"
+      ],
+      "after": [
+        "Caucasus",
+        "Eastern Europe",
+        "Middle Asia",
+        "Northern Africa",
+        "Southeastern Europe",
+        "Southwestern Europe",
+        "Western Asia"
+      ],
+      "why": "the 20 rows round 8's full-catalog regeneration rewrote, since validated against WCVP by cross-check-native-region.ts: 13 were already correct and 7 were corrected on July 28. The regeneration overreach itself is fixed upstream, where --round or --all is now required (§26)."
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Wild clary",
+      "id": "634ac422-3f23-4d96-a55b-54c203d83f21",
+      "detail": "Wild clary — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H4",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Manna",
+      "id": "639e03e8-c1a6-4c61-9fda-3f9ed3cb6027",
+      "detail": "Manna — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Hyacinth",
+      "id": "639e36f1-210a-4369-af4f-5071240a33a5",
+      "detail": "Hyacinth — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Buttercup winter-hazel",
+      "id": "63d0a6ce-1661-4a1f-98ae-53068a73935d",
+      "detail": "Buttercup winter-hazel — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Japanese flowering dogwood",
+      "id": "63dc6184-2607-474d-beda-8cf8e316fd1f",
+      "detail": "Japanese flowering dogwood — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Everlasting-pea",
+      "id": "63e7315f-2a38-4c32-b3bb-bc68fc0d8276",
+      "detail": "Everlasting-pea — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Marsh daisy",
+      "id": "641b97ed-1618-49a0-aaae-4208d3b2a02f",
+      "detail": "Marsh daisy — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Hubricht's bluestar",
+      "id": "64cc20fd-793d-4fc4-ae14-40b3ed6d9839",
+      "detail": "Hubricht's bluestar — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: native_region",
+      "plant": "Lemon",
+      "id": "64e1a536-3aea-4213-8d0e-194c9d97162e",
+      "detail": "Lemon — native_region rewritten though the round never seeded it",
+      "column": "native_region",
+      "before": [
+        "Arabian Peninsula",
+        "China",
+        "Indian Subcontinent",
+        "Indo-China",
+        "Malesia",
+        "Western Asia"
+      ],
+      "after": [],
+      "why": "the 20 rows round 8's full-catalog regeneration rewrote, since validated against WCVP by cross-check-native-region.ts: 13 were already correct and 7 were corrected on July 28. The regeneration overreach itself is fixed upstream, where --round or --all is now required (§26)."
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Lemon",
+      "id": "64e1a536-3aea-4213-8d0e-194c9d97162e",
+      "detail": "Lemon — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H1c",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Redleaf rose",
+      "id": "64e3a9ed-7e9e-481e-9e5b-97f0957b028c",
+      "detail": "Redleaf rose — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Iceplant",
+      "id": "65788e1b-aaea-4041-9e87-4b640fa9839c",
+      "detail": "Iceplant — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Tabasco pepper",
+      "id": "6588e09f-2cbf-4819-88f9-caa38c4a6a40",
+      "detail": "Tabasco pepper — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H1b",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Flax",
+      "id": "6597910a-ad7c-4051-baaa-df496e04c1fe",
+      "detail": "Flax — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Blue fescue",
+      "id": "65b7ea9f-ff94-4ec4-bf01-d61372cf8bc9",
+      "detail": "Blue fescue — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "White stonecrop",
+      "id": "663dde0f-67ad-4ef1-8d20-473ea00e9b97",
+      "detail": "White stonecrop — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Early stachyurus",
+      "id": "66d3bd09-e3ec-4ea4-834c-696def0a4a2d",
+      "detail": "Early stachyurus — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "St. bernard’s lily",
+      "id": "66fdc6be-34bf-434e-a7cf-1be1472d4745",
+      "detail": "St. bernard’s lily — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Cistus purpureus",
+      "id": "67469754-ff62-4c22-a0e0-023f207089ef",
+      "detail": "Cistus purpureus — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Judastree",
+      "id": "67680923-5cd9-4087-8188-c7605c9e3bbc",
+      "detail": "Judastree — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Red campion",
+      "id": "678180b5-8bff-424f-a7e1-c3045c3b68e6",
+      "detail": "Red campion — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Alpine strawberry",
+      "id": "67867676-da42-4b3d-b16d-7ece3a80408d",
+      "detail": "Alpine strawberry — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H7",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Foxtail barley",
+      "id": "67b232b2-70a3-44d6-b7cb-08d98df75b37",
+      "detail": "Foxtail barley — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Sevenbark",
+      "id": "67de5ea0-b6c0-4bc7-93c7-bf60f1d78341",
+      "detail": "Sevenbark — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Balm",
+      "id": "68c8f8d3-9adf-4d56-b88c-c3fc7c6d3d5a",
+      "detail": "Balm — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Mealytree",
+      "id": "68f0e532-a026-477c-ab0a-dfe09b85eb2b",
+      "detail": "Mealytree — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Wood spurge",
+      "id": "69778467-89e5-4dd8-b108-d3cb00761109",
+      "detail": "Wood spurge — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Myrtle",
+      "id": "6aea46f7-277b-4f7b-9c91-55ad3dbe9e03",
+      "detail": "Myrtle — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Chasteberry",
+      "id": "6b056631-5c7d-4fd0-bdad-9b0b41557442",
+      "detail": "Chasteberry — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Mezereon",
+      "id": "6c4e8d9a-2063-41e1-8d3b-0b5055fe36ae",
+      "detail": "Mezereon — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Olive",
+      "id": "6c753826-84aa-4af9-9668-4f71e272edb1",
+      "detail": "Olive — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Himalayan clematis",
+      "id": "6c9f3d6b-290c-4866-b686-b8292e76c0c9",
+      "detail": "Himalayan clematis — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Culver's-root",
+      "id": "6dff513c-27bd-47d2-b514-a89aedf3b6aa",
+      "detail": "Culver's-root — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Foxglove",
+      "id": "6e20ffb3-fd37-42e5-8862-b743a846b1ce",
+      "detail": "Foxglove — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Glory-of-the-snow",
+      "id": "6e26aa15-f8f8-4918-89bf-b745e9f88bef",
+      "detail": "Glory-of-the-snow — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Solomon's-plume",
+      "id": "6e6e511b-1bb1-4ec6-bb54-18a808b62a98",
+      "detail": "Solomon's-plume — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: native_region",
+      "plant": "Summer savory",
+      "id": "6ec8cc94-1670-4406-bd3d-847ff437b634",
+      "detail": "Summer savory — native_region rewritten though the round never seeded it",
+      "column": "native_region",
+      "before": [
+        "Northern Africa",
+        "Southeastern Europe",
+        "Southwestern Europe",
+        "Western Asia"
+      ],
+      "after": [
+        "Caucasus",
+        "Eastern Europe",
+        "Middle Asia",
+        "Southeastern Europe",
+        "Western Asia"
+      ],
+      "why": "the 20 rows round 8's full-catalog regeneration rewrote, since validated against WCVP by cross-check-native-region.ts: 13 were already correct and 7 were corrected on July 28. The regeneration overreach itself is fixed upstream, where --round or --all is now required (§26)."
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Summer savory",
+      "id": "6ec8cc94-1670-4406-bd3d-847ff437b634",
+      "detail": "Summer savory — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H4",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Genet",
+      "id": "6f079aa9-5340-4958-8e35-1c61875347a1",
+      "detail": "Genet — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Silk-tassel",
+      "id": "6fd94992-9cfe-425e-b957-9e896d3958c6",
+      "detail": "Silk-tassel — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Irish strawberry-tree",
+      "id": "6fe0bf15-9e14-4726-adfa-236e789a64e3",
+      "detail": "Irish strawberry-tree — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Goat's-beard",
+      "id": "6ffb4f45-049e-424c-904f-680169e192f7",
+      "detail": "Goat's-beard — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Minorca honeysuckle",
+      "id": "707f734a-042d-49a4-b6d4-def4433a7239",
+      "detail": "Minorca honeysuckle — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Oxeye daisy",
+      "id": "71b64f02-84af-46fd-9cb4-9b19c905db74",
+      "detail": "Oxeye daisy — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Sweet iris",
+      "id": "71babd0a-8139-4715-bfbd-1eb5f40bf1f7",
+      "detail": "Sweet iris — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Cyprus-turpentine",
+      "id": "71f3874f-0a43-4c4e-ac4a-625713bd368c",
+      "detail": "Cyprus-turpentine — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Tawhiwhi",
+      "id": "71fcef6f-1cb6-45bd-affc-4e501bb1a731",
+      "detail": "Tawhiwhi — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Holy basil",
+      "id": "72a64ce0-ce0b-47dc-b493-be4e8176d4a0",
+      "detail": "Holy basil — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H1b",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Lemon verbena",
+      "id": "73f60acf-e88e-4d2c-982d-251c7dc2402d",
+      "detail": "Lemon verbena — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H3",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: native_region",
+      "plant": "White-leaf rock-rose",
+      "id": "7446ac5e-a786-4857-95f4-e6b6c1341478",
+      "detail": "White-leaf rock-rose — native_region rewritten though the round never seeded it",
+      "column": "native_region",
+      "before": [
+        "Northern Africa",
+        "Southwestern Europe"
+      ],
+      "after": [
+        "Northern Africa",
+        "Southeastern Europe",
+        "Southwestern Europe"
+      ],
+      "why": "the 20 rows round 8's full-catalog regeneration rewrote, since validated against WCVP by cross-check-native-region.ts: 13 were already correct and 7 were corrected on July 28. The regeneration overreach itself is fixed upstream, where --round or --all is now required (§26)."
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Raspberry",
+      "id": "745c0584-0f27-4dec-b131-e58f7f9d6d61",
+      "detail": "Raspberry — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H7",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Oenothera lindheimeri",
+      "id": "74c97e12-c7ca-4226-8fc6-966b426e0fc2",
+      "detail": "Oenothera lindheimeri — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Soft shield-fern",
+      "id": "7633096a-6cd9-4f67-aa7f-bb3001636151",
+      "detail": "Soft shield-fern — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Etruscan honeysuckle",
+      "id": "76721579-d4eb-409e-9c9d-2179f5e73748",
+      "detail": "Etruscan honeysuckle — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Spotted Joe-Pye weed",
+      "id": "771ef385-11d2-4080-ad19-cf612b17e38c",
+      "detail": "Spotted Joe-Pye weed — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Cornelian-cherry",
+      "id": "77d576dc-b98d-40af-b96b-7f943a4cae08",
+      "detail": "Cornelian-cherry — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Sowbread",
+      "id": "785a0e4d-94d6-481c-a718-8fc95d0c57f5",
+      "detail": "Sowbread — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Knotted crane's-bill",
+      "id": "786b546b-6afd-4b49-95e0-d466df86d52b",
+      "detail": "Knotted crane's-bill — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Lavender cotton",
+      "id": "78925fff-cb08-4ca5-b289-08bf37b65ac6",
+      "detail": "Lavender cotton — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Greater honeywort",
+      "id": "7962b870-2159-4f30-8a4e-261fd6c8d2bf",
+      "detail": "Greater honeywort — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Feverfew",
+      "id": "7998098a-6cbe-4ee3-8b5b-60efe2f4f37e",
+      "detail": "Feverfew — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H5",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Cotton thistle",
+      "id": "7a03aad9-9a9e-4c43-b892-a7e24646f7d2",
+      "detail": "Cotton thistle — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Algerian iris",
+      "id": "7a7c8423-3e82-4362-9738-54a8a4be111f",
+      "detail": "Algerian iris — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Northern maidenhair",
+      "id": "7bec09d9-8805-4118-b0f9-c43a350169cf",
+      "detail": "Northern maidenhair — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Adria bellflower",
+      "id": "7c176431-b727-4e3c-b324-a3eb622d24bd",
+      "detail": "Adria bellflower — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Podophyllum hexandrum",
+      "id": "7c22e64f-6975-40ae-85e6-30b4f58971bc",
+      "detail": "Podophyllum hexandrum — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "German chamomile",
+      "id": "7c80807d-beb3-4730-9d6f-724867b4e3cd",
+      "detail": "German chamomile — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H5",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "River-lily",
+      "id": "7cb3f611-4fbe-446e-9567-6a1c897d34b7",
+      "detail": "River-lily — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Chives",
+      "id": "7d360706-5224-494f-a069-1700c250b1b3",
+      "detail": "Chives — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H7",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Perennial quaking grass",
+      "id": "7d5a09a7-67ec-471b-8345-f846dde6dead",
+      "detail": "Perennial quaking grass — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Ginkgo",
+      "id": "7e25882f-a8a1-4cf1-bef2-6621b15a0f79",
+      "detail": "Ginkgo — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Giant snowdrop",
+      "id": "7ee8945d-e9b7-41e6-80b8-d8cf838f69b7",
+      "detail": "Giant snowdrop — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Garlic chives",
+      "id": "7f21b857-365a-4504-8ef0-1f76879a821b",
+      "detail": "Garlic chives — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H5",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Sweet alison",
+      "id": "7f21c95b-fb73-40a0-b8bf-ad87795ab900",
+      "detail": "Sweet alison — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Roman chamomile",
+      "id": "7f237ac3-1b90-4954-9e71-331b2e4d3c6c",
+      "detail": "Roman chamomile — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H5",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Wild tulip",
+      "id": "7f3828d5-8b1e-4ef9-afb4-434fb4422ce7",
+      "detail": "Wild tulip — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Big blue lilyturf",
+      "id": "7f3a484d-e41e-40db-a05f-ae76ea7be5de",
+      "detail": "Big blue lilyturf — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Shrubby germander",
+      "id": "8012ea41-a72f-4777-a55e-2661e75814f5",
+      "detail": "Shrubby germander — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Hairless catmint",
+      "id": "814c8a67-ab38-47b5-8a21-b879cb0c6b3d",
+      "detail": "Hairless catmint — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Maiden pink",
+      "id": "822ad657-f123-4d7e-a217-7e85cedb4ef1",
+      "detail": "Maiden pink — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Blue echium",
+      "id": "824be0b9-2f28-461f-b414-f3f8725eda3d",
+      "detail": "Blue echium — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Japanese fatsia",
+      "id": "843cd1e1-ceaa-4fea-98b9-20d051b45ac7",
+      "detail": "Japanese fatsia — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Spotted henbit",
+      "id": "84faa0f4-e816-4273-974e-5e6fa6e07df4",
+      "detail": "Spotted henbit — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Cabbage coneflower",
+      "id": "856e1349-69d5-4de3-a2e7-a4c5ac946a56",
+      "detail": "Cabbage coneflower — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "White-forsythia",
+      "id": "869ff6d9-e125-49ad-9574-da42d9d4cc65",
+      "detail": "White-forsythia — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Hosta sieboldiana",
+      "id": "86d65bb6-d03e-4671-8e0d-b8c4080a5637",
+      "detail": "Hosta sieboldiana — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Boston-ivy",
+      "id": "8703fa1f-4e15-4cf0-b180-ab3efe7c0689",
+      "detail": "Boston-ivy — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Winter heath",
+      "id": "879105a3-f762-4f61-ba77-99a9aec035fa",
+      "detail": "Winter heath — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Shrubby scorpion-vetch",
+      "id": "882a31a6-003c-48de-a276-6f5034375b1d",
+      "detail": "Shrubby scorpion-vetch — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Honesty",
+      "id": "88ac95fd-58b9-4c87-8582-7433517db135",
+      "detail": "Honesty — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Cobweb house-leek",
+      "id": "8924c677-e17a-4feb-ae50-7c46298b03a2",
+      "detail": "Cobweb house-leek — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Littleleaf boxwood",
+      "id": "8940b574-d4d2-4791-9459-e258857a93f2",
+      "detail": "Littleleaf boxwood — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Yellow coneflower",
+      "id": "8b72dd3f-7528-4091-9e17-7528c60f88cc",
+      "detail": "Yellow coneflower — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Bellwort",
+      "id": "8c056523-9234-4aa1-b76d-5a7e7cbe06f3",
+      "detail": "Bellwort — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Berberis japonica",
+      "id": "8c388188-82a2-4a98-9c17-7752f6753524",
+      "detail": "Berberis japonica — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Red bistort",
+      "id": "8cf4af92-6be4-47f9-82be-66b4414d3f70",
+      "detail": "Red bistort — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Absinthe",
+      "id": "8d8e99e0-5863-4f54-a78f-42c4110fe52f",
+      "detail": "Absinthe — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Costmary",
+      "id": "8dedc30b-cc7c-4324-8fc0-0c33c5e61e98",
+      "detail": "Costmary — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H5",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Sarcococca confusa",
+      "id": "8e216227-fd5d-41ee-a54c-3115501a5a91",
+      "detail": "Sarcococca confusa — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Sweet basil",
+      "id": "8e690d97-e9d5-493d-a4d1-9e2c0012b99c",
+      "detail": "Sweet basil — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H1c",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Caucasian boxwood",
+      "id": "8ee2f219-aecb-4d59-a53f-4cab40b0ed3d",
+      "detail": "Caucasian boxwood — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Garden lady's-mantle",
+      "id": "8f4ad665-8412-4954-a184-961d37e5fb66",
+      "detail": "Garden lady's-mantle — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Shieldleaf rodgersia",
+      "id": "8f515d5f-4617-4b61-8545-21415cd0b6ae",
+      "detail": "Shieldleaf rodgersia — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Shiso",
+      "id": "90f3bd55-b0e7-4dc0-b7a4-26f821a0a3e5",
+      "detail": "Shiso — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H2",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Alpine squill",
+      "id": "91233ba8-65c7-444b-8829-093ca990dbd0",
+      "detail": "Alpine squill — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Houseleek",
+      "id": "93b5b83a-c5d7-4845-8635-baf981d3810f",
+      "detail": "Houseleek — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Rue",
+      "id": "93c77a65-fd32-44d6-8b51-9a07c9ce9127",
+      "detail": "Rue — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Bulgarian columbine",
+      "id": "945d8d9d-d454-43ec-b03c-f52ae92abbd4",
+      "detail": "Bulgarian columbine — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: common_name",
+      "plant": "Southern grape hyacinth",
+      "id": "9593210e-974a-413d-8191-7ffb0800b181",
+      "detail": "Southern grape hyacinth — common_name rewritten though the round never seeded it",
+      "column": "common_name",
+      "before": "Grape-hyacinth",
+      "after": "Southern grape hyacinth",
+      "why": "pre-existing collision between Muscari botryoides and M. neglectum, both named 'Grape-hyacinth' since July 12. Not caused by this round; fixed by scripts/fix-round8-names.ts while the name pass was already running."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Ostrich fern",
+      "id": "9655496e-7ffb-4b1e-823c-9403f5861c2b",
+      "detail": "Ostrich fern — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Bear's-breeches",
+      "id": "971c650a-d4a6-4733-a335-8334eaaee9f7",
+      "detail": "Bear's-breeches — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Chervil",
+      "id": "97737ab1-c2a4-44a6-bfad-ed70d0743c64",
+      "detail": "Chervil — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H5",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Ciliate melic",
+      "id": "97bc53ca-5dba-4789-b020-28acf4447096",
+      "detail": "Ciliate melic — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Daphne bholua",
+      "id": "98066fac-44d0-4a3b-bbed-e72d94e74083",
+      "detail": "Daphne bholua — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Rusty foxglove",
+      "id": "984e7da2-c0ad-487b-b6ed-305c64eeac54",
+      "detail": "Rusty foxglove — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Globe thistle",
+      "id": "9a0b4fdd-76bb-44be-9633-102f87d3c9ee",
+      "detail": "Globe thistle — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Dill",
+      "id": "9a83ece8-50d9-457e-87eb-13b7d626043f",
+      "detail": "Dill — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H3",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Forsythia",
+      "id": "9b2f9ecd-b0d5-4670-9614-d99d4736aa55",
+      "detail": "Forsythia — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Common juniper",
+      "id": "9c87a716-a54d-4c88-93e8-bc7ae13f2304",
+      "detail": "Common juniper — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Serviceberry",
+      "id": "9cfa9047-b9e3-46c6-bc28-1d8afb6fab14",
+      "detail": "Serviceberry — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Crimson gloryvine",
+      "id": "9e1c270b-121c-4dd9-a820-7743d662dc46",
+      "detail": "Crimson gloryvine — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Lamb's-ear",
+      "id": "9e4e6fec-a7fb-496e-8f29-ee2da20e5c6f",
+      "detail": "Lamb's-ear — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Ballota pseudodictamnus",
+      "id": "9ee309ed-35b6-497d-bb49-c2478488f340",
+      "detail": "Ballota pseudodictamnus — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Hortensia",
+      "id": "9ee9f066-13d8-496f-9d89-7ea80a4caa24",
+      "detail": "Hortensia — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Toadlily",
+      "id": "9f96d820-84ee-458c-9df3-becb2eb1ee90",
+      "detail": "Toadlily — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Convolvulus cneorum",
+      "id": "9fca41a5-543f-42e2-beb0-34a79c737a0f",
+      "detail": "Convolvulus cneorum — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: native_region",
+      "plant": "Biquinho pepper",
+      "id": "9fe98215-8beb-4fc1-a1d5-715dcbfd3473",
+      "detail": "Biquinho pepper — native_region rewritten though the round never seeded it",
+      "column": "native_region",
+      "before": [
+        "Brazil",
+        "Central America",
+        "Northern South America",
+        "Southern South America",
+        "Western South America"
+      ],
+      "after": [
+        "Brazil",
+        "Northern South America"
+      ],
+      "why": "the 20 rows round 8's full-catalog regeneration rewrote, since validated against WCVP by cross-check-native-region.ts: 13 were already correct and 7 were corrected on July 28. The regeneration overreach itself is fixed upstream, where --round or --all is now required (§26)."
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Biquinho pepper",
+      "id": "9fe98215-8beb-4fc1-a1d5-715dcbfd3473",
+      "detail": "Biquinho pepper — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H1c",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Hungarian rose",
+      "id": "a0eb10e6-0242-4f77-9647-45df667c3415",
+      "detail": "Hungarian rose — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Lily-of-the-valley",
+      "id": "a16ac1ef-c4a1-4b5e-80a4-2a22cff5491c",
+      "detail": "Lily-of-the-valley — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Curryplant",
+      "id": "a25cbeab-51a5-4fdb-b95b-ba04fb8e11ea",
+      "detail": "Curryplant — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Heartsease",
+      "id": "a267cd01-a603-409b-8604-1b48f7b8a9cf",
+      "detail": "Heartsease — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H7",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Feather reed grass",
+      "id": "a2b7bc15-c7e9-4911-9806-d4c5d07fe90b",
+      "detail": "Feather reed grass — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Common sword fern",
+      "id": "a342c875-b0aa-4932-80ef-cc743e97b6a6",
+      "detail": "Common sword fern — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: native_region",
+      "plant": "Wood millet",
+      "id": "a39ac5e3-a00f-48fa-b55e-bfac66b448b9",
+      "detail": "Wood millet — native_region rewritten though the round never seeded it",
+      "column": "native_region",
+      "before": [
+        "Caucasus",
+        "China",
+        "Eastern Asia",
+        "Eastern Europe",
+        "Middle Asia",
+        "Middle Europe",
+        "Mongolia",
+        "Northern Europe",
+        "Russian Far East",
+        "Siberia",
+        "Southeastern Europe",
+        "Southwestern Europe",
+        "Western Asia"
+      ],
+      "after": [
+        "Caucasus",
+        "China",
+        "Eastern Asia",
+        "Eastern Canada",
+        "Eastern Europe",
+        "Indian Subcontinent",
+        "Middle Asia",
+        "Middle Europe",
+        "Mongolia",
+        "North-Central U.S.A.",
+        "Northeastern U.S.A.",
+        "Northern Europe",
+        "Russian Far East",
+        "Siberia",
+        "Southeastern Europe",
+        "Southeastern U.S.A.",
+        "Southwestern Europe",
+        "Western Asia",
+        "Western Canada"
+      ],
+      "why": "the 20 rows round 8's full-catalog regeneration rewrote, since validated against WCVP by cross-check-native-region.ts: 13 were already correct and 7 were corrected on July 28. The regeneration overreach itself is fixed upstream, where --round or --all is now required (§26)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Koeleria glauca",
+      "id": "a3e42f6d-dd13-40e5-8d92-2caf7f97c081",
+      "detail": "Koeleria glauca — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Miscanthus",
+      "id": "a5b27db4-daf8-4d1a-b8eb-6bc0ac7d3e0a",
+      "detail": "Miscanthus — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: native_region",
+      "plant": "Spearmint",
+      "id": "a66aed4c-5a57-45b5-bbca-3025d3ee6a85",
+      "detail": "Spearmint — native_region rewritten though the round never seeded it",
+      "column": "native_region",
+      "before": [
+        "Eastern Europe",
+        "Middle Europe",
+        "Northern Europe",
+        "Southeastern Europe",
+        "Southwestern Europe",
+        "Western Asia"
+      ],
+      "after": [
+        "Caucasus",
+        "China",
+        "Eastern Europe",
+        "Indian Subcontinent",
+        "Middle Asia",
+        "Middle Europe",
+        "Northern Africa",
+        "Northern Europe",
+        "Southeastern Europe",
+        "Southwestern Europe",
+        "Western Asia"
+      ],
+      "why": "the 20 rows round 8's full-catalog regeneration rewrote, since validated against WCVP by cross-check-native-region.ts: 13 were already correct and 7 were corrected on July 28. The regeneration overreach itself is fixed upstream, where --round or --all is now required (§26)."
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Spearmint",
+      "id": "a66aed4c-5a57-45b5-bbca-3025d3ee6a85",
+      "detail": "Spearmint — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H5",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Argentine needlegrass",
+      "id": "a67f0e4b-9f78-4230-8023-3d4faa21ad9a",
+      "detail": "Argentine needlegrass — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Society garlic",
+      "id": "a6aab135-00d2-4ed2-b649-f40909c2a027",
+      "detail": "Society garlic — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Hart's-tongue fern",
+      "id": "a78feb53-8be5-42db-8e91-d7a59157e10f",
+      "detail": "Hart's-tongue fern — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Bladder-senna",
+      "id": "a7b9e5b7-4ce3-43c5-bc1a-7862d6fef558",
+      "detail": "Bladder-senna — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Black-eyed-susan",
+      "id": "a7f6f5ee-3e9b-4c52-8ed3-fdbcadb15b91",
+      "detail": "Black-eyed-susan — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Rock crane's-bill",
+      "id": "a85aee17-33db-4e70-aa8f-92a38f3138ea",
+      "detail": "Rock crane's-bill — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Cyclamen",
+      "id": "a946c991-bf36-435a-8de1-4aa0dc582161",
+      "detail": "Cyclamen — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Primrose",
+      "id": "aa20f336-813d-49d0-b057-8c6ea8f2f7bf",
+      "detail": "Primrose — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: native_region",
+      "plant": "Snapdragon",
+      "id": "aabfdaca-5e4e-471a-8537-ad7f3ec4b114",
+      "detail": "Snapdragon — native_region rewritten though the round never seeded it",
+      "column": "native_region",
+      "before": [
+        "Northern Africa",
+        "Southeastern Europe",
+        "Southwestern Europe",
+        "Western Asia"
+      ],
+      "after": [
+        "Southwestern Europe"
+      ],
+      "why": "the 20 rows round 8's full-catalog regeneration rewrote, since validated against WCVP by cross-check-native-region.ts: 13 were already correct and 7 were corrected on July 28. The regeneration overreach itself is fixed upstream, where --round or --all is now required (§26)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Coral peony",
+      "id": "ab93201d-b565-4042-9c14-df9357ebfa0b",
+      "detail": "Coral peony — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Hakone grass",
+      "id": "ac0ff49f-bde4-4d73-9707-c32c9351e13f",
+      "detail": "Hakone grass — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Garden violet",
+      "id": "ac71866d-8540-41c8-baf1-a5f45ae83de9",
+      "detail": "Garden violet — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Aubretia",
+      "id": "ad776b04-a688-480f-af36-e99cd20801f3",
+      "detail": "Aubretia — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Centaurea cyanus",
+      "id": "adc07540-8cda-4e31-9a89-4cc07d98de28",
+      "detail": "Centaurea cyanus — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Hard shield-fern",
+      "id": "ae7c73d6-dec0-4c0b-880e-47bc0718d08d",
+      "detail": "Hard shield-fern — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Spring crocus",
+      "id": "ae90d794-b36b-4747-92fd-9eb8743d680b",
+      "detail": "Spring crocus — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Moonshine yarrow",
+      "id": "afceedfd-492a-4c2f-bf99-54fa59808ec0",
+      "detail": "Moonshine yarrow — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Sweet mock orange",
+      "id": "b0be5794-20ee-4466-a63e-c6af75fe9e38",
+      "detail": "Sweet mock orange — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Parsley",
+      "id": "b1083388-35dc-4cd6-a8a2-e01518789e09",
+      "detail": "Parsley — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H4",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Prairie dropseed",
+      "id": "b19556c0-82ab-4124-a51c-1005a6b590e1",
+      "detail": "Prairie dropseed — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Asarabacca",
+      "id": "b287e2a2-54d0-4d3c-bdd7-d239ed54e527",
+      "detail": "Asarabacca — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Astelia chathamica",
+      "id": "b353f0e3-e83a-4444-ad2f-7319546a440e",
+      "detail": "Astelia chathamica — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Photinia × fraseri",
+      "id": "b44eff8a-a631-43c9-bdae-d12f6e0c34ee",
+      "detail": "Photinia × fraseri — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Evergreen candytuft",
+      "id": "b5e2c860-438b-4b5f-8f5b-131d911a876a",
+      "detail": "Evergreen candytuft — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Queen of the prairie",
+      "id": "b5ea5d6d-02b0-43a9-927a-55303ed68eb1",
+      "detail": "Queen of the prairie — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Montpelier rock-rose",
+      "id": "b653d2bc-d4d7-4307-aabe-46ec774922ad",
+      "detail": "Montpelier rock-rose — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Winter jasmine",
+      "id": "b68c1cd0-afe3-48a0-88a6-1606fbef1197",
+      "detail": "Winter jasmine — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Angelica",
+      "id": "b6aaf7c1-48f5-45dc-8a7e-3c83f6a1c2e0",
+      "detail": "Angelica — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H7",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Garden thyme",
+      "id": "b6b13698-5cce-4dcd-86fd-32b49efffad8",
+      "detail": "Garden thyme — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Scarlet avens",
+      "id": "b6e17787-7d45-4cb1-abc2-126309001c18",
+      "detail": "Scarlet avens — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Oleander",
+      "id": "b6ec367c-f8ce-4048-ba4d-9625391c0ba9",
+      "detail": "Oleander — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Dark mullein",
+      "id": "b73b915c-6ad8-4c7e-99ec-f1c916d1a04f",
+      "detail": "Dark mullein — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Two-row stonecrop",
+      "id": "b81f84db-773f-4ac3-b365-f90cd437a036",
+      "detail": "Two-row stonecrop — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Great yellow gentian",
+      "id": "b8bbbbd2-b03d-4035-8924-c880bcd9f75e",
+      "detail": "Great yellow gentian — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Himalayan birch",
+      "id": "b91f5970-d6cf-4089-85c6-6a71ef9e55af",
+      "detail": "Himalayan birch — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Salvia guaranitica",
+      "id": "b922d936-60cb-4722-8af9-4c07a35ad62f",
+      "detail": "Salvia guaranitica — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Ajuga",
+      "id": "b92abd33-842e-4560-9d08-4fe220ce8eb8",
+      "detail": "Ajuga — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Oshima sedge",
+      "id": "ba30121b-866f-4e44-bcf1-9716a0e1508a",
+      "detail": "Oshima sedge — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Meadowsweet",
+      "id": "ba3205bc-94f9-4fcc-9f0b-266c32dcb5c9",
+      "detail": "Meadowsweet — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H7",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Scorpion-senna",
+      "id": "bae1fa7d-d014-487f-9173-f299bad752ac",
+      "detail": "Scorpion-senna — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Amethyst eryngo",
+      "id": "bcecf214-1bbb-4dac-87fa-9007177fa8fe",
+      "detail": "Amethyst eryngo — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Birchbark cherry",
+      "id": "bd5ca68a-6330-442e-ba23-fb4e5a74679f",
+      "detail": "Birchbark cherry — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Giant onion",
+      "id": "bd60fbcc-b25e-48fd-b5ea-1e6574fd3575",
+      "detail": "Giant onion — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Garland-flower",
+      "id": "bdcce95a-1624-4abe-9a00-847c4fd525bc",
+      "detail": "Garland-flower — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Chios mastictree",
+      "id": "be0fe744-c682-4a9a-bd8f-5f36729beae3",
+      "detail": "Chios mastictree — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Catnip",
+      "id": "be2da8cc-4e1d-44f4-9c82-1d7cc2f1da8c",
+      "detail": "Catnip — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H7",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Chinese lantern",
+      "id": "be7efd3d-8afe-436b-8ce7-c50f553ba1f5",
+      "detail": "Chinese lantern — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H5",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Eastern purple-coneflower",
+      "id": "bf47b069-43fe-4f15-b54d-f9305bf56ca3",
+      "detail": "Eastern purple-coneflower — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Baby sage",
+      "id": "bfaa8c3d-94dc-43a4-8934-5f2356097c26",
+      "detail": "Baby sage — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Colchicum",
+      "id": "c0312dec-c76b-46e5-bed0-6ee9e0f23bda",
+      "detail": "Colchicum — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Common grape-hyacinth",
+      "id": "c036804b-3613-4ab7-bd44-c819f744a3cc",
+      "detail": "Common grape-hyacinth — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Saffron crocus",
+      "id": "c080ce19-c6cd-48b9-8bd4-cf9876917a6a",
+      "detail": "Saffron crocus — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H4",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Astilbe rubra",
+      "id": "c1609279-d2f4-45ff-80e0-767286faca9d",
+      "detail": "Astilbe rubra — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Garden nasturtium",
+      "id": "c1646970-a2e0-47cd-83b6-eb8ddc2b7381",
+      "detail": "Garden nasturtium — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "French sorrel",
+      "id": "c19b0652-ff51-43d1-8081-7290c5bca8d6",
+      "detail": "French sorrel — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H7",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Pineapple sage",
+      "id": "c22e1a33-22dc-480a-8f84-6cdd10c55379",
+      "detail": "Pineapple sage — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H2",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Fragrant clematis",
+      "id": "c2f04ce2-1fa3-44c9-a76f-cdfff0f4b1c7",
+      "detail": "Fragrant clematis — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Fritillaria meleagris",
+      "id": "c3269c6d-7676-4699-a405-166b09f46c09",
+      "detail": "Fritillaria meleagris — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Lady Banks' rose",
+      "id": "c3375609-62e6-4f99-9d55-92e02632180e",
+      "detail": "Lady Banks' rose — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: common_name",
+      "plant": "Italian grape hyacinth",
+      "id": "c3d476db-a004-4ca0-8ed3-607a3190d0e7",
+      "detail": "Italian grape hyacinth — common_name rewritten though the round never seeded it",
+      "column": "common_name",
+      "before": "Grape-hyacinth",
+      "after": "Italian grape hyacinth",
+      "why": "pre-existing collision between Muscari botryoides and M. neglectum, both named 'Grape-hyacinth' since July 12. Not caused by this round; fixed by scripts/fix-round8-names.ts while the name pass was already running."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Star magnolia",
+      "id": "c3ee6250-6c60-4d6b-a9f7-5b1622ad4f7c",
+      "detail": "Star magnolia — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Orange New Zealand sedge",
+      "id": "c560a927-fd0a-4256-947d-3719b22acf0e",
+      "detail": "Orange New Zealand sedge — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Tree heath",
+      "id": "c6f4610f-495b-4b11-a792-5b6dc739f952",
+      "detail": "Tree heath — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Horehound",
+      "id": "c72c70ab-8902-468a-9757-12ba306ba835",
+      "detail": "Horehound — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H5",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Yellow oxeye",
+      "id": "c7a83cda-f46b-48f5-bbff-4adbe5e5c350",
+      "detail": "Yellow oxeye — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Bishop's-weed",
+      "id": "c7c41754-f21a-4af2-a2b1-53b069ca4772",
+      "detail": "Bishop's-weed — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Common garden peony",
+      "id": "c828e1ac-b59f-45cc-9c92-c617f1510308",
+      "detail": "Common garden peony — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Lydia broom",
+      "id": "c862cbc6-d3c0-40da-ad86-b4615bff69e1",
+      "detail": "Lydia broom — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Shrubby hare's-ear",
+      "id": "c881ef9e-ba2a-4e73-a780-3714148b452b",
+      "detail": "Shrubby hare's-ear — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Rough-stem goldenrod",
+      "id": "c93e2299-6b7c-4dfb-9d90-80584b68067d",
+      "detail": "Rough-stem goldenrod — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Catmint",
+      "id": "c9b3f5bf-62f1-4479-b05e-1f56d185fd06",
+      "detail": "Catmint — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H5",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Bleeding-heart",
+      "id": "ca0e532f-6031-4e10-8cd5-4b9e4d9d3854",
+      "detail": "Bleeding-heart — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Yellow corydalis",
+      "id": "ca69cd58-0cc7-4f87-8a70-59ef5b8baf9f",
+      "detail": "Yellow corydalis — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "European feather grass",
+      "id": "cb7032f7-6f62-4619-a42a-5a83fd11e589",
+      "detail": "European feather grass — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Hardy iceplant",
+      "id": "cb9d4118-e669-47db-88ac-346a6b631bb0",
+      "detail": "Hardy iceplant — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Damask-violet",
+      "id": "cd117b9a-13f9-4f5b-9579-eb5f65b5b33b",
+      "detail": "Damask-violet — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Heartleaf bergenia",
+      "id": "cd9ea69e-0304-4835-9b92-61f3f179aaa2",
+      "detail": "Heartleaf bergenia — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Knautia macedonica",
+      "id": "ce6bacc2-6341-483b-9665-0994b2e6bb4a",
+      "detail": "Knautia macedonica — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Christmas-rose",
+      "id": "cf894068-9f06-4ec8-a288-aa56620d7019",
+      "detail": "Christmas-rose — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Balkan daphne",
+      "id": "cfbff0e7-840e-443e-b16f-770e56f76986",
+      "detail": "Balkan daphne — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Great wood-rush",
+      "id": "cfe40aa5-23f4-4e1c-8322-9d2702f52114",
+      "detail": "Great wood-rush — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Centaurea montana",
+      "id": "d12061eb-c39c-4bc4-b318-14971a17f7cb",
+      "detail": "Centaurea montana — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Russian-sage",
+      "id": "d1c2b1dc-f362-4fab-8893-914ad7918676",
+      "detail": "Russian-sage — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Common jasmine",
+      "id": "d2dea1c6-6165-4037-940d-dbdded12ac50",
+      "detail": "Common jasmine — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Heart-leaf foamflower",
+      "id": "d319670c-3c90-4c42-acb1-717f39a5feb7",
+      "detail": "Heart-leaf foamflower — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Jerusalem artichoke",
+      "id": "d31b271b-8a42-407e-9595-16caa90ce7e2",
+      "detail": "Jerusalem artichoke — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H7",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: native_region",
+      "plant": "Spanish artichoke",
+      "id": "d33da23f-7e3b-4dbc-9bc7-bfd75662f0d7",
+      "detail": "Spanish artichoke — native_region rewritten though the round never seeded it",
+      "column": "native_region",
+      "before": [
+        "Northern Africa",
+        "Southeastern Europe",
+        "Southwestern Europe",
+        "Western Asia"
+      ],
+      "after": [
+        "Macaronesia",
+        "Northern Africa",
+        "Southeastern Europe",
+        "Southwestern Europe"
+      ],
+      "why": "the 20 rows round 8's full-catalog regeneration rewrote, since validated against WCVP by cross-check-native-region.ts: 13 were already correct and 7 were corrected on July 28. The regeneration overreach itself is fixed upstream, where --round or --all is now required (§26)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Mountain-grape",
+      "id": "d3dcc345-662e-4a40-a7d4-6f73a3fb5aef",
+      "detail": "Mountain-grape — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Adam's-needle",
+      "id": "d3f3d12c-4e0f-4e6e-b18c-2467ed45072d",
+      "detail": "Adam's-needle — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Austrian pine",
+      "id": "d40d3ef7-b55b-4799-8038-dff18f8cb045",
+      "detail": "Austrian pine — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Eastern sowbread",
+      "id": "d46a0f07-44b8-429b-b7bd-c06c1d323a2f",
+      "detail": "Eastern sowbread — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Blue moor grass",
+      "id": "d4dc6edc-5148-4f19-b028-ec15c22e4809",
+      "detail": "Blue moor grass — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: native_region",
+      "plant": "Woodland tobacco",
+      "id": "d61119c1-bc9e-4cce-b1a9-7f3c868b2c64",
+      "detail": "Woodland tobacco — native_region rewritten though the round never seeded it",
+      "column": "native_region",
+      "before": [
+        "Southern South America"
+      ],
+      "after": [
+        "Southern South America",
+        "Western South America"
+      ],
+      "why": "the 20 rows round 8's full-catalog regeneration rewrote, since validated against WCVP by cross-check-native-region.ts: 13 were already correct and 7 were corrected on July 28. The regeneration overreach itself is fixed upstream, where --round or --all is now required (§26)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Black mondo",
+      "id": "d6c44585-0c93-4d1d-8cf5-79c7e7247134",
+      "detail": "Black mondo — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Crampbark",
+      "id": "d6cf8eef-cd6a-44ae-a16b-0908733fffe1",
+      "detail": "Crampbark — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Chinese witch hazel",
+      "id": "d6da6435-0869-4d2a-bb76-c9bcb09849b7",
+      "detail": "Chinese witch hazel — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Blue grama",
+      "id": "d71b290a-b954-48dd-b54e-23b2eaeecd56",
+      "detail": "Blue grama — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Sorrel",
+      "id": "d7a2e442-e415-4594-b59d-37e2c21e90f8",
+      "detail": "Sorrel — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H7",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Bear's-foot",
+      "id": "d82184ee-0ecf-4aab-a966-25c7c6e8e051",
+      "detail": "Bear's-foot — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Common-briar",
+      "id": "d84a69ec-a44c-4f2b-9c0a-9f8d7a21462b",
+      "detail": "Common-briar — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: native_region",
+      "plant": "Woodruff",
+      "id": "d92c9418-7472-4cdc-b9e6-18e74df95d6d",
+      "detail": "Woodruff — native_region rewritten though the round never seeded it",
+      "column": "native_region",
+      "before": [
+        "Eastern Europe",
+        "Middle Europe",
+        "Northern Europe",
+        "Southeastern Europe",
+        "Southwestern Europe",
+        "Western Asia"
+      ],
+      "after": [
+        "Caucasus",
+        "China",
+        "Eastern Asia",
+        "Eastern Europe",
+        "Middle Europe",
+        "Northern Africa",
+        "Northern Europe",
+        "Russian Far East",
+        "Siberia",
+        "Southeastern Europe",
+        "Southwestern Europe",
+        "Western Asia"
+      ],
+      "why": "the 20 rows round 8's full-catalog regeneration rewrote, since validated against WCVP by cross-check-native-region.ts: 13 were already correct and 7 were corrected on July 28. The regeneration overreach itself is fixed upstream, where --round or --all is now required (§26)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Wintersweet",
+      "id": "daeb48e9-da72-4c99-a1f6-b8acb6772ed7",
+      "detail": "Wintersweet — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Honey garlic",
+      "id": "dd4f714e-152a-4328-a9db-1e731138596e",
+      "detail": "Honey garlic — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Fragrant viburnum",
+      "id": "dda0ab57-ca4a-4e7d-a6ba-ccbd201ed719",
+      "detail": "Fragrant viburnum — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Field gladiolus",
+      "id": "dddbf36e-9aef-4e1e-86d0-72064c54445a",
+      "detail": "Field gladiolus — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Tarragon",
+      "id": "de6f2ded-2fd7-4403-a893-2cb94a82c8ad",
+      "detail": "Tarragon — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H5",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Large yellow foxglove",
+      "id": "df38e4ef-5876-4193-b44c-ace46b35186a",
+      "detail": "Large yellow foxglove — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Gesner's tulip",
+      "id": "e00ca7e6-6d3d-4b10-ba8b-f5a527ce4f8a",
+      "detail": "Gesner's tulip — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Tenby daffodil",
+      "id": "e036e1b4-3d31-42a7-a348-65f69dea9fc4",
+      "detail": "Tenby daffodil — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Dwarf mountain pine",
+      "id": "e0659da5-1cfc-4bd8-9ceb-6406e9075273",
+      "detail": "Dwarf mountain pine — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Greater masterwort",
+      "id": "e0900c8b-b641-46e0-a380-d2c229606aac",
+      "detail": "Greater masterwort — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Pokerplant",
+      "id": "e0a15e32-f642-4bd8-8245-d9b7a0c6bacb",
+      "detail": "Pokerplant — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Winter honeysuckle",
+      "id": "e0c85417-864e-4bbb-8ad1-5df42b7cd845",
+      "detail": "Winter honeysuckle — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Trumpet creeper",
+      "id": "e1a9dd4f-91eb-4585-85f0-4bcffb1075f6",
+      "detail": "Trumpet creeper — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Male fern",
+      "id": "e1b75f91-5335-4a58-b77d-467924160e75",
+      "detail": "Male fern — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Garden forget-me-not",
+      "id": "e2b7aeb0-983b-4115-a038-de0ec7bcc888",
+      "detail": "Garden forget-me-not — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Dianthus cruentus",
+      "id": "e2cf0ad3-360a-4a5b-b276-8ab2579d7f00",
+      "detail": "Dianthus cruentus — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Common ladyfern",
+      "id": "e2fa57e1-da3a-4475-a40f-62ed55abf069",
+      "detail": "Common ladyfern — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Actaea simplex",
+      "id": "e329bb1c-ced0-473e-a556-710da64762ab",
+      "detail": "Actaea simplex — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "European columbine",
+      "id": "e3c86414-6453-470d-a08f-614e1e283092",
+      "detail": "European columbine — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Fulvous day-lily",
+      "id": "e409f7cf-2510-4a6b-a89f-c6f14de44fa3",
+      "detail": "Fulvous day-lily — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Blue leadwood",
+      "id": "e43701a0-c034-4e0d-91ed-5f3173486a4d",
+      "detail": "Blue leadwood — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Common sneezeweed",
+      "id": "e4570de1-14da-4d19-9e98-a6af343881f3",
+      "detail": "Common sneezeweed — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Alpine delphinium",
+      "id": "e59adf47-01e5-466a-a603-5c4414751482",
+      "detail": "Alpine delphinium — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Dane's-blood",
+      "id": "e5cb8b93-1652-4a7a-820c-06931d4f2348",
+      "detail": "Dane's-blood — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Apple mint",
+      "id": "e63cff20-441b-4928-b892-fd017a980848",
+      "detail": "Apple mint — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H5",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Marsh blazingstar",
+      "id": "e734b0f2-b2b9-49c1-b702-2be5726f0add",
+      "detail": "Marsh blazingstar — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Ivy",
+      "id": "e7a6ad2e-938a-46a8-9bd0-39e4b6a79400",
+      "detail": "Ivy — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Leopardplant",
+      "id": "e7f7767a-bf26-48eb-861f-ac65d240373d",
+      "detail": "Leopardplant — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Highbush blueberry",
+      "id": "e80196cc-e63f-4b3f-a304-33f98f817c29",
+      "detail": "Highbush blueberry — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H7",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Laurustinus",
+      "id": "e87d671a-7b31-4a8a-a99b-c3ab68e2c344",
+      "detail": "Laurustinus — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Hawthorn",
+      "id": "e886fcac-9efe-492a-9742-cc5018e1fc7a",
+      "detail": "Hawthorn — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Michaelmas daisy",
+      "id": "e99714a9-a87b-4f64-9cf9-ccbe2c851a66",
+      "detail": "Michaelmas daisy — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Rose campion",
+      "id": "eaee56e8-b7b7-4b63-b1f9-c6e948ed0a5d",
+      "detail": "Rose campion — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Meadow clary",
+      "id": "eb82a0af-e21e-48b1-93d3-91f74d7594ae",
+      "detail": "Meadow clary — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Dusky crane's-bill",
+      "id": "eb877bfb-c684-49a4-a224-b2c0ccba9590",
+      "detail": "Dusky crane's-bill — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Argentine vervain",
+      "id": "ecebd3d7-d5b8-43c7-8545-a339bf153752",
+      "detail": "Argentine vervain — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Flowering currant",
+      "id": "ed3cf4fb-22d0-41d3-8812-f7bdc4a908cd",
+      "detail": "Flowering currant — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Basket-of-gold",
+      "id": "ed8ef30c-9a4c-470a-9a73-1cc6dcf0a163",
+      "detail": "Basket-of-gold — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Trailing bellflower",
+      "id": "ede518c4-51f6-440e-a2c5-12991b6d0203",
+      "detail": "Trailing bellflower — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: native_region",
+      "plant": "Sunflower",
+      "id": "ef90486b-0e27-4911-8d74-87d7a651e830",
+      "detail": "Sunflower — native_region rewritten though the round never seeded it",
+      "column": "native_region",
+      "before": [
+        "Eastern Canada",
+        "Mexico",
+        "North-Central U.S.A.",
+        "Northeastern U.S.A.",
+        "Northwestern U.S.A.",
+        "South-Central U.S.A.",
+        "Southeastern U.S.A.",
+        "Southwestern U.S.A.",
+        "Subarctic America",
+        "Western Canada"
+      ],
+      "after": [
+        "Mexico",
+        "Southwestern U.S.A."
+      ],
+      "why": "the 20 rows round 8's full-catalog regeneration rewrote, since validated against WCVP by cross-check-native-region.ts: 13 were already correct and 7 were corrected on July 28. The regeneration overreach itself is fixed upstream, where --round or --all is now required (§26)."
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Sunflower",
+      "id": "ef90486b-0e27-4911-8d74-87d7a651e830",
+      "detail": "Sunflower — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H1c",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Great forget-me-not",
+      "id": "f072ceb6-2baa-40f2-b67a-1f992ed1a4d3",
+      "detail": "Great forget-me-not — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Astrantia",
+      "id": "f0fcab50-b94f-4915-adfe-6a4a47bde5c4",
+      "detail": "Astrantia — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Autumn fern",
+      "id": "f21d7dcd-35b7-4985-aac6-b667c8159b56",
+      "detail": "Autumn fern — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Jerusalem-sage",
+      "id": "f295d23e-a46e-4669-9a45-52f4c7a5884d",
+      "detail": "Jerusalem-sage — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Sweet-william",
+      "id": "f2fa3d72-6b4e-46f8-b6b4-ea8a0b15ff32",
+      "detail": "Sweet-william — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Oswego-tea",
+      "id": "f397895e-3d41-4875-9d16-7827e209547e",
+      "detail": "Oswego-tea — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Osmanthus delavayi",
+      "id": "f3b3f4f1-e9ee-4773-981c-84a88b4e269d",
+      "detail": "Osmanthus delavayi — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "American blue vervain",
+      "id": "f3e4f113-2b0c-4281-bfb5-609f6346958b",
+      "detail": "American blue vervain — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Wall germander",
+      "id": "f3f2430e-75ae-4721-b69a-54bfc4061a67",
+      "detail": "Wall germander — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Purple moor grass",
+      "id": "f58503b4-1cd1-4fde-b7f9-882fa7b29c4b",
+      "detail": "Purple moor grass — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Anemanthele lessoniana",
+      "id": "f717c6fe-94a4-48db-8699-c04101f25ae2",
+      "detail": "Anemanthele lessoniana — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Hyssop",
+      "id": "f738f1bb-a0cf-4a40-a945-5c59ff79798b",
+      "detail": "Hyssop — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Valerian",
+      "id": "f84ca46c-9f52-4671-b9c3-99597c2ee628",
+      "detail": "Valerian — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H7",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Evergreen rose",
+      "id": "f8cf0b0a-a80a-4400-9d29-92df455dbb14",
+      "detail": "Evergreen rose — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Creeping thyme",
+      "id": "f8e0508e-f4d4-4b43-9741-ab3e1f537324",
+      "detail": "Creeping thyme — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H7",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Milfoil",
+      "id": "f8f67063-5e3f-4046-8546-9c40c99ff2b5",
+      "detail": "Milfoil — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Blue flax",
+      "id": "f9c89017-945c-4fd0-8cf3-b6457f9f7a31",
+      "detail": "Blue flax — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Sage",
+      "id": "fae817c9-cd6c-4269-a242-39a99b9b6778",
+      "detail": "Sage — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Musk mallow",
+      "id": "fb24264c-bf21-4eed-9a7c-db303340e3d8",
+      "detail": "Musk mallow — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Persian onion",
+      "id": "fb340744-5f4b-4e82-9a0a-b08ba520cc00",
+      "detail": "Persian onion — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: native_region",
+      "plant": "Signet marigold",
+      "id": "fb4004b5-4210-4c37-a377-e61f3aced828",
+      "detail": "Signet marigold — native_region rewritten though the round never seeded it",
+      "column": "native_region",
+      "before": [
+        "Central America",
+        "Mexico"
+      ],
+      "after": [
+        "Central America",
+        "Mexico",
+        "Western South America"
+      ],
+      "why": "the 20 rows round 8's full-catalog regeneration rewrote, since validated against WCVP by cross-check-native-region.ts: 13 were already correct and 7 were corrected on July 28. The regeneration overreach itself is fixed upstream, where --round or --all is now required (§26)."
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Signet marigold",
+      "id": "fb4004b5-4210-4c37-a377-e61f3aced828",
+      "detail": "Signet marigold — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H2",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Chocolate vine",
+      "id": "fbea7456-7e70-4007-9dfd-00ec9fb1d8b6",
+      "detail": "Chocolate vine — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Japanese sedge",
+      "id": "fc05c644-7c47-44e1-88a3-342505e8c018",
+      "detail": "Japanese sedge — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Large white trillium",
+      "id": "fc4391fe-f203-494a-a096-6171fdba5b01",
+      "detail": "Large white trillium — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Cade juniper",
+      "id": "fcb95e31-186d-4942-a81a-9dad400e8129",
+      "detail": "Cade juniper — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Spurge-laurel",
+      "id": "fcc3e957-0810-4e8e-8f9d-8ffe36aade03",
+      "detail": "Spurge-laurel — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Anise",
+      "id": "fcd26398-b1fc-48f7-b52b-4855be55cf71",
+      "detail": "Anise — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H2",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Mexican-orange",
+      "id": "fce21a8c-9917-48d1-be56-f1f470100d0a",
+      "detail": "Mexican-orange — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Altar-lily",
+      "id": "fd6f4e28-65fb-472e-9199-3f504cbfee0d",
+      "detail": "Altar-lily — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Erysimum linifolium",
+      "id": "fd790641-e5b8-4f3c-ac3c-04cc76d6ed9d",
+      "detail": "Erysimum linifolium — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Yew",
+      "id": "fd84c6c6-9a22-434e-9697-03ba4bcb1aa8",
+      "detail": "Yew — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Siberian dogwood",
+      "id": "fd91bb7f-6fc8-4419-bf5f-c5632a41b451",
+      "detail": "Siberian dogwood — updated_at only"
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Lily-of-the-nile",
+      "id": "feb06ec0-351f-4855-a1c1-30361ad2a4c8",
+      "detail": "Lily-of-the-nile — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Caraway",
+      "id": "ff6b5b92-41e6-4e11-8f7f-093ff55f7c1e",
+      "detail": "Caraway — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H7",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "WARN",
+      "check": "guard re-stamped an unseeded row",
+      "plant": "Woolly digitalis",
+      "id": "ffba2dd5-8d0e-4368-8b9b-d4feed9a8337",
+      "detail": "Woolly digitalis — updated_at only"
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: hardiness_rating",
+      "plant": "Bilberry",
+      "id": "fff43e0a-0e53-42a4-ba02-ec34836a73fe",
+      "detail": "Bilberry — hardiness_rating rewritten though the round never seeded it",
+      "column": "hardiness_rating",
+      "before": null,
+      "after": "H7",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope pairing added",
+      "plant": "Stevia ↔ Cape gooseberry",
+      "detail": "both plants predate the round",
+      "why": "curate-combinations tops up any plant under the 5-companion cap from the whole-catalog roster, so it legitimately pairs two older plants (§19, §25 step 3). All four endpoints here are round-7 plants that were below the cap and now sit at exactly 5."
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope pairing added",
+      "plant": "African marigold ↔ Roman chamomile",
+      "detail": "both plants predate the round",
+      "why": "curate-combinations tops up any plant under the 5-companion cap from the whole-catalog roster, so it legitimately pairs two older plants (§19, §25 step 3). All four endpoints here are round-7 plants that were below the cap and now sit at exactly 5."
+    }
+  ]
+}
