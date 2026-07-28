@@ -61,6 +61,7 @@
 import { searchSpeciesByName, fetchAndMapSpecies } from '../lib/trefle'
 import { upsertPlant } from '../lib/plants-db'
 import { getSupabaseAdmin } from '../lib/supabase-admin'
+import { fetchCatalogIdentity } from './catalog-identity'
 import { fetchAllRows } from '../lib/paginate'
 import { writeRoundManifest, type SeededPlant } from './round-manifest'
 
@@ -290,17 +291,7 @@ interface Catalog {
 }
 
 async function fetchCatalog(): Promise<Catalog> {
-  const db = getSupabaseAdmin()
-  const rows = await fetchAllRows<{
-    source_species_id: number | null
-    scientific_name: string | null
-  }>((from, to) =>
-    db
-      .from('plants')
-      .select('source_species_id, scientific_name')
-      .order('id')
-      .range(from, to)
-  )
+  const rows = await fetchCatalogIdentity()
 
   const ids = new Set<number>()
   const names = new Set<string>()

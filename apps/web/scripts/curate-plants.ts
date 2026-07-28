@@ -18,6 +18,7 @@
  */
 
 import { getSupabaseAdmin } from '../lib/supabase-admin'
+import { fetchAllRows } from '../lib/paginate'
 import { getAnthropicClient, CURATION_MODEL } from '../lib/anthropic-client'
 import type { DbPlant, PlantType, SeasonalRhythm } from '../lib/plants-db'
 import { STYLE_TAG_PROMPT, type StyleTag } from '../lib/style-tags'
@@ -345,16 +346,20 @@ function buildPatch(plant: DbPlant, response: CurationResponse): PlantPatch {
 
 async function fetchUncuratedPlants(newOnly = false): Promise<DbPlant[]> {
   const db = getSupabaseAdmin()
-  let query = db.from('plants').select('*').eq('is_curated', false)
 
-  // --new-only: limit to rows that have never been drafted, so a targeted
-  // top-up after seeding a few plants doesn't re-query the whole catalog.
-  if (newOnly) query = query.is('ai_drafted_at', null)
+  // Paginated (standing rule 5). `is_curated` is true on 76 rows out of 595,
+  // so this selection is most of the catalog and grows with every seed — a
+  // bare .select() would silently start dropping rows from the drafting pass
+  // as soon as it crosses 1000.
+  return fetchAllRows<DbPlant>((from, to) => {
+    let query = db.from('plants').select('*').eq('is_curated', false)
 
-  const { data, error } = await query.order('common_name')
+    // --new-only: limit to rows that have never been drafted, so a targeted
+    // top-up after seeding a few plants doesn't re-query the whole catalog.
+    if (newOnly) query = query.is('ai_drafted_at', null)
 
-  if (error) throw new Error(`Failed to fetch plants: ${error.message}`)
-  return (data ?? []) as DbPlant[]
+    return query.order('common_name').order('id').range(from, to)
+  })
 }
 
 async function patchPlant(id: string, patch: PlantPatch): Promise<void> {

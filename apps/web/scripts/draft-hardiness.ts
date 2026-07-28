@@ -24,6 +24,7 @@
  */
 
 import { getSupabaseAdmin } from '../lib/supabase-admin'
+import { fetchAllRows } from '../lib/paginate'
 import { getAnthropicClient, CURATION_MODEL } from '../lib/anthropic-client'
 import { isHardinessRating, type HardinessRating } from '../lib/hardiness'
 import type { DbPlant } from '../lib/plants-db'
@@ -37,7 +38,8 @@ function parseLimit(): number | null {
   const i = args.indexOf('--limit')
   if (i < 0) return null
   const n = parseInt(args[i + 1] ?? '', 10)
-  if (!Number.isFinite(n) || n < 1) throw new Error('--limit must be a positive integer')
+  if (!Number.isFinite(n) || n < 1)
+    throw new Error('--limit must be a positive integer')
   return n
 }
 
@@ -92,28 +94,33 @@ async function draftRating(plant: DbPlant): Promise<HardinessRating> {
     .join('')
     .trim()
   const rating = parseRating(raw)
-  if (!rating) throw new Error(`unparseable rating: ${JSON.stringify(raw).slice(0, 60)}`)
+  if (!rating)
+    throw new Error(`unparseable rating: ${JSON.stringify(raw).slice(0, 60)}`)
   return rating
 }
 
 async function main() {
   const limit = parseLimit()
-  const redraftUnverified = process.argv.slice(2).includes('--redraft-unverified')
+  const redraftUnverified = process.argv
+    .slice(2)
+    .includes('--redraft-unverified')
   const db = getSupabaseAdmin()
 
   // Baseline: only rows with no rating. --redraft-unverified widens to rows
   // that have a rating but are not verified. Verified rows are NEVER selected.
-  let query = db
-    .from('plants')
-    .select('id, common_name, scientific_name, family, hardiness_rating')
-    .order('common_name')
-  query = redraftUnverified
-    ? query.eq('hardiness_verified', false)
-    : query.is('hardiness_rating', null)
-
-  const { data, error } = await query
-  if (error) throw new Error(`Failed to load plants: ${error.message}`)
-  let plants = (data ?? []) as DbPlant[]
+  // Paginated (standing rule 5) — --redraft-unverified currently matches 328
+  // rows and grows with the catalog.
+  let plants = await fetchAllRows<DbPlant>((from, to) => {
+    let query = db
+      .from('plants')
+      .select('id, common_name, scientific_name, family, hardiness_rating')
+      .order('common_name')
+      .order('id')
+    query = redraftUnverified
+      ? query.eq('hardiness_verified', false)
+      : query.is('hardiness_rating', null)
+    return query.range(from, to)
+  })
   if (limit) plants = plants.slice(0, limit)
 
   if (!plants.length) {

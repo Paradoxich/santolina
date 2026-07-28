@@ -193,6 +193,22 @@ An audit of why each pass keeps finding problems. The honest headline: of ~77 re
 
 **Deliberately not done:** the 450 remaining `check-round-scope --round 8` failures are the style pass rewriting `style_tags` on 450 pre-existing rows _after_ round 8 closed. They are real and correctly detected, and they are **not waived** — blanket-waiving 450 rows is how a check gets switched off. This exposes a design limit worth deciding on: the check's window is baseline → now, so **every closed round's scope check rots as soon as any later catalog-wide work happens.** Round 8's cleared state is the report archived in `rounds/8/reports/` on July 28, not a re-run today. Either the tool needs a recorded `cleared_at` to diff against, or re-running a closed round's scope check needs to be understood as meaningless. Round 8's greenery/image backfill is also still owed.
 
+### 2026-07-28 — Step registry, and the pagination rule finally applied
+
+**Branch** `fix/phase-2-structural-guards` (stacked on `fix/phase-0-guard-drift`). **No data written.** Catalog unchanged at **595 / 1485**.
+
+Phase 0 fixed four drifts by hand. This turns two of them into things that cannot drift again.
+
+**The step registry.** `round-status.ts` now holds `STEP_DEFS` — one entry per pipeline step, carrying its evidence, its FAIL/WARN level, and the bookkeeping column it stamps. `roundStatus` maps over it instead of hand-listing ten steps, and `verify-round` FAILs on any `*_checked_at` column on `plants` that no step claims. Reads the live column list, so a column added by a future migration is covered the day it ships. Negative-tested: removing `stampColumn: 'greenery_checked_at'` produces `✗ unregistered pipeline step — plants.greenery_checked_at exists but no step in round-status.ts claims it`. **This is the check that would have caught round 8's miss.**
+
+**Standing rule 5, actually applied.** The rule dates from July 21 and had never been swept. Fixed unbounded full-table reads in `seed-plants` (the dedupe set), `check-bloom-colors` and `cross-check-seasonal-care` (both guards), `curate-plants`, `draft-hardiness`, `curate-seasonal-care`. Routed the hand-rolled paging loops in `verify-round`, `curate-styles` and `curate-greenery` through `fetchAllRows`.
+
+**The seeder dedupe read is now shared, not copied.** `seed-plants`, `seed-round6`, `seed-round7`, `seed-round8` and `seed-regional-natives` each had their own copy of "read every `source_species_id` + `scientific_name`", and four of the five were bare. A short dedupe set does not error — it makes the seeder re-seed species already held. It now lives once, paginated, in `scripts/catalog-identity.ts`. This mattered because of how it would have arrived: **`seed-round9.ts` starts life as a copy of `seed-round7.ts`.**
+
+**What bit us:** nothing new — this was applying a July 21 fix that had reached 16 of 42 scripts in a week, while two scripts written _after_ it hand-rolled the same loop instead.
+
+**Deliberately not done:** a static check to enforce rule 5 was built and then **deleted**. A source scan cannot follow a builder assigned to a variable (`let q = db.from(…); … return q.range(…)`), so it produced both false positives and false negatives — and a noisy guard is one people learn to skip, which is the failure this whole effort is about. A reliable version needs AST analysis. Until then the rule is still convention. **Three historical one-off scripts remain genuinely unbounded** and were left alone rather than edited blind: `backfill-sun-split.ts`, `dry-run-native-region.ts`, `regenerate-native-to.ts`. None is a round step; all three are copy-paste sources, so fix before reuse.
+
 ### 2026-07-28 — Style re-tag pass: cottage 89.6% → discriminating tags
 
 **Branch** `session/2026-07-28-cottage-tags` (worktree `santolina-cottage-tags`, off `main`). No new species. Catalog unchanged at **595 / 1485**; only `style_tags` rewritten. Written by hand: not a round.

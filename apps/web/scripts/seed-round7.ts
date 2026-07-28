@@ -59,6 +59,7 @@
 import { searchSpeciesByName, fetchAndMapSpecies } from '../lib/trefle'
 import { upsertPlant } from '../lib/plants-db'
 import { getSupabaseAdmin } from '../lib/supabase-admin'
+import { fetchCatalogIdentity } from './catalog-identity'
 
 // ---------------------------------------------------------------------------
 // The list. Grouped by the block each entry belongs to (comments not stored).
@@ -264,15 +265,11 @@ interface Catalog {
 }
 
 async function fetchCatalog(): Promise<Catalog> {
-  const db = getSupabaseAdmin()
-  const { data, error } = await db
-    .from('plants')
-    .select('source_species_id, scientific_name')
-  if (error) throw new Error(`Failed to fetch catalog: ${error.message}`)
+  const rows = await fetchCatalogIdentity()
 
   const ids = new Set<number>()
   const names = new Set<string>()
-  for (const row of data ?? []) {
+  for (const row of rows) {
     if (row.source_species_id !== null) ids.add(row.source_species_id)
     if (row.scientific_name) names.add(normSci(row.scientific_name).join(' '))
   }

@@ -40,6 +40,7 @@
 import { readFileSync, mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { getSupabaseAdmin } from '../lib/supabase-admin'
+import { fetchAllRows } from '../lib/paginate'
 import { getAnthropicClient, CURATION_MODEL } from '../lib/anthropic-client'
 import type { SeasonalCare, SeasonalRhythm } from '../lib/plants-db'
 
@@ -310,19 +311,25 @@ function compare(target: CheckTarget, checked: CheckedLine[]): Disagreement[] {
 
 async function fetchFromDb(limit: number | null): Promise<CheckTarget[]> {
   const db = getSupabaseAdmin()
-  let query = db
-    .from('plants')
-    .select(
-      'common_name, scientific_name, plant_type, seasonal_care, seasonal_rhythm'
-    )
-    .not('seasonal_care', 'is', null)
-    .order('common_name')
-  if (limit != null) query = query.limit(limit)
-  const { data, error } = await query
-  if (error) throw new Error(`Failed to fetch plants: ${error.message}`)
-  return (data ?? [])
+  // Paginated (standing rule 5). This is a GUARD and its selection is now
+  // effectively the whole catalog (seasonal_care is non-null on all 595), so a
+  // silent 1000-row cap would stop it checking the tail without saying so.
+  // --limit is applied after paging: it is a sampling flag, not a page size.
+  const rows = await fetchAllRows<Record<string, unknown>>((from, to) =>
+    db
+      .from('plants')
+      .select(
+        'common_name, scientific_name, plant_type, seasonal_care, seasonal_rhythm'
+      )
+      .not('seasonal_care', 'is', null)
+      .order('common_name')
+      .order('id')
+      .range(from, to)
+  )
+  const targets = rows
     .map((p) => toTarget(p as never))
     .filter((t): t is CheckTarget => t !== null)
+  return limit != null ? targets.slice(0, limit) : targets
 }
 
 function fetchFromReport(path: string): CheckTarget[] {

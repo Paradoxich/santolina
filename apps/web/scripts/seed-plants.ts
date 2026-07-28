@@ -27,6 +27,7 @@
 import { fetchAndMapSpecies, searchSpeciesByName } from '../lib/trefle'
 import { upsertPlant } from '../lib/plants-db'
 import { getSupabaseAdmin } from '../lib/supabase-admin'
+import { fetchCatalogIdentity } from './catalog-identity'
 import { writeRoundManifest, type SeededPlant } from './round-manifest'
 
 // ---------------------------------------------------------------------------
@@ -307,16 +308,11 @@ interface ExistingCatalog {
 }
 
 async function fetchExistingCatalog(): Promise<ExistingCatalog> {
-  const db = getSupabaseAdmin()
-  const { data, error } = await db
-    .from('plants')
-    .select('source_species_id, scientific_name')
-
-  if (error) throw new Error(`Failed to fetch catalog: ${error.message}`)
+  const rows = await fetchCatalogIdentity()
 
   const ids = new Set<number>()
   const names = new Set<string>()
-  for (const row of data ?? []) {
+  for (const row of rows) {
     if (row.source_species_id !== null) ids.add(row.source_species_id)
     if (row.scientific_name) names.add(row.scientific_name.toLowerCase())
   }

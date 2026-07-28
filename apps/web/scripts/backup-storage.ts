@@ -61,13 +61,11 @@ async function listRecursive(bucket: string, prefix = ''): Promise<string[]> {
   const pageSize = 100
 
   for (let offset = 0; ; offset += pageSize) {
-    const { data, error } = await db.storage
-      .from(bucket)
-      .list(prefix, {
-        limit: pageSize,
-        offset,
-        sortBy: { column: 'name', order: 'asc' },
-      })
+    const { data, error } = await db.storage.from(bucket).list(prefix, {
+      limit: pageSize,
+      offset,
+      sortBy: { column: 'name', order: 'asc' },
+    })
     if (error) throw new Error(`list ${bucket}/${prefix}: ${error.message}`)
     if (!data?.length) break
 
