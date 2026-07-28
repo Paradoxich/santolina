@@ -29,7 +29,7 @@ The numbers **in this file are different and must stay written down**: a dated s
 3. **Scope every script to a round.** Use `--round <label>`, which reads `rounds/<label>/manifest.json`. Never rely on `created_at` heuristics, and see trap 2 before trusting `--new-only`.
 4. **Generate, review, then apply.** Any script offering `--apply` writes nothing until you have read its report. This split is the single reason trap 1 did not corrupt the catalog.
 5. **Never bare `.select()` on a full table.** It silently caps at 1000 rows. Use `fetchAllRows` from `lib/paginate.ts`. `plant_combinations` has already crossed the cap once (round 6: 13 duplicate pairs, 34 plants over the companion limit); current sizes are in [`catalog-state.md`](catalog-state.md).
-6. **Never flip `is_curated`.** It means "Ana has editorially reviewed this row" and is hers alone. Scripts draft; they do not sign off. **Editorial coverage is thin and worth knowing:** round 7's 76 rows are the only reviewed ones in the catalog — everything seeded before them, and round 8's batch, is still unreviewed. Current count in [`catalog-state.md`](catalog-state.md). Round 8's pass is owed, including a voice read of the 49 mechanically corrected common names.
+6. **`is_curated` is flipped by exactly one script — `curate-editorial.ts` — and by nothing else.** This rule used to read "never flip it; it is Ana's alone", which stopped being true on 2026-07-28 when she ruled that an agent owns the editorial pass, including the flag. What has not changed is that no _other_ script may touch it: a drafting or fact-checking pass that sets `is_curated` is claiming a sign-off it did not make. The bar is defined once in `lib/editorial-standard.ts` (§3, runbook step 7b). **Editorial coverage is still thin** — round 7's 76 rows and round 8's 61 approved; everything seeded before them is unreviewed. Current count in [`catalog-state.md`](catalog-state.md). Round 8's 40 held rows are recorded work with a "no" verdict, not a gap, and 33 of them wait only on an image re-check.
 7. **After any schema or request-shape change, run `--limit 3` first.** A green typecheck does not verify a runtime API contract.
 8. **Finish with `verify-round.ts --round <label>`.** Without `--round` it checks that data is _valid_ but not that the pipeline actually _ran_.
 9. **Append an entry here.** `scripts/log-db-session.ts --round <label>` writes the factual part for you.
@@ -190,6 +190,22 @@ This is trap 7 in different clothes: **an external name lookup that guesses is m
 ## Sessions
 
 <!-- Newest first. Append with: scripts/log-db-session.ts --round <label> -->
+
+### 2026-07-29 — Round 8's editorial pass: the sign-off step becomes a script
+
+**Branch** `session/2026-07-29-editorial`. Backup taken first, in the shared checkout (`backups/2026-07-28T22-11-21-734Z`) — the worktree's `backups/` and `reports/` are symlinks into the main checkout, so nothing dies with the worktree this time.
+
+**Schema.** `20260728220852_add_editorial_checked_at` — `plants.editorial_checked_at timestamptz`, applied to the remote (via MCP, so the local filename was named to match the version it recorded — trap 13). `is_curated` records only the **approvals**; without a separate stamp a row the pass judged and deliberately held back is indistinguishable from one nobody has looked at, so every run would re-judge and re-bill the entire flagged remainder. Registered in `STEP_DEFS` at FAIL level in the same commit, as the registry requires.
+
+**What ran.** `curate-editorial.ts --round 8`, the §3 judgment (image / description / tags) with the bar defined once in `lib/editorial-standard.ts`. Ana's ruling: strict, any unresolved doubt leaves the row `false`.
+
+Result over 101: **61 approved, 40 held, 57 descriptions rewritten.** Catalog-wide `is_curated` 76 → 137. All 101 stamped, so the remainder is recorded work with a "no" verdict, not a gap.
+
+**The image gate is what binds, not the copy.** **33 of the 40 holds are image-only** — 30 because the vision pass recorded `medium` confidence (plausible but uncommitted) and 3 because upstream has no image at all. Only **one** row is held on a genuine copy objection after the fix below, and six on tag judgments (a jade plant tagged for outdoor styles, a cactus tagged mediterranean, `Luzula nivea` typed as a grass when it is a rush). A targeted vision re-check of the 30 would clear most of the remainder for roughly $0.20; it is not scheduled, and the rows are correctly `false` until it runs.
+
+**What bit us:** the blind judge invented faults it could not have seen. Its rejections cited em dashes in four rewrites — but `mechanicalCopyFault()` rejects any dash _before_ the blind call, so every text reaching that judge provably contains none. Four good rewrites were held on a fabricated reason. The review prompt had already been hardened against exactly this in the same session; the fix was never carried across to the second call. Both prompts now state that punctuation is checked mechanically and must never be given as a reason, and a **rejected rewrite is now stored in the report** — previously the report asserted "the rewrite was bad" while discarding the only evidence that could contradict it. Re-running the 8 affected rows cleared 7 of the 8 copy holds.
+
+**Deliberately not done:** the 26 medium-confidence images were not re-checked with vision (cheap, but it is a separate pass and a separate decision), and no held row was nudged over the line by hand. The bar stays where Ana set it.
 
 ### 2026-07-28 — WCVP validation gets a stamp, and two migrations reconciled
 

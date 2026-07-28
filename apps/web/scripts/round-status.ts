@@ -66,6 +66,7 @@ interface StatusRow {
   style_checked_at: string | null
   greenery_checked_at: string | null
   image_checked_at: string | null
+  editorial_checked_at: string | null
 }
 
 /** A garden hybrid has no wild range, so an empty native_region is correct. */
@@ -237,6 +238,25 @@ export const STEP_DEFS: StepDef[] = [
     stampColumn: 'image_checked_at',
     ran: (p) => Boolean(p.image_checked_at),
   },
+  {
+    // The sign-off step (§3), and deliberately last: it judges the output of
+    // every step above it, so it can only run once they have.
+    //
+    // FAIL rather than WARN, even though it will show older rounds as
+    // incomplete. The editorial pass is owed, not parked, and the round-8
+    // lesson was precisely that a WARN on a live obligation is how a skipped
+    // step stays invisible. A red older round here is a true statement about
+    // the catalog, not noise.
+    //
+    // Evidence is the STAMP, never is_curated: a row the pass judged and held
+    // back is finished work with a "no" verdict, and counting only approvals
+    // would make a strict pass look like a pass that never ran.
+    step: 'curate-editorial',
+    evidence: 'editorial_checked_at NOT NULL',
+    level: 'FAIL',
+    stampColumn: 'editorial_checked_at',
+    ran: (p) => Boolean(p.editorial_checked_at),
+  },
 ]
 
 /**
@@ -270,7 +290,8 @@ export async function roundStatus(ids: string[]): Promise<StepStatus[]> {
         'id, scientific_name, ai_drafted_at, native_region, ' +
           'botanical_checked_at, native_checked_at, native_region_checked_at, ' +
           'hardiness_rating, seasonal_care, ' +
-          'style_checked_at, greenery_checked_at, image_checked_at'
+          'style_checked_at, greenery_checked_at, image_checked_at, ' +
+          'editorial_checked_at'
       )
       .in('id', ids)
       .order('id')

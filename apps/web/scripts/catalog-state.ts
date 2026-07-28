@@ -57,6 +57,7 @@ interface Row {
   style_checked_at: string | null
   greenery_checked_at: string | null
   image_checked_at: string | null
+  editorial_checked_at: string | null
 }
 
 const pct = (n: number, total: number) =>
