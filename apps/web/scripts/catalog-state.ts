@@ -53,6 +53,7 @@ interface Row {
   ai_drafted_at: string | null
   botanical_checked_at: string | null
   native_checked_at: string | null
+  native_region_checked_at: string | null
   style_checked_at: string | null
   greenery_checked_at: string | null
   image_checked_at: string | null

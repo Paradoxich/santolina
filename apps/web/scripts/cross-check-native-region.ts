@@ -41,6 +41,14 @@
  *   · a region name we cannot map to Level 2 is an ERROR, not an omission.
  *     Silently dropping unmapped names would quietly shrink a species' range
  *     and read as a confident answer.
+ *
+ * REPORT-ONLY RUNS DO WRITE ONE THING: plants.native_region_checked_at, on
+ * every row that reached a decided verdict. That is operational metadata, not
+ * catalog content, so the flags-only rule (§20) still holds — the same
+ * precedent migration 20260716120000 set for the other guard stamps, and
+ * check-round-scope already demotes *_checked_at writes to a WARN. Without it
+ * there is no per-row record of what Kew's checklist has actually seen, which
+ * is how this pass shipped in the first place.
  */
 
 import { mkdirSync, writeFileSync, readFileSync, existsSync } from 'node:fs'
@@ -49,7 +57,7 @@ import { join } from 'node:path'
 import { MANUAL_OVERRIDES } from '../lib/native-region-overrides'
 import { fetchAllRows } from '../lib/paginate'
 import { getSupabaseAdmin } from '../lib/supabase-admin'
-import { readRoundManifest } from './round-manifest'
+import { requireScope, scopeIds, describeScope } from './scope'
 
 const REPORTS_DIR = join(process.cwd(), 'reports')
 const WGSRPD_GEOJSON = join(REPORTS_DIR, 'level3.geojson')
@@ -58,6 +66,9 @@ const JSON_OUT = join(REPORTS_DIR, 'native-region-crosscheck.json')
 const MD_OUT = join(REPORTS_DIR, 'native-region-crosscheck.md')
 
 const GBIF_DELAY_MS = 400
+// Rows per stamping update — the whole batch is decided before anything is
+// written, so the stamps go out in chunks rather than one call per row.
+const STAMP_CHUNK = 100
 const WCVP_SOURCE = 'The World Checklist of Vascular Plants (WCVP)'
 
 // Same table as regenerate-native-region.ts — the 52 WGSRPD Level 2 regions.
@@ -151,6 +162,10 @@ const MANUAL_EXCLUSIONS: Record<string, { drop: string[]; why: string }> = {
     drop: ['Australia'],
     why: 'only backing row is Tasmania with no establishment marker; GBIF GRIIS-Australia lists the species as INTRODUCED',
   },
+  'Polystichum polyblepharum': {
+    drop: ['Middle Europe'],
+    why: 'only backing row is the Netherlands with no establishment marker, while the adjacent Belgium row on the same taxon IS marked INTRODUCED — a Japanese/Korean garden fern escaping in the Low Countries, not a native European range. The Afro-Asian rows are deliberately left in: many backing rows, and Catalogue of Life describes the same disjunct range independently',
+  },
 }
 
 interface PlantRow {
@@ -199,13 +214,8 @@ function parseArgs() {
     return i >= 0 ? args[i + 1] : undefined
   }
   const limitRaw = at('--limit')
+  // --round / --ids / --all are parsed by scripts/scope.ts, not here.
   return {
-    round: at('--round'),
-    ids: at('--ids')
-      ?.split(',')
-      .map((s) => s.trim())
-      .filter(Boolean),
-    all: args.includes('--all'),
     apply: args.includes('--apply'),
     allowEmpty: args.includes('--allow-empty'),
     limit: limitRaw ? Number(limitRaw) : undefined,
@@ -442,21 +452,11 @@ function compare(
 // ---------------------------------------------------------------------------
 
 async function selectPlants(
-  opts: ReturnType<typeof parseArgs>
+  opts: ReturnType<typeof parseArgs>,
+  ids: string[] | null
 ): Promise<PlantRow[]> {
   const db = getSupabaseAdmin()
   const columns = 'id, common_name, scientific_name, native_region'
-
-  let ids = opts.ids
-  if (opts.round) {
-    const manifest = readRoundManifest(opts.round)
-    if (!manifest) throw new Error(`No manifest for round "${opts.round}"`)
-    ids = manifest.seeded_ids
-  }
-  if (!ids && !opts.all)
-    throw new Error(
-      'Scope required: pass --round <label>, --ids <a,b>, or --all'
-    )
 
   const rows = await fetchAllRows<PlantRow>((from, to) => {
     let q = db.from('plants').select(columns).order('id')
@@ -571,10 +571,55 @@ async function applyCorrections(
   console.log(`\n${applied} applied, ${skipped} skipped as stale.`)
 }
 
+/**
+ * Record which rows this run actually validated, in
+ * plants.native_region_checked_at (migration 20260728193815).
+ *
+ * Stamps every row that reached a decided verdict, not only the rows it
+ * corrected — same discipline as cross-check-plants.ts. A stamp that only
+ * marked corrections could never narrow a later --new-only sweep, because the
+ * agreeing rows would look forever unchecked.
+ *
+ * Deliberately NOT stamped:
+ *   · verdict 'no-data' — GBIF returned nothing, so we learned nothing. This
+ *     is the same distinction the header refuses to blur: a failed fetch must
+ *     not leave a permanent record of a check that did not happen.
+ *   · rows skipped for a missing scientific_name — they never reached GBIF.
+ */
+async function stampChecked(findings: Finding[]): Promise<number> {
+  const db = getSupabaseAdmin()
+  const ids = findings.filter((f) => f.verdict !== 'no-data').map((f) => f.id)
+  if (!ids.length) return 0
+
+  const now = new Date().toISOString()
+  for (let i = 0; i < ids.length; i += STAMP_CHUNK) {
+    const chunk = ids.slice(i, i + STAMP_CHUNK)
+    const { error } = await db
+      .from('plants')
+      .update({ native_region_checked_at: now })
+      .in('id', chunk)
+    if (error) throw new Error(`Stamping failed: ${error.message}`)
+  }
+  return ids.length
+}
+
 async function main() {
   const opts = parseArgs()
+
+  // Scope first: it is the cheapest check and the one most likely to be wrong.
+  // Resolving it after the geojson load would answer a forgotten --round with
+  // a missing-file error instead. The scope flags this script established now
+  // live in scripts/scope.ts, so every pass refuses in the same words.
+  const scope = requireScope(
+    'cross-check-native-region',
+    'cross-check-native-region calls GBIF once per row; an unscoped run is a\n' +
+      'catalog-wide sweep of an external API.'
+  )
+  const ids = scopeIds(scope)
+  console.log(describeScope(scope, ids))
+
   const l3ToL2 = loadL3NameMap()
-  const plants = await selectPlants(opts)
+  const plants = await selectPlants(opts, ids)
   console.log(`Checking ${plants.length} plants against WCVP...`)
 
   const cache = loadCache()
@@ -625,8 +670,21 @@ async function main() {
   console.log(`\nReport → ${MD_OUT}`)
 
   if (opts.apply) await applyCorrections(findings, opts.allowEmpty)
-  else if (findings.some((f) => f.verdict === 'disagrees'))
-    console.log('Re-run with --apply to write the corrections.')
+
+  const stamped = await stampChecked(findings)
+  const noData = counts['no-data'] ?? 0
+  console.log(
+    `\nStamped native_region_checked_at on ${stamped} row(s)` +
+      (noData ? `; ${noData} left NULL (GBIF returned no data).` : '.')
+  )
+
+  const pending = findings.filter((f) => f.verdict === 'disagrees').length
+  if (!opts.apply && pending)
+    console.log(
+      `\n⚠ ${pending} row(s) are stamped as checked but their corrections are ` +
+        `still pending.\n  Re-run with --apply, or a later --new-only sweep ` +
+        `will skip them and the disagreement is lost.`
+    )
 }
 
 main().catch((err) => {

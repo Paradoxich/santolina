@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "seed": "tsx --env-file=.env.local scripts/seed-plants.ts",
+    "round:progress": "tsx --env-file=.env.local scripts/round-progress.ts",
     "catalog:state": "tsx --env-file=.env.local scripts/catalog-state.ts",
     "catalog:state:check": "tsx --env-file=.env.local scripts/catalog-state.ts && git diff --exit-code ../../docs/catalog-state.md"
   },

@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: typecheck + test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm test
+
+  catalog-state:
+    name: catalog-state staleness
+    # Reads the live catalog, so it needs the service role key. Never on
+    # pull_request: a PR-triggered job that can read SUPABASE_SERVICE_ROLE_KEY
+    # widens the blast radius of any workflow edit for no benefit. Drift is
+    # caught on the push to main immediately after merge.
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Check docs/catalog-state.md against the live catalog
+        env:
+          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SERVICE_ROLE: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        # The secrets context is not available in job- or step-level `if:`, so
+        # the skip has to happen inside the shell. Until the two repo secrets
+        # exist this job is a clean no-op rather than a red X.
+        run: |
+          if [ -z "$SERVICE_ROLE" ]; then
+            echo "::notice::Supabase secrets not set - skipping catalog:state:check."
+            exit 0
+          fi
+          printf 'NEXT_PUBLIC_SUPABASE_URL=%s\nSUPABASE_SERVICE_ROLE_KEY=%s\n' \
+            "$SUPABASE_URL" "$SERVICE_ROLE" > apps/web/.env.local
+          pnpm --filter santolina-web catalog:state:check

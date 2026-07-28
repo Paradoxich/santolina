@@ -113,28 +113,33 @@ cd apps/web
 # 0. Back up the two mutable tables first (JSON under backups/; restore-catalog.ts to undo)
 ./node_modules/.bin/tsx --env-file=.env.local scripts/backup-catalog.ts
 
-# 1. Seed botanical facts from Trefle (skips already-cataloged species;
-#    tag with --round <label> to record the batch in rounds/<label>/manifest.json)
-./node_modules/.bin/tsx --env-file=.env.local scripts/seed-plants.ts
+# 1. Seed botanical facts from Trefle (skips already-cataloged species).
+#    --round is REQUIRED: it records the batch in rounds/<label>/manifest.json,
+#    which is what every step below scopes by.
+./node_modules/.bin/tsx --env-file=.env.local scripts/seed-plants.ts --round <label>
 
 # 2. AI curation pass — fills gaps Trefle can't (care, style tags, seasonal rhythm)
-./node_modules/.bin/tsx --env-file=.env.local scripts/curate-plants.ts --new-only
+./node_modules/.bin/tsx --env-file=.env.local scripts/curate-plants.ts --round <label> --new-only
 
-# 3. Companion pairings — populates plant_combinations (idempotent; --limit N, --dry-run)
-./node_modules/.bin/tsx --env-file=.env.local scripts/curate-combinations.ts
+# 3. Companion pairings — populates plant_combinations (idempotent; --limit N, --dry-run).
+#    The scope picks who gets paired; the candidate roster stays the whole catalog.
+./node_modules/.bin/tsx --env-file=.env.local scripts/curate-combinations.ts --round <label>
 
 # 4. Regenerate native_region — MUST run after every seed, or new plants
 #    silently drop out of the "native to my region" filter (review, then --apply)
-./node_modules/.bin/tsx --env-file=.env.local scripts/regenerate-native-region.ts
+./node_modules/.bin/tsx --env-file=.env.local scripts/regenerate-native-region.ts --round <label>
 
-# 5. Guards — flag only, never edit data (pass --new-only so they don't re-bill
-#    Claude for the whole catalog on a post-seed run)
-./node_modules/.bin/tsx --env-file=.env.local scripts/cross-check-plants.ts --new-only
-./node_modules/.bin/tsx --env-file=.env.local scripts/cross-check-native-to.ts --new-only
+# 5. Guards — flag only, never edit data. Scope by --round, not --new-only:
+#    --new-only is state-based and only narrows once every other row is stamped.
+./node_modules/.bin/tsx --env-file=.env.local scripts/cross-check-plants.ts --round <label>
+./node_modules/.bin/tsx --env-file=.env.local scripts/cross-check-native-to.ts --round <label>
 ./node_modules/.bin/tsx --env-file=.env.local scripts/check-bloom-colors.ts
 
-# 6. Draft RHS hardiness ratings for unrated rows
-./node_modules/.bin/tsx --env-file=.env.local scripts/draft-hardiness.ts
+# 5b. Validate native_region against Kew's WCVP, read through GBIF
+./node_modules/.bin/tsx --env-file=.env.local scripts/cross-check-native-region.ts --round <label>
+
+# 6. Draft RHS hardiness ratings for unrated rows in this round
+./node_modules/.bin/tsx --env-file=.env.local scripts/draft-hardiness.ts --round <label>
 
 # 7. Verify the catalog satisfies the round invariants (read-only; exits 1 on any FAIL)
 ./node_modules/.bin/tsx --env-file=.env.local scripts/verify-round.ts

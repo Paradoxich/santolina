@@ -13,15 +13,19 @@
     },
     {
       "check": "out-of-scope pairing added",
-      "why": "curate-combinations tops up any plant under the 5-companion cap from the whole-catalog roster, so it legitimately pairs two older plants (§19, §25 step 3). All four endpoints here are round-7 plants that were below the cap and now sit at exactly 5."
+      "why": "curate-combinations tops up any plant under the 5-companion cap from the whole-catalog roster, so it legitimately pairs two older plants (\u00a719, \u00a725 step 3). All four endpoints here are round-7 plants that were below the cap and now sit at exactly 5."
     },
     {
       "column": "hardiness_rating",
-      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (\u00a725)."
     },
     {
       "column": "native_region",
-      "why": "the 20 rows round 8's full-catalog regeneration rewrote, since validated against WCVP by cross-check-native-region.ts: 13 were already correct and 7 were corrected on July 28. The regeneration overreach itself is fixed upstream, where --round or --all is now required (§26)."
+      "why": "the 20 rows round 8's full-catalog regeneration rewrote, since validated against WCVP by cross-check-native-region.ts: 13 were already correct and 7 were corrected on July 28. The regeneration overreach itself is fixed upstream, where --round or --all is now required (\u00a726)."
+    },
+    {
+      "column": "style_tags",
+      "why": "the July 28 style re-tag pass (scripts/curate-styles.ts), which judged all 595 plants against the tightened definitions in lib/style-tags.ts and is recorded in docs/database-log.md. Catalog-wide by design and nothing to do with round 8 \u2014 it simply lands inside a baseline-to-now window because it ran after the round. It cannot be excluded by cleared_at either: the style pass finished 13:06 on July 28 and round 8's own greenery and image remediation ran at 15:20 and 15:30, so any window wide enough to hold round 8's real work also holds this."
     }
   ]
 }

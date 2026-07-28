@@ -11,15 +11,21 @@
  * directions of existing rows. Plants already at the cap are skipped
  * without an API call.
  *
- * Usage (from apps/web):
- *   ./node_modules/.bin/tsx --env-file=.env.local scripts/curate-combinations.ts
- *   ./node_modules/.bin/tsx --env-file=.env.local scripts/curate-combinations.ts --limit 3
- *   ./node_modules/.bin/tsx --env-file=.env.local scripts/curate-combinations.ts --dry-run
+ * Usage (from apps/web) — a scope flag is mandatory, see scripts/scope.ts:
+ *   ./node_modules/.bin/tsx --env-file=.env.local scripts/curate-combinations.ts \
+ *     --round 9 [--limit 3] [--dry-run]
+ *   ... --ids <a,b,c>   |   ... --all
+ *
+ * The scope selects which plants get pairings drafted FOR them. The candidate
+ * roster stays the whole catalog either way — a round's plants should be
+ * pairable with everything already grown, and the cap arithmetic counts both
+ * directions across the whole table. Scoping the roster would silo each round.
  */
 
 import { getSupabaseAdmin } from '../lib/supabase-admin'
 import { getAnthropicClient, CURATION_MODEL } from '../lib/anthropic-client'
 import { fetchAllRows } from '../lib/paginate'
+import { requireScope, scopeIds, describeScope } from './scope'
 
 // ---------------------------------------------------------------------------
 // Config
@@ -218,6 +224,12 @@ function sleep(ms: number): Promise<void> {
 }
 
 async function main() {
+  const scope = requireScope(
+    'curate-combinations',
+    'curate-combinations bills Claude once per plant it drafts pairings for,\n' +
+      'and the whole catalog is ~595 plants.'
+  )
+  const ids = scopeIds(scope)
   const { limit, dryRun } = parseFlags()
   const db = getSupabaseAdmin()
 
@@ -264,11 +276,17 @@ async function main() {
   }
 
   const plantById = new Map(plants.map((p) => [p.id, p]))
-  const toProcess = limit ? plants.slice(0, limit) : plants
+
+  // The scope narrows who gets drafted for, never the candidate roster above.
+  const idSet = ids ? new Set(ids) : null
+  const scoped = idSet ? plants.filter((p) => idSet.has(p.id)) : plants
+  const toProcess = limit ? scoped.slice(0, limit) : scoped
 
   console.log(
-    `\nCatalog: ${plants.length} plants, ${existingPairs.size} existing pair(s).` +
-      `\nProcessing ${toProcess.length} plant(s)${dryRun ? ' (dry run — no writes)' : ''}...\n`
+    `\n${describeScope(scope, ids)}` +
+      `\nCatalog: ${plants.length} plants, ${existingPairs.size} existing pair(s).` +
+      `\nProcessing ${toProcess.length} plant(s) against the whole ${plants.length}-plant roster` +
+      `${dryRun ? ' (dry run — no writes)' : ''}...\n`
   )
 
   const failures: Array<{ name: string; error: string }> = []

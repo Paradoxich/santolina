@@ -25,9 +25,23 @@
  * (backup-catalog.ts) is what puts it there, so a round run to the runbook
  * already has what this needs.
  *
- * The window is baseline → now, not baseline → end of round: hand edits made
- * after the round still show up. Run it as the round's last step, while that
- * distinction is still free.
+ * THE WINDOW CAN BE CLOSED (added July 28 2026). By default it is baseline →
+ * now, which is right while a round is open and rots the moment it isn't: any
+ * later catalog-wide work lands inside the window and is reported as that round
+ * spilling out of its batch. Round 8 showed 450 such failures, every one of
+ * them the July 28 style pass — correctly detected, about a round that had been
+ * finished for a day.
+ *
+ * Set `cleared_at` (with a `cleared_why`) in the round's scope-allow.json when
+ * the round is done. Plant findings written after that moment then report as
+ * ALLOWED with the timestamp that put them there, instead of failing. `--live`
+ * ignores it and asks the original question.
+ *
+ * The archive is deliberately NOT the closing edge, though it looks like the
+ * obvious candidate. It has to track the live catalog to stay restorable, so it
+ * is re-captured after any later remediation and its timestamp walks forward —
+ * round 8's reads hours after the round actually ended. A window that moves is
+ * not a window.
  *
  * What counts as out of scope:
  *   FAIL · a data column changed on a plant the round didn't seed
@@ -140,7 +154,7 @@ function applyAllowlist(findings: Finding[], allow: AllowEntry[]): Finding[] {
   })
 }
 
-function parseArgs(): { label: string; baseline?: string } {
+function parseArgs(): { label: string; baseline?: string; live: boolean } {
   const args = process.argv.slice(2)
   const at = (flag: string) => {
     const i = args.indexOf(flag)
@@ -149,11 +163,11 @@ function parseArgs(): { label: string; baseline?: string } {
   const label = at('--round')
   if (!label) {
     console.error(
-      'Usage: check-round-scope.ts --round <label> [--baseline <backup dir>]'
+      'Usage: check-round-scope.ts --round <label> [--baseline <backup dir>] [--live]'
     )
     process.exit(1)
   }
-  return { label, baseline: at('--baseline') }
+  return { label, baseline: at('--baseline'), live: args.includes('--live') }
 }
 
 // Sets and JSON documents both round-trip through the DB with no guaranteed
@@ -177,6 +191,67 @@ function canonical(value: unknown): string {
 
 function readJson<T>(path: string): T {
   return JSON.parse(readFileSync(path, 'utf8')) as T
+}
+
+/**
+ * The round's declared closing edge, from `cleared_at` in scope-allow.json.
+ *
+ * NOT taken from the round's archive, which is the obvious-looking source and
+ * the wrong one: the archive has to track the live catalog to stay restorable,
+ * so it gets re-captured after any later remediation and its timestamp walks
+ * forward. Round 8's read 19:46 on July 28 — the moment of a refresh, hours
+ * after the round itself was done. A window that moves is not a window.
+ */
+function readClearedAt(label: string): { at: string; why: string } | null {
+  const path = join(roundDir(label), 'scope-allow.json')
+  if (!existsSync(path)) return null
+  const parsed = readJson<{ cleared_at?: string; cleared_why?: string }>(path)
+  if (!parsed.cleared_at) return null
+  if (!parsed.cleared_why?.trim())
+    throw new Error(
+      `${path}: cleared_at needs a "cleared_why" saying what closed the round.`
+    )
+  if (!Number.isFinite(Date.parse(parsed.cleared_at)))
+    throw new Error(`${path}: cleared_at is not a parseable timestamp.`)
+  return { at: parsed.cleared_at, why: parsed.cleared_why }
+}
+
+/**
+ * Move findings on rows written after the round closed out of FAIL.
+ *
+ * Without this, a closed round's check rots: any later catalog-wide work lands
+ * inside a baseline → now window and is reported as that round spilling out of
+ * its batch. Round 8 showed 450 such failures, every one of them the July 28
+ * style pass — correctly detected, and about a round that had been finished for
+ * a day.
+ *
+ * Keyed on plants.updated_at, so it only covers plant findings. A combination
+ * finding has no timestamp to judge and stays where it was; if a later session
+ * adds pairs between old plants, waive them by name like anything else.
+ *
+ * This narrows what a check FAILS on. It does not hide anything: the findings
+ * stay in the report under their own level, counted and labelled.
+ */
+function applyClearedAt(
+  findings: Finding[],
+  cleared: { at: string; why: string } | null,
+  afterPlants: Row[]
+): Finding[] {
+  if (!cleared) return findings
+  const closed = Date.parse(cleared.at)
+  const updatedById = new Map(
+    afterPlants.map((r) => [String(r.id), String(r.updated_at ?? '')])
+  )
+  return findings.map((f) => {
+    if (f.level !== 'FAIL' || !f.id) return f
+    const updated = Date.parse(updatedById.get(f.id) ?? '')
+    if (!Number.isFinite(updated) || updated <= closed) return f
+    return {
+      ...f,
+      level: 'ALLOWED',
+      why: `written ${updatedById.get(f.id)}, after this round closed at ${cleared.at} — ${cleared.why}`,
+    }
+  })
 }
 
 function fetchAll(table: string): Promise<Row[]> {
@@ -338,7 +413,7 @@ function format(value: unknown): string {
 }
 
 async function main() {
-  const { label, baseline: explicitBaseline } = parseArgs()
+  const { label, baseline: explicitBaseline, live } = parseArgs()
 
   const manifest = readRoundManifest(label)
   if (!manifest) {
@@ -363,6 +438,13 @@ async function main() {
   const beforeCombos = readSnapshot(baselineDir, 'plant_combinations')
   if (!beforePlants || !beforeCombos)
     throw new Error(`Baseline ${baselineDir} is missing a catalog table.`)
+  const clearedAt = live ? null : readClearedAt(label)
+  console.log(
+    clearedAt
+      ? `Window: baseline → ${clearedAt.at} (cleared; later writes are reported separately)`
+      : `Window: baseline → the live catalog (now)`
+  )
+
   const [afterPlants, afterCombos] = await Promise.all([
     fetchAll('plants'),
     fetchAll('plant_combinations'),
@@ -378,12 +460,16 @@ async function main() {
       String(r.common_name ?? r.id),
     ])
   )
-  const findings = applyAllowlist(
-    [
-      ...checkPlants(beforePlants, afterPlants, seeded),
-      ...checkCombos(beforeCombos, afterCombos, seeded, plantNames),
-    ],
-    readAllowlist(label)
+  const findings = applyClearedAt(
+    applyAllowlist(
+      [
+        ...checkPlants(beforePlants, afterPlants, seeded),
+        ...checkCombos(beforeCombos, afterCombos, seeded, plantNames),
+      ],
+      readAllowlist(label)
+    ),
+    clearedAt,
+    afterPlants
   )
 
   report(findings, 'FAIL')
@@ -403,6 +489,9 @@ async function main() {
       {
         round: manifest.label,
         baseline: baselineDir,
+        // What the window closed on, so a re-run is comparable to this one.
+        window: clearedAt ? 'cleared' : 'live',
+        cleared_at: clearedAt?.at ?? null,
         seeded_count: seeded.size,
         plants_before: beforePlants.length,
         plants_after: afterPlants.length,
