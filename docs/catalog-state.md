@@ -36,7 +36,7 @@ One row per step that stamps a column, from the `STEP_DEFS` registry in
 | `cross-check-plants` | `botanical_checked_at` | 479 / 595 | 80.5% |
 | `cross-check-native-to` | `native_checked_at` | 177 / 595 | 29.7% |
 | `curate-styles` | `style_checked_at` | 595 / 595 | 100.0% |
-| `curate-greenery` | `greenery_checked_at` | 494 / 595 | 83.0% |
+| `curate-greenery` | `greenery_checked_at` | 595 / 595 | 100.0% |
 | `pick-plant-images` | `image_checked_at` | 494 / 595 | 83.0% |
 
 ## Field coverage
@@ -49,7 +49,7 @@ One row per step that stamps a column, from the `STEP_DEFS` registry in
 | `style_tags` | never judged (NULL — a gap) | 0 |
 | `seasonal_care` | null | 0 |
 | `native_region` | empty | 4 |
-| `is_greenery` | true | 69 |
+| `is_greenery` | true | 101 |
 | `hardiness_rating` | drafted | 595 |
 | `hardiness_verified` | human-verified | 267 |
 | images | no image at all | 13 |

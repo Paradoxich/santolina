@@ -6,13 +6,13 @@ Every entry below was written because someone lost time, money, or data to somet
 
 ## What this file is, and what it is not
 
-|                          | Answers                                                            |
-| ------------------------ | ------------------------------------------------------------------ |
-| **This file**            | What has been DONE to the database, and what BIT us                |
-| `docs/catalog-state.md`  | What is TRUE RIGHT NOW — generated, never hand-written             |
-| `docs/architecture.md`   | WHY the system is shaped the way it is (design rationale)          |
-| `apps/web/rounds/<n>/`   | WHAT a specific round seeded (machine-readable provenance)         |
-| Notion Session Log       | Narrative of a work session, incl. non-database work               |
+|                         | Answers                                                    |
+| ----------------------- | ---------------------------------------------------------- |
+| **This file**           | What has been DONE to the database, and what BIT us        |
+| `docs/catalog-state.md` | What is TRUE RIGHT NOW — generated, never hand-written     |
+| `docs/architecture.md`  | WHY the system is shaped the way it is (design rationale)  |
+| `apps/web/rounds/<n>/`  | WHAT a specific round seeded (machine-readable provenance) |
+| Notion Session Log      | Narrative of a work session, incl. non-database work       |
 
 If a fact belongs in two places, it goes here as the short operational version and there as the full reasoning, with a pointer. Do not duplicate whole explanations.
 
@@ -180,6 +180,22 @@ This is trap 7 in different clothes: **an external name lookup that guesses is m
 ## Sessions
 
 <!-- Newest first. Append with: scripts/log-db-session.ts --round <label> -->
+
+### 2026-07-28 — Round 8's missing passes, finally run
+
+**Branch** `fix/phase-2-structural-guards`. **Data written.** Catalog size unchanged at 595 / 1485; the round-8 batch's greenery and image fields filled.
+
+Round 8 closed on July 27 reporting a clean 7/7 sweep. It was not clean: `curate-greenery` and the image pass had never run for any of its 101 plants, and no guard could see it because neither step was registered (trap 4). With the registry in place they became visible as a FAIL and a WARN, so they were run.
+
+**Backed up first** per rule 1 (`backups/2026-07-28T15-13-48-859Z`), and smoke-tested at `--limit 3` per rule 7 before each full run.
+
+**`curate-greenery --new-only`** — 101/101 judged, **32 greenery**. Two contradictions resolved as designed: _Italian arum_ and _Spanish-dagger_ both came back `greenery=true` while also reporting a distinctive non-green foliage colour (silver-marbled green, blue-green), so both were overridden to false and routed to their foliage bucket instead. That mattered more than the count suggests — `is_greenery` is the only route into the Explore Green bucket and defaults to `false`, so 101 plants from a shade-and-structure batch had been silently outside a live filter since July 27.
+
+**Image pass**, which needed its free prerequisite first: `recover-image-categories.ts` had never run for the batch, so all 101 had an empty `image_candidates` and the vision pick had nothing to shortlist from. Recovered 98, with **3 having no images upstream at all**. Then `pick-plant-images.ts`.
+
+**What bit us:** nothing new — this is the remediation of what the guard audit found. Worth recording that the image pass has a **prerequisite no guard checks**: `image_checked_at` being NULL does not tell you whether `image_candidates` is populated, and the pick cannot run without it. A round that skips `recover-image-categories` looks identical to one that simply has not reached the image pass yet.
+
+**Deliberately not done:** the 3 plants with no upstream images stay on the placeholder — there is nothing to pick from, and that is a sourcing problem (Wikimedia, or a manual hero) rather than a pipeline one.
 
 ### 2026-07-28 — Guard drift audit: four fixes before round 9
 
