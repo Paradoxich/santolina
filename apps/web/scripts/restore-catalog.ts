@@ -1,6 +1,19 @@
 /**
- * Restore a backup-catalog.ts snapshot. Dry-run by default: shows what would
- * change and touches nothing. Pass --apply to write.
+ * Restore a catalog snapshot. Dry-run by default: shows what would change and
+ * touches nothing. Pass --apply to write.
+ *
+ * Reads either source of truth:
+ *   · `backups/<stamp>/` — the gitignored working area backup-catalog.ts writes
+ *   · `rounds/<n>/catalog/` — the committed, gzipped archive (catalog-snapshot.ts)
+ *
+ * The second one is the point: `backups/` lives on one machine, and Free-plan
+ * Supabase projects cannot download or restore the platform's own daily
+ * backups. A committed archive nobody can restore FROM would be decoration, so
+ * this reads it directly.
+ *
+ * A round archive holds two states, so it needs `--phase`: `before` is the
+ * round's rollback point, `after` is the state it left behind. There is no
+ * default — picking the wrong one silently reverts or re-applies a whole round.
  *
  * Semantics: every backed-up row is upserted by id, so rows corrupted or
  * deleted since the backup are put back exactly as they were. Rows CREATED
@@ -8,11 +21,13 @@
  * decision, not a restore side effect.
  *
  *   ./node_modules/.bin/tsx --env-file=.env.local scripts/restore-catalog.ts \
- *     backups/<stamp>            # dry run
- *     backups/<stamp> --apply    # write
+ *     backups/<stamp>                          # dry run
+ *     backups/<stamp> --apply                  # write
+ *     rounds/8/catalog --phase before          # dry run from the committed archive
  */
 
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
+import { gunzipSync } from 'node:zlib'
 import { join } from 'node:path'
 
 import { getSupabaseAdmin } from '../lib/supabase-admin'
@@ -21,17 +36,46 @@ const TABLES = ['plants', 'plant_combinations'] as const
 
 type Row = Record<string, unknown> & { id: string }
 
-function loadBackup(dir: string, table: string): Row[] {
-  const rows = JSON.parse(
-    readFileSync(join(dir, `${table}.json`), 'utf8')
-  ) as Row[]
-  const meta = JSON.parse(readFileSync(join(dir, 'meta.json'), 'utf8')) as {
-    counts: Record<string, number>
+interface ArchiveMeta {
+  counts: Record<string, number | Record<string, number>>
+}
+
+function loadBackup(dir: string, table: string, phase?: string): Row[] {
+  const meta = JSON.parse(
+    readFileSync(join(dir, 'meta.json'), 'utf8')
+  ) as ArchiveMeta
+
+  // A round archive nests counts under before/after; a plain backup does not.
+  const isArchive =
+    typeof meta.counts.before === 'object' ||
+    typeof meta.counts.after === 'object'
+
+  let path: string
+  let expected: number | undefined
+  if (isArchive) {
+    if (phase !== 'before' && phase !== 'after')
+      throw new Error(
+        `${dir} is a round archive holding both states — pass --phase before ` +
+          `(the round's rollback point) or --phase after (what it left behind).`
+      )
+    path = join(dir, `${phase}-${table}.json.gz`)
+    expected = (meta.counts[phase] as Record<string, number>)[table]
+  } else {
+    path = join(dir, `${table}.json`)
+    expected = meta.counts[table] as number
   }
-  if (rows.length !== meta.counts[table]) {
+
+  if (!existsSync(path))
+    throw new Error(`Missing ${path} — snapshot is incomplete.`)
+  const raw = readFileSync(path)
+  const rows = JSON.parse(
+    (path.endsWith('.gz') ? gunzipSync(raw) : raw).toString('utf8')
+  ) as Row[]
+
+  if (expected !== undefined && rows.length !== expected) {
     throw new Error(
-      `${table}.json has ${rows.length} rows but meta.json recorded ` +
-        `${meta.counts[table]} — backup looks incomplete, refusing to restore`
+      `${path} has ${rows.length} rows but meta.json recorded ` +
+        `${expected} — snapshot looks incomplete, refusing to restore`
     )
   }
   return rows
@@ -56,9 +100,10 @@ async function fetchCurrent(table: string): Promise<Map<string, Row>> {
 async function restoreTable(
   dir: string,
   table: string,
-  apply: boolean
+  apply: boolean,
+  phase?: string
 ): Promise<void> {
-  const backedUp = loadBackup(dir, table)
+  const backedUp = loadBackup(dir, table, phase)
   const current = await fetchCurrent(table)
 
   const changed = backedUp.filter((row) => {
@@ -95,11 +140,18 @@ async function restoreTable(
 async function main() {
   const args = process.argv.slice(2)
   const apply = args.includes('--apply')
-  const dir = args.find((a) => !a.startsWith('--'))
+  const phaseIdx = args.indexOf('--phase')
+  const phase = phaseIdx >= 0 ? args[phaseIdx + 1] : undefined
+  // Skip the value that belongs to --phase, but only when --phase was passed;
+  // otherwise phaseIdx is -1 and index 0 (the directory) gets excluded.
+  const dir = args.find(
+    (a, i) => !a.startsWith('--') && !(phaseIdx >= 0 && i === phaseIdx + 1)
+  )
   if (!dir) {
     console.error(
-      'Usage: restore-catalog.ts <backup dir> [--apply]\n' +
-        'e.g.   restore-catalog.ts backups/2026-07-15T21-17-33-191Z'
+      'Usage: restore-catalog.ts <snapshot dir> [--phase before|after] [--apply]\n' +
+        'e.g.   restore-catalog.ts backups/2026-07-15T21-17-33-191Z\n' +
+        '       restore-catalog.ts rounds/8/catalog --phase before'
     )
     process.exit(1)
   }
@@ -107,7 +159,7 @@ async function main() {
   console.log(
     apply ? 'RESTORE — writing to the live DB.' : 'Dry run — nothing written.'
   )
-  for (const table of TABLES) await restoreTable(dir, table, apply)
+  for (const table of TABLES) await restoreTable(dir, table, apply, phase)
   if (!apply) console.log('\nRe-run with --apply to write these changes.')
 }
 

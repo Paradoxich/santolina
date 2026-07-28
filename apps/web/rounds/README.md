@@ -11,7 +11,27 @@ rounds/8/
                      with a reason (scripts/check-round-scope.ts)
   reports/           snapshot of the round's guard output, copied from the
                      gitignored reports/ working area by scripts/archive-round.ts
+  catalog/           the catalog itself, gzipped: before-*.json.gz (the round's
+                     rollback point) and after-*.json.gz (what it left behind)
 ```
+
+`catalog/` is the **only off-machine copy of the catalog that exists.**
+`backups/` is gitignored and lives on one laptop, and Free-plan Supabase
+projects cannot download or restore the platform's own daily backups — so
+without this, a dead disk loses a catalog that cannot be regenerated (curation
+is a stochastic model pass; the editorial corrections on top are one-of-a-kind).
+About 2.3MB per round gzipped, against 5.9MB raw.
+
+Restore from it directly — the archive is not decoration:
+
+```bash
+tsx --env-file=.env.local scripts/restore-catalog.ts rounds/8/catalog --phase before
+```
+
+`--phase` is required and has no default, because picking the wrong one silently
+reverts or re-applies an entire round. `check-round-scope.ts` also falls back to
+this archive when `backups/` is absent, which is what lets it run in a fresh
+clone or worktree.
 
 The manifest is the explicit record of a round's batch — it exists so nothing
 downstream has to infer "this round's plants" from a `created_at` heuristic.

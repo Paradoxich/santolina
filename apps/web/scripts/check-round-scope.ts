@@ -45,15 +45,10 @@
  * archive-round.ts snapshots the result alongside the round's other guards.
  */
 
-import {
-  existsSync,
-  mkdirSync,
-  readFileSync,
-  readdirSync,
-  writeFileSync,
-} from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
+import { readSnapshot, resolveBaselineDir } from './catalog-snapshot'
 import { fetchAllRows } from '../lib/paginate'
 import { getSupabaseAdmin } from '../lib/supabase-admin'
 import { readRoundManifest, roundDir, sanitizeLabel } from './round-manifest'
@@ -181,44 +176,6 @@ function canonical(value: unknown): string {
 
 function readJson<T>(path: string): T {
   return JSON.parse(readFileSync(path, 'utf8')) as T
-}
-
-// The baseline is the last snapshot of the catalog before the round started.
-// Anything later would already contain the round's own writes and the diff
-// would come back empty for the wrong reason.
-function resolveBaseline(startedAt: string, explicit?: string): string {
-  const backupsDir = join(process.cwd(), 'backups')
-  if (explicit) {
-    const dir = explicit.includes('/') ? explicit : join(backupsDir, explicit)
-    if (!existsSync(join(dir, 'plants.json')))
-      throw new Error(`No plants.json in baseline ${dir}`)
-    return dir
-  }
-  if (!existsSync(backupsDir))
-    throw new Error(
-      `No backups/ directory. The baseline comes from step 0 of the round ` +
-        `cadence (backup-catalog.ts); without one this check cannot run.`
-    )
-
-  const started = Date.parse(startedAt)
-  const candidates = readdirSync(backupsDir)
-    .map((name) => join(backupsDir, name))
-    .filter((dir) => existsSync(join(dir, 'meta.json')))
-    .map((dir) => ({
-      dir,
-      at: Date.parse(
-        readJson<{ created_at: string }>(join(dir, 'meta.json')).created_at
-      ),
-    }))
-    .filter((b) => Number.isFinite(b.at) && b.at <= started)
-    .sort((a, b) => b.at - a.at)
-
-  if (!candidates.length)
-    throw new Error(
-      `No backup taken at or before the round started (${startedAt}). ` +
-        `Pass --baseline explicitly if the snapshot lives elsewhere.`
-    )
-  return candidates[0]!.dir
 }
 
 function fetchAll(table: string): Promise<Row[]> {
@@ -392,14 +349,19 @@ async function main() {
   }
   const seeded = new Set(manifest.seeded_ids)
 
-  const baselineDir = resolveBaseline(manifest.started_at, explicitBaseline)
-  console.log(`Round ${manifest.label} — ${seeded.size} seeded plants`)
-  console.log(`Baseline: ${baselineDir}`)
-
-  const beforePlants = readJson<Row[]>(join(baselineDir, 'plants.json'))
-  const beforeCombos = readJson<Row[]>(
-    join(baselineDir, 'plant_combinations.json')
+  const baseline = resolveBaselineDir(
+    label,
+    manifest.started_at,
+    explicitBaseline
   )
+  const baselineDir = baseline.dir
+  console.log(`Round ${manifest.label} — ${seeded.size} seeded plants`)
+  console.log(`Baseline: ${baselineDir} (${baseline.source})`)
+
+  const beforePlants = readSnapshot(baselineDir, 'plants')
+  const beforeCombos = readSnapshot(baselineDir, 'plant_combinations')
+  if (!beforePlants || !beforeCombos)
+    throw new Error(`Baseline ${baselineDir} is missing a catalog table.`)
   const [afterPlants, afterCombos] = await Promise.all([
     fetchAll('plants'),
     fetchAll('plant_combinations'),
