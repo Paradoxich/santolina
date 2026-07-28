@@ -122,6 +122,23 @@ Hand it a binomial it does not know and it climbs the taxonomy rather than retur
 
 This is trap 7 in different clothes: **an external name lookup that guesses is more dangerous than one that fails.** Require `EXACT` at species rank _and_ that the canonical name returned is the one you asked for. Normalise the `×` away first, or every hybrid in the catalog reads as unmatched.
 
+### 13. Applying a migration through the API stamps its OWN version — FIXED July 28 2026
+
+`apply_migration` (the Supabase MCP tool / Management API) records the migration under a version it generates, **not** under your local filename. Four migrations had been applied that way, so the remote ledger and `supabase/migrations/` held the same 26 migrations under four different version stamps:
+
+| local file       | remote version   | migration               |
+| ---------------- | ---------------- | ----------------------- |
+| `20260721210000` | `20260721204551` | add_curated_plant_image |
+| `20260722120000` | `20260721230049` | add_image_attribution   |
+| `20260724120000` | `20260724120842` | add_is_greenery         |
+| `20260724120500` | `20260724120938` | add_greenery_checked_at |
+
+**The schema was never wrong — this is ledger drift, not data drift.** The danger is `supabase db push`: it would not recognise those four local filenames as applied and would try to re-run them against production.
+
+**Fixed by renaming the local files to the remote versions**, not by repairing the remote ledger. The remote versions record when the migrations actually ran, so they are the truthful record, and renaming touches **no production state at all**. Relative apply order was preserved (checked explicitly — `add_is_greenery` still precedes `add_greenery_checked_at`), and local now matches the remote ledger exactly, 26 for 26.
+
+**The durable rule:** if you apply a migration through the API or MCP rather than `supabase db push`, reconcile the filename to the version the remote recorded in the same session. `supabase migration repair --status applied <version>` is the other direction and is the right tool when the local filename is the truthful one.
+
 ### 12. A round manifest records names as SEEDED, before the name pass
 
 `rounds/<n>/manifest.json` is written by the seed run, so its `common_name` values predate `fix-round8-names.ts`. Per trap 6, Trefle gave no English name to 18 of round 8's 101 rows, and those sit in the manifest under their bare scientific name. Grepping a manifest by common name therefore returns a confidently wrong answer: it is how a review concluded round 8 had seeded nothing that could collide, when it had seeded `Anemonoides nemorosa` — the direct cause of a rename. **Search a manifest by `scientific_name`**, and cross-read the round's name-fix script.
@@ -159,6 +176,7 @@ All waived in `rounds/8/scope-allow.json`, each entry carrying its cause, so rou
 
 **Deliberately not done:**
 
+- **Migration ledger drift reconciled** (trap 13): four local migration filenames renamed to the versions the remote actually recorded, after `apply_migration` had stamped its own. No production state touched; local and remote now match 26 for 26. `supabase db push` is safe again.
 - **~575 plants still unvalidated against WCVP.** Sample says ~2% are wrong. Run in reviewed batches; do not point `--apply` at `--all`
 - the 405 `updated_at` / `*_checked_at` stamps on unseeded rows left as WARN — guards re-stamp by design
 - nothing pushed, no PR opened, `is_curated` untouched throughout
