@@ -2,7 +2,45 @@
 
 Newest entry first. Read the top entry before starting work.
 
-## 2026-07-28 (latest) — the database tooling is finished; read this one first
+## 2026-07-29 — session/2026-07-29-editorial (read this one first)
+
+**Status:** merged to main (PR #123). Worktree removed, branch deleted local and remote. `main` at `e60383e`, clean.
+
+**Round 8 is the first batch to clear every pipeline step end to end**, sign-off included. `round-progress --round 8` → 12/12 steps, 6/6 artifacts. `verify-round --round 8` → 0 failures, 4 warnings.
+
+**Done:**
+
+- **`curate-editorial.ts`** — the §3 sign-off step, which had never existed as a script. Bar defined once in `lib/editorial-standard.ts`; scope flags mandatory; migration `20260728220852` adds `editorial_checked_at`; registered in `STEP_DEFS` at FAIL. Runbook step **7b**.
+- **Ran it over round 8: 61 approved, 40 held, 57 descriptions rewritten.** Catalog-wide `is_curated` 76 → 137. All 101 stamped, so held rows are recorded "no" verdicts, not gaps.
+- **Standing rule 6 corrected.** It said "never flip `is_curated`, it is Ana's alone" — false since her July 28 ruling. Now names the one script allowed to.
+- Round 8's archive refreshed after the pass (`--catalog-only`) — the staleness check caught it, which is the July 28 trap being caught by the tool built for it.
+
+**Decisions made:**
+
+- The pass **rewrites** weak descriptions rather than only flagging them. The text is already an AI draft and `is_curated = false` is the record nobody signed it off, so a better draft replacing a worse one is not new authorship. Ana delegated this call.
+- **A rewrite is never judged by the model that wrote it** — a second blind call sees only the plant identity and candidate text. It caught a rewrite swapping in a different common name on the first smoke run.
+- **Image criterion costs nothing:** reads the persisted `image_pick_confidence`, no second vision call. Only `high` clears; `medium` is _unresolved_, not failed.
+- **Strict bar** (Ana): any unresolved doubt leaves the row `false`.
+
+**What bit us:** the blind judge invented em dashes in four rewrites that the mechanical check had already proven dash-free, holding four good rows on a fabricated reason. Both prompts now forbid citing punctuation, and rejected rewrites are stored so the claim is checkable. Re-running the 8 affected rows cleared 7.
+
+**Next steps, in order:**
+
+1. **The 30 medium-confidence images.** Highest value by a distance: 33 of round 8's 40 holds are image-only, and 30 of those clear with a targeted vision re-check — ~$0.20 plus a small verify-only mode on `pick-plant-images`. This is what stands between round 8 and a fully signed-off batch.
+2. **The 6 tag flags the pass found** — real data errors, sitting in `reports/editorial-8.json`: jade plant tagged for outdoor styles, a cactus tagged mediterranean, `Luzula nivea` typed as a grass when it is a rush.
+3. **Token usage logger.** Written and deliberately _not_ committed (it was unwired; a dead module is worse than re-adding it). Design point that matters: keep `source` free-form and the format call-site agnostic, because the Agent will go through the Vercel AI SDK and never touch `getAnthropicClient()` — instrumenting only that client measures the cheap half (curation is cents) and misses the runtime, per-user half that will actually constrain the product.
+4. ~575-plant **WCVP tail**. Reviewed batches; never `--apply` against `--all`.
+5. Promote **hardiness WARN → FAIL** in the same change that un-parks §27.
+
+**Open questions:**
+
+- The two **colour-bucket calls** still need a yes (recommendation is in the Build Backlog).
+- 3 plants have **no candidate image upstream at all** — Wikimedia or a manual hero, not a pipeline fix.
+- Blocked, unchanged: local Supabase on disk cleanup; the Pro-plan decision on real diary data.
+
+**Worth knowing about API spend, since it came up:** there is no per-task dimension in the Usage/Cost API, and the Admin API needs an organization (unavailable to individual accounts). `CURATION_MODEL` vs `VISION_MODEL` happens to split text from images cleanly across this project's whole history — verified, both constants have never changed — and `service_tier=batch` corroborates it. Finer attribution needs the local logger above. The pipeline's actual spend is cents per round; the Agent is where this becomes a real constraint.
+
+## 2026-07-28 — the database tooling is finished; read this one first
 
 **Status:** everything below is verified, not assumed. Open in [PR #122](https://github.com/Paradoxich/santolina/pull/122), branch `session/2026-07-28-db-tooling`, **CI green**.
 

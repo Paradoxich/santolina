@@ -1,8 +1,8 @@
 {
   "round": "8",
-  "captured_at": "2026-07-28T19:46:18.578Z",
-  "baseline_dir": "/Users/paradoxich/Desktop/Coding/santolina-db-tooling/apps/web/rounds/8/catalog",
-  "baseline_source": "archive",
+  "captured_at": "2026-07-28T22:38:43.472Z",
+  "baseline_dir": "/Users/paradoxich/Desktop/Coding/santolina/apps/web/backups/2026-07-27T15-40-14-161Z",
+  "baseline_source": "backups",
   "counts": {
     "before": {
       "plants": 494,
