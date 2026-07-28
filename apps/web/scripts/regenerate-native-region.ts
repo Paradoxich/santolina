@@ -47,6 +47,7 @@ import { getSupabaseAdmin } from '../lib/supabase-admin'
 import { getSpeciesBySlug } from '../lib/trefle'
 import { getAnthropicClient, CURATION_MODEL } from '../lib/anthropic-client'
 import { fetchAllRows } from '../lib/paginate'
+import { MANUAL_OVERRIDES as SHARED_OVERRIDES } from '../lib/native-region-overrides'
 import { readRoundManifest } from './round-manifest'
 
 // ---------------------------------------------------------------------------
@@ -127,46 +128,7 @@ const NO_WILD_RANGE =
 // Reviewed manual corrections to specific model-derived fallback rows. Kept as
 // data (not hand-edits to the plan JSON) so they survive re-generation and stay
 // auditable. `tags` forces an exact Level-2 set; `noWildRange` forces empty.
-const MANUAL_OVERRIDES: Record<
-  string,
-  { tags?: string[]; noWildRange?: true; reason: string }
-> = {
-  // Circumboreal fern — the bare "Europe, Asia, and North America" prose
-  // expanded to 25 regions incl. tropical/desert false positives. Tightened to
-  // the cool-temperate Northern-Hemisphere core.
-  'Matteuccia struthiopteris': {
-    tags: [
-      'Northern Europe',
-      'Middle Europe',
-      'Eastern Europe',
-      'Southeastern Europe',
-      'Southwestern Europe',
-      'Siberia',
-      'Russian Far East',
-      'Caucasus',
-      'China',
-      'Eastern Asia',
-      'Subarctic America',
-      'Western Canada',
-      'Eastern Canada',
-      'Northwestern U.S.A.',
-      'North-Central U.S.A.',
-      'Northeastern U.S.A.',
-    ],
-    reason: 'tightened circumboreal; dropped tropical/desert over-reach',
-  },
-  // "the Mediterranean region" pulled in Western Asia; rosemary is not native
-  // to the Levant. Keep the western/central-Mediterranean rim.
-  'Rosmarinus officinalis': {
-    tags: ['Northern Africa', 'Southeastern Europe', 'Southwestern Europe'],
-    reason: 'dropped Western Asia — not native Levant range',
-  },
-  // Garden hybrid (Cistus × purpureus) stored without the × — no wild range.
-  'Cistus purpureus': {
-    noWildRange: true,
-    reason: 'garden hybrid (Cistus × purpureus) — no wild native range',
-  },
-}
+const MANUAL_OVERRIDES = SHARED_OVERRIDES
 
 const uniqSorted = (xs: string[]) => [...new Set(xs)].sort()
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
