@@ -181,6 +181,21 @@ This is trap 7 in different clothes: **an external name lookup that guesses is m
 
 <!-- Newest first. Append with: scripts/log-db-session.ts --round <label> -->
 
+### 2026-07-28 — Archive refreshed after the greenery/image passes (and a trap walked into)
+
+**Branch** `chore/refresh-round8-archive`. No data written; provenance only.
+
+Running round 8's two missing passes left the round's committed archive **stale by two full passes**. `rounds/8/catalog/after-*` had been captured at **11:21**; the greenery pass ran at 15:13 and the image pass after it. Restoring that snapshot would have silently reverted ~200 rows of judged greenery and hero picks **while reporting a successful restore** — which is trap-for-trap the thing recorded here on July 28 as the reason `archive-round --catalog-only` and the staleness warning exist. The lesson had been written down that morning and was still walked into that afternoon.
+
+Refreshed with `archive-round.ts --round 8`. Verified: `restore-catalog rounds/8/catalog --phase after` now reports **0 rows differ** on both tables.
+
+**What bit us — two things, same shape:**
+
+1. **The book-end steps are not part of "the pass is done".** Running a curation script feels finished when its own output looks right. `archive-round` is step 8 of §25 for exactly this reason, and nothing enforces it: no guard fails, no hook fires, because the round directory was committed long ago. `check-round-scope`'s report is the only artifact that would have hinted, and it is not run after a remediation pass.
+2. **A backup taken inside a throwaway worktree dies with the worktree.** `backups/` is gitignored and local, so `git worktree remove --force` took the pre-write backup with it. §25 records the July 27 session coming "within one `git worktree remove`" of destroying the sole copy of the pre-round-8 catalog; this session actually did it. **No data was at risk only by luck** — the 11:21 committed archive happened to predate the writes, so a rollback point survived. **Take the backup in the shared checkout, or archive it before removing the worktree.**
+
+Also lost and regenerated: `reports/image-picks.md`, the 592-plant review report, which lived in the deleted worktree's gitignored `reports/`. Recovered with `pick-plant-images.ts --report-only` and now committed into `rounds/8/reports/` — where it should have gone in the first place.
+
 ### 2026-07-28 — Round 8's missing passes, finally run
 
 **Branch** `fix/phase-2-structural-guards`. **Data written.** Catalog size unchanged at 595 / 1485; the round-8 batch's greenery and image fields filled.
