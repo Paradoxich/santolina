@@ -2,13 +2,18 @@
  * AI curation pass — fills in fields that Trefle doesn't reliably provide,
  * using Claude's own botanical knowledge.
  *
- * Reads all plants where is_curated = false, sends each to Claude requesting
- * only the fields that are actually missing, then patches those rows back into
- * Supabase. Never overwrites existing Trefle data. Does not flip is_curated —
- * that remains a manual step after human review.
+ * Reads plants where is_curated = false within the given scope, sends each to
+ * Claude requesting only the fields that are actually missing, then patches
+ * those rows back into Supabase. Never overwrites existing Trefle data. Does
+ * not flip is_curated — that remains an editorial step after review.
  *
- * Usage (from apps/web):
- *   ./node_modules/.bin/tsx --env-file=.env.local scripts/curate-plants.ts
+ * Usage (from apps/web) — a scope flag is mandatory, see scripts/scope.ts:
+ *   ./node_modules/.bin/tsx --env-file=.env.local scripts/curate-plants.ts \
+ *     --round 9 [--new-only]
+ *   ... --ids <a,b,c>   |   ... --all
+ *
+ * --new-only narrows to rows never drafted; it is a filter within the scope,
+ * not a scope of its own.
  *
  * Review queue after running:
  *   SELECT id, common_name, scientific_name, ai_drafted_at
@@ -22,6 +27,7 @@ import { fetchAllRows } from '../lib/paginate'
 import { getAnthropicClient, CURATION_MODEL } from '../lib/anthropic-client'
 import type { DbPlant, PlantType, SeasonalRhythm } from '../lib/plants-db'
 import { STYLE_TAG_PROMPT, type StyleTag } from '../lib/style-tags'
+import { requireScope, scopeIds, describeScope } from './scope'
 
 // ---------------------------------------------------------------------------
 // Config
@@ -344,18 +350,24 @@ function buildPatch(plant: DbPlant, response: CurationResponse): PlantPatch {
 // DB helpers
 // ---------------------------------------------------------------------------
 
-async function fetchUncuratedPlants(newOnly = false): Promise<DbPlant[]> {
+async function fetchUncuratedPlants(
+  ids: string[] | null,
+  newOnly = false
+): Promise<DbPlant[]> {
   const db = getSupabaseAdmin()
 
   // Paginated (standing rule 5). `is_curated` is true on 76 rows out of 595,
-  // so this selection is most of the catalog and grows with every seed — a
+  // so an --all selection is most of the catalog and grows with every seed — a
   // bare .select() would silently start dropping rows from the drafting pass
   // as soon as it crosses 1000.
   return fetchAllRows<DbPlant>((from, to) => {
     let query = db.from('plants').select('*').eq('is_curated', false)
 
+    // ids is null only for --all.
+    if (ids) query = query.in('id', ids)
+
     // --new-only: limit to rows that have never been drafted, so a targeted
-    // top-up after seeding a few plants doesn't re-query the whole catalog.
+    // top-up after seeding a few plants doesn't re-draft the whole scope.
     if (newOnly) query = query.is('ai_drafted_at', null)
 
     return query.order('common_name').order('id').range(from, to)
@@ -381,12 +393,20 @@ function sleep(ms: number): Promise<void> {
 }
 
 async function main() {
+  const scope = requireScope(
+    'curate-plants',
+    'curate-plants bills Claude once per row, and the whole uncurated\n' +
+      'catalog is ~519 plants — an accidental full run is both expensive and\n' +
+      'a catalog-wide write.'
+  )
+  const ids = scopeIds(scope)
   const newOnly = process.argv.slice(2).includes('--new-only')
 
+  console.log(`\n${describeScope(scope, ids)}`)
   console.log(
-    `\nFetching ${newOnly ? 'undrafted ' : ''}uncurated plants from Supabase...`
+    `Fetching ${newOnly ? 'undrafted ' : ''}uncurated plants from Supabase...`
   )
-  const plants = await fetchUncuratedPlants(newOnly)
+  const plants = await fetchUncuratedPlants(ids, newOnly)
 
   if (!plants.length) {
     console.log('No uncurated plants found — nothing to do.')

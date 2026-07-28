@@ -14,13 +14,19 @@
  * The rating is drafted BLIND from species identity only (names + family), the
  * same discipline as the cross-check — no stored value is shown to the model.
  *
- * Usage (from apps/web):
- *   ./node_modules/.bin/tsx --env-file=.env.local scripts/draft-hardiness.ts
- *   ./node_modules/.bin/tsx --env-file=.env.local scripts/draft-hardiness.ts --limit 10
- *   ./node_modules/.bin/tsx --env-file=.env.local scripts/draft-hardiness.ts --redraft-unverified
+ * Usage (from apps/web) — a scope flag is mandatory, see scripts/scope.ts:
+ *   ./node_modules/.bin/tsx --env-file=.env.local scripts/draft-hardiness.ts \
+ *     --round 9 [--limit 10] [--redraft-unverified]
+ *   ... --ids <a,b,c>   |   ... --all
  *
  * --redraft-unverified also re-drafts rows that already have a rating but are
  * not yet verified (use after a prompt change). Verified rows are never touched.
+ *
+ * The scope is mandatory because "hardiness_rating IS NULL" is a catalog-wide
+ * predicate, not a round: during round 8 this drafted 177 plants — round 8's
+ * own 101 plus round 7's skipped 76 — while everything on screen said round 8.
+ * That overreach is waived in rounds/8/scope-allow.json and written up in
+ * docs/database-log.md. --round 9 now means round 9's plants and no others.
  */
 
 import { getSupabaseAdmin } from '../lib/supabase-admin'
@@ -28,6 +34,7 @@ import { fetchAllRows } from '../lib/paginate'
 import { getAnthropicClient, CURATION_MODEL } from '../lib/anthropic-client'
 import { isHardinessRating, type HardinessRating } from '../lib/hardiness'
 import type { DbPlant } from '../lib/plants-db'
+import { requireScope, scopeIds, describeScope } from './scope'
 
 const INTER_PLANT_DELAY_MS = 2000
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
@@ -100,28 +107,38 @@ async function draftRating(plant: DbPlant): Promise<HardinessRating> {
 }
 
 async function main() {
+  const scope = requireScope(
+    'draft-hardiness',
+    'draft-hardiness bills Claude once per row, and its state predicate\n' +
+      '(hardiness_rating IS NULL) is catalog-wide — it will happily draft\n' +
+      "another round's skipped plants alongside yours."
+  )
+  const ids = scopeIds(scope)
   const limit = parseLimit()
   const redraftUnverified = process.argv
     .slice(2)
     .includes('--redraft-unverified')
   const db = getSupabaseAdmin()
 
-  // Baseline: only rows with no rating. --redraft-unverified widens to rows
-  // that have a rating but are not verified. Verified rows are NEVER selected.
-  // Paginated (standing rule 5) — --redraft-unverified currently matches 328
-  // rows and grows with the catalog.
+  // Within the scope: only rows with no rating. --redraft-unverified widens to
+  // rows that have a rating but are not verified. Verified rows are NEVER
+  // selected. Paginated (standing rule 5) — an --all --redraft-unverified run
+  // matches 328 rows and grows with the catalog.
   let plants = await fetchAllRows<DbPlant>((from, to) => {
     let query = db
       .from('plants')
       .select('id, common_name, scientific_name, family, hardiness_rating')
       .order('common_name')
       .order('id')
+    if (ids) query = query.in('id', ids)
     query = redraftUnverified
       ? query.eq('hardiness_verified', false)
       : query.is('hardiness_rating', null)
     return query.range(from, to)
   })
   if (limit) plants = plants.slice(0, limit)
+
+  console.log(`\n${describeScope(scope, ids)}`)
 
   if (!plants.length) {
     console.log('No plants need a hardiness draft — nothing to do.')

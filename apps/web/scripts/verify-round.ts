@@ -150,7 +150,7 @@ function checkPlants(plants: PlantRow[]): Finding[] {
       findings.push({
         level: 'FAIL',
         check: 'ai_drafted_at',
-        detail: `${p.common_name} — never curated (run curate-plants --new-only)`,
+        detail: `${p.common_name} — never curated (run curate-plants --round <label> --new-only)`,
       })
       // Required-field checks only apply to drafted rows
     } else {
@@ -339,7 +339,7 @@ function checkCombos(plants: PlantRow[], combos: ComboRow[]): Finding[] {
       findings.push({
         level: 'FAIL',
         check: 'no combinations',
-        detail: `${p.common_name} — 0 companions (run curate-combinations)`,
+        detail: `${p.common_name} — 0 companions (run curate-combinations --round <label>)`,
       })
     } else if (n > COMPANION_CAP) {
       findings.push({

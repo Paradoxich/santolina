@@ -49,7 +49,7 @@ import { join } from 'node:path'
 import { MANUAL_OVERRIDES } from '../lib/native-region-overrides'
 import { fetchAllRows } from '../lib/paginate'
 import { getSupabaseAdmin } from '../lib/supabase-admin'
-import { readRoundManifest } from './round-manifest'
+import { requireScope, scopeIds, describeScope } from './scope'
 
 const REPORTS_DIR = join(process.cwd(), 'reports')
 const WGSRPD_GEOJSON = join(REPORTS_DIR, 'level3.geojson')
@@ -199,13 +199,8 @@ function parseArgs() {
     return i >= 0 ? args[i + 1] : undefined
   }
   const limitRaw = at('--limit')
+  // --round / --ids / --all are parsed by scripts/scope.ts, not here.
   return {
-    round: at('--round'),
-    ids: at('--ids')
-      ?.split(',')
-      .map((s) => s.trim())
-      .filter(Boolean),
-    all: args.includes('--all'),
     apply: args.includes('--apply'),
     allowEmpty: args.includes('--allow-empty'),
     limit: limitRaw ? Number(limitRaw) : undefined,
@@ -442,21 +437,11 @@ function compare(
 // ---------------------------------------------------------------------------
 
 async function selectPlants(
-  opts: ReturnType<typeof parseArgs>
+  opts: ReturnType<typeof parseArgs>,
+  ids: string[] | null
 ): Promise<PlantRow[]> {
   const db = getSupabaseAdmin()
   const columns = 'id, common_name, scientific_name, native_region'
-
-  let ids = opts.ids
-  if (opts.round) {
-    const manifest = readRoundManifest(opts.round)
-    if (!manifest) throw new Error(`No manifest for round "${opts.round}"`)
-    ids = manifest.seeded_ids
-  }
-  if (!ids && !opts.all)
-    throw new Error(
-      'Scope required: pass --round <label>, --ids <a,b>, or --all'
-    )
 
   const rows = await fetchAllRows<PlantRow>((from, to) => {
     let q = db.from('plants').select(columns).order('id')
@@ -573,8 +558,21 @@ async function applyCorrections(
 
 async function main() {
   const opts = parseArgs()
+
+  // Scope first: it is the cheapest check and the one most likely to be wrong.
+  // Resolving it after the geojson load would answer a forgotten --round with
+  // a missing-file error instead. The scope flags this script established now
+  // live in scripts/scope.ts, so every pass refuses in the same words.
+  const scope = requireScope(
+    'cross-check-native-region',
+    'cross-check-native-region calls GBIF once per row; an unscoped run is a\n' +
+      'catalog-wide sweep of an external API.'
+  )
+  const ids = scopeIds(scope)
+  console.log(describeScope(scope, ids))
+
   const l3ToL2 = loadL3NameMap()
-  const plants = await selectPlants(opts)
+  const plants = await selectPlants(opts, ids)
   console.log(`Checking ${plants.length} plants against WCVP...`)
 
   const cache = loadCache()
