@@ -16,13 +16,13 @@
  *      + reports/native-to-review.md. No DB writes.
  *        ./node_modules/.bin/tsx --env-file=.env.local scripts/regenerate-native-to.ts
  *   2. apply: reads reports/native-to.json and patches the plants table.
- *        ./node_modules/.bin/tsx --env-file=.env.local scripts/regenerate-native-to.ts --apply
+ *        ./node_modules/.bin/tsx --env-file=.env.local scripts/archive/regenerate-native-to.ts --apply
  */
 
 import { writeFileSync, mkdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { getSupabaseAdmin } from '../lib/supabase-admin'
-import { getAnthropicClient, CURATION_MODEL } from '../lib/anthropic-client'
+import { getSupabaseAdmin } from '../../lib/supabase-admin'
+import { getAnthropicClient, CURATION_MODEL } from '../../lib/anthropic-client'
 
 const INTER_PLANT_DELAY_MS = 2000
 const REPORTS_DIR = join(process.cwd(), 'reports')
@@ -148,7 +148,7 @@ async function generate(): Promise<void> {
     `\nDone. ${results.length} phrases written to:\n  ${JSON_PATH}\n  ${REVIEW_PATH}`
   )
   console.log(
-    '\nReview, then apply with:  tsx --env-file=.env.local scripts/regenerate-native-to.ts --apply'
+    '\nReview, then apply with:  tsx --env-file=.env.local scripts/archive/regenerate-native-to.ts --apply'
   )
 }
 

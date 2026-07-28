@@ -35,8 +35,8 @@
 
 import { mkdirSync, writeFileSync, readFileSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
-import { getSupabaseAdmin } from '../lib/supabase-admin'
-import { getSpeciesBySlug } from '../lib/trefle'
+import { getSupabaseAdmin } from '../../lib/supabase-admin'
+import { getSpeciesBySlug } from '../../lib/trefle'
 
 const REPORTS_DIR = join(process.cwd(), 'reports')
 const TREFLE_CACHE = join(REPORTS_DIR, 'trefle-native-cache.json')

@@ -325,7 +325,7 @@ function mapCommonNameAliases(
 // "Yugoslavia", truncations, misspellings) and it's user-facing. Instead we
 // leave it null on seed so the AI curation pass writes a short modern-geography
 // phrase (e.g. "Europe and western Asia") — see scripts/curate-plants.ts and
-// scripts/regenerate-native-to.ts.
+// scripts/archive/regenerate-native-to.ts.
 
 // ---------------------------------------------------------------------------
 // Main mapper

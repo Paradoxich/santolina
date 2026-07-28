@@ -207,7 +207,13 @@ Phase 0 fixed four drifts by hand. This turns two of them into things that canno
 
 **What bit us:** nothing new — this was applying a July 21 fix that had reached 16 of 42 scripts in a week, while two scripts written _after_ it hand-rolled the same loop instead.
 
-**Deliberately not done:** a static check to enforce rule 5 was built and then **deleted**. A source scan cannot follow a builder assigned to a variable (`let q = db.from(…); … return q.range(…)`), so it produced both false positives and false negatives — and a noisy guard is one people learn to skip, which is the failure this whole effort is about. A reliable version needs AST analysis. Until then the rule is still convention. **Three historical one-off scripts remain genuinely unbounded** and were left alone rather than edited blind: `backfill-sun-split.ts`, `dry-run-native-region.ts`, `regenerate-native-to.ts`. None is a round step; all three are copy-paste sources, so fix before reuse.
+**Deliberately not done:** a static check to enforce rule 5 was built and then **deleted**. A source scan cannot follow a builder assigned to a variable (`let q = db.from(…); … return q.range(…)`), so it produced both false positives and false negatives — and a noisy guard is one people learn to skip, which is the failure this whole effort is about. A reliable version needs AST analysis. Until then the rule is still convention.
+
+**The unbounded stragglers are now quarantined, not fixed.** `backfill-sun-split.ts`, `dry-run-native-region.ts`, `derive-empty-native-region.ts` and `regenerate-native-to.ts` moved to `apps/web/scripts/archive/`, with a README stating what each was for and why it is finished. They still contain unbounded reads and were not edited blind — they are safe as history and unsafe as templates.
+
+The move is about the copy-paste path, not tidiness: a new round script starts life as a copy of the last one, which is exactly how one unbounded `fetchExistingCatalog` became five. Anything that can be copied by accident should not sit where the live scripts sit. `apply-sun-widening.ts` stayed in `scripts/` on the same logic inverted — it is the expects-what-it-finds pattern every later apply-script follows, so it is a template worth copying.
+
+**The rule governing these files had no home in the repo.** "One-off remediation scripts stay as history" lived only in the Notion runbook, invisible to anyone working in the codebase, which is why four spent scripts sat next to the live pipeline for weeks looking identical to it. It now lives in `scripts/archive/README.md`, next to the files it describes.
 
 ### 2026-07-28 — Style re-tag pass: cottage 89.6% → discriminating tags
 
