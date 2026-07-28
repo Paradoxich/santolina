@@ -29,7 +29,7 @@ The numbers **in this file are different and must stay written down**: a dated s
 3. **Scope every script to a round.** Use `--round <label>`, which reads `rounds/<label>/manifest.json`. Never rely on `created_at` heuristics, and see trap 2 before trusting `--new-only`.
 4. **Generate, review, then apply.** Any script offering `--apply` writes nothing until you have read its report. This split is the single reason trap 1 did not corrupt the catalog.
 5. **Never bare `.select()` on a full table.** It silently caps at 1000 rows. Use `fetchAllRows` from `lib/paginate.ts`. `plant_combinations` has already crossed the cap once (round 6: 13 duplicate pairs, 34 plants over the companion limit); current sizes are in [`catalog-state.md`](catalog-state.md).
-6. **Never flip `is_curated`.** It means "Ana has editorially reviewed this row" and is hers alone. Scripts draft; they do not sign off.
+6. **Never flip `is_curated`.** It means "Ana has editorially reviewed this row" and is hers alone. Scripts draft; they do not sign off. **Editorial coverage is thin and worth knowing:** round 7's 76 rows are the only reviewed ones in the catalog — everything seeded before them, and round 8's batch, is still unreviewed. Current count in [`catalog-state.md`](catalog-state.md). Round 8's pass is owed, including a voice read of the 49 mechanically corrected common names.
 7. **After any schema or request-shape change, run `--limit 3` first.** A green typecheck does not verify a runtime API contract.
 8. **Finish with `verify-round.ts --round <label>`.** Without `--round` it checks that data is _valid_ but not that the pipeline actually _ran_.
 9. **Append an entry here.** `scripts/log-db-session.ts --round <label>` writes the factual part for you.
