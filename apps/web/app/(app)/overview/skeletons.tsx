@@ -61,7 +61,7 @@ export function DashboardCardsSkeleton() {
       </div>
       <div className={dashboardRows.bottom}>
         <CardSkeleton title="Planned" />
-        <CardSkeleton title="Diary" />
+        <CardSkeleton title="Recent activity" />
         <CardSkeleton />
       </div>
     </div>

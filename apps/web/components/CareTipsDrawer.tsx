@@ -58,7 +58,7 @@ export function CareTipsDrawer({ groups, onClose }: CareTipsDrawerProps) {
       toast({
         groupKey: key,
         message: tip.plantName
-          ? `Logged as ${eventLabel} and added to ${tip.plantName}'s diary.`
+          ? `Logged as ${eventLabel} and added to ${tip.plantName}'s story.`
           : `Logged as ${eventLabel}.`,
         tone: 'positive',
       })
@@ -87,7 +87,7 @@ export function CareTipsDrawer({ groups, onClose }: CareTipsDrawerProps) {
           <h2 className="text-title font-semibold text-primary">Plant care</h2>
           <p className="text-body leading-normal text-secondary">
             What matters in your garden right now. Tap Did it to log an action
-            to your diary.
+            to its story.
           </p>
         </div>
         <Tabs

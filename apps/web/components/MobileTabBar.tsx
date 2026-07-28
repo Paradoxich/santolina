@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Icon } from '@paradoxui/ui'
 import { icons, type IconName } from '@/lib/icons'
+import { useAddNote } from '@/components/AddNoteProvider'
 
 interface NavItem {
   label: string
@@ -14,13 +15,13 @@ interface NavItem {
 const navItems: NavItem[] = [
   { label: 'Overview', href: '/overview', icon: 'grid' },
   { label: 'My Plants', href: '/plants', icon: 'leaf' },
-  { label: 'Diary', href: '/diary', icon: 'diary' },
   { label: 'Explore', href: '/explore', icon: 'search' },
   { label: 'Reflections', href: '/reflections', icon: 'reflections' },
 ]
 
 export function MobileTabBar() {
   const pathname = usePathname()
+  const { openAddNote } = useAddNote()
 
   return (
     <nav
@@ -50,6 +51,16 @@ export function MobileTabBar() {
           </Link>
         )
       })}
+
+      {/* Sits after the destinations, styled as the one action in the bar. */}
+      <button
+        type="button"
+        onClick={openAddNote}
+        aria-label="Add note"
+        className="flex w-16 items-center justify-center rounded-full bg-surface-card-translucent"
+      >
+        <Icon src={icons.plus} />
+      </button>
     </nav>
   )
 }

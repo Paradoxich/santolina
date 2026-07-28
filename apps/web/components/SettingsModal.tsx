@@ -174,7 +174,7 @@ export function SettingsModal({
 
                   <SettingsRow
                     title="Reset garden"
-                    description="Remove all plants and diary entries. Your location stays."
+                    description="Remove all plants and their notes. Your location stays."
                   >
                     <Button
                       variant="destructive-ghost"
@@ -290,7 +290,7 @@ export function SettingsModal({
       >
         <p className="text-body text-secondary">
           This permanently deletes your account, your garden, and all your
-          plants and diary entries. This cannot be undone.
+          plants and their notes. This cannot be undone.
         </p>
       </Modal>
     </>

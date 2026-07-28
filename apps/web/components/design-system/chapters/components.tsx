@@ -552,7 +552,7 @@ function Overlays() {
           <Tooltip content="Remove from garden">
             <Button variant="secondary">Hover me</Button>
           </Tooltip>
-          <Tooltip content="Opens the plant's diary" position="right">
+          <Tooltip content="Opens the plant's story" position="right">
             <Button variant="ghost">Or me</Button>
           </Tooltip>
         </div>

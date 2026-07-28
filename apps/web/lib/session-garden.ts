@@ -71,7 +71,7 @@ export const getSessionGardenContext = cache(
  * Resolves the signed-in user's garden for a mutation, returning the session
  * client to run it through. Reuses the cached `getSessionGardenContext`, so
  * multiple callers in one request (e.g. the dashboard's listPalette +
- * getPlantDiaries + page context) share a single auth + garden lookup instead
+ * getRecentActivity + page context) share a single auth + garden lookup instead
  * of each re-hitting the auth server. Throws if there's no session or no garden
  * — both are "impossible" states behind the auth gate + first-run step, so
  * throwing (rather than silently no-op'ing) surfaces a real bug if either is

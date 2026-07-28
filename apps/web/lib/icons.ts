@@ -12,7 +12,6 @@ export const icons = {
   chat: '/icons/icon-chat.svg',
   close: '/icons/icon-close.svg',
   copy: '/icons/icon-copy.svg',
-  diary: '/icons/icon-diary.svg',
   filter: '/icons/icon-filter.svg',
   garden: '/icons/icon-garden.svg',
   grid: '/icons/icon-grid.svg',

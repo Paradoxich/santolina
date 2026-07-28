@@ -29,7 +29,7 @@ const illustrations = {
     width: 660,
     height: 468,
   },
-  diary: {
+  activity: {
     src: '/illustrations/illustration-diary.png',
     width: 660,
     height: 468,

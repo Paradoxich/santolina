@@ -16,7 +16,8 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 export interface DiaryEntry {
   id: string
   gardenId: string
-  plantId: string
+  /** Null for a garden-level entry (weather, first frost, general observations) — not about any one plant. */
+  plantId: string | null
   /** The live palette_plants row id, or null if the plant has since been removed from the garden. */
   paletteId: string | null
   note: string | null
@@ -31,7 +32,7 @@ export interface DiaryEntry {
 interface DiaryEntryRow {
   id: string
   garden_id: string
-  plant_id: string
+  plant_id: string | null
   palette_plant_id: string | null
   note: string | null
   event_types: DiaryEventType[]
@@ -120,8 +121,11 @@ export async function listGardenCareEvents(): Promise<
 /**
  * Adds a diary entry, uploading any photos to the private diary-photos
  * bucket first. Path convention: {gardenId}/{plantId}/{timestamp}-{filename},
- * and the path (not a URL) is what photo_urls stores — reads sign on the way
- * out. Filenames are sanitized to safe storage-key characters.
+ * or {gardenId}/garden/{timestamp}-{filename} for a garden-level entry (no
+ * plantId) — storage RLS only checks the first path segment (the garden),
+ * so no policy change is needed for the garden-only variant. The path (not
+ * a URL) is what photo_urls stores — reads sign on the way out. Filenames
+ * are sanitized to safe storage-key characters.
  */
 export async function addDiaryEntry({
   plantId,
@@ -130,7 +134,8 @@ export async function addDiaryEntry({
   eventTypes,
   photoFiles,
 }: {
-  plantId: string
+  /** Omit for a garden-level entry (weather, first frost, general observations). */
+  plantId?: string | null
   paletteId?: string | null
   note?: string
   eventTypes?: DiaryEventType[]
@@ -144,7 +149,7 @@ export async function addDiaryEntry({
     const timestamp = Date.now()
     for (const file of photoFiles) {
       const safeName = file.name.replace(/[^\w.-]+/g, '_')
-      const path = `${gardenId}/${plantId}/${timestamp}-${safeName}`
+      const path = `${gardenId}/${plantId ?? 'garden'}/${timestamp}-${safeName}`
       const { error: uploadError } = await db.storage
         .from(DIARY_PHOTOS_BUCKET)
         .upload(path, file, { contentType: file.type })
@@ -160,7 +165,7 @@ export async function addDiaryEntry({
     .from('diary_entries')
     .insert({
       garden_id: gardenId,
-      plant_id: plantId,
+      plant_id: plantId ?? null,
       palette_plant_id: paletteId ?? null,
       note: note ?? null,
       event_types: eventTypes ?? [],
@@ -172,6 +177,28 @@ export async function addDiaryEntry({
   if (error) throw new Error(`Failed to add diary entry: ${error.message}`)
   const [entry] = await withSignedPhotoUrls(db, [data as DiaryEntryRow])
   return entry!
+}
+
+/**
+ * Cheap existence check — no signed URLs, just a count — for callers that
+ * only need to know "does this plant have any history" (e.g. the Explore
+ * drawer deciding whether a removed plant gets a "view its story" link).
+ */
+export async function hasDiaryEntries({
+  plantId,
+}: {
+  plantId: string
+}): Promise<boolean> {
+  const { supabase: db, garden } = await requireSessionGarden()
+
+  const { count, error } = await db
+    .from('diary_entries')
+    .select('id', { count: 'exact', head: true })
+    .eq('garden_id', garden.id)
+    .eq('plant_id', plantId)
+
+  if (error) throw new Error(`Failed to check diary entries: ${error.message}`)
+  return (count ?? 0) > 0
 }
 
 /**
