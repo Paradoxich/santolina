@@ -43,7 +43,7 @@ The run **reported success** with a believable source mix — `trefle-l3=121, na
 
 **Rule this generalises to:** wherever a fallback exists, a failed fetch must be structurally distinguishable from a legitimate empty answer, and the script must **throw** rather than degrade. Full write-up: `architecture.md` §26.
 
-### 2. `--new-only` does not scope to a batch — WORKED AROUND (round 8)
+### 2. `--new-only` does not scope to a batch — WORKED AROUND (round 8), baseline backfilled (July 28)
 
 Both cross-check guards accept `--new-only`, which keys off `botanical_checked_at` / `native_checked_at` being NULL. That only narrows to a fresh batch **once every other row carries a stamp**, and that baseline was never established — the stamp columns shipped mid-history and older rows were never backfilled.
 
@@ -51,7 +51,27 @@ At round 8: 0 of 494 rows stamped, so `cross-check-plants --new-only` selected *
 
 **Use `--round <label>` instead.** It needs no baseline.
 
-**Still open for Ana:** whether to backfill stamps on the pre-round-8 rows. Deliberately not done — there is no per-row evidence they were ever checked, and stamping on that assumption would permanently hide a genuinely unchecked plant. A self-test in round 8 confirmed the concern is real: sampled older plants showed `0/4` for both cross-check steps.
+**Backfilled July 28 2026 — and the reasoning that had blocked it was wrong.** This entry previously said "there is no per-row evidence they were ever checked", citing a round-8 self-test that found sampled older plants at `0/4`. **That was circular:** `round-status.ts` detects a check _by its stamp_, so unstamped rows can only ever report `0/N`. It proved the stamps were missing, not the checks.
+
+The real explanation is simpler: **the stamp columns arrived in migration `20260716120000`, on July 16.** Every cross-check before that date physically could not stamp anything. A null stamp on an older row means the column did not exist yet.
+
+The archived reports are dated evidence, and they line up exactly with the catalog:
+
+| report                                 | checked | covers                                     |
+| -------------------------------------- | ------: | ------------------------------------------ |
+| `cross-check-2026-07-09-22-32-26.json` |     201 | the whole catalog that day (29 + 96 + 76)  |
+| `cross-check-2026-07-14-15-36-52.json` |     100 | round 6's batch                            |
+| `cross-check-2026-07-15-19-19-21.json` |      76 | round 7's batch                            |
+| `native-to-crosscheck.json`            |      76 | round 7's batch, **every row named by id** |
+
+`scripts/backfill-guard-stamps.ts` stamped 451 rows — **375 botanical + 76 `native_to`** — each **dated to the report's own `ran_at`**, not to the day of the backfill. A stamp claiming a July 9 check happened on July 28 would be its own small lie. It refuses to write any group whose live row count disagrees with the report's `checked` figure.
+
+**What stays NULL, deliberately, and matters more than what got stamped:**
+
+- **the 116 plants seeded 2026-07-12** (the regional-natives round) — no surviving botanical report covers them
+- **every pre-round-7 row for `native_checked_at`** (418) — `cross-check-native-to.ts` wrote to a **fixed filename** and overwrote its own history every run. We know earlier runs happened; the evidence is gone. This is exactly what `archive-round.ts` was later built to prevent.
+
+Null on those rows is the correct answer: it means a future guard run picks them up. **Strength of evidence, stated plainly:** the botanical reports name only the _flagged_ plants, so the clean rows are inferred from "checked count == catalog size on that date". Strong, but an inference. The `native_to` report names every row it covered, so that one is per-row proof.
 
 ### 3. Full-catalog regeneration outlived its migration — FIXED (round 8)
 
@@ -178,6 +198,7 @@ All waived in `rounds/8/scope-allow.json`, each entry carrying its cause, so rou
 **Deliberately not done:**
 
 - **Migration ledger drift reconciled** (trap 13): four local migration filenames renamed to the versions the remote actually recorded, after `apply_migration` had stamped its own. No production state touched; local and remote now match 26 for 26. `supabase db push` is safe again.
+- **Guard-stamp baseline backfilled** (trap 2): 451 rows stamped from the archived reports — 375 botanical, 76 `native_to` — each dated to when the check actually ran. 116 July-12 rows and 418 pre-round-7 `native_to` rows left NULL on purpose, because no evidence covers them. The reasoning that had blocked this for a round was circular and is corrected in trap 2.
 - **Storage buckets now backed up** — `scripts/backup-storage.ts` pulls every bucket to the gitignored `backups/storage/<stamp>/`. First run: 3 objects, 305 KB (`plant-images` 1 real hero; `diary-photos` 2 leftover 68-byte test PNGs from July 8). **This gets the objects off Supabase, not off the laptop** — `diary-photos` is private user data and cannot be committed, so syncing it somewhere private stays manual.
 - **~575 plants still unvalidated against WCVP.** Sample says ~2% are wrong. Run in reviewed batches; do not point `--apply` at `--all`
 - the 405 `updated_at` / `*_checked_at` stamps on unseeded rows left as WARN — guards re-stamp by design
