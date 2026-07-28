@@ -2,6 +2,60 @@
 
 Newest entry first. Read the top entry before starting work.
 
+## 2026-07-28 (later) — post-merge state, read this one first
+
+**Status:** `main` is green and everything below is verified, not assumed.
+
+```
+verify-round --round 8   0 failures, 4 warnings
+catalog:state:check      clean
+pnpm typecheck / test    clean, 73/73
+restore-catalog --phase after   0 rows differ (archive matches live)
+```
+
+### Branches right now
+
+| branch | state | action |
+| --- | --- | --- |
+| `main` | PR #119 merged (guard audit + round 8 data work) | — |
+| `chore/refresh-round8-archive` | 1 commit, **pushed, no PR** | open a PR, it is provenance only |
+| `feat/diary-to-plant-story` | 5 commits, **LOCAL ONLY, 40 behind main** | ⚠️ `git push -u origin` **first**, then rebase |
+
+`feat/diary-to-plant-story` is a week of product work (garden-level diary entries, plant story subpage, explore drawer CTAs, recent-activity card, global note action) existing on one laptop. Push it before anything else.
+
+### What changed today, in one line each
+
+- `round-status.ts` `STEP_DEFS` is now a **step registry**; `verify-round` FAILs on any `*_checked_at` column no step claims. **Add a step there in the same commit as the script that stamps it.**
+- `docs/catalog-state.md` is **generated** (`pnpm catalog:state`). **Never type a current catalog number into prose** — link to it. `pnpm catalog:state:check` is the staleness check.
+- The Notion runbook is a **stub**; `docs/architecture.md` §25 + `docs/database-log.md` are authoritative.
+- Four spent one-off scripts moved to `apps/web/scripts/archive/` (read its README before copying anything from there — they still contain unbounded reads).
+- Round 8's greenery and image passes finally ran. No-image plants 13 → 3.
+
+### Do next, in this order
+
+1. **Push `feat/diary-to-plant-story`**, then rebase onto `main`.
+2. **PR `chore/refresh-round8-archive`.**
+3. **Build the round orchestrator.** Recommended shape is the *cheap* one: `round-progress --round <n>` reads DB state + the round's artifacts, reports which steps have run and what must come next, and refuses to call a round complete until the backup, `archive-round` and `check-round-scope` all exist. It runs nothing and costs nothing. The expensive variant (drive every step from one command) cuts against generate-review-then-apply and is not wanted. **This is the fix for the actual failure mode: finishing a *pass* and finishing a *round* feel identical and are not.**
+4. **Add a stamp column to `cross-check-native-region.ts`** — it currently writes none, so there is no per-row record of WCVP validation. Do this **before** working the ~575-row tail, or it is trap 2 rebuilt from scratch.
+5. **Mandatory scope flags** on `curate-plants`, `curate-combinations`, `draft-hardiness` (`--round` | `--ids` | `--all`, no default). `cross-check-native-region.ts` is the pattern.
+6. Round 8's **editorial pass** on its 101 plants — agent work per Ana's standing ruling, including flipping `is_curated`.
+7. Minimal **CI** — there is none. Typecheck, tests, `catalog:state:check`.
+
+### Two traps added to `docs/database-log.md` today, both self-inflicted
+
+- **Book-end steps are not optional because a pass looks finished.** The greenery/image passes left `rounds/8/catalog/after-*` stale for six hours; restoring it would have silently reverted ~200 rows *while reporting success*. Run `archive-round --round <n>` after **any** remediation pass, not just after a seed.
+- **A backup taken inside a throwaway worktree dies with the worktree.** `backups/` and `reports/` are gitignored and local; `git worktree remove --force` took both. Take the backup in the shared checkout, or archive before removing.
+
+### Open decisions (Ana's)
+
+- Should `check-round-scope` record a `cleared_at`? Its window is baseline → now, so **every closed round's check rots** once later catalog-wide work lands. This is why round 8 currently shows **450 unwaived failures** — they are yesterday's style pass, correctly detected, deliberately not waived.
+- Two colour-bucket judgment calls from round 8 — recommendation is written in the Build Backlog, just needs a yes.
+- Promote `verify-round`'s hardiness WARN to FAIL in the same change that un-parks §27, not after.
+
+### Calibration note for whoever picks this up
+
+Phase 2 was proposed as six items and shipped **one** (the step registry) plus unplanned work; it was then reported as "done". Do not trust phase/plan language in these notes — check the tree. Rule 5 (no bare `.select()`) is still **convention only**: a static check was built and deleted because a source scan cannot follow a builder assigned to a variable. Three archived scripts remain unbounded and are named in the log.
+
 ## 2026-07-28 — fix/phase-0-guard-drift + fix/phase-2-structural-guards
 
 **Status:** merged to main (PR #119). Both branches merged; safe to delete.
