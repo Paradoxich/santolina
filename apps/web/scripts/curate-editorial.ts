@@ -45,7 +45,7 @@
  * failure of the pass; it is the pass working. Expect a real remainder.
  *
  * Stamps `editorial_checked_at` on every row it reaches a verdict on, approved
- * or not (migration 20260729001500). Without that, a held-back row is
+ * or not (migration 20260728220852). Without that, a held-back row is
  * indistinguishable from an unexamined one and every run re-bills the whole
  * remainder.
  *
