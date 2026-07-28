@@ -195,6 +195,8 @@ Round 8 closed on July 27 reporting a clean 7/7 sweep. It was not clean: `curate
 
 **What bit us:** nothing new — this is the remediation of what the guard audit found. Worth recording that the image pass has a **prerequisite no guard checks**: `image_checked_at` being NULL does not tell you whether `image_candidates` is populated, and the pick cannot run without it. A round that skips `recover-image-categories` looks identical to one that simply has not reached the image pass yet.
 
+**Image pass result: 95 picks — high 65, medium 30, low 0, no-usable 0, errored 0.** It also corrected a guard that was asserting something untrue. `verify-round` warned "placeholder in use" on any row with a null `image_url`, which read as 44 plants; but `lib/plant-detail.ts` resolves the hero **curated-then-Trefle**, so a row carrying only `image_url_curated` renders perfectly well. The real number with no image on either column was 13 before this pass and is **3** after it. Both `verify-round` and `catalog-state.ts` now use the app's own precedence — a guard reporting a number nobody can act on is worse than one that says nothing.
+
 **Deliberately not done:** the 3 plants with no upstream images stay on the placeholder — there is nothing to pick from, and that is a sourcing problem (Wikimedia, or a manual hero) rather than a pipeline one.
 
 ### 2026-07-28 — Guard drift audit: four fixes before round 9

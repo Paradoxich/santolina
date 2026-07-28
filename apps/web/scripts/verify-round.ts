@@ -21,7 +21,7 @@
  *     · seasonal_care null (per-plant view; a ROUND missing it FAILs via
  *       round-status, because Care Tips v2 is live and reads the field)
  *     · hardiness_rating null (track parked)
- *     · image_url null (PlantImage placeholder covers it)
+ *     · no image on either column (PlantImage placeholder covers it)
  *
  * Read-only, no AI calls — cheap enough to run after every round.
  *
@@ -64,6 +64,7 @@ interface PlantRow {
   sun_tolerates: string[] | null
   hardiness_rating: string | null
   image_url: string | null
+  image_url_curated: string | null
 }
 
 interface ComboRow {
@@ -124,7 +125,7 @@ async function fetchAllPlants(): Promise<PlantRow[]> {
     'id, common_name, scientific_name, ai_drafted_at, native_region, ' +
     'bloom_color, foliage_color, plant_type, plant_type_label, style_tags, space_types, ' +
     'description, care_level, seasonal_rhythm, seasonal_care, sun_thrives, ' +
-    'sun_tolerates, hardiness_rating, image_url'
+    'sun_tolerates, hardiness_rating, image_url, image_url_curated'
   return fetchAllRows<PlantRow>((from, to) =>
     db.from('plants').select(columns).order('id').range(from, to)
   )
@@ -238,11 +239,16 @@ function checkPlants(plants: PlantRow[]): Finding[] {
         detail: `${p.common_name} — unrated (track parked)`,
       })
     }
-    if (!p.image_url) {
+    // Both columns, in the app's own precedence: lib/plant-detail.ts resolves
+    // the hero as curated-then-Trefle, so a row with only image_url_curated
+    // renders fine. Checking image_url alone reported 44 plants on the
+    // placeholder when the real number was 13 — a guard asserting something
+    // untrue, which is worse than one that says nothing.
+    if (!p.image_url && !p.image_url_curated) {
       findings.push({
         level: 'WARN',
-        check: 'image_url',
-        detail: `${p.common_name} — placeholder in use`,
+        check: 'no image',
+        detail: `${p.common_name} — no image at all, placeholder in use`,
       })
     }
   }
