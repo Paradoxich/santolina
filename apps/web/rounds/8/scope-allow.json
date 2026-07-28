@@ -1,0 +1,27 @@
+{
+  "note": "Round 8 wrote to 101 plants outside its manifest. Each case was traced to a specific cause before being waived here; none is waived on the grounds that it looked harmless.",
+  "allow": [
+    {
+      "plant": "Wood anemone",
+      "column": "common_name",
+      "why": "self-inflicted by this round: seeding Anemonoides nemorosa and naming it 'Wood anemone' collided with this pre-existing row, so the American species took the qualifier. scripts/fix-round8-names.ts records it."
+    },
+    {
+      "plant": "Grape-hyacinth",
+      "column": "common_name",
+      "why": "pre-existing collision between Muscari botryoides and M. neglectum, both named 'Grape-hyacinth' since July 12. Not caused by this round; fixed by scripts/fix-round8-names.ts while the name pass was already running."
+    },
+    {
+      "check": "out-of-scope pairing added",
+      "why": "curate-combinations tops up any plant under the 5-companion cap from the whole-catalog roster, so it legitimately pairs two older plants (§19, §25 step 3). All four endpoints here are round-7 plants that were below the cap and now sit at exactly 5."
+    },
+    {
+      "column": "hardiness_rating",
+      "why": "draft-hardiness targets hardiness_rating IS NULL, so it backfilled round 7's 76 plants, never drafted since July 15. Remediation of a genuinely skipped step rather than a stray write, and the reason round-status.ts now exists (§25)."
+    },
+    {
+      "column": "native_region",
+      "why": "the 20 rows round 8's full-catalog regeneration rewrote, since validated against WCVP by cross-check-native-region.ts: 13 were already correct and 7 were corrected on July 28. The regeneration overreach itself is fixed upstream, where --round or --all is now required (§26)."
+    }
+  ]
+}
