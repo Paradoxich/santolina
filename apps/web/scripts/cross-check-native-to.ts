@@ -21,7 +21,7 @@
  * stamps the operational native_checked_at column (§20, migration
  * 20260716120000) per row. `--apply` patches ONLY rows the check rated "gross"
  * that carry a suggested replacement phrase — the same generate-then-apply
- * safety split as regenerate-native-to.ts.
+ * safety split as scripts/archive/regenerate-native-to.ts.
  *
  * --round <label> is the preferred post-seed scope: exactly the ids the seed
  * run recorded in rounds/<label>/manifest.json. --new-only scopes to rows
@@ -57,7 +57,7 @@ const GBIF_DELAY_MS = 200
 const REPORTS_DIR = join(process.cwd(), 'reports')
 const JSON_OUT = join(REPORTS_DIR, 'native-to-crosscheck.json')
 const MD_OUT = join(REPORTS_DIR, 'native-to-crosscheck.md')
-// Raw Trefle distribution, if regenerate-native-to.ts left it behind (optional).
+// Raw Trefle distribution, if scripts/archive/regenerate-native-to.ts left it behind (optional).
 const RAW_SNAPSHOT = join(REPORTS_DIR, 'native-to.json')
 
 const CONTINENTS = [

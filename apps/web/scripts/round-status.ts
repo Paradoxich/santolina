@@ -25,6 +25,15 @@
  * leaves behind, never by a log or a flag file — state is the only thing that
  * survives a killed run, a re-run, or a different machine. That also makes
  * these checks honest about partial work: a run killed at 60% reports 60%.
+ *
+ * THIS LIST IS HAND-MAINTAINED, AND THAT IS ITS OWN FAILURE MODE. A step
+ * missing from here is invisible in exactly the way this file exists to
+ * prevent: `verify-round --round 8` reported 7/7 green while curate-greenery
+ * and the image pass had never run for any of round 8's 101 plants (found
+ * 2026-07-28, by querying the DB rather than by any guard). If you add a
+ * pipeline step that stamps a column, add it here in the same commit — the
+ * standing check is that every `*_checked_at` column on `plants` should
+ * correspond to a step below.
  */
 
 import { getSupabaseAdmin } from './../lib/supabase-admin'
@@ -53,6 +62,9 @@ interface StatusRow {
   native_checked_at: string | null
   hardiness_rating: string | null
   seasonal_care: unknown
+  style_checked_at: string | null
+  greenery_checked_at: string | null
+  image_checked_at: string | null
 }
 
 /** A garden hybrid has no wild range, so an empty native_region is correct. */
@@ -61,6 +73,136 @@ const isHybrid = (sci: string | null): boolean =>
 
 const nonEmpty = (v: unknown): boolean =>
   Array.isArray(v) ? v.length > 0 : v !== null && v !== undefined
+
+/** State a step needs beyond the plant row itself. */
+interface StepContext {
+  paired: Set<string>
+}
+
+interface StepDef {
+  /** Step name, matching the §25 runbook order. */
+  step: string
+  /** The DB state that counts as evidence — printed so a reader can check it. */
+  evidence: string
+  /** FAIL once the feature the step feeds is shipped; WARN while it is parked. */
+  level: 'FAIL' | 'WARN'
+  /**
+   * The bookkeeping column this step stamps, when it stamps one.
+   *
+   * This field is what makes the registry self-checking. `verify-round`
+   * asserts that every `*_checked_at` column on `plants` is claimed by some
+   * step here, so adding a stamp column without adding its step FAILS instead
+   * of going unnoticed — which is precisely how curate-greenery and the image
+   * pass stayed invisible through round 8.
+   */
+  stampColumn?: string
+  /** Rows the step can apply to. Default: every plant in the round. */
+  applies?: (p: StatusRow) => boolean
+  /** Has this step run for this row? */
+  ran: (p: StatusRow, ctx: StepContext) => boolean
+}
+
+/**
+ * THE STEP REGISTRY — the single source of truth for what a round consists of.
+ *
+ * Adding a pipeline step means adding an entry here, in the same commit as the
+ * script. Everything else reads from this list: `roundStatus` counts against
+ * it, `verify-round` fails on a gap, `log-db-session` records it, and the
+ * stamp-column assertion above proves nothing was left out.
+ */
+export const STEP_DEFS: StepDef[] = [
+  {
+    step: 'curate-plants',
+    evidence: 'ai_drafted_at NOT NULL',
+    level: 'FAIL',
+    ran: (p) => Boolean(p.ai_drafted_at),
+  },
+  {
+    step: 'curate-combinations',
+    evidence: 'appears in plant_combinations',
+    level: 'FAIL',
+    ran: (p, ctx) => ctx.paired.has(p.id),
+  },
+  {
+    step: 'regenerate-native-region',
+    evidence: 'native_region non-empty (hybrids excluded)',
+    level: 'FAIL',
+    applies: (p) => !isHybrid(p.scientific_name),
+    ran: (p) => nonEmpty(p.native_region),
+  },
+  {
+    step: 'cross-check-plants',
+    evidence: 'botanical_checked_at NOT NULL',
+    level: 'FAIL',
+    stampColumn: 'botanical_checked_at',
+    ran: (p) => Boolean(p.botanical_checked_at),
+  },
+  {
+    step: 'cross-check-native-to',
+    evidence: 'native_checked_at NOT NULL',
+    level: 'FAIL',
+    stampColumn: 'native_checked_at',
+    ran: (p) => Boolean(p.native_checked_at),
+  },
+  {
+    // Care Tips v2 is LIVE and reads seasonal_care[currentStage], so a plant
+    // without it shows no tip at all. Shipped feature: FAIL.
+    step: 'curate-seasonal-care',
+    evidence: 'seasonal_care NOT NULL',
+    level: 'FAIL',
+    ran: (p) => nonEmpty(p.seasonal_care),
+  },
+  {
+    // §27 hardiness is PARKED — it feeds only a dormant survive-winter
+    // bullet. Warn until that work resumes, then promote to FAIL.
+    step: 'draft-hardiness',
+    evidence: 'hardiness_rating NOT NULL',
+    level: 'WARN',
+    ran: (p) => Boolean(p.hardiness_rating),
+  },
+  {
+    // The Explore style browse tiles are live. An unjudged row keeps whatever
+    // curate-plants drafted under the loose pre-July-28 prompt, which is what
+    // put cottage on 89.6% of the catalog.
+    step: 'curate-styles',
+    evidence: 'style_checked_at NOT NULL',
+    level: 'FAIL',
+    stampColumn: 'style_checked_at',
+    ran: (p) => Boolean(p.style_checked_at),
+  },
+  {
+    // is_greenery is the ONLY way into the Explore Green colour bucket
+    // (lib/plant-colors.ts — plain green foliage deliberately never maps).
+    // It defaults to false, so an unjudged plant is silently excluded from a
+    // live filter rather than flagged. Shipped feature: FAIL.
+    step: 'curate-greenery',
+    evidence: 'greenery_checked_at NOT NULL',
+    level: 'FAIL',
+    stampColumn: 'greenery_checked_at',
+    ran: (p) => Boolean(p.greenery_checked_at),
+  },
+  {
+    // WARN, not FAIL: the vision pick is a separate costed Batch API flow
+    // (§30/§31), deliberately not part of the per-round cadence, and
+    // PlantImage falls back to a placeholder. Visible so a round cannot
+    // quietly ship without one, but it should not redden every round.
+    step: 'pick-plant-images',
+    evidence: 'image_checked_at NOT NULL',
+    level: 'WARN',
+    stampColumn: 'image_checked_at',
+    ran: (p) => Boolean(p.image_checked_at),
+  },
+]
+
+/**
+ * The bookkeeping columns some step claims. `verify-round` compares this
+ * against the columns that actually exist on `plants`.
+ */
+export function registeredStampColumns(): Set<string> {
+  return new Set(
+    STEP_DEFS.map((d) => d.stampColumn).filter((c): c is string => Boolean(c))
+  )
+}
 
 /**
  * Inspect the live DB and report which pipeline steps have run for `ids`.
@@ -81,7 +223,8 @@ export async function roundStatus(ids: string[]): Promise<StepStatus[]> {
       .from('plants')
       .select(
         'id, scientific_name, ai_drafted_at, native_region, ' +
-          'botanical_checked_at, native_checked_at, hardiness_rating, seasonal_care'
+          'botanical_checked_at, native_checked_at, hardiness_rating, seasonal_care, ' +
+          'style_checked_at, greenery_checked_at, image_checked_at'
       )
       .in('id', ids)
       .order('id')
@@ -102,71 +245,43 @@ export async function roundStatus(ids: string[]): Promise<StepStatus[]> {
     if (idSet.has(c.plant_id_b)) paired.add(c.plant_id_b)
   }
 
-  const total = plants.length
-  const nonHybrid = plants.filter((p) => !isHybrid(p.scientific_name))
+  const ctx: StepContext = { paired }
 
-  return [
-    {
-      step: 'curate-plants',
-      done: plants.filter((p) => p.ai_drafted_at).length,
-      total,
-      evidence: 'ai_drafted_at NOT NULL',
-      level: 'FAIL',
-      complete: plants.every((p) => p.ai_drafted_at),
-    },
-    {
-      step: 'curate-combinations',
-      done: plants.filter((p) => paired.has(p.id)).length,
-      total,
-      evidence: 'appears in plant_combinations',
-      level: 'FAIL',
-      complete: plants.every((p) => paired.has(p.id)),
-    },
-    {
-      step: 'regenerate-native-region',
-      done: nonHybrid.filter((p) => nonEmpty(p.native_region)).length,
-      total: nonHybrid.length,
-      evidence: 'native_region non-empty (hybrids excluded)',
-      level: 'FAIL',
-      complete: nonHybrid.every((p) => nonEmpty(p.native_region)),
-    },
-    {
-      step: 'cross-check-plants',
-      done: plants.filter((p) => p.botanical_checked_at).length,
-      total,
-      evidence: 'botanical_checked_at NOT NULL',
-      level: 'FAIL',
-      complete: plants.every((p) => p.botanical_checked_at),
-    },
-    {
-      step: 'cross-check-native-to',
-      done: plants.filter((p) => p.native_checked_at).length,
-      total,
-      evidence: 'native_checked_at NOT NULL',
-      level: 'FAIL',
-      complete: plants.every((p) => p.native_checked_at),
-    },
-    {
-      step: 'curate-seasonal-care',
-      done: plants.filter((p) => nonEmpty(p.seasonal_care)).length,
-      total,
-      evidence: 'seasonal_care NOT NULL',
-      // Care Tips v2 is LIVE and reads seasonal_care[currentStage], so a plant
-      // without it shows no tip at all. This is a shipped feature: FAIL.
-      level: 'FAIL',
-      complete: plants.every((p) => nonEmpty(p.seasonal_care)),
-    },
-    {
-      step: 'draft-hardiness',
-      done: plants.filter((p) => p.hardiness_rating).length,
-      total,
-      evidence: 'hardiness_rating NOT NULL',
-      // §27 hardiness is PARKED — it feeds only a dormant survive-winter
-      // bullet. Warn until that work resumes, then promote to FAIL.
-      level: 'WARN',
-      complete: plants.every((p) => p.hardiness_rating),
-    },
-  ]
+  return STEP_DEFS.map((def) => {
+    const scope = def.applies ? plants.filter(def.applies) : plants
+    const done = scope.filter((p) => def.ran(p, ctx)).length
+    return {
+      step: def.step,
+      done,
+      total: scope.length,
+      complete: done === scope.length,
+      evidence: def.evidence,
+      level: def.level,
+    }
+  })
+}
+
+/**
+ * Assert that every bookkeeping column on `plants` is claimed by a step in
+ * STEP_DEFS. Returns the unclaimed ones.
+ *
+ * This is the check that would have caught the round-8 miss. `greenery_checked_at`
+ * and `image_checked_at` both existed on the table while no step mentioned
+ * them, so a round could skip those passes entirely and still report a clean
+ * sweep. Reads the live column list rather than a hardcoded one, so a column
+ * added by a future migration is covered the day it ships.
+ */
+export async function unregisteredStampColumns(): Promise<string[]> {
+  const db = getSupabaseAdmin()
+  const { data, error } = await db.from('plants').select('*').limit(1)
+  if (error) throw new Error(`Failed to read plants columns: ${error.message}`)
+  if (!data?.length) return []
+
+  const registered = registeredStampColumns()
+  return Object.keys(data[0])
+    .filter((c) => c.endsWith('_checked_at'))
+    .filter((c) => !registered.has(c))
+    .sort()
 }
 
 /** One-line-per-step render, used by both the verifier and the log writer. */

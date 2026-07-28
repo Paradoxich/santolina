@@ -17,19 +17,32 @@
  */
 
 import { getSupabaseAdmin } from '../lib/supabase-admin'
+import { fetchAllRows } from '../lib/paginate'
 import { IGNORED_BLOOM_COLORS, RAW_TO_BUCKET } from '../lib/bloom-colors'
 import {
   FOLIAGE_RAW_TO_BUCKET,
   IGNORED_FOLIAGE_COLORS,
 } from '../lib/foliage-colors'
 
+interface ColorRow {
+  common_name: string
+  bloom_color: string[] | null
+  foliage_color: string | null
+}
+
 async function main() {
   const supabase = getSupabaseAdmin()
-  const { data, error } = await supabase
-    .from('plants')
-    .select('common_name, bloom_color, foliage_color')
-
-  if (error) throw new Error(`Failed to load plants: ${error.message}`)
+  // Paginated (standing rule 5). This is a GUARD over the whole catalog, so a
+  // silent 1000-row cap would quietly stop checking the tail while still
+  // reporting a confident count — the failure this script exists to prevent,
+  // reintroduced one layer up.
+  const data = await fetchAllRows<ColorRow>((from, to) =>
+    supabase
+      .from('plants')
+      .select('common_name, bloom_color, foliage_color')
+      .order('id')
+      .range(from, to)
+  )
 
   // axis label → unmapped value → carrier plant names
   const unmapped = new Map<string, Map<string, string[]>>([
@@ -45,7 +58,7 @@ async function main() {
     axisMap.set(value, carriers)
   }
 
-  for (const plant of data ?? []) {
+  for (const plant of data) {
     for (const raw of plant.bloom_color ?? []) {
       counts.bloom_color++
       const value = raw.toLowerCase()

@@ -11,14 +11,17 @@
  *     · no duplicate common_name (two species sharing a display name are
  *       indistinguishable in search — the round-8 trap)
  *     · required curation fields non-null on drafted rows
+ *     · style_tags judged — NULL fails, `[]` passes (a plant may legitimately
+ *       read as no particular style; only "never judged" is a gap)
  *     · sun_thrives non-empty and disjoint from sun_tolerates
  *     · every plant has ≥1 combination; no self/duplicate/reversed-duplicate
  *       pairs; nobody over the 5-companion cap
  *
  *   WARN (exit 0) — known gaps, reported so they stay visible:
- *     · seasonal_care null (separate distillation track, not yet user-facing)
+ *     · seasonal_care null (per-plant view; a ROUND missing it FAILs via
+ *       round-status, because Care Tips v2 is live and reads the field)
  *     · hardiness_rating null (track parked)
- *     · image_url null (PlantImage placeholder covers it)
+ *     · no image on either column (PlantImage placeholder covers it)
  *
  * Read-only, no AI calls — cheap enough to run after every round.
  *
@@ -31,8 +34,13 @@ import {
   IGNORED_FOLIAGE_COLORS,
 } from '../lib/foliage-colors'
 import { getSupabaseAdmin } from '../lib/supabase-admin'
+import { fetchAllRows } from '../lib/paginate'
 import { readRoundManifest } from './round-manifest'
-import { roundStatus, formatStatus } from './round-status'
+import {
+  roundStatus,
+  formatStatus,
+  unregisteredStampColumns,
+} from './round-status'
 
 const COMPANION_CAP = 5
 
@@ -56,6 +64,7 @@ interface PlantRow {
   sun_tolerates: string[] | null
   hardiness_rating: string | null
   image_url: string | null
+  image_url_curated: string | null
 }
 
 interface ComboRow {
@@ -73,10 +82,12 @@ interface Finding {
 // are core product surfaces; the array fields feed Explore filters and
 // placement. bloom_months/bloom_color stay out — legitimately null on
 // foliage/evergreen plants.
+//
+// style_tags is NOT in this list, because for it empty and missing are
+// different answers — see checkStyleTags below.
 const REQUIRED_DRAFTED_FIELDS: Array<keyof PlantRow> = [
   'plant_type',
   'plant_type_label',
-  'style_tags',
   'space_types',
   'description',
   'care_level',
@@ -110,39 +121,25 @@ function isEmpty(value: unknown): boolean {
 
 async function fetchAllPlants(): Promise<PlantRow[]> {
   const db = getSupabaseAdmin()
-  const pageSize = 1000
-  const rows: PlantRow[] = []
   const columns =
     'id, common_name, scientific_name, ai_drafted_at, native_region, ' +
     'bloom_color, foliage_color, plant_type, plant_type_label, style_tags, space_types, ' +
     'description, care_level, seasonal_rhythm, seasonal_care, sun_thrives, ' +
-    'sun_tolerates, hardiness_rating, image_url'
-  for (let from = 0; ; from += pageSize) {
-    const { data, error } = await db
-      .from('plants')
-      .select(columns)
-      .order('id')
-      .range(from, from + pageSize - 1)
-    if (error) throw new Error(`Failed to fetch plants: ${error.message}`)
-    rows.push(...((data ?? []) as unknown as PlantRow[]))
-    if (!data || data.length < pageSize) return rows
-  }
+    'sun_tolerates, hardiness_rating, image_url, image_url_curated'
+  return fetchAllRows<PlantRow>((from, to) =>
+    db.from('plants').select(columns).order('id').range(from, to)
+  )
 }
 
 async function fetchAllCombos(): Promise<ComboRow[]> {
   const db = getSupabaseAdmin()
-  const pageSize = 1000
-  const rows: ComboRow[] = []
-  for (let from = 0; ; from += pageSize) {
-    const { data, error } = await db
+  return fetchAllRows<ComboRow>((from, to) =>
+    db
       .from('plant_combinations')
       .select('plant_id_a, plant_id_b')
       .order('id')
-      .range(from, from + pageSize - 1)
-    if (error) throw new Error(`Failed to fetch combinations: ${error.message}`)
-    rows.push(...((data ?? []) as ComboRow[]))
-    if (!data || data.length < pageSize) return rows
-  }
+      .range(from, to)
+  )
 }
 
 function checkPlants(plants: PlantRow[]): Finding[] {
@@ -165,6 +162,18 @@ function checkPlants(plants: PlantRow[]): Finding[] {
             detail: `${p.common_name} — drafted but ${field} is empty`,
           })
         }
+      }
+      // style_tags: `[]` is a real judgment ("this plant reads as no particular
+      // style"), NULL means nobody has judged it. The July 28 re-tag pass made
+      // that distinction load-bearing — 33 plants are deliberately neutral —
+      // and curate-plants already treats only NULL as missing. Checking this
+      // with isEmpty() would fail all 33 for being correct.
+      if (p.style_tags === null) {
+        findings.push({
+          level: 'FAIL',
+          check: 'required field: style_tags',
+          detail: `${p.common_name} — drafted but style_tags was never judged (run curate-styles)`,
+        })
       }
     }
 
@@ -230,11 +239,16 @@ function checkPlants(plants: PlantRow[]): Finding[] {
         detail: `${p.common_name} — unrated (track parked)`,
       })
     }
-    if (!p.image_url) {
+    // Both columns, in the app's own precedence: lib/plant-detail.ts resolves
+    // the hero as curated-then-Trefle, so a row with only image_url_curated
+    // renders fine. Checking image_url alone reported 44 plants on the
+    // placeholder when the real number was 13 — a guard asserting something
+    // untrue, which is worse than one that says nothing.
+    if (!p.image_url && !p.image_url_curated) {
       findings.push({
         level: 'WARN',
-        check: 'image_url',
-        detail: `${p.common_name} — placeholder in use`,
+        check: 'no image',
+        detail: `${p.common_name} — no image at all, placeholder in use`,
       })
     }
   }
@@ -389,6 +403,29 @@ async function checkRoundCompleteness(label: string): Promise<Finding[]> {
     }))
 }
 
+/**
+ * Every `*_checked_at` column on `plants` must be claimed by a step in
+ * round-status.ts's registry. Runs with or without --round, because it is a
+ * property of the pipeline rather than of any one round.
+ *
+ * Why this is a FAIL and not a lint: a stamp column with no owning step is a
+ * pipeline step that no completeness check can see. That is not hypothetical —
+ * `greenery_checked_at` and `image_checked_at` sat unclaimed through round 8,
+ * so `verify-round --round 8` reported 7/7 green while neither pass had run
+ * for any of its 101 plants.
+ */
+async function checkStepRegistry(): Promise<Finding[]> {
+  const unregistered = await unregisteredStampColumns()
+  return unregistered.map((column) => ({
+    level: 'FAIL' as const,
+    check: 'unregistered pipeline step',
+    detail:
+      `plants.${column} exists but no step in round-status.ts claims it — ` +
+      `a round can skip whatever writes it and still report complete. ` +
+      `Add a STEP_DEFS entry with stampColumn: '${column}'.`,
+  }))
+}
+
 function parseRound(): string | null {
   const args = process.argv.slice(2)
   const idx = args.indexOf('--round')
@@ -411,6 +448,7 @@ async function main() {
   console.log(`${plants.length} plants, ${combos.length} combinations.`)
 
   const findings = [...checkPlants(plants), ...checkCombos(plants, combos)]
+  findings.push(...(await checkStepRegistry()))
   if (roundLabel) findings.push(...(await checkRoundCompleteness(roundLabel)))
   else
     console.log(

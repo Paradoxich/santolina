@@ -39,6 +39,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { getSupabaseAdmin } from '../lib/supabase-admin'
+import { fetchAllRows } from '../lib/paginate'
 import { getAnthropicClient, CURATION_MODEL } from '../lib/anthropic-client'
 import type { DbPlant, SeasonalCare, SeasonalRhythm } from '../lib/plants-db'
 
@@ -436,15 +437,19 @@ async function generateForPlant(plant: DbPlant): Promise<GenerateResult> {
 
 async function fetchEligiblePlants(newOnly: boolean): Promise<DbPlant[]> {
   const db = getSupabaseAdmin()
-  const { data, error } = await db
-    .from('plants')
-    .select('*')
-    .is('seasonal_care', null)
-    .not('seasonal_rhythm', 'is', null)
-    .order('common_name')
-
-  if (error) throw new Error(`Failed to fetch plants: ${error.message}`)
-  let plants = (data ?? []) as DbPlant[]
+  // Paginated (standing rule 5). Small today because seasonal_care is filled
+  // catalog-wide, but this widens to the whole catalog after any re-derivation
+  // of the field.
+  let plants = await fetchAllRows<DbPlant>((from, to) =>
+    db
+      .from('plants')
+      .select('*')
+      .is('seasonal_care', null)
+      .not('seasonal_rhythm', 'is', null)
+      .order('common_name')
+      .order('id')
+      .range(from, to)
+  )
 
   // --new-only: keep only rows created on the newest seed day (most recent
   // batch), for a targeted top-up after seeding.

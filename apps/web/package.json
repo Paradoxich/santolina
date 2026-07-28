@@ -9,7 +9,9 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "seed": "tsx --env-file=.env.local scripts/seed-plants.ts"
+    "seed": "tsx --env-file=.env.local scripts/seed-plants.ts",
+    "catalog:state": "tsx --env-file=.env.local scripts/catalog-state.ts",
+    "catalog:state:check": "tsx --env-file=.env.local scripts/catalog-state.ts && git diff --exit-code ../../docs/catalog-state.md"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.110.0",

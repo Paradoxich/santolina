@@ -39,6 +39,7 @@
  */
 
 import { getSupabaseAdmin } from '../lib/supabase-admin'
+import { fetchAllRows } from '../lib/paginate'
 import { getAnthropicClient, CURATION_MODEL } from '../lib/anthropic-client'
 import { STYLE_TAGS, STYLE_TAG_PROMPT, type StyleTag } from '../lib/style-tags'
 
@@ -161,10 +162,10 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 async function main() {
   const db = getSupabaseAdmin()
 
-  // Full-table read via explicit paging (never a bare .select() — 1000 cap)
-  const pageSize = 1000
-  const plants: PlantRow[] = []
-  for (let from = 0; ; from += pageSize) {
+  // Full-table read — through the shared helper, not a hand-rolled loop. Four
+  // scripts had grown their own copy of this paging code, which is how a rule
+  // drifts: every copy is a place the fix can fail to reach.
+  const plants = await fetchAllRows<PlantRow>((from, to) => {
     let query = db
       .from('plants')
       .select(
@@ -172,13 +173,10 @@ async function main() {
       )
       .order('common_name')
       .order('id')
-      .range(from, from + pageSize - 1)
+      .range(from, to)
     if (NEW_ONLY) query = query.is('style_checked_at', null)
-    const { data, error } = await query
-    if (error) throw new Error(`Failed to load plants: ${error.message}`)
-    plants.push(...((data ?? []) as PlantRow[]))
-    if (!data || data.length < pageSize) break
-  }
+    return query
+  })
 
   let selected = IDS ? plants.filter((p) => IDS.includes(p.id)) : plants
   if (LIMIT) selected = selected.slice(0, LIMIT)

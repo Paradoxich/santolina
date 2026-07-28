@@ -24,9 +24,9 @@
  *   ./node_modules/.bin/tsx --env-file=.env.local scripts/backfill-sun-split.ts --dry-run
  */
 
-import { getSupabaseAdmin } from '../lib/supabase-admin'
-import { getAnthropicClient, CURATION_MODEL } from '../lib/anthropic-client'
-import type { DbPlant } from '../lib/plants-db'
+import { getSupabaseAdmin } from '../../lib/supabase-admin'
+import { getAnthropicClient, CURATION_MODEL } from '../../lib/anthropic-client'
+import type { DbPlant } from '../../lib/plants-db'
 
 const INTER_PLANT_DELAY_MS = 2000
 const SUN_ORDER = ['full_sun', 'partial_sun', 'shade'] as const

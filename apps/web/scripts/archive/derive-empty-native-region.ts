@@ -1,7 +1,7 @@
 /**
  * DRY RUN, part 2 — fallback for the empty-native plants. WRITES NOTHING.
  *
- * The main dry run (dry-run-native-region.ts) found 14 real plants that Trefle
+ * The main dry run (dry-run-native-region.ts, alongside this file) found 14 real plants that Trefle
  * returns no native distribution for, so they get NO Option-A tags and would
  * vanish from every region filter. Hand-tagging them reintroduces the exact
  * hand/prompt-tagging this whole change retires — and would be clobbered the
@@ -19,7 +19,7 @@
 
 import { readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { getAnthropicClient, CURATION_MODEL } from '../lib/anthropic-client'
+import { getAnthropicClient, CURATION_MODEL } from '../../lib/anthropic-client'
 
 const REPORTS_DIR = join(process.cwd(), 'reports')
 const DRYRUN_JSON = join(REPORTS_DIR, 'native-region-dryrun.json')
