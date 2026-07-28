@@ -152,7 +152,20 @@ async function archiveCatalog(label: string, startedAt: string | null) {
 async function main() {
   const label = parseRoundLabel()
   const skipCatalog = process.argv.includes('--skip-catalog')
+  const catalogOnly = process.argv.includes('--catalog-only')
   const reportsDir = join(process.cwd(), 'reports')
+
+  // Refresh the catalog snapshot without touching the archived reports. The
+  // catalog keeps changing after a round ends — corrections, backfills — so the
+  // committed `after-*` copy goes stale and stops being a usable recovery point
+  // for the CURRENT catalog. Re-running the full archive is the wrong fix: it
+  // would also re-copy whatever happens to be sitting in reports/ now, which by
+  // then includes unrelated history from later work.
+  if (catalogOnly) {
+    const manifest = readRoundManifest(label)
+    await archiveCatalog(label, manifest?.started_at ?? null)
+    return
+  }
 
   if (!existsSync(reportsDir)) {
     console.error(
