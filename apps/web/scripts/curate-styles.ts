@@ -63,7 +63,6 @@ interface PlantRow {
   bloom_months: number[] | null
   foliage_color: string | null
   is_greenery: boolean | null
-  garden_use_tags: string[] | null
   native_to: string | null
   style_tags: string[] | null
   style_checked_at: string | null
@@ -87,6 +86,9 @@ const IDS = idsIdx >= 0 ? (args[idsIdx + 1] ?? '').split(',') : null
 
 function buildPrompt(plant: PlantRow): string {
   // Deliberately excludes the current style_tags — a blind re-judgment.
+  // garden_use_tags is excluded too: it dates from the loose-prompt era and
+  // often literally says "cottage gardens" (all 57 such rows carried the
+  // cottage tag), which anchors exactly the judgment this pass re-makes.
   const known = {
     common_name: plant.common_name,
     scientific_name: plant.scientific_name,
@@ -97,7 +99,6 @@ function buildPrompt(plant: PlantRow): string {
     bloom_months: plant.bloom_months,
     foliage_color: plant.foliage_color,
     is_greenery: plant.is_greenery,
-    garden_use_tags: plant.garden_use_tags,
     native_to: plant.native_to,
   }
 
@@ -167,7 +168,7 @@ async function main() {
     let query = db
       .from('plants')
       .select(
-        'id, common_name, scientific_name, plant_type, plant_type_label, description, bloom_color, bloom_months, foliage_color, is_greenery, garden_use_tags, native_to, style_tags, style_checked_at'
+        'id, common_name, scientific_name, plant_type, plant_type_label, description, bloom_color, bloom_months, foliage_color, is_greenery, native_to, style_tags, style_checked_at'
       )
       .order('common_name')
       .order('id')
