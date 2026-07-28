@@ -104,11 +104,64 @@ Rounds are run in `git worktree` checkouts to avoid clashing with other sessions
 
 Reading the wrong field names leaves the code undefined, every zone falls through as unmapped, and the plant ends up untagged. See `architecture.md` §26.
 
+### 10. Trefle's `distributions.native[]` includes INTRODUCED range — MOSTLY OPEN
+
+Traps 1 and 9 are the pipeline failing to fetch. This one is the fetch succeeding and the answer being wrong, which no amount of pipeline hardening finds. Trefle does not reliably separate where a plant is _from_ from where it now _grows_, so `native_region` has been answering the wrong question — and that field is the entire basis of the "native to my region" filter.
+
+`Imperata cylindrica` was tagged China / Eastern Asia / Indo-China, which is exactly the range it was **introduced** into; it is native to Africa, the Mediterranean and West Asia. Sixteen regions wrong, and inverted.
+
+**Validate with `cross-check-native-region.ts` against WCVP** (Kew's checklist, read through GBIF). Report-only by default. Two refusals are deliberate: "no WCVP rows" is treated as no-data rather than as an empty native range (trap 1's lesson), and a region name it cannot map is an error, never a silent omission. Clearing a row needs `--allow-empty` on top of `--apply`.
+
+Two WCVP quirks worth knowing. It occasionally **omits the establishment marker**, so a single unmarked Level 3 row invents a whole Level 2 region — `Galium verum` read as native to Australia off one Tasmania row, while GBIF's own GRIIS-Australia dataset lists it as introduced. And a reviewed decision must outrank it: `Rosmarinus officinalis` has Western Asia deliberately cut and WCVP disagrees, which is why `MANUAL_OVERRIDES` now lives in `lib/native-region-overrides.ts` and is read by both the generator and the checker.
+
+**Status: 20 rows validated (7 corrected), ~575 not.** A 60-plant sample scored 56 clean against 1 genuinely wrong, so the tail is real but small. Do not point `--apply` at `--all`.
+
+### 11. GBIF's `species/match` fails UPWARD, into a genus
+
+Hand it a binomial it does not know and it climbs the taxonomy rather than returning nothing: `Pennisetum alopecuroides` comes back as the **genus `Cenchrus`**, `matchType: HIGHERRANK`. Accepting that fetches an entire genus's distribution — it was about to widen one grass from "Eastern Asia" to 41 regions including Brazil and New Zealand.
+
+This is trap 7 in different clothes: **an external name lookup that guesses is more dangerous than one that fails.** Require `EXACT` at species rank _and_ that the canonical name returned is the one you asked for. Normalise the `×` away first, or every hybrid in the catalog reads as unmatched.
+
+### 12. A round manifest records names as SEEDED, before the name pass
+
+`rounds/<n>/manifest.json` is written by the seed run, so its `common_name` values predate `fix-round8-names.ts`. Per trap 6, Trefle gave no English name to 18 of round 8's 101 rows, and those sit in the manifest under their bare scientific name. Grepping a manifest by common name therefore returns a confidently wrong answer: it is how a review concluded round 8 had seeded nothing that could collide, when it had seeded `Anemonoides nemorosa` — the direct cause of a rename. **Search a manifest by `scientific_name`**, and cross-read the round's name-fix script.
+
 ---
 
 ## Sessions
 
 <!-- Newest first. Append with: scripts/log-db-session.ts --round <label> -->
+
+### 2026-07-28 — Round 8 follow-up: scope guard, and native_region validated against WCVP
+
+**Branch** `chore/round-scope-check` (worktree `santolina-round-scope`, off `origin/main`). No new species. Catalog unchanged at **595 / 1485**. Written by hand: `log-db-session.ts` refuses a second entry for an already-logged round, correctly — this is a follow-up session, not a round.
+
+**Why this session happened.** The round-8 entry below records that `native_region` was rewritten catalog-wide, "121 changed — 101 new plus 20 pre-existing". Nobody had looked at those 20. Looking at them turned up something larger than the overreach itself.
+
+**Built: `check-round-scope.ts`.** The mirror of `round-status.ts` — that asks whether every step ran for the round's plants, this asks whether any step ran on plants that were _not_ the round's. Diffs the round's pre-seed backup against the live catalog; FAILs on a data column changed on an unmanifested row, on an unmanifested insert or delete, and on a companion pair added or removed between two plants that both predate the round. Bookkeeping stamps WARN. Works off DB state, not any script's report, so it covers steps that write no report and steps not yet written.
+
+Over round 8 it found **101 out-of-scope writes**, every one since traced:
+
+| what               | count | cause                                                                                           |
+| ------------------ | ----: | ----------------------------------------------------------------------------------------------- |
+| `hardiness_rating` |    76 | `draft-hardiness` backfilling round 7's never-drafted batch (trap 4) — remediation, not a stray |
+| `native_region`    |    20 | the known regeneration overreach (trap 3), now validated — see below                            |
+| `common_name`      |     3 | `fix-round8-names.ts`; 1 self-inflicted collision, 2 pre-existing (trap 12 bit the review here) |
+| pairings           |     2 | `curate-combinations` topping up under-cap plants from the whole roster, by design (§19)        |
+
+All waived in `rounds/8/scope-allow.json`, each entry carrying its cause, so round 8 exits clean and the next round starts from a green baseline instead of a permanently red check. **Exactly one of the 101 was a genuine mistake** — the `native_region` overreach that started this.
+
+**Built: `cross-check-native-region.ts`, and trap 10 with it.** Validating those 20 against WCVP showed Trefle conflates native with introduced range (details in trap 10; `Imperata cylindrica` was 16 regions wrong and inverted). **13 of the 20 already matched WCVP; 7 did not and were corrected.**
+
+**Data written:** `native_region` on 7 rows — Solomon's-seal (+Indo-China), Snowy mespilus (5→2 regions), Lady's bedstraw (−Australia), American wood anemone (−South-Central U.S.A., +Western Canada), Summer savory (rebuilt), Biquinho pepper (Western→Northern South America), and **Lemon cleared to empty**: `Citrus limon` is a cultigen whose 94 WCVP rows are every one introduced, so it is now a `noWildRange` override plus a `verify-round` hybrid exemption rather than a permanent gap. `verify-round`: **0 failures**, 44 image warnings.
+
+**Also found:** traps 11 and 12, both caught by _reading a report_ rather than by anything failing — which is the standing argument for report-then-apply. `MANUAL_OVERRIDES` moved to `lib/native-region-overrides.ts` so the generator and the checker cannot drift apart.
+
+**Deliberately not done:**
+
+- **~575 plants still unvalidated against WCVP.** Sample says ~2% are wrong. Run in reviewed batches; do not point `--apply` at `--all`
+- the 405 `updated_at` / `*_checked_at` stamps on unseeded rows left as WARN — guards re-stamp by design
+- nothing pushed, no PR opened, `is_curated` untouched throughout
 
 ### 2026-07-27 — Round 8 (shade & structure), 494 → 595 species
 
