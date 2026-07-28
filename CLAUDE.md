@@ -20,7 +20,13 @@ The project also extracts an open source UI framework called Paradox UI (`@parad
   /eslint-config        ← shared ESLint configs
 ```
 
-**Tooling:** Turborepo + pnpm workspaces. Node 20 LTS.
+**Tooling:** Turborepo + pnpm workspaces. Node 22 LTS (pinned in `.nvmrc`).
+
+Node 22 is a requirement, not a preference: `@supabase/supabase-js` builds its
+realtime client against a native `WebSocket`, which arrives in Node 22, so on
+Node 20 every script under `apps/web/scripts/` throws at client construction
+before it reaches a query. `.nvmrc` said 20 until 2026-07-28 and nothing caught
+it, because local machines were already on 22.
 
 ---
 
