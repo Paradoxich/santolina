@@ -170,6 +170,25 @@ This is trap 7 in different clothes: **an external name lookup that guesses is m
 
 <!-- Newest first. Append with: scripts/log-db-session.ts --round <label> -->
 
+### 2026-07-28 — Style re-tag pass: cottage 89.6% → discriminating tags
+
+**Branch** `session/2026-07-28-cottage-tags` (worktree `santolina-cottage-tags`, off `main`). No new species. Catalog unchanged at **595 / 1485**; only `style_tags` rewritten. Written by hand: not a round.
+
+Closes the open question from the round-8 entry: `cottage` tagged 533 of 595 rows (89.6%; classic 63%, wildflower 55%) because the curate-plants prompt listed the six tag names with no definitions and no selectivity bar, making the style filter's most-used option a no-op.
+
+**Schema:** migration `20260728150000_add_style_checked_at` — nullable `style_checked_at timestamptz` stamp on `plants`, guard-stamp convention. **Applied to remote via `apply_migration`** before the pass ran.
+
+**Data written:** `style_tags` overwritten + `style_checked_at` stamped on every judged row by the new `scripts/curate-styles.ts` — a blind re-judgment (the model never sees the old tags) against shared definitions in `lib/style-tags.ts`. Backed up first per rule 1 (`backups/2026-07-28T11-48-09-479Z`). Smoke-tested `--limit 3 --dry-run`, then `--limit 3` live, then two passes:
+
+- **Pass 1 (all 595, 0 failures):** cottage 89.6% → 53.5%, classic 63.4% → 13.9%, wildflower 55.1% → 17.1%; 25 style-neutral.
+- **Pass 2 (the 318 still-cottage rows, stricter cottage bar):** the definition now demands primary identity with exclusions (woodland/shade, groundcovers, grasses, ferns, structural shrubs), and `garden_use_tags` was dropped from the prompt as an anchor — it dates from the loose era and all 57 rows saying "cottage gardens" carried the tag.
+
+**Pass 2 was cut short by billing 14 plants from the end** — the Anthropic account ran dry mid-run (`credit balance is too low`; the script failed loud per trap 1, no fallback). Ana topped up credits the same day and the 14 were re-judged clean (0 failures; Wood anemone, Yellow archangel and Yellow wood anemone went style-neutral, Wood spurge moved to mediterranean).
+
+**Final state (all 595 stamped, nothing pending): cottage 290 (48.7%), mediterranean 27.1%, lush 17.0%, wildflower 16.6%, classic 16.1%, modern 16.0%, 33 style-neutral.** The model genuinely reads ~half this catalog as cottage even under the primary-identity bar — consistent with its ornamental-perennial lean (round 8 measured cottage 455/494 pre-balance). Tightening below ~49% is an editorial call, not a prompt bug; the in-script >40% warning stays on so the next full run resurfaces it.
+
+**Semantics change:** `[]` is now a valid style-neutral judgment. `curate-plants.ts` treats only NULL `style_tags` as missing (an empty array no longer triggers a re-ask through the loose path), and both curation entry points share `lib/style-tags.ts` so the definitions cannot drift.
+
 ### 2026-07-28 — Round 8 follow-up: scope guard, and native_region validated against WCVP
 
 **Branch** `chore/round-scope-check` (worktree `santolina-round-scope`, off `origin/main`). No new species. Catalog unchanged at **595 / 1485**. Written by hand: `log-db-session.ts` refuses a second entry for an already-logged round, correctly — this is a follow-up session, not a round.
