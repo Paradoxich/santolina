@@ -58,13 +58,14 @@ type Row = Record<string, unknown>
 // Written by guards to record "I have looked at this row", not to record a
 // finding. A guard re-run without --new-only re-stamps the whole table, which
 // is a legitimate whole-catalog write — worth seeing, not worth failing on.
-const STAMP_COLUMNS = new Set([
-  'updated_at',
-  'botanical_checked_at',
-  'native_checked_at',
-  'image_checked_at',
-  'greenery_checked_at',
-])
+//
+// Matched by PATTERN, not by a hand-kept list. The list version had already
+// rotted: `style_checked_at` shipped in migration 20260728150000 and was never
+// added, so the next `curate-styles --new-only` would have been reported as an
+// out-of-scope data write on every row it re-stamped. Any new bookkeeping
+// column is covered the day it exists.
+const isStampColumn = (column: string): boolean =>
+  column === 'updated_at' || column.endsWith('_checked_at')
 
 interface Finding {
   level: 'FAIL' | 'WARN' | 'ALLOWED'
@@ -215,7 +216,7 @@ function checkPlants(
       const a = canonical(old[column])
       const b = canonical(now[column])
       if (a === b) continue
-      if (STAMP_COLUMNS.has(column)) {
+      if (isStampColumn(column)) {
         changedStamps.push(column)
         continue
       }

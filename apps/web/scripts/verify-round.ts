@@ -11,12 +11,15 @@
  *     · no duplicate common_name (two species sharing a display name are
  *       indistinguishable in search — the round-8 trap)
  *     · required curation fields non-null on drafted rows
+ *     · style_tags judged — NULL fails, `[]` passes (a plant may legitimately
+ *       read as no particular style; only "never judged" is a gap)
  *     · sun_thrives non-empty and disjoint from sun_tolerates
  *     · every plant has ≥1 combination; no self/duplicate/reversed-duplicate
  *       pairs; nobody over the 5-companion cap
  *
  *   WARN (exit 0) — known gaps, reported so they stay visible:
- *     · seasonal_care null (separate distillation track, not yet user-facing)
+ *     · seasonal_care null (per-plant view; a ROUND missing it FAILs via
+ *       round-status, because Care Tips v2 is live and reads the field)
  *     · hardiness_rating null (track parked)
  *     · image_url null (PlantImage placeholder covers it)
  *
@@ -73,10 +76,12 @@ interface Finding {
 // are core product surfaces; the array fields feed Explore filters and
 // placement. bloom_months/bloom_color stay out — legitimately null on
 // foliage/evergreen plants.
+//
+// style_tags is NOT in this list, because for it empty and missing are
+// different answers — see checkStyleTags below.
 const REQUIRED_DRAFTED_FIELDS: Array<keyof PlantRow> = [
   'plant_type',
   'plant_type_label',
-  'style_tags',
   'space_types',
   'description',
   'care_level',
@@ -165,6 +170,18 @@ function checkPlants(plants: PlantRow[]): Finding[] {
             detail: `${p.common_name} — drafted but ${field} is empty`,
           })
         }
+      }
+      // style_tags: `[]` is a real judgment ("this plant reads as no particular
+      // style"), NULL means nobody has judged it. The July 28 re-tag pass made
+      // that distinction load-bearing — 33 plants are deliberately neutral —
+      // and curate-plants already treats only NULL as missing. Checking this
+      // with isEmpty() would fail all 33 for being correct.
+      if (p.style_tags === null) {
+        findings.push({
+          level: 'FAIL',
+          check: 'required field: style_tags',
+          detail: `${p.common_name} — drafted but style_tags was never judged (run curate-styles)`,
+        })
       }
     }
 

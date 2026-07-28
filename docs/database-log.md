@@ -81,7 +81,7 @@ The `MANUAL_OVERRIDES` table in that script exists because hand-corrections were
 
 **The script now refuses to run without `--round <label>` or `--all`.** There is no default.
 
-### 4. Steps can silently not run at all — FIXED (round 8)
+### 4. Steps can silently not run at all — PARTLY FIXED (round 8), recurred immediately
 
 Every guard in this repo checks whether a value is _wrong_. Until round 8, nothing checked whether work _happened_. Three separate steps had silently not run:
 
@@ -92,6 +92,12 @@ Every guard in this repo checks whether a value is _wrong_. Until round 8, nothi
 All three were invisible because `verify-round` WARNs rather than FAILs on those fields — correct while a field is parked, wrong once the feature ships.
 
 **`verify-round.ts --round <label>` now asserts per-step completeness** and exits 1 on a gap (`scripts/round-status.ts`). When §27 hardiness work resumes, promote its WARN to FAIL there.
+
+**It recurred the same week, and the fix did not see it (2026-07-28).** `round-status.ts` detects a step by a hand-written list, so a step missing from the list is invisible in exactly the way the file exists to prevent. `verify-round --round 8` reported **7/7 green** while `curate-greenery` and the image pass had never run for a single one of round 8's 101 plants — `greenery_checked_at` and `image_checked_at` were null on all of them. It was found by querying the database directly, not by any guard.
+
+That gap was not cosmetic. `is_greenery` is the **only** way into the Explore Green colour bucket (`lib/plant-colors.ts` — plain green foliage deliberately never maps), and it defaults to `false`, so 101 unjudged plants were silently excluded from a live filter. Round 8 was the **shade & structure** batch: 21 of the 101 are ferns, grasses and shrubs, the plants the Green bucket exists for.
+
+`curate-styles`, `curate-greenery` and `pick-plant-images` are now registered steps. **The durable rule: a pipeline step that stamps a column must be added to `round-status.ts` in the same commit.** Every `*_checked_at` column on `plants` should correspond to a step there — if you add the column and not the step, the next round's gap is invisible again.
 
 ### 5. Unmapped colour values vanish from the filter — recurring, guarded
 
@@ -169,6 +175,23 @@ This is trap 7 in different clothes: **an external name lookup that guesses is m
 ## Sessions
 
 <!-- Newest first. Append with: scripts/log-db-session.ts --round <label> -->
+
+### 2026-07-28 — Guard drift audit: four fixes before round 9
+
+**Branch** `fix/phase-0-guard-drift` (worktree `santolina-phase0`, off `main`). **No data written** — read-only audit plus guard-code changes. Catalog unchanged at **595 / 1485**.
+
+An audit of why each pass keeps finding problems. The honest headline: of ~77 recorded incidents only six are recurrences of a fixed failure mode, and each of those six had a first fix aimed at the _instance_ rather than the _mode_. But the guard layer built July 27–28 had never been exercised by a round, and checking it against the live database found it already broken in two places.
+
+**What bit us:**
+
+1. **`verify-round` was red on `main`.** The July 28 style pass made `[]` a valid style-neutral judgment (33 plants), but `verify-round` kept `style_tags` in `REQUIRED_DRAFTED_FIELDS`, where `isEmpty()` treats `[]` as missing — so it failed 33 rows for being correct. `curate-plants` was updated for the new semantics and the verifier was not.
+2. **`curate-greenery` and the image pass never ran for round 8**, and `verify-round --round 8` reported 7/7 green anyway. See trap 4 — that trap is no longer "FIXED".
+3. **`STAMP_COLUMNS` had already rotted.** `style_checked_at` shipped in `20260728150000` and was never added to the hand-kept set in `check-round-scope.ts`, so every row the style pass re-stamped counted as an out-of-scope _data_ write. Measured: 944 failures before the fix, 450 after — 494 stamp re-writes correctly demoted to warnings.
+4. **`--round` was optional and silent on `seed-plants.ts`.** Forgetting it disarms both cross-check scopes, `round-status`, `check-round-scope`, `archive-round`, `log-db-session` and the pre-commit hook simultaneously — and the hook cannot notice, because it only fires on a `rounds/<label>/` directory that was never created. Now exits 1 without a scope.
+
+**Verified after the change:** `verify-round` (no scope) → 0 failures, 44 warnings. `verify-round --round 8` → `curate-greenery` 0/101 FAIL, `pick-plant-images` 0/101 WARN, exit 1 — which is the correct answer and was previously green.
+
+**Deliberately not done:** the 450 remaining `check-round-scope --round 8` failures are the style pass rewriting `style_tags` on 450 pre-existing rows _after_ round 8 closed. They are real and correctly detected, and they are **not waived** — blanket-waiving 450 rows is how a check gets switched off. This exposes a design limit worth deciding on: the check's window is baseline → now, so **every closed round's scope check rots as soon as any later catalog-wide work happens.** Round 8's cleared state is the report archived in `rounds/8/reports/` on July 28, not a re-run today. Either the tool needs a recorded `cleared_at` to diff against, or re-running a closed round's scope check needs to be understood as meaningless. Round 8's greenery/image backfill is also still owed.
 
 ### 2026-07-28 — Style re-tag pass: cottage 89.6% → discriminating tags
 

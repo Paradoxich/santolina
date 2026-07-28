@@ -2,11 +2,11 @@
  * One-off seed script — fetches plants from Trefle and writes them to
  * the Supabase plants table.
  *
- * Usage (from apps/web):
- *   pnpm seed
+ * Usage (from apps/web) — --round is REQUIRED, see the check in main():
+ *   pnpm seed -- --round 9
  *
  * The npm script in package.json runs:
- *   node --env-file=.env.local --import tsx/esm scripts/seed-plants.ts
+ *   tsx --env-file=.env.local scripts/seed-plants.ts
  *
  * You can seed by Trefle numeric ID or by scientific/common name:
  *   - IDs are fetched directly via the species detail endpoint.
@@ -357,6 +357,24 @@ async function main() {
   const includeExisting = args.includes('--include-existing')
   const roundIdx = args.indexOf('--round')
   const roundLabel = roundIdx >= 0 ? args[roundIdx + 1] : undefined
+
+  // --round is REQUIRED, and it is required here rather than politely defaulted
+  // because the manifest it writes is what every later guard scopes by. Seeding
+  // without one silently disarms both cross-check scopes, round-status,
+  // check-round-scope, archive-round, log-db-session AND the pre-commit hook at
+  // the same moment — and the hook cannot even notice, because it only fires on
+  // a rounds/<label>/ directory that was never created. One forgotten flag used
+  // to turn every guard in the pipeline off at once, with no output saying so.
+  if (!roundLabel || roundLabel.startsWith('--')) {
+    console.error(
+      '\nScope required: pass --round <label> (e.g. --round 9).\n\n' +
+        'The seed run records what it inserted in rounds/<label>/manifest.json,\n' +
+        'and every downstream guard scopes by that file. Without it the round is\n' +
+        'unverifiable: nothing downstream can tell which plants were yours.\n'
+    )
+    process.exit(1)
+  }
+
   const startedAt = new Date().toISOString()
   const seeded: SeededPlant[] = []
 
@@ -432,10 +450,10 @@ async function main() {
 
   // Round manifest — the explicit record of what this run seeded, so the
   // rest of the pipeline (and future us) never has to infer the batch.
-  if (roundLabel && seeded.length) {
+  if (seeded.length) {
     const path = writeRoundManifest({ label: roundLabel, startedAt, seeded })
     console.log(`\nWrote round manifest: ${path}`)
-  } else if (roundLabel) {
+  } else {
     console.log('\nNothing seeded — no manifest written.')
   }
 

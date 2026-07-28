@@ -25,6 +25,15 @@
  * leaves behind, never by a log or a flag file — state is the only thing that
  * survives a killed run, a re-run, or a different machine. That also makes
  * these checks honest about partial work: a run killed at 60% reports 60%.
+ *
+ * THIS LIST IS HAND-MAINTAINED, AND THAT IS ITS OWN FAILURE MODE. A step
+ * missing from here is invisible in exactly the way this file exists to
+ * prevent: `verify-round --round 8` reported 7/7 green while curate-greenery
+ * and the image pass had never run for any of round 8's 101 plants (found
+ * 2026-07-28, by querying the DB rather than by any guard). If you add a
+ * pipeline step that stamps a column, add it here in the same commit — the
+ * standing check is that every `*_checked_at` column on `plants` should
+ * correspond to a step below.
  */
 
 import { getSupabaseAdmin } from './../lib/supabase-admin'
@@ -53,6 +62,9 @@ interface StatusRow {
   native_checked_at: string | null
   hardiness_rating: string | null
   seasonal_care: unknown
+  style_checked_at: string | null
+  greenery_checked_at: string | null
+  image_checked_at: string | null
 }
 
 /** A garden hybrid has no wild range, so an empty native_region is correct. */
@@ -81,7 +93,8 @@ export async function roundStatus(ids: string[]): Promise<StepStatus[]> {
       .from('plants')
       .select(
         'id, scientific_name, ai_drafted_at, native_region, ' +
-          'botanical_checked_at, native_checked_at, hardiness_rating, seasonal_care'
+          'botanical_checked_at, native_checked_at, hardiness_rating, seasonal_care, ' +
+          'style_checked_at, greenery_checked_at, image_checked_at'
       )
       .in('id', ids)
       .order('id')
@@ -165,6 +178,41 @@ export async function roundStatus(ids: string[]): Promise<StepStatus[]> {
       // bullet. Warn until that work resumes, then promote to FAIL.
       level: 'WARN',
       complete: plants.every((p) => p.hardiness_rating),
+    },
+    {
+      step: 'curate-styles',
+      done: plants.filter((p) => p.style_checked_at).length,
+      total,
+      evidence: 'style_checked_at NOT NULL',
+      // The Explore style browse tiles are live. An unjudged row keeps
+      // whatever curate-plants drafted under the loose pre-July-28 prompt,
+      // which is what put cottage on 89.6% of the catalog.
+      level: 'FAIL',
+      complete: plants.every((p) => p.style_checked_at),
+    },
+    {
+      step: 'curate-greenery',
+      done: plants.filter((p) => p.greenery_checked_at).length,
+      total,
+      evidence: 'greenery_checked_at NOT NULL',
+      // is_greenery is the ONLY way into the Explore Green colour bucket
+      // (lib/plant-colors.ts — plain green foliage deliberately never maps).
+      // It defaults to false, so an unjudged plant is silently excluded from
+      // a live filter rather than flagged. Shipped feature: FAIL.
+      level: 'FAIL',
+      complete: plants.every((p) => p.greenery_checked_at),
+    },
+    {
+      step: 'pick-plant-images',
+      done: plants.filter((p) => p.image_checked_at).length,
+      total,
+      evidence: 'image_checked_at NOT NULL',
+      // WARN, not FAIL: the vision pick is a separate costed Batch API flow
+      // (§30/§31), deliberately not part of the per-round cadence, and
+      // PlantImage falls back to a placeholder. Visible so a round cannot
+      // quietly ship without one, but it should not redden every round.
+      level: 'WARN',
+      complete: plants.every((p) => p.image_checked_at),
     },
   ]
 }
