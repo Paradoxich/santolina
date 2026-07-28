@@ -2,7 +2,61 @@
 
 Newest entry first. Read the top entry before starting work.
 
-## 2026-07-28 (later) — post-merge state, read this one first
+## 2026-07-28 (latest) — the database tooling is finished; read this one first
+
+**Status:** everything below is verified, not assumed. Open in [PR #122](https://github.com/Paradoxich/santolina/pull/122), branch `session/2026-07-28-db-tooling`, **CI green**.
+
+```
+pnpm typecheck / test         clean, 92/92 (73 + 19 new)
+verify-round --round 8        0 failures, 4 warnings
+round-progress --round 8      complete — 11/11 steps, 6/6 artifacts
+check-round-scope --round 8   0 out-of-scope, 551 waived (identical on re-run)
+restore-catalog --phase after 0 rows differ
+GitHub Actions                typecheck+test pass in 39s
+```
+
+The previous entry's items 1 and 2 were **already done** (PRs #120, #121 merged). This session shipped the remaining four plus Ana's `cleared_at` decision. The shared checkout was 30+ commits behind and is now aligned on a local `main`; the three stale local branches were fully merged and deleted.
+
+### What shipped, one line each
+
+- **CI exists** (`.github/workflows/ci.yml`) — typecheck + test on every PR. A `catalog-state` staleness job is wired but **skips with a notice until Ana adds repo secrets** `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`. It never runs on `pull_request`: a PR-triggered job holding the service-role key is not worth the drift check.
+- **Scope flags are mandatory** on `curate-plants`, `curate-combinations`, `draft-hardiness` (`--round | --ids | --all`, no default) via `scripts/scope.ts`. `--new-only` and `--redraft-unverified` survive as filters _within_ a scope. A state predicate is not a scope.
+- **`native_region_checked_at`** — the WCVP pass now stamps every row it decided, registered in `STEP_DEFS` at **FAIL**. A report-only run therefore writes one column now.
+- **`round-progress --round <n>`** (`pnpm round:progress`) — reads DB state plus the round's artifacts, prints one NEXT line, exits 1 while anything is outstanding. Runs nothing, costs nothing.
+- **`cleared_at`** — `check-round-scope` can close its window, so a finished round's answer stops rotting.
+
+### Two findings that matter more than the features
+
+1. **A committed migration is not an applied migration.** `20260727120000_diary_entries_garden_level` was merged in PR #121 and deployed while `diary_entries.plant_id` was still `NOT NULL` in production — **garden-level notes were failing for real users for a day.** Applied and verified this session. Found by accident; nothing was watching and nothing still is. Written up as **trap 14**; the check is mechanical and belongs in CI once the secrets exist.
+2. **The round archive cannot be the scope window's closing edge.** It looks like the obvious source for `cleared_at` and is wrong: the archive must track the live catalog to stay restorable, so it is re-captured after any remediation and its timestamp walks forward. Round 8's read 19:46 — the moment of this session's own refresh. `cleared_at` is therefore explicit, in `scope-allow.json`, with a required `cleared_why`.
+
+### Round 8 is green honestly, not by softening anything
+
+The pre-existing WCVP report covered **20 plants, not 101** — it validated the out-of-scope rewrites, not the batch — so backfilling from it would have left the round at 20/101 while looking addressed. The pass was re-run instead (free: GBIF plus a local geojson). 91 match, 5 corrections applied, 5 no-data.
+
+- One correction was **rejected on evidence**: WCVP would have widened `Polystichum polyblepharum`, a Japanese fern, into Middle Europe on a single unmarked Netherlands row, while the adjacent Belgium row is marked INTRODUCED. Recorded in `MANUAL_EXCLUSIONS`.
+- The 5 rows GBIF has no WCVP data for are named in `NO_WCVP_DISTRIBUTION` with their evidence, **rather than dropping the step to WARN** to make them disappear.
+- Round 8's 450 scope failures were **waived, not cleared**: the style pass finished 13:06 and round 8's own remediation ran 15:20, so no window holding round 8's real work can exclude a pass that ran _first_.
+
+### Do next
+
+1. **Merge PR #122**, then delete the branch and the `../santolina-db-tooling` worktree.
+2. **Add the two CI repo secrets** — the `catalog-state` job is inert until then. Consider adding the trap-14 schema-drift check to the same job.
+3. **Round 8's editorial pass** on its 101 plants — agent work per Ana's standing ruling, including flipping `is_curated`. Deliberately deferred as the only remaining costed item.
+4. **The ~575-row WCVP tail** — now properly stampable, which was the prerequisite.
+5. Two **colour-bucket calls** still waiting on Ana's yes in the Build Backlog.
+
+### Still open, unchanged
+
+- Promote `verify-round`'s hardiness WARN to FAIL **in the same change that un-parks §27**, not after.
+- Rule 5 (no bare `.select()`) remains **convention only** — a static check was built and deleted because a source scan cannot follow a builder assigned to a variable. Three archived scripts are still unbounded and named in the log.
+- 3 plants have no candidate images upstream at all — Wikimedia or a manual hero, not a pipeline fix.
+
+### Calibration note
+
+The previous entry warned not to trust phase language and to check the tree. That was right and it paid off twice: items 1-2 were already done, and the WCVP report's "101" turned out to be 20. **Check the artifact, not the summary of it** — including the summaries in this entry.
+
+## 2026-07-28 (later) — post-merge state
 
 **Status:** `main` is green and everything below is verified, not assumed.
 
@@ -15,11 +69,11 @@ restore-catalog --phase after   0 rows differ (archive matches live)
 
 ### Branches right now
 
-| branch | state | action |
-| --- | --- | --- |
-| `main` | PR #119 merged (guard audit + round 8 data work) | — |
-| `chore/refresh-round8-archive` | 1 commit, **pushed, no PR** | open a PR, it is provenance only |
-| `feat/diary-to-plant-story` | 5 commits, **LOCAL ONLY, 40 behind main** | ⚠️ `git push -u origin` **first**, then rebase |
+| branch                         | state                                            | action                                         |
+| ------------------------------ | ------------------------------------------------ | ---------------------------------------------- |
+| `main`                         | PR #119 merged (guard audit + round 8 data work) | —                                              |
+| `chore/refresh-round8-archive` | 1 commit, **pushed, no PR**                      | open a PR, it is provenance only               |
+| `feat/diary-to-plant-story`    | 5 commits, **LOCAL ONLY, 40 behind main**        | ⚠️ `git push -u origin` **first**, then rebase |
 
 `feat/diary-to-plant-story` is a week of product work (garden-level diary entries, plant story subpage, explore drawer CTAs, recent-activity card, global note action) existing on one laptop. Push it before anything else.
 
@@ -35,7 +89,7 @@ restore-catalog --phase after   0 rows differ (archive matches live)
 
 1. **Push `feat/diary-to-plant-story`**, then rebase onto `main`.
 2. **PR `chore/refresh-round8-archive`.**
-3. **Build the round orchestrator.** Recommended shape is the *cheap* one: `round-progress --round <n>` reads DB state + the round's artifacts, reports which steps have run and what must come next, and refuses to call a round complete until the backup, `archive-round` and `check-round-scope` all exist. It runs nothing and costs nothing. The expensive variant (drive every step from one command) cuts against generate-review-then-apply and is not wanted. **This is the fix for the actual failure mode: finishing a *pass* and finishing a *round* feel identical and are not.**
+3. **Build the round orchestrator.** Recommended shape is the _cheap_ one: `round-progress --round <n>` reads DB state + the round's artifacts, reports which steps have run and what must come next, and refuses to call a round complete until the backup, `archive-round` and `check-round-scope` all exist. It runs nothing and costs nothing. The expensive variant (drive every step from one command) cuts against generate-review-then-apply and is not wanted. **This is the fix for the actual failure mode: finishing a _pass_ and finishing a _round_ feel identical and are not.**
 4. **Add a stamp column to `cross-check-native-region.ts`** — it currently writes none, so there is no per-row record of WCVP validation. Do this **before** working the ~575-row tail, or it is trap 2 rebuilt from scratch.
 5. **Mandatory scope flags** on `curate-plants`, `curate-combinations`, `draft-hardiness` (`--round` | `--ids` | `--all`, no default). `cross-check-native-region.ts` is the pattern.
 6. Round 8's **editorial pass** on its 101 plants — agent work per Ana's standing ruling, including flipping `is_curated`.
@@ -43,7 +97,7 @@ restore-catalog --phase after   0 rows differ (archive matches live)
 
 ### Two traps added to `docs/database-log.md` today, both self-inflicted
 
-- **Book-end steps are not optional because a pass looks finished.** The greenery/image passes left `rounds/8/catalog/after-*` stale for six hours; restoring it would have silently reverted ~200 rows *while reporting success*. Run `archive-round --round <n>` after **any** remediation pass, not just after a seed.
+- **Book-end steps are not optional because a pass looks finished.** The greenery/image passes left `rounds/8/catalog/after-*` stale for six hours; restoring it would have silently reverted ~200 rows _while reporting success_. Run `archive-round --round <n>` after **any** remediation pass, not just after a seed.
 - **A backup taken inside a throwaway worktree dies with the worktree.** `backups/` and `reports/` are gitignored and local; `git worktree remove --force` took both. Take the backup in the shared checkout, or archive before removing.
 
 ### Open decisions (Ana's)
