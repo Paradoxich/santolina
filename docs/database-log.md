@@ -191,6 +191,22 @@ This is trap 7 in different clothes: **an external name lookup that guesses is m
 
 <!-- Newest first. Append with: scripts/log-db-session.ts --round <label> -->
 
+### 2026-07-29 — Round 8's editorial pass: the sign-off step becomes a script
+
+**Branch** `session/2026-07-29-editorial`. Backup taken first, in the shared checkout (`backups/2026-07-28T22-11-21-734Z`) — the worktree's `backups/` and `reports/` are symlinks into the main checkout, so nothing dies with the worktree this time.
+
+**Schema.** `20260728220852_add_editorial_checked_at` — `plants.editorial_checked_at timestamptz`, applied to the remote (via MCP, so the local filename was named to match the version it recorded — trap 13). `is_curated` records only the **approvals**; without a separate stamp a row the pass judged and deliberately held back is indistinguishable from one nobody has looked at, so every run would re-judge and re-bill the entire flagged remainder. Registered in `STEP_DEFS` at FAIL level in the same commit, as the registry requires.
+
+**What ran.** `curate-editorial.ts --round 8`, the §3 judgment (image / description / tags) with the bar defined once in `lib/editorial-standard.ts`. Ana's ruling: strict, any unresolved doubt leaves the row `false`.
+
+Result over 101: **61 approved, 40 held, 57 descriptions rewritten.** Catalog-wide `is_curated` 76 → 137. All 101 stamped, so the remainder is recorded work with a "no" verdict, not a gap.
+
+**The image gate is what binds, not the copy.** **33 of the 40 holds are image-only** — 30 because the vision pass recorded `medium` confidence (plausible but uncommitted) and 3 because upstream has no image at all. Only **one** row is held on a genuine copy objection after the fix below, and six on tag judgments (a jade plant tagged for outdoor styles, a cactus tagged mediterranean, `Luzula nivea` typed as a grass when it is a rush). A targeted vision re-check of the 30 would clear most of the remainder for roughly $0.20; it is not scheduled, and the rows are correctly `false` until it runs.
+
+**What bit us:** the blind judge invented faults it could not have seen. Its rejections cited em dashes in four rewrites — but `mechanicalCopyFault()` rejects any dash _before_ the blind call, so every text reaching that judge provably contains none. Four good rewrites were held on a fabricated reason. The review prompt had already been hardened against exactly this in the same session; the fix was never carried across to the second call. Both prompts now state that punctuation is checked mechanically and must never be given as a reason, and a **rejected rewrite is now stored in the report** — previously the report asserted "the rewrite was bad" while discarding the only evidence that could contradict it. Re-running the 8 affected rows cleared 7 of the 8 copy holds.
+
+**Deliberately not done:** the 26 medium-confidence images were not re-checked with vision (cheap, but it is a separate pass and a separate decision), and no held row was nudged over the line by hand. The bar stays where Ana set it.
+
 ### 2026-07-28 — WCVP validation gets a stamp, and two migrations reconciled
 
 **Branch** `session/2026-07-28-db-tooling`. Backup taken first, **in the shared checkout** (`backups/2026-07-28T19-36-15-183Z`), per the trap recorded two entries below.
