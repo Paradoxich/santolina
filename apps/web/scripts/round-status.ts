@@ -60,6 +60,7 @@ interface StatusRow {
   native_region: string[] | null
   botanical_checked_at: string | null
   native_checked_at: string | null
+  native_region_checked_at: string | null
   hardiness_rating: string | null
   seasonal_care: unknown
   style_checked_at: string | null
@@ -73,6 +74,31 @@ const isHybrid = (sci: string | null): boolean =>
 
 const nonEmpty = (v: unknown): boolean =>
   Array.isArray(v) ? v.length > 0 : v !== null && v !== undefined
+
+/**
+ * Taxa GBIF carries no usable WCVP distribution for, so
+ * cross-check-native-region can never stamp them — it deliberately leaves a
+ * no-data row NULL rather than record a check that did not happen (migration
+ * 20260728193815). Without this list those rows would hold the step at
+ * 96/101 forever and the only way to green it would be to soften a FAIL to a
+ * WARN, which is how a skipped step stays invisible.
+ *
+ * Named, with the reason, in the same spirit as MANUAL_EXCLUSIONS in the
+ * cross-check and the waivers in rounds/<n>/scope-allow.json: an exception is
+ * written down, not switched off. Re-checked July 28 2026 — resolving each to
+ * its accepted synonym (Struthiopteris spicant, Isotrema macrophyllum) still
+ * returns no WCVP rows, so this is upstream absence, not a naming miss.
+ */
+const NO_WCVP_DISTRIBUTION: Record<string, string> = {
+  'Stylophorum diphyllum': 'GBIF has the taxon, no WCVP distribution rows',
+  'Musa basjoo': 'GBIF has the taxon, no WCVP distribution rows',
+  'Viburnum davidii':
+    'GBIF only matches fuzzily to "Viburnum davidi", which carries a single WCVP row — too thin to validate against',
+  'Aristolochia macrophylla':
+    'no species-rank GBIF match; accepted synonym Isotrema macrophyllum resolves but carries no WCVP rows',
+  'Blechnum spicant':
+    'no species-rank GBIF match; segregate genus Struthiopteris spicant resolves but carries no WCVP rows',
+}
 
 /** State a step needs beyond the plant row itself. */
 interface StepContext {
@@ -143,6 +169,25 @@ export const STEP_DEFS: StepDef[] = [
     level: 'FAIL',
     stampColumn: 'native_checked_at',
     ran: (p) => Boolean(p.native_checked_at),
+  },
+  {
+    // §25 step 5b. FAIL rather than WARN: native_region powers a live filter
+    // (lib/native-to-me.ts), the pass costs nothing to run (GBIF plus a local
+    // geojson, no Claude call), and Trefle conflates native with introduced
+    // range — the failure this guard exists to catch is a plant tagged with
+    // exactly the range it was introduced into.
+    step: 'cross-check-native-region',
+    evidence: 'native_region_checked_at NOT NULL',
+    level: 'FAIL',
+    stampColumn: 'native_region_checked_at',
+    // A row with no scientific_name can't be looked up in GBIF, and neither
+    // can the taxa upstream has no WCVP distribution for. Counting either
+    // would hold the step permanently incomplete on rows that no re-run can
+    // ever fix.
+    applies: (p) =>
+      Boolean(p.scientific_name) &&
+      !(p.scientific_name! in NO_WCVP_DISTRIBUTION),
+    ran: (p) => Boolean(p.native_region_checked_at),
   },
   {
     // Care Tips v2 is LIVE and reads seasonal_care[currentStage], so a plant
@@ -223,7 +268,8 @@ export async function roundStatus(ids: string[]): Promise<StepStatus[]> {
       .from('plants')
       .select(
         'id, scientific_name, ai_drafted_at, native_region, ' +
-          'botanical_checked_at, native_checked_at, hardiness_rating, seasonal_care, ' +
+          'botanical_checked_at, native_checked_at, native_region_checked_at, ' +
+          'hardiness_rating, seasonal_care, ' +
           'style_checked_at, greenery_checked_at, image_checked_at'
       )
       .in('id', ids)

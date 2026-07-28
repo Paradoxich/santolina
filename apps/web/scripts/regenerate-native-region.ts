@@ -580,10 +580,16 @@ async function apply(): Promise<void> {
     const e = plan[i]!
     const before = [...e.old_tags].sort().join(',')
     const after = [...e.new_tags].sort().join(',')
-    const { error } = await supabase
-      .from('plants')
-      .update({ native_region: e.new_tags })
-      .eq('id', e.id)
+    // Inverse obligation from migration 20260728193815: a WCVP validation is a
+    // statement about a specific set of tags, so rewriting them invalidates it.
+    // Only rows whose tags actually change are un-stamped — nulling every row
+    // an --all run touches would wipe the coverage the WCVP tail is building
+    // for no reason.
+    const patch =
+      before === after
+        ? { native_region: e.new_tags }
+        : { native_region: e.new_tags, native_region_checked_at: null }
+    const { error } = await supabase.from('plants').update(patch).eq('id', e.id)
     if (error)
       throw new Error(`update failed for ${e.common_name}: ${error.message}`)
     if (before !== after) changed++

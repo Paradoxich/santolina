@@ -35,6 +35,7 @@ One row per step that stamps a column, from the `STEP_DEFS` registry in
 | --- | --- | ---: | ---: |
 | `cross-check-plants` | `botanical_checked_at` | 479 / 595 | 80.5% |
 | `cross-check-native-to` | `native_checked_at` | 177 / 595 | 29.7% |
+| `cross-check-native-region` | `native_region_checked_at` | 96 / 595 | 16.1% |
 | `curate-styles` | `style_checked_at` | 595 / 595 | 100.0% |
 | `curate-greenery` | `greenery_checked_at` | 595 / 595 | 100.0% |
 | `pick-plant-images` | `image_checked_at` | 592 / 595 | 99.5% |

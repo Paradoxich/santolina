@@ -171,6 +171,16 @@ This is trap 7 in different clothes: **an external name lookup that guesses is m
 
 **The durable rule:** if you apply a migration through the API or MCP rather than `supabase db push`, reconcile the filename to the version the remote recorded in the same session. `supabase migration repair --status applied <version>` is the other direction and is the right tool when the local filename is the truthful one.
 
+### 14. A committed migration is not an applied migration — OPEN
+
+`supabase/migrations/20260727120000_diary_entries_garden_level.sql` was committed to `main` on July 27, merged in PR #121 along with the garden-level diary feature that depends on it, deployed — and **never applied to the remote**. `diary_entries.plant_id` stayed `NOT NULL` in production, so saving a garden-level note failed for anyone who tried. It went unnoticed for a day and was found only by diffing the remote's migration list against the directory while applying an unrelated migration (July 28).
+
+**Nothing was watching.** There is no `supabase db push` in any workflow, migrations are applied by hand through the MCP, and every guard in the pipeline checks catalog _data_. A migration file in the repo reads as applied to anyone browsing it, and trap 13's ledger drift makes a filename-to-remote comparison non-obvious.
+
+**The durable rule:** the remote's migration list is the truth about what is applied; `supabase/migrations/` is the truth about what was written. Compare them before assuming a schema change is live, and especially after merging a PR that carries one. This is trap 13's sibling — same two-homes-for-one-fact shape, one direction further out.
+
+**Not yet fixed.** The check is mechanical (list migrations, compare against the directory modulo trap-13 renames) and belongs in CI once the Supabase secrets exist, but nothing enforces it today.
+
 ### 12. A round manifest records names as SEEDED, before the name pass
 
 `rounds/<n>/manifest.json` is written by the seed run, so its `common_name` values predate `fix-round8-names.ts`. Per trap 6, Trefle gave no English name to 18 of round 8's 101 rows, and those sit in the manifest under their bare scientific name. Grepping a manifest by common name therefore returns a confidently wrong answer: it is how a review concluded round 8 had seeded nothing that could collide, when it had seeded `Anemonoides nemorosa` — the direct cause of a rename. **Search a manifest by `scientific_name`**, and cross-read the round's name-fix script.
@@ -180,6 +190,31 @@ This is trap 7 in different clothes: **an external name lookup that guesses is m
 ## Sessions
 
 <!-- Newest first. Append with: scripts/log-db-session.ts --round <label> -->
+
+### 2026-07-28 — WCVP validation gets a stamp, and two migrations reconciled
+
+**Branch** `session/2026-07-28-db-tooling`. Backup taken first, **in the shared checkout** (`backups/2026-07-28T19-36-15-183Z`), per the trap recorded two entries below.
+
+**Schema — two migrations applied to the remote this session:**
+
+1. `20260728193815_add_native_region_checked_at` — `plants.native_region_checked_at timestamptz`. `cross-check-native-region.ts` shipped July 28 writing **no stamp at all**, so nothing recorded which rows Kew's checklist had actually seen. That is the same gap the guard stamps were built to close (`20260716120000`), rebuilt from scratch, with a ~575-row tail still to work.
+2. `20260728193759_diary_entries_garden_level` — **this was committed to `main` on July 27 and had never been applied.** `diary_entries.plant_id` was still `NOT NULL` in production while the garden-level diary feature that depends on it was merged (PR #121) and deployed, so **saving a garden-level note failed in production**. Found by diffing the remote migration list against `supabase/migrations/`; applied and verified (`is_nullable = YES`, check constraint present). Nothing in the pipeline would have caught this: the guards check catalog data, not schema drift, and the feature's own tests don't touch the live database.
+
+**Filenames reconciled (trap 13).** All three applied via the Supabase MCP, which records its own version, so the local files were renamed to match what the remote actually holds: `20260727120000` → `20260728193759` (diary), `20260728163000` → `20260728193815` (this session's), and the pre-existing `20260728150000` → `20260728114824` (style, drifted since July 28).
+
+**The pass now stamps.** `cross-check-native-region.ts` writes `native_region_checked_at` on every row that reached a decided verdict — including rows that agreed, or `--new-only` could never narrow. **A report-only run now writes to the database**, which is a real change in the script's character: it is operational metadata rather than catalog content, so §20's flags-only rule holds and `check-round-scope` already demotes `*_checked_at` writes to WARN. `no-data` verdicts are deliberately **not** stamped — a failed GBIF lookup must not leave a permanent record of a check that did not happen (trap 1 applied to bookkeeping). A closing warning now names rows stamped with corrections still pending, so an un-applied disagreement can't be skipped by a later sweep.
+
+**Round 8 brought to 96/96, honestly.** The existing round-8 report covered **20 plants, not 101** — it validated the out-of-scope `native_region` rewrites, not the batch. Backfilling stamps from it would have left the round at 20/101 while looking addressed, so the pass was simply re-run for the round's 101 (free: GBIF plus a local geojson, no Claude). Result: 91 match, 5 disagree, 5 no-data. All 5 disagreements applied after review, `Sorbus aucuparia` being the textbook case — WCVP marks its Southeastern U.S.A. range INTRODUCED, exactly the native-vs-introduced conflation this guard exists for.
+
+**One disagreement was rejected on evidence, not applied wholesale.** WCVP would have widened `Polystichum polyblepharum`, a Japanese/Korean fern, into **Middle Europe** — resting entirely on a Netherlands row with no establishment marker, while the adjacent Belgium row on the same taxon **is** marked INTRODUCED. That is the `Galium verum` signature, so it is recorded in `MANUAL_EXCLUSIONS` with its evidence. Its Afro-Asian range was deliberately left alone: many backing rows, and Catalogue of Life describes the same disjunct distribution independently.
+
+**Five rows can never be stamped**, so they are named in `NO_WCVP_DISTRIBUTION` in `round-status.ts` rather than the step being softened to a WARN: `Stylophorum diphyllum`, `Musa basjoo`, `Viburnum davidii`, `Aristolochia macrophylla`, `Blechnum spicant`. Each was re-checked against its accepted synonym (`Struthiopteris spicant`, `Isotrema macrophyllum`, GBIF's misspelled `Viburnum davidi`) — all resolve taxonomically and still carry no usable WCVP rows, so this is upstream absence, not a naming miss. The step registers at **FAIL**, not WARN: `native_region` powers a live filter and the pass costs nothing to re-run.
+
+**Verified:** `verify-round --round 8` → **0 failures, 4 warnings** (the 3 known no-image plants). `restore-catalog rounds/8/catalog --phase after` → **0 rows differ**, after re-archiving with `--catalog-only`, because 5 corrections and 96 stamps moved the catalog and the book-end rule below says to re-archive after **any** remediation pass, not just a seed.
+
+**What bit us:** nothing during the run, but the diary migration is the finding of the session and it was found by accident — the schema-drift check that would have caught it does not exist. A migration file committed to `main` is treated as applied by everyone reading the repo, and nothing verifies that. `supabase/migrations/` and the remote's own list are two homes for one fact, which is the exact pattern the July 28 audit named as the root cause of every regression it traced.
+
+**Deliberately not done:** the ~575-row WCVP tail is untouched — it is now properly stampable, which was the prerequisite. No GBIF taxon-alias table was built: only 1 of the 3 unresolved names gains a WCVP row when resolved to its synonym, and that row is too thin to validate against, so the table would carry more maintenance than evidence. `verify-round`'s hardiness WARN stays a WARN until §27 un-parks, per the standing decision.
 
 ### 2026-07-28 — Archive refreshed after the greenery/image passes (and a trap walked into)
 
