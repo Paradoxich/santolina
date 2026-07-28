@@ -20,6 +20,7 @@
 import { getSupabaseAdmin } from '../lib/supabase-admin'
 import { getAnthropicClient, CURATION_MODEL } from '../lib/anthropic-client'
 import type { DbPlant, PlantType, SeasonalRhythm } from '../lib/plants-db'
+import { STYLE_TAG_PROMPT, type StyleTag } from '../lib/style-tags'
 
 // ---------------------------------------------------------------------------
 // Config
@@ -39,15 +40,6 @@ const PLANT_TYPES: PlantType[] = [
   'succulent',
   'bulb',
 ]
-
-const STYLE_TAGS = [
-  'cottage',
-  'mediterranean',
-  'wildflower',
-  'modern',
-  'lush',
-  'classic',
-] as const
 
 const SPACE_TYPES = [
   'ground_garden',
@@ -83,7 +75,7 @@ interface CurationResponse {
   hardiness_zone_min?: number | null
   hardiness_zone_max?: number | null
   hardiness_confidence?: 'high' | 'low'
-  style_tags?: Array<(typeof STYLE_TAGS)[number]>
+  style_tags?: StyleTag[]
   space_types?: Array<(typeof SPACE_TYPES)[number]>
   garden_use_tags?: string[]
   bloom_color?: string[]
@@ -137,7 +129,9 @@ function buildPrompt(plant: DbPlant): string {
       'hardiness_zone_max',
       'hardiness_confidence'
     )
-  if (!plant.style_tags?.length) missing.push('style_tags')
+  // [] is a real judgment (style-neutral, per curate-styles.ts) — only NULL
+  // means the question was never asked.
+  if (plant.style_tags == null) missing.push('style_tags')
   if (!plant.space_types?.length) missing.push('space_types')
   if (!plant.garden_use_tags?.length) missing.push('garden_use_tags')
   if (!plant.bloom_color?.length) missing.push('bloom_color')
@@ -194,7 +188,7 @@ Field specifications:
 - height_min_cm / height_max_cm: Integers. Realistic mature height range in centimetres.
 - spread_min_cm / spread_max_cm: Integers. Realistic mature spread (width) range in centimetres. Distinct from height.
 - hardiness_zone_min / hardiness_zone_max: Integer USDA zone numbers (1–13). Use the species' typical range, not a single cultivar. IMPORTANT: if plant_type is "annual", set both to null — annuals complete their lifecycle in one season and hardiness zones are not applicable. If you are meaningfully less confident for this species (uncommon, ambiguous range, or cultivar-specific), set hardiness_confidence to "low"; otherwise "high".
-- style_tags: Subset of exactly ${JSON.stringify(STYLE_TAGS)}. Can be multiple.
+${STYLE_TAG_PROMPT}
 - space_types: Subset of exactly ${JSON.stringify(SPACE_TYPES)}. Can be multiple.
 - garden_use_tags: Array of 2-4 practical use-case phrases describing how this plant is typically used in a garden (e.g. ["pollinator gardens", "gravel gardens", "sunny borders", "wildlife gardens"]). This is DISTINCT from style_tags — use-case focused, not aesthetic.
 - bloom_color: Array of plain English color names (e.g. ["purple", "white"]). Empty array [] for non-flowering or purely foliage plants.
@@ -296,7 +290,9 @@ function buildPatch(plant: DbPlant, response: CurationResponse): PlantPatch {
       patch.hardiness_zone_max = response.hardiness_zone_max
   }
 
-  if (!plant.style_tags?.length && response.style_tags?.length)
+  // [] is a real answer (style-neutral) and must be written, or the row
+  // would read as never-asked forever.
+  if (plant.style_tags == null && response.style_tags != null)
     patch.style_tags = response.style_tags
   if (!plant.space_types?.length && response.space_types?.length)
     patch.space_types = response.space_types

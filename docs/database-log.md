@@ -170,6 +170,18 @@ This is trap 7 in different clothes: **an external name lookup that guesses is m
 
 <!-- Newest first. Append with: scripts/log-db-session.ts --round <label> -->
 
+### 2026-07-28 — Style re-tag pass: cottage 89.6% → discriminating tags
+
+**Branch** `session/2026-07-28-cottage-tags` (worktree `santolina-cottage-tags`, off `main`). No new species. Catalog unchanged at **595 / 1485**; only `style_tags` rewritten. Written by hand: not a round.
+
+Closes the open question from the round-8 entry: `cottage` tagged 533 of 595 rows (89.6%; classic 63%, wildflower 55%) because the curate-plants prompt listed the six tag names with no definitions and no selectivity bar, making the style filter's most-used option a no-op.
+
+**Schema:** migration `20260728150000_add_style_checked_at` — nullable `style_checked_at timestamptz` stamp on `plants`, guard-stamp convention. **Applied to remote via `apply_migration`** before the pass ran.
+
+**Data written:** `style_tags` overwritten + `style_checked_at` stamped on every judged row by the new `scripts/curate-styles.ts` — a blind re-judgment (the model never sees the old tags) against shared definitions in `lib/style-tags.ts`. Backed up first per rule 1 (`backups/2026-07-28T11-48-09-479Z`). Smoke-tested `--limit 3 --dry-run`, then `--limit 3` live, then the full run. Final distribution: see the run log / follow-up note below this entry once the full pass lands.
+
+**Semantics change:** `[]` is now a valid style-neutral judgment. `curate-plants.ts` treats only NULL `style_tags` as missing (an empty array no longer triggers a re-ask through the loose path), and both curation entry points share `lib/style-tags.ts` so the definitions cannot drift.
+
 ### 2026-07-28 — Round 8 follow-up: scope guard, and native_region validated against WCVP
 
 **Branch** `chore/round-scope-check` (worktree `santolina-round-scope`, off `origin/main`). No new species. Catalog unchanged at **595 / 1485**. Written by hand: `log-db-session.ts` refuses a second entry for an already-logged round, correctly — this is a follow-up session, not a round.
