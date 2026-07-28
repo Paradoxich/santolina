@@ -20,15 +20,16 @@ If a fact belongs in two places, it goes here as the short operational version a
 ## Standing rules
 
 1. **Back up before any bulk write.** `scripts/backup-catalog.ts`. Non-negotiable. `backups/` is gitignored and local-only, and **Free-plan projects cannot download or restore Supabase's own daily backups** — so the durable copy is `archive-round.ts`, which commits the catalog gzipped into `rounds/<n>/catalog/` (`before-*` = the round's rollback point, `after-*` = what it left behind, ~2.3MB a round). Restore from either with `restore-catalog.ts <dir> [--phase before|after]`.
-2. **Scope every script to a round.** Use `--round <label>`, which reads `rounds/<label>/manifest.json`. Never rely on `created_at` heuristics, and see trap 2 before trusting `--new-only`.
-3. **Generate, review, then apply.** Any script offering `--apply` writes nothing until you have read its report. This split is the single reason trap 1 did not corrupt the catalog.
-4. **Never bare `.select()` on a full table.** It silently caps at 1000 rows. Use `fetchAllRows` from `lib/paginate.ts`. The catalog is at 595 and climbing.
-5. **Never flip `is_curated`.** It means "Ana has editorially reviewed this row" and is hers alone. Scripts draft; they do not sign off.
-6. **After any schema or request-shape change, run `--limit 3` first.** A green typecheck does not verify a runtime API contract.
-7. **Finish with `verify-round.ts --round <label>`.** Without `--round` it checks that data is _valid_ but not that the pipeline actually _ran_.
-8. **Append an entry here.** `scripts/log-db-session.ts --round <label>` writes the factual part for you.
+2. **Storage is in NO database backup, on any plan.** The database holds only metadata about bucket objects, so `backup-catalog.ts`, the committed round archives and Supabase's own daily backups all leave the buckets uncovered. Run `scripts/backup-storage.ts`. **`diary-photos` is private user data and must never be committed** — git history is forever; sync it somewhere private instead. `plant-images` is public product data (`image_url_curated` points at it, so a lost object 404s a plant page).
+3. **Scope every script to a round.** Use `--round <label>`, which reads `rounds/<label>/manifest.json`. Never rely on `created_at` heuristics, and see trap 2 before trusting `--new-only`.
+4. **Generate, review, then apply.** Any script offering `--apply` writes nothing until you have read its report. This split is the single reason trap 1 did not corrupt the catalog.
+5. **Never bare `.select()` on a full table.** It silently caps at 1000 rows. Use `fetchAllRows` from `lib/paginate.ts`. The catalog is at 595 and climbing.
+6. **Never flip `is_curated`.** It means "Ana has editorially reviewed this row" and is hers alone. Scripts draft; they do not sign off.
+7. **After any schema or request-shape change, run `--limit 3` first.** A green typecheck does not verify a runtime API contract.
+8. **Finish with `verify-round.ts --round <label>`.** Without `--round` it checks that data is _valid_ but not that the pipeline actually _ran_.
+9. **Append an entry here.** `scripts/log-db-session.ts --round <label>` writes the factual part for you.
 
-**Rule 8 is enforced, not encouraged.** `.husky/check-db-log.sh` runs on every commit and blocks it if a round directory is committed without an entry naming that round, if a migration is committed without touching this file, or if this file still contains the `TODO —` placeholders the script writes. Git cannot see what you ran against Supabase — only what you commit — so the hook checks the artifacts database work leaves behind, and the honest reading of a green hook is "you recorded something", not "you recorded enough". `--no-verify` exists and is occasionally right (a revert, a docs fixup). It is not the normal path, and whatever you skip is inherited by whoever comes next.
+**Rule 9 is enforced, not encouraged.** `.husky/check-db-log.sh` runs on every commit and blocks it if a round directory is committed without an entry naming that round, if a migration is committed without touching this file, or if this file still contains the `TODO —` placeholders the script writes. Git cannot see what you ran against Supabase — only what you commit — so the hook checks the artifacts database work leaves behind, and the honest reading of a green hook is "you recorded something", not "you recorded enough". `--no-verify` exists and is occasionally right (a revert, a docs fixup). It is not the normal path, and whatever you skip is inherited by whoever comes next.
 
 ---
 
@@ -177,6 +178,7 @@ All waived in `rounds/8/scope-allow.json`, each entry carrying its cause, so rou
 **Deliberately not done:**
 
 - **Migration ledger drift reconciled** (trap 13): four local migration filenames renamed to the versions the remote actually recorded, after `apply_migration` had stamped its own. No production state touched; local and remote now match 26 for 26. `supabase db push` is safe again.
+- **Storage buckets now backed up** — `scripts/backup-storage.ts` pulls every bucket to the gitignored `backups/storage/<stamp>/`. First run: 3 objects, 305 KB (`plant-images` 1 real hero; `diary-photos` 2 leftover 68-byte test PNGs from July 8). **This gets the objects off Supabase, not off the laptop** — `diary-photos` is private user data and cannot be committed, so syncing it somewhere private stays manual.
 - **~575 plants still unvalidated against WCVP.** Sample says ~2% are wrong. Run in reviewed batches; do not point `--apply` at `--all`
 - the 405 `updated_at` / `*_checked_at` stamps on unseeded rows left as WARN — guards re-stamp by design
 - nothing pushed, no PR opened, `is_curated` untouched throughout
