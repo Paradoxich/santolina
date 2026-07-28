@@ -56,3 +56,4 @@ storybook-static
 # and are no use if every session has to be handed them out of band.
 .claude/*
 !.claude/skills/
+!.claude/handoff.md
