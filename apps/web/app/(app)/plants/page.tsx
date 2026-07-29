@@ -36,6 +36,11 @@ export default async function MyGardenPage({
         initialPalette={palette}
         notes={entries.map(toDiaryNote)}
         backHref={`/plants?tab=${tab ?? 'growing'}`}
+        // Resolved once here so SSR and hydration agree: the timeline's today
+        // line is positioned by fraction-of-year, so two new Date() calls
+        // milliseconds apart render different markup and React reports a
+        // hydration mismatch.
+        todayIso={new Date().toISOString().slice(0, 10)}
       />
     )
   }

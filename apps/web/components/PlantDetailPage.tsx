@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
@@ -9,6 +9,7 @@ import {
   IconButton,
   Lightbox,
   Modal,
+  Panel,
   Tooltip,
   useToast,
 } from '@paradoxui/ui'
@@ -36,6 +37,7 @@ import { GoodForSection } from './plant-detail/GoodForSection'
 import { DetailsSection } from './plant-detail/DetailsSection'
 import { StorySection } from './plant-detail/StorySection'
 import { StoryComposer } from './plant-detail/StoryComposer'
+import { GardenPlantView } from './plant-detail/GardenPlantView'
 
 /** Photo widths cycle to match the Figma strip (third photo clips at the edge). */
 const PHOTO_WIDTHS = [131, 175, 207]
@@ -47,6 +49,8 @@ interface PlantDetailPageProps {
   notes: DiaryNote[]
   /** Where "My Plants" points back to — preserves the Growing/Planned tab. */
   backHref: string
+  /** Today as YYYY-MM-DD, resolved on the server — see GardenPlantView. */
+  todayIso: string
 }
 
 /**
@@ -60,6 +64,7 @@ export function PlantDetailPage({
   initialPalette,
   notes,
   backHref,
+  todayIso,
 }: PlantDetailPageProps) {
   const { plant, companions, garden } = detail
   const subtitle = formatPlantSubtitle(
@@ -82,6 +87,8 @@ export function PlantDetailPage({
   const { toast } = useToast()
 
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
+  const [referenceOpen, setReferenceOpen] = useState(false)
+  const storyRef = useRef<HTMLDivElement>(null)
 
   const [palette, setPalette] = useState(initialPalette)
   const [pendingAction, setPendingAction] = useState<'plan' | 'garden' | null>(
@@ -402,7 +409,13 @@ export function PlantDetailPage({
         </div>
       </header>
 
-      <div className="mx-auto flex w-full max-w-[640px] flex-col pt-8 md:pt-12">
+      {/* Growing plants get the dashboard's 1032px column; everything else
+          keeps the 640px reading column, because it is still a read page. */}
+      <div
+        className={`flex w-full flex-col pt-8 md:pt-12 ${
+          isGrowing ? 'max-w-[1032px]' : 'mx-auto max-w-[640px]'
+        }`}
+      >
         {actionError && (
           <p
             role="alert"
@@ -421,7 +434,12 @@ export function PlantDetailPage({
           )}
         </div>
 
-        <div className="mt-4 flex w-full shrink-0 snap-x snap-mandatory gap-inline-gap overflow-x-auto">
+        {/* The growing view carries its own photo row inside "Your plant". */}
+        <div
+          className={`mt-4 w-full shrink-0 snap-x snap-mandatory gap-inline-gap overflow-x-auto ${
+            isGrowing ? 'hidden' : 'flex'
+          }`}
+        >
           {(photos.length > 0 ? photos : [null]).map((src, i) => {
             const imageClass =
               'relative h-[141px] shrink-0 snap-start overflow-hidden rounded-sm'
@@ -454,7 +472,7 @@ export function PlantDetailPage({
           })}
         </div>
 
-        {credit && (
+        {credit && !isGrowing && (
           <p className="mt-2 w-full text-body-small text-muted">
             {credit}
             {plant.image_attribution?.source_url && (
@@ -486,24 +504,86 @@ export function PlantDetailPage({
           </p>
         )}
 
-        <div className="mt-section-break flex w-full flex-col gap-section-break">
-          <AboutSection description={plant.description} />
-          {showStory && (
+        {isGrowing ? (
+          /* The plant is yours and in the ground: the page becomes a
+             dashboard for it. Reference sections stay, demoted into a
+             collapsed panel, so nothing that was here is lost. */
+          <div className="mt-8 flex w-full flex-col gap-item-gap">
+            <GardenPlantView
+              plant={plant}
+              notes={notes}
+              heroPhotos={allPhotos}
+              todayIso={todayIso}
+              onHeroPhotoClick={setLightboxIndex}
+              onSeeAllNotes={() =>
+                storyRef.current?.scrollIntoView({
+                  behavior: 'smooth',
+                  block: 'start',
+                })
+              }
+            />
+
+            <Panel
+              title="Care reference"
+              description="Water, light, soil, pruning, the full year, and the botanical details"
+              meta={
+                <button
+                  type="button"
+                  onClick={() => setReferenceOpen((open) => !open)}
+                  className="text-body text-secondary underline-offset-2 transition-colors duration-normal hover:text-primary hover:underline"
+                >
+                  {referenceOpen ? 'Hide' : 'Show'}
+                </button>
+              }
+            >
+              {referenceOpen && (
+                <div className="flex w-full flex-col gap-section-break">
+                  <AboutSection description={plant.description} />
+                  <GoodForYourGardenSection bullets={bullets} />
+                  <CareSection plant={plant} />
+                  <SeasonalRhythmSection rhythm={plant.seasonal_rhythm} />
+                  <InYourGardenSection plant={plant} />
+                  <WorksWellWithSection companions={companions} />
+                  <GoodForSection tags={plant.garden_use_tags} />
+                  <DetailsSection plant={plant} />
+                </div>
+              )}
+            </Panel>
+          </div>
+        ) : (
+          <div className="mt-section-break flex w-full flex-col gap-section-break">
+            <AboutSection description={plant.description} />
+            {showStory && (
+              <StorySection
+                plantId={plant.id}
+                plantName={plant.common_name}
+                notes={notes}
+                isGrowing={isGrowing}
+              />
+            )}
+            <GoodForYourGardenSection bullets={bullets} />
+            <CareSection plant={plant} />
+            <SeasonalRhythmSection rhythm={plant.seasonal_rhythm} />
+            <InYourGardenSection plant={plant} />
+            <WorksWellWithSection companions={companions} />
+            <GoodForSection tags={plant.garden_use_tags} />
+            <DetailsSection plant={plant} />
+          </div>
+        )}
+
+        {/* The full story stays a real section on the page, not a card: it is
+            the read-and-write surface, and the Diary card is a teaser into
+            it. Growing plants only reach it via the scroll above. */}
+        {isGrowing && (
+          <div ref={storyRef} className="mt-section-break">
             <StorySection
               plantId={plant.id}
               plantName={plant.common_name}
               notes={notes}
               isGrowing={isGrowing}
             />
-          )}
-          <GoodForYourGardenSection bullets={bullets} />
-          <CareSection plant={plant} />
-          <SeasonalRhythmSection rhythm={plant.seasonal_rhythm} />
-          <InYourGardenSection plant={plant} />
-          <WorksWellWithSection companions={companions} />
-          <GoodForSection tags={plant.garden_use_tags} />
-          <DetailsSection plant={plant} />
-        </div>
+          </div>
+        )}
 
         {showStory && (
           <div className="mt-section-break">

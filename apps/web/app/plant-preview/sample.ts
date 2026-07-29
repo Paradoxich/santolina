@@ -1,45 +1,58 @@
 /**
- * Sample data for the plant-detail preview. Deliberately hand written rather
- * than fetched: the preview exists to judge layout and hierarchy before any
- * query or migration is committed to. Shapes mirror the real ones (DbPlant,
- * DiaryNote, CareEvent) so graduating a section to the live page is a swap of
- * the data source, not a rewrite.
+ * Sample data for the plant-detail preview.
  *
- * TODAY is frozen so the preview reads identically whenever it is opened.
+ * The preview renders the REAL GardenPlantView component, not a copy of it,
+ * so this file only has to produce the shapes that component takes: a DbPlant
+ * row and a list of DiaryNote. That way the preview cannot drift away from
+ * what ships, which a parallel implementation would have done within a day.
  */
 
-import type { DiaryEventType } from '@/lib/diary-events'
+import type { DbPlant } from '@/lib/plants-db'
+import type { DiaryNote } from '@/types/diary'
 
-export const TODAY = new Date('2026-07-29T12:00:00Z')
+/** Sample dates track the current year so the strip always reads sensibly. */
+const YEAR = new Date().getFullYear()
 
-export interface SamplePlant {
-  common_name: string
-  scientific_name: string
-  plant_type: string
-  /** Months 1-12 the species flowers. */
-  bloom_months: number[]
-  /** Per-stage description of what the plant is doing (seasonal_rhythm). */
-  seasonal_rhythm: Record<string, string>
-  /** Per-stage imperative action, null where there is nothing to do. */
-  seasonal_care: Record<string, string | null>
-  water_needs: string
-  light_needs: string
-  soil_needs: string
-  maintenance_notes: string
-  common_issues: string
-  best_placement: string
-  environment_benefits: string
-  height: string
-  spread: string
-  native_to: string
-  family: string
+function iso(month: number, day: number): string {
+  return `${YEAR}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
 }
 
-export const SAMPLE_PLANT: SamplePlant = {
+/**
+ * A catalog row with the fields this view actually reads populated, cast to
+ * DbPlant rather than spelling out all sixty columns. If the view starts
+ * reading a new field it reads undefined here, which surfaces as an empty
+ * card in the preview — the intended failure mode, not a silent pass.
+ */
+export const SAMPLE_PLANT = {
+  id: 'preview-lavender',
   common_name: 'English lavender',
   scientific_name: 'Lavandula angustifolia',
-  plant_type: 'Shrub',
+  common_name_aliases: [],
+  family: 'Lamiaceae',
+  native_to: 'Western Mediterranean',
+  description:
+    'A compact evergreen shrub with narrow grey green leaves and dense spikes of scented purple flowers through midsummer.',
+  plant_type: 'shrub',
+  plant_type_label: 'Shrub',
   bloom_months: [6, 7, 8],
+  height_min_cm: 40,
+  height_max_cm: 80,
+  spread_min_cm: 60,
+  spread_max_cm: 100,
+  sun_requirements: ['full_sun'],
+  light_needs: 'Full sun',
+  water_needs:
+    'Low once established. Water deeply but rarely, and let the soil dry between.',
+  soil_needs: 'Sharp drainage above all else. Poor, gritty soil suits it.',
+  maintenance_notes:
+    'Prune every year after flowering to keep the mound tight. Lavender will not reshoot from bare wood, so never cut back further than the soft growth.',
+  common_issues:
+    'Woody, splitting centres from skipped pruning. Root rot in heavy or wet soil.',
+  best_placement:
+    'Sunny edges, gravel beds, along a path where you brush past it.',
+  environment_benefits:
+    'Heavily worked by bees and hoverflies through midsummer.',
+  garden_use_tags: ['pollinator friendly', 'drought tolerant', 'fragrant'],
   seasonal_rhythm: {
     early_spring: 'Grey green foliage tightens up and new shoots push through.',
     late_spring: 'Flower spikes rise well above the mound of leaves.',
@@ -56,92 +69,52 @@ export const SAMPLE_PLANT: SamplePlant = {
     autumn: null,
     winter: 'Leave it alone. Wet feet in cold soil is what kills lavender.',
   },
-  water_needs:
-    'Low once established. Water deeply but rarely, and let the soil dry between.',
-  light_needs: 'Full sun',
-  soil_needs: 'Sharp drainage above all else. Poor, gritty soil suits it.',
-  maintenance_notes:
-    'Prune every year after flowering to keep the mound tight. Lavender will not reshoot from bare wood, so never cut back further than the soft growth.',
-  common_issues:
-    'Woody, splitting centres from skipped pruning. Root rot in heavy or wet soil.',
-  best_placement:
-    'Sunny edges, gravel beds, along a path where you brush past it.',
-  environment_benefits:
-    'Heavily worked by bees and hoverflies through midsummer.',
-  height: '40 to 80 cm',
-  spread: '60 to 100 cm',
-  native_to: 'Western Mediterranean',
-  family: 'Lamiaceae',
-}
-
-export interface SampleEvent {
-  type: DiaryEventType
-  date: string
-}
-
-export interface SampleNote {
-  id: string
-  date: string
-  text: string
-  eventTypes: DiaryEventType[]
-  photoCount: number
-}
+  image_url: null,
+  image_urls: [],
+} as unknown as DbPlant
 
 /** A well logged plant: roughly a note a fortnight, events through the season. */
-export const NOTES_RICH: SampleNote[] = [
+export const NOTES_RICH: DiaryNote[] = [
   {
     id: 'n1',
-    date: '2026-07-24',
+    date: iso(7, 24),
     text: 'Bees on it all afternoon. The spikes nearest the path are already going papery at the tips.',
     eventTypes: [],
-    photoCount: 2,
+    photos: [
+      { src: '/placeholder-img.png', width: 131 },
+      { src: '/placeholder-img.png', width: 175 },
+    ],
   },
-  {
-    id: 'n2',
-    date: '2026-07-23',
-    text: '',
-    eventTypes: ['watered'],
-    photoCount: 0,
-  },
+  { id: 'n2', date: iso(7, 23), text: '', eventTypes: ['watered'] },
   {
     id: 'n3',
-    date: '2026-07-09',
+    date: iso(7, 9),
     text: 'Full flower now. Much better than last year, the extra grit clearly helped.',
     eventTypes: ['watered'],
-    photoCount: 1,
+    photos: [{ src: '/placeholder-img.png', width: 207 }],
   },
   {
     id: 'n4',
-    date: '2026-06-18',
+    date: iso(6, 18),
     text: 'First spikes opening.',
     eventTypes: [],
-    photoCount: 1,
+    photos: [{ src: '/placeholder-img.png', width: 131 }],
   },
   {
     id: 'n5',
-    date: '2026-05-02',
+    date: iso(5, 2),
     text: 'Worked a bag of grit into the bed before planting. Soil here holds more water than I would like.',
     eventTypes: ['planted'],
-    photoCount: 2,
+    photos: [
+      { src: '/placeholder-img.png', width: 175 },
+      { src: '/placeholder-img.png', width: 131 },
+    ],
   },
 ]
 
 /** A sparsely logged plant: planted, then silence. The common case. */
-export const NOTES_SPARSE: SampleNote[] = [
-  {
-    id: 's1',
-    date: '2026-05-02',
-    text: '',
-    eventTypes: ['planted'],
-    photoCount: 0,
-  },
+export const NOTES_SPARSE: DiaryNote[] = [
+  { id: 's1', date: iso(5, 2), text: '', eventTypes: ['planted'] },
 ]
 
-export const NOTES_NONE: SampleNote[] = []
-
-/** Flattens notes into one event per logged type, as listGardenCareEvents does. */
-export function eventsFromNotes(notes: SampleNote[]): SampleEvent[] {
-  return notes.flatMap((note) =>
-    note.eventTypes.map((type) => ({ type, date: note.date }))
-  )
-}
+export const NOTES_NONE: DiaryNote[] = []

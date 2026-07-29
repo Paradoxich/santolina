@@ -13,8 +13,14 @@
  */
 
 import { PlantImage } from '@/components/PlantImage'
-import { DIARY_EVENT_LABELS } from '@/lib/diary-events'
-import type { SampleEvent } from './sample'
+import { DIARY_EVENT_LABELS, type DiaryEventType } from '@/lib/diary-events'
+
+/** A logged event reduced to what the strip plots: what, and roughly when. */
+export interface TimelineEvent {
+  type: DiaryEventType
+  /** ISO date, e.g. "2026-05-08". */
+  date: string
+}
 
 const MONTH_INITIALS = [
   'J',
@@ -55,7 +61,7 @@ function positionOf(date: Date): number {
 
 interface YearTimelineProps {
   bloomMonths: number[]
-  events: SampleEvent[]
+  events: TimelineEvent[]
   today: Date
   plantName: string
   imageUrl: string | null
@@ -79,7 +85,7 @@ export function YearTimeline({
   const spanWidth = ((lastMonth - firstMonth + 1) / 12) * 100
 
   // Events grouped by month: a month with three waterings gets one mark.
-  const byMonth = new Map<number, SampleEvent[]>()
+  const byMonth = new Map<number, TimelineEvent[]>()
   for (const event of events) {
     const month = new Date(`${event.date}T12:00:00Z`).getUTCMonth() + 1
     const bucket = byMonth.get(month)
