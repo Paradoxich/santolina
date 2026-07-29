@@ -270,6 +270,16 @@ Getting there surfaced four bugs, all the same shape — **something failed for 
 
 Round 8 finished at **94 of 101**, catalog **170**. The 7 still held: 3 with no image upstream at all, 2 whose species cannot be confirmed from any available photograph, the prickly-pear disagreement, and Japanese banana (bloom data against `is_greenery` — botanical, so the cross-check's call, not the editorial pass's).
 
+**The pipeline went from thirteen steps to ten, and gained a runner.** Round 8's three days were not compute — eleven batched calls per plant is hours — they were a person standing at thirteen gates. `run-round.ts --round <n>` (`pnpm round:run`) executes the whole of §25 in order, reads DB state first so a killed run skips what is already done rather than re-billing it, and **stops on a failure without retrying, skipping or working around it**. It deliberately does not seed: choosing which species to add against which measured gap is the round's actual judgment.
+
+Three steps left the per-round cadence, none of them by lowering a bar:
+
+- **`curate-styles`** — `curate-plants` already tags new seeds from the SAME tightened definitions (both import `lib/style-tags.ts`), so running it over a fresh batch re-asked a question already answered correctly. It stays as the repair pass for rows drafted under the loose pre-July-28 prompt.
+- **`curate-greenery`** — folded into `curate-plants`. It is one boolean on a call already being made for that plant, so a whole pass disappears for free. The criterion moved to `lib/greenery.ts` so both callers share one definition, the same arrangement `style-tags.ts` has, and for the same reason: two entry points slowly disagreeing is what put cottage on 90% of the catalog.
+- **`draft-hardiness`** — §27 is parked, so a round was paying for a rating that feeds a dormant bullet. When §27 resumes it becomes per-round and FAIL in one change.
+
+`STEP_DEFS` keeps all three, with `perRound: false`. The registry is what proves every stamp column on `plants` is claimed by some step, so dropping them from it would re-open the hole that let `greenery_checked_at` and `image_checked_at` sit unclaimed through round 8. They are still registered; they are simply not part of what "round N is done" means.
+
 **Deliberately not done:**
 
 - the ~70 medium heroes outside round 8 — the flag is scoped, and this session's mandate was round 8

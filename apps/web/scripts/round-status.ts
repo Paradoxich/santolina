@@ -125,6 +125,22 @@ interface StepDef {
    * pass stayed invisible through round 8.
    */
   stampColumn?: string
+  /**
+   * False for a step a round does not owe.
+   *
+   * Some passes exist to REPAIR older data, not to run per round, and holding
+   * a round incomplete until they have run is how a pipeline grows to
+   * thirteen manual gates. `curate-styles` re-judges tags drafted under the
+   * loose pre-July-28 prompt — a plant seeded today is already tagged by the
+   * same tightened definitions inside `curate-plants`, so re-asking is a step
+   * that cannot change anything. `curate-greenery` is the same story since
+   * `is_greenery` was folded into the drafting call.
+   *
+   * They stay in this registry, because the registry is what proves every
+   * stamp column on `plants` is claimed by something. They are simply not
+   * part of what "round N is done" means.
+   */
+  perRound?: boolean
   /** Rows the step can apply to. Default: every plant in the round. */
   applies?: (p: StatusRow) => boolean
   /** Has this step run for this row? */
@@ -202,30 +218,42 @@ export const STEP_DEFS: StepDef[] = [
   },
   {
     // §27 hardiness is PARKED — it feeds only a dormant survive-winter
-    // bullet. Warn until that work resumes, then promote to FAIL.
+    // bullet, so a round does not owe it. Drafting a rating per round for a
+    // feature nobody can see is a paid step that buys a warning symbol.
+    // When §27 resumes: perRound true and level FAIL, in one change.
     step: 'draft-hardiness',
     evidence: 'hardiness_rating NOT NULL',
     level: 'WARN',
+    perRound: false,
     ran: (p) => Boolean(p.hardiness_rating),
   },
   {
-    // The Explore style browse tiles are live. An unjudged row keeps whatever
-    // curate-plants drafted under the loose pre-July-28 prompt, which is what
-    // put cottage on 89.6% of the catalog.
+    // NOT per round since 2026-07-29. curate-plants tags new seeds using the
+    // SAME tightened definitions (both import lib/style-tags.ts), so running
+    // this over a fresh batch re-asks a question already answered correctly.
+    // It remains the repair pass for rows drafted under the loose
+    // pre-July-28 prompt — the ones that put cottage on 89.6% of the catalog.
     step: 'curate-styles',
     evidence: 'style_checked_at NOT NULL',
     level: 'FAIL',
+    perRound: false,
     stampColumn: 'style_checked_at',
     ran: (p) => Boolean(p.style_checked_at),
   },
   {
-    // is_greenery is the ONLY way into the Explore Green colour bucket
-    // (lib/plant-colors.ts — plain green foliage deliberately never maps).
-    // It defaults to false, so an unjudged plant is silently excluded from a
-    // live filter rather than flagged. Shipped feature: FAIL.
+    // NOT per round since 2026-07-29: is_greenery is now answered inside
+    // curate-plants, on a call already being made, and stamped there. This
+    // survives as the repair pass for rows seeded before that.
+    //
+    // The obligation has not gone away, it has moved: is_greenery is the ONLY
+    // way into the Explore Green colour bucket (lib/plant-colors.ts — plain
+    // green foliage deliberately never maps) and defaults to false, so an
+    // unjudged plant is silently missing from a live filter. curate-plants
+    // now carries that, and the stamp is what proves it.
     step: 'curate-greenery',
     evidence: 'greenery_checked_at NOT NULL',
     level: 'FAIL',
+    perRound: false,
     stampColumn: 'greenery_checked_at',
     ran: (p) => Boolean(p.greenery_checked_at),
   },
@@ -339,7 +367,10 @@ export async function roundStatus(ids: string[]): Promise<StepStatus[]> {
 
   const ctx: StepContext = { paired }
 
-  return STEP_DEFS.map((def) => {
+  // Only the steps a round actually owes. A repair pass for older data
+  // (perRound: false) stays in the registry so its stamp column is claimed,
+  // but a round is not held incomplete waiting for it.
+  return STEP_DEFS.filter((def) => def.perRound !== false).map((def) => {
     const scope = def.applies ? plants.filter(def.applies) : plants
     const done = scope.filter((p) => def.ran(p, ctx)).length
     return {

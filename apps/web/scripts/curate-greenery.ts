@@ -37,6 +37,7 @@
  */
 
 import { getSupabaseAdmin } from '../lib/supabase-admin'
+import { GREENERY_PROMPT } from '../lib/greenery'
 import {
   requireScope,
   scopeIds,
@@ -134,7 +135,7 @@ function buildPrompt(plant: PlantRow): string {
 ${JSON.stringify(known, null, 2)}
 
 ${askFoliage ? `Provide two fields:` : `Provide one field:`}
-- greenery (boolean): Is this plant's garden identity GREENERY — grown primarily for green mass, leaves or form, with flowers absent or incidental? True for the likes of boxwood, laurel, ferns, ivy, most conifers, and hedging or structural evergreens. False for anything grown mainly for its flowers, even if it holds handsome green leaves. Also false for foliage plants whose leaves read as a distinctive NON-green colour (silver, blue-grey, burgundy, gold) — their identity is that colour, not green.${
+- ${GREENERY_PROMPT}${
     askFoliage
       ? `
 - foliage_color (string or null): The plant's distinctive STANDING foliage colour, or null if the foliage is typical green (null is the expected answer for most plants). Distinctive means the leaf colour itself is a reason to plant it. Prefer these established terms when accurate: "silver", "silver-grey", "silvery-grey", "grey-green", "blue-green", "blue-grey", "burgundy", "near-black", "bronze-purple", "copper-orange". Standing colour only — ignore autumn colour, winter bronzing, and coloured new growth. Judge the base species, not cultivars.`

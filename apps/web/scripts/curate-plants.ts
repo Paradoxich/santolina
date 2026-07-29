@@ -27,6 +27,7 @@ import { fetchAllRows } from '../lib/paginate'
 import { getAnthropicClient, CURATION_MODEL } from '../lib/anthropic-client'
 import type { DbPlant, PlantType, SeasonalRhythm } from '../lib/plants-db'
 import { STYLE_TAG_PROMPT, type StyleTag } from '../lib/style-tags'
+import { GREENERY_PROMPT } from '../lib/greenery'
 import { requireScope, scopeIds, describeScope } from './scope'
 
 // ---------------------------------------------------------------------------
@@ -87,6 +88,7 @@ interface CurationResponse {
   garden_use_tags?: string[]
   bloom_color?: string[]
   foliage_color?: string | null
+  is_greenery?: boolean
   sun_thrives?: Array<(typeof SUN_VALUES)[number]>
   sun_tolerates?: Array<(typeof SUN_VALUES)[number]>
   bloom_months?: number[]
@@ -105,6 +107,8 @@ interface CurationResponse {
 // Fields written back to Supabase — hardiness_confidence is meta only
 type PlantPatch = Omit<CurationResponse, 'hardiness_confidence'> & {
   ai_drafted_at: string
+  // Written alongside is_greenery so a "false" can be told from "never asked".
+  greenery_checked_at?: string
 }
 
 // ---------------------------------------------------------------------------
@@ -143,6 +147,11 @@ function buildPrompt(plant: DbPlant): string {
   if (!plant.garden_use_tags?.length) missing.push('garden_use_tags')
   if (!plant.bloom_color?.length) missing.push('bloom_color')
   if (plant.foliage_color === null) missing.push('foliage_color')
+  // Folded in from curate-greenery (2026-07-29). It is one boolean on a call
+  // we are already making for this plant, so asking it here removes a whole
+  // per-round pass for free. curate-greenery survives as the repair tool for
+  // rows seeded before the field existed.
+  if (!plant.greenery_checked_at) missing.push('is_greenery')
   // sun is drafted as two fields; sun_requirements is derived by a DB trigger.
   if (!plant.sun_thrives?.length) missing.push('sun_thrives', 'sun_tolerates')
   if (!plant.bloom_months?.length) missing.push('bloom_months')
@@ -200,6 +209,7 @@ ${STYLE_TAG_PROMPT}
 - garden_use_tags: Array of 2-4 practical use-case phrases describing how this plant is typically used in a garden (e.g. ["pollinator gardens", "gravel gardens", "sunny borders", "wildlife gardens"]). This is DISTINCT from style_tags — use-case focused, not aesthetic.
 - bloom_color: Array of plain English color names (e.g. ["purple", "white"]). Empty array [] for non-flowering or purely foliage plants.
 - foliage_color: Single string only if the foliage is notably distinctive (e.g. "silver", "burgundy", "variegated grey-green"). null if typical green.
+- is_greenery: ${GREENERY_PROMPT}
 - sun_thrives: Subset of ["full_sun", "partial_sun", "shade"] — the exposure(s) where the species performs at its BEST (flowers well, best habit, healthy growth). Usually one, occasionally two. Must be non-empty.
 - sun_tolerates: Subset of ["full_sun", "partial_sun", "shade"], DISJOINT from sun_thrives — ADDITIONAL exposures the species accepts and grows acceptably in but is not at its best. Include every exposure it reliably tolerates beyond its optimum; [] if it only performs in its thrives range. E.g. a plant best in full sun that also does fine in partial sun → sun_thrives ["full_sun"], sun_tolerates ["partial_sun"].
 - bloom_months: Array of integers 1–12 (Jan=1, Dec=12). Must be internally consistent with seasonal_rhythm if you are providing both.
@@ -310,6 +320,13 @@ function buildPatch(plant: DbPlant, response: CurationResponse): PlantPatch {
   // foliage_color: null is a valid value (means "typical green" — skip re-asking)
   if (plant.foliage_color === null && 'foliage_color' in response)
     patch.foliage_color = response.foliage_color ?? null
+  // Stamped as well as written, so round-status can tell "judged false" from
+  // "never asked" — false is the column default, so the value alone says
+  // nothing (the same trap greenery_checked_at was added for).
+  if (!plant.greenery_checked_at && typeof response.is_greenery === 'boolean') {
+    patch.is_greenery = response.is_greenery
+    patch.greenery_checked_at = new Date().toISOString()
+  }
   // Sun: write the two source fields; the DB trigger derives sun_requirements.
   // Clamp tolerates to be disjoint from thrives (enforced by a CHECK too).
   if (!plant.sun_thrives?.length && response.sun_thrives?.length) {
