@@ -117,45 +117,11 @@ export function YearTimeline({
 
   return (
     <div className="flex w-full flex-col gap-item-gap">
-      {/* Stage segments. Buttons, because selecting one reads out its text. */}
-      <div className="flex w-full gap-tight-gap">
-        {SEASON_SPANS.map((span) => {
-          const { width } = spanBounds(span.startMonth, span.endMonth)
-          const isCurrent = span.season === currentSeason
-          const isSelected = span.season === selected
-          return (
-            <button
-              key={`${span.season}-${span.startMonth}`}
-              type="button"
-              onClick={() => setSelected(span.season)}
-              aria-pressed={isSelected}
-              style={{ width: `${width}%` }}
-              className={[
-                'flex min-w-0 flex-col gap-tight-gap rounded-sm px-inline-gap py-inline-gap text-left transition-colors duration-fast',
-                'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus',
-                isSelected
-                  ? 'bg-accent-muted'
-                  : 'bg-surface-subtle hover:bg-surface-hover',
-              ].join(' ')}
-            >
-              <span
-                className={[
-                  'truncate text-label',
-                  isSelected ? 'text-accent' : 'text-secondary',
-                ].join(' ')}
-              >
-                {SEASON_LABELS[span.season]}
-              </span>
-              {isCurrent && (
-                <span className="truncate text-micro text-muted">Now</span>
-              )}
-            </button>
-          )
-        })}
-      </div>
-
-      {/* Flowering and your marks, on the same twelve-month axis. */}
-      <div className="relative h-[52px] w-full">
+      {/* One track. Everything below is positioned against the same twelve
+          months, so a stage band, the bloom bar and a logged mark in the
+          same column are genuinely the same week of the year. */}
+      <div className="relative w-full">
+        {/* Month gridlines run the full height, behind every lane. */}
         <div
           aria-hidden="true"
           className="absolute inset-0 flex justify-between"
@@ -168,43 +134,91 @@ export function YearTimeline({
           ))}
         </div>
 
+        {/* Today, across every lane. */}
         <div
           aria-hidden="true"
-          className="absolute top-0 h-full w-px bg-accent"
+          className="absolute top-0 z-10 h-full w-px bg-accent"
           style={{ left: `${todayLeft}%` }}
         />
 
-        {hasBloom && (
-          <div className="absolute inset-x-0 top-[30%]">
-            <div
-              className="absolute h-[4px] -translate-y-1/2 rounded-full bg-accent"
-              style={{ left: `${bloom.left}%`, width: `${bloom.width}%` }}
-              role="img"
-              aria-label={`Flowers ${MONTH_NAMES[firstMonth - 1]} to ${MONTH_NAMES[lastMonth - 1]}`}
-            />
-            <div
-              className="absolute size-6 -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full border border-accent"
-              style={{ left: `${bloom.left + bloom.width / 2}%` }}
-            >
-              <PlantImage
-                src={imageUrl}
-                alt={plantName}
-                fill
-                sizes="24px"
-                className="object-cover"
-              />
-            </div>
-          </div>
-        )}
+        {/* Stage lane: contiguous bands, hairline-separated, rounded only at
+            the two ends of the year so it reads as one continuous track. */}
+        <div className="relative flex h-11 w-full overflow-hidden rounded-sm">
+          {SEASON_SPANS.map((span, i) => {
+            const { width } = spanBounds(span.startMonth, span.endMonth)
+            const isCurrent = span.season === currentSeason
+            const isSelected = span.season === selected
+            return (
+              <button
+                key={`${span.season}-${span.startMonth}`}
+                type="button"
+                onClick={() => setSelected(span.season)}
+                aria-pressed={isSelected}
+                title={SEASON_LABELS[span.season]}
+                style={{ width: `${width}%` }}
+                className={[
+                  'flex min-w-0 items-center gap-tight-gap px-inline-gap text-left transition-colors duration-fast',
+                  'focus-visible:outline focus-visible:-outline-offset-2 focus-visible:outline-2 focus-visible:outline-focus',
+                  i > 0 ? 'border-l border-divider-subtle' : '',
+                  isSelected
+                    ? 'bg-accent-muted'
+                    : 'bg-surface-subtle hover:bg-surface-hover',
+                ].join(' ')}
+              >
+                <span
+                  className={[
+                    'truncate text-label',
+                    isSelected ? 'text-accent' : 'text-secondary',
+                  ].join(' ')}
+                >
+                  {SEASON_LABELS[span.season]}
+                </span>
+                {isCurrent && (
+                  <span
+                    aria-label="Current stage"
+                    className="size-1.5 shrink-0 rounded-full bg-accent"
+                  />
+                )}
+              </button>
+            )
+          })}
+        </div>
 
-        <div className="absolute inset-x-0 top-[74%]">
+        {/* Flowering lane. */}
+        <div className="relative h-8 w-full">
+          {hasBloom && (
+            <>
+              <div
+                className="absolute top-1/2 h-[4px] -translate-y-1/2 rounded-full bg-accent"
+                style={{ left: `${bloom.left}%`, width: `${bloom.width}%` }}
+                role="img"
+                aria-label={`Flowers ${MONTH_NAMES[firstMonth - 1]} to ${MONTH_NAMES[lastMonth - 1]}`}
+              />
+              <div
+                className="absolute top-1/2 size-6 -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full border border-accent"
+                style={{ left: `${bloom.left + bloom.width / 2}%` }}
+              >
+                <PlantImage
+                  src={imageUrl}
+                  alt={plantName}
+                  fill
+                  sizes="24px"
+                  className="object-cover"
+                />
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Your marks lane. */}
+        <div className="relative h-4 w-full">
           {[...byMonth.entries()].map(([month, monthEvents]) => (
             <span
               key={month}
               title={`${MONTH_NAMES[month - 1]}: ${monthEvents
                 .map((e) => DIARY_EVENT_LABELS[e.type])
                 .join(', ')}`}
-              className="absolute size-2 -translate-x-1/2 rounded-xs bg-fern-600"
+              className="absolute top-1/2 size-2 -translate-x-1/2 -translate-y-1/2 rounded-xs bg-fern-600"
               style={{ left: `${((month - 1) / 12) * 100 + 100 / 24}%` }}
             />
           ))}
