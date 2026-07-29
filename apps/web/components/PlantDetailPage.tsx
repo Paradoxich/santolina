@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
   Button,
@@ -14,6 +13,7 @@ import {
   useToast,
 } from '@paradoxui/ui'
 import { icons } from '@/lib/icons'
+import { SubpageHeader } from '@/components/SubpageHeader'
 import { PlantImage } from '@/components/PlantImage'
 import { creditLine } from '@/lib/image-attribution'
 import type { PlantDetail } from '@/lib/plant-detail'
@@ -350,66 +350,53 @@ export function PlantDetailPage({
 
   return (
     <div className="pb-16">
-      {/* Full-bleed top strip: spans the sidebar divider to the right edge of
-          the viewport by cancelling the app shell's gutters, the same escape
-          the Garden and Explore headers use. The page body below stays in the
-          640px reading column. */}
-      <header className="flex items-center justify-between gap-inline-gap border-b border-sage-200 py-4 md:ml-[calc(-1*var(--sidebar-offset))] md:mr-[calc(-1*var(--content-gutter))] md:pl-[var(--sidebar-offset)] md:pr-content-gutter">
-        <Link
-          href={backHref}
-          className="flex items-center gap-tight-gap text-body text-secondary transition-colors duration-normal hover:text-primary"
-        >
-          <Icon src={icons.arrowRight} className="rotate-180" />
-          My Plants
-        </Link>
-        <div className="flex items-center gap-inline-gap">
-          {palette?.status !== 'planted' && (
-            <Button
-              variant="control"
-              size="sm"
-              onClick={handleAddToPlan}
-              disabled={controlsDisabled}
-            >
-              {addToPlanLabel}
-            </Button>
-          )}
-          {palette?.status === 'planted' ? (
-            <Tooltip content="Remove from garden" position="bottom">
-              {/* Span carries the hover handlers: a disabled button doesn't
-                  reliably fire mouse events, and this button disables mid-action. */}
-              <span className="inline-flex">
-                <IconButton
-                  variant="control"
-                  size="sm"
-                  onClick={handleRemoveClick}
-                  disabled={controlsDisabled}
-                  aria-label="Remove from garden"
-                >
-                  <Icon src={icons.trash} />
-                </IconButton>
-              </span>
-            </Tooltip>
-          ) : (
-            <Button
-              variant="control"
-              size="sm"
-              onClick={handleSecondaryAction}
-              disabled={controlsDisabled}
-            >
-              {secondaryActionLabel}
-            </Button>
-          )}
-          <Tooltip content="Chat about this plant" position="bottom">
-            <IconButton
-              variant="control"
-              size="sm"
-              aria-label="Chat about this plant"
-            >
-              <Icon src={icons.chat} />
-            </IconButton>
+      <SubpageHeader backHref={backHref} backLabel="My Plants">
+        {palette?.status !== 'planted' && (
+          <Button
+            variant="control"
+            size="sm"
+            onClick={handleAddToPlan}
+            disabled={controlsDisabled}
+          >
+            {addToPlanLabel}
+          </Button>
+        )}
+        {palette?.status === 'planted' ? (
+          <Tooltip content="Remove from garden" position="bottom">
+            {/* Span carries the hover handlers: a disabled button doesn't
+                reliably fire mouse events, and this button disables mid-action. */}
+            <span className="inline-flex">
+              <IconButton
+                variant="control"
+                size="sm"
+                onClick={handleRemoveClick}
+                disabled={controlsDisabled}
+                aria-label="Remove from garden"
+              >
+                <Icon src={icons.trash} />
+              </IconButton>
+            </span>
           </Tooltip>
-        </div>
-      </header>
+        ) : (
+          <Button
+            variant="control"
+            size="sm"
+            onClick={handleSecondaryAction}
+            disabled={controlsDisabled}
+          >
+            {secondaryActionLabel}
+          </Button>
+        )}
+        <Tooltip content="Chat about this plant" position="bottom">
+          <IconButton
+            variant="control"
+            size="sm"
+            aria-label="Chat about this plant"
+          >
+            <Icon src={icons.chat} />
+          </IconButton>
+        </Tooltip>
+      </SubpageHeader>
 
       {/* Growing plants get a 1128px column — wider than the dashboard's
           1032, Ana's call, because this page's hero and full-width timeline
