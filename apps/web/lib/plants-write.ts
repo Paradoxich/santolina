@@ -41,12 +41,23 @@ export const CRITERIA: readonly Criterion[] = ['image', 'description', 'tags']
 /**
  * The columns each criterion rests on, and the stamp that records it.
  *
- * This is the same mapping the trigger holds, and the duplication is the point
- * of tension in the whole design: one home per fact would say delete one of
- * them. It stays because the two are not the same statement — the trigger
- * decides when a verdict DIES, this decides what a caller may CLAIM — and
- * because a caller cannot ask Postgres what the trigger watches. The contract
- * test is what keeps the two honest; if they ever diverge, it fails.
+ * This is the same mapping the trigger holds, and the duplication is real: one
+ * home per fact would say delete one of them. It stays because the two answer
+ * different questions — the trigger decides when a verdict DIES, this decides
+ * what a caller may CLAIM — and because a caller cannot ask Postgres what the
+ * trigger watches.
+ *
+ * NOTHING CHECKS THAT THE TWO AGREE. Stated plainly because an earlier draft of
+ * this comment claimed the contract test kept them honest, and it does not: that
+ * test exercises five hand-written columns, so it cannot see a sixth column
+ * added to the trigger and not to this map. If that happens, a script writing
+ * that column loses its verdict silently and this module never knows.
+ *
+ * Left unguarded on purpose. The guard would cost two mechanisms — generating
+ * the test's cases from this map, and parsing the trigger's SQL out of
+ * `supabase/migrations/` — to protect against a column nobody has proposed. It
+ * is written down here instead, which is what to do with a risk you are choosing
+ * to carry. Build the guard the day a sixth column is actually added.
  */
 export const CRITERION_FIELDS: Record<Criterion, readonly string[]> = {
   image: ['image_url_curated', 'image_pick_confidence'],

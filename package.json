@@ -11,6 +11,7 @@
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "prepare": "husky",
     "tokens:check": "turbo run tokens:check",
+    "runbook:check": "turbo run runbook:check",
     "tokens:usage": "turbo run tokens:usage"
   },
   "devDependencies": {

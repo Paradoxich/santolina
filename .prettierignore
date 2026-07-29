@@ -11,4 +11,5 @@ pnpm-lock.yaml
 # staleness check (`pnpm catalog:state:check`, `pnpm tokens:check`) into a
 # permanent false alarm.
 docs/catalog-state.md
+docs/round-runbook.md
 apps/web/components/design-system/token-consumers.generated.ts
