@@ -6,7 +6,7 @@ import {
   Drawer,
   Icon,
   IconButton,
-  Lightbox,
+  Gallery,
   Tooltip,
   useToast,
 } from '@paradoxui/ui'
@@ -69,7 +69,7 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
   const router = useRouter()
   const { toast } = useToast()
 
-  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
+  const [galleryIndex, setGalleryIndex] = useState<number | null>(null)
 
   const [palette, setPalette] = useState<{
     paletteId: string
@@ -310,7 +310,7 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
               <Button
                 variant="control"
                 size="sm"
-                onClick={() => router.push(`/plants?plant=${plant.id}`)}
+                onClick={() => router.push(`/plants/${plant.id}`)}
               >
                 View in My Plants
               </Button>
@@ -319,7 +319,7 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
             <Button
               variant="control"
               size="sm"
-              onClick={() => router.push(`/plants?plant=${plant.id}`)}
+              onClick={() => router.push(`/plants/${plant.id}`)}
             >
               You grew this before. View its story
             </Button>
@@ -383,7 +383,7 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
               <button
                 key={src}
                 type="button"
-                onClick={() => setLightboxIndex(i)}
+                onClick={() => setGalleryIndex(i)}
                 aria-label={`View ${plant.common_name} photo ${i + 1}`}
                 className={`${imageClass} cursor-pointer transition-opacity duration-normal hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus`}
                 style={style}
@@ -442,11 +442,11 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
         </div>
       </div>
 
-      <Lightbox
+      <Gallery
         images={galleryImages}
-        isOpen={lightboxIndex !== null}
-        initialIndex={lightboxIndex ?? 0}
-        onClose={() => setLightboxIndex(null)}
+        isOpen={galleryIndex !== null}
+        initialIndex={galleryIndex ?? 0}
+        onClose={() => setGalleryIndex(null)}
       />
     </Drawer>
   )

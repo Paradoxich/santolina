@@ -34,8 +34,8 @@ export default function DashboardPage() {
           <Suspense fallback={<CardSkeleton title="My plants" />}>
             <MyPlantsSection />
           </Suspense>
-          <Suspense fallback={<CardSkeleton />}>
-            <BloomTimelineSection />
+          <Suspense fallback={<CardSkeleton title="Plant care" />}>
+            <CareTipsSection />
           </Suspense>
         </div>
 
@@ -43,8 +43,8 @@ export default function DashboardPage() {
           <Suspense fallback={<CardSkeleton />}>
             <WeatherSection />
           </Suspense>
-          <Suspense fallback={<CardSkeleton title="Plant care" />}>
-            <CareTipsSection />
+          <Suspense fallback={<CardSkeleton />}>
+            <BloomTimelineSection />
           </Suspense>
         </div>
 

@@ -1,11 +1,12 @@
-// Navigation skeleton for /plants: the real chrome (tab rail, heading) in
-// real text, pulse bars only where data lands. Every route into this page
-// lands on the default Growing tab (sidebar, mobile tab bar, dashboard cards
-// all link /plants without a tab param), so the rail shows Growing active.
-// The one mismatch is a hard reload on ?tab=planned, which flashes the
-// Growing header until the palette arrives — accepted trade for instant real
-// text on the common path. Tab styles mirror the kit's Tabs; counts are data,
-// so the rail omits them while loading.
+// Navigation skeleton for /plants (the Growing/Planned list only). Plant
+// detail and notes live under /plants/[plantId] so they do not inherit this
+// Growing rail — that flash on detail ↔ notes was the original bug.
+// Every route into this page lands on the default Growing tab (sidebar,
+// mobile tab bar, dashboard cards all link /plants without a tab param), so
+// the rail shows Growing active. The one mismatch is a hard reload on
+// ?tab=planned, which flashes the Growing header until the palette arrives —
+// accepted trade for instant real text on the common path. Tab styles mirror
+// the kit's Tabs; counts are data, so the rail omits them while loading.
 export default function PlantsLoading() {
   return (
     <div className="pb-16">

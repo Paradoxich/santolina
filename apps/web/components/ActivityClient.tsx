@@ -11,7 +11,6 @@ import {
   IconButton,
   Lightbox,
   Modal,
-  Tabs,
   Tooltip,
   useToast,
 } from '@paradoxui/ui'
@@ -20,9 +19,8 @@ import { DIARY_EVENT_LABELS } from '@/lib/diary-events'
 import { formatDayLabel, formatMonthLabel } from '@/lib/utils'
 import { deleteDiaryEntry } from '@/server/diary-actions'
 import { useAddNote } from '@/components/AddNoteProvider'
+import { SubpageHeader } from '@/components/SubpageHeader'
 import type { RecentActivityEntry } from '@/lib/diary'
-
-type ActivityFilter = 'all' | 'garden' | 'plants'
 
 function pluralize(count: number, noun: string): string {
   return `${count} ${noun}${count === 1 ? '' : 's'}`
@@ -45,22 +43,37 @@ function groupByMonth(
   return Array.from(groups.entries())
 }
 
+export interface ActivityClientProps {
+  entries: RecentActivityEntry[]
+  title?: string
+  backHref?: string
+  backLabel?: string
+  /**
+   * When false, hide the plant name column — used for a single plant's notes
+   * list, where every row is already about that plant.
+   */
+  showPlantLink?: boolean
+  emptyMessage?: string
+}
+
 /**
- * The archive: every entry in the garden, newest first. Read-only apart
- * from deletion — capture lives in the add-note dialog, and a plant's own
- * page remains the place to read one plant's story in isolation. Deletion
- * is here because a garden-level entry has nowhere else to be removed from.
+ * The archive list: entries newest first, grouped by month. Used for the
+ * garden-wide Recent activity page and the plant-scoped Notes page. Capture
+ * lives in the add-note dialog; deletion is here because these rows have
+ * nowhere else to be removed from.
  */
 export function ActivityClient({
   entries,
-}: {
-  entries: RecentActivityEntry[]
-}) {
+  title = 'Recent activity',
+  backHref = '/overview',
+  backLabel = 'Overview',
+  showPlantLink = true,
+  emptyMessage = 'Nothing logged yet. Add your first note.',
+}: ActivityClientProps) {
   const router = useRouter()
   const { toast } = useToast()
   const { openAddNote } = useAddNote()
 
-  const [filter, setFilter] = useState<ActivityFilter>('all')
   const [toDelete, setToDelete] = useState<RecentActivityEntry | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
@@ -69,17 +82,7 @@ export function ActivityClient({
     index: number
   } | null>(null)
 
-  const gardenCount = entries.filter((e) => e.plantId === null).length
-  const plantCount = entries.length - gardenCount
-
-  const visible = entries.filter((entry) =>
-    filter === 'garden'
-      ? entry.plantId === null
-      : filter === 'plants'
-        ? entry.plantId !== null
-        : true
-  )
-  const monthGroups = groupByMonth(visible)
+  const monthGroups = groupByMonth(entries)
 
   const handleConfirmDelete = async () => {
     if (!toDelete) return
@@ -100,155 +103,126 @@ export function ActivityClient({
   }
 
   return (
-    <div className="max-w-[669px] pb-16 pt-8 md:pt-12">
-      <Link
-        href="/overview"
-        className="flex w-fit items-center gap-tight-gap text-body text-secondary transition-colors duration-normal hover:text-primary"
-      >
-        <Icon src={icons.arrowRight} className="rotate-180" />
-        Overview
-      </Link>
+    <div className="pb-16">
+      <SubpageHeader backHref={backHref} backLabel={backLabel} />
 
-      <header className="mt-6 flex flex-col gap-item-gap">
-        <h1 className="text-title font-semibold text-primary">
-          Recent activity
-        </h1>
-        <p className="text-body text-secondary">
-          Everything you have logged, newest first.
-        </p>
-      </header>
+      <div className="max-w-content pt-8 md:pt-12">
+        <h1 className="text-title font-semibold text-primary">{title}</h1>
 
-      {entries.length === 0 ? (
-        <EmptyState
-          className="mt-11"
-          message="Nothing logged yet. Add your first note."
-          ctaLabel="Add note"
-          onCtaClick={openAddNote}
-        />
-      ) : (
-        <>
-          <div className="mt-8">
-            <Tabs
-              items={[
-                { value: 'all', label: 'All', count: entries.length },
-                { value: 'garden', label: 'Garden', count: gardenCount },
-                { value: 'plants', label: 'Plants', count: plantCount },
-              ]}
-              value={filter}
-              onChange={(value) => setFilter(value as ActivityFilter)}
-            />
+        {entries.length === 0 ? (
+          <EmptyState
+            className="mt-11"
+            message={emptyMessage}
+            ctaLabel="Add note"
+            onCtaClick={openAddNote}
+          />
+        ) : (
+          <div className="mt-8 flex flex-col gap-section-gap">
+            {monthGroups.map(([month, monthEntries]) => (
+              <section key={month} className="flex flex-col">
+                <h2 className="pb-item-gap text-label font-medium uppercase tracking-label text-muted">
+                  {month}
+                </h2>
+                <ul className="flex flex-col border-t border-sage-200">
+                  {monthEntries.map((entry) => {
+                    const images = entry.photoUrls.map((src, i) => ({
+                      src,
+                      alt: `${entry.plantName ?? 'Garden'} photo ${i + 1}`,
+                    }))
+                    const plantLabel = entry.plantName ?? 'Your garden'
+
+                    return (
+                      <li
+                        key={entry.id}
+                        className="group flex items-center gap-row-gap border-b border-sage-200 py-item-gap"
+                      >
+                        <span className="w-[52px] shrink-0 text-label text-muted">
+                          {formatDayLabel(entry.date)}
+                        </span>
+
+                        <div className="flex min-w-0 flex-1 flex-col gap-tight-gap">
+                          {entry.text ? (
+                            <p className="text-body leading-normal text-primary">
+                              {entry.text}
+                            </p>
+                          ) : entry.eventTypes.length === 0 &&
+                            images.length === 0 ? (
+                            <p className="text-body text-muted">Empty note</p>
+                          ) : null}
+
+                          {entry.eventTypes.length > 0 && (
+                            <div className="flex flex-wrap gap-tight-gap">
+                              {entry.eventTypes.map((event) => (
+                                <span
+                                  key={event}
+                                  className="w-fit rounded-full bg-surface-overlay px-1.5 py-0.5 text-label text-muted"
+                                >
+                                  {DIARY_EVENT_LABELS[event]}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+
+                          {images.length > 0 && (
+                            <div className="flex flex-wrap gap-inline-gap">
+                              {images.map((image, i) => (
+                                <button
+                                  key={image.src}
+                                  type="button"
+                                  onClick={() =>
+                                    setLightbox({ images, index: i })
+                                  }
+                                  aria-label={`View photo ${i + 1}`}
+                                  className="relative h-[79px] w-[93px] shrink-0 cursor-pointer overflow-hidden rounded-xs focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+                                >
+                                  <Image
+                                    src={image.src}
+                                    alt=""
+                                    fill
+                                    sizes="93px"
+                                    className="object-cover"
+                                  />
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        {showPlantLink &&
+                          (entry.plantId ? (
+                            <Link
+                              href={`/plants/${entry.plantId}`}
+                              className="shrink-0 text-body-small text-secondary underline-offset-2 hover:underline"
+                            >
+                              {plantLabel}
+                            </Link>
+                          ) : (
+                            <span className="shrink-0 text-body-small text-secondary">
+                              {plantLabel}
+                            </span>
+                          ))}
+
+                        <div className="shrink-0 md:opacity-0 md:transition-opacity md:duration-normal md:group-hover:opacity-100 md:focus-within:opacity-100">
+                          <Tooltip content="Delete note" position="bottom">
+                            <IconButton
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setToDelete(entry)}
+                              aria-label="Delete note"
+                            >
+                              <Icon src={icons.trashCritical} />
+                            </IconButton>
+                          </Tooltip>
+                        </div>
+                      </li>
+                    )
+                  })}
+                </ul>
+              </section>
+            ))}
           </div>
-
-          {visible.length === 0 ? (
-            <p className="mt-8 text-body text-muted">
-              {filter === 'garden'
-                ? 'No notes about the garden itself yet.'
-                : 'No notes on your plants yet.'}
-            </p>
-          ) : (
-            <div className="mt-8 flex flex-col gap-section-gap">
-              {monthGroups.map(([month, monthEntries]) => (
-                <section key={month} className="flex flex-col gap-item-gap">
-                  <h2 className="text-label font-medium uppercase tracking-label text-muted">
-                    {month}
-                  </h2>
-                  <div className="flex flex-col gap-tight-gap">
-                    {monthEntries.map((entry) => {
-                      const images = entry.photoUrls.map((src, i) => ({
-                        src,
-                        alt: `${entry.plantName ?? 'Garden'} photo ${i + 1}`,
-                      }))
-                      return (
-                        <article
-                          key={entry.id}
-                          className="group relative flex w-full gap-item-gap rounded-md bg-fern-100 p-item-gap"
-                        >
-                          <span className="w-[52px] shrink-0 text-label leading-6 text-muted">
-                            {formatDayLabel(entry.date)}
-                          </span>
-
-                          <div className="flex min-w-0 flex-1 flex-col gap-inline-gap">
-                            {/* A plant entry can be read in full on its own
-                                page; a garden entry has no such destination. */}
-                            {entry.plantId ? (
-                              <Link
-                                href={`/plants?plant=${entry.plantId}`}
-                                className="w-fit text-body font-semibold text-primary underline-offset-2 hover:underline"
-                              >
-                                {entry.plantName}
-                              </Link>
-                            ) : (
-                              <span className="text-body font-semibold text-primary">
-                                Your garden
-                              </span>
-                            )}
-
-                            {entry.text && (
-                              <p className="text-body leading-normal text-primary">
-                                {entry.text}
-                              </p>
-                            )}
-
-                            {entry.eventTypes.length > 0 && (
-                              <div className="flex flex-wrap gap-tight-gap">
-                                {entry.eventTypes.map((event) => (
-                                  <span
-                                    key={event}
-                                    className="w-fit rounded-full bg-surface-overlay px-1.5 py-0.5 text-label text-muted"
-                                  >
-                                    {DIARY_EVENT_LABELS[event]}
-                                  </span>
-                                ))}
-                              </div>
-                            )}
-
-                            {images.length > 0 && (
-                              <div className="flex flex-wrap gap-inline-gap">
-                                {images.map((image, i) => (
-                                  <button
-                                    key={image.src}
-                                    type="button"
-                                    onClick={() =>
-                                      setLightbox({ images, index: i })
-                                    }
-                                    aria-label={`View photo ${i + 1}`}
-                                    className="relative h-[79px] w-[93px] shrink-0 cursor-pointer overflow-hidden rounded-xs transition-opacity duration-normal hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
-                                  >
-                                    <Image
-                                      src={image.src}
-                                      alt=""
-                                      fill
-                                      sizes="93px"
-                                      className="object-cover"
-                                    />
-                                  </button>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-
-                          <div className="absolute right-inline-gap top-inline-gap md:opacity-0 md:transition-opacity md:duration-normal md:group-hover:opacity-100 md:focus-within:opacity-100">
-                            <Tooltip content="Delete note" position="bottom">
-                              <IconButton
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setToDelete(entry)}
-                                aria-label="Delete note"
-                              >
-                                <Icon src={icons.trashCritical} />
-                              </IconButton>
-                            </Tooltip>
-                          </div>
-                        </article>
-                      )
-                    })}
-                  </div>
-                </section>
-              ))}
-            </div>
-          )}
-        </>
-      )}
+        )}
+      </div>
 
       {lightbox && (
         <Lightbox

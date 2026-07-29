@@ -1,19 +1,19 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import {
   Button,
   Icon,
   IconButton,
-  Lightbox,
+  Gallery,
   Modal,
   Panel,
   Tooltip,
   useToast,
 } from '@paradoxui/ui'
 import { icons } from '@/lib/icons'
+import { SubpageHeader } from '@/components/SubpageHeader'
 import { PlantImage } from '@/components/PlantImage'
 import { creditLine } from '@/lib/image-attribution'
 import type { PlantDetail } from '@/lib/plant-detail'
@@ -38,7 +38,6 @@ import { DetailsSection } from './plant-detail/DetailsSection'
 import { StorySection } from './plant-detail/StorySection'
 import { StoryComposer } from './plant-detail/StoryComposer'
 import { GardenPlantView } from './plant-detail/GardenPlantView'
-import { DiaryDrawer } from './plant-detail/DiaryDrawer'
 import { ReferenceDrawer } from './plant-detail/ReferenceDrawer'
 
 /** Photo widths cycle to match the Figma strip (third photo clips at the edge). */
@@ -69,6 +68,12 @@ export function PlantDetailPage({
   todayIso,
 }: PlantDetailPageProps) {
   const { plant, companions, garden } = detail
+  const searchParams = useSearchParams()
+  const fromTab = searchParams.get('from')
+  const notesHref =
+    fromTab === 'planned'
+      ? `/plants/${plant.id}/notes?from=planned`
+      : `/plants/${plant.id}/notes`
   const subtitle = formatPlantSubtitle(
     plant.scientific_name,
     plant.common_name_aliases ?? []
@@ -88,9 +93,8 @@ export function PlantDetailPage({
   const router = useRouter()
   const { toast } = useToast()
 
-  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
+  const [galleryIndex, setGalleryIndex] = useState<number | null>(null)
   const [referenceOpen, setReferenceOpen] = useState(false)
-  const [isDiaryOpen, setIsDiaryOpen] = useState(false)
 
   const [palette, setPalette] = useState(initialPalette)
   const [pendingAction, setPendingAction] = useState<'plan' | 'garden' | null>(
@@ -350,66 +354,53 @@ export function PlantDetailPage({
 
   return (
     <div className="pb-16">
-      {/* Full-bleed top strip: spans the sidebar divider to the right edge of
-          the viewport by cancelling the app shell's gutters, the same escape
-          the Garden and Explore headers use. The page body below stays in the
-          640px reading column. */}
-      <header className="flex items-center justify-between gap-inline-gap border-b border-sage-200 py-4 md:ml-[calc(-1*var(--sidebar-offset))] md:mr-[calc(-1*var(--content-gutter))] md:pl-[var(--sidebar-offset)] md:pr-content-gutter">
-        <Link
-          href={backHref}
-          className="flex items-center gap-tight-gap text-body text-secondary transition-colors duration-normal hover:text-primary"
-        >
-          <Icon src={icons.arrowRight} className="rotate-180" />
-          My Plants
-        </Link>
-        <div className="flex items-center gap-inline-gap">
-          {palette?.status !== 'planted' && (
-            <Button
-              variant="control"
-              size="sm"
-              onClick={handleAddToPlan}
-              disabled={controlsDisabled}
-            >
-              {addToPlanLabel}
-            </Button>
-          )}
-          {palette?.status === 'planted' ? (
-            <Tooltip content="Remove from garden" position="bottom">
-              {/* Span carries the hover handlers: a disabled button doesn't
-                  reliably fire mouse events, and this button disables mid-action. */}
-              <span className="inline-flex">
-                <IconButton
-                  variant="control"
-                  size="sm"
-                  onClick={handleRemoveClick}
-                  disabled={controlsDisabled}
-                  aria-label="Remove from garden"
-                >
-                  <Icon src={icons.trash} />
-                </IconButton>
-              </span>
-            </Tooltip>
-          ) : (
-            <Button
-              variant="control"
-              size="sm"
-              onClick={handleSecondaryAction}
-              disabled={controlsDisabled}
-            >
-              {secondaryActionLabel}
-            </Button>
-          )}
-          <Tooltip content="Chat about this plant" position="bottom">
-            <IconButton
-              variant="control"
-              size="sm"
-              aria-label="Chat about this plant"
-            >
-              <Icon src={icons.chat} />
-            </IconButton>
+      <SubpageHeader backHref={backHref} backLabel="My Plants">
+        {palette?.status !== 'planted' && (
+          <Button
+            variant="control"
+            size="sm"
+            onClick={handleAddToPlan}
+            disabled={controlsDisabled}
+          >
+            {addToPlanLabel}
+          </Button>
+        )}
+        {palette?.status === 'planted' ? (
+          <Tooltip content="Remove from garden" position="bottom">
+            {/* Span carries the hover handlers: a disabled button doesn't
+                reliably fire mouse events, and this button disables mid-action. */}
+            <span className="inline-flex">
+              <IconButton
+                variant="control"
+                size="sm"
+                onClick={handleRemoveClick}
+                disabled={controlsDisabled}
+                aria-label="Remove from garden"
+              >
+                <Icon src={icons.trash} />
+              </IconButton>
+            </span>
           </Tooltip>
-        </div>
-      </header>
+        ) : (
+          <Button
+            variant="control"
+            size="sm"
+            onClick={handleSecondaryAction}
+            disabled={controlsDisabled}
+          >
+            {secondaryActionLabel}
+          </Button>
+        )}
+        <Tooltip content="Chat about this plant" position="bottom">
+          <IconButton
+            variant="control"
+            size="sm"
+            aria-label="Chat about this plant"
+          >
+            <Icon src={icons.chat} />
+          </IconButton>
+        </Tooltip>
+      </SubpageHeader>
 
       {/* Growing plants get a 1128px column — wider than the dashboard's
           1032, Ana's call, because this page's hero and full-width timeline
@@ -464,7 +455,7 @@ export function PlantDetailPage({
               <button
                 key={src}
                 type="button"
-                onClick={() => setLightboxIndex(i)}
+                onClick={() => setGalleryIndex(i)}
                 aria-label={`View ${plant.common_name} photo ${i + 1}`}
                 className={`${imageClass} cursor-pointer transition-opacity duration-normal hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus`}
                 style={style}
@@ -522,11 +513,11 @@ export function PlantDetailPage({
               heroPhotos={allPhotos}
               subtitle={subtitle}
               todayIso={todayIso}
-              onHeroPhotoClick={setLightboxIndex}
-              onSeeAllNotes={() => setIsDiaryOpen(true)}
+              onHeroPhotoClick={setGalleryIndex}
+              notesHref={notesHref}
               reference={
                 <Panel
-                  title="Care reference"
+                  title="Plant details"
                   role="button"
                   tabIndex={0}
                   onClick={() => setReferenceOpen(true)}
@@ -536,15 +527,12 @@ export function PlantDetailPage({
                       setReferenceOpen(true)
                     }
                   }}
-                  className="relative isolate min-h-[234px] cursor-pointer justify-between overflow-hidden focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus lg:h-full lg:min-h-0"
+                  className="relative isolate min-h-[234px] cursor-pointer overflow-hidden focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus lg:h-full lg:min-h-0"
                 >
                   <p className="max-w-[70%] text-body text-secondary">
                     Water, light, soil, pruning, the full year, and the
                     botanical details.
                   </p>
-                  <span className="text-body-small text-secondary">
-                    Open reference
-                  </span>
                 </Panel>
               }
             />
@@ -570,9 +558,8 @@ export function PlantDetailPage({
           </div>
         )}
 
-        {/* Growing plants read and write their story in the drawer, opened
-            from the Diary card. Everything else keeps it inline, where it is
-            the only place notes live. */}
+        {/* Non-growing plants keep story inline — growing plants read notes
+            on /plants/[id]/notes from the Diary card. */}
         {showStory && !isGrowing && (
           <div className="mt-section-break">
             <StoryComposer
@@ -596,25 +583,11 @@ export function PlantDetailPage({
         />
       )}
 
-      {isDiaryOpen && (
-        <DiaryDrawer
-          plantId={plant.id}
-          plantName={plant.common_name}
-          notes={notes}
-          paletteId={palette?.paletteId ?? null}
-          isGrowing={isGrowing}
-          onClose={() => setIsDiaryOpen(false)}
-          onAddedBackToGarden={({ paletteId }) =>
-            setPalette({ paletteId, status: 'planted' })
-          }
-        />
-      )}
-
-      <Lightbox
+      <Gallery
         images={galleryImages}
-        isOpen={lightboxIndex !== null}
-        initialIndex={lightboxIndex ?? 0}
-        onClose={() => setLightboxIndex(null)}
+        isOpen={galleryIndex !== null}
+        initialIndex={galleryIndex ?? 0}
+        onClose={() => setGalleryIndex(null)}
       />
 
       <Modal

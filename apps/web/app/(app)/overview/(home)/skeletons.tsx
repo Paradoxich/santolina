@@ -53,11 +53,11 @@ export function DashboardCardsSkeleton() {
     <div className="mt-8 flex flex-col gap-item-gap">
       <div className={dashboardRows.top}>
         <CardSkeleton title="My plants" />
-        <CardSkeleton />
+        <CardSkeleton title="Plant care" />
       </div>
       <div className={dashboardRows.middle}>
         <CardSkeleton />
-        <CardSkeleton title="Plant care" />
+        <CardSkeleton />
       </div>
       <div className={dashboardRows.bottom}>
         <CardSkeleton title="Planned" />

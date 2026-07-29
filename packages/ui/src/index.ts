@@ -42,6 +42,8 @@ export { Modal } from './components/Modal'
 export type { ModalProps } from './components/Modal'
 export { Lightbox } from './components/Lightbox'
 export type { LightboxProps, LightboxImage } from './components/Lightbox'
+export { Gallery } from './components/Gallery'
+export type { GalleryProps, GalleryImage } from './components/Gallery'
 
 export { Toast } from './components/Toast'
 export type { ToastProps, ToastAction } from './components/Toast'

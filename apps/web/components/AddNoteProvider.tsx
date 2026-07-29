@@ -32,8 +32,11 @@ export function AddNoteProvider({ children }: { children: React.ReactNode }) {
     // Read the plant off the URL at open time rather than with
     // useSearchParams: this only ever runs from a click, and the hook would
     // otherwise opt the whole app shell out of static rendering.
-    const plantId = new URLSearchParams(window.location.search).get('plant')
-    setInitialPlantId(plantId)
+    const fromQuery = new URLSearchParams(window.location.search).get('plant')
+    const fromPath = window.location.pathname.match(
+      /^\/plants\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:\/notes)?\/?$/i
+    )?.[1]
+    setInitialPlantId(fromQuery ?? fromPath ?? null)
     setIsOpen(true)
   }, [])
 
