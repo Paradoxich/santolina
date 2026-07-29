@@ -2,7 +2,47 @@
 
 Newest entry first. Read the top entry before starting work.
 
-## 2026-07-29 — session/2026-07-29-images (read this one first)
+## 2026-07-29 — session/2026-07-29-diary-feature-polish (read this one first)
+
+**Status:** merged to main ([PR #125](https://github.com/Paradoxich/santolina/pull/125), merge commit `da5da2d`). Worktree removed, branch deleted local and remote. CI green including the new tokens job.
+
+**Design/UI session, no catalog work** — ran alongside `session/2026-07-29-images` (the entry below) and touched nothing it touched.
+
+**Done:**
+
+- **Plant detail has a full-width top strip.** Back link + actions span sidebar divider to viewport edge, reusing the gutter escape `GardenClient`/Explore already use. Body stays in the 640px column.
+- **`sage-200` → `#e2ebe2`** (Ana's call, slightly less tinted). It moved lighter, so contrast improves marginally.
+- **No token copies another token's channels.** Twelve translucent tokens now use relative colour syntax — `rgb(from var(--step) r g b / <alpha>)`. Confirmed rendering in Ana's Firefox. All but `surface-card-translucent` compute byte-identical to the literals they replaced; that one had drifted and now genuinely tracks sage-200.
+- **`pnpm tokens:check`, in CI on `pull_request`** (pure source scan, no secrets — unlike `catalog-state`). A: no token value in prose. B: no token re-types another's channels. C: the design-system list covers `index.css` both ways.
+- **`token-consumers.generated.ts`** — consumers derived by walking the real Tailwind preset object, surfaced per row on **All tokens**, so no doc has to claim where a token is used.
+
+**Decisions made:**
+
+- **Historical token values stay legal behind an explicit `<!-- tokens:historical: reason -->` marker.** The 2026-07-07 audit snapshot keeps its record of deleted ramps; the "Changes since this audit" drift log below it does not get the exemption. Explicit rather than inferred, per the `cleared_at` ruling.
+- **`--login-hairline` retired.** Never a hairline — its only use was the login placeholder, now on `text-faint`. Its comment named `gray-900`, a ramp deleted in July.
+- **`--sidebar-surface` derives from sage-200.** The one deliberate _look_ change in the branch: the mobile tab bar is lighter and much less green than the raw `#b2d1b8` it replaced.
+- Generated file is prettier-ignored, same reason as `catalog-state.md`: reformatting it would make the staleness diff a permanent false alarm.
+
+**What bit us, and is worth repeating:**
+
+- **A guard that has never failed has not been tested.** Check B originally scanned _comments_ for literals and went green against a faithful reproduction of the real bug — the literal sits in the declaration, the comment only mislabels it. It was checking the symptom. Rewritten to compare channels, it immediately found **six live copies**, incl. `border-divider-subtle` re-typing sage-300 one line below the `var()` form of the same colour. Check C found **18 tokens missing** from a list whose own comment claims "if a token exists in code, it exists here".
+- **The first commit split was wrong and had to be redone.** Commit 2 silently absorbed two later edits, and left the preset referencing a token that commit had just deleted. Typecheck each commit standalone, not just the tip.
+
+**Next steps, in order:**
+
+1. **Look at `--sidebar-surface` on a phone.** It has never been seen in place — the tab bar is `md:hidden` _and_ behind the auth gate. The Vercel preview on PR #125 is the easiest way. If too washed out: sage-300 @ 30% (neutral, more presence) or fern-200 @ 30% (stays green, on-ramp).
+2. **Decide the login placeholder contrast.** Now ~2.1:1 (was ~1.6:1), still short of 4.5:1. `text-faint` is the systemically correct role; only `text-muted` (sage-700) clears the bar. Shipped undecided, on purpose.
+3. **The plant detail page design** — the actual reason this session started, barely begun. Sections live in `apps/web/components/plant-detail/*`.
+4. `--sidebar-surface` aside, `--color-scrim`'s black is the only raw colour left in the token file, and it legitimately is its own value.
+
+**Open questions:**
+
+- **`NEXT_PUBLIC_APP_URL` is empty and referenced nowhere in code**, but still advertised in `.env.example` and CLAUDE.md's env list. Delete it or wire it up — it currently looks load-bearing and isn't.
+- **Supabase's redirect allow-list may not include localhost.** Logging in locally only worked on port **3000**; a dev server on any other port bounces to `/login` or to santolina.app, because Supabase silently falls back to the Site URL when `emailRedirectTo` is not allow-listed. Worth adding `http://localhost:3000/**` explicitly (Auth → URL Configuration) so it is not luck.
+
+**Known limit of the new guard, stated so nobody over-trusts it:** an _already-drifted_ copy matches no primitive and is invisible to check B. It closes the path, not the state — safe only because every pre-existing copy was eliminated in the same change. And neither tool proves prose is _true_; that half is unmechanisable, which is why consumers are generated instead of written.
+
+## 2026-07-29 — session/2026-07-29-images
 
 **Status:** merged to main ([PR #124](https://github.com/Paradoxich/santolina/pull/124)). Worktree removed, branch deleted local and remote. `main` at `97ff868`.
 
