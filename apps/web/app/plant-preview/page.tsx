@@ -9,7 +9,9 @@
  * only things this file owns are the sample rows and the two toggles. Nothing
  * about the design lives here, so there is nothing to keep in sync.
  *
- * Public via a temporary entry in isPublicPath — remove before merge.
+ * Behind the auth gate like the rest of the app: it sits outside
+ * /design-system because that layout clamps to 960px, and page width is part
+ * of what this exists to show. Signed-in only, so it is not a public surface.
  */
 
 import { useState } from 'react'
