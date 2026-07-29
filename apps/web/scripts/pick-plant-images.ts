@@ -78,6 +78,7 @@ import { getSupabaseAdmin } from '../lib/supabase-admin'
 import { getAnthropicClient, VISION_MODEL } from '../lib/anthropic-client'
 import { fetchAllRows } from '../lib/paginate'
 import {
+  displayUrlFor,
   fetchImageBlob,
   probeImage,
   type ImageBlob,
@@ -1001,6 +1002,19 @@ async function main() {
         )
       }
       for (const r of rejected) console.log(`          drop: ${r}`)
+    } else {
+      // A dropped Wikimedia candidate is reported even outside a dry run,
+      // because it is the one kind of loss nobody would otherwise notice.
+      // Trefle candidates arrive in bulk and a dead one among twenty-eight is
+      // routine; a Wikimedia candidate was sourced BY HAND for this exact
+      // plant, usually because nothing else was good enough. Losing it puts
+      // the pick back among the photos that were already judged inadequate,
+      // stamps the row, and says nothing. Probing now retries transient
+      // failures (lib/image-probe.ts), so anything still dropping here has
+      // failed three times and is worth a human seeing.
+      for (const r of rejected) {
+        if (r.startsWith('wikimedia:')) console.log(`          drop: ${r}`)
+      }
     }
 
     // Pre-fetch Wikimedia images as base64 (Anthropic can't fetch the upload
@@ -1181,10 +1195,21 @@ async function collectResults(
       continue
     }
 
+    // Store a rendition when the winner is an oversized Commons original. The
+    // photograph is identical and the attribution unchanged; only the bytes a
+    // browser is asked to pull differ.
+    const display = await displayUrlFor(chosen.url)
+    if (display.kind === 'unmeasured') {
+      console.log(
+        `  ${plant.common_name} — could not size-check the winning image (${display.reason}); storing the original`
+      )
+    }
+    const displayUrl = display.url
+
     const { error } = await supabase
       .from('plants')
       .update({
-        image_url_curated: chosen.url,
+        image_url_curated: displayUrl,
         // Credit the source when it requires one (Wikimedia); a Trefle pick
         // carries no attribution, so this clears any stale credit from a prior
         // Wikimedia pick that has since been beaten by a Trefle photo.
@@ -1192,6 +1217,19 @@ async function collectResults(
         image_pick_confidence: pick.confidence,
         image_pick_reason: pick.reason,
         image_checked_at: new Date().toISOString(),
+        // The inverse obligation from migration 20260728220852. This pass
+        // decides the hero, and criterion 1 of the editorial bar is "the image
+        // shows the right plant" — so any editorial verdict on this row was
+        // made about whatever photograph used to be here. Keeping the stamp
+        // would leave an approval attached to an image nobody signed off.
+        //
+        // Nulled unconditionally rather than only when the URL changes: a
+        // re-pick that lands on the same photo still rewrites the confidence
+        // the verdict was read from, and "same URL" is not the same claim as
+        // "same judgment".
+        editorial_checked_at: null,
+        // Likewise the verification: it was a judgment about a specific photo.
+        image_verified_at: null,
       })
       .eq('id', plantId)
 

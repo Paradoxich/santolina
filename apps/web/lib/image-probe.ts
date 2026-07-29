@@ -187,9 +187,10 @@ export const IMAGE_FETCH_UA =
  * never parse as an image header. Content-type is only used to explain a
  * failure, never to cause one.
  */
-export async function probeImage(
+async function probeImageOnce(
   url: string,
-  timeoutMs = 10_000
+  timeoutMs = 10_000,
+  probeBytes = PROBE_BYTES
 ): Promise<ProbeResult> {
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), timeoutMs)
@@ -197,7 +198,7 @@ export async function probeImage(
   try {
     const res = await fetch(url, {
       headers: {
-        Range: `bytes=0-${PROBE_BYTES - 1}`,
+        Range: `bytes=0-${probeBytes - 1}`,
         'User-Agent': IMAGE_FETCH_UA,
       },
       signal: controller.signal,
@@ -212,7 +213,7 @@ export async function probeImage(
     const bytes = full && full !== '*' ? Number(full) : null
 
     const buf = new Uint8Array(await res.arrayBuffer())
-    const dims = readImageDimensions(buf.slice(0, PROBE_BYTES))
+    const dims = readImageDimensions(buf.slice(0, probeBytes))
     if (!dims) {
       return { ok: false, url, reason: `unreadable header (${contentType})` }
     }
@@ -240,6 +241,92 @@ export async function probeImage(
   }
 }
 
+/**
+ * Failures that say "ask again later", not "this photo is no good".
+ *
+ * The distinction is the whole point, and it is the house rule about a failed
+ * fetch never looking like a negative result (trap 1). A rejected candidate is
+ * silently dropped from the shortlist, the pick proceeds on what is left, and
+ * the row is stamped `image_checked_at` — so a rate limit lasting ten seconds
+ * permanently removes a photograph from consideration and nothing anywhere
+ * reports that it happened. Sourcing nine Wikimedia photos on 2026-07-29 hit
+ * this immediately: a different candidate dropped on each dry run, on 429s and
+ * on truncated bodies, and only running it twice made it visible.
+ *
+ * An unreadable header is NOT in this set — retrying it fetches the same bytes
+ * and fails identically. It is handled separately below, by reading further.
+ */
+function isTransient(result: ProbeResult): boolean {
+  if (result.ok) return false
+  const r = result.reason
+  if (/^HTTP (429|5\d\d)$/.test(r)) return true
+  if (r.startsWith('timed out')) return true
+  // Network-level failures (DNS blips, socket resets) surface as the raw Error
+  // message, so they cannot be enumerated — anything not recognised above is
+  // treated as permanent, which keeps a genuine 404 from being retried twice.
+  return /fetch failed|ECONNRESET|ETIMEDOUT|EAI_AGAIN|socket hang up/i.test(r)
+}
+
+/**
+ * An unreadable header from a server that says it is sending an image usually
+ * means we did not read far enough, not that the file is broken.
+ *
+ * 64KB covers essentially every PlantNet photo, so this went unnoticed until
+ * hand-sourced Wikimedia originals arrived on 2026-07-29: those carry large
+ * EXIF, ICC and XMP blocks ahead of the SOF marker, and two of nine had their
+ * dimensions at byte 71,816 and 135,539. The probe read 65,536 and reported
+ * "unreadable header (image/jpeg)" — which reads as a corrupt file and is
+ * really a truncated read, so both photos were silently dropped from the pick
+ * they had been sourced for.
+ *
+ * A non-image content-type is excluded deliberately: an HTML error page served
+ * as HTTP 200 will not become an image at 512KB, and re-reading it is pure
+ * waste. This is the one case where content-type is allowed to influence
+ * anything, and it only ever decides whether to spend MORE effort.
+ */
+const ESCALATED_PROBE_BYTES = 524_288
+
+function wantsMoreBytes(result: ProbeResult): boolean {
+  return !result.ok && /^unreadable header \(image\//.test(result.reason)
+}
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
+
+/**
+ * Validate and measure a candidate image, distinguishing the two ways this can
+ * fail for reasons that have nothing to do with the photograph.
+ *
+ * Both exist to keep a fetch failure from reading as a verdict (trap 1). A
+ * rejected candidate is dropped from the shortlist, the pick proceeds on what
+ * is left, and the row is stamped `image_checked_at` — so without these, ten
+ * seconds of rate limiting or 6KB of camera metadata permanently removes a
+ * photograph from consideration and nothing reports that it happened.
+ *
+ *   1. Transient failure (429, 5xx, timeout, socket) — ask again, up to three
+ *      attempts with a widening backoff. Deliberately modest: this runs over
+ *      thousands of candidates behind a concurrency limit, and the point is to
+ *      ride out a burst, not to grind against a host that is down.
+ *   2. Unreadable image header — read further, once, then give up.
+ *
+ * A permanent failure still returns on the first attempt, so the 404s that
+ * make up most real rejections cost exactly one request.
+ */
+export async function probeImage(
+  url: string,
+  timeoutMs = 10_000,
+  attempts = 3
+): Promise<ProbeResult> {
+  let last = await probeImageOnce(url, timeoutMs)
+  for (let i = 1; i < attempts && isTransient(last); i++) {
+    await sleep(400 * i)
+    last = await probeImageOnce(url, timeoutMs)
+  }
+  if (wantsMoreBytes(last)) {
+    last = await probeImageOnce(url, timeoutMs, ESCALATED_PROBE_BYTES)
+  }
+  return last
+}
+
 /** The four media types the Messages API accepts for image blocks. */
 export type ImageMediaType =
   | 'image/jpeg'
@@ -261,6 +348,129 @@ const SUPPORTED_MEDIA: Record<string, ImageMediaType> = {
 
 // Anthropic caps image blocks near 5MB of base64; stay clear of it.
 const MAX_IMAGE_BYTES = 4_500_000
+
+/**
+ * Rewrite a Wikimedia Commons original into a scaled rendition.
+ *
+ * Commons stores camera originals, and they are frequently far past what the
+ * Messages API will accept as an image block — the Musa basjoo photo sourced
+ * on 2026-07-29 is 13.7MB. Before this, an oversized candidate was fetched in
+ * full, found too big, and dropped, so a photograph deliberately sourced for a
+ * plant never reached the model that was choosing its hero. The whole download
+ * was wasted to learn that.
+ *
+ * The vision pass only ever sees a resized copy anyway (which is why
+ * resolution is measured from the header rather than judged by the model), so
+ * a scaled rendition loses the model nothing. Commons derives these on demand
+ * at a URL built from the original's own path:
+ *
+ *   .../commons/3/37/Name.jpg  →  .../commons/thumb/3/37/Name.jpg/1280px-Name.jpg
+ *
+ * THE WIDTH IS NOT FREE-FORM. Commons now serves only a fixed set of sizes and
+ * answers anything else with HTTP 400 and a page pointing at the list — 1600,
+ * 800, 1024, 320 and 2560 are all rejected, while 1280 and 1920 are fine. A
+ * plausible-looking width is therefore a silent dead end, which is why the
+ * allowed values are named here rather than passed in ad hoc. 1280px is the
+ * default: comfortably detailed for a visual judgment, and ~460KB against the
+ * 13.7MB original.
+ *
+ * Returns null for anything that is not an upload.wikimedia.org original —
+ * including a URL that is already a thumb, which would otherwise nest.
+ */
+export const WIKIMEDIA_THUMB_WIDTHS = [120, 250, 500, 960, 1280, 1920] as const
+
+/**
+ * Above this, a Commons original is served as a rendition instead.
+ *
+ * Separate from MAX_IMAGE_BYTES, which is about what the Messages API accepts.
+ * This one is about what a browser should be asked to pull: Commons stores
+ * camera originals, and the Musa basjoo hero picked on 2026-07-29 is 13.7MB
+ * for a card that renders it a few hundred pixels wide. `next/image` resizes
+ * and caches, so this is a cold-cache and optimizer cost rather than a
+ * per-visitor one, but it is a real cost paid for nothing.
+ */
+const MAX_DISPLAY_BYTES = 2_000_000
+
+/**
+ * What URL a hero should actually be STORED as.
+ *
+ * 1920 rather than the 1280 used for vision — this is the displayed image, not
+ * a model's input, so it should still look right on a large screen.
+ *
+ * THREE OUTCOMES, NOT TWO, and the third is the point. An unreachable host
+ * cannot be reported as "this hero is a sane size": that is a failed fetch
+ * wearing the costume of a negative result (trap 1), and the first draft of
+ * this function had exactly that bug — a HEAD that failed returned the URL
+ * unchanged, so a run reported nine rows to fix, rewrote four, and then
+ * reported zero remaining. The five it lost looked identical to five it had
+ * checked and approved.
+ */
+export type DisplayUrlResult =
+  | { kind: 'unchanged'; url: string }
+  | { kind: 'rescaled'; url: string }
+  | { kind: 'unmeasured'; url: string; reason: string }
+
+export async function displayUrlFor(url: string): Promise<DisplayUrlResult> {
+  let thumb: string | null
+  try {
+    thumb = wikimediaThumbUrl(url, 1920)
+  } catch {
+    return { kind: 'unchanged', url }
+  }
+  // Not a Commons original: nothing to rescale, and nothing to measure either.
+  if (!thumb) return { kind: 'unchanged', url }
+
+  try {
+    const res = await fetch(url, {
+      method: 'HEAD',
+      headers: { 'User-Agent': IMAGE_FETCH_UA },
+    })
+    if (!res.ok) {
+      return { kind: 'unmeasured', url, reason: `HTTP ${res.status}` }
+    }
+    const declared = Number(res.headers.get('content-length'))
+    if (!Number.isFinite(declared) || declared <= 0) {
+      return { kind: 'unmeasured', url, reason: 'no content-length' }
+    }
+    return declared > MAX_DISPLAY_BYTES
+      ? { kind: 'rescaled', url: thumb }
+      : { kind: 'unchanged', url }
+  } catch (err) {
+    return {
+      kind: 'unmeasured',
+      url,
+      reason: err instanceof Error ? err.message : String(err),
+    }
+  }
+}
+
+export function wikimediaThumbUrl(url: string, width = 1280): string | null {
+  if (!WIKIMEDIA_THUMB_WIDTHS.includes(width as never)) {
+    throw new Error(
+      `Commons rejects a ${width}px thumbnail with HTTP 400. ` +
+        `Use one of: ${WIKIMEDIA_THUMB_WIDTHS.join(', ')}.`
+    )
+  }
+  let parsed: URL
+  try {
+    parsed = new URL(url)
+  } catch {
+    return null
+  }
+  if (parsed.hostname !== 'upload.wikimedia.org') return null
+  if (parsed.pathname.includes('/thumb/')) return null
+
+  // /wikipedia/<project>/<a>/<ab>/<file>
+  const parts = parsed.pathname.split('/').filter(Boolean)
+  if (parts.length < 5 || parts[0] !== 'wikipedia') return null
+  const file = parts[parts.length - 1]!
+  const head = parts.slice(0, 2)
+  const hash = parts.slice(2, parts.length - 1)
+  if (hash.length !== 2) return null
+
+  parsed.pathname = `/${[...head, 'thumb', ...hash, file].join('/')}/${width}px-${file}`
+  return parsed.toString()
+}
 
 /**
  * Download an image and return it base64-encoded for a Messages API image
@@ -287,8 +497,21 @@ export async function fetchImageBlob(
     const ct = (res.headers.get('content-type') ?? '').split(';')[0]!.trim()
     // CloudFront serves valid JPEGs as octet-stream, so default to JPEG.
     const mediaType = SUPPORTED_MEDIA[ct] ?? 'image/jpeg'
+    // Check the advertised size before reading the body: the oversized case is
+    // exactly the one where downloading it is most expensive and least useful.
+    const declared = Number(res.headers.get('content-length'))
+    if (Number.isFinite(declared) && declared > MAX_IMAGE_BYTES) {
+      const thumb = wikimediaThumbUrl(url)
+      if (thumb) return await fetchImageBlob(thumb, timeoutMs)
+    }
+
     const buf = Buffer.from(await res.arrayBuffer())
-    if (buf.byteLength > MAX_IMAGE_BYTES) return null
+    if (buf.byteLength > MAX_IMAGE_BYTES) {
+      // Too big to send. For Commons that is a solvable problem, not a dead
+      // end — ask for a scaled rendition instead of discarding the candidate.
+      const thumb = wikimediaThumbUrl(url)
+      return thumb ? await fetchImageBlob(thumb, timeoutMs) : null
+    }
     return { data: buf.toString('base64'), mediaType }
   } catch {
     return null

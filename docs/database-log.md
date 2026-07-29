@@ -48,6 +48,8 @@ The run **reported success** with a believable source mix — `trefle-l3=121, na
 
 **Rule this generalises to:** wherever a fallback exists, a failed fetch must be structurally distinguishable from a legitimate empty answer, and the script must **throw** rather than degrade. Full write-up: `architecture.md` §26.
 
+**This is the trap that keeps coming back, and it is subtle every single time.** It recurred four times in one sitting on 2026-07-29 while sourcing nine photographs (see that session entry): a rate-limited probe read as "bad photo"; a truncated header read as "corrupt file"; an oversized file read as "unusable candidate"; and **the fix for the third returned "this hero is fine" whenever its own size check failed** — written by someone who had spent the previous hour fixing exactly this. The lesson is not "remember the rule". It is that **any function returning a two-way answer about a remote resource is one network failure away from lying**, so give it a third outcome and make the caller handle it. `displayUrlFor` returns `unchanged | rescaled | unmeasured` for that reason.
+
 ### 2. `--new-only` does not scope to a batch — WORKED AROUND (round 8), baseline backfilled (July 28)
 
 Both cross-check guards accept `--new-only`, which keys off `botanical_checked_at` / `native_checked_at` being NULL. That only narrows to a fresh batch **once every other row carries a stamp**, and that baseline was never established — the stamp columns shipped mid-history and older rows were never backfilled.
@@ -219,10 +221,23 @@ Ana's verdicts: **1 reverted** (Parry's agave, back to the previous photo), **3 
 
 **A bug fixed in passing:** `apply-image-reverts.ts` changed the hero image AND the confidence without nulling `editorial_checked_at`, leaving an editorial approval that had been made about a different photograph. It predates that column, so it was missing rather than decided against — the inverse obligation in migration `20260728220852` names exactly this.
 
+**Then we sourced photographs for the nine, and the pipeline fought back four times.** `feed-wikimedia-candidates.ts` resolved a CC-licensed Commons photo for all 9 (the Hosta included). Re-picking gave 6 high, 3 medium, and **the new Fragrant plantain lily hero is a white-flowered hosta at high confidence** — which retroactively confirms the demotion that started this. Round 8 **83 → 89 of 101**, catalog **159 → 165**. Two rows are held on an unconfirmable species (American alumroot, Persian ironwood) and one on a real tag contradiction.
+
+Getting there surfaced four bugs, all the same shape — **something failed for a reason that had nothing to do with the photograph, and the failure read as a verdict on the photograph**:
+
+1. **Probe rejections were permanent.** A 429 dropped a candidate from the shortlist, the pick proceeded without it, and the row was stamped `image_checked_at` so it never came back. Now retried (429/5xx/timeout/socket), with the classification and the no-retry-on-404 rule under test.
+2. **`unreadable header (image/jpeg)` was a truncated read, not a corrupt file.** The probe reads 64KB; Commons originals carry large EXIF/ICC/XMP blocks, and two of the nine had their dimensions at bytes **71,816 and 135,539**. Both were silently dropped from the pick they had just been sourced for. Now escalates to 512KB once — and only for an image content-type, since an HTML error page will not become a JPEG at 512KB.
+3. **Commons originals are frequently too large to send.** The Musa basjoo photo is **13.7MB** against a ~4.5MB API ceiling, so it was downloaded in full and discarded. Now checks the declared size first and falls back to a rendition. **The width is not free-form:** Commons answers an unlisted width with HTTP 400, and 1600, 1024, 800, 320 and 2560 are all rejected while 1280 and 1920 are fine — so the allowed set is named in `WIKIMEDIA_THUMB_WIDTHS` and an unlisted one throws rather than 400ing silently.
+4. **The fix for 3 immediately committed the same sin.** `displayUrlFor` returned the URL unchanged when its size check FAILED, so an unreachable host read as "this hero is a sane size". The first run reported 9 to fix, rewrote 4, then reported 0 remaining — the 5 it lost were indistinguishable from 5 it had approved. It now returns three outcomes, and `unmeasured` is reported separately and loudly. **This is trap 1 written by someone who had just spent an hour fixing trap 1.**
+
+**Oversized heroes fixed catalog-wide.** `fix-oversized-heroes.ts` moved 9 Commons heroes (13.7MB down to 2MB) onto 1920px renditions — same photograph, same credit, same licence. Not an editorial change, so `editorial_checked_at` is deliberately untouched.
+
+**A third home for the same obligation.** Migration `20260728220852` says a pass that rewrites what the editorial verdict rests on must null the stamp. `pick-plant-images` decides the hero — criterion 1 — and did not. Nine rows carried an approval made about a photograph that had since been replaced. It now nulls both `editorial_checked_at` and `image_verified_at`, unconditionally rather than only when the URL changes: a re-pick landing on the same photo still rewrites the confidence the verdict was read from. The 9 live rows were corrected by hand. **Three scripts have now needed this and all three were written before the column existed** — worth a guard rather than a fourth discovery.
+
 **Deliberately not done:**
 
 - the ~70 medium heroes outside round 8 — the flag is scoped, and this session's mandate was round 8
-- the 8 Ana flagged for a new photograph: sourcing work (Wikimedia or a manual hero), not another pass
+- American alumroot and Persian ironwood: still unconfirmable even on the new photograph, and the Commons candidate was the only one available
 - the 6 tag flags from `reports/editorial-8.json` — next in the handoff order, untouched here
 - the 3 plants with no candidate image upstream at all, unchanged
 
