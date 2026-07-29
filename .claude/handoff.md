@@ -2,6 +2,74 @@
 
 Newest entry first. Read the top entry before starting work.
 
+## The rule for writing in this file
+
+**Do not write a claim about the current state of a system. Write the command that answers it.**
+
+A state claim is true when typed and rots silently from then on. Nobody
+re-checks it, the next session reads it as current, and repeats it — this file
+told three consecutive sessions that a CI job was "waiting for secrets" that had
+been set on 2026-07-28. It was corrected in Notion the same morning by the
+session that discovered it, and this file still carried the stale copy into the
+afternoon and stated it to Ana as fact. **The log was not unread. It was read,
+and it was wrong.**
+
+So the split is:
+
+- **Durable, worth writing:** a decision and its reasoning, a constraint someone
+  will otherwise rediscover the hard way, why a thing is built the way it is,
+  what was tried and rejected. These do not rot, because they are about the past
+  and about intent.
+- **Not writable here:** whether a job ran, whether a branch is pushed, whether a
+  migration is applied, whether a check passes, how many rows are in a table,
+  what is "still" blocked. Every one of these is a command. Give the command.
+
+Worked example, from the failure that produced this rule:
+
+> ✗ "The `catalog-state` CI job is skipping for want of repo secrets."
+> ✓ "The `catalog-state` job is gated off `pull_request` on purpose — a
+> PR-triggered job holding the service-role key is worth less than the drift
+> check it buys. Whether it ran: `gh run list --branch main --limit 5`."
+
+The second sentence cannot go stale, because it does not assert anything that
+can change. The first was wrong within a day and survived three sessions.
+
+**The test is tense, not topic.** "PR #128 was merged as `06ab97a`, and its CI
+was green" is a record of something that happened, anchored to a commit — it is
+as true next month as today, and it is exactly the provenance an entry should
+carry. "The build is green" is a claim about now, and is a coin flip by the time
+anyone reads it. Write what happened; do not write what is.
+
+**Same principle as `catalog-state.md` and `round-runbook.md`, which are
+generated rather than typed.** This file is the last hand-written document in
+the loop, so it is where stale facts now collect. It is not automatable —
+nothing can prove prose is true — which is exactly why the rule has to be a rule.
+
+**Entries below the "Historical entries" marker are archive.** They record what
+was believed at the time and are deliberately NOT rewritten, because rewriting
+the record is its own dishonesty. Do not read their state claims as current, and
+do not carry one forward without running the command first.
+
+---
+
+## Current state — commands, not claims
+
+Run these rather than trusting any sentence in this file.
+
+```bash
+gh pr list --state open                 # what is open
+git worktree list                       # who else is working, and where
+git branch --list 'session/*'           # session branches alive
+gh run list --branch main --limit 5     # did CI pass on main
+gh secret list                          # which repo secrets exist
+cd apps/web && pnpm round:progress --round <n>   # what a round still owes
+cd apps/web && pnpm catalog:state:check          # is the catalog doc stale
+```
+
+The catalog's size, the curated count and the per-round step table are
+**generated** into `docs/catalog-state.md` and `docs/round-runbook.md`. Link to
+them; never retype their numbers here.
+
 ## 2026-07-29 — session/2026-07-29-rehearsal (read this one first)
 
 **Status:** merged to main ([PR #128](https://github.com/Paradoxich/santolina/pull/128), merge commit `06ab97a`). CI green. Worktree removed, branch deleted local and remote. **No catalog data changed** — this is pipeline code only.
@@ -32,8 +100,9 @@ Follow-up to the round-9 entry below, doing its next steps 1 and 2. Both grew in
 
 **Open questions:**
 
-- **The Notion Session Log entry for 2026-07-29 is still owed** — mandatory per the standing rule, and neither this session nor the round-9 one could reach Notion. Two sessions' worth: round 9, and this.
-- Blocked, unchanged: local Supabase on disk cleanup; the Pro-plan decision.
+- Blocked on something outside the repo: local Supabase (disk cleanup) and the Pro-plan decision. Both are Ana's, and neither is checkable from here — which is why they are the only "still open" items left as prose.
+
+**Written up in Notion** — the Session Log page for 2026-07-29 carries both sessions in full, including the reasoning behind each decision above.
 
 **Worth knowing:** the rehearsal exists because three bugs in one round shared one anatomy — _a step the runner did not know it needed_. If round 10 finds a fourth bug of that shape, the rehearsal is the place to add the assertion, not the script that failed. If it finds a bug of a **different** shape, resist widening the rehearsal to cover it speculatively; write the assertion only once you have a real failure to mutation-test against.
 
@@ -79,15 +148,31 @@ typecheck / tests             clean, 139 passed
 2. **Nobody has yet run a round start-to-finish in one clean pass** with the current runbook. Round 9 took three restarts with fixes between. Treat round 10's first attempt as still testing the runner.
 3. **Round 9's 8 editorial holds** (`rounds/9/reports/editorial-9.md`). Three need a NEW candidate image, not a re-check: `Silene acaulis` (hero is a fringed _Dianthus_), `Hamamelis japonica` (staked nursery sapling), `Carex comans`. Plus `Erysimum cheiri`, which has no image upstream at all.
 4. **`Symphyotrichum lateriflorum` displays as "Calico or one-sided or white woodland or starved aster"** — Trefle gave four common names as one string. Not a verify failure so deliberately not fixed, but it is bad copy live in Explore now. Worth a general guard: a common_name containing " or " is almost certainly a Trefle blob.
-5. Carried over unchanged: round 8's last holds; the ~575-plant WCVP tail (never `--apply` against `--all`); the token usage logger; promote hardiness WARN → FAIL when §27 un-parks; the two colour-bucket calls; `NEXT_PUBLIC_APP_URL` is dead but still advertised.
+5. Carried over: the ~575-plant WCVP tail (never `--apply` against `--all`); the token usage logger; promote hardiness WARN → FAIL when §27 un-parks; the two colour-bucket calls; `NEXT_PUBLIC_APP_URL` is referenced nowhere in code but still advertised in `.env.example` and CLAUDE.md.
 
-**Open questions:**
-
-- Blocked, unchanged: local Supabase on disk cleanup; the Pro-plan decision.
-
-**Correction, because this entry first repeated it wrongly: the `catalog-state staleness` job is NOT inert.** Both repo secrets have existed since 2026-07-28 (`gh secret list` confirms), and on the push to main for PR #127 the job ran for real — secrets populated, skip branch not taken, `catalog:state:check` executed against the live catalog, **success**. It shows as "skipping" in `gh pr checks` only because it is deliberately gated off pull requests (`if: github.event_name != 'pull_request'`), so that a PR-triggered job cannot read the service-role key. The "waiting for secrets" line came from the 2026-07-28 entry, was true then, and was carried forward here without being re-checked. **Verify a load-bearing claim in this file against the thing itself before repeating it — especially an asserted negative.**
+**Correction, because this entry first repeated it wrongly, and it is the reason this file now has a rule at the top.** The entry originally said the `catalog-state` CI job was "still skipping for want of repo secrets, inert across several sessions". Every part of that was false. The secrets were set on 2026-07-28; the job is gated off `pull_request` **by design**, so that a PR-triggered job cannot read the service-role key; and it runs on pushes to main. The claim came from the 2026-07-28 entry, was true the day it was written, and was carried forward as current without anyone running `gh secret list` — a two-second check. **The same correction had already been written in Notion that morning by another session.** Do not repeat an asserted negative from this file without running the command.
 
 **Calibration note:** the base rate says round 10 finds _different_ bugs, not these. Of ~77 incidents across rounds 1-8 only six were repeats. Fixing three does not predict a clean round — automating the pipeline is what makes them visible at all, and that is the improvement.
+
+---
+
+# Historical entries
+
+**Everything below this line is archive, and its state claims were true only on
+the day they were written.** They are deliberately left as written — rewriting
+the record to match today would destroy the evidence of what was believed when,
+which is the most useful thing about a log.
+
+Read them for decisions and reasoning, which keep. Do not read them for status.
+Two specific traps live below and have already cost time:
+
+- The 2026-07-28 entries say the `catalog-state` CI job "skips until Ana adds
+  repo secrets" and is "inert until then". **The secrets were added that same
+  day.** This is the claim that propagated for three sessions.
+- Several entries list branches as unpushed or worktrees as existing. Those were
+  snapshots. `git worktree list` and `gh pr list` are the answer now.
+
+---
 
 ## 2026-07-29 — session/2026-07-29-diary-feature-polish
 
