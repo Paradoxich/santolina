@@ -955,25 +955,56 @@ async function main() {
   if (whyAll) console.log(`Whole-catalog run, because: ${whyAll}`)
 
   // Ordered by id — paging needs a unique column to be stable.
-  let plants = await fetchAllRows<PlantRow>((from, to) => {
+  //
+  // Fetched WITHOUT filtering on image_candidates on purpose, so a row missing
+  // its candidates is counted rather than silently dropped. See the check below.
+  let scoped = await fetchAllRows<PlantRow>((from, to) => {
     let q = supabase
       .from('plants')
       .select(
         'id, common_name, scientific_name, bloom_months, image_url, image_candidates'
       )
-      .not('image_candidates', 'is', null)
     if (!recheck) q = q.is('image_checked_at', null)
     return applyScope(q, scopeIdList).order('id').range(from, to)
   })
 
+  // A ROW WITH NO CANDIDATES IS UNJUDGED, NOT JUDGED-AND-FINE.
+  //
+  // This filter used to live in the query as `.not('image_candidates','is',null)`,
+  // which made rows without candidates vanish before anything counted them. The
+  // pass then printed "every plant with candidates has been checked" and exited
+  // 0. Round 9 hit exactly that: all 50 plants had NULL image_candidates, the
+  // vision pass judged none of them and reported success, and the truth only
+  // surfaced one step later when curate-editorial held all 50 for "the image
+  // pass never judged this row".
+  //
+  // image_candidates is populated by recover-image-categories.ts, which is now
+  // runbook step 7 — but a missing prerequisite must FAIL rather than read as
+  // a clean result. Same rule as a rate-limited fetch: no data is not the same
+  // answer as a negative one.
+  const missingCandidates = scoped.filter((p) => p.image_candidates === null)
+  if (missingCandidates.length > 0) {
+    console.error(
+      `\n${missingCandidates.length} of ${scoped.length} plant(s) in scope have no image_candidates.\n` +
+        'They CANNOT be judged, and skipping them quietly is how a round ends up\n' +
+        'with heroes nobody picked. Populate the candidates first:\n\n' +
+        '  ./node_modules/.bin/tsx --env-file=.env.local scripts/recover-image-categories.ts\n\n' +
+        'Then re-run this pass. First few affected:\n' +
+        missingCandidates
+          .slice(0, 5)
+          .map((p) => `  · ${p.common_name} (${p.scientific_name})`)
+          .join('\n')
+    )
+    process.exit(1)
+  }
+
+  let plants = scoped
   plants.sort((a, b) => a.common_name.localeCompare(b.common_name))
   if (limit) plants = plants.slice(0, limit)
 
   if (plants.length === 0) {
     console.log(
-      recheck
-        ? 'No plants have image_candidates yet — run recover-image-categories.ts first.'
-        : 'Nothing to do — every plant with candidates has been checked. Use --recheck to redo.'
+      'Nothing to do — every plant in scope has been checked. Use --recheck to redo.'
     )
     // Still refresh the report: the reviewer may just want the current state.
     await writeReviewReport(supabase)

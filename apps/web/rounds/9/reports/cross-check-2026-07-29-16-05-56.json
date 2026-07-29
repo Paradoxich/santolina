@@ -1,0 +1,121 @@
+{
+  "ran_at": "2026-07-29T16:05:56.948Z",
+  "model": "claude-sonnet-4-5",
+  "checked": 50,
+  "clean": 42,
+  "flagged": [
+    {
+      "id": "04a435aa-6f6c-40e1-b313-56343280305e",
+      "common_name": "Willow-leaf sunflower",
+      "scientific_name": "Helianthus salicifolius",
+      "flags": [
+        {
+          "field": "sun_requirements",
+          "severity": "minor",
+          "stored": ["full_sun", "partial_sun"],
+          "checked": ["full_sun"],
+          "detail": "partial overlap"
+        }
+      ]
+    },
+    {
+      "id": "1fabb169-1fce-4ddc-8f5d-fea6f967d3c3",
+      "common_name": "Leatherleaf sedge",
+      "scientific_name": "Carex buchananii",
+      "flags": [
+        {
+          "field": "bloom_months",
+          "severity": "minor",
+          "stored": [],
+          "checked": [7, 8, 9],
+          "detail": "one side reports no bloom"
+        }
+      ]
+    },
+    {
+      "id": "426be7af-a453-453f-89be-e3511b129dfd",
+      "common_name": "Chinese-holly",
+      "scientific_name": "Osmanthus heterophyllus",
+      "flags": [
+        {
+          "field": "sun_requirements",
+          "severity": "minor",
+          "stored": ["full_sun", "partial_sun", "shade"],
+          "checked": ["full_sun", "partial_sun"],
+          "detail": "partial overlap"
+        }
+      ]
+    },
+    {
+      "id": "6711354d-ee76-4dda-8a71-29bf1842e1a9",
+      "common_name": "Hamamelis japonica",
+      "scientific_name": "Hamamelis japonica",
+      "flags": [
+        {
+          "field": "sun_requirements",
+          "severity": "minor",
+          "stored": ["full_sun", "partial_sun", "shade"],
+          "checked": ["full_sun", "partial_sun"],
+          "detail": "partial overlap"
+        }
+      ]
+    },
+    {
+      "id": "a42bde4a-d51c-407c-96ff-7e2d6ec36869",
+      "common_name": "Thin-leaf coneflower",
+      "scientific_name": "Rudbeckia triloba",
+      "flags": [
+        {
+          "field": "plant_type",
+          "severity": "disagree",
+          "stored": "perennial",
+          "checked": "biennial",
+          "detail": "classification mismatch"
+        }
+      ]
+    },
+    {
+      "id": "aeccc411-2929-49b9-83a3-4c91d7c363be",
+      "common_name": "Cheddar pink",
+      "scientific_name": "Dianthus gratianopolitanus",
+      "flags": [
+        {
+          "field": "sun_requirements",
+          "severity": "minor",
+          "stored": ["full_sun", "partial_sun"],
+          "checked": ["full_sun"],
+          "detail": "partial overlap"
+        }
+      ]
+    },
+    {
+      "id": "b40b6991-e23e-4e06-930a-8bbf6216906c",
+      "common_name": "Bieberstein's crocus",
+      "scientific_name": "Crocus speciosus",
+      "flags": [
+        {
+          "field": "hardiness_zone_min",
+          "severity": "disagree",
+          "stored": "3",
+          "checked": 5,
+          "detail": "2 zones apart"
+        }
+      ]
+    },
+    {
+      "id": "bb8ae38d-c3ef-402a-b10d-27a5a2e1dd99",
+      "common_name": "Alpine balsam",
+      "scientific_name": "Erinus alpinus",
+      "flags": [
+        {
+          "field": "bloom_months",
+          "severity": "minor",
+          "stored": [5, 6, 7, 8, 9, 10],
+          "checked": [5, 6, 7, 8],
+          "detail": "window boundaries drift 2 month(s)"
+        }
+      ]
+    }
+  ],
+  "failures": []
+}
