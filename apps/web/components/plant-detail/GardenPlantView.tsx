@@ -21,9 +21,9 @@ import { Badge, Icon, Lightbox, Panel } from '@paradoxui/ui'
 import { icons } from '@/lib/icons'
 import { PlantImage } from '@/components/PlantImage'
 import { CardIllustration } from '@/components/dashboard/CardIllustration'
-import { DIARY_EVENT_LABELS, type DiaryEventType } from '@/lib/diary-events'
+import { DIARY_EVENT_LABELS } from '@/lib/diary-events'
 import { getBloomStatus, getStageNote } from '@/lib/bloom-status'
-import { getCurrentSeason } from '@/lib/season'
+import { getPlantCareTips, isPeakHeat } from '@/lib/care-tips'
 import { formatBloomRange } from '@/lib/format-plant'
 import { flattenNotePhotos } from './StorySection'
 import { PlantGallery } from './PlantGallery'
@@ -46,8 +46,6 @@ const STATUS_LABEL: Record<string, string> = {
   resting: 'Resting',
   evergreen: 'Evergreen',
 }
-
-const TRACKED_EVENTS: DiaryEventType[] = ['watered', 'fertilized', 'pruned']
 
 const CLICKABLE =
   'cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus'
@@ -113,8 +111,9 @@ export function GardenPlantView({
   const bloomMonths = plant.bloom_months ?? []
   const status = getBloomStatus(bloomMonths, now)
   const stageNote = getStageNote(bloomMonths, now)
-  const season = getCurrentSeason(now)
-  const currentAction = plant.seasonal_care?.[season] ?? null
+  // seasonal_care[currentStage] is no longer read here: it is one of the two
+  // tiers getPlantCareTips already returns, and reading it separately would
+  // put the same line on the page twice.
   const bloomRange = formatBloomRange(plant.bloom_months) ?? undefined
 
   // One entry per logged event, as listGardenCareEvents does server-side.
@@ -127,11 +126,18 @@ export function GardenPlantView({
     .sort((a, b) => a.date.localeCompare(b.date))[0]
   const daysInGarden = plantedEvent ? daysSince(plantedEvent.date, now) : null
 
-  const recency = TRACKED_EVENTS.map((type) => {
-    const latest = events
-      .filter((e) => e.type === type)
-      .sort((a, b) => b.date.localeCompare(a.date))[0]
-    return { type, days: latest ? daysSince(latest.date, now) : null }
+  // This plant's own Care Tips, through the same engine as the dashboard
+  // card. No forecast is fetched here, so isPeakHeat falls back to its
+  // documented season test — which is what the static summer tip already
+  // assumes, so the two agree.
+  const tips = getPlantCareTips(plant.id, plant, {
+    events: events.map((e) => ({
+      plantId: plant.id,
+      eventType: e.type,
+      occurredAt: new Date(`${e.date}T12:00:00Z`),
+    })),
+    today: now,
+    peakHeat: isPeakHeat(null, now),
   })
 
   const { images: notePhotos, offsetByNoteId } = flattenNotePhotos(
@@ -256,27 +262,38 @@ export function GardenPlantView({
           </Panel>
         )}
 
-        <Panel title="Care" className="h-full">
-          {/* What to do now leads; what you last did sits under it, because
-              the second is how you judge whether the first is overdue. */}
-          <p className="text-body leading-normal text-primary">
-            {currentAction ?? 'Nothing to do this stage.'}
-          </p>
-          <ul className="mt-auto flex w-full flex-col pt-item-gap">
-            {recency.map(({ type, days }) => (
-              <li
-                key={type}
-                className="flex w-full items-center justify-between gap-row-gap border-b border-divider py-item-gap"
-              >
-                <span className="text-body text-primary">
-                  {DIARY_EVENT_LABELS[type]}
-                </span>
-                <span className="shrink-0 text-label text-muted">
-                  {days === null ? 'Not logged' : agoLabel(days)}
-                </span>
-              </li>
-            ))}
-          </ul>
+        <Panel
+          title="Care"
+          meta={
+            tips.length > 0
+              ? `${tips.length} ${tips.length === 1 ? 'tip' : 'tips'}`
+              : undefined
+          }
+          className="h-full"
+        >
+          {tips.length === 0 ? (
+            <p className="text-body leading-normal text-secondary">
+              Nothing to do this stage.
+            </p>
+          ) : (
+            <ul className="flex w-full flex-col gap-tight-gap">
+              {tips.map((tip, i) => (
+                <li
+                  key={`${tip.text}-${i}`}
+                  className="flex w-full items-center justify-between gap-row-gap rounded-sm bg-surface-subtle px-item-gap py-inline-gap"
+                >
+                  <span className="min-w-0 flex-1 text-body leading-normal text-primary">
+                    {tip.text}
+                  </span>
+                  {tip.timeframe && (
+                    <span className="shrink-0 whitespace-nowrap text-label text-muted">
+                      {tip.timeframe}
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
         </Panel>
       </div>
 

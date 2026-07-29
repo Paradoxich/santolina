@@ -436,6 +436,34 @@ export function getCareTips(
   return [...eventTips, ...guidance].slice(0, MAX_TIPS)
 }
 
+/**
+ * One plant's Care Tips, for its own page. Same two tiers and the same
+ * rules as the dashboard card — this synthesises a one-row palette and
+ * delegates, rather than reimplementing the ranking beside it.
+ *
+ * Deliberately without the STATIC_SEASONAL_TIPS fallback: those are
+ * garden-level advice with `plantId: null`, and on a page about one plant
+ * they would read as things to do to *that* plant. A plant with nothing due
+ * shows nothing, and the card says so.
+ */
+export function getPlantCareTips(
+  plantId: string,
+  plant: PalettePlant['plant'],
+  { events = [], today = new Date(), peakHeat = false }: TipOptions = {}
+): CareTip[] {
+  // Only the fields the two tip builders read: status gates both, plantId
+  // keys the event lookup, and plant carries plant_type, seasonal_care and
+  // bloom_months. Cast because the rest of the row is irrelevant here.
+  const palette = [
+    { plantId, status: 'planted', plant },
+  ] as unknown as PalettePlant[]
+
+  return [
+    ...getEventTips(palette, events, { today, peakHeat }),
+    ...buildGuidanceTips(palette, today),
+  ]
+}
+
 /** The Care Tips full list, grouped for the drawer (Care Tips v2 § Surfaces). */
 export interface GroupedCareTips {
   /** Actionable right now — dated tips due this week. */
