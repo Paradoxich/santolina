@@ -262,21 +262,38 @@ async function mapWithConcurrency<T, R>(
   return results
 }
 
-/** Probe a shortlist, drop what fails or is too small, rank what survives. */
+/**
+ * Probe a shortlist, drop what fails or is too small, rank what survives.
+ *
+ * `rejected` and `unresolved` are deliberately two lists. A rejected candidate
+ * has been judged — dead link, too small, wrong shape — and dropping it is the
+ * right answer. An unresolved one failed transiently and kept failing after
+ * every retry, so its quality is simply unknown, and treating that as a
+ * rejection is trap 1: it converts "we could not look" into "we looked and it
+ * was no good", then stamps the row so nothing ever looks again.
+ */
 async function measure(
   candidates: ImageCandidate[],
   incumbent: string | null
-): Promise<{ kept: Measured[]; rejected: string[]; capped: number }> {
+): Promise<{
+  kept: Measured[]
+  rejected: string[]
+  unresolved: string[]
+  capped: number
+}> {
   const probes = await mapWithConcurrency(candidates, PROBE_CONCURRENCY, (c) =>
     probeImage(c.url).then((r) => ({ candidate: c, probe: r as ProbeResult }))
   )
 
   const kept: Measured[] = []
   const rejected: string[] = []
+  const unresolved: string[] = []
 
   for (const { candidate, probe } of probes) {
     if (!probe.ok) {
-      rejected.push(`${candidate.category}: ${probe.reason}`)
+      const line = `${candidate.category}: ${probe.reason}`
+      if (probe.transient) unresolved.push(line)
+      else rejected.push(line)
       continue
     }
     const longEdge = Math.max(probe.width, probe.height)
@@ -308,7 +325,7 @@ async function measure(
   }
 
   const { kept: ranked, capped } = rankAndCap(kept)
-  return { kept: ranked, rejected, capped }
+  return { kept: ranked, rejected, unresolved, capped }
 }
 
 function buildPrompt(plant: PlantRow, images: Measured[]): string {
@@ -1016,17 +1033,35 @@ async function main() {
   const requests: Anthropic.Messages.Batches.BatchCreateParams.Request[] = []
   const manifestPlants: Manifest['plants'] = {}
   const skipped: string[] = []
+  const deferred: string[] = []
   let totalRejected = 0
   let totalCapped = 0
 
   for (const [i, plant] of plants.entries()) {
     const candidates = plant.image_candidates ?? []
     const short = shortlist(candidates, plant.image_url)
-    const { kept, rejected, capped } = await measure(short, plant.image_url)
+    const { kept, rejected, unresolved, capped } = await measure(
+      short,
+      plant.image_url
+    )
     totalRejected += rejected.length
     totalCapped += capped
 
     const label = `${pad(i + 1)}/${plants.length} ${plant.common_name}`
+
+    // An incomplete pool is not a pool. Judging what did load would write a
+    // confidently-worded pick chosen from a set the reviewer never intended,
+    // and stamping the row means a plain re-run skips it forever — so leave the
+    // row untouched and let the next run retry it, which is what an errored row
+    // already does everywhere else in this pass.
+    if (unresolved.length > 0) {
+      console.log(
+        `${label} — DEFERRED, ${unresolved.length} candidate(s) unresolved after retries; not judged, not stamped`
+      )
+      for (const u of unresolved) console.log(`          unresolved: ${u}`)
+      deferred.push(plant.common_name)
+      continue
+    }
 
     if (kept.length === 0) {
       console.log(
@@ -1077,14 +1112,24 @@ async function main() {
     // model returns indexes that exact list, and a mismatch resolves the wrong
     // photo.
     const blobs = new Map<string, ImageBlob>()
+    let unfetchable = false
     for (const img of kept) {
       if (img.source !== 'wikimedia') continue
       const blob = await fetchImageBlob(img.url)
       if (blob) blobs.set(img.url, blob)
-      else
+      else {
+        // Same reasoning as the unresolved-probe branch above: the photo
+        // measured fine seconds ago, so failing to fetch it now is a network
+        // answer, not a verdict. Defer rather than judge the rest.
         console.log(
-          `        (wikimedia image unfetchable, dropping: ${img.url})`
+          `${label} — DEFERRED, wikimedia image measured but could not be fetched: ${img.url}`
         )
+        unfetchable = true
+      }
+    }
+    if (unfetchable) {
+      deferred.push(plant.common_name)
+      continue
     }
 
     const request = buildRequest(plant, kept, blobs)
@@ -1107,8 +1152,19 @@ async function main() {
 
   console.log(
     `\nProbing done: ${requests.length} plant(s) ready, ${skipped.length} with nothing usable, ` +
+      `${deferred.length} deferred, ` +
       `${totalRejected} candidate image(s) rejected, ${totalCapped} good candidate(s) left unsent at the ${MAX_FOR_VISION}-image cap.`
   )
+  if (deferred.length > 0) {
+    console.log(
+      `\nDeferred (unstamped, re-run to retry): ${deferred.join(', ')}`
+    )
+    // Exit non-zero even though the rest of the batch is about to run fine: a
+    // round must not read this step as finished while a plant it was pointed at
+    // was never looked at. This is the StepStatus.vacuous lesson in a second
+    // costume — "this run has no news about X" is not "there is no X".
+    process.exitCode = 1
+  }
 
   if (dryRun) {
     console.log(
