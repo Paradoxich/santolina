@@ -42,6 +42,7 @@ import { spawnSync } from 'node:child_process'
 import { flagValue } from './scope'
 import { roundStatus } from './round-status'
 import { readRoundManifest } from './round-manifest'
+import { resolveBaselineDir } from './catalog-snapshot'
 
 import { RUNBOOK, type Step } from './runbook'
 
@@ -95,6 +96,38 @@ async function main() {
     `\nRound ${label} — ${manifest.seeded_ids.length} seeded plant(s).\n`
   )
 
+  // PREFLIGHT: the rollback point must exist BEFORE anything is billed.
+  //
+  // resolveBaselineDir only accepts a snapshot taken at or before the
+  // manifest's started_at, which is correct and is why round 9 picked the
+  // hand-taken pre-seed backup over the runner's own post-seed one. But a
+  // round with NO pre-seed snapshot does not fail here — it fails at step 8a,
+  // after every AI pass has been paid for, because that is the first step to
+  // ask for a baseline.
+  //
+  // The backup this runner takes at step 0 cannot fill the gap: the runner
+  // does not seed, so its step 0 always happens AFTER the plants exist. A
+  // pre-seed snapshot has to be taken by whoever seeds, and this is the check
+  // that says so at second zero instead of at the end of the round.
+  try {
+    const baseline = resolveBaselineDir(label, manifest.started_at)
+    console.log(`Rollback point: ${baseline.dir} (${baseline.source})\n`)
+  } catch {
+    console.error(
+      `No catalog snapshot predates round ${label}'s seed (started ${manifest.started_at}).\n\n` +
+        "That is the round's rollback point, and step 8a needs it to tell this\n" +
+        "round's writes from everyone else's. Failing now rather than after the\n" +
+        'AI passes have been billed.\n\n' +
+        'The backup at step 0 below cannot cover this — the runner does not seed,\n' +
+        'so its backup is always taken after the new plants exist. Take one before\n' +
+        'seeding:\n\n' +
+        '  ./node_modules/.bin/tsx --env-file=.env.local scripts/backup-catalog.ts\n\n' +
+        'If a suitable snapshot exists elsewhere, pass it to check-round-scope\n' +
+        'with --baseline <dir>.\n'
+    )
+    process.exit(1)
+  }
+
   // Read state up front for the PLAN. Everything is measured against the
   // database, never against a log or a flag file, so a killed run resumes
   // honestly.
@@ -106,7 +139,12 @@ async function main() {
   const refreshDone = async () => {
     const status = await roundStatus(manifest.seeded_ids)
     done.clear()
-    for (const s of status) if (s.complete) done.add(s.step)
+    // `complete && !vacuous`. A step whose scope is empty has not been asked a
+    // question yet, so it is not done — see StepStatus.vacuous. Treating
+    // vacuous completion as done is how round 9's image-verify step was
+    // crossed off before a single image had been judged, and it would have
+    // stayed crossed off in every future round.
+    for (const s of status) if (s.complete && !s.vacuous) done.add(s.step)
   }
   await refreshDone()
 

@@ -11,6 +11,9 @@ const step = (
   done: complete ? 10 : 4,
   total: 10,
   complete,
+  // These fixtures all have real scope (total 10), so none is vacuous. The
+  // empty-scope case is covered in round-rehearsal.test.ts.
+  vacuous: false,
   evidence: `${name} evidence`,
   level,
 })
