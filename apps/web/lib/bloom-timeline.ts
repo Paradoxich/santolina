@@ -8,6 +8,7 @@ import type { PalettePlant } from '@/server/palette-actions'
 import type { BloomSeason, BloomSpan } from '@/types/dashboard'
 import { monthName } from './format-plant'
 import { heroImageUrl } from './plant-image'
+import { CHART_COLORS } from './chart-colors'
 
 /** Visible height of the chart's scroll viewport, in px. */
 const CHART_HEIGHT = 147
@@ -28,23 +29,29 @@ const MONTH_STEP = 100 / (WINDOW_SIZE - 1)
 
 /** Muted chart colors keyed by the curated bloom_color English names. */
 const BLOOM_COLOR_HEX: Record<string, string> = {
-  purple: '#a38eb8',
-  violet: '#a38eb8',
-  lavender: '#b3a3c8',
-  blue: '#9aa4c4',
-  pink: '#c9a6b8',
-  magenta: '#c9a6b8',
-  red: '#c48a8a',
-  orange: '#d6a987',
-  apricot: '#d6a987',
-  yellow: '#d1c187',
-  gold: '#d1c187',
-  white: '#c8c2a4',
-  cream: '#c8c2a4',
-  green: '#a8b0a4',
+  purple: CHART_COLORS.violet,
+  violet: CHART_COLORS.violet,
+  lavender: CHART_COLORS.lavender,
+  blue: CHART_COLORS.blue,
+  pink: CHART_COLORS.pink,
+  magenta: CHART_COLORS.pink,
+  red: CHART_COLORS.red,
+  orange: CHART_COLORS.apricot,
+  apricot: CHART_COLORS.apricot,
+  yellow: CHART_COLORS.gold,
+  gold: CHART_COLORS.gold,
+  white: CHART_COLORS.sand,
+  cream: CHART_COLORS.sand,
+  green: CHART_COLORS.sage,
 }
-const FALLBACK_COLORS = ['#a38eb8', '#d6a987', '#9aa4c4', '#c8c2a4', '#a8b0a4']
-const PAST_COLOR = '#afafaf'
+const FALLBACK_COLORS = [
+  CHART_COLORS.violet,
+  CHART_COLORS.apricot,
+  CHART_COLORS.blue,
+  CHART_COLORS.sand,
+  CHART_COLORS.sage,
+]
+const PAST_COLOR = CHART_COLORS.spent
 
 const THUMB_SIZE: Record<BloomSpan['emphasis'], number> = {
   now: 24,

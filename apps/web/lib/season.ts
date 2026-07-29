@@ -2,6 +2,7 @@
 // climate). Client-safe — no framework or Supabase imports. Shared by the
 // dashboard Care Tips and the growing cards' stage notes.
 import type { SeasonalRhythm } from './plants-db'
+import { CHART_COLORS } from './chart-colors'
 
 export type Season = keyof SeasonalRhythm
 
@@ -23,6 +24,21 @@ const MONTH_TO_SEASON: Record<number, Season> = {
 /** Maps a calendar month onto the 6-stage seasonal_rhythm vocabulary. */
 export function getCurrentSeason(today: Date = new Date()): Season {
   return MONTH_TO_SEASON[today.getMonth() + 1]!
+}
+
+/**
+ * A chart swatch per stage, from the shared muted palette the dashboard's
+ * bloom chart uses. Roughly seasonal (fresh green through gold and rust to
+ * a cold blue) so the year reads at a glance, but they are decoration for
+ * telling one track from another, not an encoding of anything.
+ */
+export const SEASON_COLORS: Record<Season, string> = {
+  early_spring: CHART_COLORS.sage,
+  late_spring: CHART_COLORS.pink,
+  summer: CHART_COLORS.gold,
+  late_summer: CHART_COLORS.apricot,
+  autumn: CHART_COLORS.red,
+  winter: CHART_COLORS.blue,
 }
 
 /** Display names for the six stages, in seasonal_rhythm key order. */
