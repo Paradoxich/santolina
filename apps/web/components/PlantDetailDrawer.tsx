@@ -310,7 +310,7 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
               <Button
                 variant="control"
                 size="sm"
-                onClick={() => router.push(`/plants?plant=${plant.id}`)}
+                onClick={() => router.push(`/plants/${plant.id}`)}
               >
                 View in My Plants
               </Button>
@@ -319,7 +319,7 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
             <Button
               variant="control"
               size="sm"
-              onClick={() => router.push(`/plants?plant=${plant.id}`)}
+              onClick={() => router.push(`/plants/${plant.id}`)}
             >
               You grew this before. View its story
             </Button>

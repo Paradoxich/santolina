@@ -43,17 +43,33 @@ function groupByMonth(
   return Array.from(groups.entries())
 }
 
+export interface ActivityClientProps {
+  entries: RecentActivityEntry[]
+  title?: string
+  backHref?: string
+  backLabel?: string
+  /**
+   * When false, hide the plant name column — used for a single plant's notes
+   * list, where every row is already about that plant.
+   */
+  showPlantLink?: boolean
+  emptyMessage?: string
+}
+
 /**
- * The archive: every entry in the garden, newest first. Read-only apart
- * from deletion — capture lives in the add-note dialog, and a plant's own
- * page remains the place to read one plant's story in isolation. Deletion
- * is here because a garden-level entry has nowhere else to be removed from.
+ * The archive list: entries newest first, grouped by month. Used for the
+ * garden-wide Recent activity page and the plant-scoped Notes page. Capture
+ * lives in the add-note dialog; deletion is here because these rows have
+ * nowhere else to be removed from.
  */
 export function ActivityClient({
   entries,
-}: {
-  entries: RecentActivityEntry[]
-}) {
+  title = 'Recent activity',
+  backHref = '/overview',
+  backLabel = 'Overview',
+  showPlantLink = true,
+  emptyMessage = 'Nothing logged yet. Add your first note.',
+}: ActivityClientProps) {
   const router = useRouter()
   const { toast } = useToast()
   const { openAddNote } = useAddNote()
@@ -88,17 +104,15 @@ export function ActivityClient({
 
   return (
     <div className="pb-16">
-      <SubpageHeader backHref="/overview" backLabel="Overview" />
+      <SubpageHeader backHref={backHref} backLabel={backLabel} />
 
       <div className="max-w-content pt-8 md:pt-12">
-        <h1 className="text-title font-semibold text-primary">
-          Recent activity
-        </h1>
+        <h1 className="text-title font-semibold text-primary">{title}</h1>
 
         {entries.length === 0 ? (
           <EmptyState
             className="mt-11"
-            message="Nothing logged yet. Add your first note."
+            message={emptyMessage}
             ctaLabel="Add note"
             onCtaClick={openAddNote}
           />
@@ -174,18 +188,19 @@ export function ActivityClient({
                           )}
                         </div>
 
-                        {entry.plantId ? (
-                          <Link
-                            href={`/plants?plant=${entry.plantId}`}
-                            className="shrink-0 text-body-small text-secondary underline-offset-2 hover:underline"
-                          >
-                            {plantLabel}
-                          </Link>
-                        ) : (
-                          <span className="shrink-0 text-body-small text-secondary">
-                            {plantLabel}
-                          </span>
-                        )}
+                        {showPlantLink &&
+                          (entry.plantId ? (
+                            <Link
+                              href={`/plants/${entry.plantId}`}
+                              className="shrink-0 text-body-small text-secondary underline-offset-2 hover:underline"
+                            >
+                              {plantLabel}
+                            </Link>
+                          ) : (
+                            <span className="shrink-0 text-body-small text-secondary">
+                              {plantLabel}
+                            </span>
+                          ))}
 
                         <div className="shrink-0 md:opacity-0 md:transition-opacity md:duration-normal md:group-hover:opacity-100 md:focus-within:opacity-100">
                           <Tooltip content="Delete note" position="bottom">

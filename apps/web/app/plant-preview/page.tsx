@@ -5,7 +5,7 @@
  * session and with logging densities that are hard to produce on demand in
  * real data (a never-logged plant, a planted-then-silent one).
  *
- * It renders the REAL GardenPlantView that /plants?plant=<id> renders. The
+ * It renders the REAL GardenPlantView that /plants/[id] renders. The
  * only things this file owns are the sample rows and the two toggles. Nothing
  * about the design lives here, so there is nothing to keep in sync.
  *
@@ -17,7 +17,6 @@
 import { useState } from 'react'
 import { Panel, ToastProvider } from '@paradoxui/ui'
 import { GardenPlantView } from '@/components/plant-detail/GardenPlantView'
-import { DiaryDrawer } from '@/components/plant-detail/DiaryDrawer'
 import { SAMPLE_PLANT, NOTES_RICH, NOTES_SPARSE, NOTES_NONE } from './sample'
 import type { DiaryNote } from '@/types/diary'
 
@@ -79,7 +78,6 @@ const TODAY_ISO = new Date().toISOString().slice(0, 10)
 export default function PlantPreviewPage() {
   const [density, setDensity] = useState<Density>('rich')
   const [width, setWidth] = useState<WidthMode>('product')
-  const [isDiaryOpen, setIsDiaryOpen] = useState(false)
 
   const notes = NOTES_BY_DENSITY[density]
 
@@ -91,8 +89,8 @@ export default function PlantPreviewPage() {
     }`
 
   return (
-    // ToastProvider because the diary drawer's story components use useToast,
-    // which the real page gets from the (app) layout.
+    // ToastProvider because garden plant cards may toast, which the real
+    // page gets from the (app) layout.
     <ToastProvider>
       {/* Mimics the real app shell (sidebar offset + content-gutter) so the
           width the cards get here is the width they get in the product. */}
@@ -102,7 +100,7 @@ export default function PlantPreviewPage() {
             <div className="mb-8 flex flex-col gap-item-gap rounded-md border border-divider-subtle bg-surface-subtle p-card-padding">
               <p className="text-label text-muted">
                 Harness for the real component, with sample data. The live page
-                is /plants?plant=&lt;id&gt; for a plant you are growing.
+                is /plants/&lt;id&gt; for a plant you are growing.
               </p>
               <div className="flex flex-wrap items-center gap-tight-gap">
                 <span className="text-label text-secondary">
@@ -145,39 +143,24 @@ export default function PlantPreviewPage() {
                 subtitle={SAMPLE_PLANT.scientific_name}
                 todayIso={TODAY_ISO}
                 onHeroPhotoClick={() => {}}
-                onSeeAllNotes={() => setIsDiaryOpen(true)}
+                notesHref={`/plants/${SAMPLE_PLANT.id}/notes`}
                 reference={
                   // Shape-only stand-in: the real card is built in
                   // PlantDetailPage, which owns the reference drawer's state.
                   <Panel
-                    title="Care reference"
-                    className="min-h-[234px] justify-between lg:h-full lg:min-h-0"
+                    title="Plant details"
+                    className="min-h-[234px] lg:h-full lg:min-h-0"
                   >
                     <p className="max-w-[70%] text-body text-secondary">
                       Water, light, soil, pruning, the full year, and the
                       botanical details.
                     </p>
-                    <span className="text-body-small text-secondary">
-                      Open reference
-                    </span>
                   </Panel>
                 }
               />
             </div>
           </div>
         </div>
-
-        {isDiaryOpen && (
-          <DiaryDrawer
-            plantId={SAMPLE_PLANT.id}
-            plantName={SAMPLE_PLANT.common_name}
-            notes={notes}
-            paletteId={null}
-            isGrowing
-            onClose={() => setIsDiaryOpen(false)}
-            onAddedBackToGarden={() => {}}
-          />
-        )}
       </div>
     </ToastProvider>
   )

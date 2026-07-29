@@ -70,8 +70,9 @@ export function GardenClient({ palette }: GardenClientProps) {
   }
 
   // Navigates to the plant's own page — not an overlay, a real route swap.
+  // `from` preserves Growing/Planned on the back link.
   const openPlant = (plantId: string) =>
-    router.push(`/plants?tab=${tab}&plant=${plantId}`)
+    router.push(`/plants/${plantId}?from=${tab}`)
   const openPlantByPaletteId = (paletteId: string) => {
     const row = palette.find((p) => p.id === paletteId)
     if (row) openPlant(row.plantId)

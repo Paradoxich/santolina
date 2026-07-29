@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import {
   Button,
   Icon,
@@ -38,7 +38,6 @@ import { DetailsSection } from './plant-detail/DetailsSection'
 import { StorySection } from './plant-detail/StorySection'
 import { StoryComposer } from './plant-detail/StoryComposer'
 import { GardenPlantView } from './plant-detail/GardenPlantView'
-import { DiaryDrawer } from './plant-detail/DiaryDrawer'
 import { ReferenceDrawer } from './plant-detail/ReferenceDrawer'
 
 /** Photo widths cycle to match the Figma strip (third photo clips at the edge). */
@@ -69,6 +68,12 @@ export function PlantDetailPage({
   todayIso,
 }: PlantDetailPageProps) {
   const { plant, companions, garden } = detail
+  const searchParams = useSearchParams()
+  const fromTab = searchParams.get('from')
+  const notesHref =
+    fromTab === 'planned'
+      ? `/plants/${plant.id}/notes?from=planned`
+      : `/plants/${plant.id}/notes`
   const subtitle = formatPlantSubtitle(
     plant.scientific_name,
     plant.common_name_aliases ?? []
@@ -90,7 +95,6 @@ export function PlantDetailPage({
 
   const [galleryIndex, setGalleryIndex] = useState<number | null>(null)
   const [referenceOpen, setReferenceOpen] = useState(false)
-  const [isDiaryOpen, setIsDiaryOpen] = useState(false)
 
   const [palette, setPalette] = useState(initialPalette)
   const [pendingAction, setPendingAction] = useState<'plan' | 'garden' | null>(
@@ -510,10 +514,10 @@ export function PlantDetailPage({
               subtitle={subtitle}
               todayIso={todayIso}
               onHeroPhotoClick={setGalleryIndex}
-              onSeeAllNotes={() => setIsDiaryOpen(true)}
+              notesHref={notesHref}
               reference={
                 <Panel
-                  title="Care reference"
+                  title="Plant details"
                   role="button"
                   tabIndex={0}
                   onClick={() => setReferenceOpen(true)}
@@ -523,15 +527,12 @@ export function PlantDetailPage({
                       setReferenceOpen(true)
                     }
                   }}
-                  className="relative isolate min-h-[234px] cursor-pointer justify-between overflow-hidden focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus lg:h-full lg:min-h-0"
+                  className="relative isolate min-h-[234px] cursor-pointer overflow-hidden focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus lg:h-full lg:min-h-0"
                 >
                   <p className="max-w-[70%] text-body text-secondary">
                     Water, light, soil, pruning, the full year, and the
                     botanical details.
                   </p>
-                  <span className="text-body-small text-secondary">
-                    Open reference
-                  </span>
                 </Panel>
               }
             />
@@ -557,9 +558,8 @@ export function PlantDetailPage({
           </div>
         )}
 
-        {/* Growing plants read and write their story in the drawer, opened
-            from the Diary card. Everything else keeps it inline, where it is
-            the only place notes live. */}
+        {/* Non-growing plants keep story inline — growing plants read notes
+            on /plants/[id]/notes from the Diary card. */}
         {showStory && !isGrowing && (
           <div className="mt-section-break">
             <StoryComposer
@@ -580,20 +580,6 @@ export function PlantDetailPage({
           companions={companions}
           bullets={bullets}
           onClose={() => setReferenceOpen(false)}
-        />
-      )}
-
-      {isDiaryOpen && (
-        <DiaryDrawer
-          plantId={plant.id}
-          plantName={plant.common_name}
-          notes={notes}
-          paletteId={palette?.paletteId ?? null}
-          isGrowing={isGrowing}
-          onClose={() => setIsDiaryOpen(false)}
-          onAddedBackToGarden={({ paletteId }) =>
-            setPalette({ paletteId, status: 'planted' })
-          }
         />
       )}
 
