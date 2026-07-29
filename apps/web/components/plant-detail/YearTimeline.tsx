@@ -1,19 +1,29 @@
 'use client'
 
 /**
- * One plant's year, drawn in the dashboard's BloomTimelineCard language:
- * month gridlines at low opacity with the current month at full accent, the
- * bloom window as a 4px rounded span, and a circular plant thumbnail sitting
- * on it. The difference from the dashboard card is the row underneath — your
- * logged events, in the same coordinate space as the species' flowering.
+ * What the plant does across the year, on one axis.
  *
- * That overlay is the whole argument for a garden-scoped detail view: it is
- * the only place "the species" and "your copy of it" are visibly different
- * things. Neither half needs a new column.
+ * Three layers over the same twelve months: the six seasonal_rhythm stages as
+ * segments, the flowering window as a bar, and your logged events as marks.
+ * Selecting a stage reads out its rhythm text, which is why this replaced the
+ * bloom-band-only strip — that strip showed one fact the header already
+ * stated, while the rhythm text sat in a table in the reference drawer saying
+ * the same thing in a different place. One home, and it is this.
+ *
+ * Winter appears at both ends because it wraps the year end. Both segments
+ * select the same stage.
  */
 
+import { useState } from 'react'
 import { PlantImage } from '@/components/PlantImage'
 import { DIARY_EVENT_LABELS, type DiaryEventType } from '@/lib/diary-events'
+import {
+  SEASON_LABELS,
+  SEASON_SPANS,
+  getCurrentSeason,
+  type Season,
+} from '@/lib/season'
+import type { SeasonalRhythm } from '@/lib/plants-db'
 
 /** A logged event reduced to what the strip plots: what, and roughly when. */
 export interface TimelineEvent {
@@ -59,12 +69,22 @@ function positionOf(date: Date): number {
   return ((date.getTime() - start) / (end - start)) * 100
 }
 
+/** Left edge and width of a month range, as percentages of the year. */
+function spanBounds(startMonth: number, endMonth: number) {
+  return {
+    left: ((startMonth - 1) / 12) * 100,
+    width: ((endMonth - startMonth + 1) / 12) * 100,
+  }
+}
+
 interface YearTimelineProps {
   bloomMonths: number[]
   events: TimelineEvent[]
   today: Date
   plantName: string
   imageUrl: string | null
+  /** Per-stage description of what the plant is doing. */
+  rhythm: SeasonalRhythm | null
 }
 
 export function YearTimeline({
@@ -73,16 +93,16 @@ export function YearTimeline({
   today,
   plantName,
   imageUrl,
+  rhythm,
 }: YearTimelineProps) {
-  const currentMonth = today.getUTCMonth() + 1
+  const currentSeason = getCurrentSeason(today)
+  const [selected, setSelected] = useState<Season>(currentSeason)
   const todayLeft = positionOf(today)
 
   const hasBloom = bloomMonths.length > 0
   const firstMonth = hasBloom ? Math.min(...bloomMonths) : 0
   const lastMonth = hasBloom ? Math.max(...bloomMonths) : 0
-  // Span runs from the start of the first bloom month to the end of the last.
-  const spanLeft = ((firstMonth - 1) / 12) * 100
-  const spanWidth = ((lastMonth - firstMonth + 1) / 12) * 100
+  const bloom = spanBounds(firstMonth, lastMonth)
 
   // Events grouped by month: a month with three waterings gets one mark.
   const byMonth = new Map<number, TimelineEvent[]>()
@@ -93,11 +113,49 @@ export function YearTimeline({
     else byMonth.set(month, [event])
   }
 
+  const selectedText = rhythm?.[selected] ?? null
+
   return (
-    <div className="flex w-full flex-1 flex-col justify-between gap-item-gap">
-      <div className="relative min-h-[120px] w-full flex-1">
-        {/* Month gridlines, current month picked out. Matches the dashboard's
-            seasonal card so the two read as the same instrument. */}
+    <div className="flex w-full flex-col gap-item-gap">
+      {/* Stage segments. Buttons, because selecting one reads out its text. */}
+      <div className="flex w-full gap-tight-gap">
+        {SEASON_SPANS.map((span) => {
+          const { width } = spanBounds(span.startMonth, span.endMonth)
+          const isCurrent = span.season === currentSeason
+          const isSelected = span.season === selected
+          return (
+            <button
+              key={`${span.season}-${span.startMonth}`}
+              type="button"
+              onClick={() => setSelected(span.season)}
+              aria-pressed={isSelected}
+              style={{ width: `${width}%` }}
+              className={[
+                'flex min-w-0 flex-col gap-tight-gap rounded-sm px-inline-gap py-inline-gap text-left transition-colors duration-fast',
+                'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus',
+                isSelected
+                  ? 'bg-accent-muted'
+                  : 'bg-surface-subtle hover:bg-surface-hover',
+              ].join(' ')}
+            >
+              <span
+                className={[
+                  'truncate text-label',
+                  isSelected ? 'text-accent' : 'text-secondary',
+                ].join(' ')}
+              >
+                {SEASON_LABELS[span.season]}
+              </span>
+              {isCurrent && (
+                <span className="truncate text-micro text-muted">Now</span>
+              )}
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Flowering and your marks, on the same twelve-month axis. */}
+      <div className="relative h-[52px] w-full">
         <div
           aria-hidden="true"
           className="absolute inset-0 flex justify-between"
@@ -105,35 +163,28 @@ export function YearTimeline({
           {MONTH_INITIALS.map((month, i) => (
             <span
               key={`${month}-${i}`}
-              className={[
-                'h-full w-px bg-accent',
-                i + 1 === currentMonth ? '' : 'opacity-10',
-              ].join(' ')}
+              className="h-full w-px bg-accent opacity-10"
             />
           ))}
         </div>
 
-        {/* Today, as a full-height line. */}
         <div
           aria-hidden="true"
           className="absolute top-0 h-full w-px bg-accent"
           style={{ left: `${todayLeft}%` }}
         />
 
-        {/* The species: its flowering window. Sits in the upper third, with
-            your logged marks in the lower third, so the two rows read as
-            "what it does" above "what you did". */}
         {hasBloom && (
-          <div className="absolute inset-x-0 top-[38%]">
+          <div className="absolute inset-x-0 top-[30%]">
             <div
               className="absolute h-[4px] -translate-y-1/2 rounded-full bg-accent"
-              style={{ left: `${spanLeft}%`, width: `${spanWidth}%` }}
+              style={{ left: `${bloom.left}%`, width: `${bloom.width}%` }}
               role="img"
               aria-label={`Flowers ${MONTH_NAMES[firstMonth - 1]} to ${MONTH_NAMES[lastMonth - 1]}`}
             />
             <div
               className="absolute size-6 -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full border border-accent"
-              style={{ left: `${spanLeft + spanWidth / 2}%` }}
+              style={{ left: `${bloom.left + bloom.width / 2}%` }}
             >
               <PlantImage
                 src={imageUrl}
@@ -146,8 +197,7 @@ export function YearTimeline({
           </div>
         )}
 
-        {/* You: what you logged, same axis. */}
-        <div className="absolute inset-x-0 top-[76%]">
+        <div className="absolute inset-x-0 top-[74%]">
           {[...byMonth.entries()].map(([month, monthEvents]) => (
             <span
               key={month}
@@ -161,29 +211,39 @@ export function YearTimeline({
         </div>
       </div>
 
-      <div className="flex w-full flex-col gap-item-gap">
-        <div className="flex w-full items-center justify-between text-center text-micro">
-          {MONTH_INITIALS.map((month, i) => (
-            <span
-              key={`${month}-${i}`}
-              className={i + 1 === currentMonth ? 'text-accent' : 'text-muted'}
-            >
-              {month}
-            </span>
-          ))}
-        </div>
-        {/* Two rows sharing one axis need naming; the dashboard's card plots
-            only one kind of thing and can go without. */}
-        <div className="flex flex-wrap items-center gap-item-gap text-micro text-muted">
-          <span className="flex items-center gap-tight-gap">
-            <span className="h-1 w-4 rounded-full bg-accent" />
-            Flowering
+      <div className="flex w-full items-center justify-between text-center text-micro">
+        {MONTH_INITIALS.map((month, i) => (
+          <span
+            key={`${month}-${i}`}
+            className={
+              getCurrentSeason(new Date(Date.UTC(2000, i, 15))) ===
+              currentSeason
+                ? 'text-accent'
+                : 'text-muted'
+            }
+          >
+            {month}
           </span>
-          <span className="flex items-center gap-tight-gap">
-            <span className="size-2 rounded-xs bg-fern-600" />
-            You logged something
-          </span>
-        </div>
+        ))}
+      </div>
+
+      {/* The selected stage, in words. Null is the normal value for a stage
+          with nothing to describe, so it says so rather than collapsing and
+          shifting everything below it. */}
+      <p className="text-body leading-normal text-secondary">
+        <span className="text-primary">{SEASON_LABELS[selected]}. </span>
+        {selectedText ?? 'Nothing recorded for this stage.'}
+      </p>
+
+      <div className="flex flex-wrap items-center gap-item-gap text-micro text-muted">
+        <span className="flex items-center gap-tight-gap">
+          <span className="h-1 w-4 rounded-full bg-accent" />
+          Flowering
+        </span>
+        <span className="flex items-center gap-tight-gap">
+          <span className="size-2 rounded-xs bg-fern-600" />
+          You logged something
+        </span>
       </div>
     </div>
   )

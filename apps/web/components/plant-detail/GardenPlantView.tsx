@@ -317,6 +317,7 @@ export function GardenPlantView({
           today={now}
           plantName={plant.common_name}
           imageUrl={heroPhotos[0] ?? null}
+          rhythm={plant.seasonal_rhythm}
         />
       </Panel>
 

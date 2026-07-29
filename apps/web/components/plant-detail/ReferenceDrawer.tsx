@@ -17,7 +17,6 @@ import { DRAWER_MOTION } from '@/lib/drawer-motion'
 import { AboutSection } from './AboutSection'
 import { GoodForYourGardenSection } from './GoodForYourGardenSection'
 import { CareSection } from './CareSection'
-import { SeasonalRhythmSection } from './SeasonalRhythmSection'
 import { InYourGardenSection } from './InYourGardenSection'
 import { WorksWellWithSection } from './WorksWellWithSection'
 import { GoodForSection } from './GoodForSection'
@@ -53,7 +52,10 @@ export function ReferenceDrawer({
         <AboutSection description={plant.description} />
         <GoodForYourGardenSection bullets={bullets} />
         <CareSection plant={plant} />
-        <SeasonalRhythmSection rhythm={plant.seasonal_rhythm} />
+        {/* SeasonalRhythmSection is deliberately absent: the year timeline on
+            the page now reads out the same seasonal_rhythm text, stage by
+            stage, and this table was the second copy of it. The Explore
+            drawer still shows the table, since that page has no timeline. */}
         <InYourGardenSection plant={plant} />
         <WorksWellWithSection companions={companions} />
         <GoodForSection tags={plant.garden_use_tags} />
