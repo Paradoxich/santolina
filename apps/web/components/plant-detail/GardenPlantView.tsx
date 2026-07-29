@@ -48,6 +48,9 @@ const STATUS_LABEL: Record<string, string> = {
 
 const TRACKED_EVENTS: DiaryEventType[] = ['watered', 'fertilized', 'pruned']
 
+const CLICKABLE =
+  'cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus'
+
 const MS_PER_DAY = 1000 * 60 * 60 * 24
 
 function daysSince(date: string, now: Date): number {
@@ -131,6 +134,20 @@ export function GardenPlantView({
     notes,
     plant.common_name
   )
+
+  // The Diary card opens the drawer, empty or not — same affordance the
+  // dashboard's Plant care card uses to reach its full list.
+  const openDiaryProps = {
+    role: 'button',
+    tabIndex: 0,
+    onClick: onSeeAllNotes,
+    onKeyDown: (event: React.KeyboardEvent) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault()
+        onSeeAllNotes()
+      }
+    },
+  }
 
   return (
     <div className="flex flex-col gap-item-gap">
@@ -234,18 +251,22 @@ export function GardenPlantView({
         {notes.length === 0 ? (
           <Panel
             title="Diary"
-            className="relative isolate min-h-[280px] overflow-hidden lg:h-full lg:min-h-0"
+            {...openDiaryProps}
+            className={`relative isolate min-h-[280px] overflow-hidden lg:h-full lg:min-h-0 ${CLICKABLE}`}
           >
             <CardIllustration name="activity" />
+            {/* The card is the only way into the drawer, so an empty one has
+                to say what tapping it does. */}
             <p className="mt-auto max-w-[55%] text-body-small text-muted">
-              Nothing logged yet.
+              Nothing logged yet. Write the first note.
             </p>
           </Panel>
         ) : (
           <Panel
             title="Diary"
             meta={`${notes.length} ${notes.length === 1 ? 'note' : 'notes'}`}
-            className="h-full"
+            {...openDiaryProps}
+            className={`h-full ${CLICKABLE}`}
           >
             <ul className="flex min-h-0 w-full flex-1 flex-col overflow-hidden">
               {notes.slice(0, 4).map((note) => (
@@ -271,13 +292,12 @@ export function GardenPlantView({
                 </li>
               ))}
             </ul>
-            <button
-              type="button"
-              onClick={onSeeAllNotes}
-              className="mt-item-gap w-fit text-body-small text-secondary underline-offset-2 transition-colors duration-normal hover:text-primary hover:underline"
-            >
+            {/* Not a button: the whole card is one, and nesting a control
+                inside a role="button" breaks keyboard and screen reader
+                behaviour. This is the affordance label, nothing more. */}
+            <span className="mt-item-gap w-fit text-body-small text-secondary">
               See all notes
-            </button>
+            </span>
           </Panel>
         )}
       </div>

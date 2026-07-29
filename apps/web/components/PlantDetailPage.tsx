@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
@@ -38,6 +38,7 @@ import { DetailsSection } from './plant-detail/DetailsSection'
 import { StorySection } from './plant-detail/StorySection'
 import { StoryComposer } from './plant-detail/StoryComposer'
 import { GardenPlantView } from './plant-detail/GardenPlantView'
+import { DiaryDrawer } from './plant-detail/DiaryDrawer'
 
 /** Photo widths cycle to match the Figma strip (third photo clips at the edge). */
 const PHOTO_WIDTHS = [131, 175, 207]
@@ -88,7 +89,7 @@ export function PlantDetailPage({
 
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
   const [referenceOpen, setReferenceOpen] = useState(false)
-  const storyRef = useRef<HTMLDivElement>(null)
+  const [isDiaryOpen, setIsDiaryOpen] = useState(false)
 
   const [palette, setPalette] = useState(initialPalette)
   const [pendingAction, setPendingAction] = useState<'plan' | 'garden' | null>(
@@ -515,12 +516,7 @@ export function PlantDetailPage({
               heroPhotos={allPhotos}
               todayIso={todayIso}
               onHeroPhotoClick={setLightboxIndex}
-              onSeeAllNotes={() =>
-                storyRef.current?.scrollIntoView({
-                  behavior: 'smooth',
-                  block: 'start',
-                })
-              }
+              onSeeAllNotes={() => setIsDiaryOpen(true)}
             />
 
             <Panel
@@ -571,21 +567,10 @@ export function PlantDetailPage({
           </div>
         )}
 
-        {/* The full story stays a real section on the page, not a card: it is
-            the read-and-write surface, and the Diary card is a teaser into
-            it. Growing plants only reach it via the scroll above. */}
-        {isGrowing && (
-          <div ref={storyRef} className="mt-section-break">
-            <StorySection
-              plantId={plant.id}
-              plantName={plant.common_name}
-              notes={notes}
-              isGrowing={isGrowing}
-            />
-          </div>
-        )}
-
-        {showStory && (
+        {/* Growing plants read and write their story in the drawer, opened
+            from the Diary card. Everything else keeps it inline, where it is
+            the only place notes live. */}
+        {showStory && !isGrowing && (
           <div className="mt-section-break">
             <StoryComposer
               plantId={plant.id}
@@ -598,6 +583,20 @@ export function PlantDetailPage({
           </div>
         )}
       </div>
+
+      {isDiaryOpen && (
+        <DiaryDrawer
+          plantId={plant.id}
+          plantName={plant.common_name}
+          notes={notes}
+          paletteId={palette?.paletteId ?? null}
+          isGrowing={isGrowing}
+          onClose={() => setIsDiaryOpen(false)}
+          onAddedBackToGarden={({ paletteId }) =>
+            setPalette({ paletteId, status: 'planted' })
+          }
+        />
+      )}
 
       <Lightbox
         images={galleryImages}

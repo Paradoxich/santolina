@@ -13,7 +13,9 @@
  */
 
 import { useState } from 'react'
+import { ToastProvider } from '@paradoxui/ui'
 import { GardenPlantView } from '@/components/plant-detail/GardenPlantView'
+import { DiaryDrawer } from '@/components/plant-detail/DiaryDrawer'
 import { SAMPLE_PLANT, NOTES_RICH, NOTES_SPARSE, NOTES_NONE } from './sample'
 import type { DiaryNote } from '@/types/diary'
 
@@ -77,6 +79,7 @@ const TODAY_ISO = new Date().toISOString().slice(0, 10)
 export default function PlantPreviewPage() {
   const [density, setDensity] = useState<Density>('rich')
   const [width, setWidth] = useState<WidthMode>('product')
+  const [isDiaryOpen, setIsDiaryOpen] = useState(false)
 
   const notes = NOTES_BY_DENSITY[density]
 
@@ -88,66 +91,82 @@ export default function PlantPreviewPage() {
     }`
 
   return (
-    // Mimics the real app shell (sidebar offset + mr-12) so the width the
-    // cards get here is the width they get in the product.
-    <div className="min-h-screen bg-surface-page">
-      <div className="px-4 pb-20 md:ml-sidebar-offset md:mr-12 md:px-0 md:pb-0">
-        <div className={`${WIDTHS[width].className} pb-16 pt-8 md:pt-12`}>
-          <div className="mb-8 flex flex-col gap-item-gap rounded-md border border-divider-subtle bg-surface-subtle p-card-padding">
-            <p className="text-label text-muted">
-              Harness for the real component, with sample data. The live page is
-              /plants?plant=&lt;id&gt; for a plant you are growing.
+    // ToastProvider because the diary drawer's story components use useToast,
+    // which the real page gets from the (app) layout.
+    <ToastProvider>
+      {/* Mimics the real app shell (sidebar offset + mr-12) so the width the
+          cards get here is the width they get in the product. */}
+      <div className="min-h-screen bg-surface-page">
+        <div className="px-4 pb-20 md:ml-sidebar-offset md:mr-12 md:px-0 md:pb-0">
+          <div className={`${WIDTHS[width].className} pb-16 pt-8 md:pt-12`}>
+            <div className="mb-8 flex flex-col gap-item-gap rounded-md border border-divider-subtle bg-surface-subtle p-card-padding">
+              <p className="text-label text-muted">
+                Harness for the real component, with sample data. The live page
+                is /plants?plant=&lt;id&gt; for a plant you are growing.
+              </p>
+              <div className="flex flex-wrap items-center gap-tight-gap">
+                <span className="text-label text-secondary">
+                  How much is logged:
+                </span>
+                {DENSITY_LABELS.map(([value, label]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setDensity(value)}
+                    className={chip(density === value)}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+              <div className="flex flex-wrap items-center gap-tight-gap">
+                <span className="text-label text-secondary">Page width:</span>
+                {(Object.keys(WIDTHS) as WidthMode[]).map((value) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setWidth(value)}
+                    className={chip(width === value)}
+                  >
+                    {WIDTHS[value].label}
+                  </button>
+                ))}
+              </div>
+              <p className="text-label text-muted">{WIDTHS[width].note}</p>
+            </div>
+
+            <h1 className="text-title font-semibold text-primary">
+              {SAMPLE_PLANT.common_name}
+            </h1>
+            <p className="mt-3 text-body italic text-secondary">
+              {SAMPLE_PLANT.scientific_name}
             </p>
-            <div className="flex flex-wrap items-center gap-tight-gap">
-              <span className="text-label text-secondary">
-                How much is logged:
-              </span>
-              {DENSITY_LABELS.map(([value, label]) => (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => setDensity(value)}
-                  className={chip(density === value)}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-            <div className="flex flex-wrap items-center gap-tight-gap">
-              <span className="text-label text-secondary">Page width:</span>
-              {(Object.keys(WIDTHS) as WidthMode[]).map((value) => (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => setWidth(value)}
-                  className={chip(width === value)}
-                >
-                  {WIDTHS[value].label}
-                </button>
-              ))}
-            </div>
-            <p className="text-label text-muted">{WIDTHS[width].note}</p>
-          </div>
 
-          <h1 className="text-title font-semibold text-primary">
-            {SAMPLE_PLANT.common_name}
-          </h1>
-          <p className="mt-3 text-body italic text-secondary">
-            {SAMPLE_PLANT.scientific_name}
-          </p>
-
-          <div className="mt-8">
-            <GardenPlantView
-              plant={SAMPLE_PLANT}
-              notes={notes}
-              heroPhotos={HERO_PHOTOS}
-              todayIso={TODAY_ISO}
-              onHeroPhotoClick={() => {}}
-              onSeeAllNotes={() => {}}
-            />
+            <div className="mt-8">
+              <GardenPlantView
+                plant={SAMPLE_PLANT}
+                notes={notes}
+                heroPhotos={HERO_PHOTOS}
+                todayIso={TODAY_ISO}
+                onHeroPhotoClick={() => {}}
+                onSeeAllNotes={() => setIsDiaryOpen(true)}
+              />
+            </div>
           </div>
         </div>
+
+        {isDiaryOpen && (
+          <DiaryDrawer
+            plantId={SAMPLE_PLANT.id}
+            plantName={SAMPLE_PLANT.common_name}
+            notes={notes}
+            paletteId={null}
+            isGrowing
+            onClose={() => setIsDiaryOpen(false)}
+            onAddedBackToGarden={() => {}}
+          />
+        )}
       </div>
-    </div>
+    </ToastProvider>
   )
 }
