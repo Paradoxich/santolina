@@ -14,6 +14,11 @@ function isPublicPath(pathname: string): boolean {
   if (pathname === '/' || pathname === '/login') return true
   if (pathname.startsWith('/auth')) return true
   if (pathname.startsWith('/design-system')) return true
+  // TEMPORARY, remove before this branch merges: the plant-detail design
+  // preview. Static sample data, no queries, no user data. It sits outside
+  // /design-system only so it renders at the app shell's real width rather
+  // than the docs layout's 960px clamp, which is part of what is being judged.
+  if (pathname.startsWith('/plant-preview')) return true
   return false
 }
 
