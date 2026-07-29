@@ -54,6 +54,21 @@
  *   ./node_modules/.bin/tsx --env-file=.env.local scripts/pick-plant-images.ts --resume msgbatch_123
  *
  *   ./node_modules/.bin/tsx --env-file=.env.local scripts/pick-plant-images.ts --recheck
+ *
+ * VERIFY MODE (--verify) answers a different question about a different thing.
+ * The pick above is COMPARATIVE — "which of these candidates is best?" — and a
+ * `medium` result usually means two were close, or the winner carried a small
+ * flaw. Re-running the pick cannot resolve that; it just re-stages the same
+ * comparison. So --verify shows the model the ONE image that won, alone,
+ * alongside the plant's identity, and asks an absolute question: is this the
+ * right species, and is it good enough to be the hero? See the block comment
+ * above runVerify() for why this is not a re-roll of a judgment we dislike.
+ *
+ *   # Smoke test first, per the pipeline rules:
+ *   ./node_modules/.bin/tsx --env-file=.env.local scripts/pick-plant-images.ts \
+ *     --verify --round 8 --limit 3 --dry-run
+ *   # Real run:
+ *   ./node_modules/.bin/tsx --env-file=.env.local scripts/pick-plant-images.ts --verify --round 8
  */
 
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
@@ -63,6 +78,7 @@ import { getSupabaseAdmin } from '../lib/supabase-admin'
 import { getAnthropicClient, VISION_MODEL } from '../lib/anthropic-client'
 import { fetchAllRows } from '../lib/paginate'
 import {
+  displayUrlFor,
   fetchImageBlob,
   probeImage,
   type ImageBlob,
@@ -75,6 +91,14 @@ import {
   type ImageCandidate,
   type Measured,
 } from '../lib/image-shortlist'
+import {
+  requireScope,
+  scopeIds,
+  describeScope,
+  applyScope,
+  scopeGuard,
+  requireReasonForAll,
+} from './scope'
 
 // Below this a photo cannot fill an Explore card without visible softening.
 const MIN_LONG_EDGE = 500
@@ -116,6 +140,8 @@ interface Manifest {
   batchId: string
   createdAt: string
   model: string
+  /** null means the batch was built under --all. */
+  scopeIds?: string[] | null
   plants: Record<
     string,
     { commonName: string; incumbent: string | null; images: Measured[] }
@@ -407,6 +433,473 @@ function buildRequest(
   } as Anthropic.Messages.Batches.BatchCreateParams.Request
 }
 
+// ---------------------------------------------------------------------------
+// Verify mode — an absolute second look at the hero a pick already chose
+// ---------------------------------------------------------------------------
+
+/**
+ * WHY THIS IS NOT JUST RE-ROLLING UNTIL WE GET "high".
+ *
+ * That objection is the right one to raise, so it is answered here rather than
+ * left implicit. Three things make this a different question and not a second
+ * attempt at the same one:
+ *
+ *   1. It is ABSOLUTE, not comparative. The pick was shown up to six photos and
+ *      asked which is best; `medium` there is largely a statement about the
+ *      FIELD ("two were close", "the winner has a pot rim in it"). Verify is
+ *      shown exactly one photo and asked whether that photo, on its own, is the
+ *      right species and good enough to be the hero. A "close call between two
+ *      good photos" and "a plausible photo of possibly the wrong plant" are
+ *      indistinguishable in the pick's output and could not be more different
+ *      editorially. Only the second should block sign-off.
+ *
+ *   2. The verdict is COMPUTED, not asked for. The model never names a
+ *      confidence level, so it cannot be nudged toward the answer we want. It
+ *      answers two narrow factual questions and `mapVerdict` below turns those
+ *      into a confidence. The promotion rule is therefore in the diff, testable
+ *      and arguable, rather than in a prompt asking nicely for "high".
+ *
+ *   3. It can DEMOTE. A verified row can come out `low`, which is worse than
+ *      where it started and is the outcome that actually matters: a plausible
+ *      hero showing the wrong species is the most visible error the catalog can
+ *      make. If this pass only ever moved rows upward it would be laundering.
+ *
+ * It also runs ONCE per row: `image_verified_at` records the second look, so a
+ * row that stays `medium` after it stays medium. There is no third ask.
+ */
+
+interface VerifyAnswer {
+  species_match: 'yes' | 'unsure' | 'no'
+  hero_quality: 'good' | 'acceptable' | 'poor'
+  reason: string
+}
+
+const VERIFY_SCHEMA = {
+  type: 'object',
+  properties: {
+    species_match: {
+      type: 'string',
+      enum: ['yes', 'unsure', 'no'],
+      description:
+        'Whether the photo shows the named species. "unsure" when the photo is ' +
+        'too tight, too distant or too obscured to tell, or when the genus is ' +
+        'right but the species cannot be confirmed.',
+    },
+    hero_quality: {
+      type: 'string',
+      enum: ['good', 'acceptable', 'poor'],
+      description:
+        'How well this works as a large full-bleed card image, judged on ' +
+        'composition, focus, light and background.',
+    },
+    reason: {
+      type: 'string',
+      description:
+        'One or two sentences describing what is actually in the frame.',
+    },
+  },
+  required: ['species_match', 'hero_quality', 'reason'],
+  additionalProperties: false,
+}
+
+/**
+ * Turn the two factual answers into the confidence the catalog stores.
+ *
+ * `acceptable` quality with a confirmed species clears. That is deliberate and
+ * it is where this pass earns its keep: the strict bar exists to catch the
+ * wrong plant, not an unremarkable photograph. Holding a correctly-identified,
+ * perfectly usable photo off sign-off because it is merely fine would make
+ * `is_curated` a photography award. An unconfirmed species never clears, at any
+ * quality.
+ */
+export function mapVerdict(a: VerifyAnswer): 'high' | 'medium' | 'low' {
+  if (a.species_match === 'no' || a.hero_quality === 'poor') return 'low'
+  if (a.species_match === 'unsure') return 'medium'
+  return 'high'
+}
+
+function buildVerifyPrompt(plant: VerifyRow): string {
+  const name = plant.scientific_name
+    ? `${plant.common_name} (${plant.scientific_name})`
+    : plant.common_name
+  const blooms = plant.bloom_months?.length
+    ? `Recorded bloom months: ${plant.bloom_months.join(', ')}.`
+    : 'Bloom season is unrecorded for this plant.'
+
+  return `This single photograph is the hero image for ${name} in a garden planning app. It appears large and full-bleed on a browsing card. Judge it on its own merits — there is nothing to compare it against and no alternative to pick.
+
+${blooms}
+
+Answer two separate questions.
+
+1. species_match — does this photograph show ${name}?
+   "yes" only if what you can see is consistent with this species and you would
+   stand behind it. "unsure" if the frame is too tight, too distant, too
+   obscured, or shows a plant you can place only to the genus. "no" if it is a
+   different plant, or is not a living plant at all (a herbarium sheet, a
+   pressed specimen, a botanical illustration, a seed packet).
+   Do not resolve doubt in the photo's favour. "unsure" is a useful answer and
+   costs nothing; a wrong "yes" puts the wrong plant on a plant's own page,
+   which a reader will notice without knowing anything about plants.
+
+2. hero_quality — how well does it work as a large card image?
+   "good": the plant is clearly the subject and in focus, the light and
+   background do it justice.
+   "acceptable": usable and clear, but unremarkable, or carrying a minor
+   distraction such as a pot rim, a fence, decking or a busy background.
+   "poor": blurry, badly exposed, the plant hard to make out or incidental to
+   the frame, or the shot is documentary rather than horticultural (hands,
+   rulers, scale bars, labels, nursery trays, packaging).
+
+These are independent. A beautiful photo of the wrong plant is species_match
+"no" with hero_quality "good", and saying so is more useful than averaging them.
+
+In your reason, describe what is actually in the frame rather than what a good
+photo of this plant would contain. If there is a pot or a background object, say
+so. Do not comment on punctuation or wording of anything.`
+}
+
+interface VerifyRow {
+  id: string
+  common_name: string
+  scientific_name: string | null
+  bloom_months: number[] | null
+  image_url_curated: string | null
+  image_pick_confidence: string | null
+  image_pick_reason: string | null
+  image_attribution: string | null
+}
+
+interface VerifyManifest {
+  batchId: string
+  createdAt: string
+  model: string
+  plants: Record<
+    string,
+    {
+      commonName: string
+      scientificName: string | null
+      url: string
+      priorConfidence: string | null
+      priorReason: string | null
+    }
+  >
+}
+
+function verifyManifestPath(batchId: string): string {
+  return join(MANIFEST_DIR, `verify-${batchId}.json`)
+}
+
+async function runVerify(
+  supabase: ReturnType<typeof getSupabaseAdmin>,
+  anthropic: Anthropic,
+  opts: { dryRun: boolean; limit: number | null; reverify: boolean }
+) {
+  // Mandatory, like every other pass that bills Claude per row (scripts/scope.ts).
+  const scope = requireScope(
+    'pick-plant-images --verify',
+    'Verification is a vision call per row, so an unscoped run bills the ' +
+      'whole medium remainder of the catalog rather than the round you meant.'
+  )
+  const ids = scopeIds(scope)
+  console.log(`${describeScope(scope, ids)}\n`)
+
+  let rows = await fetchAllRows<VerifyRow>((from, to) => {
+    let q = supabase
+      .from('plants')
+      .select(
+        'id, common_name, scientific_name, bloom_months, image_url_curated, image_pick_confidence, image_pick_reason, image_attribution'
+      )
+      // Only `medium`. `high` is settled and `low` needs a new candidate, not a
+      // second opinion on the same photo.
+      .eq('image_pick_confidence', 'medium')
+      .not('image_url_curated', 'is', null)
+    if (ids) q = q.in('id', ids)
+    if (!opts.reverify) q = q.is('image_verified_at', null)
+    return q.order('id').range(from, to)
+  })
+
+  rows.sort((a, b) => a.common_name.localeCompare(b.common_name))
+  if (opts.limit) rows = rows.slice(0, opts.limit)
+
+  if (rows.length === 0) {
+    console.log(
+      'Nothing to verify — no unverified medium-confidence heroes in scope.'
+    )
+    return
+  }
+
+  console.log(`Verifying ${rows.length} medium-confidence hero(es).\n`)
+
+  const requests: Anthropic.Messages.Batches.BatchCreateParams.Request[] = []
+  const manifestPlants: VerifyManifest['plants'] = {}
+
+  for (const [i, plant] of rows.entries()) {
+    const url = plant.image_url_curated!
+    // Wikimedia rejects Anthropic's fetcher, so those go as base64 — the same
+    // constraint the pick pass hit, and the same fix. Decided from the URL
+    // host, not from image_attribution: attribution is a rendering concern and
+    // a row could carry one for another reason, whereas the host is the thing
+    // that actually breaks the fetch.
+    const isWikimedia = /(^|\.)wikimedia\.org$/.test(new URL(url).hostname)
+    const blob = isWikimedia ? await fetchImageBlob(url) : null
+    if (isWikimedia && !blob) {
+      console.log(
+        `${pad(i + 1)}/${rows.length} ${plant.common_name} — hero image unfetchable, skipping`
+      )
+      continue
+    }
+
+    console.log(`${pad(i + 1)}/${rows.length} ${plant.common_name}`)
+    if (opts.dryRun) {
+      console.log(`        was: ${plant.image_pick_reason ?? '(no reason)'}`)
+      console.log(`        url: ${url}`)
+    }
+
+    requests.push({
+      custom_id: plant.id,
+      params: {
+        model: VISION_MODEL,
+        // Same reasoning as the pick pass: thinking shares this budget.
+        max_tokens: 4096,
+        output_config: {
+          effort: 'medium',
+          format: {
+            type: 'json_schema',
+            schema: VERIFY_SCHEMA as unknown as Record<string, unknown>,
+          },
+        },
+        messages: [
+          {
+            role: 'user',
+            content: [
+              blob
+                ? {
+                    type: 'image' as const,
+                    source: {
+                      type: 'base64' as const,
+                      media_type: blob.mediaType,
+                      data: blob.data,
+                    },
+                  }
+                : {
+                    type: 'image' as const,
+                    source: { type: 'url' as const, url },
+                  },
+              { type: 'text' as const, text: buildVerifyPrompt(plant) },
+            ],
+          },
+        ],
+      },
+    } as Anthropic.Messages.Batches.BatchCreateParams.Request)
+
+    manifestPlants[plant.id] = {
+      commonName: plant.common_name,
+      scientificName: plant.scientific_name,
+      url,
+      priorConfidence: plant.image_pick_confidence,
+      priorReason: plant.image_pick_reason,
+    }
+  }
+
+  if (opts.dryRun) {
+    console.log(
+      `\n--dry-run: ${requests.length} request(s) built, nothing sent, nothing written.`
+    )
+    return
+  }
+  if (requests.length === 0) return
+
+  const batch = await anthropic.messages.batches.create({ requests })
+  const manifest: VerifyManifest = {
+    batchId: batch.id,
+    createdAt: new Date().toISOString(),
+    model: VISION_MODEL,
+    plants: manifestPlants,
+  }
+  mkdirSync(MANIFEST_DIR, { recursive: true })
+  writeFileSync(verifyManifestPath(batch.id), JSON.stringify(manifest, null, 2))
+
+  console.log(`\nBatch submitted: ${batch.id}`)
+  console.log(`Manifest: ${verifyManifestPath(batch.id)}`)
+  console.log(`Reattach with:\n  --verify --resume ${batch.id}\n`)
+
+  await collectVerifyResults(anthropic, supabase, manifest)
+}
+
+/** Poll a verify batch and write each verdict back. */
+async function collectVerifyResults(
+  anthropic: Anthropic,
+  supabase: ReturnType<typeof getSupabaseAdmin>,
+  manifest: VerifyManifest
+) {
+  for (;;) {
+    const batch = await anthropic.messages.batches.retrieve(manifest.batchId)
+    if (batch.processing_status === 'ended') break
+    const c = batch.request_counts
+    console.log(
+      `  ${batch.processing_status} — processing ${c.processing}, succeeded ${c.succeeded}, errored ${c.errored}`
+    )
+    await sleep(POLL_INTERVAL_MS)
+  }
+
+  console.log('\nBatch ended. Writing verdicts.\n')
+
+  const stats = { high: 0, medium: 0, low: 0, errored: 0 }
+  const records: VerifyRecord[] = []
+
+  for await (const entry of await anthropic.messages.batches.results(
+    manifest.batchId
+  )) {
+    const plantId = entry.custom_id
+    const m = manifest.plants[plantId]
+    if (!m) {
+      console.log(`  ${plantId} — not in manifest, skipping`)
+      stats.errored++
+      continue
+    }
+
+    if (entry.result.type !== 'succeeded') {
+      console.log(`  ${m.commonName} — ${entry.result.type}`)
+      stats.errored++
+      continue
+    }
+    const text = entry.result.message.content.find((b) => b.type === 'text')
+    if (!text || text.type !== 'text') {
+      console.log(
+        `  ${m.commonName} — no text block (stop_reason ${entry.result.message.stop_reason})`
+      )
+      stats.errored++
+      continue
+    }
+
+    let answer: VerifyAnswer
+    try {
+      answer = JSON.parse(text.text) as VerifyAnswer
+    } catch {
+      console.log(`  ${m.commonName} — unparseable response`)
+      stats.errored++
+      continue
+    }
+
+    const confidence = mapVerdict(answer)
+    const changed = confidence !== m.priorConfidence
+
+    const update: Record<string, unknown> = {
+      image_pick_confidence: confidence,
+      image_pick_reason: `verify: ${answer.reason}`,
+      image_verified_at: new Date().toISOString(),
+    }
+    // The inverse obligation from migration 20260728220852: a pass that moves
+    // something the editorial verdict rested on must null that verdict's stamp.
+    // Criterion 1 reads image_pick_confidence directly, so a row whose
+    // confidence moved has an editorial verdict built on a fact that no longer
+    // holds — in either direction.
+    if (changed) update.editorial_checked_at = null
+
+    const { error } = await supabase
+      .from('plants')
+      .update(update)
+      .eq('id', plantId)
+    if (error) {
+      console.log(`  ${m.commonName} — DB write failed: ${error.message}`)
+      stats.errored++
+      continue
+    }
+
+    stats[confidence]++
+    console.log(
+      `  ${m.commonName} — ${m.priorConfidence} → ${confidence} (species ${answer.species_match}, quality ${answer.hero_quality}): ${answer.reason}`
+    )
+    records.push({
+      id: plantId,
+      common_name: m.commonName,
+      scientific_name: m.scientificName,
+      url: m.url,
+      prior_confidence: m.priorConfidence,
+      prior_reason: m.priorReason,
+      species_match: answer.species_match,
+      hero_quality: answer.hero_quality,
+      confidence,
+      reason: answer.reason,
+    })
+  }
+
+  console.log(
+    `\nDone. cleared (high) ${stats.high}, still unresolved (medium) ${stats.medium}, ` +
+      `demoted (low) ${stats.low}, errored ${stats.errored}.`
+  )
+  if (stats.low) {
+    console.log(
+      '\nThe low rows need a NEW candidate image (Wikimedia or a manual hero), ' +
+        'not another re-check. They are in the report below.'
+    )
+  }
+  writeVerifyReport(records)
+  // Errored rows keep image_verified_at NULL, so a plain re-run retries them.
+}
+
+interface VerifyRecord {
+  id: string
+  common_name: string
+  scientific_name: string | null
+  url: string
+  prior_confidence: string | null
+  prior_reason: string | null
+  species_match: string
+  hero_quality: string
+  confidence: 'high' | 'medium' | 'low'
+  reason: string
+}
+
+/**
+ * Written from this run's records, not from the database — unlike the pick
+ * report, which describes catalog state. This one describes a set of DECISIONS
+ * and their before/after, which is only knowable here: once the verdict is
+ * written, the prior confidence is gone from the row.
+ */
+function writeVerifyReport(records: VerifyRecord[]) {
+  if (records.length === 0) return
+  mkdirSync(REPORTS_DIR, { recursive: true })
+  const jsonOut = join(REPORTS_DIR, 'image-verify.json')
+  writeFileSync(jsonOut, JSON.stringify(records, null, 2) + '\n')
+
+  const group = (c: string) => records.filter((r) => r.confidence === c)
+  const lines = [
+    '# Hero image verification — review',
+    '',
+    `${records.length} medium-confidence hero(es) re-judged on their own merits.`,
+    `Result: ${group('high').length} cleared, ${group('medium').length} still unresolved, ${group('low').length} demoted.`,
+    '',
+    'Demoted first — those need a new candidate image, not another check.',
+    '',
+  ]
+  const section = (title: string, rows: VerifyRecord[]) => {
+    if (!rows.length) return
+    lines.push(`## ${title} (${rows.length})`, '')
+    for (const r of rows) {
+      lines.push(
+        `### ${r.common_name}${r.scientific_name ? ` (${r.scientific_name})` : ''}`,
+        '',
+        `species ${r.species_match}, quality ${r.hero_quality}`,
+        '',
+        r.reason,
+        '',
+        `_pick said:_ ${r.prior_reason ?? '(no reason recorded)'}`,
+        '',
+        `<img src="${r.url}" width="280">`,
+        ''
+      )
+    }
+  }
+  section('Demoted to low', group('low'))
+  section('Still medium', group('medium'))
+  section('Cleared to high', group('high'))
+
+  writeFileSync(join(REPORTS_DIR, 'image-verify.md'), lines.join('\n') + '\n')
+  console.log(`\nVerify report: ${join(REPORTS_DIR, 'image-verify.md')}`)
+}
+
 async function main() {
   const args = process.argv.slice(2)
   const dryRun = args.includes('--dry-run')
@@ -415,6 +908,23 @@ async function main() {
   const limit = parseLimit()
 
   const supabase = getSupabaseAdmin()
+
+  if (args.includes('--verify')) {
+    const anthropic = getAnthropicClient()
+    if (resumeId) {
+      const manifest = JSON.parse(
+        readFileSync(verifyManifestPath(resumeId), 'utf8')
+      ) as VerifyManifest
+      await collectVerifyResults(anthropic, supabase, manifest)
+      return
+    }
+    await runVerify(supabase, anthropic, {
+      dryRun,
+      limit,
+      reverify: args.includes('--reverify'),
+    })
+    return
+  }
 
   // Rebuild the review file from current state without touching the API.
   if (args.includes('--report-only')) {
@@ -430,6 +940,20 @@ async function main() {
     return
   }
 
+  // Scope is mandatory here too. `image_checked_at IS NULL` is a state
+  // predicate, not a scope: it selects every plant the pass has never reached,
+  // across every round, so a routine run for a new batch quietly picks heroes
+  // for older ones as well.
+  const scope = requireScope(
+    'pick-plant-images',
+    'This pass bills a vision call per plant and OVERWRITES the hero image. ' +
+      'An unscoped run would re-pick for every unchecked plant in the catalog.'
+  )
+  const scopeIdList = scopeIds(scope)
+  const whyAll = requireReasonForAll(scope)
+  console.log(describeScope(scope, scopeIdList))
+  if (whyAll) console.log(`Whole-catalog run, because: ${whyAll}`)
+
   // Ordered by id — paging needs a unique column to be stable.
   let plants = await fetchAllRows<PlantRow>((from, to) => {
     let q = supabase
@@ -439,7 +963,7 @@ async function main() {
       )
       .not('image_candidates', 'is', null)
     if (!recheck) q = q.is('image_checked_at', null)
-    return q.order('id').range(from, to)
+    return applyScope(q, scopeIdList).order('id').range(from, to)
   })
 
   plants.sort((a, b) => a.common_name.localeCompare(b.common_name))
@@ -501,6 +1025,19 @@ async function main() {
         )
       }
       for (const r of rejected) console.log(`          drop: ${r}`)
+    } else {
+      // A dropped Wikimedia candidate is reported even outside a dry run,
+      // because it is the one kind of loss nobody would otherwise notice.
+      // Trefle candidates arrive in bulk and a dead one among twenty-eight is
+      // routine; a Wikimedia candidate was sourced BY HAND for this exact
+      // plant, usually because nothing else was good enough. Losing it puts
+      // the pick back among the photos that were already judged inadequate,
+      // stamps the row, and says nothing. Probing now retries transient
+      // failures (lib/image-probe.ts), so anything still dropping here has
+      // failed three times and is worth a human seeing.
+      for (const r of rejected) {
+        if (r.startsWith('wikimedia:')) console.log(`          drop: ${r}`)
+      }
     }
 
     // Pre-fetch Wikimedia images as base64 (Anthropic can't fetch the upload
@@ -561,6 +1098,10 @@ async function main() {
     batchId: batch.id,
     createdAt: new Date().toISOString(),
     model: VISION_MODEL,
+    // The scope's ids ride along in the manifest so a --resume days later is
+    // still bound by the scope the batch was built under. Re-parsing the flags
+    // at resume time would let a different --round silently rebind the writes.
+    scopeIds: scopeIdList,
     plants: manifestPlants,
   }
   const path = saveManifest(manifest)
@@ -592,6 +1133,12 @@ async function collectResults(
   }
 
   console.log('\nBatch ended. Writing picks.\n')
+
+  // Enforced from the MANIFEST, not from this invocation's flags, so a
+  // --resume days later is still bound by the scope the batch was built
+  // under. Re-reading the flags here would let a different --round rebind
+  // where the writes land, which is the one thing --resume must never do.
+  const allowed = manifest.scopeIds ? new Set(manifest.scopeIds) : null
 
   const stats = { high: 0, medium: 0, low: 0, none: 0, errored: 0 }
   const review: string[] = []
@@ -638,6 +1185,14 @@ async function collectResults(
       stats.errored++
       continue
     }
+    if (allowed && !allowed.has(plantId)) {
+      console.log(
+        `  ${entryManifest.commonName} — outside this batch's scope, refusing to write`
+      )
+      stats.errored++
+      continue
+    }
+
     const plant = {
       common_name: entryManifest.commonName,
       image_url: entryManifest.incumbent,
@@ -681,10 +1236,21 @@ async function collectResults(
       continue
     }
 
+    // Store a rendition when the winner is an oversized Commons original. The
+    // photograph is identical and the attribution unchanged; only the bytes a
+    // browser is asked to pull differ.
+    const display = await displayUrlFor(chosen.url)
+    if (display.kind === 'unmeasured') {
+      console.log(
+        `  ${plant.common_name} — could not size-check the winning image (${display.reason}); storing the original`
+      )
+    }
+    const displayUrl = display.url
+
     const { error } = await supabase
       .from('plants')
       .update({
-        image_url_curated: chosen.url,
+        image_url_curated: displayUrl,
         // Credit the source when it requires one (Wikimedia); a Trefle pick
         // carries no attribution, so this clears any stale credit from a prior
         // Wikimedia pick that has since been beaten by a Trefle photo.
@@ -692,6 +1258,19 @@ async function collectResults(
         image_pick_confidence: pick.confidence,
         image_pick_reason: pick.reason,
         image_checked_at: new Date().toISOString(),
+        // The inverse obligation from migration 20260728220852. This pass
+        // decides the hero, and criterion 1 of the editorial bar is "the image
+        // shows the right plant" — so any editorial verdict on this row was
+        // made about whatever photograph used to be here. Keeping the stamp
+        // would leave an approval attached to an image nobody signed off.
+        //
+        // Nulled unconditionally rather than only when the URL changes: a
+        // re-pick that lands on the same photo still rewrites the confidence
+        // the verdict was read from, and "same URL" is not the same claim as
+        // "same judgment".
+        editorial_checked_at: null,
+        // Likewise the verification: it was a judgment about a specific photo.
+        image_verified_at: null,
       })
       .eq('id', plantId)
 
@@ -823,7 +1402,10 @@ async function writeReviewReport(
   console.log(`\nReview report: ${MD_OUT} (${rows.length} plant(s))`)
 }
 
-main().catch((err) => {
-  console.error(err)
-  process.exit(1)
-})
+// Importable for tests without running main().
+if (require.main === module) {
+  main().catch((err) => {
+    console.error(err)
+    process.exit(1)
+  })
+}

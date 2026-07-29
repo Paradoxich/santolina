@@ -67,7 +67,7 @@
  * Run scripts/backup-catalog.ts first. restore-catalog.ts is the undo.
  */
 
-import { writeFileSync } from 'node:fs'
+import { readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { getSupabaseAdmin } from '../lib/supabase-admin'
 import { fetchAllRows } from '../lib/paginate'
@@ -106,8 +106,12 @@ interface PlantRow {
   image_url: string | null
   image_url_curated: string | null
   image_pick_confidence: string | null
+  image_verified_at: string | null
   is_curated: boolean | null
   editorial_checked_at: string | null
+  editorial_image_at: string | null
+  editorial_description_at: string | null
+  editorial_tags_at: string | null
 }
 
 /** One criterion's outcome. `open` means unresolved, which blocks approval. */
@@ -172,9 +176,17 @@ function judgeImage(p: PlantRow): {
   if (conf === 'medium')
     return {
       verdict: 'open',
-      reason:
-        'image pass: medium confidence — plausible but uncommitted, so the ' +
-        'hero is unverified. A targeted vision re-check clears this.',
+      // Two very different situations wear the same confidence, and telling
+      // them apart is the difference between "one cheap command clears this"
+      // and "this needs a photograph nobody has yet".
+      reason: p.image_verified_at
+        ? 'image pass: medium confidence, and it SURVIVED the targeted ' +
+          're-check (pick-plant-images --verify) — the species could not be ' +
+          'confirmed from this photo. Needs a new candidate image, not ' +
+          'another check.'
+        : 'image pass: medium confidence — plausible but uncommitted, so the ' +
+          'hero is unverified. A targeted vision re-check clears this ' +
+          '(pick-plant-images --verify).',
     }
   return { verdict: 'fail', reason: `image pass: ${conf} confidence` }
 }
@@ -356,11 +368,50 @@ Respond with ONLY valid JSON: {"verdict": "ok"|"weak", "reason": string}`
 // Report
 // ---------------------------------------------------------------------------
 
-function writeReport(findings: Finding[], scopeLabel: string) {
+/**
+ * Merge this run's findings over whatever the report already held.
+ *
+ * A partial re-run must not destroy the queue. `--new-only` and `--ids` runs
+ * are the NORMAL way this pass is used — re-judging the handful of rows whose
+ * image confidence just moved — and a plain overwrite meant a 9-row run
+ * replaced a 101-row report, taking with it the recorded blockers for every
+ * row still held. That happened on 2026-07-29: six flagged tag errors were
+ * only recoverable because someone had summarised three of them in a handoff.
+ *
+ * This is the same failure `writeReviewReport` in pick-plant-images was fixed
+ * for ("retrying four transient failures replaced a 490-plant review file with
+ * a 4-plant one"), arrived at independently in a second script. The blockers
+ * are the only durable record of WHY a row was held — the database keeps the
+ * verdict but not the reasoning — so the file is the artefact, not a log.
+ *
+ * Newest wins per plant id, and a row this run did not touch is carried
+ * forward untouched.
+ */
+function mergeFindings(previous: Finding[], current: Finding[]): Finding[] {
+  const byId = new Map(previous.map((f) => [f.id, f]))
+  for (const f of current) byId.set(f.id, f)
+  return [...byId.values()].sort((a, b) =>
+    a.common_name.localeCompare(b.common_name)
+  )
+}
+
+function readPreviousFindings(jsonPath: string): Finding[] {
+  try {
+    const parsed = JSON.parse(readFileSync(jsonPath, 'utf8')) as {
+      findings?: Finding[]
+    }
+    return parsed.findings ?? []
+  } catch {
+    return []
+  }
+}
+
+function writeReport(current: Finding[], scopeLabel: string) {
   const slug = scopeLabel.replace(/[^a-z0-9]+/gi, '-').toLowerCase()
   const jsonPath = join(REPORTS_DIR, `editorial-${slug}.json`)
   const mdPath = join(REPORTS_DIR, `editorial-${slug}.md`)
 
+  const findings = mergeFindings(readPreviousFindings(jsonPath), current)
   writeFileSync(jsonPath, JSON.stringify({ findings }, null, 2))
 
   const approved = findings.filter((f) => f.approved)
@@ -411,7 +462,7 @@ async function main() {
     let q = db
       .from('plants')
       .select(
-        'id, common_name, scientific_name, plant_type_label, description, style_tags, space_types, bloom_months, bloom_color, foliage_color, is_greenery, height_min_cm, height_max_cm, image_url, image_url_curated, image_pick_confidence, is_curated, editorial_checked_at'
+        'id, common_name, scientific_name, plant_type_label, description, style_tags, space_types, bloom_months, bloom_color, foliage_color, is_greenery, height_min_cm, height_max_cm, image_url, image_url_curated, image_pick_confidence, image_verified_at, is_curated, editorial_checked_at, editorial_image_at, editorial_description_at, editorial_tags_at'
       )
       .order('id')
       .range(from, to)
@@ -433,9 +484,39 @@ async function main() {
   for (const [i, p] of selected.entries()) {
     const tag = `[${i + 1}/${selected.length}] ${p.common_name}`
     try {
-      const image = judgeImage(p)
+      // ONLY judge what is actually open. Each criterion carries its own
+      // stamp (migration 20260729140000), so a row whose photo changed has
+      // exactly one open criterion — and that one is decided mechanically,
+      // for free, from the confidence the vision pass already persisted.
+      //
+      // This is the whole point of splitting the verdict. Under the single
+      // flag, removing one style tag from Rowan re-opened the description and
+      // the pass rewrote copy nobody had asked it to touch.
+      const needImage = !p.editorial_image_at
+      const needDescription = !p.editorial_description_at
+      const needTags = !p.editorial_tags_at
 
-      const review = await reviewPlant(p)
+      if (!needImage && !needDescription && !needTags) {
+        console.log(`  ${tag}: already clear on all three criteria, skipping`)
+        continue
+      }
+
+      const image = needImage
+        ? judgeImage(p)
+        : ({ verdict: 'pass', reason: 'cleared previously' } as const)
+
+      // The model is called only when a criterion it decides is open. A row
+      // needing just the image costs nothing at all.
+      const review =
+        needDescription || needTags
+          ? await reviewPlant(p)
+          : {
+              descriptionVerdict: 'ok' as const,
+              descriptionReason: 'cleared previously',
+              tagsVerdict: 'ok' as const,
+              tagsReason: 'cleared previously',
+              rewrite: null,
+            }
 
       const description: Finding['description'] = {
         verdict: 'pass',
@@ -443,7 +524,10 @@ async function main() {
         rewritten: false,
       }
 
-      if (review.descriptionVerdict === 'ok') {
+      if (!needDescription) {
+        // Cleared previously and unchanged since — the trigger would have
+        // re-opened it otherwise.
+      } else if (review.descriptionVerdict === 'ok') {
         // Even an approved description has to clear the mechanical rules.
         const fault = mechanicalCopyFault(p.description ?? '')
         if (fault) {
@@ -488,7 +572,7 @@ async function main() {
         verdict: (review.tagsVerdict === 'ok'
           ? 'pass'
           : 'fail') as CriterionVerdict,
-        reason: review.tagsReason,
+        reason: needTags ? review.tagsReason : 'cleared previously',
       }
 
       const blockers: string[] = []
@@ -517,11 +601,24 @@ async function main() {
       )
 
       if (!DRY_RUN) {
+        const now = new Date().toISOString()
         const patch: Record<string, unknown> = {
-          editorial_checked_at: new Date().toISOString(),
+          editorial_checked_at: now,
         }
         if (description.rewritten) patch.description = description.after
+
+        // Each criterion that PASSED gets its stamp. A criterion that failed
+        // is left NULL, which is what makes the next run re-judge exactly it
+        // and nothing else.
+        //
+        // These are written in the same statement as the description rewrite
+        // on purpose: the trigger skips a criterion whose stamp this UPDATE
+        // changes, so the rewrite cannot invalidate the approval it is part of.
+        if (image.verdict === 'pass') patch.editorial_image_at = now
+        if (description.verdict === 'pass') patch.editorial_description_at = now
+        if (tags.verdict === 'pass') patch.editorial_tags_at = now
         if (approved) patch.is_curated = true
+
         const { error } = await db.from('plants').update(patch).eq('id', p.id)
         if (error) throw new Error(`DB write failed: ${error.message}`)
       }

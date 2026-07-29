@@ -14,6 +14,16 @@
  * rule from the July 28 audit). `curate-editorial.ts` imports it; anything
  * else that needs to state the bar imports it rather than restating it.
  *
+ * THE THREE ARE JUDGED AND RECORDED SEPARATELY (migration 20260729140000).
+ * Each has its own stamp, and `is_curated` is true only when all three are
+ * set. That is not bookkeeping neatness: under a single flag, changing any one
+ * of these re-opened all three, and re-opening the description means this pass
+ * may REWRITE the copy. Removing one style tag from Rowan on 2026-07-29 came
+ * back with its description rewritten, which nobody had asked for. Criterion 1
+ * is also free to re-decide — it reads a persisted confidence — so the common
+ * case of a hero image changing now costs nothing instead of two model calls
+ * and a side effect on the text.
+ *
  * Criterion 1 is deliberately NOT re-judged with vision here. The image pass
  * (PR #88) already made that call per row and persisted it as
  * `image_pick_confidence`, so re-asking is paying twice for the same

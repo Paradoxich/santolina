@@ -31,6 +31,13 @@
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { getSupabaseAdmin } from '../lib/supabase-admin'
+import {
+  requireScope,
+  scopeIds,
+  describeScope,
+  scopeGuard,
+  requireReasonForAll,
+} from './scope'
 import { getAnthropicClient, CURATION_MODEL } from '../lib/anthropic-client'
 import type { DbPlant, PlantType } from '../lib/plants-db'
 import { fetchAllRows } from '../lib/paginate'
@@ -137,12 +144,24 @@ function parseRound(): string | null {
 
 // Stamp a row as botanically checked. Operational metadata only — never
 // touches a catalog field, so the flags-only rule (§20) holds.
+/**
+ * The id to stamp, refusing if it is outside the active scope.
+ *
+ * A guard is set up in main() and consumed here, so the module-level indirection
+ * is deliberate: the check has to sit ON the write, not near it.
+ */
+let activeGuard: ((id: string) => void) | null = null
+function guardStampTarget(id: string): string {
+  activeGuard?.(id)
+  return id
+}
+
 async function stampChecked(id: string): Promise<void> {
   const db = getSupabaseAdmin()
   const { error } = await db
     .from('plants')
     .update({ botanical_checked_at: new Date().toISOString() })
-    .eq('id', id)
+    .eq('id', guardStampTarget(id))
   if (error) throw new Error(`Failed to stamp ${id}: ${error.message}`)
 }
 
@@ -368,19 +387,19 @@ async function main() {
   // only narrows to a batch once the REST of the catalog carries a stamp, and
   // rows seeded before the stamp column shipped never got backfilled (see the
   // --round note in this file's header).
-  let roundIds: string[] | null = null
-  if (roundLabel) {
-    const manifest = readRoundManifest(roundLabel)
-    if (!manifest) {
-      throw new Error(
-        `No manifest for round "${roundLabel}" — expected rounds/${roundLabel}/manifest.json`
-      )
-    }
-    roundIds = manifest.seeded_ids
-    console.log(
-      `\nScoping to round ${manifest.label}: ${roundIds.length} seeded plant(s).`
-    )
-  }
+  // Scope is MANDATORY (scripts/scope.ts). It used to be optional here, with
+  // `--new-only` as the fallback — and `--new-only` is a state predicate, not
+  // a scope, so a run without --round quietly reached every unstamped plant in
+  // the catalog and billed for it.
+  const scope = requireScope(
+    'cross-check-plants',
+    'This guard bills Claude a blind second-opinion call per plant. An unscoped run re-checks the whole catalog, which is what every round did before the stamp baseline was backfilled.'
+  )
+  const roundIds = scopeIds(scope)
+  const whyAll = requireReasonForAll(scope)
+  activeGuard = scopeGuard(scope, roundIds)
+  console.log(`\n${describeScope(scope, roundIds)}`)
+  if (whyAll) console.log(`Whole-catalog run, because: ${whyAll}`)
 
   console.log('\nFetching AI-drafted plants from Supabase...')
   const data = await fetchAllRows<Record<string, unknown>>((from, to) => {

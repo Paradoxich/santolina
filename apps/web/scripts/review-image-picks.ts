@@ -13,17 +13,30 @@
  *
  * Usage (from apps/web):
  *   ./node_modules/.bin/tsx --env-file=.env.local scripts/review-image-picks.ts
- *   ./node_modules/.bin/tsx --env-file=.env.local scripts/review-image-picks.ts --all
+ *   ./node_modules/.bin/tsx --env-file=.env.local scripts/review-image-picks.ts --round 8
+ *   ./node_modules/.bin/tsx --env-file=.env.local scripts/review-image-picks.ts --everything
  *   open reports/image-picks.html
  *
  * Default scope is the review queue (medium confidence and anything with no
- * usable photo). --all includes the high-confidence picks too.
+ * usable photo), catalog-wide. `--round <label>` / `--ids <a,b>` narrow it to
+ * one batch; `--everything` includes the high-confidence picks too. The scope
+ * flags are OPTIONAL here, unlike everywhere else — this script only reads,
+ * writes no database column and calls no API, so there is nothing an unscoped
+ * run can cost. (`--everything` rather than `--all`, which scope.ts has
+ * already claimed for the deliberate whole-catalog run.)
+ *
+ * A row that has been through `pick-plant-images.ts --verify` is marked as
+ * such. That distinction is the whole point of the queue now: a plain `medium`
+ * is a question nobody has asked twice, while a verified `medium` is one that
+ * survived a second look and needs a NEW photograph — which is a sourcing job,
+ * not a judgment call, and no amount of staring at this page will fix it.
  */
 
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { getSupabaseAdmin } from '../lib/supabase-admin'
 import { fetchAllRows } from '../lib/paginate'
+import { parseScope, scopeIds, describeScope } from './scope'
 
 const REPORTS_DIR = join(process.cwd(), 'reports')
 const HTML_OUT = join(REPORTS_DIR, 'image-picks.html')
@@ -36,6 +49,7 @@ interface Row {
   image_url_curated: string | null
   image_pick_confidence: 'high' | 'medium' | 'low' | null
   image_pick_reason: string | null
+  image_verified_at: string | null
 }
 
 const escapeHtml = (s: string) =>
@@ -78,6 +92,15 @@ function card(r: Row): string {
     ? `<button data-v="before">Keep the before</button>`
     : ''
 
+  // "I can confirm the species" only appears where it can actually do
+  // something: a row the automated passes left below `high`. On a high row it
+  // would be a button that writes what is already true, and offering it would
+  // suggest the sign-off needs a human click that it does not.
+  const confirmSpecies =
+    r.image_url_curated && r.image_pick_confidence !== 'high'
+      ? `<button data-v="confirm" title="Promotes this hero to high confidence. Use when you can tell the species from the photo and the vision pass could not.">I can confirm the species</button>`
+      : ''
+
   return `<article class="card" data-id="${r.id}" data-name="${escapeHtml(r.common_name)}">
   <header>
     <h3>${escapeHtml(r.common_name)}</h3>
@@ -85,12 +108,20 @@ function card(r: Row): string {
       ${r.scientific_name ? `<em>${escapeHtml(r.scientific_name)}</em>` : ''}
       <span class="tag ${r.image_pick_confidence ?? 'none'}">${r.image_pick_confidence ?? 'n/a'}</span>
       <span class="tag status">${status}</span>
+      ${
+        r.image_verified_at
+          ? r.image_pick_confidence === 'high'
+            ? `<span class="tag verified" title="pick-plant-images --verify re-judged this photo on its own merits and confirmed it.">re-checked, confirmed</span>`
+            : `<span class="tag verified" title="pick-plant-images --verify re-judged this photo on its own merits and could not confirm the species from it. Another check will not help — this needs a different photograph.">re-checked, still unconfirmed</span>`
+          : ''
+      }
     </div>
   </header>
   <p class="reason">${escapeHtml(r.image_pick_reason ?? '(no reason recorded)')}</p>
   <div class="panes">${panes}</div>
   <div class="verdict">
     <button data-v="ok">Good</button>
+    ${confirmSpecies}
     ${keepBefore}
     <button data-v="bad">Needs a new photo</button>
     <button data-v="clear">Clear</button>
@@ -100,21 +131,27 @@ function card(r: Row): string {
 }
 
 async function main() {
-  const all = process.argv.slice(2).includes('--all')
+  const argv = process.argv.slice(2)
+  const all = argv.includes('--everything')
   const supabase = getSupabaseAdmin()
 
-  const rows = await fetchAllRows<Row>((from, to) =>
-    supabase
+  // Optional here — see the header. parseScope returns null when no flag is
+  // present, which is the catalog-wide default this script has always had.
+  const scope = parseScope(argv)
+  const ids = scope ? scopeIds(scope) : null
+  if (scope) console.log(`${describeScope(scope, ids)}\n`)
+
+  const rows = await fetchAllRows<Row>((from, to) => {
+    const q = supabase
       .from('plants')
       .select(
-        'id, common_name, scientific_name, image_url, image_url_curated, image_pick_confidence, image_pick_reason'
+        'id, common_name, scientific_name, image_url, image_url_curated, image_pick_confidence, image_pick_reason, image_verified_at'
       )
       .not('image_checked_at', 'is', null)
-      .order('id')
-      .range(from, to)
-  )
+    return (ids ? q.in('id', ids) : q).order('id').range(from, to)
+  })
 
-  // Queue first: no-pick, then low, then medium. High only with --all.
+  // Queue first: no-pick, then low, then medium. High only with --everything.
   const rank = { none: 0, low: 1, medium: 2, high: 3 } as const
   const scoped = rows
     .filter(
@@ -143,11 +180,13 @@ async function main() {
   .card.done-ok { border-color: #3a825a; }
   .card.done-bad { border-color: #b4483c; }
   .card.done-before { border-color: #b8860b; }
+  .card.done-confirm { border-color: #4a6fa5; }
   header h3 { margin: 0; font-size: 1.1rem; }
   .meta { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; margin: .25rem 0 .5rem; opacity: .8; font-size: .85rem; }
   .tag { border: 1px solid var(--line); border-radius: 99px; padding: .05rem .5rem; font-size: .75rem; }
   .tag.medium { border-color: #b8860b; }
   .tag.low, .tag.none { border-color: #b4483c; }
+  .tag.verified { border-color: #4a6fa5; }
   .reason { margin: .25rem 0 .75rem; }
   .panes { display: flex; gap: 1rem; flex-wrap: wrap; }
   .pane { flex: 1 1 320px; }
@@ -162,11 +201,12 @@ async function main() {
 </style>
 
 <h1>Hero image picks — review</h1>
-<p class="lede">${scoped.length} plant(s)${all ? ' (everything)' : ' — the queue: medium confidence and anything with no usable photo'}. Three verdicts: <strong>Good</strong> keeps the pick, <strong>Keep the before</strong> reverts to the previous photo (a free fix — that photo still exists), <strong>Needs a new photo</strong> flags it for sourcing. Verdicts save in this browser as you go; nothing is written to the database until you run the apply script.</p>
+<p class="lede">${scoped.length} plant(s)${all ? ' (everything)' : ' — the queue: medium confidence and anything with no usable photo'}. Four verdicts: <strong>Good</strong> keeps the pick as it stands, <strong>I can confirm the species</strong> promotes a hero the vision pass could not commit to (this is the one that unblocks sign-off), <strong>Keep the before</strong> reverts to the previous photo (a free fix — that photo still exists), <strong>Needs a new photo</strong> flags it for sourcing. Verdicts save in this browser as you go; nothing is written to the database until you run an apply script. The two export buttons write to two different files on purpose — reverting and promoting are opposite decisions.</p>
 
 <div class="bar">
   <strong id="progress">0 / ${scoped.length} reviewed</strong>
-  <button id="export">Export verdicts</button>
+  <button id="export">Export reverts</button>
+  <button id="export-confirm">Export confirmations</button>
   <button id="reset">Reset all</button>
 </div>
 
@@ -183,8 +223,10 @@ function paint(card) {
   card.classList.toggle('done-ok', v === 'ok')
   card.classList.toggle('done-bad', v === 'bad')
   card.classList.toggle('done-before', v === 'before')
+  card.classList.toggle('done-confirm', v === 'confirm')
   card.querySelector('.mark').textContent =
     v === 'ok' ? 'looks good'
+    : v === 'confirm' ? 'species confirmed — promote to high'
     : v === 'before' ? 'revert to the previous photo'
     : v === 'bad' ? 'needs a new photo sourced'
     : ''
@@ -210,35 +252,59 @@ document.querySelectorAll('.card').forEach((card) => {
 })
 progress()
 
-document.getElementById('export').addEventListener('click', () => {
-  const before = [], bad = [], ok = []
+function collect() {
+  const g = { before: [], bad: [], ok: [], confirm: [] }
   document.querySelectorAll('.card').forEach((c) => {
-    const entry = { id: c.dataset.id, name: c.dataset.name }
     const v = store[c.dataset.id]
-    if (v === 'before') before.push(entry)
-    else if (v === 'bad') bad.push(entry)
-    else if (v === 'ok') ok.push(entry)
+    if (g[v]) g[v].push({ id: c.dataset.id, name: c.dataset.name })
   })
-  // The revert list is the machine-readable part: one plant id per line, which
-  // apply-image-reverts.ts parses. The other two verdicts ride along as
-  // comments so the whole review lives in one file — the apply script skips
-  // any line starting with '#', so they can't be acted on by accident.
+  return g
+}
+
+function show(text) {
   const out = document.getElementById('out')
   out.hidden = false
-  out.value =
+  out.value = text
+  out.select()
+  out.scrollIntoView({ behavior: 'smooth' })
+}
+
+// TWO exports, into two files, and that separation is deliberate. Each block's
+// ids are LIVE in its own file — an id pasted into the wrong one has to be
+// inert, not do the other action. Reverting a photo and promoting a photo are
+// opposite decisions, and one file with two acted-on sections would be one
+// stray paste away from applying the wrong one.
+document.getElementById('export').addEventListener('click', () => {
+  const g = collect()
+  show(
     '# Paste this into apps/web/reports/image-reverts.txt, then run:\\n' +
     '#   ./node_modules/.bin/tsx --env-file=.env.local scripts/apply-image-reverts.ts        (dry run)\\n' +
     '#   ./node_modules/.bin/tsx --env-file=.env.local scripts/apply-image-reverts.ts --apply\\n' +
     '#\\n' +
-    '# REVERT TO PREVIOUS PHOTO (' + before.length + ') — these lines are what the script acts on:\\n' +
-    before.map(e => e.id + '  # ' + e.name).join('\\n') +
+    '# REVERT TO PREVIOUS PHOTO (' + g.before.length + ') — these lines are what the script acts on:\\n' +
+    g.before.map(e => e.id + '  # ' + e.name).join('\\n') +
     '\\n#\\n' +
-    '# NEEDS A NEW PHOTO SOURCED (' + bad.length + ') — for reference, not reverted:\\n' +
-    bad.map(e => '#   ' + e.name).join('\\n') +
+    '# NEEDS A NEW PHOTO SOURCED (' + g.bad.length + ') — for reference, not reverted:\\n' +
+    g.bad.map(e => '#   ' + e.name).join('\\n') +
     '\\n#\\n' +
-    '# CONFIRMED GOOD (' + ok.length + '):\\n' +
-    ok.map(e => '#   ' + e.name).join('\\n')
-  out.scrollIntoView({ behavior: 'smooth' })
+    '# CONFIRMED GOOD (' + g.ok.length + ') — no action needed, the pick already stands:\\n' +
+    g.ok.map(e => '#   ' + e.name).join('\\n') +
+    '\\n#\\n' +
+    '# SPECIES CONFIRMED BY REVIEWER (' + g.confirm.length + ') — use the other export button:\\n' +
+    g.confirm.map(e => '#   ' + e.name).join('\\n')
+  )
+})
+
+document.getElementById('export-confirm').addEventListener('click', () => {
+  const g = collect()
+  show(
+    '# Paste this into apps/web/reports/image-confirmations.txt, then run:\\n' +
+    '#   ./node_modules/.bin/tsx --env-file=.env.local scripts/apply-image-confirmations.ts        (dry run)\\n' +
+    '#   ./node_modules/.bin/tsx --env-file=.env.local scripts/apply-image-confirmations.ts --apply\\n' +
+    '#\\n' +
+    '# SPECIES CONFIRMED BY REVIEWER (' + g.confirm.length + ') — promoted to high confidence:\\n' +
+    g.confirm.map(e => e.id + '  # ' + e.name).join('\\n')
+  )
 })
 
 document.getElementById('reset').addEventListener('click', () => {

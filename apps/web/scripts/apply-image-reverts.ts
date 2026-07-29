@@ -104,6 +104,7 @@ async function main() {
     }
 
     if (apply) {
+      const now = new Date().toISOString()
       const { error: upErr } = await supabase
         .from('plants')
         .update({
@@ -113,6 +114,15 @@ async function main() {
           image_attribution: null,
           image_pick_confidence: 'high', // human confirmation is the strongest signal we have
           image_pick_reason: REVERT_REASON,
+          // A reviewer choosing this photo is a verification, and the
+          // strongest one available — stamp it so --verify does not re-ask.
+          image_verified_at: now,
+          // It is also criterion 1 of the editorial bar being cleared by hand,
+          // so record that (migration 20260729140000) rather than clearing the
+          // verdict and paying to re-derive what a person just decided.
+          // Written in this same statement so the trigger treats the criterion
+          // as claimed rather than invalidated.
+          editorial_image_at: now,
         })
         .eq('id', id)
       if (upErr) {

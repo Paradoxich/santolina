@@ -1,5 +1,9 @@
-import { describe, expect, it } from 'vitest'
-import { readImageDimensions } from './image-probe'
+import { afterEach, describe, expect, it } from 'vitest'
+import {
+  probeImage,
+  readImageDimensions,
+  wikimediaThumbUrl,
+} from './image-probe'
 
 /**
  * These headers are hand-built rather than fixtures because the point of the
@@ -128,5 +132,124 @@ describe('readImageDimensions', () => {
   it('returns null for a truncated header rather than guessing', () => {
     expect(readImageDimensions(png(100, 100).slice(0, 12))).toBeNull()
     expect(readImageDimensions(new Uint8Array([0xff, 0xd8]))).toBeNull()
+  })
+})
+
+/**
+ * Retry behaviour. The rule these pin down is the house rule about a failed
+ * fetch never looking like a negative result: a rate limit must not silently
+ * remove a photograph from the shortlist, and a genuine 404 must not cost
+ * three round trips on every one of thousands of candidates.
+ */
+describe('probeImage retries', () => {
+  const realFetch = globalThis.fetch
+  afterEach(() => {
+    globalThis.fetch = realFetch
+  })
+
+  /** Queue of responses, one per attempt. */
+  function stubFetch(responses: Array<() => Response>) {
+    let i = 0
+    const calls = { count: 0 }
+    globalThis.fetch = (async () => {
+      calls.count++
+      const make = responses[Math.min(i++, responses.length - 1)]!
+      return make()
+    }) as typeof fetch
+    return calls
+  }
+
+  const ok = () =>
+    new Response(png(800, 600).slice().buffer as ArrayBuffer, {
+      status: 206,
+      headers: { 'content-type': 'image/png' },
+    })
+  const rateLimited = () => new Response('slow down', { status: 429 })
+  const notFound = () => new Response('nope', { status: 404 })
+  const truncatedJpeg = () =>
+    new Response(new Uint8Array([0xff, 0xd8]).buffer as ArrayBuffer, {
+      status: 206,
+      headers: { 'content-type': 'image/jpeg' },
+    })
+  const errorPage = () =>
+    new Response('<html>error</html>', {
+      status: 200,
+      headers: { 'content-type': 'text/html' },
+    })
+
+  it('retries a 429 and succeeds on a later attempt', async () => {
+    const calls = stubFetch([rateLimited, rateLimited, ok])
+    const r = await probeImage('https://example.test/a.png')
+    expect(r.ok).toBe(true)
+    expect(calls.count).toBe(3)
+  })
+
+  it('re-reads further when an image header is unreadable, rather than rejecting', async () => {
+    // The real case: a Wikimedia original whose SOF sits past 64KB of EXIF.
+    // One escalated read, not a retry of the same range.
+    const calls = stubFetch([truncatedJpeg, ok])
+    const r = await probeImage('https://example.test/b.jpg')
+    expect(r.ok).toBe(true)
+    expect(calls.count).toBe(2)
+  })
+
+  it('escalates only once, and only for an image content-type', async () => {
+    const calls = stubFetch([truncatedJpeg])
+    const r = await probeImage('https://example.test/f.jpg')
+    expect(r.ok).toBe(false)
+    expect(calls.count).toBe(2)
+  })
+
+  it('does not retry a 404 — that is an answer, not a hiccup', async () => {
+    const calls = stubFetch([notFound])
+    const r = await probeImage('https://example.test/c.jpg')
+    expect(r.ok).toBe(false)
+    expect(calls.count).toBe(1)
+  })
+
+  it('does not retry an HTML error page served as 200', async () => {
+    const calls = stubFetch([errorPage])
+    const r = await probeImage('https://example.test/d.jpg')
+    expect(r.ok).toBe(false)
+    expect(calls.count).toBe(1)
+  })
+
+  it('gives up after the attempt limit and reports the real reason', async () => {
+    const calls = stubFetch([rateLimited])
+    const r = await probeImage('https://example.test/e.jpg')
+    expect(r.ok).toBe(false)
+    expect(r.ok === false && r.reason).toBe('HTTP 429')
+    expect(calls.count).toBe(3)
+  })
+})
+
+describe('wikimediaThumbUrl', () => {
+  const original =
+    'https://upload.wikimedia.org/wikipedia/commons/3/37/Musa_basjoo_-_G%C3%B6ttingen.jpg'
+
+  it('builds the Commons thumb path from an original', () => {
+    expect(wikimediaThumbUrl(original)).toBe(
+      'https://upload.wikimedia.org/wikipedia/commons/thumb/3/37/Musa_basjoo_-_G%C3%B6ttingen.jpg/1280px-Musa_basjoo_-_G%C3%B6ttingen.jpg'
+    )
+  })
+
+  it('refuses a URL that is already a thumb, so the rewrite cannot nest', () => {
+    expect(wikimediaThumbUrl(wikimediaThumbUrl(original)!)).toBeNull()
+  })
+
+  it('leaves non-Commons hosts alone', () => {
+    expect(
+      wikimediaThumbUrl('https://bs.plantnet.org/image/o/abc123')
+    ).toBeNull()
+  })
+
+  it('returns null rather than throwing on a malformed URL', () => {
+    expect(wikimediaThumbUrl('not a url')).toBeNull()
+  })
+
+  it('refuses a width Commons does not serve, loudly', () => {
+    // Commons answers an unlisted width with HTTP 400, so a plausible-looking
+    // 1600 would be a silent dead end rather than a smaller picture.
+    expect(() => wikimediaThumbUrl(original, 1600)).toThrow(/HTTP 400/)
   })
 })

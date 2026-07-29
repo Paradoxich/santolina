@@ -149,3 +149,81 @@ export function describeScope(scope: Scope, ids: string[] | null): string {
       return 'Scope: --all (whole catalog)'
   }
 }
+
+// ---------------------------------------------------------------------------
+// The freeze — a finished round is finished
+// ---------------------------------------------------------------------------
+
+/**
+ * Narrow a plants query to the scope's rows.
+ *
+ * `--all` returns the query untouched, which is the deliberate whole-catalog
+ * run and the only way to reach rows outside the current round.
+ */
+export function applyScope<T>(query: T, ids: string[] | null): T {
+  if (!ids) return query
+  // Supabase's builder is chainable; the cast keeps callers from having to
+  // name PostgrestFilterBuilder's generics at every call site.
+  return (query as { in: (col: string, v: string[]) => T }).in('id', ids)
+}
+
+/**
+ * A per-write assertion that a plant belongs to the active scope.
+ *
+ * WHY BOTH THIS AND `applyScope`. The query filter decides which rows a script
+ * FETCHES; this decides which rows it may WRITE. They are usually the same set
+ * and the duplication is the point — every cross-round write in round 8 came
+ * from a script whose selection was a state predicate ("where hardiness is
+ * null") rather than a scope, and a state predicate looks exactly like a scope
+ * right up until it silently matches an older round's rows. If a future edit
+ * loosens a query, this still refuses.
+ *
+ * The refusal names the plant and the scope, because the useful question when
+ * this fires is "which round did this row belong to?", not "which line threw?".
+ */
+export function scopeGuard(
+  scope: Scope,
+  ids: string[] | null
+): (id: string, label?: string) => void {
+  const allowed = ids ? new Set(ids) : null
+  return (id, label) => {
+    // --all is the deliberate whole-catalog run; it has already been spelled
+    // out on the command line and justified with --why.
+    if (!allowed || allowed.has(id)) return
+    throw new Error(
+      `Refusing to write to ${label ?? id}: it is outside ${describeScope(scope, ids).replace(/^Scope: /, '')}.\n` +
+        'A finished round is frozen. If this write is genuinely meant to reach ' +
+        'older rows, say so explicitly with --all --why "<reason>", which is ' +
+        'recorded in the run output and reviewable, rather than widening a ' +
+        'query until it happens by accident.'
+    )
+  }
+}
+
+/**
+ * The reason a whole-catalog run is justified. Required with `--all`.
+ *
+ * `--all` is legitimate — the style re-tag and the region regeneration both
+ * had to sweep the catalog — but it is also how a routine round quietly
+ * rewrites 400 older rows. Requiring a sentence does not prevent that; it
+ * makes the operator state an intention, which is the difference between a
+ * decision and an accident, and it puts the reason in the run output where a
+ * reader can disagree with it.
+ */
+export function requireReasonForAll(
+  scope: Scope,
+  argv: string[] = process.argv.slice(2)
+): string | null {
+  if (scope.kind !== 'all') return null
+  const why = flagValue('--why', argv)
+  if (!why) {
+    console.error(
+      '\n--all needs --why "<reason>".\n\n' +
+        'A whole-catalog run reaches every finished round. That is sometimes ' +
+        'right (the July 2026 style re-tag, the region regeneration) and is ' +
+        'always worth a sentence, which is recorded in the run output.\n'
+    )
+    process.exit(1)
+  }
+  return why
+}

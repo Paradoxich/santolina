@@ -66,6 +66,8 @@ interface StatusRow {
   style_checked_at: string | null
   greenery_checked_at: string | null
   image_checked_at: string | null
+  image_pick_confidence: string | null
+  image_verified_at: string | null
   editorial_checked_at: string | null
 }
 
@@ -117,12 +119,28 @@ interface StepDef {
    * The bookkeeping column this step stamps, when it stamps one.
    *
    * This field is what makes the registry self-checking. `verify-round`
-   * asserts that every `*_checked_at` column on `plants` is claimed by some
+   * asserts that every `*_checked_at` and `*_verified_at` column on `plants` is claimed by some
    * step here, so adding a stamp column without adding its step FAILS instead
    * of going unnoticed — which is precisely how curate-greenery and the image
    * pass stayed invisible through round 8.
    */
   stampColumn?: string
+  /**
+   * False for a step a round does not owe.
+   *
+   * Some passes exist to REPAIR older data, not to run per round, and holding
+   * a round incomplete until they have run is how a pipeline grows to
+   * thirteen manual gates. `curate-styles` re-judges tags drafted under the
+   * loose pre-July-28 prompt — a plant seeded today is already tagged by the
+   * same tightened definitions inside `curate-plants`, so re-asking is a step
+   * that cannot change anything. `curate-greenery` is the same story since
+   * `is_greenery` was folded into the drafting call.
+   *
+   * They stay in this registry, because the registry is what proves every
+   * stamp column on `plants` is claimed by something. They are simply not
+   * part of what "round N is done" means.
+   */
+  perRound?: boolean
   /** Rows the step can apply to. Default: every plant in the round. */
   applies?: (p: StatusRow) => boolean
   /** Has this step run for this row? */
@@ -200,30 +218,42 @@ export const STEP_DEFS: StepDef[] = [
   },
   {
     // §27 hardiness is PARKED — it feeds only a dormant survive-winter
-    // bullet. Warn until that work resumes, then promote to FAIL.
+    // bullet, so a round does not owe it. Drafting a rating per round for a
+    // feature nobody can see is a paid step that buys a warning symbol.
+    // When §27 resumes: perRound true and level FAIL, in one change.
     step: 'draft-hardiness',
     evidence: 'hardiness_rating NOT NULL',
     level: 'WARN',
+    perRound: false,
     ran: (p) => Boolean(p.hardiness_rating),
   },
   {
-    // The Explore style browse tiles are live. An unjudged row keeps whatever
-    // curate-plants drafted under the loose pre-July-28 prompt, which is what
-    // put cottage on 89.6% of the catalog.
+    // NOT per round since 2026-07-29. curate-plants tags new seeds using the
+    // SAME tightened definitions (both import lib/style-tags.ts), so running
+    // this over a fresh batch re-asks a question already answered correctly.
+    // It remains the repair pass for rows drafted under the loose
+    // pre-July-28 prompt — the ones that put cottage on 89.6% of the catalog.
     step: 'curate-styles',
     evidence: 'style_checked_at NOT NULL',
     level: 'FAIL',
+    perRound: false,
     stampColumn: 'style_checked_at',
     ran: (p) => Boolean(p.style_checked_at),
   },
   {
-    // is_greenery is the ONLY way into the Explore Green colour bucket
-    // (lib/plant-colors.ts — plain green foliage deliberately never maps).
-    // It defaults to false, so an unjudged plant is silently excluded from a
-    // live filter rather than flagged. Shipped feature: FAIL.
+    // NOT per round since 2026-07-29: is_greenery is now answered inside
+    // curate-plants, on a call already being made, and stamped there. This
+    // survives as the repair pass for rows seeded before that.
+    //
+    // The obligation has not gone away, it has moved: is_greenery is the ONLY
+    // way into the Explore Green colour bucket (lib/plant-colors.ts — plain
+    // green foliage deliberately never maps) and defaults to false, so an
+    // unjudged plant is silently missing from a live filter. curate-plants
+    // now carries that, and the stamp is what proves it.
     step: 'curate-greenery',
     evidence: 'greenery_checked_at NOT NULL',
     level: 'FAIL',
+    perRound: false,
     stampColumn: 'greenery_checked_at',
     ran: (p) => Boolean(p.greenery_checked_at),
   },
@@ -237,6 +267,28 @@ export const STEP_DEFS: StepDef[] = [
     level: 'WARN',
     stampColumn: 'image_checked_at',
     ran: (p) => Boolean(p.image_checked_at),
+  },
+  {
+    // The remediation half of the image pass, and the only step here that is
+    // CONDITIONAL: a row only owes a verification if the pick came out
+    // `medium`. `high` is settled and `low` needs a new candidate image, not a
+    // second opinion on the same one — so both are outside the obligation
+    // rather than passing it trivially.
+    //
+    // A row cleared to `high` by the verification stops applying, which is
+    // correct: the question it was asked has been answered and the answer is
+    // recorded in image_pick_confidence. A row that stays `medium` keeps
+    // applying and is satisfied by the stamp, so "we looked again and still
+    // could not confirm it" reads as done work with an unresolved answer,
+    // exactly like a held-back editorial verdict.
+    //
+    // WARN, following the pick step it belongs to.
+    step: 'pick-plant-images --verify',
+    evidence: 'image_verified_at NOT NULL (medium-confidence heroes only)',
+    level: 'WARN',
+    stampColumn: 'image_verified_at',
+    applies: (p) => p.image_pick_confidence === 'medium',
+    ran: (p) => Boolean(p.image_verified_at),
   },
   {
     // The sign-off step (§3), and deliberately last: it judges the output of
@@ -291,6 +343,7 @@ export async function roundStatus(ids: string[]): Promise<StepStatus[]> {
           'botanical_checked_at, native_checked_at, native_region_checked_at, ' +
           'hardiness_rating, seasonal_care, ' +
           'style_checked_at, greenery_checked_at, image_checked_at, ' +
+          'image_pick_confidence, image_verified_at, ' +
           'editorial_checked_at'
       )
       .in('id', ids)
@@ -314,7 +367,10 @@ export async function roundStatus(ids: string[]): Promise<StepStatus[]> {
 
   const ctx: StepContext = { paired }
 
-  return STEP_DEFS.map((def) => {
+  // Only the steps a round actually owes. A repair pass for older data
+  // (perRound: false) stays in the registry so its stamp column is claimed,
+  // but a round is not held incomplete waiting for it.
+  return STEP_DEFS.filter((def) => def.perRound !== false).map((def) => {
     const scope = def.applies ? plants.filter(def.applies) : plants
     const done = scope.filter((p) => def.ran(p, ctx)).length
     return {
@@ -345,10 +401,26 @@ export async function unregisteredStampColumns(): Promise<string[]> {
   if (!data?.length) return []
 
   const registered = registeredStampColumns()
-  return Object.keys(data[0])
-    .filter((c) => c.endsWith('_checked_at'))
-    .filter((c) => !registered.has(c))
-    .sort()
+  return (
+    Object.keys(data[0])
+      // Criterion stamps (editorial_image_at, editorial_description_at,
+      // editorial_tags_at) are deliberately NOT matched here, and saying so is
+      // the point — an omission this file did not state explicitly is what
+      // trap 1b is about. They are not step stamps: they are three parts of ONE
+      // step's verdict, and that step already claims editorial_checked_at. A
+      // round is complete when the pass reached a verdict, not when every
+      // criterion passed; holding a round open until nothing is ever held back
+      // would make a strict pass unable to finish.
+      //
+      // `_verified_at` as well as `_checked_at`: image_verified_at (migration
+      // 20260729083058) is a bookkeeping stamp in every sense that matters, and
+      // a suffix check looking only for the older name would have sailed past
+      // it — which is the precise failure this function exists to prevent,
+      // repeating itself one naming convention later.
+      .filter((c) => c.endsWith('_checked_at') || c.endsWith('_verified_at'))
+      .filter((c) => !registered.has(c))
+      .sort()
+  )
 }
 
 /** One-line-per-step render, used by both the verifier and the log writer. */
