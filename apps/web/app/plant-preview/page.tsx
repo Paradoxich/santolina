@@ -47,14 +47,14 @@ const WIDTHS: Record<
   { label: string; className: string; note: string }
 > = {
   product: {
-    label: 'Product max (1032)',
-    className: 'max-w-[1032px]',
-    note: 'What the dashboard and the real plant page use today.',
+    label: 'Plant page (1128)',
+    className: 'max-w-[1128px]',
+    note: "What the real plant page uses. Wider than the dashboard's 1032.",
   },
   wide: {
-    label: 'Wider cap (1280)',
-    className: 'max-w-[1280px]',
-    note: 'Cards breathe and the grid keeps its proportions. Would need the dashboard raised to match.',
+    label: 'Dashboard (1032)',
+    className: 'max-w-[1032px]',
+    note: 'What the dashboard still uses, for comparison.',
   },
   fill: {
     label: 'Fill available',

@@ -410,11 +410,12 @@ export function PlantDetailPage({
         </div>
       </header>
 
-      {/* Growing plants get the dashboard's 1032px column; everything else
-          keeps the 640px reading column, because it is still a read page. */}
+      {/* Growing plants get a 1128px column — wider than the dashboard's
+          1032, Ana's call, because this page's hero and full-width timeline
+          want the room. Everything else keeps the 640px reading column. */}
       <div
         className={`flex w-full flex-col pt-8 md:pt-12 ${
-          isGrowing ? 'max-w-[1032px]' : 'mx-auto max-w-[640px]'
+          isGrowing ? 'max-w-[1128px]' : 'mx-auto max-w-[640px]'
         }`}
       >
         {actionError && (
