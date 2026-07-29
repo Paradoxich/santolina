@@ -92,6 +92,15 @@ function card(r: Row): string {
     ? `<button data-v="before">Keep the before</button>`
     : ''
 
+  // "I can confirm the species" only appears where it can actually do
+  // something: a row the automated passes left below `high`. On a high row it
+  // would be a button that writes what is already true, and offering it would
+  // suggest the sign-off needs a human click that it does not.
+  const confirmSpecies =
+    r.image_url_curated && r.image_pick_confidence !== 'high'
+      ? `<button data-v="confirm" title="Promotes this hero to high confidence. Use when you can tell the species from the photo and the vision pass could not.">I can confirm the species</button>`
+      : ''
+
   return `<article class="card" data-id="${r.id}" data-name="${escapeHtml(r.common_name)}">
   <header>
     <h3>${escapeHtml(r.common_name)}</h3>
@@ -112,6 +121,7 @@ function card(r: Row): string {
   <div class="panes">${panes}</div>
   <div class="verdict">
     <button data-v="ok">Good</button>
+    ${confirmSpecies}
     ${keepBefore}
     <button data-v="bad">Needs a new photo</button>
     <button data-v="clear">Clear</button>
@@ -170,6 +180,7 @@ async function main() {
   .card.done-ok { border-color: #3a825a; }
   .card.done-bad { border-color: #b4483c; }
   .card.done-before { border-color: #b8860b; }
+  .card.done-confirm { border-color: #4a6fa5; }
   header h3 { margin: 0; font-size: 1.1rem; }
   .meta { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; margin: .25rem 0 .5rem; opacity: .8; font-size: .85rem; }
   .tag { border: 1px solid var(--line); border-radius: 99px; padding: .05rem .5rem; font-size: .75rem; }
@@ -190,11 +201,12 @@ async function main() {
 </style>
 
 <h1>Hero image picks — review</h1>
-<p class="lede">${scoped.length} plant(s)${all ? ' (everything)' : ' — the queue: medium confidence and anything with no usable photo'}. Three verdicts: <strong>Good</strong> keeps the pick, <strong>Keep the before</strong> reverts to the previous photo (a free fix — that photo still exists), <strong>Needs a new photo</strong> flags it for sourcing. Verdicts save in this browser as you go; nothing is written to the database until you run the apply script.</p>
+<p class="lede">${scoped.length} plant(s)${all ? ' (everything)' : ' — the queue: medium confidence and anything with no usable photo'}. Four verdicts: <strong>Good</strong> keeps the pick as it stands, <strong>I can confirm the species</strong> promotes a hero the vision pass could not commit to (this is the one that unblocks sign-off), <strong>Keep the before</strong> reverts to the previous photo (a free fix — that photo still exists), <strong>Needs a new photo</strong> flags it for sourcing. Verdicts save in this browser as you go; nothing is written to the database until you run an apply script. The two export buttons write to two different files on purpose — reverting and promoting are opposite decisions.</p>
 
 <div class="bar">
   <strong id="progress">0 / ${scoped.length} reviewed</strong>
-  <button id="export">Export verdicts</button>
+  <button id="export">Export reverts</button>
+  <button id="export-confirm">Export confirmations</button>
   <button id="reset">Reset all</button>
 </div>
 
@@ -211,8 +223,10 @@ function paint(card) {
   card.classList.toggle('done-ok', v === 'ok')
   card.classList.toggle('done-bad', v === 'bad')
   card.classList.toggle('done-before', v === 'before')
+  card.classList.toggle('done-confirm', v === 'confirm')
   card.querySelector('.mark').textContent =
     v === 'ok' ? 'looks good'
+    : v === 'confirm' ? 'species confirmed — promote to high'
     : v === 'before' ? 'revert to the previous photo'
     : v === 'bad' ? 'needs a new photo sourced'
     : ''
@@ -238,35 +252,59 @@ document.querySelectorAll('.card').forEach((card) => {
 })
 progress()
 
-document.getElementById('export').addEventListener('click', () => {
-  const before = [], bad = [], ok = []
+function collect() {
+  const g = { before: [], bad: [], ok: [], confirm: [] }
   document.querySelectorAll('.card').forEach((c) => {
-    const entry = { id: c.dataset.id, name: c.dataset.name }
     const v = store[c.dataset.id]
-    if (v === 'before') before.push(entry)
-    else if (v === 'bad') bad.push(entry)
-    else if (v === 'ok') ok.push(entry)
+    if (g[v]) g[v].push({ id: c.dataset.id, name: c.dataset.name })
   })
-  // The revert list is the machine-readable part: one plant id per line, which
-  // apply-image-reverts.ts parses. The other two verdicts ride along as
-  // comments so the whole review lives in one file — the apply script skips
-  // any line starting with '#', so they can't be acted on by accident.
+  return g
+}
+
+function show(text) {
   const out = document.getElementById('out')
   out.hidden = false
-  out.value =
+  out.value = text
+  out.select()
+  out.scrollIntoView({ behavior: 'smooth' })
+}
+
+// TWO exports, into two files, and that separation is deliberate. Each block's
+// ids are LIVE in its own file — an id pasted into the wrong one has to be
+// inert, not do the other action. Reverting a photo and promoting a photo are
+// opposite decisions, and one file with two acted-on sections would be one
+// stray paste away from applying the wrong one.
+document.getElementById('export').addEventListener('click', () => {
+  const g = collect()
+  show(
     '# Paste this into apps/web/reports/image-reverts.txt, then run:\\n' +
     '#   ./node_modules/.bin/tsx --env-file=.env.local scripts/apply-image-reverts.ts        (dry run)\\n' +
     '#   ./node_modules/.bin/tsx --env-file=.env.local scripts/apply-image-reverts.ts --apply\\n' +
     '#\\n' +
-    '# REVERT TO PREVIOUS PHOTO (' + before.length + ') — these lines are what the script acts on:\\n' +
-    before.map(e => e.id + '  # ' + e.name).join('\\n') +
+    '# REVERT TO PREVIOUS PHOTO (' + g.before.length + ') — these lines are what the script acts on:\\n' +
+    g.before.map(e => e.id + '  # ' + e.name).join('\\n') +
     '\\n#\\n' +
-    '# NEEDS A NEW PHOTO SOURCED (' + bad.length + ') — for reference, not reverted:\\n' +
-    bad.map(e => '#   ' + e.name).join('\\n') +
+    '# NEEDS A NEW PHOTO SOURCED (' + g.bad.length + ') — for reference, not reverted:\\n' +
+    g.bad.map(e => '#   ' + e.name).join('\\n') +
     '\\n#\\n' +
-    '# CONFIRMED GOOD (' + ok.length + '):\\n' +
-    ok.map(e => '#   ' + e.name).join('\\n')
-  out.scrollIntoView({ behavior: 'smooth' })
+    '# CONFIRMED GOOD (' + g.ok.length + ') — no action needed, the pick already stands:\\n' +
+    g.ok.map(e => '#   ' + e.name).join('\\n') +
+    '\\n#\\n' +
+    '# SPECIES CONFIRMED BY REVIEWER (' + g.confirm.length + ') — use the other export button:\\n' +
+    g.confirm.map(e => '#   ' + e.name).join('\\n')
+  )
+})
+
+document.getElementById('export-confirm').addEventListener('click', () => {
+  const g = collect()
+  show(
+    '# Paste this into apps/web/reports/image-confirmations.txt, then run:\\n' +
+    '#   ./node_modules/.bin/tsx --env-file=.env.local scripts/apply-image-confirmations.ts        (dry run)\\n' +
+    '#   ./node_modules/.bin/tsx --env-file=.env.local scripts/apply-image-confirmations.ts --apply\\n' +
+    '#\\n' +
+    '# SPECIES CONFIRMED BY REVIEWER (' + g.confirm.length + ') — promoted to high confidence:\\n' +
+    g.confirm.map(e => e.id + '  # ' + e.name).join('\\n')
+  )
 })
 
 document.getElementById('reset').addEventListener('click', () => {

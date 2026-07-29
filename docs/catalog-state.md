@@ -39,6 +39,7 @@ One row per step that stamps a column, from the `STEP_DEFS` registry in
 | `curate-styles` | `style_checked_at` | 595 / 595 | 100.0% |
 | `curate-greenery` | `greenery_checked_at` | 595 / 595 | 100.0% |
 | `pick-plant-images` | `image_checked_at` | 592 / 595 | 99.5% |
+| `pick-plant-images --verify` | `image_verified_at` | 32 / 595 | 5.4% |
 | `curate-editorial` | `editorial_checked_at` | 101 / 595 | 17.0% |
 
 ## Field coverage
@@ -46,7 +47,7 @@ One row per step that stamps a column, from the `STEP_DEFS` registry in
 | field | state | count |
 | --- | --- | ---: |
 | `ai_drafted_at` | drafted | 595 |
-| `is_curated` | editorially reviewed | 137 |
+| `is_curated` | editorially reviewed | 159 |
 | `style_tags` | style-neutral (`[]`, a valid judgment) | 33 |
 | `style_tags` | never judged (NULL — a gap) | 0 |
 | `seasonal_care` | null | 0 |
