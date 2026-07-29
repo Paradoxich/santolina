@@ -280,6 +280,12 @@ Three steps left the per-round cadence, none of them by lowering a bar:
 
 `STEP_DEFS` keeps all three, with `perRound: false`. The registry is what proves every stamp column on `plants` is claimed by some step, so dropping them from it would re-open the hole that let `greenery_checked_at` and `image_checked_at` sit unclaimed through round 8. They are still registered; they are simply not part of what "round N is done" means.
 
+**The editorial verdict is now three verdicts, which is what Ana's question exposed.** `is_curated` was one yes/no over three separate judgments, so touching any one of them re-opened all three — and re-opening the description means the pass may **rewrite the copy**. That is not hypothetical: removing a single style tag from Rowan brought its description back rewritten, and the trigger added earlier the same day makes that happen more often, not less.
+
+Migration `20260729140000` gives each criterion its own stamp and narrows the trigger to match. Proved on a live row: a photo change clears only the image stamp, a tag change clears only the tags stamp, the description stamp survives both. Re-clearing a re-opened image criterion then took **0.79 seconds and zero model calls**, because criterion 1 is decided mechanically from the persisted `image_pick_confidence` — where the same row previously cost two Claude calls and a possible rewrite of text nobody asked to change.
+
+**Backfill covered 94 of the 170 curated rows.** The other 76 are round 7's, `is_curated = true` with no `editorial_checked_at` at all — approved before the stamp column existed. They are left exactly as they are: deciding whether a legacy approval counts as three cleared criteria is a judgment about Ana's earlier work, not a migration's call. **Open question for her**, and until it is answered those rows are approvals with no recorded verdict behind them.
+
 **Deliberately not done:**
 
 - the ~70 medium heroes outside round 8 — the flag is scoped, and this session's mandate was round 8

@@ -403,6 +403,15 @@ export async function unregisteredStampColumns(): Promise<string[]> {
   const registered = registeredStampColumns()
   return (
     Object.keys(data[0])
+      // Criterion stamps (editorial_image_at, editorial_description_at,
+      // editorial_tags_at) are deliberately NOT matched here, and saying so is
+      // the point — an omission this file did not state explicitly is what
+      // trap 1b is about. They are not step stamps: they are three parts of ONE
+      // step's verdict, and that step already claims editorial_checked_at. A
+      // round is complete when the pass reached a verdict, not when every
+      // criterion passed; holding a round open until nothing is ever held back
+      // would make a strict pass unable to finish.
+      //
       // `_verified_at` as well as `_checked_at`: image_verified_at (migration
       // 20260729083058) is a bookkeeping stamp in every sense that matters, and
       // a suffix check looking only for the older name would have sailed past

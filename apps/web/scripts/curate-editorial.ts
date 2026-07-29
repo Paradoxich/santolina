@@ -109,6 +109,9 @@ interface PlantRow {
   image_verified_at: string | null
   is_curated: boolean | null
   editorial_checked_at: string | null
+  editorial_image_at: string | null
+  editorial_description_at: string | null
+  editorial_tags_at: string | null
 }
 
 /** One criterion's outcome. `open` means unresolved, which blocks approval. */
@@ -459,7 +462,7 @@ async function main() {
     let q = db
       .from('plants')
       .select(
-        'id, common_name, scientific_name, plant_type_label, description, style_tags, space_types, bloom_months, bloom_color, foliage_color, is_greenery, height_min_cm, height_max_cm, image_url, image_url_curated, image_pick_confidence, image_verified_at, is_curated, editorial_checked_at'
+        'id, common_name, scientific_name, plant_type_label, description, style_tags, space_types, bloom_months, bloom_color, foliage_color, is_greenery, height_min_cm, height_max_cm, image_url, image_url_curated, image_pick_confidence, image_verified_at, is_curated, editorial_checked_at, editorial_image_at, editorial_description_at, editorial_tags_at'
       )
       .order('id')
       .range(from, to)
@@ -481,9 +484,39 @@ async function main() {
   for (const [i, p] of selected.entries()) {
     const tag = `[${i + 1}/${selected.length}] ${p.common_name}`
     try {
-      const image = judgeImage(p)
+      // ONLY judge what is actually open. Each criterion carries its own
+      // stamp (migration 20260729140000), so a row whose photo changed has
+      // exactly one open criterion — and that one is decided mechanically,
+      // for free, from the confidence the vision pass already persisted.
+      //
+      // This is the whole point of splitting the verdict. Under the single
+      // flag, removing one style tag from Rowan re-opened the description and
+      // the pass rewrote copy nobody had asked it to touch.
+      const needImage = !p.editorial_image_at
+      const needDescription = !p.editorial_description_at
+      const needTags = !p.editorial_tags_at
 
-      const review = await reviewPlant(p)
+      if (!needImage && !needDescription && !needTags) {
+        console.log(`  ${tag}: already clear on all three criteria, skipping`)
+        continue
+      }
+
+      const image = needImage
+        ? judgeImage(p)
+        : ({ verdict: 'pass', reason: 'cleared previously' } as const)
+
+      // The model is called only when a criterion it decides is open. A row
+      // needing just the image costs nothing at all.
+      const review =
+        needDescription || needTags
+          ? await reviewPlant(p)
+          : {
+              descriptionVerdict: 'ok' as const,
+              descriptionReason: 'cleared previously',
+              tagsVerdict: 'ok' as const,
+              tagsReason: 'cleared previously',
+              rewrite: null,
+            }
 
       const description: Finding['description'] = {
         verdict: 'pass',
@@ -491,7 +524,10 @@ async function main() {
         rewritten: false,
       }
 
-      if (review.descriptionVerdict === 'ok') {
+      if (!needDescription) {
+        // Cleared previously and unchanged since — the trigger would have
+        // re-opened it otherwise.
+      } else if (review.descriptionVerdict === 'ok') {
         // Even an approved description has to clear the mechanical rules.
         const fault = mechanicalCopyFault(p.description ?? '')
         if (fault) {
@@ -536,7 +572,7 @@ async function main() {
         verdict: (review.tagsVerdict === 'ok'
           ? 'pass'
           : 'fail') as CriterionVerdict,
-        reason: review.tagsReason,
+        reason: needTags ? review.tagsReason : 'cleared previously',
       }
 
       const blockers: string[] = []
@@ -565,11 +601,24 @@ async function main() {
       )
 
       if (!DRY_RUN) {
+        const now = new Date().toISOString()
         const patch: Record<string, unknown> = {
-          editorial_checked_at: new Date().toISOString(),
+          editorial_checked_at: now,
         }
         if (description.rewritten) patch.description = description.after
+
+        // Each criterion that PASSED gets its stamp. A criterion that failed
+        // is left NULL, which is what makes the next run re-judge exactly it
+        // and nothing else.
+        //
+        // These are written in the same statement as the description rewrite
+        // on purpose: the trigger skips a criterion whose stamp this UPDATE
+        // changes, so the rewrite cannot invalidate the approval it is part of.
+        if (image.verdict === 'pass') patch.editorial_image_at = now
+        if (description.verdict === 'pass') patch.editorial_description_at = now
+        if (tags.verdict === 'pass') patch.editorial_tags_at = now
         if (approved) patch.is_curated = true
+
         const { error } = await db.from('plants').update(patch).eq('id', p.id)
         if (error) throw new Error(`DB write failed: ${error.message}`)
       }
