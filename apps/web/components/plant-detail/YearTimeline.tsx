@@ -1,21 +1,22 @@
 'use client'
 
 /**
- * What the plant does across the year, drawn like the dashboard's bloom
- * chart: one track per thing, each a coloured span sitting on its own row
- * over a shared twelve-month axis. No plant thumbnails — every row here
- * belongs to the same plant, so a repeated photo would carry no information.
+ * What the plant does across the year: one row per stage, each row a coloured
+ * span showing WHEN over the shared twelve-month axis and a line of text
+ * saying WHAT. Then flowering, then anything you logged.
  *
- * Rows are the six seasonal_rhythm stages, then the flowering window, then
- * anything you logged. Selecting a stage row reads out its rhythm text,
- * which is why this replaced the bloom-only strip: that strip drew one fact
- * the hero already states, while the rhythm text sat in a table in the
- * reference drawer saying the same thing somewhere else.
+ * The text is on the row rather than behind a click. An earlier pass made the
+ * rows selectable and printed one description underneath, which meant six
+ * rows that carried only a name and a colour — the same table the reference
+ * drawer used to hold, with five sixths of it hidden.
+ *
+ * Captions start at the left edge instead of following their span: a span
+ * beginning in October has almost no room to its right, and a caption that
+ * moves per row gives the eye nothing to track down the column.
  *
  * Winter is one row with two spans, because it wraps the year end.
  */
 
-import { useState } from 'react'
 import { DIARY_EVENT_LABELS, type DiaryEventType } from '@/lib/diary-events'
 import {
   SEASON_COLORS,
@@ -63,9 +64,6 @@ const MONTH_NAMES = [
   'December',
 ]
 
-/** Row pitch in px — matches the dashboard chart's comfortable span spacing. */
-const ROW_HEIGHT = 28
-
 /** Position across the strip as a percentage of the year, by day. */
 function positionOf(date: Date): number {
   const start = Date.UTC(date.getUTCFullYear(), 0, 1)
@@ -96,6 +94,57 @@ interface YearTimelineProps {
   rhythm: SeasonalRhythm | null
 }
 
+/**
+ * One row: the spans on the axis, then the caption underneath. Both live in
+ * the same relative box so the gridlines behind them line up.
+ */
+function Row({
+  spans,
+  color,
+  name,
+  text,
+  emphasis = false,
+  children,
+}: {
+  spans: { left: number; width: number; key: string | number }[]
+  color: string
+  name: string
+  text: string | null
+  emphasis?: boolean
+  /** Extra marks drawn on the axis, e.g. logged events. */
+  children?: React.ReactNode
+}) {
+  return (
+    <div className="relative w-full pb-item-gap pt-inline-gap">
+      <div className="relative h-2 w-full">
+        {spans.map((span) => (
+          <span
+            key={span.key}
+            className="absolute top-1/2 -translate-y-1/2 rounded-full"
+            style={{
+              left: `${span.left}%`,
+              width: `${span.width}%`,
+              height: emphasis ? 8 : 4,
+              backgroundColor: color,
+            }}
+          />
+        ))}
+        {children}
+      </div>
+      <p
+        className="mt-inline-gap truncate text-body-small"
+        title={text ?? name}
+      >
+        <span className={emphasis ? 'text-primary' : 'text-secondary'}>
+          {name}
+          {text ? '. ' : ''}
+        </span>
+        <span className="text-muted">{text}</span>
+      </p>
+    </div>
+  )
+}
+
 export function YearTimeline({
   bloomMonths,
   events,
@@ -103,7 +152,6 @@ export function YearTimeline({
   rhythm,
 }: YearTimelineProps) {
   const currentSeason = getCurrentSeason(today)
-  const [selected, setSelected] = useState<Season>(currentSeason)
   const todayLeft = positionOf(today)
 
   const hasBloom = bloomMonths.length > 0
@@ -120,36 +168,12 @@ export function YearTimeline({
     else byMonth.set(month, [event])
   }
 
-  const extraRows = (hasBloom ? 1 : 0) + (byMonth.size > 0 ? 1 : 0)
-  const chartHeight = (STAGE_ROWS.length + extraRows) * ROW_HEIGHT
-  const selectedText = rhythm?.[selected] ?? null
-
-  /** Row label, sitting just left of its span when there is room. */
-  const rowLabel = (
-    text: string,
-    left: number,
-    muted = false,
-    strong = false
-  ) => (
-    <span
-      className={[
-        'pointer-events-none absolute top-1/2 -translate-y-1/2 whitespace-nowrap text-micro',
-        strong ? 'text-primary' : muted ? 'text-muted' : 'text-secondary',
-      ].join(' ')}
-      style={
-        left > 50
-          ? { right: `${100 - left}%`, marginRight: 8 }
-          : { left: `${left}%`, marginLeft: 8 }
-      }
-    >
-      {text}
-    </span>
-  )
+  const loggedMonths = [...byMonth.keys()].sort((a, b) => a - b)
 
   return (
-    <div className="flex w-full flex-col gap-item-gap">
-      <div className="relative w-full" style={{ height: chartHeight }}>
-        {/* Month gridlines behind every row. */}
+    <div className="flex w-full flex-col gap-tight-gap">
+      <div className="relative w-full">
+        {/* Month gridlines and today, behind every row. */}
         <div
           aria-hidden="true"
           className="absolute inset-0 flex justify-between"
@@ -161,97 +185,71 @@ export function YearTimeline({
             />
           ))}
         </div>
-
         <div
           aria-hidden="true"
           className="absolute top-0 h-full w-px bg-accent"
           style={{ left: `${todayLeft}%` }}
         />
 
-        {/* One row per stage. */}
-        {STAGE_ROWS.map((row, i) => {
-          const isSelected = row.season === selected
-          const isCurrent = row.season === currentSeason
-          const firstRun = row.runs[0]!
-          const labelAt = spanBounds(firstRun.startMonth, firstRun.endMonth)
-          return (
-            <button
-              key={row.season}
-              type="button"
-              onClick={() => setSelected(row.season)}
-              aria-pressed={isSelected}
-              // Every stage is equally real, so selection is weight rather
-              // than opacity: dimming five of six rows washed the chart out
-              // and read as "these ones do not count".
-              className="absolute inset-x-0 rounded-xs text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-focus"
-              style={{ top: i * ROW_HEIGHT, height: ROW_HEIGHT }}
-            >
-              {row.runs.map((run) => {
-                const { left, width } = spanBounds(run.startMonth, run.endMonth)
-                return (
-                  <span
-                    key={run.startMonth}
-                    className="absolute top-1/2 -translate-y-1/2 rounded-full transition-all duration-fast"
-                    style={{
-                      left: `${left}%`,
-                      width: `${width}%`,
-                      height: isSelected ? 8 : 4,
-                      backgroundColor: SEASON_COLORS[row.season],
-                    }}
-                  />
-                )
-              })}
-              {rowLabel(
-                `${SEASON_LABELS[row.season]}${isCurrent ? ' · now' : ''}`,
-                labelAt.left + labelAt.width,
-                false,
-                isSelected
-              )}
-            </button>
-          )
-        })}
+        {STAGE_ROWS.map((row) => (
+          <Row
+            key={row.season}
+            color={SEASON_COLORS[row.season]}
+            emphasis={row.season === currentSeason}
+            name={
+              SEASON_LABELS[row.season] +
+              (row.season === currentSeason ? ' · now' : '')
+            }
+            text={rhythm?.[row.season] ?? null}
+            spans={row.runs.map((run) => ({
+              key: run.startMonth,
+              ...spanBounds(run.startMonth, run.endMonth),
+            }))}
+          />
+        ))}
 
-        {/* Flowering, its own row in the accent colour. */}
         {hasBloom && (
-          <div
-            className="absolute inset-x-0"
-            style={{ top: STAGE_ROWS.length * ROW_HEIGHT, height: ROW_HEIGHT }}
-          >
-            <span
-              role="img"
-              aria-label={`Flowers ${MONTH_NAMES[firstMonth - 1]} to ${MONTH_NAMES[lastMonth - 1]}`}
-              className="absolute top-1/2 h-[4px] -translate-y-1/2 rounded-full bg-accent"
-              style={{ left: `${bloom.left}%`, width: `${bloom.width}%` }}
-            />
-            {rowLabel('Flowering', bloom.left + bloom.width)}
-          </div>
+          <Row
+            color="var(--color-accent)"
+            name="Flowering"
+            text={`${MONTH_NAMES[firstMonth - 1]} to ${MONTH_NAMES[lastMonth - 1]}`}
+            spans={[{ key: 'bloom', ...bloom }]}
+          />
         )}
 
-        {/* What you logged, its own row. */}
-        {byMonth.size > 0 && (
-          <div
-            className="absolute inset-x-0"
-            style={{
-              top: (STAGE_ROWS.length + (hasBloom ? 1 : 0)) * ROW_HEIGHT,
-              height: ROW_HEIGHT,
-            }}
+        {loggedMonths.length > 0 && (
+          <Row
+            color="transparent"
+            name="You logged"
+            // Deduped: watering twice in July is one "watered" in the
+            // caption, not "watered, watered". The mark already carries
+            // that the month had activity; the count is not the point here.
+            text={loggedMonths
+              .map(
+                (m) =>
+                  `${MONTH_NAMES[m - 1]!.slice(0, 3)} ${[
+                    ...new Set(
+                      byMonth
+                        .get(m)!
+                        .map((e) => DIARY_EVENT_LABELS[e.type].toLowerCase())
+                    ),
+                  ].join(', ')}`
+              )
+              .join(' · ')}
+            spans={[]}
           >
-            {[...byMonth.entries()].map(([month, monthEvents]) => (
+            {loggedMonths.map((month) => (
               <span
                 key={month}
-                title={`${MONTH_NAMES[month - 1]}: ${monthEvents
+                title={`${MONTH_NAMES[month - 1]}: ${byMonth
+                  .get(month)!
                   .map((e) => DIARY_EVENT_LABELS[e.type])
                   .join(', ')}`}
                 className="absolute top-1/2 size-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-fern-600"
                 style={{ left: `${((month - 1) / 12) * 100 + 100 / 24}%` }}
               />
             ))}
-            {rowLabel(
-              'You logged',
-              (Math.max(...byMonth.keys()) / 12) * 100,
-              true
-            )}
-          </div>
+          </Row>
         )}
       </div>
 
@@ -270,13 +268,6 @@ export function YearTimeline({
           </span>
         ))}
       </div>
-
-      {/* The selected stage, in words. Null is the normal value for a stage
-          with nothing to describe, so it says so rather than collapsing. */}
-      <p className="text-body leading-normal text-secondary">
-        <span className="text-primary">{SEASON_LABELS[selected]}. </span>
-        {selectedText ?? 'Nothing recorded for this stage.'}
-      </p>
     </div>
   )
 }
