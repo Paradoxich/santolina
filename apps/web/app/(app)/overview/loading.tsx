@@ -6,7 +6,7 @@ import { DashboardCardsSkeleton, SubtitleSkeleton } from './skeletons'
 // prerendered at build time, so it cannot know today's date.
 export default function OverviewLoading() {
   return (
-    <div className="max-w-[1032px] pb-16 pt-8 md:pt-12" aria-hidden="true">
+    <div className="max-w-content pb-16 pt-8 md:pt-12" aria-hidden="true">
       <div className="h-9 w-40 animate-pulse rounded-md bg-surface-card" />
       <SubtitleSkeleton />
       <DashboardCardsSkeleton />

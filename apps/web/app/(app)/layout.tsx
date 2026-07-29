@@ -41,7 +41,7 @@ export default async function AppLayout({
       <AddNoteProvider>
         <div className="min-h-screen bg-surface-page">
           <AppSidebar identity={identity} />
-          <main className="px-4 pb-20 md:ml-sidebar-offset md:mr-12 md:px-0 md:pb-0">
+          <main className="px-4 pb-20 md:ml-sidebar-offset md:mr-content-gutter md:px-0 md:pb-0">
             {children}
           </main>
           <MobileTabBar />

@@ -359,7 +359,12 @@ export const allTokens: TokenTier[] = [
       },
       {
         title: 'Layout measures',
-        entries: sp('--sidebar-width', '--sidebar-offset'),
+        entries: sp(
+          '--sidebar-width',
+          '--sidebar-offset',
+          '--content-gutter',
+          '--content-max'
+        ),
       },
       {
         title: 'Effects',

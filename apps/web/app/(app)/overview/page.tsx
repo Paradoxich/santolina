@@ -23,7 +23,7 @@ export default function DashboardPage() {
   }).format(new Date())
 
   return (
-    <div className="max-w-[1032px] pb-16 pt-8 md:pt-12">
+    <div className="max-w-content pb-16 pt-8 md:pt-12">
       <h1 className="text-title font-semibold text-primary">{today}</h1>
       <Suspense fallback={<SubtitleSkeleton />}>
         <DashboardSubtitle />

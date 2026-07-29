@@ -112,7 +112,9 @@ function NoteCard({
           <div className="flex gap-inline-gap">
             {note.photos.map((photo, i) => (
               <button
-                key={photo.src}
+                // Keyed by position: signed URLs are not stable identifiers,
+                // and the same photo can legitimately appear twice in a note.
+                key={photoOffset + i}
                 type="button"
                 onClick={() => onPhotoClick(photoOffset + i)}
                 aria-label={`View photo ${photoOffset + i + 1}`}

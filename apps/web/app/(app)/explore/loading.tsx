@@ -23,7 +23,7 @@ export default function ExploreLoading() {
         </div>
 
         <div className="mt-8" aria-hidden="true">
-          <hr className="-mx-4 border-[var(--sidebar-divider)] md:-ml-10 md:-mr-12" />
+          <hr className="-mx-4 border-[var(--sidebar-divider)] md:-ml-content-gutter md:-mr-content-gutter" />
           <div className="flex flex-col gap-row-gap pt-12">
             <div className="h-6 w-32 animate-pulse rounded bg-surface-card" />
             <div className="grid grid-cols-2 gap-item-gap md:grid-cols-3">
