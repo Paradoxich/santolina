@@ -21,10 +21,12 @@
  *
  * NOT an editorial change — the hero is the same photograph, so the verdict is
  * preserved. Since migration 20260729120000 that has to be DONE rather than
- * assumed: a trigger clears `editorial_checked_at` on any write to
+ * assumed: a trigger clears the image criterion on any write to
  * `image_url_curated`, so this script resizes and then re-asserts the verdict
  * in a second statement. See the comment at that write for why one statement
- * cannot work. Re-judging a row because the same picture got smaller would be
+ * cannot work. Since 20260729140000 the criterion cleared is
+ * `editorial_image_at`, and the re-assert has to restore that stamp too —
+ * `is_curated` alone would be an approval with a criterion outstanding. Re-judging a row because the same picture got smaller would be
  * noise, but the opt-out belongs in the diff where it can be argued with.
  *
  * DRY RUN BY DEFAULT. Pass --apply to write.
@@ -48,11 +50,12 @@ async function main() {
     image_url_curated: string | null
     is_curated: boolean | null
     editorial_checked_at: string | null
+    editorial_image_at: string | null
   }>((from, to) =>
     supabase
       .from('plants')
       .select(
-        'id, common_name, image_url_curated, is_curated, editorial_checked_at'
+        'id, common_name, image_url_curated, is_curated, editorial_checked_at, editorial_image_at'
       )
       .like('image_url_curated', '%upload.wikimedia.org%')
       .order('id')
@@ -103,12 +106,20 @@ async function main() {
       // Against the now-null current value, the same write is a change, and
       // passes. The first draft of this script got that wrong and would have
       // quietly un-curated every row it resized.
+      // The re-assert MUST include editorial_image_at. Since the verdict was
+      // split per criterion (migration 20260729140000) the resize clears that
+      // stamp, and restoring only is_curated and editorial_checked_at leaves
+      // the row approved with criterion 1 outstanding — the one state the
+      // trigger exists to make impossible. This script predates the split and
+      // was not updated with it; the contract test's last case is what found
+      // it, before the script had run again.
       if (p.editorial_checked_at || p.is_curated) {
         const { error: restoreErr } = await supabase
           .from('plants')
           .update({
             is_curated: p.is_curated,
             editorial_checked_at: p.editorial_checked_at,
+            editorial_image_at: p.editorial_image_at,
           })
           .eq('id', p.id)
         if (restoreErr) {
