@@ -24,14 +24,28 @@
 -- invalidate an editorial judgment, and sweeping more columns in would make
 -- the flag impossible to keep.
 --
--- THE ESCAPE HATCH IS DELIBERATE AND NARROW. If an UPDATE writes
--- editorial_checked_at itself, the trigger leaves it alone. That is what lets
--- curate-editorial rewrite a description and sign it off in one statement, and
--- it lets a caller that genuinely knows better say so — fix-oversized-heroes
--- swaps a hero for a smaller rendition of the SAME photograph, which no
--- reviewer would judge differently, so it re-states the stamp rather than
--- losing 9 sign-offs to a resize. An exception has to be written down, in the
--- same spirit as MANUAL_EXCLUSIONS and the round scope waivers.
+-- THE ESCAPE HATCH IS DELIBERATE AND NARROW, AND IT IS ABOUT CHANGING THE
+-- STAMP, NOT WRITING IT. If an UPDATE moves editorial_checked_at to a new
+-- value, the trigger leaves the row alone; that is what lets curate-editorial
+-- rewrite a description and sign it off in one statement.
+--
+-- Writing the OLD value back does not qualify, and cannot. Postgres cannot
+-- distinguish "wrote the same value deliberately" from "did not write this
+-- column" — PostgREST sends every column on an update either way — so value
+-- equality is the only signal available, and an unchanged stamp has to read as
+-- no claim. The first version of this comment said "writes editorial_checked_at
+-- itself", and fix-oversized-heroes was built against that wording: it passed
+-- the old stamp back inside the same update and was silently un-curating every
+-- row it resized. Caught the day it shipped, by testing the trigger rather than
+-- trusting its description.
+--
+-- A caller that genuinely knows better must therefore RE-ASSERT the verdict in
+-- a second statement, where the old value is a change against the now-cleared
+-- one. fix-oversized-heroes does exactly that: a smaller rendition of the SAME
+-- photograph is not something a reviewer would judge differently, and losing
+-- sign-offs to a resize would be the guard working against what it protects.
+-- An exception has to be written down, in the same spirit as MANUAL_EXCLUSIONS
+-- and the round scope waivers.
 --
 -- is_curated is cleared alongside the stamp. Leaving it true would produce the
 -- one state that is definitely wrong: an approval with no verdict behind it.

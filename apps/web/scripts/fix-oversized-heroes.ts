@@ -20,11 +20,12 @@
  * left exactly as it is.
  *
  * NOT an editorial change — the hero is the same photograph, so the verdict is
- * preserved. Since migration 20260729120000 that has to be stated rather than
+ * preserved. Since migration 20260729120000 that has to be DONE rather than
  * assumed: a trigger clears `editorial_checked_at` on any write to
- * `image_url_curated`, and this script opts out by writing the existing stamp
- * back unchanged. Re-judging a row because the same picture got smaller would
- * be noise, but the opt-out belongs in the diff where it can be argued with.
+ * `image_url_curated`, so this script resizes and then re-asserts the verdict
+ * in a second statement. See the comment at that write for why one statement
+ * cannot work. Re-judging a row because the same picture got smaller would be
+ * noise, but the opt-out belongs in the diff where it can be argued with.
  *
  * DRY RUN BY DEFAULT. Pass --apply to write.
  *
@@ -81,23 +82,41 @@ async function main() {
     if (apply) {
       const { error } = await supabase
         .from('plants')
-        .update({
-          image_url_curated: result.url,
-          // Declaring the exception, per the invalidate_editorial_verdict
-          // trigger (migration 20260729120000): an UPDATE that writes
-          // editorial_checked_at keeps its verdict. This is a smaller
-          // rendition of the SAME photograph, so no reviewer would judge it
-          // differently, and losing nine sign-offs to a resize would be the
-          // guard working against the thing it protects. Written back
-          // unchanged rather than refreshed — the verdict was made when it
-          // was made.
-          is_curated: p.is_curated,
-          editorial_checked_at: p.editorial_checked_at,
-        })
+        .update({ image_url_curated: result.url })
         .eq('id', p.id)
       if (error) {
         console.log(`  ${p.common_name} — write failed: ${error.message}`)
         continue
+      }
+
+      // Re-assert the verdict in a SECOND statement, because the first one
+      // cleared it. This is a smaller rendition of the SAME photograph, so no
+      // reviewer would judge it differently, and losing sign-offs to a resize
+      // would be the guard working against the thing it protects.
+      //
+      // It has to be a second write. The invalidate_editorial_verdict trigger
+      // (migration 20260729120000) skips an update that CHANGES the stamp, and
+      // Postgres cannot tell "wrote the same value deliberately" from "did not
+      // write it" — PostgREST sends every column either way, so value equality
+      // is the only signal available. Writing the old stamp back inside the
+      // first update therefore looks like no write at all and gets cleared.
+      // Against the now-null current value, the same write is a change, and
+      // passes. The first draft of this script got that wrong and would have
+      // quietly un-curated every row it resized.
+      if (p.editorial_checked_at || p.is_curated) {
+        const { error: restoreErr } = await supabase
+          .from('plants')
+          .update({
+            is_curated: p.is_curated,
+            editorial_checked_at: p.editorial_checked_at,
+          })
+          .eq('id', p.id)
+        if (restoreErr) {
+          console.log(
+            `  ${p.common_name} — RESIZED BUT THE VERDICT WAS NOT RESTORED (${restoreErr.message}); re-run curate-editorial for this row`
+          )
+          continue
+        }
       }
     }
     console.log(
