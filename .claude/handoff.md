@@ -37,7 +37,7 @@ Newest entry first. Read the top entry before starting work.
 **Open questions:**
 
 - **`NEXT_PUBLIC_APP_URL` is empty and referenced nowhere in code**, but still advertised in `.env.example` and CLAUDE.md's env list. Delete it or wire it up — it currently looks load-bearing and isn't.
-- **Supabase's redirect allow-list may not include localhost.** Logging in locally only worked on port **3000**; a dev server on any other port bounces to `/login` or to santolina.app, because Supabase silently falls back to the Site URL when `emailRedirectTo` is not allow-listed. Worth adding `http://localhost:3000/**` explicitly (Auth → URL Configuration) so it is not luck.
+- ~~Supabase redirect allow-list~~ — **resolved, not a question: run the local dev server on port 3000.** Ana confirmed the allow-list holds `localhost:3000` and nothing else. On any other port Supabase ignores `emailRedirectTo` and silently falls back to the Site URL, so you get bounced to `/login` forever or thrown to santolina.app — with nothing in the app's own code to blame. Cost real time this session on port 3111. Consequence worth knowing when two sessions run at once: only one worktree can have a loggable dev server up, so stop the other first.
 
 **Known limit of the new guard, stated so nobody over-trusts it:** an _already-drifted_ copy matches no primitive and is invisible to check B. It closes the path, not the state — safe only because every pre-existing copy was eliminated in the same change. And neither tool proves prose is _true_; that half is unmechanisable, which is why consumers are generated instead of written.
 
