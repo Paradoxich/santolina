@@ -24,6 +24,7 @@ export const icons = {
   maintenance: '/icons/icon-maintenance.svg',
   placement: '/icons/icon-placement.svg',
   plus: '/icons/icon-plus.svg',
+  plusFilled: '/icons/icon-plus-filled.svg',
   reflections: '/icons/icon-reflections.svg',
   search: '/icons/icon-search.svg',
   settings: '/icons/icon-settings.svg',

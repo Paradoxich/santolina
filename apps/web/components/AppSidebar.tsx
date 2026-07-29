@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Avatar, Badge, Button, Icon, Menu } from '@paradoxui/ui'
+import { Avatar, Badge, Icon, Menu } from '@paradoxui/ui'
 import { icons, type IconName } from '@/lib/icons'
 import { SettingsModal } from '@/components/SettingsModal'
 import { useAddNote } from '@/components/AddNoteProvider'
@@ -94,20 +94,23 @@ export function AppSidebar({ identity }: { identity: SidebarIdentity }) {
         />
       </div>
 
-      {/* An action, not a destination — kept visually distinct from the nav
-          rows below so it doesn't read as a fifth place to go. */}
+      {/* An action, not a destination — same row chrome as the nav links
+          below, with a filled plus so it still reads as "do" rather than "go". */}
       <div className="px-inline-gap pb-inline-gap">
-        <Button
-          variant="control"
-          size="sm"
+        <button
+          type="button"
           onClick={openAddNote}
-          className="w-full justify-start gap-inline-gap px-row-gap"
+          className={[
+            'flex w-full items-center gap-inline-gap rounded-md px-row-gap py-item-gap',
+            'text-body text-primary',
+            'transition-colors duration-normal hover:bg-surface-nav-active',
+          ].join(' ')}
         >
           <span className={glyphSlot}>
-            <Icon src={icons.plus} />
+            <Icon src={icons.plusFilled} />
           </span>
           Add note
-        </Button>
+        </button>
       </div>
 
       <nav className="flex min-h-0 flex-1 flex-col gap-tight-gap p-inline-gap">
