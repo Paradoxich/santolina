@@ -75,12 +75,14 @@ export const RAW_TO_BUCKET: Record<string, string> = {
   peach: 'orange',
   bronze: 'orange',
   'rusty copper': 'orange',
+  apricot: 'orange', // round 9, Lewisia cotyledon — pale orange, not peach-pink
   // red
   red: 'red',
   crimson: 'red',
   'deep red': 'red',
   scarlet: 'red',
   'orange-red': 'red',
+  'coral-red': 'red', // round 9, Kniphofia rooperi — see the compound rule below
   // burgundy — the dark/moody bloom bucket
   burgundy: 'burgundy',
   maroon: 'burgundy',
@@ -106,12 +108,21 @@ export const RAW_TO_BUCKET: Record<string, string> = {
   magenta: 'magenta',
   'purple-pink': 'magenta',
   // purple
+  //
+  // THE COMPOUND RULE, made explicit in round 9 because the table already
+  // followed it and nothing said so: in a hyphenated colour the LAST word is
+  // the bucket and the first only modifies it. That is why 'purple-red' is
+  // burgundy (a red, darkened toward purple) while 'reddish-purple' is purple
+  // (a purple, warmed toward red) — they are not the same colour reversed, and
+  // reading them as if they were is how a Sempervivum ends up filed with the
+  // near-blacks. Same rule puts 'purple-blue' in blue and 'coral-red' in red.
   purple: 'purple',
   violet: 'purple',
   'dark purple': 'purple',
   'deep purple': 'purple',
   'pale purple': 'purple',
   'purple-tinged': 'purple',
+  'reddish-purple': 'purple', // round 9, Sempervivum montanum
   // lavender
   lavender: 'lavender',
   'lavender-blue': 'lavender',
@@ -122,6 +133,7 @@ export const RAW_TO_BUCKET: Record<string, string> = {
   // blue
   blue: 'blue',
   'violet-blue': 'blue',
+  'purple-blue': 'blue', // round 9, Festuca amethystina — compound rule above
   'pale blue': 'blue',
   'steel blue': 'blue',
   'deep blue': 'blue',

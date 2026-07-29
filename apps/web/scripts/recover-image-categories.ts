@@ -32,6 +32,13 @@ import { getSupabaseAdmin } from '../lib/supabase-admin'
 import { getSpeciesBySlug } from '../lib/trefle'
 import { fetchAllRows } from '../lib/paginate'
 import type { ImageCandidate } from '../lib/image-shortlist'
+import {
+  requireScope,
+  scopeIds,
+  applyScope,
+  describeScope,
+  requireReasonForAll,
+} from './scope'
 
 // Trefle asks for a gentle crawl; matches seed-round7.ts.
 const INTER_SPECIES_DELAY_MS = 1600
@@ -92,6 +99,20 @@ async function main() {
   const limit = parseLimit()
   const supabase = getSupabaseAdmin()
 
+  // Scope is mandatory, as on every pipeline step since the 2026-07-29 freeze.
+  // `image_candidates IS NULL` is a state predicate, not a scope: it selects
+  // every plant this pass has never reached, across every round, so a routine
+  // run for a new batch would reach back into finished rounds.
+  const scope = requireScope(
+    'recover-image-categories',
+    'This pass writes image_candidates, which is what the vision pass is ' +
+      'allowed to look at. An unscoped run would reach into finished rounds.'
+  )
+  const scopeIdList = scopeIds(scope)
+  const whyAll = requireReasonForAll(scope)
+  console.log(describeScope(scope, scopeIdList))
+  if (whyAll) console.log(`Whole-catalog run, because: ${whyAll}`)
+
   // Never a bare .select() — Supabase caps unpaginated reads at 1000 rows and
   // the catalog is past that (see docs/architecture.md §25). Ordered by id
   // rather than common_name because paging needs a unique column to be stable.
@@ -101,7 +122,7 @@ async function main() {
       .select('id, common_name, source_species_id')
       .not('source_species_id', 'is', null)
     if (!refresh) q = q.is('image_candidates', null)
-    return q.order('id').range(from, to)
+    return applyScope(q, scopeIdList).order('id').range(from, to)
   })
 
   plants.sort((a, b) => a.common_name.localeCompare(b.common_name))

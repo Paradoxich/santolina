@@ -1,0 +1,1176 @@
+{
+  "findings": [
+    {
+      "id": "04a435aa-6f6c-40e1-b313-56343280305e",
+      "common_name": "Willow-leaf sunflower",
+      "scientific_name": "Helianthus salicifolius",
+      "stored": ["North-Central U.S.A.", "South-Central U.S.A."],
+      "wcvp_native": ["North-Central U.S.A.", "South-Central U.S.A."],
+      "wcvp_introduced_only": [
+        "Eastern Europe",
+        "Middle Europe",
+        "Northeastern U.S.A."
+      ],
+      "native_l3_count": 5,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": ["South-Central U.S.A."],
+      "verdict": "match"
+    },
+    {
+      "id": "0bb261fb-f554-47c7-8898-81d0eaea5b80",
+      "common_name": "Seven son flower",
+      "scientific_name": "Heptacodium miconioides",
+      "stored": ["China"],
+      "wcvp_native": ["China"],
+      "wcvp_introduced_only": [],
+      "native_l3_count": 2,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": [],
+      "verdict": "match"
+    },
+    {
+      "id": "1c7be629-62e3-4fbd-baaf-63626cfaf89b",
+      "common_name": "Abelia chinensis",
+      "scientific_name": "Abelia chinensis",
+      "stored": ["China", "Eastern Asia", "Indo-China"],
+      "wcvp_native": ["China", "Eastern Asia", "Indo-China"],
+      "wcvp_introduced_only": [],
+      "native_l3_count": 5,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": ["Indo-China"],
+      "verdict": "match"
+    },
+    {
+      "id": "1fabb169-1fce-4ddc-8f5d-fea6f967d3c3",
+      "common_name": "Leatherleaf sedge",
+      "scientific_name": "Carex buchananii",
+      "stored": ["New Zealand"],
+      "wcvp_native": ["New Zealand"],
+      "wcvp_introduced_only": ["Northern Europe"],
+      "native_l3_count": 1,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": ["New Zealand"],
+      "verdict": "match"
+    },
+    {
+      "id": "2154b945-3cf7-40b1-9563-2615b43f4d8a",
+      "common_name": "Gray rockcress",
+      "scientific_name": "Arabis caucasica",
+      "stored": [
+        "Arabian Peninsula",
+        "Caucasus",
+        "Eastern Europe",
+        "Middle Asia",
+        "Northern Africa",
+        "Southeastern Europe",
+        "Western Asia"
+      ],
+      "wcvp_native": [
+        "Arabian Peninsula",
+        "Caucasus",
+        "Eastern Europe",
+        "Middle Asia",
+        "Northern Africa",
+        "Southeastern Europe",
+        "Western Asia"
+      ],
+      "wcvp_introduced_only": [
+        "Eastern Canada",
+        "Indian Subcontinent",
+        "Macaronesia",
+        "Middle Europe",
+        "North-Central U.S.A.",
+        "Northeastern U.S.A.",
+        "Northern Europe",
+        "Southwestern Europe",
+        "Subarctic America",
+        "Western Canada"
+      ],
+      "native_l3_count": 21,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": ["Eastern Europe", "Middle Asia"],
+      "verdict": "match"
+    },
+    {
+      "id": "2284e249-11e8-4621-9024-e079c3208ab3",
+      "common_name": "Firethorn",
+      "scientific_name": "Pyracantha coccinea",
+      "stored": [
+        "Caucasus",
+        "Eastern Europe",
+        "Middle Europe",
+        "Southeastern Europe",
+        "Southwestern Europe",
+        "Western Asia"
+      ],
+      "wcvp_native": [
+        "Caucasus",
+        "Eastern Europe",
+        "Middle Europe",
+        "Southeastern Europe",
+        "Southwestern Europe",
+        "Western Asia"
+      ],
+      "wcvp_introduced_only": [
+        "Eastern Canada",
+        "Middle Asia",
+        "North-Central U.S.A.",
+        "Northeastern U.S.A.",
+        "Northern Europe",
+        "Northwestern U.S.A.",
+        "South-Central U.S.A.",
+        "Southeastern U.S.A.",
+        "Southern Africa",
+        "Southwestern U.S.A.",
+        "Western Canada",
+        "Western South America"
+      ],
+      "native_l3_count": 15,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": ["Eastern Europe", "Middle Europe"],
+      "verdict": "match"
+    },
+    {
+      "id": "25097132-5e8e-40a3-943b-ca117bdd6561",
+      "common_name": "Iris danfordiae",
+      "scientific_name": "Iris danfordiae",
+      "stored": ["Western Asia"],
+      "wcvp_native": ["Western Asia"],
+      "wcvp_introduced_only": [],
+      "native_l3_count": 1,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": ["Western Asia"],
+      "verdict": "match"
+    },
+    {
+      "id": "2ca17843-dc09-4efc-b76b-f3769792660e",
+      "common_name": "Lifelong saxifrage",
+      "scientific_name": "Saxifraga paniculata",
+      "stored": [
+        "Caucasus",
+        "Eastern Canada",
+        "Eastern Europe",
+        "Middle Europe",
+        "North-Central U.S.A.",
+        "Northeastern U.S.A.",
+        "Northern Europe",
+        "Southeastern Europe",
+        "Southwestern Europe",
+        "Subarctic America",
+        "Western Asia",
+        "Western Canada"
+      ],
+      "wcvp_native": [
+        "Caucasus",
+        "Eastern Canada",
+        "Eastern Europe",
+        "Middle Europe",
+        "North-Central U.S.A.",
+        "Northeastern U.S.A.",
+        "Northern Europe",
+        "Southeastern Europe",
+        "Southwestern Europe",
+        "Subarctic America",
+        "Western Asia",
+        "Western Canada"
+      ],
+      "wcvp_introduced_only": [],
+      "native_l3_count": 38,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": [
+        "Eastern Europe",
+        "North-Central U.S.A.",
+        "Western Canada"
+      ],
+      "verdict": "match"
+    },
+    {
+      "id": "3359a0a9-c178-4582-8664-08a8c1b04ad9",
+      "common_name": "Mountain house-leek",
+      "scientific_name": "Sempervivum montanum",
+      "stored": ["Middle Europe", "Southeastern Europe", "Southwestern Europe"],
+      "wcvp_native": [
+        "Middle Europe",
+        "Southeastern Europe",
+        "Southwestern Europe"
+      ],
+      "wcvp_introduced_only": [],
+      "native_l3_count": 8,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": ["Southeastern Europe"],
+      "verdict": "match"
+    },
+    {
+      "id": "374ba454-1e2f-4094-9d52-c380e3b25bab",
+      "common_name": "Lily leek",
+      "scientific_name": "Allium moly",
+      "stored": [
+        "Northern Africa",
+        "Southeastern Europe",
+        "Southwestern Europe"
+      ],
+      "wcvp_native": [
+        "Northern Africa",
+        "Southeastern Europe",
+        "Southwestern Europe"
+      ],
+      "wcvp_introduced_only": ["Middle Europe", "Northern Europe"],
+      "native_l3_count": 5,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": ["Southeastern Europe"],
+      "verdict": "match"
+    },
+    {
+      "id": "3d845cd7-9c6e-4241-834f-dead0d23220b",
+      "common_name": "Winter daphne",
+      "scientific_name": "Daphne odora",
+      "stored": ["China", "Eastern Asia", "Indo-China"],
+      "wcvp_native": ["China", "Eastern Asia", "Indo-China"],
+      "wcvp_introduced_only": ["New Zealand"],
+      "native_l3_count": 4,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": ["Eastern Asia", "Indo-China"],
+      "verdict": "match"
+    },
+    {
+      "id": "416a041f-5e6d-4974-b160-4aa736ffc1f0",
+      "common_name": "Longwood tussock",
+      "scientific_name": "Carex comans",
+      "stored": ["New Zealand"],
+      "wcvp_native": ["New Zealand"],
+      "wcvp_introduced_only": ["Northern Europe"],
+      "native_l3_count": 2,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": [],
+      "verdict": "match"
+    },
+    {
+      "id": "41e12209-2c6c-49f4-a430-04647bdc8129",
+      "common_name": "Lady tulip",
+      "scientific_name": "Tulipa clusiana",
+      "stored": ["Indian Subcontinent", "Western Asia"],
+      "wcvp_native": ["Indian Subcontinent", "Western Asia"],
+      "wcvp_introduced_only": [
+        "Northern Africa",
+        "Southwestern Europe",
+        "Southwestern U.S.A."
+      ],
+      "native_l3_count": 5,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": [],
+      "verdict": "match"
+    },
+    {
+      "id": "426be7af-a453-453f-89be-e3511b129dfd",
+      "common_name": "Chinese-holly",
+      "scientific_name": "Osmanthus heterophyllus",
+      "stored": ["Eastern Asia"],
+      "wcvp_native": ["Eastern Asia", "Indo-China"],
+      "wcvp_introduced_only": ["Southeastern U.S.A."],
+      "native_l3_count": 5,
+      "missing": ["Indo-China"],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": ["Indo-China"],
+      "verdict": "disagrees"
+    },
+    {
+      "id": "4a61a80c-e1b4-4176-b48b-380658568cf3",
+      "common_name": "Mother of thyme",
+      "scientific_name": "Thymus praecox",
+      "stored": [
+        "Caucasus",
+        "Middle Europe",
+        "Northern Europe",
+        "Southeastern Europe",
+        "Southwestern Europe",
+        "Subarctic America",
+        "Western Asia"
+      ],
+      "wcvp_native": [
+        "Caucasus",
+        "Middle Europe",
+        "Northern Europe",
+        "Southeastern Europe",
+        "Southwestern Europe",
+        "Subarctic America",
+        "Western Asia"
+      ],
+      "wcvp_introduced_only": ["North-Central U.S.A."],
+      "native_l3_count": 29,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": ["Subarctic America"],
+      "verdict": "match"
+    },
+    {
+      "id": "4e862b91-b844-4c1f-bc26-bb224e400584",
+      "common_name": "Snowberry",
+      "scientific_name": "Symphoricarpos albus",
+      "stored": [
+        "Eastern Canada",
+        "North-Central U.S.A.",
+        "Northeastern U.S.A.",
+        "Northwestern U.S.A.",
+        "South-Central U.S.A.",
+        "Southeastern U.S.A.",
+        "Southwestern U.S.A.",
+        "Subarctic America",
+        "Western Canada"
+      ],
+      "wcvp_native": [],
+      "wcvp_introduced_only": [],
+      "native_l3_count": 0,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": [],
+      "verdict": "no-data",
+      "note": "GBIF has the taxon but carries no WCVP distribution for it"
+    },
+    {
+      "id": "54439803-18e1-46a4-b16e-89fc919a9782",
+      "common_name": "Prunus subhirtella",
+      "scientific_name": "Prunus subhirtella",
+      "stored": ["Eastern Asia"],
+      "wcvp_native": ["Eastern Asia"],
+      "wcvp_introduced_only": [
+        "North-Central U.S.A.",
+        "Northeastern U.S.A.",
+        "Southeastern U.S.A."
+      ],
+      "native_l3_count": 1,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": ["Eastern Asia"],
+      "verdict": "match"
+    },
+    {
+      "id": "624473b2-5aae-4bf6-9ffc-a3d443376ccd",
+      "common_name": "Red spider lily",
+      "scientific_name": "Lycoris radiata",
+      "stored": ["China", "Eastern Asia", "Indian Subcontinent"],
+      "wcvp_native": ["China", "Eastern Asia", "Indian Subcontinent"],
+      "wcvp_introduced_only": [
+        "North-Central U.S.A.",
+        "Southeastern U.S.A.",
+        "Western Indian Ocean"
+      ],
+      "native_l3_count": 6,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": ["Indian Subcontinent"],
+      "verdict": "match"
+    },
+    {
+      "id": "66b9bfeb-cbac-4eea-8b65-1630c316f630",
+      "common_name": "Moss phlox",
+      "scientific_name": "Phlox subulata",
+      "stored": [
+        "Eastern Canada",
+        "North-Central U.S.A.",
+        "Northeastern U.S.A.",
+        "Southeastern U.S.A.",
+        "Southwestern U.S.A.",
+        "Western Canada"
+      ],
+      "wcvp_native": [
+        "Eastern Canada",
+        "North-Central U.S.A.",
+        "Northeastern U.S.A.",
+        "Southeastern U.S.A.",
+        "Southwestern U.S.A.",
+        "Western Canada"
+      ],
+      "wcvp_introduced_only": ["Middle Asia", "Middle Europe"],
+      "native_l3_count": 32,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": ["Southwestern U.S.A.", "Western Canada"],
+      "verdict": "match"
+    },
+    {
+      "id": "6711354d-ee76-4dda-8a71-29bf1842e1a9",
+      "common_name": "Hamamelis japonica",
+      "scientific_name": "Hamamelis japonica",
+      "stored": ["Eastern Asia"],
+      "wcvp_native": ["Eastern Asia"],
+      "wcvp_introduced_only": [],
+      "native_l3_count": 1,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": ["Eastern Asia"],
+      "verdict": "match"
+    },
+    {
+      "id": "706ab536-d200-4689-9bcd-e6cc959942d0",
+      "common_name": "Caryopteris incana",
+      "scientific_name": "Caryopteris incana",
+      "stored": ["China", "Eastern Asia"],
+      "wcvp_native": ["China", "Eastern Asia"],
+      "wcvp_introduced_only": ["North-Central U.S.A.", "Southeastern Europe"],
+      "native_l3_count": 5,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": [],
+      "verdict": "match"
+    },
+    {
+      "id": "70eb272f-7c61-475a-9f03-07b2084a1759",
+      "common_name": "Common rock-rose",
+      "scientific_name": "Helianthemum nummularium",
+      "stored": [
+        "Caucasus",
+        "Eastern Europe",
+        "Middle Europe",
+        "Northern Europe",
+        "Southeastern Europe",
+        "Southwestern Europe",
+        "Western Asia"
+      ],
+      "wcvp_native": [
+        "Caucasus",
+        "Eastern Europe",
+        "Middle Europe",
+        "Northern Africa",
+        "Northern Europe",
+        "Southeastern Europe",
+        "Southwestern Europe",
+        "Western Asia"
+      ],
+      "wcvp_introduced_only": [],
+      "native_l3_count": 43,
+      "missing": ["Northern Africa"],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": ["Northern Africa"],
+      "verdict": "disagrees"
+    },
+    {
+      "id": "7364a922-e25a-40d3-bc48-c479efe6d5fe",
+      "common_name": "Calico or one-sided or white woodland or starved aster",
+      "scientific_name": "Symphyotrichum lateriflorum",
+      "stored": [
+        "Eastern Canada",
+        "Mexico",
+        "North-Central U.S.A.",
+        "Northeastern U.S.A.",
+        "South-Central U.S.A.",
+        "Southeastern U.S.A.",
+        "Western Canada"
+      ],
+      "wcvp_native": [
+        "Eastern Canada",
+        "Mexico",
+        "North-Central U.S.A.",
+        "Northeastern U.S.A.",
+        "South-Central U.S.A.",
+        "Southeastern U.S.A.",
+        "Western Canada"
+      ],
+      "wcvp_introduced_only": [
+        "Eastern Europe",
+        "Middle Europe",
+        "Southeastern Europe",
+        "Southwestern Europe"
+      ],
+      "native_l3_count": 44,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": ["Mexico", "South-Central U.S.A.", "Western Canada"],
+      "verdict": "match"
+    },
+    {
+      "id": "78209b06-1440-4bbb-ad3e-2550aad9ceeb",
+      "common_name": "Alpine gypsophila",
+      "scientific_name": "Gypsophila repens",
+      "stored": ["Middle Europe", "Southeastern Europe", "Southwestern Europe"],
+      "wcvp_native": [
+        "Middle Europe",
+        "Southeastern Europe",
+        "Southwestern Europe"
+      ],
+      "wcvp_introduced_only": [],
+      "native_l3_count": 9,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": [],
+      "verdict": "match"
+    },
+    {
+      "id": "7a2cfda3-c8f4-4d44-9df8-faf218ebd71d",
+      "common_name": "Michaelmas daisy",
+      "scientific_name": "Symphyotrichum novi-belgii",
+      "stored": [
+        "Eastern Canada",
+        "Northeastern U.S.A.",
+        "Southeastern U.S.A."
+      ],
+      "wcvp_native": [
+        "Eastern Canada",
+        "Northeastern U.S.A.",
+        "Southeastern U.S.A."
+      ],
+      "wcvp_introduced_only": [
+        "Australia",
+        "Caribbean",
+        "Caucasus",
+        "Eastern Asia",
+        "Eastern Europe",
+        "Malesia",
+        "Middle Asia",
+        "Middle Europe",
+        "Northern Europe",
+        "Northwestern Pacific",
+        "Russian Far East",
+        "Siberia",
+        "Southeastern Europe",
+        "Southwestern Europe",
+        "Southwestern Pacific",
+        "Western Asia"
+      ],
+      "native_l3_count": 20,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": [],
+      "verdict": "match"
+    },
+    {
+      "id": "80d1c87b-4b4e-40d9-8bb4-35eadf270b36",
+      "common_name": "Callicarpa bodinieri",
+      "scientific_name": "Callicarpa bodinieri",
+      "stored": ["China", "Indo-China"],
+      "wcvp_native": ["China", "Indo-China"],
+      "wcvp_introduced_only": [],
+      "native_l3_count": 6,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": [],
+      "verdict": "match"
+    },
+    {
+      "id": "88b0da7d-1f73-4af7-8401-c5834370cbe7",
+      "common_name": "Prostrate speedwell",
+      "scientific_name": "Veronica prostrata",
+      "stored": [
+        "Caucasus",
+        "Eastern Europe",
+        "Middle Asia",
+        "Middle Europe",
+        "Siberia",
+        "Southeastern Europe",
+        "Southwestern Europe"
+      ],
+      "wcvp_native": [
+        "Caucasus",
+        "Eastern Europe",
+        "Middle Asia",
+        "Middle Europe",
+        "Siberia",
+        "Southeastern Europe",
+        "Southwestern Europe"
+      ],
+      "wcvp_introduced_only": [],
+      "native_l3_count": 28,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": ["Caucasus", "Middle Asia", "Southwestern Europe"],
+      "verdict": "match"
+    },
+    {
+      "id": "937dde15-f3fa-4b39-a369-79fed9da7b9b",
+      "common_name": "Indian chrysanthemum",
+      "scientific_name": "Chrysanthemum indicum",
+      "stored": ["China", "Eastern Asia", "Indian Subcontinent", "Indo-China"],
+      "wcvp_native": [
+        "China",
+        "Eastern Asia",
+        "Indian Subcontinent",
+        "Indo-China"
+      ],
+      "wcvp_introduced_only": [
+        "Caribbean",
+        "Central America",
+        "Malesia",
+        "Middle Asia",
+        "Southeastern Europe",
+        "Southwestern Europe",
+        "West-Central Tropical Africa",
+        "Western Indian Ocean",
+        "Western South America"
+      ],
+      "native_l3_count": 12,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": [],
+      "verdict": "match"
+    },
+    {
+      "id": "93f71f54-0d89-4f26-bc81-86b48b1364f5",
+      "common_name": "Zephyr-lily",
+      "scientific_name": "Zephyranthes candida",
+      "stored": ["Brazil", "Southern South America"],
+      "wcvp_native": ["Brazil", "Southern South America"],
+      "wcvp_introduced_only": [
+        "Australia",
+        "Caribbean",
+        "China",
+        "Eastern Asia",
+        "Indian Subcontinent",
+        "Northern Africa",
+        "Northwestern Pacific",
+        "Papuasia",
+        "South Tropical Africa",
+        "South-Central Pacific",
+        "South-Central U.S.A.",
+        "Southeastern U.S.A.",
+        "Southern Africa",
+        "Southwestern Pacific",
+        "Western Indian Ocean",
+        "Western South America"
+      ],
+      "native_l3_count": 5,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": [],
+      "verdict": "match"
+    },
+    {
+      "id": "9981a70f-2beb-427c-b48b-d65a424d914b",
+      "common_name": "Jonquil",
+      "scientific_name": "Narcissus jonquilla",
+      "stored": ["Southwestern Europe"],
+      "wcvp_native": ["Southwestern Europe"],
+      "wcvp_introduced_only": [
+        "Macaronesia",
+        "Middle Europe",
+        "North-Central U.S.A.",
+        "Northeastern U.S.A.",
+        "Northern Europe",
+        "South-Central U.S.A.",
+        "Southeastern Europe",
+        "Southeastern U.S.A.",
+        "Southwestern U.S.A.",
+        "Western Canada"
+      ],
+      "native_l3_count": 2,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": [],
+      "verdict": "match"
+    },
+    {
+      "id": "9def1484-04a4-4c44-b37a-8b345de75e6d",
+      "common_name": "Carpathian harebell",
+      "scientific_name": "Campanula carpatica",
+      "stored": ["Eastern Europe", "Middle Europe", "Southeastern Europe"],
+      "wcvp_native": ["Eastern Europe", "Middle Europe", "Southeastern Europe"],
+      "wcvp_introduced_only": ["Northeastern U.S.A."],
+      "native_l3_count": 3,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": [
+        "Eastern Europe",
+        "Middle Europe",
+        "Southeastern Europe"
+      ],
+      "verdict": "match"
+    },
+    {
+      "id": "9f47edff-529f-4f70-b706-7b1281b3c74e",
+      "common_name": "Amethyst fescue",
+      "scientific_name": "Festuca amethystina",
+      "stored": [
+        "Eastern Europe",
+        "Middle Europe",
+        "Southeastern Europe",
+        "Southwestern Europe",
+        "Western Asia"
+      ],
+      "wcvp_native": [
+        "Eastern Europe",
+        "Middle Europe",
+        "Southeastern Europe",
+        "Southwestern Europe",
+        "Western Asia"
+      ],
+      "wcvp_introduced_only": [],
+      "native_l3_count": 14,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": [
+        "Eastern Europe",
+        "Southwestern Europe",
+        "Western Asia"
+      ],
+      "verdict": "match"
+    },
+    {
+      "id": "a1a0cbf6-5a0d-42a8-bc55-0a7d9aae03ee",
+      "common_name": "Petticoat daffodil",
+      "scientific_name": "Narcissus bulbocodium",
+      "stored": ["Southwestern Europe"],
+      "wcvp_native": ["Southwestern Europe"],
+      "wcvp_introduced_only": [
+        "Middle Europe",
+        "Northern Europe",
+        "Southeastern U.S.A."
+      ],
+      "native_l3_count": 3,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": [],
+      "verdict": "match"
+    },
+    {
+      "id": "a42bde4a-d51c-407c-96ff-7e2d6ec36869",
+      "common_name": "Thin-leaf coneflower",
+      "scientific_name": "Rudbeckia triloba",
+      "stored": [
+        "Eastern Canada",
+        "North-Central U.S.A.",
+        "Northeastern U.S.A.",
+        "Northwestern U.S.A.",
+        "South-Central U.S.A.",
+        "Southeastern U.S.A.",
+        "Southwestern U.S.A."
+      ],
+      "wcvp_native": [
+        "Eastern Canada",
+        "North-Central U.S.A.",
+        "Northeastern U.S.A.",
+        "Northwestern U.S.A.",
+        "South-Central U.S.A.",
+        "Southeastern U.S.A.",
+        "Southwestern U.S.A."
+      ],
+      "wcvp_introduced_only": [
+        "Caucasus",
+        "Eastern Europe",
+        "Middle Europe",
+        "Northern Africa",
+        "Northern Europe",
+        "Southeastern Europe"
+      ],
+      "native_l3_count": 35,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": [
+        "Northwestern U.S.A.",
+        "South-Central U.S.A.",
+        "Southwestern U.S.A."
+      ],
+      "verdict": "match"
+    },
+    {
+      "id": "aca72ced-a3a1-4582-9900-4dbf487a4696",
+      "common_name": "Autumn snowflake",
+      "scientific_name": "Acis autumnalis",
+      "stored": [
+        "Northern Africa",
+        "Southeastern Europe",
+        "Southwestern Europe"
+      ],
+      "wcvp_native": [
+        "Northern Africa",
+        "Southeastern Europe",
+        "Southwestern Europe"
+      ],
+      "wcvp_introduced_only": [],
+      "native_l3_count": 8,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": ["Southeastern Europe"],
+      "verdict": "match"
+    },
+    {
+      "id": "aeccc411-2929-49b9-83a3-4c91d7c363be",
+      "common_name": "Cheddar pink",
+      "scientific_name": "Dianthus gratianopolitanus",
+      "stored": [
+        "Eastern Europe",
+        "Middle Europe",
+        "Northern Europe",
+        "Southwestern Europe"
+      ],
+      "wcvp_native": [
+        "Eastern Europe",
+        "Middle Europe",
+        "Northern Europe",
+        "Southwestern Europe"
+      ],
+      "wcvp_introduced_only": [],
+      "native_l3_count": 8,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": [
+        "Eastern Europe",
+        "Northern Europe",
+        "Southwestern Europe"
+      ],
+      "verdict": "match"
+    },
+    {
+      "id": "b40b6991-e23e-4e06-930a-8bbf6216906c",
+      "common_name": "Bieberstein's crocus",
+      "scientific_name": "Crocus speciosus",
+      "stored": ["Caucasus"],
+      "wcvp_native": [
+        "Caucasus",
+        "Eastern Europe",
+        "Southeastern Europe",
+        "Western Asia"
+      ],
+      "wcvp_introduced_only": ["Middle Europe", "Northern Europe"],
+      "native_l3_count": 7,
+      "missing": ["Eastern Europe", "Southeastern Europe", "Western Asia"],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": ["Eastern Europe"],
+      "verdict": "disagrees"
+    },
+    {
+      "id": "b95eeedb-7502-4c2c-93de-f84e90356510",
+      "common_name": "Siskiyou lewisia",
+      "scientific_name": "Lewisia cotyledon",
+      "stored": ["Northwestern U.S.A.", "Southwestern U.S.A."],
+      "wcvp_native": ["Northwestern U.S.A.", "Southwestern U.S.A."],
+      "wcvp_introduced_only": [],
+      "native_l3_count": 2,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": ["Northwestern U.S.A.", "Southwestern U.S.A."],
+      "verdict": "match"
+    },
+    {
+      "id": "bb8ae38d-c3ef-402a-b10d-27a5a2e1dd99",
+      "common_name": "Alpine balsam",
+      "scientific_name": "Erinus alpinus",
+      "stored": [
+        "Middle Europe",
+        "Northern Africa",
+        "Southeastern Europe",
+        "Southwestern Europe"
+      ],
+      "wcvp_native": [
+        "Middle Europe",
+        "Northern Africa",
+        "Southeastern Europe",
+        "Southwestern Europe"
+      ],
+      "wcvp_introduced_only": ["Northern Europe"],
+      "native_l3_count": 8,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": ["Southeastern Europe"],
+      "verdict": "match"
+    },
+    {
+      "id": "c5780b7e-62b7-4c95-8ed4-7bd4b6aebbfb",
+      "common_name": "White-stem bramble",
+      "scientific_name": "Rubus cockburnianus",
+      "stored": ["China"],
+      "wcvp_native": ["China"],
+      "wcvp_introduced_only": ["Northern Europe"],
+      "native_l3_count": 4,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": [],
+      "verdict": "match"
+    },
+    {
+      "id": "c760761b-a0f1-46d3-ab4a-1646bc7dae22",
+      "common_name": "Crocus banaticus",
+      "scientific_name": "Crocus banaticus",
+      "stored": ["Eastern Europe", "Middle Europe", "Southeastern Europe"],
+      "wcvp_native": ["Eastern Europe", "Middle Europe", "Southeastern Europe"],
+      "wcvp_introduced_only": [],
+      "native_l3_count": 5,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": ["Eastern Europe"],
+      "verdict": "match"
+    },
+    {
+      "id": "c8246dff-aa81-47e5-9af4-d5e2bfea1b7c",
+      "common_name": "Spiny oleaster",
+      "scientific_name": "Elaeagnus pungens",
+      "stored": ["China", "Eastern Asia", "Middle Asia"],
+      "wcvp_native": ["China", "Eastern Asia", "Middle Asia"],
+      "wcvp_introduced_only": [
+        "Northeastern U.S.A.",
+        "Northern Europe",
+        "South-Central U.S.A.",
+        "Southeastern Europe",
+        "Southeastern U.S.A.",
+        "Southwestern Europe",
+        "Western Indian Ocean"
+      ],
+      "native_l3_count": 5,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": ["Middle Asia"],
+      "verdict": "match"
+    },
+    {
+      "id": "dfc5d3bf-c3b8-47b7-83fb-118205f5fb5d",
+      "common_name": "Fairies'-thimbles",
+      "scientific_name": "Campanula cochleariifolia",
+      "stored": ["Middle Europe", "Southeastern Europe", "Southwestern Europe"],
+      "wcvp_native": [
+        "Middle Europe",
+        "Southeastern Europe",
+        "Southwestern Europe"
+      ],
+      "wcvp_introduced_only": ["Northern Europe"],
+      "native_l3_count": 12,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": [],
+      "verdict": "match"
+    },
+    {
+      "id": "e8e9ea05-01d2-4aa0-9a35-22877512463c",
+      "common_name": "Glorytree",
+      "scientific_name": "Clerodendrum trichotomum",
+      "stored": ["China", "Eastern Asia", "Malesia"],
+      "wcvp_native": ["China", "Eastern Asia", "Malesia"],
+      "wcvp_introduced_only": [
+        "New Zealand",
+        "Northern Europe",
+        "Southeastern Europe",
+        "Southeastern U.S.A."
+      ],
+      "native_l3_count": 10,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": ["Malesia"],
+      "verdict": "match"
+    },
+    {
+      "id": "ec5b05fe-bff8-4a02-b005-58a1a852274b",
+      "common_name": "Kniphofia rooperi",
+      "scientific_name": "Kniphofia rooperi",
+      "stored": ["Southern Africa"],
+      "wcvp_native": ["Southern Africa"],
+      "wcvp_introduced_only": [],
+      "native_l3_count": 2,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": [],
+      "verdict": "match"
+    },
+    {
+      "id": "ee348c80-f4bd-41b5-82a4-0ebd35292bbd",
+      "common_name": "Easter-lily",
+      "scientific_name": "Amaryllis belladonna",
+      "stored": ["Southern Africa"],
+      "wcvp_native": ["Southern Africa"],
+      "wcvp_introduced_only": [
+        "Australia",
+        "Caribbean",
+        "Macaronesia",
+        "Mexico",
+        "Middle Atlantic Ocean",
+        "New Zealand",
+        "Northern Africa",
+        "Northern Europe",
+        "Southeastern U.S.A.",
+        "Southern South America",
+        "Southwestern Europe",
+        "Southwestern U.S.A.",
+        "West-Central Tropical Africa"
+      ],
+      "native_l3_count": 1,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": ["Southern Africa"],
+      "verdict": "match"
+    },
+    {
+      "id": "ef55a12b-1701-4db7-8d96-baa22ed58bf9",
+      "common_name": "Heart-leaved globe daisy",
+      "scientific_name": "Globularia cordifolia",
+      "stored": [
+        "Middle Europe",
+        "Southeastern Europe",
+        "Southwestern Europe",
+        "Western Asia"
+      ],
+      "wcvp_native": [
+        "Middle Europe",
+        "Southeastern Europe",
+        "Southwestern Europe",
+        "Western Asia"
+      ],
+      "wcvp_introduced_only": [],
+      "native_l3_count": 12,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": ["Western Asia"],
+      "verdict": "match"
+    },
+    {
+      "id": "f02778a0-ceb2-415b-9f68-fe3e15151908",
+      "common_name": "Cushion-pink",
+      "scientific_name": "Silene acaulis",
+      "stored": [
+        "Eastern Canada",
+        "Eastern Europe",
+        "Middle Europe",
+        "Northeastern U.S.A.",
+        "Northern Europe",
+        "Northwestern U.S.A.",
+        "Russian Far East",
+        "Siberia",
+        "South-Central U.S.A.",
+        "Southeastern Europe",
+        "Southwestern Europe",
+        "Southwestern U.S.A.",
+        "Subarctic America",
+        "Western Asia",
+        "Western Canada"
+      ],
+      "wcvp_native": [
+        "Eastern Canada",
+        "Eastern Europe",
+        "Middle Europe",
+        "Northeastern U.S.A.",
+        "Northern Europe",
+        "Northwestern U.S.A.",
+        "Russian Far East",
+        "Siberia",
+        "South-Central U.S.A.",
+        "Southeastern Europe",
+        "Southwestern Europe",
+        "Southwestern U.S.A.",
+        "Subarctic America",
+        "Western Asia",
+        "Western Canada"
+      ],
+      "wcvp_introduced_only": [],
+      "native_l3_count": 54,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": ["Siberia", "South-Central U.S.A.", "Western Asia"],
+      "verdict": "match"
+    },
+    {
+      "id": "f341f9c8-9fe3-47e3-aa2f-561d901fc7ea",
+      "common_name": "Mexican bush sage",
+      "scientific_name": "Salvia leucantha",
+      "stored": ["Central America", "Mexico"],
+      "wcvp_native": ["Central America", "Mexico"],
+      "wcvp_introduced_only": [
+        "East Tropical Africa",
+        "Indian Subcontinent",
+        "Macaronesia",
+        "Northeast Tropical Africa",
+        "Northern South America",
+        "Western South America"
+      ],
+      "native_l3_count": 9,
+      "missing": [],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": [],
+      "verdict": "match"
+    },
+    {
+      "id": "f61e87a6-f6a4-4f1a-a417-e9a53029ea7f",
+      "common_name": "Erysimum cheiri",
+      "scientific_name": "Erysimum cheiri",
+      "stored": [
+        "Northern Africa",
+        "Southeastern Europe",
+        "Southwestern Europe",
+        "Western Asia"
+      ],
+      "wcvp_native": ["Southeastern Europe"],
+      "wcvp_introduced_only": [
+        "China",
+        "Eastern Asia",
+        "Eastern Canada",
+        "Eastern Europe",
+        "Middle Europe",
+        "New Zealand",
+        "Northern Africa",
+        "Northern Europe",
+        "Southwestern Europe",
+        "Southwestern U.S.A.",
+        "Subantarctic Islands",
+        "Subarctic America",
+        "Western Asia",
+        "Western Canada",
+        "Western South America"
+      ],
+      "native_l3_count": 1,
+      "missing": [],
+      "extra": ["Northern Africa", "Southwestern Europe", "Western Asia"],
+      "extra_are_introduced": [
+        "Northern Africa",
+        "Southwestern Europe",
+        "Western Asia"
+      ],
+      "thin_evidence": ["Southeastern Europe"],
+      "verdict": "disagrees"
+    }
+  ]
+}

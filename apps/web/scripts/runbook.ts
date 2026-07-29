@@ -12,11 +12,16 @@
  * you are about to write the order of the round into a document, don't; link to
  * the generated page instead.
  *
- * TEN STEPS PLUS FOUR BOOK-ENDS, and the distinction is worth keeping straight
- * because both numbers are true and they get confused. The four `alwaysRun`
- * entries (backup, verify, scope-check, archive) are book-ends: free, and run
- * whether or not the round has work. The other ten do the work. "Thirteen steps
- * became ten" on 2026-07-29 refers to the ten.
+ * TEN STEPS PLUS SIX BOOK-ENDS, and the distinction is worth keeping straight
+ * because both numbers are true and they get confused. The `alwaysRun` entries
+ * are book-ends: free, and run whether or not the round has work. The other ten
+ * do the work. "Thirteen steps became ten" on 2026-07-29 refers to the ten.
+ *
+ * Book-ends went from four to six in round 9, and both additions are the same
+ * lesson: a step that costs nothing and produces what a later step needs must
+ * be IN here, not in somebody's memory. The native-region plan and
+ * recover-image-categories were each a prerequisite the runner did not know
+ * about, and each one broke a round that looked like it was running fine.
  */
 
 export interface Step {
@@ -65,8 +70,32 @@ export const RUNBOOK: Step[] = [
     script: 'curate-combinations.ts',
   },
   {
-    step: 'regenerate-native-region',
+    // The PLAN half of a generate-review-apply script. It writes no DB rows —
+    // only reports/native-region-regen.{md,json} — so it is free, and it always
+    // runs.
+    //
+    // It was missing, and the runner could therefore never finish a round on a
+    // clean checkout: only `--apply` was registered, and `--apply` replays a
+    // plan JSON that lives in gitignored reports/. Round 9 hit this on its
+    // first unattended run. Round 8 got past it because a plan file happened to
+    // be sitting on that machine from a manual run — the same shape as the trap
+    // about backups that die with their worktree, and the reason a round must
+    // not depend on untracked local state.
+    step: 'regenerate-native-region (plan)',
     runbook: '4',
+    script: 'regenerate-native-region.ts',
+    alwaysRun: true,
+  },
+  {
+    // NOTE: this applies the plan immediately, in the same run. The script's
+    // own docs describe a review step between the two and there is no gate here
+    // enforcing it — `onFail` only fires on failure, and generating a plan
+    // succeeds. What actually audits this write is step 5b, the WCVP
+    // cross-check, which reported 45/50 agreement for round 9 and caught the
+    // one row where Trefle had counted an INTRODUCED range as native. If that
+    // cross-check ever stops being a FAIL-level step, this needs a real gate.
+    step: 'regenerate-native-region',
+    runbook: '4a',
     script: 'regenerate-native-region.ts',
     args: ['--apply'],
   },
@@ -80,6 +109,24 @@ export const RUNBOOK: Step[] = [
     step: 'cross-check-native-region',
     runbook: '5b',
     script: 'cross-check-native-region.ts',
+  },
+  {
+    // The vision pass's prerequisite, and it was never in the runbook.
+    //
+    // recover-image-categories fetches Trefle's per-category image labels into
+    // image_candidates. pick-plant-images judges ONLY rows that have them, so
+    // without this the vision pass has nothing to look at. This script's own
+    // header has said "use after a new seed batch" all along; the runbook never
+    // did, so every round depended on somebody remembering. Round 8's
+    // candidates came from a manual run; round 9's never happened, and the
+    // vision pass reported success over 50 unjudged plants.
+    //
+    // No AI spend — Trefle calls only — and it skips rows that already have
+    // candidates, so running it every round is cheap and idempotent.
+    step: 'recover-image-categories',
+    runbook: '6',
+    script: 'recover-image-categories.ts',
+    alwaysRun: true,
   },
   {
     step: 'curate-seasonal-care',

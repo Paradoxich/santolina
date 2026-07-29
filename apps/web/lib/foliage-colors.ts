@@ -60,6 +60,14 @@ export const FOLIAGE_RAW_TO_BUCKET: Record<string, string> = {
   // orange — coppery standing foliage (e.g. the bronze sedges)
   'copper-orange': 'orange',
   'bronze-green': 'orange',
+  // Round 9 brought the bronze sedges themselves. For Carex buchananii and
+  // C. comans the bronze IS the standing colour all year — not a seasonal
+  // turn, which is the distinction this file exists to keep.
+  'coppery-bronze': 'orange',
+  'bronze-brown': 'orange',
+  // Glaucous blue-green folds into silver (Ana, July 24 2026) — the purple
+  // cast does not move it out of the cool metallic family.
+  'blue-green with purple tones': 'silver',
 }
 
 /**
@@ -93,6 +101,9 @@ export const IGNORED_FOLIAGE_COLORS = new Set([
   'crimson in autumn',
   'golden yellow in autumn',
   'green tipped with red-purple',
+  // round 9, Sempervivum montanum — same case as the line above: a green
+  // rosette with coloured tips reads green in a bed
+  'green tinged red-purple',
   'green turning orange-red-purple',
   'red in winter',
   'red new growth',

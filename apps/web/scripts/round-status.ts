@@ -101,6 +101,13 @@ const NO_WCVP_DISTRIBUTION: Record<string, string> = {
     'no species-rank GBIF match; accepted synonym Isotrema macrophyllum resolves but carries no WCVP rows',
   'Blechnum spicant':
     'no species-rank GBIF match; segregate genus Struthiopteris spicant resolves but carries no WCVP rows',
+  // Round 9. Verdict came back 'no-data' on 2026-07-29 with the stored range
+  // (nine North American regions) left untouched — the cross-check reported
+  // "GBIF has the taxon but carries no WCVP distribution for it". Nothing was
+  // learned about this row, so it is deliberately unstamped rather than
+  // recorded as validated.
+  'Symphoricarpos albus':
+    'GBIF has the taxon, no WCVP distribution rows (round 9)',
 }
 
 /** State a step needs beyond the plant row itself. */
