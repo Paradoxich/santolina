@@ -67,6 +67,21 @@ function agoLabel(days: number): string {
   return months === 1 ? 'a month ago' : `${months} months ago`
 }
 
+/**
+ * First sentence only. Catalog descriptions run three or four sentences and
+ * the first one is always the identifying line; the rest elaborates and is
+ * in the reference drawer.
+ *
+ * Splits on a full stop followed by a space and a capital, so "40 cm. Tall"
+ * splits but "Lavandula angustifolia L." does not. Returns the whole string
+ * when it finds no such break.
+ */
+function firstSentence(text: string | null): string | null {
+  if (!text) return null
+  const match = text.match(/^.*?[.!?](?=\s+[A-Z])/s)
+  return (match?.[0] ?? text).trim()
+}
+
 function formatDayLabel(date: string): string {
   return new Date(`${date}T12:00:00Z`).toLocaleDateString('en-GB', {
     day: 'numeric',
@@ -122,6 +137,7 @@ export function GardenPlantView({
   // tiers getPlantCareTips already returns, and reading it separately would
   // put the same line on the page twice.
   const bloomRange = formatBloomRange(plant.bloom_months) ?? undefined
+  const shortDescription = firstSentence(plant.description)
 
   // One entry per logged event, as listGardenCareEvents does server-side.
   const events = notes.flatMap((note) =>
@@ -180,25 +196,30 @@ export function GardenPlantView({
           <h1 className="text-title font-semibold text-primary">
             {plant.common_name}
           </h1>
+          {/* The ladder is name (sage-950), description (sage-800),
+              botanical line (sage-700). It ran the other way: the botanical
+              line was text-secondary and the description text-body-secondary,
+              so the aside was darker than the sentence it sat under. */}
           {subtitle && (
-            <p className="text-body italic text-secondary">{subtitle}</p>
+            <p className="text-body italic text-muted">{subtitle}</p>
           )}
-          {plant.description && (
-            <p className="text-body leading-normal text-body-secondary">
-              {plant.description}
+          {shortDescription && (
+            <p className="text-body leading-normal text-secondary">
+              {shortDescription}
             </p>
           )}
 
           <div className="mt-item-gap flex flex-col gap-tight-gap">
-            <p className="text-body text-primary">
-              {daysInGarden !== null
-                ? `In your garden ${agoLabel(daysInGarden)}`
-                : // NEEDS COLUMN: palette_plants.planted_at. The age is
-                  // inferred from a 'planted' diary event, so a plant marked
-                  // planted without logging has no age at all, and every
-                  // establishment rule in CARE_EVENT_RULES never fires for it.
-                  'Planting date not recorded'}
-            </p>
+            {/* Only when there is a date to show. The "not recorded" fallback
+                said nothing a reader could act on — the gap it stands for
+                (NEEDS COLUMN: palette_plants.planted_at, currently inferred
+                from a 'planted' diary event) is real but belongs in the
+                backlog, not in the hero. */}
+            {daysInGarden !== null && (
+              <p className="text-body text-primary">
+                In your garden {agoLabel(daysInGarden)}
+              </p>
+            )}
             {/* Bloom status was a card of its own and carried one short line,
                 so it is a line here instead. */}
             <p className="flex items-center gap-inline-gap text-body text-secondary">
