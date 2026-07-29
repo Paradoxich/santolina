@@ -308,18 +308,6 @@ export function GardenPlantView({
       </div>
 
       {/* ============================================================
-          THE YEAR — full width, its own row.
-      ============================================================= */}
-      <Panel title="Its year" meta={bloomRange} className="overflow-hidden">
-        <YearTimeline
-          bloomMonths={bloomMonths}
-          events={events}
-          today={now}
-          rhythm={plant.seasonal_rhythm}
-        />
-      </Panel>
-
-      {/* ============================================================
           Photos, the reference entry point, and what the plant does for
           the garden. Drops a column at a time as its cards drop out.
       ============================================================= */}
@@ -391,6 +379,20 @@ export function GardenPlantView({
           </Panel>
         )}
       </div>
+
+      {/* ============================================================
+          THE YEAR — full width, last on the page. It is the tallest thing
+          here and the least urgent: reference for the whole year, where
+          everything above it is about this plant today.
+      ============================================================= */}
+      <Panel title="Its year" meta={bloomRange} className="overflow-hidden">
+        <YearTimeline
+          bloomMonths={bloomMonths}
+          events={events}
+          today={now}
+          rhythm={plant.seasonal_rhythm}
+        />
+      </Panel>
 
       <Lightbox
         images={notePhotos}
