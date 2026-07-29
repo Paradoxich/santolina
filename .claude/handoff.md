@@ -70,6 +70,48 @@ The catalog's size, the curated count and the per-round step table are
 **generated** into `docs/catalog-state.md` and `docs/round-runbook.md`. Link to
 them; never retype their numbers here.
 
+## 2026-07-29 — session/2026-07-29-round-10 (pipeline; read this one first for pipeline work)
+
+**Status:** merged to main ([PR #132](https://github.com/Paradoxich/santolina/pull/132), merge commit `32c257e`), CI green on that run — `typecheck + test + tokens` passed in 36s. Catalog data was already live before the merge, as always: the pipeline writes straight to remote Supabase, so the PR landed the seed script, two pipeline fixes and the provenance, not the plants.
+
+Round 10 = **balcony and container plants**, doing the round-9 entry's next step 1 (run a round, and treat its first run as still testing the runner). Catalog **645 → 695 species, 1608 → 1735 pairings**. Current per-round numbers are generated into `docs/catalog-state.md`; do not retype them here.
+
+**Done:**
+
+- **`scripts/seed-round10.ts`** — 50 species, same exact-Trefle-id resolution as rounds 6-9.
+- **Two bugs fixed in `curate-editorial`'s report merge**, both surfaced by this round. They are the real output of this session.
+- **`scripts/editorial-report.ts` + `editorial-report.test.ts`** — the merge rules split out and given 8 assertions, no DB and no API key, inside `pnpm test` and therefore already in CI.
+
+**How the theme was chosen, because the first attempt was wrong and the correction is reusable.** The naive read said balcony was still the gap (138/645 tagged `terrace_balcony`, barely up from round 9's 111/595), and that much held up: 15 unambiguous balcony genera already in the catalog all tagged correctly, so it was species and not tagging — the same test round 9 used to kill its winter theme. But the first candidate list was mostly a **second wave of round 9's own categories** (alpines, houseleeks, mat sedums, small bulbs) and came back **27 of 54 "already in catalog"** on the dry run, because rounds 8 and 9 had taken the obvious second choices. What found the gap was asking which iconic Adriatic balcony genera were absent **entirely**: `Pelargonium`, `Bougainvillea`, `Fuchsia`, `Begonia`, `Impatiens`, `Plumbago`, `Lantana` — all zero rows. **A "% tagged" number tells you a gap exists; it does not tell you where. Querying for zero-row genera did.**
+
+**The two bugs, because they share one anatomy with three earlier ones:**
+
+1. **A cleared row left its STALE hold standing in the report.** A row clear on all three criteria returned without emitting a finding, so `mergeFindings` had nothing to overwrite its previous finding with and carried the old verdict forward. After `Cyclamen persicum` was cleared by an `--ids` run, the next `--round 10` run reported it **held, quoting a description the database no longer had**, over a row marked `is_curated`. This is the mirror of the bug `mergeFindings` exists to fix: merging stops a partial re-run destroying findings, and the same merge preserves a stale one unless a cleared row says so out loud.
+2. **The obvious fix for that destroyed the rewrite provenance.** A synthetic "cleared" finding carries `rewritten: false`, so re-stating 42 already-clear rows flattened each row's history and the report went from **29 rewrites to 0**. Recorded because the fix looked obviously correct. For a freshly seeded plant that before/after is the **only** copy: the round's `before` catalog snapshot is taken before the seed, so new rows are not in it (checked for round 10: 0 of 50), and both the draft and the rewrite happen inside the same round.
+
+**All four now share one shape: "this run has no news about X" recorded as "there is no X".** `StepStatus.vacuous` (empty scope read as complete), `pick-plant-images`' review report (a partial re-run overwrote 490 rows with 4), and these two. **The place to look for a fifth is anywhere the pipeline builds a file from "what did this run touch".**
+
+**Decisions made:**
+
+- **`curate-editorial` flags bad tags but never fixes them**, so a held `tags:` finding is a **live defect sitting in the catalog**, not a parked warning like a held image. Three shipped this round before anyone looked: a 4-8m orange tree tagged for balconies, a frost-tender cactus tagged for open ground, an indoor cyclamen tagged for borders. Fixed by hand. **Scan `editorial-<n>.md` for `tags:` blockers before calling a round done.**
+- **An empty `space_types` array is NOT a valid state**, unlike `style_tags` where style-neutral is a documented deliberate answer. `verify-round` fails it as a missing required field. Learned by trying it as a way to resolve a tags hold.
+- **When the tag judge objects, read the description before touching the tag.** `Cyclamen persicum`'s tag hold was a symptom; the description was the defect. It opened with "charming" (twee, banned by the voice bar) and framed the plant as an indoor gift plant — garden-centre register, not this catalog's subject, since the species flowers outdoors through mild coastal winters, which is the setting the app is built for. Once the copy was true the tag cleared on its own. **Never rewrite copy to make a judge agree: the rewrite has to be true on its own terms, or the hold was correct.**
+- **Ana approved both hand-rewritten descriptions** (`Allium karataviense`, `Cyclamen persicum`) explicitly, so they are settled. They were put to her because a blind AI judge approving AI copy is not a voice pass.
+- **One test is deliberately labelled as weaker than it looks.** The stale-hold case cannot be reproduced in a unit test — the half that emitted no finding lives in `curate-editorial.ts`, which calls `requireScope()` and `main()` at import — and it passes against the pre-fix merge. Verified by mutation, and it says so in its own comment rather than implying coverage it does not have.
+
+**Next steps, in order:**
+
+1. **8 editorial holds, every one on image confidence, and each needs a NEW candidate image rather than another check.** That is the §30/§31 Batch API flow, deliberately not part of the per-round cadence. `Osteospermum ecklonis` has no image upstream at all, joining round 9's `Erysimum cheiri`.
+2. **Round 9's holds are still open** — `Silene acaulis` (hero is a fringed *Dianthus*), `Hamamelis japonica` (staked nursery sapling), `Carex comans`, `Erysimum cheiri`.
+3. **`Symphyotrichum lateriflorum` displays as "Calico or one-sided or white woodland or starved aster"** — live in Explore since round 9. A `common_name` containing " or " is almost always a Trefle blob; worth a cheap guard alongside the fix.
+4. Carried over: the ~575-plant WCVP tail (never `--apply` against `--all`); the token usage logger; promote hardiness WARN → FAIL when §27 un-parks; `NEXT_PUBLIC_APP_URL` is dead but still advertised.
+
+**Open questions:**
+
+- Unchanged and outside the repo: local Supabase (disk cleanup) and the Pro-plan decision. Both Ana's.
+
+**Worth knowing about the repo state this session left.** `session/2026-07-29-overview-polish` was created by another session **while this one was running**, and had uncommitted work in its worktree when this handoff was written. This session therefore never touched the shared checkout: the handoff was committed from a throwaway worktree, and the shared `santolina` checkout was left on whatever commit its own session had it on rather than being pulled forward. Whether it is behind: `git -C <main checkout> status -sb`.
+
 ## 2026-07-29 — session/2026-07-29-demo-anonymous-signin
 
 **Status:** merged to main ([PR #130](https://github.com/Paradoxich/santolina/pull/130), merge commit `4a1f572`), CI green on that run. Worktree and branch removed at session end. Adds one migration (`20260729170000_expired_demo_users`) and one script; **no catalog data changed**.
