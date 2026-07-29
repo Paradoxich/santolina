@@ -196,8 +196,12 @@ export function GardenPlantView({
           field only if the break above them is bigger than the gaps inside.
           Expressed as the difference so it stays 40 total if either token
           moves. */}
-      <div className="mb-[calc(var(--space-section-break)_-_var(--space-item-gap))] grid grid-cols-1 gap-section-gap lg:grid-cols-[480fr_520fr] lg:items-start">
-        <div className="flex flex-col gap-item-gap">
+      <div className="mb-[calc(var(--space-section-break)_-_var(--space-item-gap))] grid grid-cols-1 gap-item-gap lg:grid-cols-2 lg:items-start">
+        {/* Same two columns and gap as the Diary/Care row below, and the text
+            carries the cards' own padding, so the hero sits on the same grid
+            rather than near it: the heading starts where a card title starts,
+            and the gallery starts where the right-hand card starts. */}
+        <div className="flex flex-col gap-item-gap px-card-padding lg:pl-card-padding lg:pr-0">
           <h1 className="text-title font-semibold text-primary">
             {plant.common_name}
           </h1>
