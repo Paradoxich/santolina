@@ -11,9 +11,11 @@
  * three of these five cards would be permanently empty — it keeps the linear
  * layout in PlantDetailPage instead.
  *
- * Every value here comes from data that already exists. The two things it
- * cannot source are marked NEEDS COLUMN and render as "not recorded" rather
- * than being hidden, so the gap stays visible.
+ * Every value here comes from data that already exists. Two things it cannot
+ * source were once shown as "not recorded" placeholders and are now simply
+ * absent, on Ana's call: a planting date (palette_plants has no planted_at,
+ * so age is inferred from a 'planted' diary event) and a placement. Both gaps
+ * are real and live in the backlog rather than on the page.
  */
 
 import { useState } from 'react'
@@ -49,23 +51,6 @@ const STATUS_LABEL: Record<string, string> = {
 
 const CLICKABLE =
   'cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus'
-
-const MS_PER_DAY = 1000 * 60 * 60 * 24
-
-function daysSince(date: string, now: Date): number {
-  return Math.floor(
-    (now.getTime() - new Date(`${date}T12:00:00Z`).getTime()) / MS_PER_DAY
-  )
-}
-
-/** "6 days ago", "today", "3 months ago". Terse, no invented precision. */
-function agoLabel(days: number): string {
-  if (days <= 0) return 'today'
-  if (days === 1) return 'yesterday'
-  if (days < 31) return `${days} days ago`
-  const months = Math.round(days / 30)
-  return months === 1 ? 'a month ago' : `${months} months ago`
-}
 
 /**
  * First sentence only. Catalog descriptions run three or four sentences and
@@ -144,11 +129,6 @@ export function GardenPlantView({
     note.eventTypes.map((type) => ({ type, date: note.date }))
   )
 
-  const plantedEvent = events
-    .filter((e) => e.type === 'planted')
-    .sort((a, b) => a.date.localeCompare(b.date))[0]
-  const daysInGarden = plantedEvent ? daysSince(plantedEvent.date, now) : null
-
   // This plant's own Care Tips, through the same engine as the dashboard
   // card. No forecast is fetched here, so isPeakHeat falls back to its
   // documented season test — which is what the static summer tip already
@@ -188,7 +168,7 @@ export function GardenPlantView({
     // reads as a single field rather than stacked bands.
     <div className="flex flex-col gap-item-gap">
       {/* ============================================================
-          HERO — who this plant is, and how long it has been yours.
+          HERO — who this plant is, and where it is in its year.
           Not a card: it is the page's own header, on the page surface.
       ============================================================= */}
       {/* 40px below the hero, not the 12px the card rows use between
@@ -218,24 +198,13 @@ export function GardenPlantView({
             </p>
           )}
 
-          <div className="mt-item-gap flex flex-col gap-tight-gap">
-            {/* Only when there is a date to show. The "not recorded" fallback
-                said nothing a reader could act on — the gap it stands for
-                (NEEDS COLUMN: palette_plants.planted_at, currently inferred
-                from a 'planted' diary event) is real but belongs in the
-                backlog, not in the hero. */}
-            {daysInGarden !== null && (
-              <p className="text-body text-primary">
-                In your garden {agoLabel(daysInGarden)}
-              </p>
-            )}
-            {/* Bloom status was a card of its own and carried one short line,
-                so it is a line here instead. */}
-            <p className="flex items-center gap-inline-gap text-body text-secondary">
-              <Badge variant="accent">{STATUS_LABEL[status]}</Badge>
-              {stageNote}
-            </p>
-          </div>
+          {/* The "in your garden for N days" line is gone entirely, not just
+              its empty state. Bloom status stays: it was a card of its own
+              carrying one short line, so it is a line here instead. */}
+          <p className="mt-item-gap flex items-center gap-inline-gap text-body text-secondary">
+            <Badge variant="accent">{STATUS_LABEL[status]}</Badge>
+            {stageNote}
+          </p>
         </div>
 
         <PlantGallery
