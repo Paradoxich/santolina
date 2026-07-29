@@ -70,6 +70,40 @@ The catalog's size, the curated count and the per-round step table are
 **generated** into `docs/catalog-state.md` and `docs/round-runbook.md`. Link to
 them; never retype their numbers here.
 
+## 2026-07-29 — session/2026-07-29-demo-anonymous-signin
+
+**Status:** merged to main ([PR #130](https://github.com/Paradoxich/santolina/pull/130), merge commit `4a1f572`), CI green on that run. Worktree and branch removed at session end. Adds one migration (`20260729170000_expired_demo_users`) and one script; **no catalog data changed**.
+
+A visitor can now try Santolina without signing up. "Look around first" on `/login` signs them in anonymously and seeds them a garden in Opatija.
+
+**Done:**
+
+- **Anonymous sign-in is the demo.** The visitor gets a real anonymous auth user, so `handle_new_user` provisions their profile and garden exactly as a magic-link signup does, and every RLS policy, server action and page works unchanged. Gardens are per-visitor; nothing is shared between people looking around at once.
+- **`lib/demo-garden.ts`** seeds a location, 8 plants and 3 diary entries, resolved **by scientific name** rather than by id so a catalog re-seed cannot rot it. Rows are backdated so the garden reads as established and the `CARE_EVENT_RULES` establishment tips actually fire.
+- **`AuthOptions`** — the Google and email controls, extracted from `LoginForm` and shared with the conversion modal.
+- **`scripts/purge-demo-users.ts`** + the migration. Whether demo accounts are piling up: `npx tsx --env-file=.env.local scripts/purge-demo-users.ts` (dry run) from `apps/web`.
+
+**Decisions made:**
+
+- **The demo flag is `auth.users.is_anonymous` and nothing else.** No `is_demo` column, no marker row. A visitor who converts stops being anonymous by the same act that converts them, so there is no second copy of the fact to update — the July 28 "one home per fact" rule applied up front.
+- **Conversion is an upgrade in place, not a new account.** `updateUser({ email })` and `linkIdentity()` both preserve the user id, so the palette and diary survive. Signing in normally from that modal would swap the session for another account and abandon the garden the visitor just built, which is why the modal shares the login _controls_ but not its actions.
+- **The garden is seeded rather than left empty.** An empty garden hits the first-run location gate and shows every surface in its empty state, which is the worst possible tour.
+- **"End demo", not "Log out", for anonymous sessions.** An anonymous session cannot be signed back into, so the ordinary label promises a way back that does not exist.
+- **Ornamental-first in the seed.** Raspberry, Jerusalem artichoke and cardoon were dropped as too kitchen-garden, and trumpet creeper because it is a thug on a coastal wall and a demo should not model it as a good idea.
+- **Opatija over Zadar** (Ana chose from two). Kvarner is mild and wet enough that the palette is not all drought survivors, and the garden has something happening whatever month a visitor arrives.
+
+**Traps recorded (full detail in `docs/database-log.md`):**
+
+- **`auth.admin.listUsers` returns 500 "Database error finding users" whenever `per_page` exceeds the project's total user count.** Reproduced by curl at 5 users: `per_page=5` → 200, `per_page=6` → 500. It is not the JS SDK. It fails precisely when the user table is small, and no fixed page size is safe as the count moves. Anything reaching for `listUsers` will hit this; `expired_demo_users` reads `auth.users` directly instead.
+- **`pnpm build` and `pnpm test` passing locally is not a green CI run.** This branch failed CI on `tokens:check`, which regenerates `token-consumers.generated.ts` and fails on the diff — moving markup between files moves token ownership with it. Run `pnpm tokens:check` before pushing any change that moves JSX.
+
+**Next steps, in order:**
+
+1. **Click the Google button in the conversion modal.** It is the one path in this feature never exercised end to end. Manual linking was enabled on the project for it; the email path was clicked through and confirmed (same garden, bar gone). It fails safely with a visible message if linking misbehaves.
+2. **Clear the test demo accounts** left by the smoke test and Ana's click-through, or leave them to age out after 7 days: `npx tsx --env-file=.env.local scripts/purge-demo-users.ts --days 0 --apply`
+3. **Decide whether the demo needs a scheduled purge.** It is a manual script today, which is fine at zero traffic and not fine if the demo is ever linked publicly.
+4. **Two Settings rows make no sense for a demo session** and were deliberately left alone: **Reset garden** wipes the seeded palette and diary with no way to restore them, and the **Email** row renders blank because an anonymous user's email is an empty string rather than null.
+
 ## 2026-07-29 — session/2026-07-29-plant-detail
 
 **Status:** merged to main ([PR #129](https://github.com/Paradoxich/santolina/pull/129), squash commit `504c313`), CI green on that run. Worktree and branch removed at session end. **UI only** — no catalog data, no scripts, no migrations. Independent of the two pipeline entries below; they touched no file this branch touched.
@@ -97,7 +131,7 @@ Rebuilt `/plants?plant=<id>` for plants you are **growing**. Planned and removed
 1. **Click through the live page signed in.** This branch was verified by types and by the harness only — no session was available to it. The path worth clicking first is **adding a note from inside the diary drawer**: that is the one place server actions and `router.refresh()` interact, and the harness cannot prove it.
 2. **The timeline is unfinished** and was left mid-iteration by agreement. It went strip → segments → bands → one track per stage → text on each row → text inside blocks → two-line clamp. At 1512 the card measured ~667px, which is still large; the next lever is a one-line clamp (~530px), at which point most stages show a fragment.
 3. **Two fields the page wants and the schema lacks**, both cut from the hero rather than shown as "not recorded" placeholders: `palette_plants.planted_at` (age is inferred from a `planted` diary event, so a plant marked planted without logging has no age at all — and every establishment rule in `CARE_EVENT_RULES` silently never fires for it) and a placement field.
-4. **`formatPlantSubtitle` repeats the heading** when a plant's common name is its botanical name — `Stipa gigantea` renders "*Stipa gigantea.*" as its own subtitle. Cheap to suppress when the two match.
+4. **`formatPlantSubtitle` repeats the heading** when a plant's common name is its botanical name — `Stipa gigantea` renders "_Stipa gigantea._" as its own subtitle. Cheap to suppress when the two match.
 
 **Open questions:**
 
