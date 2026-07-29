@@ -1,0 +1,44 @@
+{
+  "findings": [
+    {
+      "id": "0124cf98-02a9-4a60-b31b-1b564747f9c6",
+      "common_name": "Florist's cyclamen",
+      "scientific_name": "Cyclamen persicum",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "The description is concrete, specific, warm without being twee, leads with visual detail, states the practical caution about frost tenderness calmly, and uses no dashes or marketing language.",
+        "rewritten": false
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "The space_types tag for terrace_balcony is appropriate for a frost-tender pot plant, and the empty style_tags list is a valid deliberate answer for a style-neutral plant."
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "49a249ac-046a-4bec-a9f4-196503809153",
+      "common_name": "Turkestan onion",
+      "scientific_name": "Allium karataviense",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "The description is plain, concrete, and specific, leading with what the reader sees (foliage, flowers, habit) and ending with the practical caution about dormancy, all in the appropriate register.",
+        "rewritten": false
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    }
+  ]
+}

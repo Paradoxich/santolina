@@ -1,0 +1,233 @@
+{
+  "ran_at": "2026-07-29T19:03:20.700Z",
+  "model": "claude-sonnet-4-5",
+  "checked": 50,
+  "clean": 36,
+  "flagged": [
+    {
+      "id": "0dea7532-ef1e-4536-be62-bc08c4f370d8",
+      "common_name": "Barbados aloe",
+      "scientific_name": "Aloe vera",
+      "flags": [
+        {
+          "field": "bloom_months",
+          "severity": "disagree",
+          "stored": [6, 7, 8],
+          "checked": [2, 3, 4, 5],
+          "detail": "no shared months"
+        }
+      ]
+    },
+    {
+      "id": "3308abb4-dc35-49a4-9578-50a245f759a8",
+      "common_name": "Plumbago",
+      "scientific_name": "Plumbago auriculata",
+      "flags": [
+        {
+          "field": "bloom_months",
+          "severity": "minor",
+          "stored": [5, 6, 7, 8, 9, 10, 11],
+          "checked": [3, 4, 5, 6, 7, 8, 9, 10, 11],
+          "detail": "window boundaries drift 2 month(s)"
+        }
+      ]
+    },
+    {
+      "id": "3fd07602-67cf-464f-b85d-59c5dd87b964",
+      "common_name": "Sweetpotato",
+      "scientific_name": "Ipomoea batatas",
+      "flags": [
+        {
+          "field": "sun_requirements",
+          "severity": "minor",
+          "stored": ["full_sun", "partial_sun"],
+          "checked": ["full_sun"],
+          "detail": "partial overlap"
+        }
+      ]
+    },
+    {
+      "id": "5a4d5330-efc4-46db-a952-b4c69e92bfe4",
+      "common_name": "Paper-flower",
+      "scientific_name": "Bougainvillea glabra",
+      "flags": [
+        {
+          "field": "sun_requirements",
+          "severity": "minor",
+          "stored": ["full_sun", "partial_sun"],
+          "checked": ["full_sun"],
+          "detail": "partial overlap"
+        },
+        {
+          "field": "bloom_months",
+          "severity": "minor",
+          "stored": [5, 6, 7, 8, 9, 10],
+          "checked": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+          "detail": "window boundaries drift 4 month(s)"
+        }
+      ]
+    },
+    {
+      "id": "7fa2d18c-cbff-4ffd-b46f-4da2e52922d6",
+      "common_name": "Clove pink",
+      "scientific_name": "Dianthus caryophyllus",
+      "flags": [
+        {
+          "field": "sun_requirements",
+          "severity": "minor",
+          "stored": ["full_sun", "partial_sun"],
+          "checked": ["full_sun"],
+          "detail": "partial overlap"
+        }
+      ]
+    },
+    {
+      "id": "8477f33d-e61b-4856-ab86-fd7b6c8bd967",
+      "common_name": "Sour orange",
+      "scientific_name": "Citrus × aurantium",
+      "flags": [
+        {
+          "field": "sun_requirements",
+          "severity": "minor",
+          "stored": ["full_sun", "partial_sun"],
+          "checked": ["full_sun"],
+          "detail": "partial overlap"
+        }
+      ]
+    },
+    {
+      "id": "8bdfa979-38c2-462c-85ae-45a52337e72c",
+      "common_name": "Osteospermum ecklonis",
+      "scientific_name": "Osteospermum ecklonis",
+      "flags": [
+        {
+          "field": "sun_requirements",
+          "severity": "minor",
+          "stored": ["full_sun", "partial_sun"],
+          "checked": ["full_sun"],
+          "detail": "partial overlap"
+        }
+      ]
+    },
+    {
+      "id": "93d15845-378e-405a-9d4e-984ecd9fd3f9",
+      "common_name": "Rose scented geranium",
+      "scientific_name": "Pelargonium capitatum",
+      "flags": [
+        {
+          "field": "plant_type",
+          "severity": "disagree",
+          "stored": "shrub",
+          "checked": "perennial",
+          "detail": "classification mismatch"
+        }
+      ]
+    },
+    {
+      "id": "b86fbbb8-27e1-4020-95a3-a679aed60049",
+      "common_name": "Bunny-ears prickly-pear",
+      "scientific_name": "Opuntia microdasys",
+      "flags": [
+        {
+          "field": "sun_requirements",
+          "severity": "minor",
+          "stored": ["full_sun", "partial_sun"],
+          "checked": ["full_sun"],
+          "detail": "partial overlap"
+        }
+      ]
+    },
+    {
+      "id": "c057eb3f-0805-4a53-a5f3-d64b5a77ca9d",
+      "common_name": "Sweet scented geranium",
+      "scientific_name": "Pelargonium graveolens",
+      "flags": [
+        {
+          "field": "plant_type",
+          "severity": "disagree",
+          "stored": "shrub",
+          "checked": "perennial",
+          "detail": "classification mismatch"
+        }
+      ]
+    },
+    {
+      "id": "eaec6d55-945f-42e0-99e9-93ea1bcf3016",
+      "common_name": "Oakleaf geranium",
+      "scientific_name": "Pelargonium quercifolium",
+      "flags": [
+        {
+          "field": "bloom_months",
+          "severity": "minor",
+          "stored": [5, 6, 7, 8],
+          "checked": [5, 6, 7, 8, 9, 10],
+          "detail": "window boundaries drift 2 month(s)"
+        }
+      ]
+    },
+    {
+      "id": "ebf95e9a-40b6-4618-8be7-9299c5c74662",
+      "common_name": "Busy lizzy",
+      "scientific_name": "Impatiens walleriana",
+      "flags": [
+        {
+          "field": "plant_type",
+          "severity": "disagree",
+          "stored": "annual",
+          "checked": "perennial",
+          "detail": "classification mismatch"
+        },
+        {
+          "field": "hardiness_zone_min",
+          "severity": "minor",
+          "stored": null,
+          "checked": 10,
+          "detail": "one side has no value"
+        },
+        {
+          "field": "hardiness_zone_max",
+          "severity": "minor",
+          "stored": null,
+          "checked": 11,
+          "detail": "one side has no value"
+        },
+        {
+          "field": "sun_requirements",
+          "severity": "minor",
+          "stored": ["full_sun", "partial_sun", "shade"],
+          "checked": ["partial_sun", "shade"],
+          "detail": "partial overlap"
+        }
+      ]
+    },
+    {
+      "id": "ed8fc9eb-2bc6-449d-9e9a-f2d695a7b286",
+      "common_name": "Origanum laevigatum",
+      "scientific_name": "Origanum laevigatum",
+      "flags": [
+        {
+          "field": "sun_requirements",
+          "severity": "minor",
+          "stored": ["full_sun", "partial_sun"],
+          "checked": ["full_sun"],
+          "detail": "partial overlap"
+        }
+      ]
+    },
+    {
+      "id": "f738cfdc-80f0-4a5a-b374-5cb104cce403",
+      "common_name": "Pearl echeveria",
+      "scientific_name": "Echeveria elegans",
+      "flags": [
+        {
+          "field": "bloom_months",
+          "severity": "minor",
+          "stored": [4, 5, 6, 7, 8],
+          "checked": [2, 3, 4, 5],
+          "detail": "window boundaries drift 3 month(s)"
+        }
+      ]
+    }
+  ],
+  "failures": []
+}

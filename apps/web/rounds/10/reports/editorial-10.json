@@ -1,0 +1,1132 @@
+{
+  "findings": [
+    {
+      "id": "f3e911ba-cfb8-4289-9b1f-488379cd1c3a",
+      "common_name": "Alpine-geranium",
+      "scientific_name": "Erodium reichardii",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": true,
+        "before": "A charming low-growing plant forming neat mounds of small, rounded leaves covered with delicate cup-shaped flowers throughout the warmer months. Perfect for edging, rock gardens, or spilling over containers. The flowers are typically white or pink with darker veining, creating a dainty display.",
+        "after": "A low-growing evergreen perennial forming neat mounds of small, rounded leaves. Cup-shaped flowers in white or pink with darker veining appear from mid-spring through mid-autumn. Suitable for edging, rock gardens, raised beds, and containers where it can trail over the sides.",
+        "blind_verdict": "ok",
+        "blind_reason": "The description is clear, specific, and follows the voice guidelines. It leads with habit, describes flowers concretely, provides bloom timing consistent with the data, and ends with practical uses. The tone is warm but not twee, avoiding marketing language."
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "dcbeb49e-b573-44c1-8b1a-f1c690dc66aa",
+      "common_name": "Apache beggarticks",
+      "scientific_name": "Bidens ferulifolia",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": true,
+        "before": "A cheerful, free-flowering plant with masses of bright golden-yellow daisy-like flowers held above delicate, ferny foliage. Blooms prolifically from late spring through to the first frosts, creating a sunny carpet of color. Perfect for adding long-lasting brightness to containers, hanging baskets, and sunny borders.",
+        "after": "A free-flowering plant with masses of bright golden-yellow daisy-like flowers held above delicate, ferny foliage. Blooms prolifically from late spring through to the first frosts, creating a sunny carpet of color in containers, hanging baskets, and sunny borders.",
+        "blind_verdict": "ok",
+        "blind_reason": ""
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "355f85df-368f-4040-ab95-c44492fd985a",
+      "common_name": "Apple geranium",
+      "scientific_name": "Pelargonium odoratissimum",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": true,
+        "before": "A small, spreading scented geranium with soft, rounded leaves that release a delightful apple fragrance when touched. It produces small white flowers throughout the growing season and is often grown for its aromatic foliage. In cooler climates, it's typically grown as a houseplant or summer container plant.",
+        "after": "A small, spreading scented geranium with soft, rounded leaves that release an apple fragrance when touched. It produces small white flowers from late spring through summer and is often grown for its aromatic foliage. In cooler climates, it is typically grown as a houseplant or summer container plant.",
+        "blind_verdict": "ok",
+        "blind_reason": "The description is clear, concrete, and appropriately structured. It leads with the plant's habit and key feature (small, spreading, aromatic foliage), describes what the reader will see (soft rounded leaves, small white flowers, timing), and ends with practical growing information for cooler climates. The tone is warm but not twee, and the language is specific without being marketing-heavy. It aligns with the structured data provided."
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "733fe14d-a4ca-4e1f-8bbf-24633e101f49",
+      "common_name": "Ashy cranesbill",
+      "scientific_name": "Geranium cinereum",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": true,
+        "before": "A low-growing, spreading perennial with delicate saucer-shaped flowers in shades of pink, held above neat mounds of grey-green foliage. Perfect for rock gardens, edges of borders, and containers where its compact habit and long flowering season can be appreciated. Easy to grow and reliable once established.",
+        "after": "A low-growing, spreading perennial with delicate saucer-shaped flowers in shades of pink, held above neat mounds of grey-green foliage. Suits rock gardens, edges of borders, and containers where its compact habit and long flowering season from June to August can be appreciated. Easy to grow and reliable once established.",
+        "blind_verdict": "ok",
+        "blind_reason": ""
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "7ed70055-adc1-44e6-88d4-f87f397d7bbd",
+      "common_name": "Australian-laurel",
+      "scientific_name": "Pittosporum tobira",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": false
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "0dea7532-ef1e-4536-be62-bc08c4f370d8",
+      "common_name": "Barbados aloe",
+      "scientific_name": "Aloe vera",
+      "image": {
+        "verdict": "open",
+        "reason": "image pass: medium confidence, and it SURVIVED the targeted re-check (pick-plant-images --verify) — the species could not be confirmed from this photo. Needs a new candidate image, not another check."
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": false
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": false,
+      "blockers": [
+        "image: image pass: medium confidence, and it SURVIVED the targeted re-check (pick-plant-images --verify) — the species could not be confirmed from this photo. Needs a new candidate image, not another check."
+      ]
+    },
+    {
+      "id": "0bdd323c-1116-4a52-9d4c-9ec6a61ea2be",
+      "common_name": "Bedding pansy",
+      "scientific_name": "Viola cornuta",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": true,
+        "before": "A charming, long-flowering plant with small, colorful flowers that bloom prolifically from spring through autumn. The flowers have distinctive 'faces' with overlapping petals in shades of purple, blue, yellow, and white. More compact and longer-flowering than garden pansies, making them ideal for edging and containers.",
+        "after": "A compact herbaceous perennial forming low mounds of small green leaves covered in cheerful flowers from spring through autumn. The blooms have five overlapping petals in purple, blue, yellow, white, and pink, often with darker markings. More compact and longer flowering than large-flowered pansies, suited to edging, containers, and the front of borders.",
+        "blind_verdict": "ok",
+        "blind_reason": "The description is clear, concrete, and appropriately detailed. It leads with habit and foliage, describes the flowers specifically, gives bloom timing, and ends with practical placement advice. The tone is warm but factual, avoiding marketing language. The content matches the structured data accurately."
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "cd559eab-8ce2-43f0-8206-af3f31228998",
+      "common_name": "Bengal rose",
+      "scientific_name": "Rosa chinensis",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": true,
+        "before": "A classic rose species with elegant single or semi-double flowers that bloom repeatedly through the growing season. Compact growth habit makes it suitable for smaller gardens and containers. Known for its relatively easy care compared to many hybrid roses.",
+        "after": "A classic rose species with single or semi-double flowers in pink, red or white that bloom repeatedly from late spring through autumn. Compact growth to 60-120 cm makes it suitable for smaller gardens and containers. More tolerant of poor soil and less demanding of deadheading and spraying than most modern hybrid roses.",
+        "blind_verdict": "ok",
+        "blind_reason": "The description is consistent with the plant data, follows Santolina's voice guidelines, and is fit to publish. It leads with what the reader sees (flower form, color, blooming period), includes practical information (size, suitability for containers), and ends with care requirements stated plainly. The tone is warm but factual, avoids marketing language, and uses specific details."
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "23d9654c-0048-4505-8378-04ef588d51fa",
+      "common_name": "Black-eyed-susan-vine",
+      "scientific_name": "Thunbergia alata",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": true,
+        "before": "A vigorous climbing vine prized for its cheerful orange, yellow, or white flowers with distinctive dark centres. Fast-growing and ideal for covering fences, trellises, or trailing from hanging baskets. Often grown as an annual in cooler climates but is perennial in frost-free areas.",
+        "after": "A vigorous climbing vine with orange, yellow, or white flowers that have distinctive dark centres. Fast-growing and suitable for covering fences, trellises, or trailing from hanging baskets. Often grown as an annual in cooler climates but perennial in frost-free areas.",
+        "blind_verdict": "ok",
+        "blind_reason": ""
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "8d4c9eb4-78de-4488-8888-cdb0ad0064f5",
+      "common_name": "Brazilian-jasmine",
+      "scientific_name": "Mandevilla sanderi",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": true,
+        "before": "A vigorous tropical climber with glossy dark green leaves and showy trumpet-shaped flowers that bloom profusely throughout warm weather. The vibrant blooms appear in clusters and come in shades of pink, red, or white. Though tender, it's often grown as a container plant in cooler climates and brought indoors for winter.",
+        "after": "A vigorous tropical climber with glossy dark green leaves and trumpet-shaped flowers in shades of pink, red, or white that appear in clusters from late spring through autumn. The flowers measure around 7cm across and open continuously in warm weather. Though tender, it grows well in containers and can be moved indoors for winter in cooler climates.",
+        "blind_verdict": "ok",
+        "blind_reason": "The description is clear, concrete, and well-structured. It leads with what the reader sees (climber with glossy leaves and trumpet-shaped flowers), provides specific details (7cm flower size, bloom period), and ends with practical growing information about containers and winter protection. The tone is warm but not twee, and all details match the structured data."
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "b86fbbb8-27e1-4020-95a3-a679aed60049",
+      "common_name": "Bunny-ears prickly-pear",
+      "scientific_name": "Opuntia microdasys",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": false
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "ebf95e9a-40b6-4618-8be7-9299c5c74662",
+      "common_name": "Busy lizzy",
+      "scientific_name": "Impatiens walleriana",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": true,
+        "before": "A popular bedding plant with succulent stems and a profusion of flat-faced flowers in bright colors. Forms neat, bushy mounds covered in blooms from late spring until the first frost. Valued for its ability to flower reliably in shady spots where many other bedding plants struggle.",
+        "after": "A popular bedding plant with succulent stems and a profusion of flat-faced flowers in pink, red, orange, white or purple. Forms neat, bushy mounds covered in blooms from late spring until the first frost. Flowers reliably in shady spots where many other bedding plants struggle.",
+        "blind_verdict": "ok",
+        "blind_reason": ""
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "bcc91752-8c02-4ef2-8f02-7ce64ff448b1",
+      "common_name": "Chinese hibiscus",
+      "scientific_name": "Hibiscus rosa-sinensis",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": true,
+        "before": "A tropical flowering shrub famous for its large, showy blooms that come in many vibrant colors. The glossy green leaves provide year-round interest, while the flowers—often 10-15 cm across—appear continuously in warm conditions. A classic choice for tropical and subtropical gardens, or as a container plant that can be moved indoors in cold climates.",
+        "after": "A tropical flowering shrub with large, showy blooms in red, pink, orange, yellow, or white that appear continuously in warm conditions. The flowers often reach 10 to 15 cm across, set against glossy evergreen foliage that provides year-round interest. Suitable for tropical and subtropical gardens or as a container plant that can be moved indoors where winters are cold.",
+        "blind_verdict": "ok",
+        "blind_reason": "Description follows the style guide: leads with what the reader sees (tropical shrub with large showy blooms), uses specific measurements (10 to 15 cm), states bloom colors concretely matching the data, notes continuous blooming in warm conditions consistent with year-round bloom months, describes foliage appropriately, ends with practical growing context, avoids marketing language and twee tone, and is appropriately concise at three sentences."
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "cee12bab-c059-4ce0-b976-69e82580c7cc",
+      "common_name": "Clematis macropetala",
+      "scientific_name": "Clematis macropetala",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": true,
+        "before": "A graceful climbing plant with delicate, nodding blue or violet flowers that appear in spring. The flowers have a distinctive double appearance with pointed petals, followed by fluffy silvery seedheads. Climbs using twining leaf stalks and is perfect for covering walls, fences, or growing through trees.",
+        "after": "A graceful climbing plant with delicate, nodding blue or violet flowers that appear in spring. The flowers have a distinctive double appearance with pointed petals, followed by fluffy silvery seedheads. Climbs using twining leaf stalks and suits walls, fences, or growing through trees.",
+        "blind_verdict": "ok",
+        "blind_reason": "The description is clear, concrete, and appropriately detailed. It leads with what the reader sees (graceful climbing plant, nodding flowers, color, timing), describes the distinctive double appearance and seedheads, and ends with practical growing information about how it climbs and where to use it. The tone is warm but factual, avoiding marketing language. All details align with the structured data."
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "7fa2d18c-cbff-4ffd-b46f-4da2e52922d6",
+      "common_name": "Clove pink",
+      "scientific_name": "Dianthus caryophyllus",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": false
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "35a6a035-ffd1-4b3f-93c3-0fed9f286065",
+      "common_name": "Common lantana",
+      "scientific_name": "Lantana camara",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": false
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "b0a96382-94a4-4103-9815-ada46f92a354",
+      "common_name": "Convolvulus sabatius",
+      "scientific_name": "Convolvulus sabatius",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": true,
+        "before": "A lovely trailing plant with soft grey-green leaves and masses of delicate blue-purple funnel-shaped flowers throughout summer. Perfect for cascading over walls, containers, and hanging baskets. Forms a sprawling mat of growth that softens hard edges beautifully.",
+        "after": "A trailing plant with soft grey-green leaves and masses of delicate blue-purple funnel-shaped flowers throughout summer. It cascades over walls, containers and hanging baskets, forming a sprawling mat of growth that softens hard edges.",
+        "blind_verdict": "ok",
+        "blind_reason": ""
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "f0a6e3a3-d524-40bf-a7cb-5c0eb1c94898",
+      "common_name": "Crimean iris",
+      "scientific_name": "Iris lutescens",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": true,
+        "before": "A compact iris with elegant blooms in shades of yellow, violet, or purple appearing in early spring. The narrow, sword-like leaves form neat clumps that remain attractive after flowering. This tough little iris is perfect for sunny spots and rock gardens.",
+        "after": "A compact iris with elegant blooms in shades of yellow, violet, or purple appearing in early spring. The narrow, sword-like leaves form neat clumps that remain attractive after flowering. Thrives in sunny spots and rock gardens.",
+        "blind_verdict": "ok",
+        "blind_reason": "Description meets standards. It leads with what the reader sees (compact habit, elegant blooms with specific colors), states the season (early spring), describes the foliage (narrow, sword-like, neat clumps that remain attractive), and ends with growing conditions (sunny spots, rock gardens). Tone is warm but factual, specific rather than general, and free of marketing language."
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "4f8732c6-ccf3-4074-9130-e25d8f1ef212",
+      "common_name": "Erigeron karvinskianus",
+      "scientific_name": "Erigeron karvinskianus",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": true,
+        "before": "A delicate, spreading daisy that produces masses of small white flowers that age to pink. It blooms continuously from late spring through autumn, creating a soft, billowing effect. Easy to grow and self-seeds freely, making it perfect for filling gaps in paving and walls.",
+        "after": "A delicate, spreading daisy that produces masses of small white flowers aging to pink. It blooms continuously from late spring through autumn, creating a soft, billowing effect. Easy to grow and self-seeds freely into paving cracks and wall crevices.",
+        "blind_verdict": "ok",
+        "blind_reason": "The description is clear, concrete, and follows the voice guidelines. It leads with what the reader sees (delicate spreading daisy, small white flowers aging to pink), specifies timing (late spring through autumn), describes the effect (soft billowing), and ends with practical information about ease of growth and self-seeding behavior. The tone is warm but not twee, and all details align with the structured data."
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "370f2a10-6742-4742-af3e-157f026240f8",
+      "common_name": "Flaming katy",
+      "scientific_name": "Kalanchoe blossfeldiana",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": true,
+        "before": "A popular indoor flowering succulent with clusters of small, cheerful flowers held above thick, glossy green leaves. Blooms last for weeks and come in vibrant shades of red, pink, orange, yellow, or white. Easy to care for and widely available, making it a perfect choice for beginners.",
+        "after": "A popular indoor flowering succulent with clusters of small, cheerful flowers held above thick, glossy green leaves. Blooms last for weeks and come in vibrant shades of red, pink, orange, yellow, or white. Easy to care for and widely available.",
+        "blind_verdict": "ok",
+        "blind_reason": "Description is clear, specific, and consistent with the plant data. It leads with what the reader sees (flowering succulent, thick glossy leaves), specifies bloom duration and colors matching the data, and maintains Santolina's warm but plain voice without marketing language or prohibited punctuation."
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "0124cf98-02a9-4a60-b31b-1b564747f9c6",
+      "common_name": "Florist's cyclamen",
+      "scientific_name": "Cyclamen persicum",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": false
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "87d772c8-94b6-40e0-9763-2d81f9055f24",
+      "common_name": "Fuchsia",
+      "scientific_name": "Fuchsia magellanica",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": true,
+        "before": "A graceful shrub with elegant hanging flowers that dangle like tiny ballerinas throughout summer. The blooms are bicolored, typically red and purple, attracting hummingbirds and bees. Forms an upright or arching bush with small dark green leaves.",
+        "after": "A graceful shrub with elegant hanging flowers in red and purple throughout summer, attracting hummingbirds and bees. Forms an upright or arching bush with small dark green leaves. The bicolored blooms dangle from the stems in abundance from June through October.",
+        "blind_verdict": "ok",
+        "blind_reason": ""
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "fb5941ea-d969-4a5f-9e3b-d3be55a34489",
+      "common_name": "Haworth's aeonium",
+      "scientific_name": "Aeonium haworthii",
+      "image": {
+        "verdict": "open",
+        "reason": "image pass: medium confidence, and it SURVIVED the targeted re-check (pick-plant-images --verify) — the species could not be confirmed from this photo. Needs a new candidate image, not another check."
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": false
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": false,
+      "blockers": [
+        "image: image pass: medium confidence, and it SURVIVED the targeted re-check (pick-plant-images --verify) — the species could not be confirmed from this photo. Needs a new candidate image, not another check."
+      ]
+    },
+    {
+      "id": "4aa7e5a6-9821-4abe-a2ca-0381ab83bc48",
+      "common_name": "Horseshoe geranium",
+      "scientific_name": "Pelargonium zonale",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": false
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "76f17b89-94d3-466d-81f6-dcdd1cefaab2",
+      "common_name": "Ivyleaf geranium",
+      "scientific_name": "Pelargonium peltatum",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": true,
+        "before": "A cascading plant with glossy, ivy-shaped leaves and clusters of vibrant flowers that trail beautifully from containers and hanging baskets. Popular for balconies and summer displays, it blooms prolifically from late spring through autumn. Usually grown as an annual in cooler climates but is technically a tender perennial.",
+        "after": "A cascading plant with glossy, ivy-shaped leaves and clusters of vibrant flowers that trail beautifully from containers and hanging baskets. Flowers appear from late spring through autumn in pink, red, white, purple or magenta. A tender perennial usually grown as an annual in cooler climates.",
+        "blind_verdict": "ok",
+        "blind_reason": "The description is clear, concrete, and consistent with the data. It leads with what the reader sees (cascading habit, glossy ivy-shaped leaves, vibrant flowers), specifies when flowers appear and in what colors, and ends with the practical note about tender perennial status. The tone is warm but not twee, and avoids marketing language."
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "8a6d178e-d62a-48e5-ba79-4131c04453df",
+      "common_name": "Licorice-plant",
+      "scientific_name": "Helichrysum petiolare",
+      "image": {
+        "verdict": "open",
+        "reason": "image pass: medium confidence, and it SURVIVED the targeted re-check (pick-plant-images --verify) — the species could not be confirmed from this photo. Needs a new candidate image, not another check."
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": false
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": false,
+      "blockers": [
+        "image: image pass: medium confidence, and it SURVIVED the targeted re-check (pick-plant-images --verify) — the species could not be confirmed from this photo. Needs a new candidate image, not another check."
+      ]
+    },
+    {
+      "id": "f846b65f-3737-42e8-a585-91b5223e198b",
+      "common_name": "Moss-rose",
+      "scientific_name": "Portulaca grandiflora",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": false
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "84e94c63-f36c-451e-b776-a5e045badb27",
+      "common_name": "Nemesia caerulea",
+      "scientific_name": "Nemesia caerulea",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": true,
+        "before": "A charming South African perennial with delicate, lipped flowers in shades of blue, lavender, and white that bloom prolifically over many months. Forms neat, spreading mounds of small green leaves that make excellent ground cover or container plants. Loved by pollinators and perfect for adding colour to sunny spots.",
+        "after": "A South African perennial with delicate, lipped flowers in shades of blue, lavender, and white that bloom from mid-spring through mid-autumn. Forms neat, spreading mounds of small green leaves that work well as ground cover or in containers. Loved by pollinators and suited to sunny spots.",
+        "blind_verdict": "ok",
+        "blind_reason": "The description is clear, concrete, and consistent with the plant data. It leads with what the reader sees (flowers, habit, foliage), specifies bloom colors and season, mentions practical uses (ground cover, containers), and notes pollinator value. The tone is warm but not twee, and all information matches the structured data."
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "eaec6d55-945f-42e0-99e9-93ea1bcf3016",
+      "common_name": "Oakleaf geranium",
+      "scientific_name": "Pelargonium quercifolium",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": true,
+        "before": "A scented geranium with distinctive oak-shaped leaves that release a strong, pleasant fragrance when touched. Produces small pink flowers in spring and summer, but is primarily grown for its aromatic foliage. Can be grown as a houseplant or outdoor container plant in cooler climates.",
+        "after": "A tender evergreen perennial with deeply lobed, oak-shaped leaves that release a spicy, balsamic scent when brushed. Small pink to white flowers appear from late spring through summer, though the plant is grown chiefly for its aromatic foliage. Needs frost protection in cooler climates and thrives in containers or sheltered borders.",
+        "blind_verdict": "ok",
+        "blind_reason": "The description is concrete and specific, leads with the distinctive foliage, mentions bloom timing and color consistent with the data, and ends with practical growing requirements. The tone is warm but factual, avoiding marketing language."
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "ed8fc9eb-2bc6-449d-9e9a-f2d695a7b286",
+      "common_name": "Origanum laevigatum",
+      "scientific_name": "Origanum laevigatum",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": true,
+        "before": "An aromatic perennial oregano with wiry stems bearing small purple-pink flowers from summer into autumn. The flowers are highly attractive to bees and butterflies, creating a hazy cloud of color above the foliage. It forms neat mounds of aromatic leaves and is well-suited to hot, dry conditions.",
+        "after": "An aromatic perennial oregano with wiry stems bearing small purple-pink flowers from summer into autumn. The flowers are highly attractive to bees and butterflies and form loose clusters above neat mounds of aromatic foliage. It is well-suited to hot, dry conditions.",
+        "blind_verdict": "ok",
+        "blind_reason": ""
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "8bdfa979-38c2-462c-85ae-45a52337e72c",
+      "common_name": "Osteospermum ecklonis",
+      "scientific_name": "Osteospermum ecklonis",
+      "image": {
+        "verdict": "fail",
+        "reason": "no image at all (upstream has none)"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": false
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": false,
+      "blockers": ["image: no image at all (upstream has none)"]
+    },
+    {
+      "id": "5a4d5330-efc4-46db-a952-b4c69e92bfe4",
+      "common_name": "Paper-flower",
+      "scientific_name": "Bougainvillea glabra",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": true,
+        "before": "A vigorous climbing plant known for its stunning display of papery bracts in vibrant colors that surround tiny white flowers. The bracts last for months, creating a spectacular show of color. Popular in warm climates where it can cover walls, pergolas, and fences with dramatic effect.",
+        "after": "A vigorous climbing plant with papery bracts in purple, pink, magenta or white that surround tiny white flowers from late spring through autumn. The bracts last for months, creating long-lasting color on walls, pergolas and fences. Needs a warm climate and frost-free conditions to thrive.",
+        "blind_verdict": "ok",
+        "blind_reason": ""
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "f738cfdc-80f0-4a5a-b374-5cb104cce403",
+      "common_name": "Pearl echeveria",
+      "scientific_name": "Echeveria elegans",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": true,
+        "before": "A rosette-forming succulent with plump, powdery blue-grey leaves that create perfect geometric patterns. Pink bell-shaped flowers emerge on arching stems in spring and summer. This compact plant is ideal for containers, rock gardens, and sunny windowsills.",
+        "after": "A rosette-forming succulent with plump, powdery blue-grey leaves arranged in tight spirals. Pink bell-shaped flowers emerge on arching stems in spring and summer. This compact plant suits containers, rock gardens, and sunny windowsills.",
+        "blind_verdict": "ok",
+        "blind_reason": ""
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "3a937e0e-669c-4db3-ac7a-8ce052584ec3",
+      "common_name": "Pink jasmine",
+      "scientific_name": "Jasminum polyanthum",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": true,
+        "before": "A vigorous evergreen climber prized for its profuse clusters of fragrant pink-white flowers that appear from late winter through spring. The dark green foliage provides year-round coverage on walls, fences, or trellises. Fast-growing and reliable once established, though it needs protection from harsh frosts.",
+        "after": "A vigorous evergreen climber with profuse clusters of fragrant pink-white flowers from late winter through spring. The dark green foliage provides year-round coverage on walls, fences, or trellises. Fast-growing and reliable once established, though it needs protection from harsh frosts.",
+        "blind_verdict": "ok",
+        "blind_reason": "The description follows Santolina's voice guidelines. It leads with what the reader sees (vigorous climber, flower details, foliage), uses specific concrete language ('profuse clusters of fragrant pink-white flowers from late winter through spring'), avoids marketing language and twee expressions, and ends with a practical caution about frost protection stated calmly. The information aligns with the structured data provided."
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "3308abb4-dc35-49a4-9578-50a245f759a8",
+      "common_name": "Plumbago",
+      "scientific_name": "Plumbago auriculata",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": true,
+        "before": "A vigorous, sprawling shrub with clusters of sky-blue flowers that bloom almost year-round in warm climates. The stems are slender and arching, creating a loose, informal shape that works well tumbling over walls or trained as a climber. Easy to grow and fast-growing, making it ideal for quick coverage in sunny spots.",
+        "after": "A vigorous, sprawling shrub with clusters of sky-blue flowers from late spring through autumn. The stems are slender and arching, creating a loose, informal shape that works well tumbling over walls or trained as a climber. Easy to grow and fast-growing, making it ideal for quick coverage in sunny spots.",
+        "blind_verdict": "ok",
+        "blind_reason": ""
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "93d15845-378e-405a-9d4e-984ecd9fd3f9",
+      "common_name": "Rose scented geranium",
+      "scientific_name": "Pelargonium capitatum",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": true,
+        "before": "A spreading evergreen shrub with soft, velvety leaves that release a wonderful rose scent when touched. Pink to mauve flowers appear in clusters above the foliage, adding charm to its aromatic appeal. Popular for scented gardens and containers.",
+        "after": "A spreading evergreen shrub with soft, velvety grey-green leaves that release a strong rose scent when brushed. Pink to mauve flowers appear in clusters from late spring through summer. Grows well in containers and is often used in scented gardens.",
+        "blind_verdict": "ok",
+        "blind_reason": ""
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "45aa8715-4054-4dca-93e3-fceaf277bb5a",
+      "common_name": "Scaevola aemula",
+      "scientific_name": "Scaevola aemula",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": false
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "b439372e-bbab-48e3-a6a4-d5643e8fe3df",
+      "common_name": "Seaside petunia",
+      "scientific_name": "Calibrachoa parviflora",
+      "image": {
+        "verdict": "open",
+        "reason": "image pass: medium confidence, and it SURVIVED the targeted re-check (pick-plant-images --verify) — the species could not be confirmed from this photo. Needs a new candidate image, not another check."
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": false
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": false,
+      "blockers": [
+        "image: image pass: medium confidence, and it SURVIVED the targeted re-check (pick-plant-images --verify) — the species could not be confirmed from this photo. Needs a new candidate image, not another check."
+      ]
+    },
+    {
+      "id": "825c8eba-ee84-4843-980c-b38f351d8957",
+      "common_name": "Sempervivum calcareum",
+      "scientific_name": "Sempervivum calcareum",
+      "image": {
+        "verdict": "open",
+        "reason": "image pass: medium confidence, and it SURVIVED the targeted re-check (pick-plant-images --verify) — the species could not be confirmed from this photo. Needs a new candidate image, not another check."
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": false
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": false,
+      "blockers": [
+        "image: image pass: medium confidence, and it SURVIVED the targeted re-check (pick-plant-images --verify) — the species could not be confirmed from this photo. Needs a new candidate image, not another check."
+      ]
+    },
+    {
+      "id": "3c4f77ab-aaac-4dba-96f6-d39bb7ca747f",
+      "common_name": "Slender vervain",
+      "scientific_name": "Verbena rigida",
+      "image": {
+        "verdict": "fail",
+        "reason": "image pass: low confidence"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": false
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": false,
+      "blockers": ["image: image pass: low confidence"]
+    },
+    {
+      "id": "8477f33d-e61b-4856-ab86-fd7b6c8bd967",
+      "common_name": "Sour orange",
+      "scientific_name": "Citrus × aurantium",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": false
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "925023ec-4885-443d-9fdd-d0e257651007",
+      "common_name": "Swan river daisy",
+      "scientific_name": "Brachyscome iberidifolia",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": true,
+        "before": "A cheerful Australian daisy that produces masses of small, delicate flowers in shades of blue, purple, pink, and white throughout summer. The flowers have bright yellow centers and sit above fine, ferny foliage. Perfect for filling gaps in borders or tumbling over container edges.",
+        "after": "A cheerful Australian daisy that produces masses of small, delicate flowers in shades of blue, purple, pink, and white throughout summer. The flowers have bright yellow centers and sit above fine, ferny foliage. Grows 20 to 40 cm tall, suited to border edges and containers where it tumbles over the sides.",
+        "blind_verdict": "ok",
+        "blind_reason": ""
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "c057eb3f-0805-4a53-a5f3-d64b5a77ca9d",
+      "common_name": "Sweet scented geranium",
+      "scientific_name": "Pelargonium graveolens",
+      "image": {
+        "verdict": "open",
+        "reason": "image pass: medium confidence, and it SURVIVED the targeted re-check (pick-plant-images --verify) — the species could not be confirmed from this photo. Needs a new candidate image, not another check."
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": false
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": false,
+      "blockers": [
+        "image: image pass: medium confidence, and it SURVIVED the targeted re-check (pick-plant-images --verify) — the species could not be confirmed from this photo. Needs a new candidate image, not another check."
+      ]
+    },
+    {
+      "id": "3fd07602-67cf-464f-b85d-59c5dd87b964",
+      "common_name": "Sweetpotato",
+      "scientific_name": "Ipomoea batatas",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": false
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "0a352519-b1b7-404d-a9c3-ba0340fd5642",
+      "common_name": "Tasteless stonecrop",
+      "scientific_name": "Sedum sexangulare",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": false
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "65426238-cc48-4b08-81fc-a04b0e1cb17a",
+      "common_name": "Thanksgiving cactus",
+      "scientific_name": "Schlumbergera truncata",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": true,
+        "before": "A popular houseplant with flattened, segmented stems and vibrant flowers that bloom around Thanksgiving. The arching stems create a cascading effect, making it ideal for hanging baskets or elevated displays. Easy to care for and can live for decades with proper attention.",
+        "after": "A houseplant with flattened, segmented stems and vibrant pink, red, white or purple flowers that bloom around Thanksgiving. The arching stems create a cascading effect, making it well suited to hanging baskets or elevated displays. Can live for decades when watered regularly during active growth and given a cool, dry rest period in autumn to encourage flowering.",
+        "blind_verdict": "ok",
+        "blind_reason": ""
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "904848ee-8735-4a3b-9797-d9d79863da3e",
+      "common_name": "Treasure-flower",
+      "scientific_name": "Gazania rigens",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": false
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "49a249ac-046a-4bec-a9f4-196503809153",
+      "common_name": "Turkestan onion",
+      "scientific_name": "Allium karataviense",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": true,
+        "before": "A striking ornamental onion with broad, flat blue-grey leaves that hug the ground and large rounded flowerheads of pale pink to white star-shaped flowers. The dramatic foliage and sculptural form make it a standout in spring borders. After flowering, the leaves fade and the plant goes dormant in summer.",
+        "after": "A striking ornamental onion with broad, flat blue-grey leaves that hug the ground and large rounded flowerheads of pale pink to white star-shaped flowers in mid to late spring. The dramatic foliage and sculptural form contrast well with finer-textured perennials. After flowering, the leaves fade and the plant goes dormant in summer.",
+        "blind_verdict": "ok",
+        "blind_reason": ""
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "b7253509-503b-48e4-9a24-7aa7c382fadc",
+      "common_name": "Twinspur",
+      "scientific_name": "Diascia barberae",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": true,
+        "before": "Twinspur is a charming low-growing plant that produces masses of delicate spurred flowers throughout summer. The flowers resemble tiny snapdragons and come in shades of pink, creating a carpet of color. It's perfect for edging, containers, and spilling over walls.",
+        "after": "Twinspur is a low-growing plant that produces masses of delicate spurred flowers from early summer through mid-autumn. The flowers resemble tiny snapdragons and come in shades of pink, coral, and salmon, forming a dense carpet of color. It works well for edging borders, filling containers, and cascading over walls.",
+        "blind_verdict": "ok",
+        "blind_reason": "The description is concrete and specific, leads with visual characteristics, maintains appropriate tone without marketing language, and aligns with the structured data showing bloom period June through October and pink/coral/salmon colors."
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "e1cb034c-24e3-4ce7-ab2a-89f19a53af82",
+      "common_name": "Violet-flower petunia",
+      "scientific_name": "Petunia integrifolia",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": false
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    }
+  ]
+}

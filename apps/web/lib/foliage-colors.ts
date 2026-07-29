@@ -68,6 +68,13 @@ export const FOLIAGE_RAW_TO_BUCKET: Record<string, string> = {
   // Glaucous blue-green folds into silver (Ana, July 24 2026) — the purple
   // cast does not move it out of the cool metallic family.
   'blue-green with purple tones': 'silver',
+  // Round 10 — pot succulents. Grey/blue-green base with an accent tip or
+  // edge stays in the same family as the other "X with Y" silver rows above
+  // (e.g. 'grey-green with silver undersides'); the accent doesn't move the
+  // standing read out of the cool metallic family.
+  'grey-green with purple-red tips': 'silver', // Sempervivum calcareum
+  'powdery blue-grey': 'silver', // Echeveria elegans
+  'blue-green with red edges': 'silver', // Aeonium haworthii
 }
 
 /**

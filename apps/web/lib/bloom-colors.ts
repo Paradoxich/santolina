@@ -102,6 +102,7 @@ export const RAW_TO_BUCKET: Record<string, string> = {
   rose: 'pink',
   coral: 'pink',
   'coral pink': 'pink',
+  salmon: 'pink', // round 10, Pelargonium zonale / Diascia barberae
   'magenta-pink': 'pink',
   'pink-bronze': 'pink',
   // magenta

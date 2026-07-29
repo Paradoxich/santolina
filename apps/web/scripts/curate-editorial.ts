@@ -117,6 +117,16 @@ interface PlantRow {
 /** One criterion's outcome. `open` means unresolved, which blocks approval. */
 type CriterionVerdict = 'pass' | 'fail' | 'open'
 
+/**
+ * The reason a criterion carries when THIS run did not judge it, because an
+ * earlier run already cleared it and its stamp is still set.
+ *
+ * A constant rather than five string literals: `carryDescriptionProvenance`
+ * keys off it to tell "not re-judged" from "judged and passed", so a typo in
+ * one copy would silently drop a rewrite record instead of failing.
+ */
+const CLEARED_PREVIOUSLY = 'cleared previously'
+
 interface Finding {
   id: string
   common_name: string
@@ -389,10 +399,46 @@ Respond with ONLY valid JSON: {"verdict": "ok"|"weak", "reason": string}`
  */
 function mergeFindings(previous: Finding[], current: Finding[]): Finding[] {
   const byId = new Map(previous.map((f) => [f.id, f]))
-  for (const f of current) byId.set(f.id, f)
+  for (const f of current) {
+    const prior = byId.get(f.id)
+    byId.set(f.id, prior ? carryDescriptionProvenance(prior, f) : f)
+  }
   return [...byId.values()].sort((a, b) =>
     a.common_name.localeCompare(b.common_name)
   )
+}
+
+/**
+ * Keep the newest VERDICT, but keep the newest real DESCRIPTION RECORD.
+ *
+ * A run only judges the criteria a row still has open, so a row whose
+ * description was cleared in an earlier run comes back carrying
+ * `reason: CLEARED_PREVIOUSLY` and no rewrite detail. Letting that overwrite
+ * the prior finding wholesale drops the before/after text of a rewrite that
+ * really happened: round 10's report went from "29 rewritten" to "0" that way,
+ * because a later run re-stated 42 already-clear rows and each one flattened
+ * its own history.
+ *
+ * The verdict and reason still come from `next` — it is the current truth
+ * about whether the row is held. Only the provenance fields, which `next`
+ * has no opinion about because it did not re-judge, are carried.
+ */
+function carryDescriptionProvenance(prior: Finding, next: Finding): Finding {
+  if (next.description.reason !== CLEARED_PREVIOUSLY) return next
+  const { rewritten, before, after, blind_verdict, blind_reason } =
+    prior.description
+  if (!rewritten && blind_verdict === undefined) return next
+  return {
+    ...next,
+    description: {
+      ...next.description,
+      rewritten,
+      before,
+      after,
+      blind_verdict,
+      blind_reason,
+    },
+  }
 }
 
 function readPreviousFindings(jsonPath: string): Finding[] {
@@ -498,12 +544,35 @@ async function main() {
 
       if (!needImage && !needDescription && !needTags) {
         console.log(`  ${tag}: already clear on all three criteria, skipping`)
+        // Record the clearance rather than `continue`-ing. A skip emits no
+        // finding, so mergeFindings has nothing to overwrite the row's
+        // PREVIOUS finding with and carries the old verdict forward intact —
+        // which means a row held in one run and cleared in the next still
+        // reads as held in the report, quoting text the database no longer
+        // has. Round 10 hit exactly that: Cyclamen persicum was cleared by an
+        // --ids run, and the next --round run reported it held against its
+        // pre-rewrite description, over a database that said is_curated.
+        //
+        // This is the mirror of the bug mergeFindings exists to fix. Merging
+        // stops a partial re-run DESTROYING findings; the same merge preserves
+        // a stale one unless a cleared row states its clearance out loud.
+        const cleared = { verdict: 'pass', reason: CLEARED_PREVIOUSLY } as const
+        findings.push({
+          id: p.id,
+          common_name: p.common_name,
+          scientific_name: p.scientific_name,
+          image: cleared,
+          description: { ...cleared, rewritten: false },
+          tags: cleared,
+          approved: true,
+          blockers: [],
+        })
         continue
       }
 
       const image = needImage
         ? judgeImage(p)
-        : ({ verdict: 'pass', reason: 'cleared previously' } as const)
+        : ({ verdict: 'pass', reason: CLEARED_PREVIOUSLY } as const)
 
       // The model is called only when a criterion it decides is open. A row
       // needing just the image costs nothing at all.
@@ -512,9 +581,9 @@ async function main() {
           ? await reviewPlant(p)
           : {
               descriptionVerdict: 'ok' as const,
-              descriptionReason: 'cleared previously',
+              descriptionReason: CLEARED_PREVIOUSLY,
               tagsVerdict: 'ok' as const,
-              tagsReason: 'cleared previously',
+              tagsReason: CLEARED_PREVIOUSLY,
               rewrite: null,
             }
 
@@ -572,7 +641,7 @@ async function main() {
         verdict: (review.tagsVerdict === 'ok'
           ? 'pass'
           : 'fail') as CriterionVerdict,
-        reason: needTags ? review.tagsReason : 'cleared previously',
+        reason: needTags ? review.tagsReason : CLEARED_PREVIOUSLY,
       }
 
       const blockers: string[] = []

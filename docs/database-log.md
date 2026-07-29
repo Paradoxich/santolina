@@ -216,6 +216,55 @@ This is trap 7 in different clothes: **an external name lookup that guesses is m
 
 <!-- Newest first. Append with: scripts/log-db-session.ts --round <label> -->
 
+### 2026-07-29 — Round 10
+
+**Branch** `session/2026-07-29-round-10`. Seeded 50 plant(s) on 2026-07-29.
+
+Catalog now **695 species / 1735 combinations** (256 with `is_curated = true`).
+
+Pipeline steps for this round:
+
+```
+✓ curate-plants                  50/50   ai_drafted_at NOT NULL
+✓ curate-combinations            50/50   appears in plant_combinations
+✓ regenerate-native-region       49/49   native_region non-empty (hybrids excluded)
+✓ cross-check-plants             50/50   botanical_checked_at NOT NULL
+✓ cross-check-native-to          50/50   native_checked_at NOT NULL
+✓ cross-check-native-region      49/49   native_region_checked_at NOT NULL
+✓ curate-seasonal-care           50/50   seasonal_care NOT NULL
+⚠ pick-plant-images              49/50   image_checked_at NOT NULL
+✓ pick-plant-images --verify       6/6   image_verified_at NOT NULL (medium-confidence heroes only)
+✓ curate-editorial               50/50   editorial_checked_at NOT NULL
+```
+
+⚠️ **1 step(s) did not complete:** pick-plant-images, on 1 plant — Osteospermum ecklonis has no usable image candidates upstream at all (0 rejected, 0 sent), so the step is genuinely nothing-to-do, not a failure. Same shape as Erysimum cheiri from round 9.
+
+**Round 10 = balcony/container, a direct continuation of round 9's small-space block, not a repeat.** Checked before seeding: 138/645 (21.4%) carried `terrace_balcony`, up only slightly from round 9's 111/595 — still a real species gap, confirmed by spot-checking 15 unambiguous balcony genera already in the catalog (all 15 tag correctly). A first candidate list mostly re-proposed round 9's own categories (alpines, houseleeks, sedums) and 27 of 54 came back "already in catalog" on the dry run. The list that actually worked: checking which iconic Mediterranean/Adriatic balcony genera were **entirely absent** — Pelargonium, Bougainvillea, Fuchsia, Begonia, Impatiens, Plumbago, Lantana all had zero rows. `terrace_balcony` now 184/695 (26.5%).
+
+**What bit us:**
+
+- **`pick-plant-images --verify` re-checks a medium confidence pick, but `curate-editorial` does not auto-correct a flagged tag** — it only records the hold (`is_curated` stays false, the field itself is untouched). Three of round 10's plants were live with wrong `space_types` after the automated pipeline finished: `Citrus × aurantium` tagged `terrace_balcony` despite the editorial standard's own worked example ("a tree tagged for balconies is a defect") — it's a 4-8m tree with no pot-cultivation caveat in its description; `Opuntia microdasys` tagged `ground_garden`/`raised_beds` with no climate qualification on a frost-tender cactus; `Cyclamen persicum` tagged `terrace_balcony` + `mixed` when its own description says "most commonly enjoyed as a tender pot plant" indoors. Corrected by hand (`space_types` patched, `editorial_tags_at` cleared, `curate-editorial` re-run to re-judge) rather than left as a silent defect — `run-round`'s own automatic `verify`/`scope-check`/`archive` had already run by the time this was found, so those three were re-run too for a clean final snapshot. **Worth a scan of any round's `editorial-<n>.md` for `tags:` blockers before calling the round done — a held tag finding is a real defect sitting live in the catalog, not a parked warning like a held image.**
+- **An empty `space_types` array is not a valid state**, unlike `style_tags` (style-neutral is documented as deliberate). Tried clearing `Cyclamen persicum` to `[]` to resolve its tags hold; `verify-round` immediately failed it as a missing required field. Every plant needs at least one true space type — landed on `['terrace_balcony']` alone (drop `mixed`, keep the pot-appropriate tag; the plant is explicitly a "tender pot plant").
+- Ordinary new-shade instances of the standing pattern documented in `lib/bloom-colors.ts`/`lib/foliage-colors.ts`'s own headers ("new seed rounds invent new shades") — `salmon` (bloom), `grey-green with purple-red tips` / `powdery blue-grey` / `blue-green with red edges` (foliage) — plus `ACTION_VERBS` lacking `harden` (Impatiens walleriana's hardening-off care line) and `Bidens ferulifolia` needing a `NO_WCVP_DISTRIBUTION` entry (GBIF has the taxon, no WCVP rows — same shape as round 9's `Symphoricarpos albus`). None of these are new classes of problem; recorded here only because they're what `verify-round` caught on the first pass.
+
+- **A cleared row left its STALE hold standing in the report, and the report is the artefact.** `curate-editorial` only judges criteria a row still has open, and a row clear on all three `continue`d without emitting a finding — so `mergeFindings` had nothing to overwrite the row's previous finding with and carried the old verdict forward. After `Cyclamen persicum` was cleared by an `--ids` run, the next `--round 10` run reported it **held, quoting a description the database no longer had**, against a row that said `is_curated = true`. Report said 9 held; the database said 8. **This is the mirror of the bug `mergeFindings` exists to fix** — merging stops a partial re-run destroying findings, and the same merge preserves a stale one unless a cleared row states its clearance out loud. Fixed: a fully-clear row now pushes an approved finding. Caught only by counting the database instead of reading the report, which is the standing rule.
+- **The first fix for that quietly destroyed the rewrite provenance**, and it is worth recording because the fix looked obviously right. A synthetic "cleared" finding carries `rewritten: false`, so re-stating 42 already-clear rows flattened each one's history and the report went from **29 rewritten to 0** — losing every before/after of a rewrite that really happened. `mergeFindings` now carries the prior description record forward when the current run did not re-judge the description (`carryDescriptionProvenance`); the verdict still comes from the newer finding. Both behaviours were then verified by restoring the archived pre-fix report (29 rewrites plus the stale hold, the exact input that produced the bug) and re-running: 42 approved, 8 held, 29 rewrites intact.
+
+**Data written:** 50 new plants (curated, paired, region-tagged, seasonal-care distilled, editorially reviewed); 127 new combinations. **42/50 `is_curated = true`; 8 held back, every one of them on image confidence alone** — each needs a **new** candidate image, not another check (`Barbados aloe`, `Haworth's aeonium`, `Licorice-plant`, `Seaside petunia`, `Sempervivum calcareum`, `Slender vervain`, `Sweet scented geranium`, plus `Osteospermum ecklonis`, which has no image upstream at all).
+
+**Two descriptions rewritten by hand after the pass held them twice, and both holds were right.** In each case the drafted copy was evaluating the plant instead of describing it, which is what the voice bar is for:
+
+- `Allium karataviense` — "the dramatic foliage and sculptural form contrast well with finer-textured perennials" told the reader it was dramatic rather than saying what they would see. Replaced with the concrete version (broad flat leaves lying close to the ground, flowerheads opening just above them). Blind judge approved first pass, no rewrite.
+- `Cyclamen persicum` — **the tag hold was a symptom; the description was the defect.** The pass kept refusing `terrace_balcony` for "a houseplant primarily grown indoors", and the copy was the reason: it opened with "charming" (twee, banned by the voice bar) and framed the plant as "a gift plant for indoor display". That is generic garden-centre register, not this catalog's subject — _C. persicum_ is an eastern-Mediterranean species that flowers outdoors through mild coastal winters, which is exactly the setting the app is built for (the demo garden is in Opatija). Rewritten to lead with the plant and state frost-tenderness calmly at the end; **the tag then cleared on its own**. Worth generalising: when the tag judge objects, read the description before touching the tag, and never rewrite copy to make a judge agree — the rewrite has to be true on its own terms or the hold is correct.
+
+**Deliberately not done:**
+
+- hardiness_rating left parked for all 50 (§27, unchanged policy)
+- the 8 image holds left as recorded verdicts, not chased — they need new candidate images, which is the §30/§31 Batch API flow, not this round
+- nothing pushed, no PR opened
+
+---
+
 ### 2026-07-29 — Demo accounts via anonymous sign-in
 
 **Branch** `session/2026-07-29-demo-anonymous-signin`. **No catalog data changed** — this session only added rows a demo visitor owns, and removed them again.
