@@ -45,7 +45,7 @@
    * under 3:1 (2.76) until the semantic remap addresses it. */
   --color-sage-50: #f4f9f5;
   --color-sage-100: #e8f2ea; /* shipped — sidebar nav hover/selected */
-  --color-sage-200: #dfebe0; /* shipped — surface-card, surface-drawer, divider */
+  --color-sage-200: #e2ebe2; /* shipped — surface-card, surface-drawer, divider */
   --color-sage-300: #d1e0d3; /* shipped — surface-page, hover tints */
   --color-sage-400: #c4d0c6;
   --color-sage-500: #adb8ae; /* ~was gray-100 — disabled/faint only */
@@ -227,18 +227,25 @@
   ); /* a quieter surface nested inside a card or panel — never placed directly on the page, where it would be invisible */
   --color-surface-inverse: var(--color-fern-950);
   /* Translucent compositions — light-mode assumption baked in; these need
-   * real values (not re-aliases) in any dark theme. */
-  --color-surface-field: rgb(255 255 255 / 0.6);
-  --color-surface-overlay: rgb(255 255 255 / 0.5);
+   * real values (not re-aliases) in any dark theme.
+   *
+   * Ramp-derived ones use relative colour syntax — `rgb(from var(--ramp-step)
+   * r g b / <alpha>)` reads the channels back out of the token, so the ramp
+   * step stays the single home for the value. Do NOT paste a literal rgb()
+   * triple here: the hand-copied ones drifted from their ramp step and the
+   * comment naming the step kept claiming otherwise. Only a colour that is
+   * genuinely its own value (--color-scrim's black) stays a literal. */
+  --color-surface-field: rgb(from var(--color-white) r g b / 0.6);
+  --color-surface-overlay: rgb(from var(--color-white) r g b / 0.5);
   --color-surface-control: rgb(
-    255 255 255 / 0.7
+    from var(--color-white) r g b / 0.7
   ); /* resting translucent small controls (Button/IconButton control variant) */
-  --color-surface-hover: rgb(255 255 255 / 0.7);
+  --color-surface-hover: rgb(from var(--color-white) r g b / 0.7);
   --color-surface-row-hover: var(
     --color-sage-300
   ); /* hover feedback for rows in menus and dropdowns — lands on translucent white, not a card */
-  --color-surface-active: rgb(153 189 157 / 0.5); /* fern-300 @ 50% */
-  --color-surface-card-translucent: rgb(225 235 227 / 0.7); /* sage-200 @ 70% */
+  --color-surface-active: rgb(from var(--color-fern-300) r g b / 0.5);
+  --color-surface-card-translucent: rgb(from var(--color-sage-200) r g b / 0.7);
   --color-surface-nav-active: var(
     --color-sage-100
   ); /* sidebar nav item hover/selected */
@@ -273,14 +280,14 @@
   /* Toast surfaces — translucent tinted glass (ramp step @ 80%), sitting
    * over a backdrop-blur rather than the opaque tone kits above. Text and
    * icon stay text-primary on every tone; only the tint changes. */
-  --color-toast-surface-neutral: rgb(196 208 198 / 0.8); /* sage-400 @ 80% */
-  --color-toast-border-neutral: rgb(139 148 140 / 0.2); /* sage-600 @ 20% */
-  --color-toast-surface-positive: rgb(153 189 157 / 0.8); /* fern-300 @ 80% */
-  --color-toast-border-positive: rgb(15 49 25 / 0.1); /* fern-900 @ 10% */
-  --color-toast-surface-warning: rgb(222 187 134 / 0.8); /* honey-300 @ 80% */
-  --color-toast-border-warning: rgb(89 60 0 / 0.1); /* honey-800 @ 10% */
-  --color-toast-surface-critical: rgb(224 158 149 / 0.8); /* brick-300 @ 80% */
-  --color-toast-border-critical: rgb(167 63 54 / 0.2); /* brick-600 @ 20% */
+  --color-toast-surface-neutral: rgb(from var(--color-sage-400) r g b / 0.8);
+  --color-toast-border-neutral: rgb(from var(--color-sage-600) r g b / 0.2);
+  --color-toast-surface-positive: rgb(from var(--color-fern-300) r g b / 0.8);
+  --color-toast-border-positive: rgb(from var(--color-fern-900) r g b / 0.1);
+  --color-toast-surface-warning: rgb(from var(--color-honey-300) r g b / 0.8);
+  --color-toast-border-warning: rgb(from var(--color-honey-800) r g b / 0.1);
+  --color-toast-surface-critical: rgb(from var(--color-brick-300) r g b / 0.8);
+  --color-toast-border-critical: rgb(from var(--color-brick-600) r g b / 0.2);
 
   /* Accent — hover now darkens (800); the old 600 alias was a no-op. */
   --color-accent: var(--color-fern-700);
@@ -289,9 +296,9 @@
 
   /* Borders */
   --color-border-card: var(--color-white);
-  --color-border-card-translucent: rgb(255 255 255 / 0.5);
+  --color-border-card-translucent: rgb(from var(--color-white) r g b / 0.5);
   --color-border-divider: var(--color-sage-300);
-  --color-border-divider-subtle: rgb(209 224 211 / 0.3); /* sage-300 @ 30% */
+  --color-border-divider-subtle: rgb(from var(--color-sage-300) r g b / 0.3);
   --color-border-placeholder: var(
     --color-sage-100
   ); /* dashed outline of a panel awaiting content */
@@ -333,9 +340,10 @@
   ); /* same shape as card-tile, used on dashboard-style tab cards */
   --card-row-radius: var(--radius-lg);
   --modal-radius: 1.25rem; /* 20px — dialog / modal surface */
-  --sidebar-surface: rgb(
-    178 209 184 / 0.3
-  ); /* legacy tint — still used by MobileTabBar */
+  /* The mobile tab bar's tinted glass. Was a raw #b2d1b8 @ 30% matching no
+   * ramp step; now derives from sage-200, the same step backing the pill
+   * inside it (surface-card-translucent). */
+  --sidebar-surface: rgb(from var(--color-sage-200) r g b / 0.3);
   --sidebar-divider: var(
     --color-sage-200
   ); /* soft hairline separating the flush sidebar from content — was white, too harsh against surface-page (sage-300) */
@@ -343,8 +351,11 @@
   /* main content clearance: sidebar width + 40px gutter (sidebar is flush to the viewport edge) */
   --sidebar-offset: calc(var(--sidebar-width) + var(--spacing-10));
   --login-border: var(--color-fern-500);
-  /* gray-900 @ 20% — translucent composition, light-mode assumption baked in */
-  --login-hairline: rgb(17 17 17 / 0.2);
+  /* --login-hairline removed July 2026. It was never a hairline: its only use
+   * was the login field's placeholder text, so it belongs to the text-faint
+   * role, not a component-tier colour. Its comment claimed "gray-900 @ 20%",
+   * a ramp deleted in the July rename — the name and the comment were both
+   * describing something that had stopped being true. */
   --avatar-fill: var(--color-fern-700); /* was 600, visually identical */
   --thumbnail-scrim: linear-gradient(
     to top,
