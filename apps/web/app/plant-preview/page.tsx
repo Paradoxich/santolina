@@ -135,18 +135,14 @@ export default function PlantPreviewPage() {
               <p className="text-label text-muted">{WIDTHS[width].note}</p>
             </div>
 
-            <h1 className="text-title font-semibold text-primary">
-              {SAMPLE_PLANT.common_name}
-            </h1>
-            <p className="mt-3 text-body italic text-secondary">
-              {SAMPLE_PLANT.scientific_name}
-            </p>
-
-            <div className="mt-8">
+            {/* No title here: the view's own hero owns the name and the
+                botanical line, same as on the real page. */}
+            <div>
               <GardenPlantView
                 plant={SAMPLE_PLANT}
                 notes={notes}
                 heroPhotos={HERO_PHOTOS}
+                subtitle={SAMPLE_PLANT.scientific_name}
                 todayIso={TODAY_ISO}
                 onHeroPhotoClick={() => {}}
                 onSeeAllNotes={() => setIsDiaryOpen(true)}

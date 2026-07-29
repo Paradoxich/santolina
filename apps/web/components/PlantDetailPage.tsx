@@ -426,14 +426,18 @@ export function PlantDetailPage({
           </p>
         )}
 
-        <div className="flex w-full flex-col gap-item-gap">
-          <h1 className="w-full text-title font-semibold text-primary">
-            {plant.common_name}
-          </h1>
-          {subtitle && (
-            <p className="w-full text-body italic text-muted">{subtitle}</p>
-          )}
-        </div>
+        {/* The growing view's hero owns the name, the botanical line and the
+            description, so it can sit beside the gallery. */}
+        {!isGrowing && (
+          <div className="flex w-full flex-col gap-item-gap">
+            <h1 className="w-full text-title font-semibold text-primary">
+              {plant.common_name}
+            </h1>
+            {subtitle && (
+              <p className="w-full text-body italic text-muted">{subtitle}</p>
+            )}
+          </div>
+        )}
 
         {/* The growing view carries its own photo row inside "Your plant". */}
         <div
@@ -509,11 +513,12 @@ export function PlantDetailPage({
           /* The plant is yours and in the ground: the page becomes a
              dashboard for it. Reference sections stay, demoted into a
              collapsed panel, so nothing that was here is lost. */
-          <div className="mt-8 flex w-full flex-col gap-item-gap">
+          <div className="flex w-full flex-col gap-section-break">
             <GardenPlantView
               plant={plant}
               notes={notes}
               heroPhotos={allPhotos}
+              subtitle={subtitle}
               todayIso={todayIso}
               onHeroPhotoClick={setLightboxIndex}
               onSeeAllNotes={() => setIsDiaryOpen(true)}

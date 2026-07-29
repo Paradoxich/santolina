@@ -26,6 +26,7 @@ import { getBloomStatus, getStageNote } from '@/lib/bloom-status'
 import { getCurrentSeason } from '@/lib/season'
 import { formatBloomRange } from '@/lib/format-plant'
 import { flattenNotePhotos } from './StorySection'
+import { PlantGallery } from './PlantGallery'
 import { YearTimeline } from './YearTimeline'
 import type { DbPlant } from '@/lib/plants-db'
 import type { DiaryNote } from '@/types/diary'
@@ -79,8 +80,10 @@ function formatDayLabel(date: string): string {
 export interface GardenPlantViewProps {
   plant: DbPlant
   notes: DiaryNote[]
-  /** Resolved hero photos for the species, newest editorial pick first. */
+  /** Resolved hero photos for the species, editorial pick first. */
   heroPhotos: string[]
+  /** Botanical name plus aliases, already formatted by the page. */
+  subtitle: string | null
   /** Opens the page's species-photo lightbox at this index. */
   onHeroPhotoClick: (index: number) => void
   /** Scrolls to the full story section below the grid. */
@@ -99,6 +102,7 @@ export function GardenPlantView({
   plant,
   notes,
   heroPhotos,
+  subtitle,
   onHeroPhotoClick,
   onSeeAllNotes,
   todayIso,
@@ -150,104 +154,55 @@ export function GardenPlantView({
   }
 
   return (
-    <div className="flex flex-col gap-item-gap">
+    <div className="flex flex-col gap-section-break">
       {/* ============================================================
-          ROW 1 — the plant itself, and where it is right now.
+          HERO — who this plant is, and how long it has been yours.
+          Not a card: it is the page's own header, on the page surface.
       ============================================================= */}
-      <div className={rows.top}>
-        <Panel
-          title="Your plant"
-          meta={
-            daysInGarden !== null
-              ? `Planted ${agoLabel(daysInGarden)}`
-              : // NEEDS COLUMN: palette_plants.planted_at. The age is inferred
-                // from a 'planted' diary event, so a plant marked planted
-                // without logging has no age at all — and every establishment
-                // window rule in CARE_EVENT_RULES silently never fires for it.
-                'Planting date not recorded'
-          }
-          className="h-full"
-        >
-          <div className="flex min-h-0 flex-1 gap-tight-gap">
-            {(heroPhotos.length > 0 ? heroPhotos.slice(0, 3) : [null]).map(
-              (src, i) => {
-                const inner = (
-                  <>
-                    <PlantImage
-                      src={src}
-                      alt={`${plant.common_name} photo ${i + 1}`}
-                      fill
-                      sizes="200px"
-                      className="object-cover"
-                    />
-                    <div
-                      aria-hidden="true"
-                      className="absolute inset-0 bg-[image:var(--thumbnail-scrim)]"
-                    />
-                  </>
-                )
-                const shell =
-                  'relative min-w-0 flex-1 overflow-hidden rounded-sm'
-                return src ? (
-                  <button
-                    key={i}
-                    type="button"
-                    onClick={() => onHeroPhotoClick(i)}
-                    aria-label={`View ${plant.common_name} photo ${i + 1}`}
-                    className={`${shell} cursor-pointer transition-opacity duration-normal hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus`}
-                  >
-                    {inner}
-                  </button>
-                ) : (
-                  <div key="placeholder" className={shell}>
-                    {inner}
-                  </div>
-                )
-              }
-            )}
-          </div>
-          {/* NEEDS COLUMN: palette_plants.placement. The only field that would
-              tell two copies of the same species apart. */}
-          <span className="text-label text-muted">No spot recorded</span>
-        </Panel>
+      <div className="grid grid-cols-1 gap-section-gap lg:grid-cols-[480fr_520fr] lg:items-start">
+        <div className="flex flex-col gap-item-gap">
+          <h1 className="text-title font-semibold text-primary">
+            {plant.common_name}
+          </h1>
+          {subtitle && (
+            <p className="text-body italic text-secondary">{subtitle}</p>
+          )}
+          {plant.description && (
+            <p className="text-body leading-normal text-body-secondary">
+              {plant.description}
+            </p>
+          )}
 
-        <Panel className="h-full justify-between">
-          <div className="flex flex-col gap-item-gap">
-            {/* w-fit: Badge is a span, but a flex column stretches it. */}
-            <Badge variant="accent" className="w-fit">
-              {STATUS_LABEL[status]}
-            </Badge>
-            <p className="text-subheading font-medium leading-tight tracking-heading text-primary">
+          <div className="mt-item-gap flex flex-col gap-tight-gap">
+            <p className="text-body text-primary">
+              {daysInGarden !== null
+                ? `In your garden ${agoLabel(daysInGarden)}`
+                : // NEEDS COLUMN: palette_plants.planted_at. The age is
+                  // inferred from a 'planted' diary event, so a plant marked
+                  // planted without logging has no age at all, and every
+                  // establishment rule in CARE_EVENT_RULES never fires for it.
+                  'Planting date not recorded'}
+            </p>
+            {/* Bloom status was a card of its own and carried one short line,
+                so it is a line here instead. */}
+            <p className="flex items-center gap-inline-gap text-body text-secondary">
+              <Badge variant="accent">{STATUS_LABEL[status]}</Badge>
               {stageNote}
             </p>
-            <p className="text-body text-secondary">
-              {currentAction ?? 'Nothing to do this stage.'}
-            </p>
           </div>
-          <span className="text-label font-medium uppercase tracking-label text-muted">
-            Right now
-          </span>
-        </Panel>
+        </div>
+
+        <PlantGallery
+          photos={heroPhotos}
+          plantName={plant.common_name}
+          onPhotoClick={onHeroPhotoClick}
+        />
       </div>
 
       {/* ============================================================
-          ROW 2 — the year, and what you have written in it.
+          NOTES AND CARE.
       ============================================================= */}
       <div className={rows.middle}>
-        <Panel
-          title="Its year"
-          meta={bloomRange}
-          className="h-full overflow-hidden"
-        >
-          <YearTimeline
-            bloomMonths={bloomMonths}
-            events={events}
-            today={now}
-            plantName={plant.common_name}
-            imageUrl={heroPhotos[0] ?? null}
-          />
-        </Panel>
-
         {notes.length === 0 ? (
           <Panel
             title="Diary"
@@ -300,17 +255,14 @@ export function GardenPlantView({
             </span>
           </Panel>
         )}
-      </div>
 
-      {/* ============================================================
-          ROW 3 — what you last did, the photos you have taken, and what
-          this plant is doing for the garden.
-      ============================================================= */}
-      <div
-        className={plant.environment_benefits ? rows.bottom : rows.bottomTwoUp}
-      >
-        <Panel title="Last done" className="h-full">
-          <ul className="flex w-full flex-col">
+        <Panel title="Care" className="h-full">
+          {/* What to do now leads; what you last did sits under it, because
+              the second is how you judge whether the first is overdue. */}
+          <p className="text-body leading-normal text-primary">
+            {currentAction ?? 'Nothing to do this stage.'}
+          </p>
+          <ul className="mt-auto flex w-full flex-col pt-item-gap">
             {recency.map(({ type, days }) => (
               <li
                 key={type}
@@ -326,7 +278,28 @@ export function GardenPlantView({
             ))}
           </ul>
         </Panel>
+      </div>
 
+      {/* ============================================================
+          THE YEAR — full width, its own row.
+      ============================================================= */}
+      <Panel title="Its year" meta={bloomRange} className="overflow-hidden">
+        <YearTimeline
+          bloomMonths={bloomMonths}
+          events={events}
+          today={now}
+          plantName={plant.common_name}
+          imageUrl={heroPhotos[0] ?? null}
+        />
+      </Panel>
+
+      {/* ============================================================
+          Everything below here is unrevised — Ana's "then we'll do the
+          rest". Left in place so nothing is lost while the top is settled.
+      ============================================================= */}
+      <div
+        className={plant.environment_benefits ? rows.middle : rows.bottomTwoUp}
+      >
         {notePhotos.length === 0 ? (
           <Panel
             title="Photos"
