@@ -31,7 +31,7 @@ export const tokenConsumers: Record<string, string[]> = {
     'packages/ui/src/components/Menu.tsx',
   ],
   '--color-sage-200': [
-    'apps/web/app/(app)/plants/loading.tsx',
+    'apps/web/app/(app)/plants/(list)/loading.tsx',
     'apps/web/components/ActivityClient.tsx',
     'apps/web/components/GardenClient.tsx',
     'apps/web/components/SubpageHeader.tsx',
@@ -313,8 +313,8 @@ export const tokenConsumers: Record<string, string[]> = {
   '--radius-xs': [
     'apps/web/app/(app)/explore/loading.tsx',
     'apps/web/app/(app)/loading.tsx',
-    'apps/web/app/(app)/overview/skeletons.tsx',
-    'apps/web/app/(app)/plants/loading.tsx',
+    'apps/web/app/(app)/overview/(home)/skeletons.tsx',
+    'apps/web/app/(app)/plants/(list)/loading.tsx',
     'apps/web/app/page.tsx',
     'apps/web/components/ActivityClient.tsx',
     'apps/web/components/AddNoteModal.tsx',
@@ -333,7 +333,7 @@ export const tokenConsumers: Record<string, string[]> = {
     'packages/ui/src/components/Toast.tsx',
   ],
   '--radius-sm': [
-    'apps/web/app/(app)/plants/loading.tsx',
+    'apps/web/app/(app)/plants/(list)/loading.tsx',
     'apps/web/app/not-found.tsx',
     'apps/web/components/AuthOptions.tsx',
     'apps/web/components/BloomStatusBadge.tsx',
@@ -367,8 +367,8 @@ export const tokenConsumers: Record<string, string[]> = {
   '--radius-md': [
     'apps/web/app/(app)/explore/loading.tsx',
     'apps/web/app/(app)/loading.tsx',
-    'apps/web/app/(app)/overview/loading.tsx',
-    'apps/web/app/(app)/plants/loading.tsx',
+    'apps/web/app/(app)/overview/(home)/loading.tsx',
+    'apps/web/app/(app)/plants/(list)/loading.tsx',
     'apps/web/app/page.tsx',
     'apps/web/app/plant-preview/page.tsx',
     'apps/web/components/AddNoteModal.tsx',
@@ -527,8 +527,8 @@ export const tokenConsumers: Record<string, string[]> = {
   '--breakpoint-2xl': [],
   '--color-text-primary': [
     'apps/web/app/(app)/explore/loading.tsx',
-    'apps/web/app/(app)/overview/page.tsx',
-    'apps/web/app/(app)/plants/loading.tsx',
+    'apps/web/app/(app)/overview/(home)/page.tsx',
+    'apps/web/app/(app)/plants/(list)/loading.tsx',
     'apps/web/app/(app)/reflections/page.tsx',
     'apps/web/app/design-system/dither-lab/page.tsx',
     'apps/web/app/design-system/layout.tsx',
@@ -598,7 +598,7 @@ export const tokenConsumers: Record<string, string[]> = {
   ],
   '--color-text-secondary': [
     'apps/web/app/(app)/explore/loading.tsx',
-    'apps/web/app/(app)/overview/cards.tsx',
+    'apps/web/app/(app)/overview/(home)/cards.tsx',
     'apps/web/app/(app)/reflections/page.tsx',
     'apps/web/app/not-found.tsx',
     'apps/web/app/plant-preview/page.tsx',
@@ -652,7 +652,7 @@ export const tokenConsumers: Record<string, string[]> = {
     'packages/ui/src/stories/Panel.stories.tsx',
   ],
   '--color-text-muted': [
-    'apps/web/app/(app)/plants/loading.tsx',
+    'apps/web/app/(app)/plants/(list)/loading.tsx',
     'apps/web/app/design-system/dither-lab/page.tsx',
     'apps/web/app/design-system/layout.tsx',
     'apps/web/app/plant-preview/page.tsx',
@@ -725,8 +725,8 @@ export const tokenConsumers: Record<string, string[]> = {
   ],
   '--color-surface-page': [
     'apps/web/app/(app)/layout.tsx',
-    'apps/web/app/(app)/overview/skeletons.tsx',
-    'apps/web/app/(app)/plants/loading.tsx',
+    'apps/web/app/(app)/overview/(home)/skeletons.tsx',
+    'apps/web/app/(app)/plants/(list)/loading.tsx',
     'apps/web/app/login/page.tsx',
     'apps/web/app/not-found.tsx',
     'apps/web/app/page.tsx',
@@ -745,9 +745,9 @@ export const tokenConsumers: Record<string, string[]> = {
   '--color-surface-card': [
     'apps/web/app/(app)/explore/loading.tsx',
     'apps/web/app/(app)/loading.tsx',
-    'apps/web/app/(app)/overview/loading.tsx',
-    'apps/web/app/(app)/overview/skeletons.tsx',
-    'apps/web/app/(app)/plants/loading.tsx',
+    'apps/web/app/(app)/overview/(home)/loading.tsx',
+    'apps/web/app/(app)/overview/(home)/skeletons.tsx',
+    'apps/web/app/(app)/plants/(list)/loading.tsx',
     'apps/web/app/design-system/dither-lab/page.tsx',
     'apps/web/app/login/page.tsx',
     'apps/web/components/DemoBanner.tsx',
@@ -1045,7 +1045,7 @@ export const tokenConsumers: Record<string, string[]> = {
     'packages/ui/src/utils/cn.ts',
   ],
   '--color-border-card-translucent': [
-    'apps/web/app/(app)/plants/loading.tsx',
+    'apps/web/app/(app)/plants/(list)/loading.tsx',
     'apps/web/app/login/page.tsx',
     'apps/web/components/AuthOptions.tsx',
     'apps/web/components/CareTipsDrawer.tsx',
@@ -1064,7 +1064,7 @@ export const tokenConsumers: Record<string, string[]> = {
   ],
   '--color-border-divider': [
     'apps/web/app/(app)/explore/loading.tsx',
-    'apps/web/app/(app)/plants/loading.tsx',
+    'apps/web/app/(app)/plants/(list)/loading.tsx',
     'apps/web/app/design-system/layout.tsx',
     'apps/web/app/login/page.tsx',
     'apps/web/app/page.tsx',
@@ -1173,7 +1173,7 @@ export const tokenConsumers: Record<string, string[]> = {
   ],
   '--font-size-micro': [],
   '--space-tight-gap': [
-    'apps/web/app/(app)/plants/loading.tsx',
+    'apps/web/app/(app)/plants/(list)/loading.tsx',
     'apps/web/app/plant-preview/page.tsx',
     'apps/web/components/ActivityClient.tsx',
     'apps/web/components/AddNoteModal.tsx',
@@ -1208,7 +1208,7 @@ export const tokenConsumers: Record<string, string[]> = {
   ],
   '--space-inline-gap': [
     'apps/web/app/(app)/explore/loading.tsx',
-    'apps/web/app/(app)/plants/loading.tsx',
+    'apps/web/app/(app)/plants/(list)/loading.tsx',
     'apps/web/app/not-found.tsx',
     'apps/web/components/ActivityClient.tsx',
     'apps/web/components/AddNoteModal.tsx',
@@ -1252,9 +1252,9 @@ export const tokenConsumers: Record<string, string[]> = {
   ],
   '--space-item-gap': [
     'apps/web/app/(app)/explore/loading.tsx',
-    'apps/web/app/(app)/overview/page.tsx',
-    'apps/web/app/(app)/overview/skeletons.tsx',
-    'apps/web/app/(app)/plants/loading.tsx',
+    'apps/web/app/(app)/overview/(home)/page.tsx',
+    'apps/web/app/(app)/overview/(home)/skeletons.tsx',
+    'apps/web/app/(app)/plants/(list)/loading.tsx',
     'apps/web/app/(app)/reflections/page.tsx',
     'apps/web/app/design-system/layout.tsx',
     'apps/web/app/not-found.tsx',
@@ -1304,7 +1304,7 @@ export const tokenConsumers: Record<string, string[]> = {
   ],
   '--space-row-gap': [
     'apps/web/app/(app)/explore/loading.tsx',
-    'apps/web/app/(app)/plants/loading.tsx',
+    'apps/web/app/(app)/plants/(list)/loading.tsx',
     'apps/web/components/ActivityClient.tsx',
     'apps/web/components/AddNoteModal.tsx',
     'apps/web/components/AppSidebar.tsx',
@@ -1337,7 +1337,7 @@ export const tokenConsumers: Record<string, string[]> = {
   ],
   '--space-section-gap': [
     'apps/web/app/(app)/loading.tsx',
-    'apps/web/app/(app)/plants/loading.tsx',
+    'apps/web/app/(app)/plants/(list)/loading.tsx',
     'apps/web/app/design-system/layout.tsx',
     'apps/web/components/ActivityClient.tsx',
     'apps/web/components/ExploreBrowse.tsx',
@@ -1351,7 +1351,7 @@ export const tokenConsumers: Record<string, string[]> = {
     'packages/ui/src/stories/Panel.stories.tsx',
   ],
   '--space-card-padding': [
-    'apps/web/app/(app)/plants/loading.tsx',
+    'apps/web/app/(app)/plants/(list)/loading.tsx',
     'apps/web/app/design-system/layout.tsx',
     'apps/web/app/not-found.tsx',
     'apps/web/app/plant-preview/page.tsx',
@@ -1400,7 +1400,7 @@ export const tokenConsumers: Record<string, string[]> = {
   ],
   '--card-tile-radius': [
     'apps/web/app/(app)/explore/loading.tsx',
-    'apps/web/app/(app)/plants/loading.tsx',
+    'apps/web/app/(app)/plants/(list)/loading.tsx',
     'apps/web/app/design-system/dither-lab/page.tsx',
     'apps/web/app/login/page.tsx',
     'apps/web/app/page.tsx',
@@ -1437,7 +1437,7 @@ export const tokenConsumers: Record<string, string[]> = {
   ],
   '--content-gutter': [
     'apps/web/app/(app)/layout.tsx',
-    'apps/web/app/(app)/plants/loading.tsx',
+    'apps/web/app/(app)/plants/(list)/loading.tsx',
     'apps/web/app/plant-preview/page.tsx',
     'apps/web/components/ExploreClient.tsx',
     'apps/web/components/GardenClient.tsx',
@@ -1445,7 +1445,7 @@ export const tokenConsumers: Record<string, string[]> = {
   ],
   '--sidebar-offset': [
     'apps/web/app/(app)/layout.tsx',
-    'apps/web/app/(app)/plants/loading.tsx',
+    'apps/web/app/(app)/plants/(list)/loading.tsx',
     'apps/web/app/plant-preview/page.tsx',
     'apps/web/components/GardenClient.tsx',
     'apps/web/components/SubpageHeader.tsx',

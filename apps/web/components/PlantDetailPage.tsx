@@ -16,6 +16,7 @@ import { icons } from '@/lib/icons'
 import { SubpageHeader } from '@/components/SubpageHeader'
 import { PlantImage } from '@/components/PlantImage'
 import { creditLine } from '@/lib/image-attribution'
+import { galleryPhotoUrls } from '@/lib/plant-image'
 import type { PlantDetail } from '@/lib/plant-detail'
 import { formatPlantSubtitle } from '@/lib/format-plant'
 import { buildGoodForYourGarden } from '@/lib/good-for-your-garden'
@@ -78,10 +79,7 @@ export function PlantDetailPage({
     plant.scientific_name,
     plant.common_name_aliases ?? []
   )
-  const allPhotos = [
-    ...(plant.image_url ? [plant.image_url] : []),
-    ...(plant.image_urls ?? []).filter((u) => u !== plant.image_url),
-  ]
+  const allPhotos = galleryPhotoUrls(plant)
   const photos = allPhotos.slice(0, 3)
   const galleryImages = allPhotos.map((src, i) => ({
     src,

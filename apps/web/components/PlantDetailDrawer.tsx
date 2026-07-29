@@ -14,6 +14,7 @@ import { icons } from '@/lib/icons'
 import { PlantImage } from '@/components/PlantImage'
 import { DRAWER_MOTION } from '@/lib/drawer-motion'
 import { creditLine } from '@/lib/image-attribution'
+import { galleryPhotoUrls } from '@/lib/plant-image'
 import type { PlantDetail } from '@/lib/plant-detail'
 import { formatPlantSubtitle } from '@/lib/format-plant'
 import { buildGoodForYourGarden } from '@/lib/good-for-your-garden'
@@ -49,15 +50,9 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
     plant.scientific_name,
     plant.common_name_aliases ?? []
   )
-  // Lead with the curated hero (getPlantDetail resolves plant.image_url to it),
-  // so the drawer shows the same photo the browse card does — including a
-  // Wikimedia pick, which isn't in the raw image_urls list. Dedupe so the hero
-  // doesn't repeat when it also happens to be a Trefle image. The full-size
-  // viewer pages through this same ordering, not just the 3 shown in the strip.
-  const allPhotos = [
-    ...(plant.image_url ? [plant.image_url] : []),
-    ...(plant.image_urls ?? []).filter((u) => u !== plant.image_url),
-  ]
+  // The full-size viewer pages through this whole list, not just the 3 shown
+  // in the strip — see galleryPhotoUrls for the ordering and the cap.
+  const allPhotos = galleryPhotoUrls(plant)
   const photos = allPhotos.slice(0, 3)
   const galleryImages = allPhotos.map((src, i) => ({
     src,
