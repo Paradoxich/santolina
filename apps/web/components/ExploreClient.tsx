@@ -87,8 +87,16 @@ export function ExploreClient({
         detail ? 'lg:pr-[480px]' : '',
       ].join(' ')}
     >
+      {/* The 1128 cap sits on this column, not on the flex parent: the
+          parent's lg:pr-[480px] reserves room for a viewport-fixed drawer,
+          so capping it would indent the list away from a drawer that has
+          not moved. */}
       <div
-        className={detail ? 'w-full max-w-[680px] shrink-0' : 'min-w-0 flex-1'}
+        className={
+          detail
+            ? 'w-full max-w-[680px] shrink-0'
+            : 'min-w-0 max-w-[1128px] flex-1'
+        }
       >
         <header className="flex flex-col gap-item-gap">
           <h1 className="text-title font-semibold tracking-title text-primary">
