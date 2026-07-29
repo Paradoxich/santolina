@@ -70,7 +70,42 @@ The catalog's size, the curated count and the per-round step table are
 **generated** into `docs/catalog-state.md` and `docs/round-runbook.md`. Link to
 them; never retype their numbers here.
 
-## 2026-07-29 — session/2026-07-29-rehearsal (read this one first)
+## 2026-07-29 — session/2026-07-29-plant-detail
+
+**Status:** merged to main ([PR #129](https://github.com/Paradoxich/santolina/pull/129), squash commit `504c313`), CI green on that run. Worktree and branch removed at session end. **UI only** — no catalog data, no scripts, no migrations. Independent of the two pipeline entries below; they touched no file this branch touched.
+
+Rebuilt `/plants?plant=<id>` for plants you are **growing**. Planned and removed-with-history plants keep the old linear layout, because a planned plant has no diary (Ana, 21 July) and most of the new cards would be permanently empty. Nothing was deleted: every reference section still renders, moved into a Care reference drawer.
+
+**Done:**
+
+- **The page.** Hero on the page surface (name, botanical line, one-sentence description, bloom status) beside a gallery; then Diary and Care; then Photos / Care reference / In your garden; then the year timeline.
+- **One 1200px content cap across the app**, sized to a 14in MacBook Pro: 1512 − 232 sidebar − 40 − 40. The dashboard was 1032, and Explore and My Plants were **uncapped** — on a wide display they ran several hundred px wider than the dashboard beside them.
+- **`--content-gutter` and `--content-max`.** The gutter was 40px left and 48px right, and that difference was not deliberate — it was one number retyped at six full-bleed escapes, each hardcoding whichever edge it sat against. `--sidebar-offset` derives from it now.
+- **`lib/chart-colors.ts`.** The dashboard chart's muted palette was private to `bloom-timeline.ts`; the year timeline needed it, so both import it rather than a second copy drifting.
+- **`getPlantCareTips`** — single-plant entry point that synthesises a one-row palette and delegates to the existing tip builders, rather than reimplementing the ranking beside them.
+
+**Decisions made:**
+
+- **A plant you own is a dashboard for that plant**, so it uses the dashboard's card system — `Panel`, the same grid ratios, `CardIllustration` for empty cards. The first attempt invented a second visual language and was thrown away; that is why the early commits look like a rewrite of themselves.
+- **Diary and Care reference are drawers, not inline sections.** Plant care on the dashboard already worked this way. An inline reference panel inside a third-width card would have set two StatCards side by side in ~360px.
+- **No health status.** Inferring "needs water" from absence of logs is trap 1 in a new costume — a fallback that turns missing data into a confident-looking claim.
+- **Stage descriptions clamp to two lines in the timeline, and `SeasonalRhythmSection` therefore stays in the reference drawer.** It was removed while the timeline showed each stage in full, and put back when the clamp landed. The timeline is the at-a-glance view; the drawer holds the full text.
+- **`/plant-preview` is a dev harness behind the auth gate.** It renders the real `GardenPlantView`, not a copy, so it cannot drift. It exists because never-logged and planted-then-silent states are hard to produce on demand in real data.
+
+**Next steps, in order:**
+
+1. **Click through the live page signed in.** This branch was verified by types and by the harness only — no session was available to it. The path worth clicking first is **adding a note from inside the diary drawer**: that is the one place server actions and `router.refresh()` interact, and the harness cannot prove it.
+2. **The timeline is unfinished** and was left mid-iteration by agreement. It went strip → segments → bands → one track per stage → text on each row → text inside blocks → two-line clamp. At 1512 the card measured ~667px, which is still large; the next lever is a one-line clamp (~530px), at which point most stages show a fragment.
+3. **Two fields the page wants and the schema lacks**, both cut from the hero rather than shown as "not recorded" placeholders: `palette_plants.planted_at` (age is inferred from a `planted` diary event, so a plant marked planted without logging has no age at all — and every establishment rule in `CARE_EVENT_RULES` silently never fires for it) and a placement field.
+4. **`formatPlantSubtitle` repeats the heading** when a plant's common name is its botanical name — `Stipa gigantea` renders "*Stipa gigantea.*" as its own subtitle. Cheap to suppress when the two match.
+
+**Open questions:**
+
+- **Should the dashboard's 3-up rows adopt the plant page's spacing?** This branch set 12px between rows to match the gap inside one, and 40px below the hero. The dashboard still uses its own rhythm.
+
+**Worth knowing, because it cost time twice:** `pnpm typecheck` reported green on a file that did not parse, because turbo served a cached result — the browser console caught it, not the typecheck. Use `pnpm typecheck --force` after edits. Separately, **Tailwind preset changes need a dev server restart**: new tokens were correct in `index.css` while `max-w-content` and `mr-content-gutter` silently did nothing, and the page measured 1240 instead of 1200 and looked plausible.
+
+## 2026-07-29 — session/2026-07-29-rehearsal (pipeline; read this one first for pipeline work)
 
 **Status:** merged to main ([PR #128](https://github.com/Paradoxich/santolina/pull/128), merge commit `06ab97a`). CI green. Worktree removed, branch deleted local and remote. **No catalog data changed** — this is pipeline code only.
 
