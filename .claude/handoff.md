@@ -2,7 +2,42 @@
 
 Newest entry first. Read the top entry before starting work.
 
-## 2026-07-29 — session/2026-07-29-round-9 (read this one first)
+## 2026-07-29 — session/2026-07-29-rehearsal (read this one first)
+
+**Status:** merged to main ([PR #128](https://github.com/Paradoxich/santolina/pull/128), merge commit `06ab97a`). CI green. Worktree removed, branch deleted local and remote. **No catalog data changed** — this is pipeline code only.
+
+Follow-up to the round-9 entry below, doing its next steps 1 and 2. Both grew in the doing, and both grew in the same direction: the thing I fixed in the morning was a symptom.
+
+**Done:**
+
+- **`StepStatus.vacuous`, and it is the root cause of round 9's bug 1.** The line was `complete: done === scope.length`. An empty scope makes that `0 === 0`, so a step reports itself finished before it has looked at anything. **This was never specific to `pick-plant-images --verify` — it is true of every step with an `applies` predicate whenever its scope is empty.** PR #127 re-read state between steps, which treated one step's symptom. Emptiness is now surfaced and each caller decides: `verify-round` may treat "nothing to do" as fine, `run-round` skips only on `complete && !vacuous`.
+- **`scripts/round-rehearsal.test.ts` — 13 assertions, 12ms, no DB and no API key.** Feeds a synthetic freshly-seeded plant to `computeStatus` (the pure half of `roundStatus`, split out for this) and asserts the pipeline is WIRED right: no step claims completion for a plant nothing has run on; scripts exist; runbook numbers do not collide; the array is in runbook order; `STEP_DEFS` and `RUNBOOK` agree **in both directions**; the native-region plan precedes its apply; image candidates precede the vision pass; sign-off is last.
+- **It runs inside `pnpm test`, so CI already covers it on every PR.** No workflow change was needed.
+- **`run-round` preflights the rollback point** and exits 1 before step 0 if none predates the seed, instead of discovering it at step 8a after every AI pass is billed.
+
+**Decisions made:**
+
+- **Every assertion was mutation-tested by reintroducing the real bug** — reverting `vacuous` fails 2, unregistering the plan step fails the prerequisite test by name, deleting `recover-image-categories` fails 1. Non-negotiable here after the token check went green against a faithful reproduction of its own bug on 2026-07-29. **A guard that has never failed has not been tested.**
+- **The rehearsal asserts STRUCTURE, not plant data.** Data is what the live pipeline already checks well; wiring is what kept failing. Stated in the file: a green rehearsal is not a green round, and it proves nothing about a step's output or an API contract.
+- **`vacuous` requires `plants.length > 0`**, so a zero-plant round is not misreported as a pipeline fault. Guard on the guard, with its own test.
+
+**Correction to the round-9 entry below: its "backup before seed" framing was wrong.** Baseline selection was ALREADY correct — `resolveBaselineDir` only accepts a snapshot at or before the manifest's `started_at`, so the runner's own post-seed backup can never be chosen, and round 9 picked the hand-taken one by logic rather than luck. The real gap was only _when you find out_, which the preflight now fixes. Verified both ways: round 9 in a worktree with **no `backups/` at all** resolves from the committed `rounds/9/catalog` archive, and a probe round with no snapshot anywhere exits 1 before step 0.
+
+**Next steps, in order:**
+
+1. **Round 10, and treat its first run as still testing the runner.** The rehearsal covers wiring; it cannot catch a step whose output is wrong or an upstream API that changed shape. Measure the gap first and check it is not a data artefact (see the round-9 entry — that check killed a whole round's premise for free).
+2. **Round 9's 8 editorial holds** — three need a NEW candidate image, not a re-check: `Silene acaulis` (hero is a fringed _Dianthus_), `Hamamelis japonica` (staked nursery sapling), `Carex comans`. Plus `Erysimum cheiri`, no image upstream at all.
+3. **`Symphyotrichum lateriflorum` displays as "Calico or one-sided or white woodland or starved aster"** — live in Explore now. A `common_name` containing " or " is almost always a Trefle blob; worth a cheap guard alongside the fix.
+4. Carried over: the ~575-plant WCVP tail (never `--apply` against `--all`); the token usage logger; promote hardiness WARN → FAIL when §27 un-parks; the two colour-bucket calls; `NEXT_PUBLIC_APP_URL` is dead but still advertised.
+
+**Open questions:**
+
+- **The Notion Session Log entry for 2026-07-29 is still owed** — mandatory per the standing rule, and neither this session nor the round-9 one could reach Notion. Two sessions' worth: round 9, and this.
+- Blocked, unchanged: local Supabase on disk cleanup; the Pro-plan decision.
+
+**Worth knowing:** the rehearsal exists because three bugs in one round shared one anatomy — _a step the runner did not know it needed_. If round 10 finds a fourth bug of that shape, the rehearsal is the place to add the assertion, not the script that failed. If it finds a bug of a **different** shape, resist widening the rehearsal to cover it speculatively; write the assertion only once you have a real failure to mutation-test against.
+
+## 2026-07-29 — session/2026-07-29-round-9
 
 **Status:** merged to main ([PR #127](https://github.com/Paradoxich/santolina/pull/127), merge commit `996a74a`). CI green. Worktree removed, branch deleted local and remote.
 
