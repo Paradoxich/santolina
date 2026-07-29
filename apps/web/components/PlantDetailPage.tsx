@@ -340,8 +340,12 @@ export function PlantDetailPage({
   const controlsDisabled = pendingAction !== null
 
   return (
-    <div className="mx-auto flex w-full max-w-[640px] flex-col pb-16">
-      <div className="flex w-full items-center justify-between gap-inline-gap pt-8 md:pt-12">
+    <div className="pb-16">
+      {/* Full-bleed top strip: spans the sidebar divider to the right edge of
+          the viewport by cancelling the app shell's gutters, the same escape
+          the Garden and Explore headers use. The page body below stays in the
+          640px reading column. */}
+      <header className="flex items-center justify-between gap-inline-gap border-b border-sage-200 py-4 md:ml-[calc(-1*var(--sidebar-offset))] md:mr-[-3rem] md:pl-[var(--sidebar-offset)] md:pr-12">
         <Link
           href={backHref}
           className="flex items-center gap-tight-gap text-body text-secondary transition-colors duration-normal hover:text-primary"
@@ -396,122 +400,124 @@ export function PlantDetailPage({
             </IconButton>
           </Tooltip>
         </div>
-      </div>
+      </header>
 
-      {actionError && (
-        <p
-          role="alert"
-          className="mt-4 w-full shrink-0 rounded-sm bg-surface-critical px-card-padding py-inline-gap text-label text-critical"
-        >
-          {actionError}
-        </p>
-      )}
-
-      <div className="mt-6 flex w-full flex-col gap-item-gap">
-        <h1 className="w-full text-title font-semibold text-primary">
-          {plant.common_name}
-        </h1>
-        {subtitle && (
-          <p className="w-full text-body italic text-muted">{subtitle}</p>
+      <div className="mx-auto flex w-full max-w-[640px] flex-col pt-8 md:pt-12">
+        {actionError && (
+          <p
+            role="alert"
+            className="mb-4 w-full shrink-0 rounded-sm bg-surface-critical px-card-padding py-inline-gap text-label text-critical"
+          >
+            {actionError}
+          </p>
         )}
-      </div>
 
-      <div className="mt-4 flex w-full shrink-0 snap-x snap-mandatory gap-inline-gap overflow-x-auto">
-        {(photos.length > 0 ? photos : [null]).map((src, i) => {
-          const imageClass =
-            'relative h-[141px] shrink-0 snap-start overflow-hidden rounded-sm'
-          const style = { width: PHOTO_WIDTHS[i % PHOTO_WIDTHS.length] }
-          const image = (
-            <PlantImage
-              src={src}
-              alt={`${plant.common_name} photo ${i + 1}`}
-              fill
-              sizes="207px"
-              className="object-cover"
-            />
-          )
-          return src ? (
-            <button
-              key={src}
-              type="button"
-              onClick={() => setLightboxIndex(i)}
-              aria-label={`View ${plant.common_name} photo ${i + 1}`}
-              className={`${imageClass} cursor-pointer transition-opacity duration-normal hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus`}
-              style={style}
-            >
-              {image}
-            </button>
-          ) : (
-            <div key="placeholder" className={imageClass} style={style}>
-              {image}
-            </div>
-          )
-        })}
-      </div>
-
-      {credit && (
-        <p className="mt-2 w-full text-body-small text-muted">
-          {credit}
-          {plant.image_attribution?.source_url && (
-            <>
-              {' · '}
-              <a
-                href={plant.image_attribution.source_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline"
-              >
-                source
-              </a>
-            </>
+        <div className="flex w-full flex-col gap-item-gap">
+          <h1 className="w-full text-title font-semibold text-primary">
+            {plant.common_name}
+          </h1>
+          {subtitle && (
+            <p className="w-full text-body italic text-muted">{subtitle}</p>
           )}
-          {plant.image_attribution?.license_url && (
-            <>
-              {' · '}
-              <a
-                href={plant.image_attribution.license_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline"
-              >
-                licence
-              </a>
-            </>
-          )}
-        </p>
-      )}
-
-      <div className="mt-section-break flex w-full flex-col gap-section-break">
-        <AboutSection description={plant.description} />
-        {showStory && (
-          <StorySection
-            plantId={plant.id}
-            plantName={plant.common_name}
-            notes={notes}
-            isGrowing={isGrowing}
-          />
-        )}
-        <GoodForYourGardenSection bullets={bullets} />
-        <CareSection plant={plant} />
-        <SeasonalRhythmSection rhythm={plant.seasonal_rhythm} />
-        <InYourGardenSection plant={plant} />
-        <WorksWellWithSection companions={companions} />
-        <GoodForSection tags={plant.garden_use_tags} />
-        <DetailsSection plant={plant} />
-      </div>
-
-      {showStory && (
-        <div className="mt-section-break">
-          <StoryComposer
-            plantId={plant.id}
-            paletteId={palette?.paletteId ?? null}
-            isGrowing={isGrowing}
-            onAddedBackToGarden={({ paletteId }) =>
-              setPalette({ paletteId, status: 'planted' })
-            }
-          />
         </div>
-      )}
+
+        <div className="mt-4 flex w-full shrink-0 snap-x snap-mandatory gap-inline-gap overflow-x-auto">
+          {(photos.length > 0 ? photos : [null]).map((src, i) => {
+            const imageClass =
+              'relative h-[141px] shrink-0 snap-start overflow-hidden rounded-sm'
+            const style = { width: PHOTO_WIDTHS[i % PHOTO_WIDTHS.length] }
+            const image = (
+              <PlantImage
+                src={src}
+                alt={`${plant.common_name} photo ${i + 1}`}
+                fill
+                sizes="207px"
+                className="object-cover"
+              />
+            )
+            return src ? (
+              <button
+                key={src}
+                type="button"
+                onClick={() => setLightboxIndex(i)}
+                aria-label={`View ${plant.common_name} photo ${i + 1}`}
+                className={`${imageClass} cursor-pointer transition-opacity duration-normal hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus`}
+                style={style}
+              >
+                {image}
+              </button>
+            ) : (
+              <div key="placeholder" className={imageClass} style={style}>
+                {image}
+              </div>
+            )
+          })}
+        </div>
+
+        {credit && (
+          <p className="mt-2 w-full text-body-small text-muted">
+            {credit}
+            {plant.image_attribution?.source_url && (
+              <>
+                {' · '}
+                <a
+                  href={plant.image_attribution.source_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline"
+                >
+                  source
+                </a>
+              </>
+            )}
+            {plant.image_attribution?.license_url && (
+              <>
+                {' · '}
+                <a
+                  href={plant.image_attribution.license_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline"
+                >
+                  licence
+                </a>
+              </>
+            )}
+          </p>
+        )}
+
+        <div className="mt-section-break flex w-full flex-col gap-section-break">
+          <AboutSection description={plant.description} />
+          {showStory && (
+            <StorySection
+              plantId={plant.id}
+              plantName={plant.common_name}
+              notes={notes}
+              isGrowing={isGrowing}
+            />
+          )}
+          <GoodForYourGardenSection bullets={bullets} />
+          <CareSection plant={plant} />
+          <SeasonalRhythmSection rhythm={plant.seasonal_rhythm} />
+          <InYourGardenSection plant={plant} />
+          <WorksWellWithSection companions={companions} />
+          <GoodForSection tags={plant.garden_use_tags} />
+          <DetailsSection plant={plant} />
+        </div>
+
+        {showStory && (
+          <div className="mt-section-break">
+            <StoryComposer
+              plantId={plant.id}
+              paletteId={palette?.paletteId ?? null}
+              isGrowing={isGrowing}
+              onAddedBackToGarden={({ paletteId }) =>
+                setPalette({ paletteId, status: 'planted' })
+              }
+            />
+          </div>
+        )}
+      </div>
 
       <Lightbox
         images={galleryImages}
