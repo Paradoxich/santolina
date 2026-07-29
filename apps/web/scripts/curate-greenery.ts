@@ -37,6 +37,14 @@
  */
 
 import { getSupabaseAdmin } from '../lib/supabase-admin'
+import {
+  requireScope,
+  scopeIds,
+  describeScope,
+  applyScope,
+  scopeGuard,
+  requireReasonForAll,
+} from './scope'
 import { fetchAllRows } from '../lib/paginate'
 import { getAnthropicClient, CURATION_MODEL } from '../lib/anthropic-client'
 import {
@@ -76,8 +84,30 @@ const DRY_RUN = args.includes('--dry-run')
 const NEW_ONLY = args.includes('--new-only')
 const limitIdx = args.indexOf('--limit')
 const LIMIT = limitIdx >= 0 ? Number(args[limitIdx + 1]) : null
-const idsIdx = args.indexOf('--ids')
-const IDS = idsIdx >= 0 ? (args[idsIdx + 1] ?? '').split(',') : null
+
+// Scope is mandatory (scripts/scope.ts). This script used to select
+// catalog-wide and narrow with a state predicate, which is not a scope: it
+// looks like one until the day it matches an older round's rows, which is
+// exactly how round 8 wrote to plants it had never seeded.
+const SCOPE = requireScope(
+  'curate-greenery',
+  'This pass bills Claude per row and sets is_greenery, the only way into the Explore Green colour bucket. An unscoped run would re-judge every plant in the catalog.'
+)
+const SCOPE_IDS = scopeIds(SCOPE)
+const WHY_ALL = requireReasonForAll(SCOPE)
+const guardScope = scopeGuard(SCOPE, SCOPE_IDS)
+
+/**
+ * The id to write to, refusing if the row is outside the active scope.
+ *
+ * Used inline at the `.eq('id', ...)` so the check cannot be separated from
+ * the write it protects — a guard two lines above a write is a guard someone
+ * eventually moves.
+ */
+function guardWrite(plant: { id: string; common_name: string }): string {
+  guardScope(plant.id, plant.common_name)
+  return plant.id
+}
 
 // ---------------------------------------------------------------------------
 // Prompt
@@ -186,11 +216,15 @@ async function main() {
       .order('id')
       .range(from, to)
     if (NEW_ONLY) query = query.is('greenery_checked_at', null)
+    query = applyScope(query, SCOPE_IDS)
     return query
   })
 
-  let selected = IDS ? plants.filter((p) => IDS.includes(p.id)) : plants
+  let selected = plants
   if (LIMIT) selected = selected.slice(0, LIMIT)
+
+  console.log(describeScope(SCOPE, SCOPE_IDS))
+  if (WHY_ALL) console.log(`Whole-catalog run, because: ${WHY_ALL}`)
 
   console.log(
     `Judging ${selected.length} plant(s)${NEW_ONLY ? ' (new only)' : ''}${DRY_RUN ? ' — DRY RUN, no writes' : ''}`
@@ -254,7 +288,7 @@ async function main() {
         const { error } = await db
           .from('plants')
           .update(patch)
-          .eq('id', plant.id)
+          .eq('id', guardWrite(plant))
         if (error) throw new Error(`DB write failed: ${error.message}`)
       }
     } catch (err) {

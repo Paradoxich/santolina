@@ -41,6 +41,13 @@
 import { mkdirSync, writeFileSync, readFileSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { getSupabaseAdmin } from '../lib/supabase-admin'
+import {
+  requireScope,
+  scopeIds,
+  describeScope,
+  scopeGuard,
+  requireReasonForAll,
+} from './scope'
 import { getAnthropicClient, CURATION_MODEL } from '../lib/anthropic-client'
 import { fetchAllRows } from '../lib/paginate'
 import { readRoundManifest } from './round-manifest'
@@ -92,12 +99,24 @@ interface PlantRow {
 
 // Stamp a row as native-checked. Operational metadata only — never touches a
 // catalog field (native_to edits happen only via the explicit --apply path).
+/**
+ * The id to stamp, refusing if it is outside the active scope.
+ *
+ * A guard is set up in main() and consumed here, so the module-level indirection
+ * is deliberate: the check has to sit ON the write, not near it.
+ */
+let activeGuard: ((id: string) => void) | null = null
+function guardStampTarget(id: string): string {
+  activeGuard?.(id)
+  return id
+}
+
 async function stampChecked(id: string): Promise<void> {
   const db = getSupabaseAdmin()
   const { error } = await db
     .from('plants')
     .update({ native_checked_at: new Date().toISOString() })
-    .eq('id', id)
+    .eq('id', guardStampTarget(id))
   if (error) throw new Error(`Failed to stamp ${id}: ${error.message}`)
 }
 
@@ -467,19 +486,20 @@ async function generate(
   // established here either — native_checked_at was NULL catalog-wide at round
   // 8, so --new-only would have re-billed all 595. See the same note in
   // cross-check-plants.ts.
-  let roundIds: string[] | null = null
-  if (roundLabel) {
-    const manifest = readRoundManifest(roundLabel)
-    if (!manifest) {
-      throw new Error(
-        `No manifest for round "${roundLabel}" — expected rounds/${roundLabel}/manifest.json`
-      )
-    }
-    roundIds = manifest.seeded_ids
-    console.log(
-      `Scoping to round ${manifest.label}: ${roundIds.length} seeded plant(s).`
-    )
-  }
+  // Scope is MANDATORY (scripts/scope.ts). It used to be optional here, with
+  // `--new-only` as the fallback — and `--new-only` is a state predicate, not
+  // a scope, so a run without --round quietly reached every unstamped plant in
+  // the catalog and billed for it.
+  const scope = requireScope(
+    'cross-check-native-to',
+    'This guard bills Claude a call per plant on top of a GBIF lookup. An ' +
+      'unscoped run re-checks the whole catalog.'
+  )
+  const roundIds = scopeIds(scope)
+  const whyAll = requireReasonForAll(scope)
+  activeGuard = scopeGuard(scope, roundIds)
+  console.log(describeScope(scope, roundIds))
+  if (whyAll) console.log(`Whole-catalog run, because: ${whyAll}`)
 
   let plants = await fetchAllRows<PlantRow>((from, to) => {
     let q = db

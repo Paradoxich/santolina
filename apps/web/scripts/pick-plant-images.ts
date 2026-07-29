@@ -91,7 +91,14 @@ import {
   type ImageCandidate,
   type Measured,
 } from '../lib/image-shortlist'
-import { requireScope, scopeIds, describeScope } from './scope'
+import {
+  requireScope,
+  scopeIds,
+  describeScope,
+  applyScope,
+  scopeGuard,
+  requireReasonForAll,
+} from './scope'
 
 // Below this a photo cannot fill an Explore card without visible softening.
 const MIN_LONG_EDGE = 500
@@ -133,6 +140,8 @@ interface Manifest {
   batchId: string
   createdAt: string
   model: string
+  /** null means the batch was built under --all. */
+  scopeIds?: string[] | null
   plants: Record<
     string,
     { commonName: string; incumbent: string | null; images: Measured[] }
@@ -931,6 +940,20 @@ async function main() {
     return
   }
 
+  // Scope is mandatory here too. `image_checked_at IS NULL` is a state
+  // predicate, not a scope: it selects every plant the pass has never reached,
+  // across every round, so a routine run for a new batch quietly picks heroes
+  // for older ones as well.
+  const scope = requireScope(
+    'pick-plant-images',
+    'This pass bills a vision call per plant and OVERWRITES the hero image. ' +
+      'An unscoped run would re-pick for every unchecked plant in the catalog.'
+  )
+  const scopeIdList = scopeIds(scope)
+  const whyAll = requireReasonForAll(scope)
+  console.log(describeScope(scope, scopeIdList))
+  if (whyAll) console.log(`Whole-catalog run, because: ${whyAll}`)
+
   // Ordered by id — paging needs a unique column to be stable.
   let plants = await fetchAllRows<PlantRow>((from, to) => {
     let q = supabase
@@ -940,7 +963,7 @@ async function main() {
       )
       .not('image_candidates', 'is', null)
     if (!recheck) q = q.is('image_checked_at', null)
-    return q.order('id').range(from, to)
+    return applyScope(q, scopeIdList).order('id').range(from, to)
   })
 
   plants.sort((a, b) => a.common_name.localeCompare(b.common_name))
@@ -1075,6 +1098,10 @@ async function main() {
     batchId: batch.id,
     createdAt: new Date().toISOString(),
     model: VISION_MODEL,
+    // The scope's ids ride along in the manifest so a --resume days later is
+    // still bound by the scope the batch was built under. Re-parsing the flags
+    // at resume time would let a different --round silently rebind the writes.
+    scopeIds: scopeIdList,
     plants: manifestPlants,
   }
   const path = saveManifest(manifest)
@@ -1106,6 +1133,12 @@ async function collectResults(
   }
 
   console.log('\nBatch ended. Writing picks.\n')
+
+  // Enforced from the MANIFEST, not from this invocation's flags, so a
+  // --resume days later is still bound by the scope the batch was built
+  // under. Re-reading the flags here would let a different --round rebind
+  // where the writes land, which is the one thing --resume must never do.
+  const allowed = manifest.scopeIds ? new Set(manifest.scopeIds) : null
 
   const stats = { high: 0, medium: 0, low: 0, none: 0, errored: 0 }
   const review: string[] = []
@@ -1152,6 +1185,14 @@ async function collectResults(
       stats.errored++
       continue
     }
+    if (allowed && !allowed.has(plantId)) {
+      console.log(
+        `  ${entryManifest.commonName} — outside this batch's scope, refusing to write`
+      )
+      stats.errored++
+      continue
+    }
+
     const plant = {
       common_name: entryManifest.commonName,
       image_url: entryManifest.incumbent,

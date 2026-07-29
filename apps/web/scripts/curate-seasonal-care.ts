@@ -39,6 +39,14 @@
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { getSupabaseAdmin } from '../lib/supabase-admin'
+import {
+  requireScope,
+  scopeIds,
+  describeScope,
+  applyScope,
+  scopeGuard,
+  requireReasonForAll,
+} from './scope'
 import { fetchAllRows } from '../lib/paginate'
 import { getAnthropicClient, CURATION_MODEL } from '../lib/anthropic-client'
 import type { DbPlant, SeasonalCare, SeasonalRhythm } from '../lib/plants-db'
@@ -441,11 +449,14 @@ async function fetchEligiblePlants(newOnly: boolean): Promise<DbPlant[]> {
   // catalog-wide, but this widens to the whole catalog after any re-derivation
   // of the field.
   let plants = await fetchAllRows<DbPlant>((from, to) =>
-    db
-      .from('plants')
-      .select('*')
-      .is('seasonal_care', null)
-      .not('seasonal_rhythm', 'is', null)
+    applyScope(
+      db
+        .from('plants')
+        .select('*')
+        .is('seasonal_care', null)
+        .not('seasonal_rhythm', 'is', null),
+      SCOPE_IDS
+    )
       .order('common_name')
       .order('id')
       .range(from, to)
@@ -467,6 +478,10 @@ async function patchSeasonalCare(
   id: string,
   seasonal_care: SeasonalCare
 ): Promise<void> {
+  // Refuses if this row is outside the active scope. Checked at the write
+  // rather than at selection, because the eligibility query is a state
+  // predicate and a future edit to it would otherwise widen this silently.
+  guardScope(id)
   const db = getSupabaseAdmin()
   const { error } = await db
     .from('plants')
@@ -542,6 +557,21 @@ interface Flags {
   ids: string[] | null
 }
 
+// Scope is mandatory (scripts/scope.ts). The old `--new-only` here was a
+// created_at day heuristic that architecture.md already called fragile, and
+// the eligibility query ("seasonal_care IS NULL") is a state predicate, not a
+// scope — on a catalog where the field has been re-derived it matches every
+// round at once.
+const SCOPE = requireScope(
+  'curate-seasonal-care',
+  'This pass bills Claude per row and writes seasonal_care, which Care Tips ' +
+    'v2 reads live. An unscoped run would re-distil every eligible plant in ' +
+    'the catalog.'
+)
+const SCOPE_IDS = scopeIds(SCOPE)
+const WHY_ALL = requireReasonForAll(SCOPE)
+const guardScope = scopeGuard(SCOPE, SCOPE_IDS)
+
 function parseFlags(): Flags {
   const argv = process.argv.slice(2)
   const flags: Flags = {
@@ -588,8 +618,10 @@ function parseFlags(): Flags {
 async function main() {
   const flags = parseFlags()
 
+  console.log(`\n${describeScope(SCOPE, SCOPE_IDS)}`)
+  if (WHY_ALL) console.log(`Whole-catalog run, because: ${WHY_ALL}`)
   console.log(
-    '\nFetching eligible plants (seasonal_care null, seasonal_rhythm present)...'
+    'Fetching eligible plants (seasonal_care null, seasonal_rhythm present)...'
   )
   let plants = await fetchEligiblePlants(flags.newOnly)
 
