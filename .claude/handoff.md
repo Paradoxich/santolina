@@ -99,10 +99,8 @@ A visitor can now try Santolina without signing up. "Look around first" on `/log
 
 **Next steps, in order:**
 
-1. **Click the Google button in the conversion modal.** It is the one path in this feature never exercised end to end. Manual linking was enabled on the project for it; the email path was clicked through and confirmed (same garden, bar gone). It fails safely with a visible message if linking misbehaves.
-2. **Clear the test demo accounts** left by the smoke test and Ana's click-through, or leave them to age out after 7 days: `npx tsx --env-file=.env.local scripts/purge-demo-users.ts --days 0 --apply`
-3. **Decide whether the demo needs a scheduled purge.** It is a manual script today, which is fine at zero traffic and not fine if the demo is ever linked publicly.
-4. **Two Settings rows make no sense for a demo session** and were deliberately left alone: **Reset garden** wipes the seeded palette and diary with no way to restore them, and the **Email** row renders blank because an anonymous user's email is an empty string rather than null.
+1. **Clear the test demo accounts** left by the smoke test and Ana's click-through, or leave them to age out after 7 days: `npx tsx --env-file=.env.local scripts/purge-demo-users.ts --days 0 --apply`
+2. **Decide whether the demo needs a scheduled purge.** It is a manual script today, which is fine at zero traffic and not fine if the demo is ever linked publicly.
 
 ## 2026-07-29 — session/2026-07-29-plant-detail
 
