@@ -1,0 +1,817 @@
+{
+  "generatedAt": null,
+  "plan": [
+    {
+      "id": "1c7be629-62e3-4fbd-baaf-63626cfaf89b",
+      "common_name": "Abelia chinensis",
+      "scientific_name": "Abelia chinensis",
+      "native_to": "China",
+      "old_tags": ["China", "Eastern Asia", "Indo-China"],
+      "new_tags": ["China", "Eastern Asia", "Indo-China"],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "bb8ae38d-c3ef-402a-b10d-27a5a2e1dd99",
+      "common_name": "Alpine balsam",
+      "scientific_name": "Erinus alpinus",
+      "native_to": "mountains of central and southern Europe",
+      "old_tags": [
+        "Middle Europe",
+        "Northern Africa",
+        "Southeastern Europe",
+        "Southwestern Europe"
+      ],
+      "new_tags": [
+        "Middle Europe",
+        "Northern Africa",
+        "Southeastern Europe",
+        "Southwestern Europe"
+      ],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "78209b06-1440-4bbb-ad3e-2550aad9ceeb",
+      "common_name": "Alpine gypsophila",
+      "scientific_name": "Gypsophila repens",
+      "native_to": "the mountains of central and southern Europe",
+      "old_tags": [
+        "Middle Europe",
+        "Southeastern Europe",
+        "Southwestern Europe"
+      ],
+      "new_tags": [
+        "Middle Europe",
+        "Southeastern Europe",
+        "Southwestern Europe"
+      ],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "9f47edff-529f-4f70-b706-7b1281b3c74e",
+      "common_name": "Amethyst fescue",
+      "scientific_name": "Festuca amethystina",
+      "native_to": "central and southern Europe",
+      "old_tags": [
+        "Eastern Europe",
+        "Middle Europe",
+        "Southeastern Europe",
+        "Southwestern Europe",
+        "Western Asia"
+      ],
+      "new_tags": [
+        "Eastern Europe",
+        "Middle Europe",
+        "Southeastern Europe",
+        "Southwestern Europe",
+        "Western Asia"
+      ],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "aca72ced-a3a1-4582-9900-4dbf487a4696",
+      "common_name": "Autumn snowflake",
+      "scientific_name": "Acis autumnalis",
+      "native_to": "the western Mediterranean",
+      "old_tags": [
+        "Northern Africa",
+        "Southeastern Europe",
+        "Southwestern Europe"
+      ],
+      "new_tags": [
+        "Northern Africa",
+        "Southeastern Europe",
+        "Southwestern Europe"
+      ],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "b40b6991-e23e-4e06-930a-8bbf6216906c",
+      "common_name": "Bieberstein's crocus",
+      "scientific_name": "Crocus speciosus",
+      "native_to": "southeastern Europe and Turkey",
+      "old_tags": ["Caucasus"],
+      "new_tags": ["Caucasus"],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "7364a922-e25a-40d3-bc48-c479efe6d5fe",
+      "common_name": "Calico or one-sided or white woodland or starved aster",
+      "scientific_name": "Symphyotrichum lateriflorum",
+      "native_to": "eastern and central North America",
+      "old_tags": [
+        "Eastern Canada",
+        "Mexico",
+        "North-Central U.S.A.",
+        "Northeastern U.S.A.",
+        "South-Central U.S.A.",
+        "Southeastern U.S.A.",
+        "Western Canada"
+      ],
+      "new_tags": [
+        "Eastern Canada",
+        "Mexico",
+        "North-Central U.S.A.",
+        "Northeastern U.S.A.",
+        "South-Central U.S.A.",
+        "Southeastern U.S.A.",
+        "Western Canada"
+      ],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "80d1c87b-4b4e-40d9-8bb4-35eadf270b36",
+      "common_name": "Callicarpa bodinieri",
+      "scientific_name": "Callicarpa bodinieri",
+      "native_to": "central and western China",
+      "old_tags": ["China", "Indo-China"],
+      "new_tags": ["China", "Indo-China"],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "9def1484-04a4-4c44-b37a-8b345de75e6d",
+      "common_name": "Carpathian harebell",
+      "scientific_name": "Campanula carpatica",
+      "native_to": "the Carpathian Mountains",
+      "old_tags": ["Eastern Europe", "Middle Europe", "Southeastern Europe"],
+      "new_tags": ["Eastern Europe", "Middle Europe", "Southeastern Europe"],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "706ab536-d200-4689-9bcd-e6cc959942d0",
+      "common_name": "Caryopteris incana",
+      "scientific_name": "Caryopteris incana",
+      "native_to": "eastern Asia",
+      "old_tags": ["China", "Eastern Asia"],
+      "new_tags": ["China", "Eastern Asia"],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "aeccc411-2929-49b9-83a3-4c91d7c363be",
+      "common_name": "Cheddar pink",
+      "scientific_name": "Dianthus gratianopolitanus",
+      "native_to": "central and southern Europe",
+      "old_tags": [
+        "Eastern Europe",
+        "Middle Europe",
+        "Northern Europe",
+        "Southwestern Europe"
+      ],
+      "new_tags": [
+        "Eastern Europe",
+        "Middle Europe",
+        "Northern Europe",
+        "Southwestern Europe"
+      ],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "426be7af-a453-453f-89be-e3511b129dfd",
+      "common_name": "Chinese-holly",
+      "scientific_name": "Osmanthus heterophyllus",
+      "native_to": "Japan and Taiwan",
+      "old_tags": ["Eastern Asia"],
+      "new_tags": ["Eastern Asia"],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "70eb272f-7c61-475a-9f03-07b2084a1759",
+      "common_name": "Common rock-rose",
+      "scientific_name": "Helianthemum nummularium",
+      "native_to": "Europe and the Mediterranean region",
+      "old_tags": [
+        "Caucasus",
+        "Eastern Europe",
+        "Middle Europe",
+        "Northern Europe",
+        "Southeastern Europe",
+        "Southwestern Europe",
+        "Western Asia"
+      ],
+      "new_tags": [
+        "Caucasus",
+        "Eastern Europe",
+        "Middle Europe",
+        "Northern Europe",
+        "Southeastern Europe",
+        "Southwestern Europe",
+        "Western Asia"
+      ],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "c760761b-a0f1-46d3-ab4a-1646bc7dae22",
+      "common_name": "Crocus banaticus",
+      "scientific_name": "Crocus banaticus",
+      "native_to": "the Carpathian Mountains and Balkans",
+      "old_tags": ["Eastern Europe", "Middle Europe", "Southeastern Europe"],
+      "new_tags": ["Eastern Europe", "Middle Europe", "Southeastern Europe"],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "f02778a0-ceb2-415b-9f68-fe3e15151908",
+      "common_name": "Cushion-pink",
+      "scientific_name": "Silene acaulis",
+      "native_to": "arctic and alpine regions of the northern hemisphere",
+      "old_tags": [
+        "Eastern Canada",
+        "Eastern Europe",
+        "Middle Europe",
+        "Northeastern U.S.A.",
+        "Northern Europe",
+        "Northwestern U.S.A.",
+        "Russian Far East",
+        "Siberia",
+        "South-Central U.S.A.",
+        "Southeastern Europe",
+        "Southwestern Europe",
+        "Southwestern U.S.A.",
+        "Subarctic America",
+        "Western Asia",
+        "Western Canada"
+      ],
+      "new_tags": [
+        "Eastern Canada",
+        "Eastern Europe",
+        "Middle Europe",
+        "Northeastern U.S.A.",
+        "Northern Europe",
+        "Northwestern U.S.A.",
+        "Russian Far East",
+        "Siberia",
+        "South-Central U.S.A.",
+        "Southeastern Europe",
+        "Southwestern Europe",
+        "Southwestern U.S.A.",
+        "Subarctic America",
+        "Western Asia",
+        "Western Canada"
+      ],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "ee348c80-f4bd-41b5-82a4-0ebd35292bbd",
+      "common_name": "Easter-lily",
+      "scientific_name": "Amaryllis belladonna",
+      "native_to": "South Africa",
+      "old_tags": ["Southern Africa"],
+      "new_tags": ["Southern Africa"],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "f61e87a6-f6a4-4f1a-a417-e9a53029ea7f",
+      "common_name": "Erysimum cheiri",
+      "scientific_name": "Erysimum cheiri",
+      "native_to": "southern Europe and the Mediterranean",
+      "old_tags": [
+        "Northern Africa",
+        "Southeastern Europe",
+        "Southwestern Europe",
+        "Western Asia"
+      ],
+      "new_tags": [
+        "Northern Africa",
+        "Southeastern Europe",
+        "Southwestern Europe",
+        "Western Asia"
+      ],
+      "source": "native_to-fallback",
+      "flags": ["MODEL-DERIVED — review"]
+    },
+    {
+      "id": "dfc5d3bf-c3b8-47b7-83fb-118205f5fb5d",
+      "common_name": "Fairies'-thimbles",
+      "scientific_name": "Campanula cochleariifolia",
+      "native_to": "the Alps and central Europe",
+      "old_tags": [
+        "Middle Europe",
+        "Southeastern Europe",
+        "Southwestern Europe"
+      ],
+      "new_tags": [
+        "Middle Europe",
+        "Southeastern Europe",
+        "Southwestern Europe"
+      ],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "2284e249-11e8-4621-9024-e079c3208ab3",
+      "common_name": "Firethorn",
+      "scientific_name": "Pyracantha coccinea",
+      "native_to": "southern Europe and western Asia",
+      "old_tags": [
+        "Caucasus",
+        "Eastern Europe",
+        "Middle Europe",
+        "Southeastern Europe",
+        "Southwestern Europe",
+        "Western Asia"
+      ],
+      "new_tags": [
+        "Caucasus",
+        "Eastern Europe",
+        "Middle Europe",
+        "Southeastern Europe",
+        "Southwestern Europe",
+        "Western Asia"
+      ],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "e8e9ea05-01d2-4aa0-9a35-22877512463c",
+      "common_name": "Glorytree",
+      "scientific_name": "Clerodendrum trichotomum",
+      "native_to": "eastern Asia, China, Korea, and Japan",
+      "old_tags": ["China", "Eastern Asia", "Malesia"],
+      "new_tags": ["China", "Eastern Asia", "Malesia"],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "2154b945-3cf7-40b1-9563-2615b43f4d8a",
+      "common_name": "Gray rockcress",
+      "scientific_name": "Arabis caucasica",
+      "native_to": "the Caucasus and southeastern Europe",
+      "old_tags": [
+        "Arabian Peninsula",
+        "Caucasus",
+        "Eastern Europe",
+        "Middle Asia",
+        "Northern Africa",
+        "Southeastern Europe",
+        "Western Asia"
+      ],
+      "new_tags": [
+        "Arabian Peninsula",
+        "Caucasus",
+        "Eastern Europe",
+        "Middle Asia",
+        "Northern Africa",
+        "Southeastern Europe",
+        "Western Asia"
+      ],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "6711354d-ee76-4dda-8a71-29bf1842e1a9",
+      "common_name": "Hamamelis japonica",
+      "scientific_name": "Hamamelis japonica",
+      "native_to": "Japan",
+      "old_tags": ["Eastern Asia"],
+      "new_tags": ["Eastern Asia"],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "ef55a12b-1701-4db7-8d96-baa22ed58bf9",
+      "common_name": "Heart-leaved globe daisy",
+      "scientific_name": "Globularia cordifolia",
+      "native_to": "central and southern Europe",
+      "old_tags": [
+        "Middle Europe",
+        "Southeastern Europe",
+        "Southwestern Europe",
+        "Western Asia"
+      ],
+      "new_tags": [
+        "Middle Europe",
+        "Southeastern Europe",
+        "Southwestern Europe",
+        "Western Asia"
+      ],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "937dde15-f3fa-4b39-a369-79fed9da7b9b",
+      "common_name": "Indian chrysanthemum",
+      "scientific_name": "Chrysanthemum indicum",
+      "native_to": "eastern Asia",
+      "old_tags": [
+        "China",
+        "Eastern Asia",
+        "Indian Subcontinent",
+        "Indo-China"
+      ],
+      "new_tags": [
+        "China",
+        "Eastern Asia",
+        "Indian Subcontinent",
+        "Indo-China"
+      ],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "25097132-5e8e-40a3-943b-ca117bdd6561",
+      "common_name": "Iris danfordiae",
+      "scientific_name": "Iris danfordiae",
+      "native_to": "Turkey",
+      "old_tags": ["Western Asia"],
+      "new_tags": ["Western Asia"],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "9981a70f-2beb-427c-b48b-d65a424d914b",
+      "common_name": "Jonquil",
+      "scientific_name": "Narcissus jonquilla",
+      "native_to": "southern Europe and northern Africa",
+      "old_tags": ["Southwestern Europe"],
+      "new_tags": ["Southwestern Europe"],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "ec5b05fe-bff8-4a02-b005-58a1a852274b",
+      "common_name": "Kniphofia rooperi",
+      "scientific_name": "Kniphofia rooperi",
+      "native_to": "South Africa",
+      "old_tags": ["Southern Africa"],
+      "new_tags": ["Southern Africa"],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "41e12209-2c6c-49f4-a430-04647bdc8129",
+      "common_name": "Lady tulip",
+      "scientific_name": "Tulipa clusiana",
+      "native_to": "central Asia and the Mediterranean",
+      "old_tags": ["Indian Subcontinent", "Western Asia"],
+      "new_tags": ["Indian Subcontinent", "Western Asia"],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "1fabb169-1fce-4ddc-8f5d-fea6f967d3c3",
+      "common_name": "Leatherleaf sedge",
+      "scientific_name": "Carex buchananii",
+      "native_to": "New Zealand",
+      "old_tags": ["New Zealand"],
+      "new_tags": ["New Zealand"],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "2ca17843-dc09-4efc-b76b-f3769792660e",
+      "common_name": "Lifelong saxifrage",
+      "scientific_name": "Saxifraga paniculata",
+      "native_to": "mountains of central and southern Europe",
+      "old_tags": [
+        "Caucasus",
+        "Eastern Canada",
+        "Eastern Europe",
+        "Middle Europe",
+        "North-Central U.S.A.",
+        "Northeastern U.S.A.",
+        "Northern Europe",
+        "Southeastern Europe",
+        "Southwestern Europe",
+        "Subarctic America",
+        "Western Asia",
+        "Western Canada"
+      ],
+      "new_tags": [
+        "Caucasus",
+        "Eastern Canada",
+        "Eastern Europe",
+        "Middle Europe",
+        "North-Central U.S.A.",
+        "Northeastern U.S.A.",
+        "Northern Europe",
+        "Southeastern Europe",
+        "Southwestern Europe",
+        "Subarctic America",
+        "Western Asia",
+        "Western Canada"
+      ],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "374ba454-1e2f-4094-9d52-c380e3b25bab",
+      "common_name": "Lily leek",
+      "scientific_name": "Allium moly",
+      "native_to": "southern Europe",
+      "old_tags": [
+        "Northern Africa",
+        "Southeastern Europe",
+        "Southwestern Europe"
+      ],
+      "new_tags": [
+        "Northern Africa",
+        "Southeastern Europe",
+        "Southwestern Europe"
+      ],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "416a041f-5e6d-4974-b160-4aa736ffc1f0",
+      "common_name": "Longwood tussock",
+      "scientific_name": "Carex comans",
+      "native_to": "New Zealand",
+      "old_tags": ["New Zealand"],
+      "new_tags": ["New Zealand"],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "f341f9c8-9fe3-47e3-aa2f-561d901fc7ea",
+      "common_name": "Mexican bush sage",
+      "scientific_name": "Salvia leucantha",
+      "native_to": "central and eastern Mexico",
+      "old_tags": ["Central America", "Mexico"],
+      "new_tags": ["Central America", "Mexico"],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "66b9bfeb-cbac-4eea-8b65-1630c316f630",
+      "common_name": "Moss phlox",
+      "scientific_name": "Phlox subulata",
+      "native_to": "eastern North America",
+      "old_tags": [
+        "Eastern Canada",
+        "North-Central U.S.A.",
+        "Northeastern U.S.A.",
+        "Southeastern U.S.A.",
+        "Southwestern U.S.A.",
+        "Western Canada"
+      ],
+      "new_tags": [
+        "Eastern Canada",
+        "North-Central U.S.A.",
+        "Northeastern U.S.A.",
+        "Southeastern U.S.A.",
+        "Southwestern U.S.A.",
+        "Western Canada"
+      ],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "4a61a80c-e1b4-4176-b48b-380658568cf3",
+      "common_name": "Mother of thyme",
+      "scientific_name": "Thymus praecox",
+      "native_to": "Europe",
+      "old_tags": [
+        "Caucasus",
+        "Middle Europe",
+        "Northern Europe",
+        "Southeastern Europe",
+        "Southwestern Europe",
+        "Subarctic America",
+        "Western Asia"
+      ],
+      "new_tags": [
+        "Caucasus",
+        "Middle Europe",
+        "Northern Europe",
+        "Southeastern Europe",
+        "Southwestern Europe",
+        "Subarctic America",
+        "Western Asia"
+      ],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "3359a0a9-c178-4582-8664-08a8c1b04ad9",
+      "common_name": "Mountain house-leek",
+      "scientific_name": "Sempervivum montanum",
+      "native_to": "the Alps and Pyrenees",
+      "old_tags": [
+        "Middle Europe",
+        "Southeastern Europe",
+        "Southwestern Europe"
+      ],
+      "new_tags": [
+        "Middle Europe",
+        "Southeastern Europe",
+        "Southwestern Europe"
+      ],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "7a2cfda3-c8f4-4d44-9df8-faf218ebd71d",
+      "common_name": "New York aster",
+      "scientific_name": "Symphyotrichum novi-belgii",
+      "native_to": "eastern North America",
+      "old_tags": [
+        "Eastern Canada",
+        "Northeastern U.S.A.",
+        "Southeastern U.S.A."
+      ],
+      "new_tags": [
+        "Eastern Canada",
+        "Northeastern U.S.A.",
+        "Southeastern U.S.A."
+      ],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "a1a0cbf6-5a0d-42a8-bc55-0a7d9aae03ee",
+      "common_name": "Petticoat daffodil",
+      "scientific_name": "Narcissus bulbocodium",
+      "native_to": "southwestern Europe and North Africa",
+      "old_tags": ["Southwestern Europe"],
+      "new_tags": ["Southwestern Europe"],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "88b0da7d-1f73-4af7-8401-c5834370cbe7",
+      "common_name": "Prostrate speedwell",
+      "scientific_name": "Veronica prostrata",
+      "native_to": "central and southern Europe",
+      "old_tags": [
+        "Caucasus",
+        "Eastern Europe",
+        "Middle Asia",
+        "Middle Europe",
+        "Siberia",
+        "Southeastern Europe",
+        "Southwestern Europe"
+      ],
+      "new_tags": [
+        "Caucasus",
+        "Eastern Europe",
+        "Middle Asia",
+        "Middle Europe",
+        "Siberia",
+        "Southeastern Europe",
+        "Southwestern Europe"
+      ],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "54439803-18e1-46a4-b16e-89fc919a9782",
+      "common_name": "Prunus subhirtella",
+      "scientific_name": "Prunus subhirtella",
+      "native_to": "Japan",
+      "old_tags": ["Eastern Asia"],
+      "new_tags": ["Eastern Asia"],
+      "source": "native_to-fallback",
+      "flags": ["MODEL-DERIVED — review"]
+    },
+    {
+      "id": "624473b2-5aae-4bf6-9ffc-a3d443376ccd",
+      "common_name": "Red spider lily",
+      "scientific_name": "Lycoris radiata",
+      "native_to": "China and Japan",
+      "old_tags": ["China", "Eastern Asia", "Indian Subcontinent"],
+      "new_tags": ["China", "Eastern Asia", "Indian Subcontinent"],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "0bb261fb-f554-47c7-8898-81d0eaea5b80",
+      "common_name": "Seven son flower",
+      "scientific_name": "Heptacodium miconioides",
+      "native_to": "central and eastern China",
+      "old_tags": ["China"],
+      "new_tags": ["China"],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "b95eeedb-7502-4c2c-93de-f84e90356510",
+      "common_name": "Siskiyou lewisia",
+      "scientific_name": "Lewisia cotyledon",
+      "native_to": "mountains of southwestern Oregon and northern California",
+      "old_tags": ["Northwestern U.S.A.", "Southwestern U.S.A."],
+      "new_tags": ["Northwestern U.S.A.", "Southwestern U.S.A."],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "4e862b91-b844-4c1f-bc26-bb224e400584",
+      "common_name": "Snowberry",
+      "scientific_name": "Symphoricarpos albus",
+      "native_to": "North America",
+      "old_tags": [
+        "Eastern Canada",
+        "North-Central U.S.A.",
+        "Northeastern U.S.A.",
+        "Northwestern U.S.A.",
+        "South-Central U.S.A.",
+        "Southeastern U.S.A.",
+        "Southwestern U.S.A.",
+        "Subarctic America",
+        "Western Canada"
+      ],
+      "new_tags": [
+        "Eastern Canada",
+        "North-Central U.S.A.",
+        "Northeastern U.S.A.",
+        "Northwestern U.S.A.",
+        "South-Central U.S.A.",
+        "Southeastern U.S.A.",
+        "Southwestern U.S.A.",
+        "Subarctic America",
+        "Western Canada"
+      ],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "c8246dff-aa81-47e5-9af4-d5e2bfea1b7c",
+      "common_name": "Spiny oleaster",
+      "scientific_name": "Elaeagnus pungens",
+      "native_to": "China and Japan",
+      "old_tags": ["China", "Eastern Asia", "Middle Asia"],
+      "new_tags": ["China", "Eastern Asia", "Middle Asia"],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "a42bde4a-d51c-407c-96ff-7e2d6ec36869",
+      "common_name": "Thin-leaf coneflower",
+      "scientific_name": "Rudbeckia triloba",
+      "native_to": "eastern and central North America",
+      "old_tags": [
+        "Eastern Canada",
+        "North-Central U.S.A.",
+        "Northeastern U.S.A.",
+        "Northwestern U.S.A.",
+        "South-Central U.S.A.",
+        "Southeastern U.S.A.",
+        "Southwestern U.S.A."
+      ],
+      "new_tags": [
+        "Eastern Canada",
+        "North-Central U.S.A.",
+        "Northeastern U.S.A.",
+        "Northwestern U.S.A.",
+        "South-Central U.S.A.",
+        "Southeastern U.S.A.",
+        "Southwestern U.S.A."
+      ],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "c5780b7e-62b7-4c95-8ed4-7bd4b6aebbfb",
+      "common_name": "White-stem bramble",
+      "scientific_name": "Rubus cockburnianus",
+      "native_to": "central and western China",
+      "old_tags": ["China"],
+      "new_tags": ["China"],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "04a435aa-6f6c-40e1-b313-56343280305e",
+      "common_name": "Willow-leaf sunflower",
+      "scientific_name": "Helianthus salicifolius",
+      "native_to": "central United States",
+      "old_tags": ["North-Central U.S.A.", "South-Central U.S.A."],
+      "new_tags": ["North-Central U.S.A.", "South-Central U.S.A."],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "3d845cd7-9c6e-4241-834f-dead0d23220b",
+      "common_name": "Winter daphne",
+      "scientific_name": "Daphne odora",
+      "native_to": "China and Japan",
+      "old_tags": ["China", "Eastern Asia", "Indo-China"],
+      "new_tags": ["China", "Eastern Asia", "Indo-China"],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "93f71f54-0d89-4f26-bc81-86b48b1364f5",
+      "common_name": "Zephyr-lily",
+      "scientific_name": "Zephyranthes candida",
+      "native_to": "Argentina and Uruguay",
+      "old_tags": ["Brazil", "Southern South America"],
+      "new_tags": ["Brazil", "Southern South America"],
+      "source": "trefle-l3",
+      "flags": []
+    }
+  ]
+}

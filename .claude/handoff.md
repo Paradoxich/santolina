@@ -2,7 +2,179 @@
 
 Newest entry first. Read the top entry before starting work.
 
-## 2026-07-29 — session/2026-07-29-diary-feature-polish (read this one first)
+## The rule for writing in this file
+
+**Do not write a claim about the current state of a system. Write the command that answers it.**
+
+A state claim is true when typed and rots silently from then on. Nobody
+re-checks it, the next session reads it as current, and repeats it — this file
+told three consecutive sessions that a CI job was "waiting for secrets" that had
+been set on 2026-07-28. It was corrected in Notion the same morning by the
+session that discovered it, and this file still carried the stale copy into the
+afternoon and stated it to Ana as fact. **The log was not unread. It was read,
+and it was wrong.**
+
+So the split is:
+
+- **Durable, worth writing:** a decision and its reasoning, a constraint someone
+  will otherwise rediscover the hard way, why a thing is built the way it is,
+  what was tried and rejected. These do not rot, because they are about the past
+  and about intent.
+- **Not writable here:** whether a job ran, whether a branch is pushed, whether a
+  migration is applied, whether a check passes, how many rows are in a table,
+  what is "still" blocked. Every one of these is a command. Give the command.
+
+Worked example, from the failure that produced this rule:
+
+> ✗ "The `catalog-state` CI job is skipping for want of repo secrets."
+> ✓ "The `catalog-state` job is gated off `pull_request` on purpose — a
+> PR-triggered job holding the service-role key is worth less than the drift
+> check it buys. Whether it ran: `gh run list --branch main --limit 5`."
+
+The second sentence cannot go stale, because it does not assert anything that
+can change. The first was wrong within a day and survived three sessions.
+
+**The test is tense, not topic.** "PR #128 was merged as `06ab97a`, and its CI
+was green" is a record of something that happened, anchored to a commit — it is
+as true next month as today, and it is exactly the provenance an entry should
+carry. "The build is green" is a claim about now, and is a coin flip by the time
+anyone reads it. Write what happened; do not write what is.
+
+**Same principle as `catalog-state.md` and `round-runbook.md`, which are
+generated rather than typed.** This file is the last hand-written document in
+the loop, so it is where stale facts now collect. It is not automatable —
+nothing can prove prose is true — which is exactly why the rule has to be a rule.
+
+**Entries below the "Historical entries" marker are archive.** They record what
+was believed at the time and are deliberately NOT rewritten, because rewriting
+the record is its own dishonesty. Do not read their state claims as current, and
+do not carry one forward without running the command first.
+
+---
+
+## Current state — commands, not claims
+
+Run these rather than trusting any sentence in this file.
+
+```bash
+gh pr list --state open                 # what is open
+git worktree list                       # who else is working, and where
+git branch --list 'session/*'           # session branches alive
+gh run list --branch main --limit 5     # did CI pass on main
+gh secret list                          # which repo secrets exist
+cd apps/web && pnpm round:progress --round <n>   # what a round still owes
+cd apps/web && pnpm catalog:state:check          # is the catalog doc stale
+```
+
+The catalog's size, the curated count and the per-round step table are
+**generated** into `docs/catalog-state.md` and `docs/round-runbook.md`. Link to
+them; never retype their numbers here.
+
+## 2026-07-29 — session/2026-07-29-rehearsal (read this one first)
+
+**Status:** merged to main ([PR #128](https://github.com/Paradoxich/santolina/pull/128), merge commit `06ab97a`). CI green. Worktree removed, branch deleted local and remote. **No catalog data changed** — this is pipeline code only.
+
+Follow-up to the round-9 entry below, doing its next steps 1 and 2. Both grew in the doing, and both grew in the same direction: the thing I fixed in the morning was a symptom.
+
+**Done:**
+
+- **`StepStatus.vacuous`, and it is the root cause of round 9's bug 1.** The line was `complete: done === scope.length`. An empty scope makes that `0 === 0`, so a step reports itself finished before it has looked at anything. **This was never specific to `pick-plant-images --verify` — it is true of every step with an `applies` predicate whenever its scope is empty.** PR #127 re-read state between steps, which treated one step's symptom. Emptiness is now surfaced and each caller decides: `verify-round` may treat "nothing to do" as fine, `run-round` skips only on `complete && !vacuous`.
+- **`scripts/round-rehearsal.test.ts` — 13 assertions, 12ms, no DB and no API key.** Feeds a synthetic freshly-seeded plant to `computeStatus` (the pure half of `roundStatus`, split out for this) and asserts the pipeline is WIRED right: no step claims completion for a plant nothing has run on; scripts exist; runbook numbers do not collide; the array is in runbook order; `STEP_DEFS` and `RUNBOOK` agree **in both directions**; the native-region plan precedes its apply; image candidates precede the vision pass; sign-off is last.
+- **It runs inside `pnpm test`, so CI already covers it on every PR.** No workflow change was needed.
+- **`run-round` preflights the rollback point** and exits 1 before step 0 if none predates the seed, instead of discovering it at step 8a after every AI pass is billed.
+
+**Decisions made:**
+
+- **Every assertion was mutation-tested by reintroducing the real bug** — reverting `vacuous` fails 2, unregistering the plan step fails the prerequisite test by name, deleting `recover-image-categories` fails 1. Non-negotiable here after the token check went green against a faithful reproduction of its own bug on 2026-07-29. **A guard that has never failed has not been tested.**
+- **The rehearsal asserts STRUCTURE, not plant data.** Data is what the live pipeline already checks well; wiring is what kept failing. Stated in the file: a green rehearsal is not a green round, and it proves nothing about a step's output or an API contract.
+- **`vacuous` requires `plants.length > 0`**, so a zero-plant round is not misreported as a pipeline fault. Guard on the guard, with its own test.
+
+**Correction to the round-9 entry below: its "backup before seed" framing was wrong.** Baseline selection was ALREADY correct — `resolveBaselineDir` only accepts a snapshot at or before the manifest's `started_at`, so the runner's own post-seed backup can never be chosen, and round 9 picked the hand-taken one by logic rather than luck. The real gap was only _when you find out_, which the preflight now fixes. Verified both ways: round 9 in a worktree with **no `backups/` at all** resolves from the committed `rounds/9/catalog` archive, and a probe round with no snapshot anywhere exits 1 before step 0.
+
+**Next steps, in order:**
+
+1. **Round 10, and treat its first run as still testing the runner.** The rehearsal covers wiring; it cannot catch a step whose output is wrong or an upstream API that changed shape. Measure the gap first and check it is not a data artefact (see the round-9 entry — that check killed a whole round's premise for free).
+2. **Round 9's 8 editorial holds** — three need a NEW candidate image, not a re-check: `Silene acaulis` (hero is a fringed _Dianthus_), `Hamamelis japonica` (staked nursery sapling), `Carex comans`. Plus `Erysimum cheiri`, no image upstream at all.
+3. **`Symphyotrichum lateriflorum` displays as "Calico or one-sided or white woodland or starved aster"** — live in Explore now. A `common_name` containing " or " is almost always a Trefle blob; worth a cheap guard alongside the fix.
+4. Carried over: the ~575-plant WCVP tail (never `--apply` against `--all`); the token usage logger; promote hardiness WARN → FAIL when §27 un-parks; the two colour-bucket calls; `NEXT_PUBLIC_APP_URL` is dead but still advertised.
+
+**Open questions:**
+
+- Blocked on something outside the repo: local Supabase (disk cleanup) and the Pro-plan decision. Both are Ana's, and neither is checkable from here — which is why they are the only "still open" items left as prose.
+
+**Written up in Notion** — the Session Log page for 2026-07-29 carries both sessions in full, including the reasoning behind each decision above.
+
+**Worth knowing:** the rehearsal exists because three bugs in one round shared one anatomy — _a step the runner did not know it needed_. If round 10 finds a fourth bug of that shape, the rehearsal is the place to add the assertion, not the script that failed. If it finds a bug of a **different** shape, resist widening the rehearsal to cover it speculatively; write the assertion only once you have a real failure to mutation-test against.
+
+## 2026-07-29 — session/2026-07-29-round-9
+
+**Status:** merged to main ([PR #127](https://github.com/Paradoxich/santolina/pull/127), merge commit `996a74a`). CI green. Worktree removed, branch deleted local and remote.
+
+**Catalog 595 → 645 species, 1485 → 1608 pairings.** The data was already live before the merge — the pipeline writes straight to remote Supabase, so the PR landed the code fixes and the provenance, not the plants.
+
+```
+verify-round --round 9        0 failures, 52 warnings (50 parked hardiness, 1 no-image plant)
+check-round-scope --round 9   0 out-of-scope, 0 waived, window CLOSED via cleared_at
+restore-catalog rounds/9/catalog --phase after   0 rows differ
+typecheck / tests             clean, 139 passed
+```
+
+**Done:**
+
+- **Round 9 = small spaces + late season.** `terrace_balcony` was 111/595 and Oct/Nov 70/13. Both were verified as _species_ gaps before being believed.
+- **Three runner bugs found and fixed** — this was `run-round`'s first unattended round. Details below; they are the real output of this session.
+- **Ten `verify-round` failures fixed**: 8 colour values mapped, the duplicate "Michaelmas daisy" resolved, `Symphoricarpos albus` added to `NO_WCVP_DISTRIBUTION` with evidence.
+- Runbook is now **10 steps + 6 book-ends** (was 4), doc regenerated.
+
+**The single most useful thing learned: a low count is not a gap until you have checked it is not the data.** Round 9 was going to be a winter round, off the histogram (Dec 11 vs Jun 341). A seed dry run killed it — **44 of 58 winter candidates were already in the catalog** and 49 plants already flower in Dec/Jan/Feb. December reads as 11 because eleven is roughly how many things flower in December. Every gap this round shipped against was tested that way first (e.g. 13 of 15 obvious balcony plants already carried `terrace_balcony` correctly, proving the low count was species, not tagging). **Do this before picking round 10's theme; it costs minutes.**
+
+**The three bugs, because they share one anatomy — a step the runner did not know it needed:**
+
+1. **A step read as complete because the step feeding it had not run.** `pick-plant-images --verify` applies only to medium-confidence heroes, and nothing has a confidence until the image pass runs, so the predicate was vacuously true and `run-round` froze the plan at read time. **In a fresh round that step could never run**; round 8's only ran because a human invoked it. Fixed by re-reading state after every step. It fired this round and demoted three wrong heroes.
+2. **Only half of a generate-review-apply script was registered.** `regenerate-native-region --apply` replays a plan JSON in gitignored `reports/`; the generate half was in no runbook, so the runner died on a clean checkout. Round 8 survived on a stale local file. **A round must not depend on untracked local state.**
+3. **A step reported success while doing nothing** — the dangerous one. `pick-plant-images` filtered to rows having `image_candidates`; all 50 were null, so it dropped every plant, printed "every plant with candidates has been checked" and exited 0. Surfaced only when `curate-editorial` started holding all 50 for "the image pass never judged this row". Its prerequisite `recover-image-categories` says "use after a new seed batch" in its own header and **had never been in the runbook**. Now step 6, now scoped (it had none — under the runner it would have written catalog-wide), and the vision pass now FAILS on a candidate-less scoped row.
+
+**Decisions made:**
+
+- **The backup must be taken before the seed.** `run-round`'s step 0 runs after seeding, so the runner's own backup is a post-seed rollback point. Round 9's scope window is honest only because one was taken by hand first. Unfixed in the runner — it does not seed, so it cannot own this.
+- **`regenerate-native-region` auto-applies with no review gate**, and that is accepted rather than fixed. `onFail` fires only on failure and generating a plan succeeds. What audits the write is the WCVP cross-check: 45/50 agreement, and it caught the one row where Trefle counted an INTRODUCED range as native (`Erysimum cheiri`). Noted in `runbook.ts`: **if that cross-check ever stops being FAIL-level, this needs a real gate.**
+- **The compound-colour rule is now explicit** in `bloom-colors.ts`: the last word is the bucket, the first only modifies it. `purple-red` is burgundy, `reddish-purple` is purple — not the same colour reversed.
+- **A duplicate name is fixed on the in-scope row.** Round 9's `S. novi-belgii` became _New York aster_ (its own standard name) rather than renaming the older `novae-angliae` row, which would have written outside the manifest.
+- **`no-data` stays unstamped.** `Symphoricarpos albus` is named in `NO_WCVP_DISTRIBUTION` with evidence rather than softening the step — an exception is written down, not switched off.
+
+**Next steps, in order:**
+
+1. **A dry rehearsal of a round, in CI — Ana's explicit ask: "I don't want to learn about bugs in 5 days."** All three bugs above were findable in minutes without spending a cent: seed one scratch plant, run every step in a no-write/plan mode, assert each step reports work to do and the ones that ran actually stamped. Bug 1 needed only the plan output, bug 2 only a clean checkout, bug 3 only "step said 0 rows, next step disagreed". **This is the highest-value item in this file** — it converts "the round finds it after three days" into "the PR finds it in 40 seconds."
+2. **Nobody has yet run a round start-to-finish in one clean pass** with the current runbook. Round 9 took three restarts with fixes between. Treat round 10's first attempt as still testing the runner.
+3. **Round 9's 8 editorial holds** (`rounds/9/reports/editorial-9.md`). Three need a NEW candidate image, not a re-check: `Silene acaulis` (hero is a fringed _Dianthus_), `Hamamelis japonica` (staked nursery sapling), `Carex comans`. Plus `Erysimum cheiri`, which has no image upstream at all.
+4. **`Symphyotrichum lateriflorum` displays as "Calico or one-sided or white woodland or starved aster"** — Trefle gave four common names as one string. Not a verify failure so deliberately not fixed, but it is bad copy live in Explore now. Worth a general guard: a common_name containing " or " is almost certainly a Trefle blob.
+5. Carried over: the ~575-plant WCVP tail (never `--apply` against `--all`); the token usage logger; promote hardiness WARN → FAIL when §27 un-parks; the two colour-bucket calls; `NEXT_PUBLIC_APP_URL` is referenced nowhere in code but still advertised in `.env.example` and CLAUDE.md.
+
+**Correction, because this entry first repeated it wrongly, and it is the reason this file now has a rule at the top.** The entry originally said the `catalog-state` CI job was "still skipping for want of repo secrets, inert across several sessions". Every part of that was false. The secrets were set on 2026-07-28; the job is gated off `pull_request` **by design**, so that a PR-triggered job cannot read the service-role key; and it runs on pushes to main. The claim came from the 2026-07-28 entry, was true the day it was written, and was carried forward as current without anyone running `gh secret list` — a two-second check. **The same correction had already been written in Notion that morning by another session.** Do not repeat an asserted negative from this file without running the command.
+
+**Calibration note:** the base rate says round 10 finds _different_ bugs, not these. Of ~77 incidents across rounds 1-8 only six were repeats. Fixing three does not predict a clean round — automating the pipeline is what makes them visible at all, and that is the improvement.
+
+---
+
+# Historical entries
+
+**Everything below this line is archive, and its state claims were true only on
+the day they were written.** They are deliberately left as written — rewriting
+the record to match today would destroy the evidence of what was believed when,
+which is the most useful thing about a log.
+
+Read them for decisions and reasoning, which keep. Do not read them for status.
+Two specific traps live below and have already cost time:
+
+- The 2026-07-28 entries say the `catalog-state` CI job "skips until Ana adds
+  repo secrets" and is "inert until then". **The secrets were added that same
+  day.** This is the claim that propagated for three sessions.
+- Several entries list branches as unpushed or worktrees as existing. Those were
+  snapshots. `git worktree list` and `gh pr list` are the answer now.
+
+---
+
+## 2026-07-29 — session/2026-07-29-diary-feature-polish
 
 **Status:** merged to main ([PR #125](https://github.com/Paradoxich/santolina/pull/125), merge commit `da5da2d`). Worktree removed, branch deleted local and remote. CI green including the new tokens job.
 

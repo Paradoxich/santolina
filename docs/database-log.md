@@ -218,7 +218,7 @@ This is trap 7 in different clothes: **an external name lookup that guesses is m
 
 ### 2026-07-29 — Demo accounts via anonymous sign-in
 
-**Branch** `worktree-demo-anonymous-signin`. **No catalog data changed** — this session only added rows a demo visitor owns, and removed them again.
+**Branch** `session/2026-07-29-demo-anonymous-signin`. **No catalog data changed** — this session only added rows a demo visitor owns, and removed them again.
 
 **Anonymous sign-in is now the "look around without signing up" path.** A visitor gets a real anonymous auth user, so the `handle_new_user` trigger provisions them a profile and garden exactly as a magic-link signup does, and every RLS policy, server action, and page works unchanged. Verified before building anything, because the whole approach dies if it fails: an `auth.users` insert shaped like `signInAnonymously()` (null email, `{}` metadata, `is_anonymous`), run inside a `DO` block that raised at the end to roll back, produced exactly one profile and one empty garden. `public.users` has no email column at all, so nothing in the provisioning path could have depended on one.
 
@@ -233,6 +233,112 @@ This is trap 7 in different clothes: **an external name lookup that guesses is m
 **Left behind: 4 anonymous test accounts** (3 from the smoke test, 1 from Ana's own click-through), each with a seeded Opatija garden of 8 palette rows and 3 diary entries. Harmless — the purge ages them out after 7 days — and Ana has the command to clear them sooner:
 `npx tsx --env-file=.env.local scripts/purge-demo-users.ts --days 0 --apply`
 The converted account is no longer anonymous and is invisible to the purge by construction, which is the intended behaviour and was confirmed here.
+
+---
+
+### 2026-07-29 — Round 9
+
+**Branch** `session/2026-07-29-round-9`. Seeded 50 plant(s) on 2026-07-29.
+
+Catalog now **645 species / 1608 combinations** (215 with `is_curated = true`).
+
+Pipeline steps for this round:
+
+```
+✓ curate-plants                  50/50   ai_drafted_at NOT NULL
+✓ curate-combinations            50/50   appears in plant_combinations
+✓ regenerate-native-region       50/50   native_region non-empty (hybrids excluded)
+✓ cross-check-plants             50/50   botanical_checked_at NOT NULL
+✓ cross-check-native-to          50/50   native_checked_at NOT NULL
+✓ cross-check-native-region      49/49   native_region_checked_at NOT NULL
+✓ curate-seasonal-care           50/50   seasonal_care NOT NULL
+⚠ pick-plant-images              49/50   image_checked_at NOT NULL
+✓ pick-plant-images --verify       4/4   image_verified_at NOT NULL (medium-confidence heroes only)
+✓ curate-editorial               50/50   editorial_checked_at NOT NULL
+```
+
+⚠️ **1 step did not complete:** `pick-plant-images`, 49/50. `Erysimum cheiri`
+has no candidate image anywhere upstream — Trefle returns an empty image set —
+so there is nothing for the vision pass to judge, and the row is deliberately
+unstamped rather than recorded as checked. It shows the placeholder. Fixing it
+means Wikimedia or a manual hero, not a pipeline re-run.
+
+**The round changed shape before it cost anything, and that is the reusable
+part.** Round 9 was going to be a winter round, picked off the bloom histogram:
+Dec 11 and Nov 13 against Jun 341. The seed dry run killed it — **44 of 58
+winter candidates were already in the catalog**, and 49 plants already flower in
+Dec/Jan/Feb. December reads as 11 because eleven is roughly how many things
+flower in December. **A low count is not a gap until you have checked it is not
+the data.** The two gaps that replaced it were each tested that way first:
+`terrace_balcony` at 111/595 is a real species gap (13 of 15 obvious balcony
+plants already carry the tag correctly, so the count is low because the catalog
+is full of things too big for a pot), and Oct 70 / Nov 13 is real (14 of 25
+autumn species simply absent).
+
+**What bit us — three bugs in the runner, all the same shape, all found by
+running it rather than reading it.** This was `run-round`'s first unattended
+round, and each of these had been survivable only because a person was standing
+at every gate.
+
+1. **A step read as complete because the step feeding it had not run.**
+   `pick-plant-images --verify` applies only to medium-confidence heroes, and no
+   plant has any confidence until the image pass runs — so its predicate was
+   vacuously true, and `run-round` had frozen the whole plan at read time. **In
+   a fresh round that step could never run.** Round 8's verify pass only
+   happened because it was invoked by hand. The runner now re-reads state after
+   every step and re-decides each skip immediately before it, announcing when a
+   forecast turns out wrong. It fired on this round and demoted three wrong
+   heroes.
+2. **Only half of a generate-review-apply script was registered.**
+   `regenerate-native-region --apply` replays a plan JSON that lives in
+   gitignored `reports/`, and the generate half was in nobody's runbook, so the
+   runner stopped dead on a clean checkout. Round 8 got past it because a plan
+   file happened to be sitting on that machine. **Same shape as the trap about
+   backups dying with their worktree: a round must not depend on untracked
+   local state.**
+3. **A step reported success while doing nothing** — the dangerous one.
+   `pick-plant-images` filtered to rows having `image_candidates`, all 50 of
+   round 9's were null, so it dropped every plant, printed "every plant with
+   candidates has been checked" and exited 0. It surfaced one step later only
+   because `curate-editorial` began holding all 50 rows for "the image pass
+   never judged this row". The prerequisite that fills that column,
+   `recover-image-categories.ts`, says "use after a new seed batch" in its own
+   header and **had never been in the runbook** — every round depended on
+   somebody remembering. It is now step 6; it now takes a mandatory scope (it
+   had none, so under the runner it would have written across the whole
+   catalog); and the vision pass now FAILS on a scoped row with no candidates
+   instead of skipping it. That is trap 1 again: no data is not a negative
+   answer.
+
+**Also worth knowing:** the backup must be taken _before_ the seed. `run-round`
+runs `backup` as step 0, which is after seeding, so the runner's own backup is a
+post-seed rollback point. This round's scope window is honest (595 → 645, 0
+out-of-scope changes) only because the backup was taken by hand first.
+
+**Deliberately not done:**
+
+- **8 rows held by the editorial pass** — recorded verdicts, not gaps, in
+  `rounds/9/reports/editorial-9.md`. Three are heroes the verify pass demoted to
+  `low` and need a NEW candidate image (Wikimedia or manual), not another
+  re-check: `Silene acaulis` (the photo is a fringed _Dianthus_, not a moss
+  cushion), `Hamamelis japonica` (a staked nursery sapling), and `Carex comans`.
+  The rest are medium-confidence heroes still unresolved, plus `Erysimum
+cheiri`, above.
+- **`regenerate-native-region` auto-applies with no review gate.** Its docs
+  describe a review step between generate and apply; nothing enforces it,
+  because `onFail` fires only on failure and generating a plan succeeds. What
+  actually audits that write is the WCVP cross-check — 45/50 agreement, and it
+  caught the one row where Trefle counted an INTRODUCED range as native
+  (`Erysimum cheiri`: N Africa, SW Europe and W Asia all introduced). Left as
+  is, and noted in `runbook.ts`: if that cross-check ever stops being a
+  FAIL-level step, this needs a real gate.
+- **`Symphyotrichum lateriflorum` displays as "Calico or one-sided or white
+  woodland or starved aster"** — Trefle handed over four common names as one
+  string. Not a verify failure, so not fixed under the only-fix-what-the-round-
+  breaks rule, but it is bad product copy sitting in Explore right now.
+- The 50 unrated hardiness warnings are §27 staying parked, unchanged.
+
+---
 
 ### 2026-07-29 — The trigger gets a test, and the test finds a bug
 

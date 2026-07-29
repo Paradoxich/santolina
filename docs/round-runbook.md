@@ -35,7 +35,7 @@ editorial verdicts are recorded, not resolved.
 | --- | --- | --- |
 | 2 | `curate-plants` | `scripts/curate-plants.ts --round <label>` |
 | 3 | `curate-combinations` | `scripts/curate-combinations.ts --round <label>` |
-| 4 | `regenerate-native-region` | `scripts/regenerate-native-region.ts --round <label> --apply` |
+| 4a | `regenerate-native-region` | `scripts/regenerate-native-region.ts --round <label> --apply` |
 | 5 | `cross-check-plants` | `scripts/cross-check-plants.ts --round <label>` |
 | 5a | `cross-check-native-to` | `scripts/cross-check-native-to.ts --round <label>` |
 | 5b | `cross-check-native-region` | `scripts/cross-check-native-region.ts --round <label>` |
@@ -44,7 +44,7 @@ editorial verdicts are recorded, not resolved.
 | 7a2 | `pick-plant-images --verify` | `scripts/pick-plant-images.ts --round <label> --verify` |
 | 7b | `curate-editorial` | `scripts/curate-editorial.ts --round <label>` |
 
-## The 4 book-ends
+## The 6 book-ends
 
 These run whether or not the round has work, because they are free and
 skipping one on a bad guess is not.
@@ -52,6 +52,8 @@ skipping one on a bad guess is not.
 | # | step | command |
 | --- | --- | --- |
 | 0 | `backup` | `scripts/backup-catalog.ts --round <label>` |
+| 4 | `regenerate-native-region (plan)` | `scripts/regenerate-native-region.ts --round <label>` |
+| 6 | `recover-image-categories` | `scripts/recover-image-categories.ts --round <label>` |
 | 8 | `verify` | `scripts/verify-round.ts --round <label>` |
 | 8a | `scope-check` | `scripts/check-round-scope.ts --round <label>` |
 | 8b | `archive` | `scripts/archive-round.ts --round <label>` |

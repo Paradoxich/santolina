@@ -42,6 +42,7 @@ import { spawnSync } from 'node:child_process'
 import { flagValue } from './scope'
 import { roundStatus } from './round-status'
 import { readRoundManifest } from './round-manifest'
+import { resolveBaselineDir } from './catalog-snapshot'
 
 import { RUNBOOK, type Step } from './runbook'
 
@@ -95,11 +96,57 @@ async function main() {
     `\nRound ${label} — ${manifest.seeded_ids.length} seeded plant(s).\n`
   )
 
-  // Read state ONCE up front: which steps are already done. Everything below
-  // is measured against the database, never against a log or a flag file, so
-  // a killed run resumes honestly.
-  const status = await roundStatus(manifest.seeded_ids)
-  const done = new Set(status.filter((s) => s.complete).map((s) => s.step))
+  // PREFLIGHT: the rollback point must exist BEFORE anything is billed.
+  //
+  // resolveBaselineDir only accepts a snapshot taken at or before the
+  // manifest's started_at, which is correct and is why round 9 picked the
+  // hand-taken pre-seed backup over the runner's own post-seed one. But a
+  // round with NO pre-seed snapshot does not fail here — it fails at step 8a,
+  // after every AI pass has been paid for, because that is the first step to
+  // ask for a baseline.
+  //
+  // The backup this runner takes at step 0 cannot fill the gap: the runner
+  // does not seed, so its step 0 always happens AFTER the plants exist. A
+  // pre-seed snapshot has to be taken by whoever seeds, and this is the check
+  // that says so at second zero instead of at the end of the round.
+  try {
+    const baseline = resolveBaselineDir(label, manifest.started_at)
+    console.log(`Rollback point: ${baseline.dir} (${baseline.source})\n`)
+  } catch {
+    console.error(
+      `No catalog snapshot predates round ${label}'s seed (started ${manifest.started_at}).\n\n` +
+        "That is the round's rollback point, and step 8a needs it to tell this\n" +
+        "round's writes from everyone else's. Failing now rather than after the\n" +
+        'AI passes have been billed.\n\n' +
+        'The backup at step 0 below cannot cover this — the runner does not seed,\n' +
+        'so its backup is always taken after the new plants exist. Take one before\n' +
+        'seeding:\n\n' +
+        '  ./node_modules/.bin/tsx --env-file=.env.local scripts/backup-catalog.ts\n\n' +
+        'If a suitable snapshot exists elsewhere, pass it to check-round-scope\n' +
+        'with --baseline <dir>.\n'
+    )
+    process.exit(1)
+  }
+
+  // Read state up front for the PLAN. Everything is measured against the
+  // database, never against a log or a flag file, so a killed run resumes
+  // honestly.
+  //
+  // The plan is a forecast, not the decision — see refreshDone() below. This
+  // read is re-done after every step that actually runs, because some steps'
+  // completion is not knowable until an earlier step has run.
+  const done = new Set<string>()
+  const refreshDone = async () => {
+    const status = await roundStatus(manifest.seeded_ids)
+    done.clear()
+    // `complete && !vacuous`. A step whose scope is empty has not been asked a
+    // question yet, so it is not done — see StepStatus.vacuous. Treating
+    // vacuous completion as done is how round 9's image-verify step was
+    // crossed off before a single image had been judged, and it would have
+    // stayed crossed off in every future round.
+    for (const s of status) if (s.complete && !s.vacuous) done.add(s.step)
+  }
+  await refreshDone()
 
   const plan = RUNBOOK.map((step) => ({
     step,
@@ -123,14 +170,47 @@ async function main() {
   console.log(
     `\n${todo.length} step(s) to run, ${plan.length - todo.length} already done.`
   )
+  if (todo.length < plan.length) {
+    console.log(
+      'This plan is a forecast. Each skip is re-decided against fresh state\n' +
+        'immediately before the step, because a step can read as complete only\n' +
+        'because the step that feeds it has not run yet.'
+    )
+  }
 
   if (dryRun) {
     console.log('\n--dry-run: nothing was run.')
     return
   }
 
-  for (const { step } of todo) {
-    if (run(step, label)) continue
+  // Walk the WHOLE runbook, not the plan's todo list, and re-decide each skip
+  // against freshly read state.
+  //
+  // WHY, because the up-front plan looked sufficient and was not: a step whose
+  // `applies` predicate depends on a column an EARLIER step writes reads as
+  // complete before that step has run, vacuously — nothing applies, so nothing
+  // is outstanding. `pick-plant-images --verify` (7a2) applies only to
+  // medium-confidence heroes, and no plant has any confidence at all until 7a
+  // has run. Round 9's plan skipped it before a single image had been picked.
+  // Frozen at plan time, that step can NEVER run in a fresh round; round 8's
+  // verify pass only happened because it was invoked by hand.
+  //
+  // A completion predicate that reads true because its input does not exist
+  // yet is the same failure this pipeline keeps finding — a step that did not
+  // run leaves no error, only a smaller run than it should have been.
+  for (const { step, skip: forecast } of plan) {
+    if (!step.alwaysRun && done.has(step.step)) continue
+
+    if (forecast) {
+      console.log(
+        `\n  (plan said ${step.step} was complete; fresh state says it is not — running it)`
+      )
+    }
+
+    if (run(step, label)) {
+      await refreshDone()
+      continue
+    }
 
     console.error(`\n${'━'.repeat(72)}`)
     console.error(`✗ STOPPED at ${step.runbook}. ${step.step}`)
