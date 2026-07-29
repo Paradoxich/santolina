@@ -70,6 +70,31 @@ The catalog's size, the curated count and the per-round step table are
 **generated** into `docs/catalog-state.md` and `docs/round-runbook.md`. Link to
 them; never retype their numbers here.
 
+## 2026-07-29 — session/2026-07-29-overview-polish
+
+**Status:** merged to main ([PR #133](https://github.com/Paradoxich/santolina/pull/133), merge commit `f20e8ba`). Worktree and branch removed at session end.
+
+**Done:**
+
+- Overview polish: card order, clickable Planned / Recent activity, shared `SubpageHeader`, sidebar Add note restyle.
+- Plant species photos open a scrollable `@paradoxui/ui` `Gallery` collage (diary/activity keep Lightbox).
+- Growing plant detail: hero-only photo card, Diary → `/plants/[id]/notes` (activity-style list); diary drawer removed; detail route moved to `/plants/[id]`.
+- Scoped Overview and My Plants `loading.tsx` into route groups so activity/notes no longer flash the parent list skeleton.
+
+**Decisions made:**
+
+- Gallery collage is product-scoped to species photos only; note photos stay carousel Lightbox.
+- Plant detail is a path segment (`/plants/[id]`), not `?plant=`, so it can share a tree with notes without remounting through the list.
+- Parent `loading.tsx` must not wrap unrelated child routes — use a route group for the list/dashboard page alone.
+
+**Next steps:**
+
+1. Smoke detail ↔ notes and Overview ↔ activity after a hard refresh (routing change).
+2. Optional: plant-detail loading skeleton under `[plantId]` if first paint from the list feels empty.
+3. Pipeline next steps remain in the round-10 entry below (image holds, etc.).
+
+**Open questions:** none from this session.
+
 ## 2026-07-29 — session/2026-07-29-round-10 (pipeline; read this one first for pipeline work)
 
 **Status:** merged to main ([PR #132](https://github.com/Paradoxich/santolina/pull/132), merge commit `32c257e`), CI green on that run — `typecheck + test + tokens` passed in 36s. Catalog data was already live before the merge, as always: the pipeline writes straight to remote Supabase, so the PR landed the seed script, two pipeline fixes and the provenance, not the plants.
@@ -102,7 +127,7 @@ Round 10 = **balcony and container plants**, doing the round-9 entry's next step
 **Next steps, in order:**
 
 1. **8 editorial holds, every one on image confidence, and each needs a NEW candidate image rather than another check.** That is the §30/§31 Batch API flow, deliberately not part of the per-round cadence. `Osteospermum ecklonis` has no image upstream at all, joining round 9's `Erysimum cheiri`.
-2. **Round 9's holds are still open** — `Silene acaulis` (hero is a fringed *Dianthus*), `Hamamelis japonica` (staked nursery sapling), `Carex comans`, `Erysimum cheiri`.
+2. **Round 9's holds are still open** — `Silene acaulis` (hero is a fringed _Dianthus_), `Hamamelis japonica` (staked nursery sapling), `Carex comans`, `Erysimum cheiri`.
 3. **`Symphyotrichum lateriflorum` displays as "Calico or one-sided or white woodland or starved aster"** — live in Explore since round 9. A `common_name` containing " or " is almost always a Trefle blob; worth a cheap guard alongside the fix.
 4. Carried over: the ~575-plant WCVP tail (never `--apply` against `--all`); the token usage logger; promote hardiness WARN → FAIL when §27 un-parks; `NEXT_PUBLIC_APP_URL` is dead but still advertised.
 
