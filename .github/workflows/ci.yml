@@ -12,7 +12,7 @@ concurrency:
 
 jobs:
   check:
-    name: typecheck + test
+    name: typecheck + test + tokens
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -24,6 +24,9 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm typecheck
       - run: pnpm test
+      # Pure source scan, no secrets — so unlike catalog-state below it is
+      # safe to run on pull_request, which is where token drift is introduced.
+      - run: pnpm tokens:check
 
   catalog-state:
     name: catalog-state staleness

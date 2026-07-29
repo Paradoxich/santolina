@@ -9,7 +9,9 @@
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
-    "prepare": "husky"
+    "prepare": "husky",
+    "tokens:check": "turbo run tokens:check",
+    "tokens:usage": "turbo run tokens:usage"
   },
   "devDependencies": {
     "turbo": "latest",

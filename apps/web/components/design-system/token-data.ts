@@ -119,7 +119,12 @@ export const allTokens: TokenTier[] = [
       },
       {
         title: 'Letter spacing',
-        entries: n('--tracking-compact', '--tracking-heading'),
+        entries: n(
+          '--tracking-compact',
+          '--tracking-heading',
+          '--tracking-title',
+          '--tracking-label'
+        ),
       },
       {
         title: 'Spacing scale (4px base unit)',
@@ -223,7 +228,22 @@ export const allTokens: TokenTier[] = [
           '--color-surface-row-hover',
           '--color-surface-active',
           '--color-surface-card-translucent',
+          '--color-surface-nav-active',
+          '--color-surface-illustration',
           '--color-scrim'
+        ),
+      },
+      {
+        title: 'Toast surfaces — translucent tinted glass over a blur',
+        entries: c(
+          '--color-toast-surface-neutral',
+          '--color-toast-border-neutral',
+          '--color-toast-surface-positive',
+          '--color-toast-border-positive',
+          '--color-toast-surface-warning',
+          '--color-toast-border-warning',
+          '--color-toast-surface-critical',
+          '--color-toast-border-critical'
         ),
       },
       {
@@ -324,12 +344,22 @@ export const allTokens: TokenTier[] = [
           '--chip-radius',
           '--card-tile-radius',
           '--card-dashboard-radius',
-          '--card-row-radius'
+          '--card-row-radius',
+          '--modal-radius'
         ),
       },
       {
         title: 'Surfaces & fills',
-        entries: c('--sidebar-surface', '--avatar-fill'),
+        entries: c(
+          '--sidebar-surface',
+          '--avatar-fill',
+          '--sidebar-divider',
+          '--login-border'
+        ),
+      },
+      {
+        title: 'Layout measures',
+        entries: sp('--sidebar-width', '--sidebar-offset'),
       },
       {
         title: 'Effects',
