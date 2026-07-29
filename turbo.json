@@ -28,6 +28,10 @@
       "cache": false,
       "outputs": []
     },
+    "runbook:check": {
+      "cache": false,
+      "outputs": []
+    },
     "tokens:usage": {
       "cache": false,
       "outputs": []

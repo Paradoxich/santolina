@@ -1,0 +1,64 @@
+{
+  "findings": [
+    {
+      "id": "6ee0b619-9e25-4604-8ebc-029e7b60cc77",
+      "common_name": "Crown imperial",
+      "scientific_name": "Fritillaria imperialis",
+      "image": {
+        "verdict": "pass",
+        "reason": "image pass: high confidence"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "The description is concrete, specific, and follows the voice guidelines without marketing language or prohibited punctuation.",
+        "rewritten": false
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "The cottage and classic style tags are appropriate for this traditional spring bulb, and the space types correctly reflect where it can be grown."
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "b704fbae-c29f-4235-9b37-138828f8df09",
+      "common_name": "Golden chain tree",
+      "scientific_name": "Laburnum anagyroides",
+      "image": {
+        "verdict": "pass",
+        "reason": "image pass: high confidence"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "The description is concrete, warm without being twee, leads with visual traits, and places the toxicity caution appropriately at the end.",
+        "rewritten": false
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "The cottage and classic style tags are appropriate for a traditional ornamental tree with showy spring flowers, and the space types correctly reflect where a 4-7m tree can be grown."
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "6db37674-a64a-4205-9678-d6b48eee3bde",
+      "common_name": "Lavender mist meadow rue",
+      "scientific_name": "Thalictrum rochebruneanum",
+      "image": {
+        "verdict": "pass",
+        "reason": "image pass: high confidence"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "The description is concrete, warm without being twee, leads with visual details, and follows all voice rules including no dashes.",
+        "rewritten": false
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "The cottage tag is appropriate for this tall, airy perennial with delicate foliage, and the space tags correctly reflect where it can be grown."
+      },
+      "approved": true,
+      "blockers": []
+    }
+  ]
+}

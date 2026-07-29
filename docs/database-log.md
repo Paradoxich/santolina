@@ -69,6 +69,10 @@ Three things to know before touching it.
 
 **Test the trigger, not its description.** Both bugs above were found by writing to a real row and reading it back — the first draft of this migration was applied, and its own author's summary of it was wrong within the hour. The catalog is read-only at runtime (nothing in `app/`, `server/` or `lib/` writes `plants`), so the blast radius is scripts, but that is where every write to this table lives.
 
+**There is now a test, and it is the thing to run: `pnpm trigger:contract`** (`scripts/test-editorial-trigger.ts`, added 2026-07-29). Twelve cases against a real Postgres — all three criteria invalidating separately, a non-criterion column and a no-op changing nothing, the same-stamp-written-back trap, the one-statement sign-off, and the two-statement re-assert. Run it after any change to the trigger, and after any restore. It found a live bug on its first run (session entry below). Deliberately NOT a vitest file: CI has no database secrets on `pull_request`, so it would have to skip, and a guard that skips where it runs automatically is this list's oldest theme.
+
+**Its known blind spot, stated so nobody over-trusts it.** The cases name five specific columns by hand, and `lib/plants-write.ts` holds the same five in `CRITERION_FIELDS`. A SIXTH column added to the trigger and not to that map is invisible to both — a script writing it would lose the verdict silently. Nothing checks that the two agree. Carried knowingly; build the guard the day a sixth column is proposed.
+
 ### 2. `--new-only` does not scope to a batch — WORKED AROUND (round 8), baseline backfilled (July 28)
 
 Both cross-check guards accept `--new-only`, which keys off `botanical_checked_at` / `native_checked_at` being NULL. That only narrows to a fresh batch **once every other row carries a stamp**, and that baseline was never established — the stamp columns shipped mid-history and older rows were never backfilled.
@@ -211,6 +215,28 @@ This is trap 7 in different clothes: **an external name lookup that guesses is m
 ## Sessions
 
 <!-- Newest first. Append with: scripts/log-db-session.ts --round <label> -->
+
+### 2026-07-29 — The trigger gets a test, and the test finds a bug
+
+**Branch** `session/2026-07-29-trigger-contract` (worktree `santolina-trigger-contract`, off `main` at `f504560`).
+
+**No catalog data changed.** Every probe ran either inside a `BEGIN … ROLLBACK` or against a scratch row deleted in a `finally`. Verified before and after: **595 plants, 170 `is_curated`, 0 scratch rows, 0 rows approved with a criterion outstanding.**
+
+**`pnpm trigger:contract` exists** — twelve cases, all passing, described in trap 1b above. Written because the trigger had surprised its own author three times in one day and every time was caught by running it, never by reading it.
+
+**It found a real bug on its first run.** `fix-oversized-heroes` predates the per-criterion split (`20260729140000`). It resizes a hero, which clears `editorial_image_at`, then re-asserts `is_curated` and `editorial_checked_at` **only** — never the image stamp. The row comes back **approved with criterion 1 outstanding**, which is the one state the trigger exists to make impossible. Latent, not fired: the script has not run since the split, and the live table has 0 rows in that state. Fixed.
+
+**`is_curated` was nobody's job in the upward direction.** The trigger only ever takes a verdict away. Nothing recomputed the flag from the three criterion stamps, so a row held on its image alone — 33 of round 8's 40 holds — could clear all three criteria and sit unapproved until someone paid for another editorial pass to notice. Proved on a scratch row, then closed.
+
+**`lib/plants-write.ts`** is now the single home for how a write meets the verdict: `claim` a criterion (stamp it in the same statement, or the change withdraws the approval it was recording), or `preserveVerdict` (two statements, because writing the old stamp back is not a change and cannot be). The two throw if combined. The decision logic is pure and unit-tested, so it runs in CI where the contract test cannot. Adopted in `fix-oversized-heroes`, `apply-image-confirmations`, `apply-image-reverts`; `curate-editorial` and `pick-plant-images` were checked and are correct as they stand.
+
+**The runbook is generated.** `RUNBOOK` moved out of `run-round.ts` into `scripts/runbook.ts`, and `docs/round-runbook.md` is rendered from it (`pnpm runbook`, staleness-checked by `pnpm runbook:check` in CI on `pull_request`). The order of a round had lived in prose and in code, and prose is how the seasonal-care step went missing entirely. **Ten steps plus four `alwaysRun` book-ends** — both numbers are true, they get confused, and neither is typed by a person any more.
+
+**Round 8's last three plants had photographs all along.** They were carried across three handoffs as "no candidate image upstream at all — Wikimedia or a manual hero, not a pipeline fix". Nobody had run `feed-wikimedia-candidates.ts` against them. Commons has all three: Crown imperial (public domain), Golden chain tree and Lavender mist meadow rue (CC BY-SA 4.0). Sourced, picked (2 `high`, 1 `medium`), the medium verified up to `high`, all three approved by the editorial pass. **Round 8: 94 → 97 of 101. Catalog `is_curated` 170 → 173. Plants with no image at all: 3 → 0.** The lesson is the July 28 one again — an asserted negative is still an assertion, and this one cost nothing to check.
+
+**Then the scope check failed on a round called clean the day before, with 287 out-of-scope changes.** Traced, not waived on sight: all 287 were written at 11:36 that morning by the images session — the per-criterion stamp backfill plus round 7's 76 legacy approvals (228), round 7's 18 hand-confirmed heroes (54), and five 1920px renditions of the same photographs (5). None from this session; the three plants touched here appear zero times. Waived with those reasons, and **round 8's window closed with `cleared_at`**, which is exactly what it was built for: a finished round's answer rotting as later catalog-wide work lands inside a window still running baseline-to-now. Expect this on every round that is called done while catalog-wide work continues — close the window when the round closes.
+
+**What bit us, and it was a documentation failure rather than a code one.** A comment was written in `plants-write.ts` claiming the contract test kept `CRITERION_FIELDS` honest against the trigger. It does not, and checking took two minutes. Asserting a guarantee is cheaper than verifying one, which is exactly why the false version got written — the same shape as the July 28 finding that a false claim in this file survived several sessions and was repeated as fact. The claim is now a stated, carried risk.
 
 ### 2026-07-29 — The medium-confidence heroes, re-checked (and one wrong plant found)
 

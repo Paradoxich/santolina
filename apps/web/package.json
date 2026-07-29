@@ -15,7 +15,10 @@
     "tokens:check": "tsx scripts/check-tokens.ts && tsx scripts/scan-token-usage.ts && git diff --exit-code components/design-system/token-consumers.generated.ts",
     "catalog:state": "tsx --env-file=.env.local scripts/catalog-state.ts",
     "catalog:state:check": "tsx --env-file=.env.local scripts/catalog-state.ts && git diff --exit-code ../../docs/catalog-state.md",
-    "round:run": "tsx --env-file=.env.local scripts/run-round.ts"
+    "round:run": "tsx --env-file=.env.local scripts/run-round.ts",
+    "runbook": "tsx scripts/generate-runbook-doc.ts",
+    "runbook:check": "tsx scripts/generate-runbook-doc.ts && git diff --exit-code ../../docs/round-runbook.md",
+    "trigger:contract": "tsx --env-file=.env.local scripts/test-editorial-trigger.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.110.0",

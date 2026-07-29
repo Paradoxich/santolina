@@ -38,6 +38,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { getSupabaseAdmin } from '../lib/supabase-admin'
 import { parseRevertList } from '../lib/image-reverts'
+import { writePlant } from '../lib/plants-write'
 
 const DEFAULT_FILE = join(process.cwd(), 'reports', 'image-confirmations.txt')
 const CONFIRM_REASON =
@@ -115,29 +116,33 @@ async function main() {
     }
 
     if (apply) {
-      const now = new Date().toISOString()
-      const { error: upErr } = await supabase
-        .from('plants')
-        .update({
-          image_pick_confidence: 'high',
-          image_pick_reason: CONFIRM_REASON,
-          // A human look is a verification, and the strongest one available.
-          image_verified_at: now,
-          // Confirming the species IS criterion 1 of the editorial bar being
-          // cleared, by the strongest evidence available, so record it as such
-          // (migration 20260729140000).
-          //
-          // Writing it in this same statement also matters mechanically: the
-          // invalidation trigger skips a criterion whose stamp the UPDATE
-          // changes, so without this line the confidence change would clear
-          // criterion 1 and withdraw the row's approval — punishing the row for
-          // getting BETTER. That is exactly what happened to round 7's 18
-          // confirmed heroes before this was fixed.
-          editorial_image_at: now,
-        })
-        .eq('id', id)
-      if (upErr) {
-        console.log(`  ${p.common_name} — write failed: ${upErr.message}`)
+      // `claim: ['image']` because confirming the species IS criterion 1 of the
+      // editorial bar being cleared, by the strongest evidence available
+      // (migration 20260729140000). The stamp has to land in the same statement
+      // as the confidence change or the change withdraws the approval it was
+      // recording — punishing the row for getting BETTER, which is what
+      // happened to round 7's 18 confirmed heroes. `plants-write.ts` owns that
+      // rule now.
+      //
+      // It also settles `is_curated`, which this script never did. A row held
+      // on its image alone clears the bar the moment this runs, and used to sit
+      // unapproved until someone paid for an editorial pass to notice.
+      try {
+        await writePlant(
+          supabase,
+          id,
+          {
+            image_pick_confidence: 'high',
+            image_pick_reason: CONFIRM_REASON,
+            // A human look is a verification, and the strongest one available.
+            image_verified_at: new Date().toISOString(),
+          },
+          { claim: ['image'] }
+        )
+      } catch (err) {
+        console.log(
+          `  ${p.common_name} — ${err instanceof Error ? err.message : String(err)}`
+        )
         continue
       }
     }

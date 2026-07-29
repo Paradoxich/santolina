@@ -21,10 +21,12 @@
  *
  * NOT an editorial change — the hero is the same photograph, so the verdict is
  * preserved. Since migration 20260729120000 that has to be DONE rather than
- * assumed: a trigger clears `editorial_checked_at` on any write to
+ * assumed: a trigger clears the image criterion on any write to
  * `image_url_curated`, so this script resizes and then re-asserts the verdict
  * in a second statement. See the comment at that write for why one statement
- * cannot work. Re-judging a row because the same picture got smaller would be
+ * cannot work. Since 20260729140000 the criterion cleared is
+ * `editorial_image_at`, and the re-assert has to restore that stamp too —
+ * `is_curated` alone would be an approval with a criterion outstanding. Re-judging a row because the same picture got smaller would be
  * noise, but the opt-out belongs in the diff where it can be argued with.
  *
  * DRY RUN BY DEFAULT. Pass --apply to write.
@@ -37,6 +39,7 @@
 import { getSupabaseAdmin } from '../lib/supabase-admin'
 import { fetchAllRows } from '../lib/paginate'
 import { displayUrlFor } from '../lib/image-probe'
+import { writePlant } from '../lib/plants-write'
 
 async function main() {
   const apply = process.argv.slice(2).includes('--apply')
@@ -46,14 +49,13 @@ async function main() {
     id: string
     common_name: string
     image_url_curated: string | null
-    is_curated: boolean | null
-    editorial_checked_at: string | null
+    // The verdict columns are deliberately NOT selected here. `writePlant`
+    // reads them itself at write time, which is also the only moment they are
+    // true — a verdict read at the top of a long run is a stale verdict.
   }>((from, to) =>
     supabase
       .from('plants')
-      .select(
-        'id, common_name, image_url_curated, is_curated, editorial_checked_at'
-      )
+      .select('id, common_name, image_url_curated')
       .like('image_url_curated', '%upload.wikimedia.org%')
       .order('id')
       .range(from, to)
@@ -80,43 +82,29 @@ async function main() {
     if (result.kind === 'unchanged') continue
 
     if (apply) {
-      const { error } = await supabase
-        .from('plants')
-        .update({ image_url_curated: result.url })
-        .eq('id', p.id)
-      if (error) {
-        console.log(`  ${p.common_name} — write failed: ${error.message}`)
-        continue
-      }
-
-      // Re-assert the verdict in a SECOND statement, because the first one
-      // cleared it. This is a smaller rendition of the SAME photograph, so no
-      // reviewer would judge it differently, and losing sign-offs to a resize
-      // would be the guard working against the thing it protects.
+      // `preserveVerdict` because this is a smaller rendition of the SAME
+      // photograph — not something a reviewer would judge differently, and
+      // losing sign-offs to a resize would be the guard working against the
+      // thing it protects. That exception is the only judgment this script
+      // makes about the verdict; how to keep one across a change now lives in
+      // `plants-write.ts` rather than being re-derived here.
       //
-      // It has to be a second write. The invalidate_editorial_verdict trigger
-      // (migration 20260729120000) skips an update that CHANGES the stamp, and
-      // Postgres cannot tell "wrote the same value deliberately" from "did not
-      // write it" — PostgREST sends every column either way, so value equality
-      // is the only signal available. Writing the old stamp back inside the
-      // first update therefore looks like no write at all and gets cleared.
-      // Against the now-null current value, the same write is a change, and
-      // passes. The first draft of this script got that wrong and would have
-      // quietly un-curated every row it resized.
-      if (p.editorial_checked_at || p.is_curated) {
-        const { error: restoreErr } = await supabase
-          .from('plants')
-          .update({
-            is_curated: p.is_curated,
-            editorial_checked_at: p.editorial_checked_at,
-          })
-          .eq('id', p.id)
-        if (restoreErr) {
-          console.log(
-            `  ${p.common_name} — RESIZED BUT THE VERDICT WAS NOT RESTORED (${restoreErr.message}); re-run curate-editorial for this row`
-          )
-          continue
-        }
+      // It was re-derived here, and wrongly: this script predates the
+      // per-criterion split and restored `is_curated` and
+      // `editorial_checked_at` without `editorial_image_at`, leaving the row
+      // approved with criterion 1 outstanding.
+      try {
+        await writePlant(
+          supabase,
+          p.id,
+          { image_url_curated: result.url },
+          { preserveVerdict: true }
+        )
+      } catch (err) {
+        console.log(
+          `  ${p.common_name} — ${err instanceof Error ? err.message : String(err)}`
+        )
+        continue
       }
     }
     console.log(

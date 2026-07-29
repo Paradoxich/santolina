@@ -26,6 +26,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { getSupabaseAdmin } from '../lib/supabase-admin'
 import { parseRevertList } from '../lib/image-reverts'
+import { writePlant } from '../lib/plants-write'
 
 const DEFAULT_FILE = join(process.cwd(), 'reports', 'image-reverts.txt')
 const REVERT_REASON = 'Reviewer preferred the previous photo over the AI pick.'
@@ -104,29 +105,33 @@ async function main() {
     }
 
     if (apply) {
-      const now = new Date().toISOString()
-      const { error: upErr } = await supabase
-        .from('plants')
-        .update({
-          image_url_curated: p.image_url,
-          // The previous photo is the Trefle/PlantNet default, which we don't
-          // credit — clear any attribution left over from a beaten Wikimedia pick.
-          image_attribution: null,
-          image_pick_confidence: 'high', // human confirmation is the strongest signal we have
-          image_pick_reason: REVERT_REASON,
-          // A reviewer choosing this photo is a verification, and the
-          // strongest one available — stamp it so --verify does not re-ask.
-          image_verified_at: now,
-          // It is also criterion 1 of the editorial bar being cleared by hand,
-          // so record that (migration 20260729140000) rather than clearing the
-          // verdict and paying to re-derive what a person just decided.
-          // Written in this same statement so the trigger treats the criterion
-          // as claimed rather than invalidated.
-          editorial_image_at: now,
-        })
-        .eq('id', id)
-      if (upErr) {
-        console.log(`  ${p.common_name} — write failed: ${upErr.message}`)
+      // `claim: ['image']` — a reviewer choosing this photograph is criterion 1
+      // being cleared by hand, so record it rather than clearing the verdict
+      // and paying to re-derive what a person just decided
+      // (migration 20260729140000). `plants-write.ts` owns the same-statement
+      // rule that makes the claim stick, and settles `is_curated` afterwards.
+      try {
+        await writePlant(
+          supabase,
+          id,
+          {
+            image_url_curated: p.image_url,
+            // The previous photo is the Trefle/PlantNet default, which we don't
+            // credit — clear any attribution left over from a beaten Wikimedia
+            // pick.
+            image_attribution: null,
+            image_pick_confidence: 'high', // human confirmation is the strongest signal we have
+            image_pick_reason: REVERT_REASON,
+            // A reviewer choosing this photo is a verification, and the
+            // strongest one available — stamp it so --verify does not re-ask.
+            image_verified_at: new Date().toISOString(),
+          },
+          { claim: ['image'] }
+        )
+      } catch (err) {
+        console.log(
+          `  ${p.common_name} — ${err instanceof Error ? err.message : String(err)}`
+        )
         continue
       }
     }
