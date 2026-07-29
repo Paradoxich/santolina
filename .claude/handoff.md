@@ -70,6 +70,35 @@ The catalog's size, the curated count and the per-round step table are
 **generated** into `docs/catalog-state.md` and `docs/round-runbook.md`. Link to
 them; never retype their numbers here.
 
+## 2026-07-29 — fix/cap-plant-gallery-at-10 (no worktree; worked in the main checkout)
+
+**Status:** merged to main ([PR #134](https://github.com/Paradoxich/santolina/pull/134), merge commit `b31fe5b`), CI green on that run. Branch deleted local and remote. **This session did not create a worktree** — it started as a data question and grew into a small fix, so it committed on a branch in the main checkout.
+
+**Done:**
+
+- `galleryPhotoUrls` + `GALLERY_MAX_PHOTOS = 10` in `lib/plant-image.ts` (`822a4a6`); `PlantDetailPage` and `PlantDetailDrawer` both call it instead of each carrying their own copy of the hero-first-then-dedupe list.
+- Regenerated `token-consumers.generated.ts` (`13d54ae`) after `d1b33aa` moved routes into `(home)`/`(list)` without re-running `scan-token-usage`. 28 path renames, no token gained or lost a consumer.
+- Notion: Session Log entry appended to the July 29 page; five Build Backlog items ticked with completion notes (editorial pass, `cleared_at`, minimal CI, round orchestrator, scope flags) and the catalog item's state line refreshed.
+- Removed the `santolina-overview-polish` dev server still holding :3000 and the empty directory husk it left (the git worktree was already gone).
+
+**Decisions made:**
+
+- Cap the gallery at 10 rather than filter it by Trefle's `flower`/`habit` category labels. Category describes the photo's **subject, not its quality** — a `flower` photo can still be a blurry nursery-pot shot — and filtering has a coverage cliff: 59 plants have zero flower/habit candidates (47 with no Wikimedia fallback), and a naive `category IN ('flower','habit')` deletes all 69 hand-sourced Wikimedia heroes from the gallery. The cap has neither problem.
+- Incidental fixes ride along in the current PR (own commit, mentioned in the body) rather than being split out. Ana, this session: "no need to split every small item."
+- Search / Explore's backlog item was three items in a trench coat. Matching shipped in PR #87; ranking and server-side did not. Ana is rewriting it as three: ranking (do it), payload trim (do it), server-side (parked with a trigger).
+
+**Next steps:**
+
+1. Rank Explore search results. Filtering returns a boolean and the list renders in `common_name` order, so a name match can sort below a facet-only match. Pure sort over the already-filtered list; no query or schema change.
+2. Drop or trim `image_urls` in the Explore query (`lib/plant-detail.ts`). Measured: the selected columns are ~2 MB across the catalog and ~879 kB of that is `image_urls`, shipped so the grid can render one thumbnail. Check the `heroImageUrl` fallback still resolves for plants with no hero.
+3. If the 10 surviving gallery photos still read poorly, the next levers are the category filter (exempting `wikimedia`) or a vision pass over the gallery — a few dollars at batch rates, so probe with `--limit 3 --dry-run` for a real per-plant number first.
+
+**Open questions:**
+
+- The `cleared_at` backlog item's title renders with stray strikethrough fragments around its two code spans — the original `****` markup fought the strikethrough. Content below the title is fine; easiest fix is retyping that line by hand in Notion.
+- Cottage at 41.7% of the catalog and `ground_garden` at 98.8% are both bar questions for their curation prompts, not data gaps (every plant has been through style curation — the 134 untagged rows are all `[]`, none `NULL`). Ana: not bothered for now.
+- Whether plant-side `space_types: mixed` (68.8%) should exist at all. On a garden it means "a mix"; on a plant it says nothing the array doesn't already say.
+
 ## 2026-07-29 — session/2026-07-29-overview-polish
 
 **Status:** merged to main ([PR #133](https://github.com/Paradoxich/santolina/pull/133), merge commit `f20e8ba`). Worktree and branch removed at session end.
