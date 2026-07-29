@@ -9,9 +9,10 @@
  * only carry a caption beside it, and a caption beside a span either collides
  * with the next row or drifts away from the months it describes.
  *
- * Row height is content-driven — a one-month stage is a narrow column and
- * needs more height for the same sentence than a two-month one. Nothing is
- * clamped, so no stage's description is silently cut off.
+ * Descriptions clamp to two lines. Unclamped, row height is content-driven
+ * and a one-month stage is a narrow column, so Late summer took 128px for a
+ * sentence a two-month stage fit in 74px and the card ran to ~756px. The
+ * full text lives in the reference drawer's seasonal rhythm table.
  *
  * Winter is one row with two blocks, because it wraps the year end; the text
  * sits in the wider of the two.
@@ -180,7 +181,15 @@ export function YearTimeline({
                         {isCurrent && ' · now'}
                       </p>
                       {text && (
-                        <p className="mt-tight-gap text-body-small leading-snug text-secondary">
+                        // Two lines, then ellipsis. Uncapped, a one-month
+                        // stage needed 128px of height for the sentence a
+                        // two-month one fit in 74px, and the card ran to
+                        // ~756px. The full text is in the title attribute
+                        // and in the reference drawer.
+                        <p
+                          title={text}
+                          className="mt-tight-gap line-clamp-2 text-body-small leading-snug text-secondary"
+                        >
                           {text}
                         </p>
                       )}
