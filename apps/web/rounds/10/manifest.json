@@ -1,0 +1,310 @@
+{
+  "label": "10",
+  "started_at": "2026-07-29T18:34:16.213Z",
+  "finished_at": "2026-07-29T18:35:58.479Z",
+  "seeded_count": 50,
+  "seeded_ids": [
+    "e1cb034c-24e3-4ce7-ab2a-89f19a53af82",
+    "b439372e-bbab-48e3-a6a4-d5643e8fe3df",
+    "84e94c63-f36c-451e-b776-a5e045badb27",
+    "b7253509-503b-48e4-9a24-7aa7c382fadc",
+    "8bdfa979-38c2-462c-85ae-45a52337e72c",
+    "3c4f77ab-aaac-4dba-96f6-d39bb7ca747f",
+    "23d9654c-0048-4505-8378-04ef588d51fa",
+    "ebf95e9a-40b6-4618-8be7-9299c5c74662",
+    "f846b65f-3737-42e8-a585-91b5223e198b",
+    "cee12bab-c059-4ce0-b976-69e82580c7cc",
+    "3a937e0e-669c-4db3-ac7a-8ce052584ec3",
+    "5a4d5330-efc4-46db-a952-b4c69e92bfe4",
+    "3308abb4-dc35-49a4-9578-50a245f759a8",
+    "7ed70055-adc1-44e6-88d4-f87f397d7bbd",
+    "35a6a035-ffd1-4b3f-93c3-0fed9f286065",
+    "76f17b89-94d3-466d-81f6-dcdd1cefaab2",
+    "4aa7e5a6-9821-4abe-a2ca-0381ab83bc48",
+    "c057eb3f-0805-4a53-a5f3-d64b5a77ca9d",
+    "93d15845-378e-405a-9d4e-984ecd9fd3f9",
+    "355f85df-368f-4040-ab95-c44492fd985a",
+    "eaec6d55-945f-42e0-99e9-93ea1bcf3016",
+    "bcc91752-8c02-4ef2-8f02-7ce64ff448b1",
+    "370f2a10-6742-4742-af3e-157f026240f8",
+    "f3e911ba-cfb8-4289-9b1f-488379cd1c3a",
+    "ed8fc9eb-2bc6-449d-9e9a-f2d695a7b286",
+    "4f8732c6-ccf3-4074-9130-e25d8f1ef212",
+    "733fe14d-a4ca-4e1f-8bbf-24633e101f49",
+    "825c8eba-ee84-4843-980c-b38f351d8957",
+    "0a352519-b1b7-404d-a9c3-ba0340fd5642",
+    "f738cfdc-80f0-4a5a-b374-5cb104cce403",
+    "fb5941ea-d969-4a5f-9e3b-d3be55a34489",
+    "0dea7532-ef1e-4536-be62-bc08c4f370d8",
+    "b0a96382-94a4-4103-9815-ada46f92a354",
+    "8477f33d-e61b-4856-ab86-fd7b6c8bd967",
+    "904848ee-8735-4a3b-9797-d9d79863da3e",
+    "0bdd323c-1116-4a52-9d4c-9ec6a61ea2be",
+    "7fa2d18c-cbff-4ffd-b46f-4da2e52922d6",
+    "cd559eab-8ce2-43f0-8206-af3f31228998",
+    "dcbeb49e-b573-44c1-8b1a-f1c690dc66aa",
+    "8a6d178e-d62a-48e5-ba79-4131c04453df",
+    "925023ec-4885-443d-9fdd-d0e257651007",
+    "45aa8715-4054-4dca-93e3-fceaf277bb5a",
+    "3fd07602-67cf-464f-b85d-59c5dd87b964",
+    "8d4c9eb4-78de-4488-8888-cdb0ad0064f5",
+    "65426238-cc48-4b08-81fc-a04b0e1cb17a",
+    "b86fbbb8-27e1-4020-95a3-a679aed60049",
+    "0124cf98-02a9-4a60-b31b-1b564747f9c6",
+    "f0a6e3a3-d524-40bf-a7cb-5c0eb1c94898",
+    "49a249ac-046a-4bec-a9f4-196503809153",
+    "87d772c8-94b6-40e0-9763-2d81f9055f24"
+  ],
+  "seeded": [
+    {
+      "id": "e1cb034c-24e3-4ce7-ab2a-89f19a53af82",
+      "source_species_id": 268482,
+      "common_name": "Violet-flower petunia"
+    },
+    {
+      "id": "b439372e-bbab-48e3-a6a4-d5643e8fe3df",
+      "source_species_id": 267577,
+      "common_name": "Seaside petunia"
+    },
+    {
+      "id": "84e94c63-f36c-451e-b776-a5e045badb27",
+      "source_species_id": 299088,
+      "common_name": "Nemesia caerulea"
+    },
+    {
+      "id": "b7253509-503b-48e4-9a24-7aa7c382fadc",
+      "source_species_id": 173030,
+      "common_name": "Twinspur"
+    },
+    {
+      "id": "8bdfa979-38c2-462c-85ae-45a52337e72c",
+      "source_species_id": 481033,
+      "common_name": "Osteospermum ecklonis"
+    },
+    {
+      "id": "3c4f77ab-aaac-4dba-96f6-d39bb7ca747f",
+      "source_species_id": 89414,
+      "common_name": "Slender vervain"
+    },
+    {
+      "id": "23d9654c-0048-4505-8378-04ef588d51fa",
+      "source_species_id": 108190,
+      "common_name": "Black-eyed-susan-vine"
+    },
+    {
+      "id": "ebf95e9a-40b6-4618-8be7-9299c5c74662",
+      "source_species_id": 197619,
+      "common_name": "Busy lizzy"
+    },
+    {
+      "id": "f846b65f-3737-42e8-a585-91b5223e198b",
+      "source_species_id": 129610,
+      "common_name": "Moss-rose"
+    },
+    {
+      "id": "cee12bab-c059-4ce0-b976-69e82580c7cc",
+      "source_species_id": 162230,
+      "common_name": "Clematis macropetala"
+    },
+    {
+      "id": "3a937e0e-669c-4db3-ac7a-8ce052584ec3",
+      "source_species_id": 216136,
+      "common_name": "Pink jasmine"
+    },
+    {
+      "id": "5a4d5330-efc4-46db-a952-b4c69e92bfe4",
+      "source_species_id": 153091,
+      "common_name": "Paper-flower"
+    },
+    {
+      "id": "3308abb4-dc35-49a4-9578-50a245f759a8",
+      "source_species_id": 128983,
+      "common_name": "Plumbago"
+    },
+    {
+      "id": "7ed70055-adc1-44e6-88d4-f87f397d7bbd",
+      "source_species_id": 129302,
+      "common_name": "Australian-laurel"
+    },
+    {
+      "id": "35a6a035-ffd1-4b3f-93c3-0fed9f286065",
+      "source_species_id": 54862,
+      "common_name": "Common lantana"
+    },
+    {
+      "id": "76f17b89-94d3-466d-81f6-dcdd1cefaab2",
+      "source_species_id": 123190,
+      "common_name": "Ivyleaf geranium"
+    },
+    {
+      "id": "4aa7e5a6-9821-4abe-a2ca-0381ab83bc48",
+      "source_species_id": 123157,
+      "common_name": "Horseshoe geranium"
+    },
+    {
+      "id": "c057eb3f-0805-4a53-a5f3-d64b5a77ca9d",
+      "source_species_id": 123023,
+      "common_name": "Sweet scented geranium"
+    },
+    {
+      "id": "93d15845-378e-405a-9d4e-984ecd9fd3f9",
+      "source_species_id": 277015,
+      "common_name": "Rose scented geranium"
+    },
+    {
+      "id": "355f85df-368f-4040-ab95-c44492fd985a",
+      "source_species_id": 277171,
+      "common_name": "Apple geranium"
+    },
+    {
+      "id": "eaec6d55-945f-42e0-99e9-93ea1bcf3016",
+      "source_species_id": 277192,
+      "common_name": "Oakleaf geranium"
+    },
+    {
+      "id": "bcc91752-8c02-4ef2-8f02-7ce64ff448b1",
+      "source_species_id": 194712,
+      "common_name": "Chinese hibiscus"
+    },
+    {
+      "id": "370f2a10-6742-4742-af3e-157f026240f8",
+      "source_species_id": 354751,
+      "common_name": "Flaming katy"
+    },
+    {
+      "id": "f3e911ba-cfb8-4289-9b1f-488379cd1c3a",
+      "source_species_id": 182543,
+      "common_name": "Alpine-geranium"
+    },
+    {
+      "id": "ed8fc9eb-2bc6-449d-9e9a-f2d695a7b286",
+      "source_species_id": 66541,
+      "common_name": "Origanum laevigatum"
+    },
+    {
+      "id": "4f8732c6-ccf3-4074-9130-e25d8f1ef212",
+      "source_species_id": 1742,
+      "common_name": "Erigeron karvinskianus"
+    },
+    {
+      "id": "733fe14d-a4ca-4e1f-8bbf-24633e101f49",
+      "source_species_id": 188380,
+      "common_name": "Ashy cranesbill"
+    },
+    {
+      "id": "825c8eba-ee84-4843-980c-b38f351d8957",
+      "source_species_id": 115285,
+      "common_name": "Sempervivum calcareum"
+    },
+    {
+      "id": "0a352519-b1b7-404d-a9c3-ba0340fd5642",
+      "source_species_id": 115455,
+      "common_name": "Tasteless stonecrop"
+    },
+    {
+      "id": "f738cfdc-80f0-4a5a-b374-5cb104cce403",
+      "source_species_id": 177674,
+      "common_name": "Pearl echeveria"
+    },
+    {
+      "id": "fb5941ea-d969-4a5f-9e3b-d3be55a34489",
+      "source_species_id": 139682,
+      "common_name": "Haworth's aeonium"
+    },
+    {
+      "id": "0dea7532-ef1e-4536-be62-bc08c4f370d8",
+      "source_species_id": 204705,
+      "common_name": "Barbados aloe"
+    },
+    {
+      "id": "b0a96382-94a4-4103-9815-ada46f92a354",
+      "source_species_id": 354275,
+      "common_name": "Convolvulus sabatius"
+    },
+    {
+      "id": "8477f33d-e61b-4856-ab86-fd7b6c8bd967",
+      "source_species_id": 161695,
+      "common_name": "Sour orange"
+    },
+    {
+      "id": "904848ee-8735-4a3b-9797-d9d79863da3e",
+      "source_species_id": 21179,
+      "common_name": "Treasure-flower"
+    },
+    {
+      "id": "0bdd323c-1116-4a52-9d4c-9ec6a61ea2be",
+      "source_species_id": 112135,
+      "common_name": "Bedding pansy"
+    },
+    {
+      "id": "7fa2d18c-cbff-4ffd-b46f-4da2e52922d6",
+      "source_species_id": 172723,
+      "common_name": "Clove pink"
+    },
+    {
+      "id": "cd559eab-8ce2-43f0-8206-af3f31228998",
+      "source_species_id": 265833,
+      "common_name": "Bengal rose"
+    },
+    {
+      "id": "dcbeb49e-b573-44c1-8b1a-f1c690dc66aa",
+      "source_species_id": 3925,
+      "common_name": "Apache beggarticks"
+    },
+    {
+      "id": "8a6d178e-d62a-48e5-ba79-4131c04453df",
+      "source_species_id": 7026,
+      "common_name": "Licorice-plant"
+    },
+    {
+      "id": "925023ec-4885-443d-9fdd-d0e257651007",
+      "source_species_id": 2746,
+      "common_name": "Swan river daisy"
+    },
+    {
+      "id": "45aa8715-4054-4dca-93e3-fceaf277bb5a",
+      "source_species_id": 132125,
+      "common_name": "Scaevola aemula"
+    },
+    {
+      "id": "3fd07602-67cf-464f-b85d-59c5dd87b964",
+      "source_species_id": 354179,
+      "common_name": "Sweetpotato"
+    },
+    {
+      "id": "8d4c9eb4-78de-4488-8888-cdb0ad0064f5",
+      "source_species_id": 59628,
+      "common_name": "Brazilian-jasmine"
+    },
+    {
+      "id": "65426238-cc48-4b08-81fc-a04b0e1cb17a",
+      "source_species_id": 115738,
+      "common_name": "Thanksgiving cactus"
+    },
+    {
+      "id": "b86fbbb8-27e1-4020-95a3-a679aed60049",
+      "source_species_id": 102638,
+      "common_name": "Bunny-ears prickly-pear"
+    },
+    {
+      "id": "0124cf98-02a9-4a60-b31b-1b564747f9c6",
+      "source_species_id": 168791,
+      "common_name": "Florist's cyclamen"
+    },
+    {
+      "id": "f0a6e3a3-d524-40bf-a7cb-5c0eb1c94898",
+      "source_species_id": 210304,
+      "common_name": "Crimean iris"
+    },
+    {
+      "id": "49a249ac-046a-4bec-a9f4-196503809153",
+      "source_species_id": 203734,
+      "common_name": "Turkestan onion"
+    },
+    {
+      "id": "87d772c8-94b6-40e0-9763-2d81f9055f24",
+      "source_species_id": 186394,
+      "common_name": "Fuchsia"
+    }
+  ]
+}

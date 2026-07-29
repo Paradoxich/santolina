@@ -81,6 +81,12 @@ import {
   TAGS_PROMPT,
 } from '../lib/editorial-standard'
 import { requireScope, scopeIds, describeScope } from './scope'
+import {
+  CLEARED_PREVIOUSLY,
+  mergeFindings,
+  type CriterionVerdict,
+  type Finding,
+} from './editorial-report'
 
 // ---------------------------------------------------------------------------
 // Config
@@ -114,27 +120,8 @@ interface PlantRow {
   editorial_tags_at: string | null
 }
 
-/** One criterion's outcome. `open` means unresolved, which blocks approval. */
-type CriterionVerdict = 'pass' | 'fail' | 'open'
-
-interface Finding {
-  id: string
-  common_name: string
-  scientific_name: string | null
-  image: { verdict: CriterionVerdict; reason: string }
-  description: {
-    verdict: CriterionVerdict
-    reason: string
-    rewritten: boolean
-    before?: string | null
-    after?: string | null
-    blind_verdict?: string
-    blind_reason?: string
-  }
-  tags: { verdict: CriterionVerdict; reason: string }
-  approved: boolean
-  blockers: string[]
-}
+// The report's data model and merge rules live in ./editorial-report so they
+// can be unit-tested — this file exits on import (requireScope, main).
 
 // ---------------------------------------------------------------------------
 // CLI
@@ -368,33 +355,6 @@ Respond with ONLY valid JSON: {"verdict": "ok"|"weak", "reason": string}`
 // Report
 // ---------------------------------------------------------------------------
 
-/**
- * Merge this run's findings over whatever the report already held.
- *
- * A partial re-run must not destroy the queue. `--new-only` and `--ids` runs
- * are the NORMAL way this pass is used — re-judging the handful of rows whose
- * image confidence just moved — and a plain overwrite meant a 9-row run
- * replaced a 101-row report, taking with it the recorded blockers for every
- * row still held. That happened on 2026-07-29: six flagged tag errors were
- * only recoverable because someone had summarised three of them in a handoff.
- *
- * This is the same failure `writeReviewReport` in pick-plant-images was fixed
- * for ("retrying four transient failures replaced a 490-plant review file with
- * a 4-plant one"), arrived at independently in a second script. The blockers
- * are the only durable record of WHY a row was held — the database keeps the
- * verdict but not the reasoning — so the file is the artefact, not a log.
- *
- * Newest wins per plant id, and a row this run did not touch is carried
- * forward untouched.
- */
-function mergeFindings(previous: Finding[], current: Finding[]): Finding[] {
-  const byId = new Map(previous.map((f) => [f.id, f]))
-  for (const f of current) byId.set(f.id, f)
-  return [...byId.values()].sort((a, b) =>
-    a.common_name.localeCompare(b.common_name)
-  )
-}
-
 function readPreviousFindings(jsonPath: string): Finding[] {
   try {
     const parsed = JSON.parse(readFileSync(jsonPath, 'utf8')) as {
@@ -498,12 +458,35 @@ async function main() {
 
       if (!needImage && !needDescription && !needTags) {
         console.log(`  ${tag}: already clear on all three criteria, skipping`)
+        // Record the clearance rather than `continue`-ing. A skip emits no
+        // finding, so mergeFindings has nothing to overwrite the row's
+        // PREVIOUS finding with and carries the old verdict forward intact —
+        // which means a row held in one run and cleared in the next still
+        // reads as held in the report, quoting text the database no longer
+        // has. Round 10 hit exactly that: Cyclamen persicum was cleared by an
+        // --ids run, and the next --round run reported it held against its
+        // pre-rewrite description, over a database that said is_curated.
+        //
+        // This is the mirror of the bug mergeFindings exists to fix. Merging
+        // stops a partial re-run DESTROYING findings; the same merge preserves
+        // a stale one unless a cleared row states its clearance out loud.
+        const cleared = { verdict: 'pass', reason: CLEARED_PREVIOUSLY } as const
+        findings.push({
+          id: p.id,
+          common_name: p.common_name,
+          scientific_name: p.scientific_name,
+          image: cleared,
+          description: { ...cleared, rewritten: false },
+          tags: cleared,
+          approved: true,
+          blockers: [],
+        })
         continue
       }
 
       const image = needImage
         ? judgeImage(p)
-        : ({ verdict: 'pass', reason: 'cleared previously' } as const)
+        : ({ verdict: 'pass', reason: CLEARED_PREVIOUSLY } as const)
 
       // The model is called only when a criterion it decides is open. A row
       // needing just the image costs nothing at all.
@@ -512,9 +495,9 @@ async function main() {
           ? await reviewPlant(p)
           : {
               descriptionVerdict: 'ok' as const,
-              descriptionReason: 'cleared previously',
+              descriptionReason: CLEARED_PREVIOUSLY,
               tagsVerdict: 'ok' as const,
-              tagsReason: 'cleared previously',
+              tagsReason: CLEARED_PREVIOUSLY,
               rewrite: null,
             }
 
@@ -572,7 +555,7 @@ async function main() {
         verdict: (review.tagsVerdict === 'ok'
           ? 'pass'
           : 'fail') as CriterionVerdict,
-        reason: needTags ? review.tagsReason : 'cleared previously',
+        reason: needTags ? review.tagsReason : CLEARED_PREVIOUSLY,
       }
 
       const blockers: string[] = []

@@ -129,6 +129,12 @@ const NO_WCVP_DISTRIBUTION: Record<string, string> = {
   // recorded as validated.
   'Symphoricarpos albus':
     'GBIF has the taxon, no WCVP distribution rows (round 9)',
+  // Round 10. Same verdict shape as Symphoricarpos albus above: cross-check
+  // reported "GBIF has the taxon but carries no WCVP distribution for it",
+  // stored range (Mexico + three US regions) left untouched, row deliberately
+  // unstamped rather than recorded as validated.
+  'Bidens ferulifolia':
+    'GBIF has the taxon, no WCVP distribution rows (round 10)',
 }
 
 /** State a step needs beyond the plant row itself. */

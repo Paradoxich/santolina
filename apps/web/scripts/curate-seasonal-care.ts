@@ -175,6 +175,10 @@ const ACTION_VERBS = new Set([
   // tender plants in pots are legitimate garden actions.
   'pull',
   'bring',
+  // Added after the round-10 balcony-annuals run: hardening off tender
+  // bedding plants before they move outdoors is a legitimate garden action
+  // the allow-set lacked (Impatiens walleriana).
+  'harden',
 ])
 
 // ---------------------------------------------------------------------------

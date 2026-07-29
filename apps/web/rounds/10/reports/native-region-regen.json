@@ -1,0 +1,589 @@
+{
+  "generatedAt": null,
+  "plan": [
+    {
+      "id": "f3e911ba-cfb8-4289-9b1f-488379cd1c3a",
+      "common_name": "Alpine-geranium",
+      "scientific_name": "Erodium reichardii",
+      "native_to": "the western Mediterranean",
+      "old_tags": ["Southwestern Europe"],
+      "new_tags": ["Southwestern Europe"],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "dcbeb49e-b573-44c1-8b1a-f1c690dc66aa",
+      "common_name": "Apache beggarticks",
+      "scientific_name": "Bidens ferulifolia",
+      "native_to": "southern United States and Mexico",
+      "old_tags": [
+        "Mexico",
+        "South-Central U.S.A.",
+        "Southeastern U.S.A.",
+        "Southwestern U.S.A."
+      ],
+      "new_tags": [
+        "Mexico",
+        "South-Central U.S.A.",
+        "Southeastern U.S.A.",
+        "Southwestern U.S.A."
+      ],
+      "source": "native_to-fallback",
+      "flags": ["MODEL-DERIVED — review"]
+    },
+    {
+      "id": "355f85df-368f-4040-ab95-c44492fd985a",
+      "common_name": "Apple geranium",
+      "scientific_name": "Pelargonium odoratissimum",
+      "native_to": "South Africa",
+      "old_tags": ["Southern Africa"],
+      "new_tags": ["Southern Africa"],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "733fe14d-a4ca-4e1f-8bbf-24633e101f49",
+      "common_name": "Ashy cranesbill",
+      "scientific_name": "Geranium cinereum",
+      "native_to": "the Pyrenees and southern Europe",
+      "old_tags": ["Southwestern Europe"],
+      "new_tags": ["Southwestern Europe"],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "7ed70055-adc1-44e6-88d4-f87f397d7bbd",
+      "common_name": "Australian-laurel",
+      "scientific_name": "Pittosporum tobira",
+      "native_to": "eastern Asia, Japan and China",
+      "old_tags": ["Eastern Asia", "Indo-China"],
+      "new_tags": ["Eastern Asia", "Indo-China"],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "0dea7532-ef1e-4536-be62-bc08c4f370d8",
+      "common_name": "Barbados aloe",
+      "scientific_name": "Aloe vera",
+      "native_to": "the Arabian Peninsula",
+      "old_tags": ["Arabian Peninsula"],
+      "new_tags": ["Arabian Peninsula"],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "0bdd323c-1116-4a52-9d4c-9ec6a61ea2be",
+      "common_name": "Bedding pansy",
+      "scientific_name": "Viola cornuta",
+      "native_to": "the Pyrenees and mountains of Spain",
+      "old_tags": ["Southwestern Europe"],
+      "new_tags": ["Southwestern Europe"],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "cd559eab-8ce2-43f0-8206-af3f31228998",
+      "common_name": "Bengal rose",
+      "scientific_name": "Rosa chinensis",
+      "native_to": "central and southern China",
+      "old_tags": ["China"],
+      "new_tags": ["China"],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "23d9654c-0048-4505-8378-04ef588d51fa",
+      "common_name": "Black-eyed-susan-vine",
+      "scientific_name": "Thunbergia alata",
+      "native_to": "tropical eastern Africa",
+      "old_tags": [
+        "East Tropical Africa",
+        "Northeast Tropical Africa",
+        "South Tropical Africa",
+        "Southern Africa",
+        "West Tropical Africa",
+        "West-Central Tropical Africa",
+        "Western Indian Ocean"
+      ],
+      "new_tags": [
+        "East Tropical Africa",
+        "Northeast Tropical Africa",
+        "South Tropical Africa",
+        "Southern Africa",
+        "West Tropical Africa",
+        "West-Central Tropical Africa",
+        "Western Indian Ocean"
+      ],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "8d4c9eb4-78de-4488-8888-cdb0ad0064f5",
+      "common_name": "Brazilian-jasmine",
+      "scientific_name": "Mandevilla sanderi",
+      "native_to": "Brazil",
+      "old_tags": ["Brazil"],
+      "new_tags": ["Brazil"],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "b86fbbb8-27e1-4020-95a3-a679aed60049",
+      "common_name": "Bunny-ears prickly-pear",
+      "scientific_name": "Opuntia microdasys",
+      "native_to": "central and northern Mexico",
+      "old_tags": ["Mexico"],
+      "new_tags": ["Mexico"],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "ebf95e9a-40b6-4618-8be7-9299c5c74662",
+      "common_name": "Busy lizzy",
+      "scientific_name": "Impatiens walleriana",
+      "native_to": "eastern Africa",
+      "old_tags": ["East Tropical Africa", "South Tropical Africa"],
+      "new_tags": ["East Tropical Africa", "South Tropical Africa"],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "bcc91752-8c02-4ef2-8f02-7ce64ff448b1",
+      "common_name": "Chinese hibiscus",
+      "scientific_name": "Hibiscus rosa-sinensis",
+      "native_to": "tropical Asia and the Pacific",
+      "old_tags": ["Southwestern Pacific"],
+      "new_tags": ["Southwestern Pacific"],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "cee12bab-c059-4ce0-b976-69e82580c7cc",
+      "common_name": "Clematis macropetala",
+      "scientific_name": "Clematis macropetala",
+      "native_to": "northern China, Mongolia, and Siberia",
+      "old_tags": ["China", "Mongolia", "Russian Far East", "Siberia"],
+      "new_tags": ["China", "Mongolia", "Russian Far East", "Siberia"],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "7fa2d18c-cbff-4ffd-b46f-4da2e52922d6",
+      "common_name": "Clove pink",
+      "scientific_name": "Dianthus caryophyllus",
+      "native_to": "the Mediterranean region",
+      "old_tags": ["Southeastern Europe"],
+      "new_tags": ["Southeastern Europe"],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "35a6a035-ffd1-4b3f-93c3-0fed9f286065",
+      "common_name": "Common lantana",
+      "scientific_name": "Lantana camara",
+      "native_to": "tropical Americas and the Caribbean",
+      "old_tags": [
+        "Brazil",
+        "Caribbean",
+        "Central America",
+        "Mexico",
+        "Northern South America",
+        "Western South America"
+      ],
+      "new_tags": [
+        "Brazil",
+        "Caribbean",
+        "Central America",
+        "Mexico",
+        "Northern South America",
+        "Western South America"
+      ],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "b0a96382-94a4-4103-9815-ada46f92a354",
+      "common_name": "Convolvulus sabatius",
+      "scientific_name": "Convolvulus sabatius",
+      "native_to": "southern Europe and North Africa",
+      "old_tags": ["Northern Africa", "Southeastern Europe"],
+      "new_tags": ["Northern Africa", "Southeastern Europe"],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "f0a6e3a3-d524-40bf-a7cb-5c0eb1c94898",
+      "common_name": "Crimean iris",
+      "scientific_name": "Iris lutescens",
+      "native_to": "southern Europe and the western Mediterranean",
+      "old_tags": ["Southeastern Europe", "Southwestern Europe"],
+      "new_tags": ["Southeastern Europe", "Southwestern Europe"],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "4f8732c6-ccf3-4074-9130-e25d8f1ef212",
+      "common_name": "Erigeron karvinskianus",
+      "scientific_name": "Erigeron karvinskianus",
+      "native_to": "Mexico and Central America",
+      "old_tags": [
+        "Central America",
+        "Mexico",
+        "Northern South America",
+        "Western South America"
+      ],
+      "new_tags": [
+        "Central America",
+        "Mexico",
+        "Northern South America",
+        "Western South America"
+      ],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "370f2a10-6742-4742-af3e-157f026240f8",
+      "common_name": "Flaming katy",
+      "scientific_name": "Kalanchoe blossfeldiana",
+      "native_to": "Madagascar",
+      "old_tags": ["Western Indian Ocean"],
+      "new_tags": ["Western Indian Ocean"],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "0124cf98-02a9-4a60-b31b-1b564747f9c6",
+      "common_name": "Florist's cyclamen",
+      "scientific_name": "Cyclamen persicum",
+      "native_to": "the eastern Mediterranean and southern Turkey",
+      "old_tags": ["Northern Africa", "Southeastern Europe", "Western Asia"],
+      "new_tags": ["Northern Africa", "Southeastern Europe", "Western Asia"],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "87d772c8-94b6-40e0-9763-2d81f9055f24",
+      "common_name": "Fuchsia",
+      "scientific_name": "Fuchsia magellanica",
+      "native_to": "southern Chile and Argentina",
+      "old_tags": ["Southern South America"],
+      "new_tags": ["Southern South America"],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "fb5941ea-d969-4a5f-9e3b-d3be55a34489",
+      "common_name": "Haworth's aeonium",
+      "scientific_name": "Aeonium haworthii",
+      "native_to": "Canary Islands",
+      "old_tags": ["Macaronesia"],
+      "new_tags": ["Macaronesia"],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "4aa7e5a6-9821-4abe-a2ca-0381ab83bc48",
+      "common_name": "Horseshoe geranium",
+      "scientific_name": "Pelargonium zonale",
+      "native_to": "southern Africa",
+      "old_tags": ["Southern Africa"],
+      "new_tags": ["Southern Africa"],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "76f17b89-94d3-466d-81f6-dcdd1cefaab2",
+      "common_name": "Ivyleaf geranium",
+      "scientific_name": "Pelargonium peltatum",
+      "native_to": "South Africa",
+      "old_tags": ["Southern Africa"],
+      "new_tags": ["Southern Africa"],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "8a6d178e-d62a-48e5-ba79-4131c04453df",
+      "common_name": "Licorice-plant",
+      "scientific_name": "Helichrysum petiolare",
+      "native_to": "southern Africa",
+      "old_tags": ["South Tropical Africa", "Southern Africa"],
+      "new_tags": ["South Tropical Africa", "Southern Africa"],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "f846b65f-3737-42e8-a585-91b5223e198b",
+      "common_name": "Moss-rose",
+      "scientific_name": "Portulaca grandiflora",
+      "native_to": "southern South America",
+      "old_tags": ["Brazil", "Southern South America", "Western South America"],
+      "new_tags": ["Brazil", "Southern South America", "Western South America"],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "84e94c63-f36c-451e-b776-a5e045badb27",
+      "common_name": "Nemesia caerulea",
+      "scientific_name": "Nemesia caerulea",
+      "native_to": "South Africa",
+      "old_tags": ["Southern Africa"],
+      "new_tags": ["Southern Africa"],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "eaec6d55-945f-42e0-99e9-93ea1bcf3016",
+      "common_name": "Oakleaf geranium",
+      "scientific_name": "Pelargonium quercifolium",
+      "native_to": "southern Africa",
+      "old_tags": ["Southern Africa"],
+      "new_tags": ["Southern Africa"],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "ed8fc9eb-2bc6-449d-9e9a-f2d695a7b286",
+      "common_name": "Origanum laevigatum",
+      "scientific_name": "Origanum laevigatum",
+      "native_to": "Turkey and the eastern Mediterranean",
+      "old_tags": ["Western Asia"],
+      "new_tags": ["Western Asia"],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "8bdfa979-38c2-462c-85ae-45a52337e72c",
+      "common_name": "Osteospermum ecklonis",
+      "scientific_name": "Osteospermum ecklonis",
+      "native_to": "South Africa",
+      "old_tags": ["Southern Africa"],
+      "new_tags": ["Southern Africa"],
+      "source": "native_to-fallback",
+      "flags": ["MODEL-DERIVED — review"]
+    },
+    {
+      "id": "5a4d5330-efc4-46db-a952-b4c69e92bfe4",
+      "common_name": "Paper-flower",
+      "scientific_name": "Bougainvillea glabra",
+      "native_to": "coastal Brazil",
+      "old_tags": ["Brazil"],
+      "new_tags": ["Brazil"],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "f738cfdc-80f0-4a5a-b374-5cb104cce403",
+      "common_name": "Pearl echeveria",
+      "scientific_name": "Echeveria elegans",
+      "native_to": "Mexico",
+      "old_tags": ["Mexico"],
+      "new_tags": ["Mexico"],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "3a937e0e-669c-4db3-ac7a-8ce052584ec3",
+      "common_name": "Pink jasmine",
+      "scientific_name": "Jasminum polyanthum",
+      "native_to": "western China and Myanmar",
+      "old_tags": ["China", "Indo-China"],
+      "new_tags": ["China", "Indo-China"],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "3308abb4-dc35-49a4-9578-50a245f759a8",
+      "common_name": "Plumbago",
+      "scientific_name": "Plumbago auriculata",
+      "native_to": "South Africa",
+      "old_tags": ["South Tropical Africa", "Southern Africa"],
+      "new_tags": ["South Tropical Africa", "Southern Africa"],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "93d15845-378e-405a-9d4e-984ecd9fd3f9",
+      "common_name": "Rose scented geranium",
+      "scientific_name": "Pelargonium capitatum",
+      "native_to": "South Africa",
+      "old_tags": ["Southern Africa"],
+      "new_tags": ["Southern Africa"],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "45aa8715-4054-4dca-93e3-fceaf277bb5a",
+      "common_name": "Scaevola aemula",
+      "scientific_name": "Scaevola aemula",
+      "native_to": "eastern and southeastern Australia",
+      "old_tags": ["Australia"],
+      "new_tags": ["Australia"],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "b439372e-bbab-48e3-a6a4-d5643e8fe3df",
+      "common_name": "Seaside petunia",
+      "scientific_name": "Calibrachoa parviflora",
+      "native_to": "South America",
+      "old_tags": [
+        "Brazil",
+        "Mexico",
+        "South-Central U.S.A.",
+        "Southern South America",
+        "Southwestern U.S.A."
+      ],
+      "new_tags": [
+        "Brazil",
+        "Mexico",
+        "South-Central U.S.A.",
+        "Southern South America",
+        "Southwestern U.S.A."
+      ],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "825c8eba-ee84-4843-980c-b38f351d8957",
+      "common_name": "Sempervivum calcareum",
+      "scientific_name": "Sempervivum calcareum",
+      "native_to": "the Alps and Jura Mountains",
+      "old_tags": ["Southeastern Europe", "Southwestern Europe"],
+      "new_tags": ["Southeastern Europe", "Southwestern Europe"],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "3c4f77ab-aaac-4dba-96f6-d39bb7ca747f",
+      "common_name": "Slender vervain",
+      "scientific_name": "Verbena rigida",
+      "native_to": "South America",
+      "old_tags": ["Brazil", "Southern South America", "Western South America"],
+      "new_tags": ["Brazil", "Southern South America", "Western South America"],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "8477f33d-e61b-4856-ab86-fd7b6c8bd967",
+      "common_name": "Sour orange",
+      "scientific_name": "Citrus × aurantium",
+      "native_to": "Southeast Asia",
+      "old_tags": ["Indo-China", "Malesia"],
+      "new_tags": ["Indo-China", "Malesia"],
+      "source": "native_to-fallback",
+      "flags": ["MODEL-DERIVED — review"]
+    },
+    {
+      "id": "925023ec-4885-443d-9fdd-d0e257651007",
+      "common_name": "Swan river daisy",
+      "scientific_name": "Brachyscome iberidifolia",
+      "native_to": "western and southern Australia",
+      "old_tags": ["Australia"],
+      "new_tags": ["Australia"],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "c057eb3f-0805-4a53-a5f3-d64b5a77ca9d",
+      "common_name": "Sweet scented geranium",
+      "scientific_name": "Pelargonium graveolens",
+      "native_to": "South Africa",
+      "old_tags": ["South Tropical Africa", "Southern Africa"],
+      "new_tags": ["South Tropical Africa", "Southern Africa"],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "3fd07602-67cf-464f-b85d-59c5dd87b964",
+      "common_name": "Sweetpotato",
+      "scientific_name": "Ipomoea batatas",
+      "native_to": "Central America and northern South America",
+      "old_tags": [
+        "Central America",
+        "Mexico",
+        "Northern South America",
+        "Western South America"
+      ],
+      "new_tags": [
+        "Central America",
+        "Mexico",
+        "Northern South America",
+        "Western South America"
+      ],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "0a352519-b1b7-404d-a9c3-ba0340fd5642",
+      "common_name": "Tasteless stonecrop",
+      "scientific_name": "Sedum sexangulare",
+      "native_to": "central and southern Europe",
+      "old_tags": [
+        "Eastern Europe",
+        "Middle Europe",
+        "Northern Europe",
+        "Southeastern Europe",
+        "Southwestern Europe"
+      ],
+      "new_tags": [
+        "Eastern Europe",
+        "Middle Europe",
+        "Northern Europe",
+        "Southeastern Europe",
+        "Southwestern Europe"
+      ],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "65426238-cc48-4b08-81fc-a04b0e1cb17a",
+      "common_name": "Thanksgiving cactus",
+      "scientific_name": "Schlumbergera truncata",
+      "native_to": "coastal mountains of southeastern Brazil",
+      "old_tags": ["Brazil"],
+      "new_tags": ["Brazil"],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "904848ee-8735-4a3b-9797-d9d79863da3e",
+      "common_name": "Treasure-flower",
+      "scientific_name": "Gazania rigens",
+      "native_to": "South Africa",
+      "old_tags": ["South Tropical Africa", "Southern Africa"],
+      "new_tags": ["South Tropical Africa", "Southern Africa"],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "49a249ac-046a-4bec-a9f4-196503809153",
+      "common_name": "Turkestan onion",
+      "scientific_name": "Allium karataviense",
+      "native_to": "central Asia",
+      "old_tags": ["Middle Asia", "Western Asia"],
+      "new_tags": ["Middle Asia", "Western Asia"],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "b7253509-503b-48e4-9a24-7aa7c382fadc",
+      "common_name": "Twinspur",
+      "scientific_name": "Diascia barberae",
+      "native_to": "South Africa",
+      "old_tags": ["Southern Africa"],
+      "new_tags": ["Southern Africa"],
+      "source": "trefle-l3",
+      "flags": []
+    },
+    {
+      "id": "e1cb034c-24e3-4ce7-ab2a-89f19a53af82",
+      "common_name": "Violet-flower petunia",
+      "scientific_name": "Petunia integrifolia",
+      "native_to": "southern South America",
+      "old_tags": ["Brazil", "Southern South America"],
+      "new_tags": ["Brazil", "Southern South America"],
+      "source": "trefle-l3",
+      "flags": []
+    }
+  ]
+}
