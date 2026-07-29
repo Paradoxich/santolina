@@ -47,13 +47,34 @@ export interface StepStatus {
   /** How many should (hybrids are excluded where the step can't apply). */
   total: number
   complete: boolean
+  /**
+   * `complete` is true because NOTHING APPLIED, not because work was done.
+   *
+   * This is the distinction that cost round 9 a wasted vision pass. A step
+   * with an `applies` predicate has `total === 0` until the step that feeds
+   * that predicate has run — `pick-plant-images --verify` applies only to
+   * medium-confidence heroes, and no plant has a confidence at all until the
+   * image pass runs. `done === total` is then `0 === 0`, and the step reports
+   * itself finished before it has ever looked at anything.
+   *
+   * It is not specific to that step: EVERY step with an `applies` predicate
+   * has this shape whenever its scope is empty. So the emptiness is surfaced
+   * rather than folded into a boolean, and each caller decides what it means.
+   * `verify-round` can treat "nothing to do" as fine; `run-round` must NOT
+   * treat it as "already done", because the reason may be that an upstream
+   * step has not run.
+   *
+   * Zero evidence is not evidence of completion — the same rule this codebase
+   * already applies to a failed fetch.
+   */
+  vacuous: boolean
   /** The DB state that counts as evidence — shown in reports so a reader can verify the claim. */
   evidence: string
   /** Level to report a gap at. Fields that are deliberately parked warn instead of failing. */
   level: 'FAIL' | 'WARN'
 }
 
-interface StatusRow {
+export interface StatusRow {
   id: string
   scientific_name: string | null
   ai_drafted_at: string | null
@@ -111,7 +132,7 @@ const NO_WCVP_DISTRIBUTION: Record<string, string> = {
 }
 
 /** State a step needs beyond the plant row itself. */
-interface StepContext {
+export interface StepContext {
   paired: Set<string>
 }
 
@@ -374,6 +395,22 @@ export async function roundStatus(ids: string[]): Promise<StepStatus[]> {
 
   const ctx: StepContext = { paired }
 
+  return computeStatus(plants, ctx)
+}
+
+/**
+ * The pure half of `roundStatus` — same answer, no database.
+ *
+ * Split out so the vacuous-completion rule can be tested against a synthetic
+ * freshly-seeded plant instead of against a real round. That test is the whole
+ * point: round 9 discovered this behaviour by spending a vision pass on 50
+ * plants, and the same finding is available for free from a plant object with
+ * every column null.
+ */
+export function computeStatus(
+  plants: StatusRow[],
+  ctx: StepContext
+): StepStatus[] {
   // Only the steps a round actually owes. A repair pass for older data
   // (perRound: false) stays in the registry so its stamp column is claimed,
   // but a round is not held incomplete waiting for it.
@@ -385,6 +422,8 @@ export async function roundStatus(ids: string[]): Promise<StepStatus[]> {
       done,
       total: scope.length,
       complete: done === scope.length,
+      // Nothing applied, so nothing was learned. See StepStatus.vacuous.
+      vacuous: scope.length === 0 && plants.length > 0,
       evidence: def.evidence,
       level: def.level,
     }
