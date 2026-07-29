@@ -167,7 +167,10 @@ export function GardenPlantView({
   }
 
   return (
-    <div className="flex flex-col gap-section-break">
+    // item-gap (12px) vertically as well as horizontally, so the space
+    // between rows matches the space between cards inside one and the grid
+    // reads as a single field rather than stacked bands.
+    <div className="flex flex-col gap-item-gap">
       {/* ============================================================
           HERO — who this plant is, and how long it has been yours.
           Not a card: it is the page's own header, on the page surface.
