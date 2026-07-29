@@ -1,41 +1,13 @@
 # Plant hero image picks — review
 
-693 plant(s) checked: 542 replaced an existing photo, 53 given a hero for the first time, 98 confirmed the existing photo was already the best, 0 with no usable photo.
-Confidence: high 621, medium 68, low 4.
+694 plant(s) checked: 544 replaced an existing photo, 54 given a hero for the first time, 96 confirmed the existing photo was already the best, 0 with no usable photo.
+Confidence: high 627, medium 67, low 0.
 
 Lowest confidence first — that is the queue. A "kept" row means the pass
 confirmed the existing photo rather than changing it, which is a real
 result and not a no-op.
 
-## low (4)
-
-### Iris danfordiae — kept
-
-verify: The image shows a yellow, six-petaled flower with dark speckled markings growing among gravel, which resembles a Moraea or similar iris-family bulb rather than the narrow, small-flowered Iris danfordiae; the shape and spotting pattern don't match this species.
-
-<img src="https://bs.plantnet.org/image/o/171f817a0b408c8cbdfc326e5e1ea5de8f35a5b9" width="280">
-
-### Slender vervain — changed
-
-verify: A sprawling verbena with clustered purple flower heads and toothed green leaves is growing out of a crack in a paved area next to a curb and some ivy; the concrete pavement dominates much of the frame, giving it an urban weedy look rather than a garden setting, and the species cannot be confirmed from foliage and flower form alone.
-
-| before                                                                                           | after                                                                                            |
-| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
-| <img src="https://bs.plantnet.org/image/o/b14e17794b0a10d4034a510072e1d5753a0c648f" width="280"> | <img src="https://bs.plantnet.org/image/o/1086588a3a039f004943c66e0b448ae483452468" width="280"> |
-
-### Hamamelis japonica — changed
-
-verify: A young sapling with sparse yellow flowers/branches is staked with a bamboo pole in a nursery or garden setting, with a plant label and mulch at its base; the plant is small, distant, and dominated by the stake and background trees, making species confirmation difficult.
-
-<img src="https://d2seqvvyy3b8p2.cloudfront.net/3b9cf115431e4d6ef762273c19d00160.jpg" width="280">
-
-### Cushion-pink — kept
-
-verify: The photo shows a cluster of pink flowers with deeply fringed, jagged-edged petals and dark centers on slender stems growing among grass and rocks, consistent with a Dianthus (pink) species rather than the low, moss-like cushion mat with unfringed petals typical of Silene acaulis.
-
-<img src="https://bs.plantnet.org/image/o/bd248cbdd330bc42920dab918da98294d843ed97" width="280">
-
-## medium (68)
+## medium (67)
 
 ### Plume poppy — changed
 
@@ -52,12 +24,6 @@ Shows the fern's characteristic fronds growing naturally in a lush woodland sett
 | before                                                                                           | after                                                                                            |
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
 | <img src="https://bs.plantnet.org/image/o/ba00ff7d4541141eefd520bcc0f2ed3ede1e9cf0" width="280"> | <img src="https://bs.plantnet.org/image/o/93e9ea9a704508041f57ab221ed66bdc28b99419" width="280"> |
-
-### Barbados aloe — kept
-
-verify: A close-up of an aloe inflorescence with green-to-yellow tubular buds and flowers on a thick stalk against a plain wall; the fleshy rosette leaves aren't visible, so the species can't be confirmed as Aloe vera specifically rather than another aloe.
-
-<img src="https://bs.plantnet.org/image/o/c7fe313538e137b5fda7e68bb14d2abb332da181" width="280">
 
 ### Autumn moor grass — changed
 
@@ -80,6 +46,14 @@ Shows the full clumping habit with characteristic reddish-bronze seed heads agai
 | before                                                                                           | after                                                                                            |
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
 | <img src="https://bs.plantnet.org/image/o/3b7a1e71f98d8ab452faa1f376e4fd2f8bbffeb1" width="280"> | <img src="https://bs.plantnet.org/image/o/c5b22af938281d349bb72bd8bb7c150a8ae1f78e" width="280"> |
+
+### Iris danfordiae — changed
+
+Sharp, well-lit close-up of the yellow iris blooms filling most of the frame with a softly blurred natural background, though the foreground twig debris is slightly distracting.
+
+| before                                                                                           | after                                                                                            |
+| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| <img src="https://bs.plantnet.org/image/o/171f817a0b408c8cbdfc326e5e1ea5de8f35a5b9" width="280"> | <img src="https://bs.plantnet.org/image/o/bc19850235e3b1d9e208ee0b50ac861c13e81254" width="280"> |
 
 ### Fustet — changed
 
@@ -167,7 +141,7 @@ Sharp, well-exposed close-up of holly's characteristic white flower clusters aga
 
 ### Longwood tussock — changed
 
-verify: A large fountain-shaped clump of fine green grass-like foliage arching outward, growing among other garden plants (yellow-flowered kniphofia, silvery foliage) in front of a hedge and stone wall; the foliage is bright green rather than the bronze tone typical of many Carex comans forms, making species identification uncertain.
+C shows a full, healthy tussock plant with its characteristic fine arching foliage clearly filling the frame against a natural garden backdrop, unlike A (has plant tags and dead leaf litter), B (top-down view with distracting surrounding foliage), or D (mostly incidental grass with unclear identification).
 
 | before                                                                                           | after                                                                                            |
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
@@ -255,14 +229,6 @@ Sharp, vividly colored purple flower spikes fill much of the frame against green
 
 <img src="https://bs.plantnet.org/image/o/10dff33bc30911aca49addde455c58d483aa5aa5" width="280">
 
-### Sempervivum calcareum — changed
-
-verify: A rosette succulent (Sempervivum sp.) with green leaves tipped in dark maroon, surrounded by dried papery brown leaves, moss and twigs; the tight symmetrical rosette is sharply in focus, but the specific species cannot be confirmed from foliage alone.
-
-| before                                                                                           | after                                                                                            |
-| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
-| <img src="https://bs.plantnet.org/image/o/20c74c10eb679be25630ba50207c2da4745ac0e5" width="280"> | <img src="https://bs.plantnet.org/image/o/53ca753a5c084202e6a848e98092461f5c4cd13f" width="280"> |
-
 ### Cobweb house-leek — changed
 
 Sharp close-up of the characteristic cobweb-covered rosettes filling the frame, though a pot rim is visible in the corner.
@@ -281,11 +247,11 @@ D shows a dense, healthy mass of characteristic boxwood foliage in natural light
 
 ### Licorice-plant — changed
 
-verify: A dense mat of small, rounded, pale silvery-green leaves fills the entire frame with no flowers or stems visible, consistent with a groundcover but not distinctly identifiable as Helichrysum petiolare rather than a similar foliage plant.
+E shows a clear close-up of the characteristic soft, silvery, felted round leaves of licorice plant with no clutter, though it lacks visible flowers.
 
 | before                                                                                           | after                                                                                            |
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
-| <img src="https://bs.plantnet.org/image/o/1053b561921ecd440c614277b5014908e2fdcc17" width="280"> | <img src="https://bs.plantnet.org/image/o/6326205aded01cc73a399867bdfbf97b23ea27b3" width="280"> |
+| <img src="https://bs.plantnet.org/image/o/1053b561921ecd440c614277b5014908e2fdcc17" width="280"> | <img src="https://bs.plantnet.org/image/o/979344821bc89173695643f8608610b846934308" width="280"> |
 
 ### Yellow coneflower — changed
 
@@ -351,7 +317,7 @@ Shows the full silvery-leaved shrub habit in a scenic coastal setting, giving th
 
 ### Amethyst fescue — changed
 
-verify: A tufted fine-leaved grass with thin flowering stalks is shown surrounded by other garden plants (large hairy leaves and a leafy herb), and a plant label is faintly visible in the background; the grass's blue-green coloring is plausible for fescue but cannot be confirmed as this particular species from this angle.
+Shows the full fescue clump with flowering seed heads in a garden setting, clearly displaying the plant's characteristic fine-bladed habit.
 
 | before                                                                                           | after                                                                                            |
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
@@ -427,13 +393,11 @@ Dense, glossy carpet of heart-shaped Asarum leaves fills the frame nicely with n
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
 | <img src="https://bs.plantnet.org/image/o/c0268b8b179c2eae78b83ec26b0035d2b5cfbbc9" width="280"> | <img src="https://bs.plantnet.org/image/o/d0947dc330f24638a0a862fc2f985479dd461a2b" width="280"> |
 
-### Seaside petunia — changed
+### Seaside petunia — kept
 
-verify: A close-up shows a small purple tubular five-lobed flower emerging from glandular, hairy succulent-looking green leaves, with a soft blurred brown background; this matches the general look of Calibrachoa but the species cannot be confirmed from this single tight shot.
+F is a sharp close-up of the small purple tubular flower and hairy foliage typical of Calibrachoa parviflora, though it's a partly closed bud rather than a fully open bloom.
 
-| before                                                                                           | after                                                                                            |
-| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
-| <img src="https://bs.plantnet.org/image/o/f9bb13da8597c1533bf1dfbea0063919547ae733" width="280"> | <img src="https://bs.plantnet.org/image/o/149c81166c7d45955ce93250420abede55cd3e48" width="280"> |
+<img src="https://bs.plantnet.org/image/o/f9bb13da8597c1533bf1dfbea0063919547ae733" width="280">
 
 ### Queen of the prairie — kept
 
@@ -465,14 +429,6 @@ F shows the characteristic large spherical purple allium blooms clearly and in s
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
 | <img src="https://bs.plantnet.org/image/o/8495d64f4a9fa7995846abd5815336a99e99ae9d" width="280"> | <img src="https://bs.plantnet.org/image/o/9be6cd5caf77c2617347d89dc1167f38acac922d" width="280"> |
 
-### Sweet scented geranium — changed
-
-verify: A lush climbing plant with deeply lobed, ferny leaves and small pink five-petaled flowers growing against a brick and stucco wall corner, intermixed with ivy at the top; the finely divided foliage resembles a scented Pelargonium but the species cannot be confirmed from this distance.
-
-| before                                                                                           | after                                                                                            |
-| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
-| <img src="https://bs.plantnet.org/image/o/16a72d5ebdbf03bfdd1cc89715d58b748317f6e2" width="280"> | <img src="https://bs.plantnet.org/image/o/3520cc26b5470fda6db64c9a6241353340232229" width="280"> |
-
 ### Astilbe rubra — changed
 
 E shows a dense mass of pink astilbe plumes in sharp focus filling most of the frame in a garden setting, clearly conveying the plant's flowering habit.
@@ -489,11 +445,13 @@ Shows the full mounded orange-toned habit of Carex testacea filling the frame in
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
 | <img src="https://bs.plantnet.org/image/o/331c4999fe614ab3a7ca1c9402e995063ce58f93" width="280"> | <img src="https://bs.plantnet.org/image/o/c356f71462526bd466ddcba1dd03d22c4e6c101a" width="280"> |
 
-### White-stem bramble — kept
+### White-stem bramble — changed
 
-verify: The image shows a bramble stem with pink/purple star-shaped flowers and green, spiky developing fruits surrounded by serrated leaves, set against a bright, blown-out green foliage background; the distinctive white stems of Rubus cockburnianus are not visible, so species identity can't be confirmed.
+Sharp close-up of the flower clusters with clear detail and natural green foliage background, filling most of the frame.
 
-<img src="https://bs.plantnet.org/image/o/7d05cfa89d7394ccf353b79eb7100466a717ebf2" width="280">
+| before                                                                                           | after                                                                                                                                    |
+| ------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| <img src="https://bs.plantnet.org/image/o/7d05cfa89d7394ccf353b79eb7100466a717ebf2" width="280"> | <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Rubus_cockburnianus.jpg/1920px-Rubus_cockburnianus.jpg" width="280"> |
 
 ### Heart-leaf foamflower — kept
 
@@ -523,6 +481,12 @@ Clear, sharp shot of the distinctive pink-and-cream bell flowers with buds, thou
 
 <img src="https://bs.plantnet.org/image/o/e618202e83d354fa86aa616fbab56f8bc8074774" width="280">
 
+### Cushion-pink — kept
+
+Sharp close-up of the characteristic pink five-petaled flowers with cushion foliage visible behind, though the composition is tight and the flowers are wet with rain droplets.
+
+<img src="https://bs.plantnet.org/image/o/bd248cbdd330bc42920dab918da98294d843ed97" width="280">
+
 ### Autumn fern — changed
 
 Shows the full frond habit with attractive coppery-pink new growth against a neutral concrete background, clearly identifying the plant, though the setting is a bit plain.
@@ -539,11 +503,11 @@ D shows the whole arching, glowing golden-orange grass mound backlit in sunlight
 
 ### Haworth's aeonium — changed
 
-verify: A dense potted rosette succulent, likely Aeonium/Sempervivum-type, with reddish-green rosettes and pale pink-cream flower clusters on tall stalks, shown in a black pot against a decorative tiled wall; the rosette shape looks more compact than typical Aeonium haworthii's loose paddle-like leaves.
+Sharp, well-lit close-up of the aeonium's flower spike with reddish leaves filling the frame against a clean, uncluttered gray background, clearly showing the species in bloom.
 
-| before                                                                                           | after                                                                                            |
-| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
-| <img src="https://bs.plantnet.org/image/o/3fb68c47a46e89da89511ef7587b804975f6b2b1" width="280"> | <img src="https://bs.plantnet.org/image/o/eb35de43c4f9f4df5bcafe99a997ee5aacd309c5" width="280"> |
+| before                                                                                           | after                                                                                                      |
+| ------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------- |
+| <img src="https://bs.plantnet.org/image/o/3fb68c47a46e89da89511ef7587b804975f6b2b1" width="280"> | <img src="https://upload.wikimedia.org/wikipedia/commons/4/4c/Aeonium_haworthii_PICT3759.jpg" width="280"> |
 
 ### Erysimum linifolium — kept
 
@@ -551,7 +515,7 @@ Shows the full mature shrub covered in characteristic magenta flower spikes in a
 
 <img src="https://bs.plantnet.org/image/o/bc7bfd03127f7f5a3c2b8abc2c8de9a358fc1b1a" width="280">
 
-## high (621)
+## high (627)
 
 ### Jerusalem pine — changed
 
@@ -792,6 +756,14 @@ Reviewer confirmed the species from this photo, resolving the vision pass uncert
 | before                                                                                           | after                                                                                            |
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
 | <img src="https://bs.plantnet.org/image/o/0a7549cfc69f87fb35495d300aea6ff3b901c491" width="280"> | <img src="https://bs.plantnet.org/image/o/75b0a7a56eac2c8b438663ec6bc270262feeaf9d" width="280"> |
+
+### Barbados aloe — changed
+
+Clear, sharp, well-lit rosette of aloe leaves filling the frame with a natural mulch garden background and no distracting elements.
+
+| before                                                                                           | after                                                                                                       |
+| ------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------- |
+| <img src="https://bs.plantnet.org/image/o/c7fe313538e137b5fda7e68bb14d2abb332da181" width="280"> | <img src="https://upload.wikimedia.org/wikipedia/commons/5/56/Starr_011104-0040_Aloe_vera.jpg" width="280"> |
 
 ### Lavender — changed
 
@@ -1639,6 +1611,14 @@ Sharp, vibrant cluster of purple mullein flowers fills the frame with a natural 
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
 | <img src="https://bs.plantnet.org/image/o/f0c76e6dc0621d60269f33e3aa05af83271f97b6" width="280"> | <img src="https://bs.plantnet.org/image/o/65bdf3c96a20eeca709ba8e9844634de79d97c25" width="280"> |
 
+### Slender vervain — changed
+
+Sharp, well-lit close-up of the plant with vivid purple bloom clusters and characteristic toothed leaves clearly filling the frame against a natural, uncluttered background.
+
+| before                                                                                           | after                                                                                            |
+| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| <img src="https://bs.plantnet.org/image/o/b14e17794b0a10d4034a510072e1d5753a0c648f" width="280"> | <img src="https://upload.wikimedia.org/wikipedia/commons/f/f7/Verbena_rigida_2.jpg" width="280"> |
+
 ### Early crocus — changed
 
 Bright, sharp overhead cluster of purple crocus blooms filling the frame with a natural mulch background, clearly showing the species' flowers.
@@ -2457,6 +2437,12 @@ Sharp, well-lit close-up of the characteristic star-shaped white flowers with ye
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
 | <img src="https://bs.plantnet.org/image/o/db7b2eea280b95e96262a844d1f4e590ac0ea48c" width="280"> | <img src="https://bs.plantnet.org/image/o/d6e17a9527b554ee83e188fdebdb023ef092bb4b" width="280"> |
 
+### Hamamelis japonica — changed
+
+Close-up of vivid yellow-and-red witch hazel blooms in sharp focus against a natural garden backdrop, clearly showcasing the species' characteristic flowers.
+
+<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/Hamamelis_japonica5.jpg/1920px-Hamamelis_japonica5.jpg" width="280">
+
 ### Cistus purpureus — changed
 
 A single dew-flecked pink flower with the characteristic dark basal blotches and yellow centre, sharp against dark foliage.
@@ -3053,6 +3039,14 @@ Sharp, well-lit full spike of blue echium flowers filling the frame against a na
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
 | <img src="https://bs.plantnet.org/image/o/433f9bcf002ad0e64f1b187a51ef20d0c7db3dce" width="280"> | <img src="https://bs.plantnet.org/image/o/f5f5ca89c39fa26c8585ae6ae4fb4adf23973cc9" width="280"> |
 
+### Sempervivum calcareum — changed
+
+Sharp, well-lit close-up of a single rosette showing the characteristic dark-tipped leaves in a natural garden setting, filling the frame without distracting clutter.
+
+| before                                                                                           | after                                                                                            |
+| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| <img src="https://bs.plantnet.org/image/o/20c74c10eb679be25630ba50207c2da4745ac0e5" width="280"> | <img src="https://bs.plantnet.org/image/o/53ca753a5c084202e6a848e98092461f5c4cd13f" width="280"> |
+
 ### Japanese fatsia — changed
 
 Shows the full characteristic habit of Fatsia japonica with its distinctive palmate leaves and creamy flower clusters, in sharp focus with a natural garden setting.
@@ -3154,6 +3148,12 @@ Sharp, well-lit close-up of abundant redbud blooms on branches with a soft green
 | before                                                                                           | after                                                                                            |
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
 | <img src="https://bs.plantnet.org/image/o/fcdbc548969df10f111dbc79402232f04e5338aa" width="280"> | <img src="https://bs.plantnet.org/image/o/612389ab8ed8454f73fcac24170fa8190a21f3d4" width="280"> |
+
+### Osteospermum ecklonis — changed
+
+Sharp, vivid close-up of a single purple Osteospermum flower filling the frame with a natural green foliage background.
+
+<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Osteospermum_ecklonis1.JPG/1920px-Osteospermum_ecklonis1.JPG" width="280">
 
 ### Bellwort — changed
 
@@ -4006,6 +4006,14 @@ Sharp, well-lit close-up of the characteristic dense purple-blue flower spike wi
 | before                                                                                           | after                                                                                            |
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
 | <img src="https://bs.plantnet.org/image/o/df6bc259a4c80df6d0e9a120c0f6774978e984dd" width="280"> | <img src="https://bs.plantnet.org/image/o/058b3a0b7cde85c357804963cb05e8500ee26731" width="280"> |
+
+### Sweet scented geranium — changed
+
+Sharp, high-resolution close-up of the characteristic veined lilac-pink flowers with clean natural garden foliage background, clearly showing the plant as the subject.
+
+| before                                                                                           | after                                                                                                                                                                                                    |
+| ------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| <img src="https://bs.plantnet.org/image/o/16a72d5ebdbf03bfdd1cc89715d58b748317f6e2" width="280"> | <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/%28MHNT%29_Pelargonium_graveolens_flower_and_leaves.jpg/1920px-%28MHNT%29_Pelargonium_graveolens_flower_and_leaves.jpg" width="280"> |
 
 ### Saffron crocus — changed
 

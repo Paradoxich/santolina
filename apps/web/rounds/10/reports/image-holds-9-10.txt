@@ -1,0 +1,18 @@
+# Editorial image holds from rounds 9 and 10 - regenerate with:
+#   python3 -c "import json;[print(h['common_name']) for r in (9,10) for h in json.load(open(f'rounds/{r}/reports/editorial-{r}.json'))['findings'] if not h['approved']]"
+Amethyst fescue
+Cushion-pink
+Erysimum cheiri
+Hamamelis japonica
+Iris danfordiae
+Longwood tussock
+Prunus subhirtella
+White-stem bramble
+Barbados aloe
+Haworth's aeonium
+Licorice-plant
+Osteospermum ecklonis
+Seaside petunia
+Sempervivum calcareum
+Slender vervain
+Sweet scented geranium
