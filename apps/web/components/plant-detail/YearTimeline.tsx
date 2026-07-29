@@ -1,20 +1,20 @@
 'use client'
 
 /**
- * What the plant does across the year: one row per stage, each row a coloured
- * span showing WHEN over the shared twelve-month axis and a line of text
- * saying WHAT. Then flowering, then anything you logged.
+ * What the plant does across the year. One row per stage; each stage is a
+ * block occupying exactly the months it covers, with its name and what
+ * happens written inside it. Then flowering, then anything you logged.
  *
- * The text is on the row rather than behind a click. An earlier pass made the
- * rows selectable and printed one description underneath, which meant six
- * rows that carried only a name and a colour — the same table the reference
- * drawer used to hold, with five sixths of it hidden.
+ * Blocks rather than 4px rules because the text lives in them: a rule can
+ * only carry a caption beside it, and a caption beside a span either collides
+ * with the next row or drifts away from the months it describes.
  *
- * Captions start at the left edge instead of following their span: a span
- * beginning in October has almost no room to its right, and a caption that
- * moves per row gives the eye nothing to track down the column.
+ * Row height is content-driven — a one-month stage is a narrow column and
+ * needs more height for the same sentence than a two-month one. Nothing is
+ * clamped, so no stage's description is silently cut off.
  *
- * Winter is one row with two spans, because it wraps the year end.
+ * Winter is one row with two blocks, because it wraps the year end; the text
+ * sits in the wider of the two.
  */
 
 import { DIARY_EVENT_LABELS, type DiaryEventType } from '@/lib/diary-events'
@@ -87,62 +87,16 @@ const STAGE_ROWS: { season: Season; runs: typeof SEASON_SPANS }[] = (
   runs: SEASON_SPANS.filter((s) => s.season === season),
 }))
 
+/** The block's fill: its colour, well diluted so the text stays readable. */
+function tint(hex: string, alpha: string): string {
+  return `${hex}${alpha}`
+}
+
 interface YearTimelineProps {
   bloomMonths: number[]
   events: TimelineEvent[]
   today: Date
   rhythm: SeasonalRhythm | null
-}
-
-/**
- * One row: the spans on the axis, then the caption underneath. Both live in
- * the same relative box so the gridlines behind them line up.
- */
-function Row({
-  spans,
-  color,
-  name,
-  text,
-  emphasis = false,
-  children,
-}: {
-  spans: { left: number; width: number; key: string | number }[]
-  color: string
-  name: string
-  text: string | null
-  emphasis?: boolean
-  /** Extra marks drawn on the axis, e.g. logged events. */
-  children?: React.ReactNode
-}) {
-  return (
-    <div className="relative w-full pb-item-gap pt-inline-gap">
-      <div className="relative h-2 w-full">
-        {spans.map((span) => (
-          <span
-            key={span.key}
-            className="absolute top-1/2 -translate-y-1/2 rounded-full"
-            style={{
-              left: `${span.left}%`,
-              width: `${span.width}%`,
-              height: emphasis ? 8 : 4,
-              backgroundColor: color,
-            }}
-          />
-        ))}
-        {children}
-      </div>
-      <p
-        className="mt-inline-gap truncate text-body-small"
-        title={text ?? name}
-      >
-        <span className={emphasis ? 'text-primary' : 'text-secondary'}>
-          {name}
-          {text ? '. ' : ''}
-        </span>
-        <span className="text-muted">{text}</span>
-      </p>
-    </div>
-  )
 }
 
 export function YearTimeline({
@@ -159,7 +113,7 @@ export function YearTimeline({
   const lastMonth = hasBloom ? Math.max(...bloomMonths) : 0
   const bloom = spanBounds(firstMonth, lastMonth)
 
-  // Events grouped by month: a month with three waterings gets one mark.
+  // Events grouped by month: a month with three waterings gets one block.
   const byMonth = new Map<number, TimelineEvent[]>()
   for (const event of events) {
     const month = new Date(`${event.date}T12:00:00Z`).getUTCMonth() + 1
@@ -167,93 +121,118 @@ export function YearTimeline({
     if (bucket) bucket.push(event)
     else byMonth.set(month, [event])
   }
-
   const loggedMonths = [...byMonth.keys()].sort((a, b) => a - b)
 
   return (
-    <div className="flex w-full flex-col gap-tight-gap">
-      <div className="relative w-full">
-        {/* Month gridlines and today, behind every row. */}
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 flex justify-between"
-        >
-          {MONTH_INITIALS.map((month, i) => (
-            <span
-              key={`${month}-${i}`}
-              className="h-full w-px bg-accent opacity-10"
-            />
-          ))}
-        </div>
-        <div
-          aria-hidden="true"
-          className="absolute top-0 h-full w-px bg-accent"
-          style={{ left: `${todayLeft}%` }}
-        />
-
-        {STAGE_ROWS.map((row) => (
-          <Row
-            key={row.season}
-            color={SEASON_COLORS[row.season]}
-            emphasis={row.season === currentSeason}
-            name={
-              SEASON_LABELS[row.season] +
-              (row.season === currentSeason ? ' · now' : '')
-            }
-            text={rhythm?.[row.season] ?? null}
-            spans={row.runs.map((run) => ({
-              key: run.startMonth,
-              ...spanBounds(run.startMonth, run.endMonth),
-            }))}
+    <div className="relative flex w-full flex-col gap-tight-gap">
+      {/* Month gridlines and today, behind every row. */}
+      <div aria-hidden="true" className="absolute inset-0 flex justify-between">
+        {MONTH_INITIALS.map((month, i) => (
+          <span
+            key={`${month}-${i}`}
+            className="h-full w-px bg-accent opacity-10"
           />
         ))}
-
-        {hasBloom && (
-          <Row
-            color="var(--color-accent)"
-            name="Flowering"
-            text={`${MONTH_NAMES[firstMonth - 1]} to ${MONTH_NAMES[lastMonth - 1]}`}
-            spans={[{ key: 'bloom', ...bloom }]}
-          />
-        )}
-
-        {loggedMonths.length > 0 && (
-          <Row
-            color="transparent"
-            name="You logged"
-            // Deduped: watering twice in July is one "watered" in the
-            // caption, not "watered, watered". The mark already carries
-            // that the month had activity; the count is not the point here.
-            text={loggedMonths
-              .map(
-                (m) =>
-                  `${MONTH_NAMES[m - 1]!.slice(0, 3)} ${[
-                    ...new Set(
-                      byMonth
-                        .get(m)!
-                        .map((e) => DIARY_EVENT_LABELS[e.type].toLowerCase())
-                    ),
-                  ].join(', ')}`
-              )
-              .join(' · ')}
-            spans={[]}
-          >
-            {loggedMonths.map((month) => (
-              <span
-                key={month}
-                title={`${MONTH_NAMES[month - 1]}: ${byMonth
-                  .get(month)!
-                  .map((e) => DIARY_EVENT_LABELS[e.type])
-                  .join(', ')}`}
-                className="absolute top-1/2 size-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-fern-600"
-                style={{ left: `${((month - 1) / 12) * 100 + 100 / 24}%` }}
-              />
-            ))}
-          </Row>
-        )}
       </div>
+      <div
+        aria-hidden="true"
+        className="absolute top-0 h-full w-px bg-accent"
+        style={{ left: `${todayLeft}%` }}
+      />
 
-      <div className="flex w-full items-center justify-between text-center text-micro">
+      {STAGE_ROWS.map((row) => {
+        const isCurrent = row.season === currentSeason
+        const color = SEASON_COLORS[row.season]
+        const text = rhythm?.[row.season] ?? null
+        // The widest run carries the text; a December sliver cannot hold it.
+        const widest = [...row.runs].sort(
+          (a, b) => b.endMonth - b.startMonth - (a.endMonth - a.startMonth)
+        )[0]!
+        return (
+          <div key={row.season} className="relative w-full">
+            {row.runs.map((run) => {
+              const { left, width } = spanBounds(run.startMonth, run.endMonth)
+              const carriesText = run.startMonth === widest.startMonth
+              return (
+                <div
+                  key={run.startMonth}
+                  className={[
+                    carriesText ? 'relative' : 'absolute top-0 h-full',
+                    'overflow-hidden rounded-sm border-t-2 px-inline-gap py-inline-gap',
+                  ].join(' ')}
+                  style={{
+                    marginLeft: carriesText ? `${left}%` : undefined,
+                    left: carriesText ? undefined : `${left}%`,
+                    width: `${width}%`,
+                    backgroundColor: tint(color, isCurrent ? '4d' : '2e'),
+                    borderTopColor: color,
+                  }}
+                >
+                  {carriesText && (
+                    <>
+                      <p
+                        className={[
+                          'text-label',
+                          isCurrent ? 'text-primary' : 'text-secondary',
+                        ].join(' ')}
+                      >
+                        {SEASON_LABELS[row.season]}
+                        {isCurrent && ' · now'}
+                      </p>
+                      {text && (
+                        <p className="mt-tight-gap text-body-small leading-snug text-secondary">
+                          {text}
+                        </p>
+                      )}
+                    </>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        )
+      })}
+
+      {hasBloom && (
+        <div className="relative w-full">
+          <div
+            className="relative overflow-hidden rounded-sm border-t-2 border-t-accent bg-accent-muted px-inline-gap py-inline-gap"
+            style={{ marginLeft: `${bloom.left}%`, width: `${bloom.width}%` }}
+          >
+            <p className="text-label text-accent">Flowering</p>
+            <p className="mt-tight-gap text-body-small leading-snug text-secondary">
+              {MONTH_NAMES[firstMonth - 1]} to {MONTH_NAMES[lastMonth - 1]}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {loggedMonths.length > 0 && (
+        <div className="relative h-9 w-full">
+          {loggedMonths.map((month) => {
+            const { left, width } = spanBounds(month, month)
+            const labels = [
+              ...new Set(
+                byMonth.get(month)!.map((e) => DIARY_EVENT_LABELS[e.type])
+              ),
+            ]
+            return (
+              <div
+                key={month}
+                title={`${MONTH_NAMES[month - 1]}: ${labels.join(', ')}`}
+                className="absolute top-0 flex h-full items-center overflow-hidden rounded-sm border-t-2 border-t-fern-600 bg-fern-100 px-inline-gap"
+                style={{ left: `${left}%`, width: `${width}%` }}
+              >
+                <p className="truncate text-label text-secondary">
+                  {labels.join(', ')}
+                </p>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      <div className="relative flex w-full items-center justify-between text-center text-micro">
         {MONTH_INITIALS.map((month, i) => (
           <span
             key={`${month}-${i}`}
