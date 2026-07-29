@@ -48,8 +48,9 @@ typecheck / tests             clean, 139 passed
 
 **Open questions:**
 
-- **The `catalog-state staleness` CI job is still skipping** for want of repo secrets `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`. It has now been inert across several sessions.
 - Blocked, unchanged: local Supabase on disk cleanup; the Pro-plan decision.
+
+**Correction, because this entry first repeated it wrongly: the `catalog-state staleness` job is NOT inert.** Both repo secrets have existed since 2026-07-28 (`gh secret list` confirms), and on the push to main for PR #127 the job ran for real — secrets populated, skip branch not taken, `catalog:state:check` executed against the live catalog, **success**. It shows as "skipping" in `gh pr checks` only because it is deliberately gated off pull requests (`if: github.event_name != 'pull_request'`), so that a PR-triggered job cannot read the service-role key. The "waiting for secrets" line came from the 2026-07-28 entry, was true then, and was carried forward here without being re-checked. **Verify a load-bearing claim in this file against the thing itself before repeating it — especially an asserted negative.**
 
 **Calibration note:** the base rate says round 10 finds _different_ bugs, not these. Of ~77 incidents across rounds 1-8 only six were repeats. Fixing three does not predict a clean round — automating the pipeline is what makes them visible at all, and that is the improvement.
 
