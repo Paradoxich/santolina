@@ -1,9 +1,51 @@
 {
-  "note": "Round 10's window is still open, so it is currently catching two later sessions' legitimate out-of-round work — the same accumulation the round-9 entry warned about. This file waives only the WCVP tail's half. It deliberately does NOT set cleared_at: closing round 10 is the round owner's call, and at the time of writing another session was still writing image and editorial columns into this window, so a cleared_at stamped now would close the window over work that had not finished deciding whether it belonged inside it.",
+  "note": "Round 10 needed both halves of the mechanism, and the reason is a timing fact worth keeping. A cleared_at alone could not close this window honestly: round 10's own last remediation (the Seaside petunia hero, 23:03:53) landed AFTER the two out-of-round write sets below (22:49 and ~22:55-23:05), so any closing edge early enough to allow them would have claimed the round was finished while it demonstrably was not. The round-8 precedent applies verbatim — no window holding a round's real work can exclude a pass that ran first — so the two sets are waived by name and the window is closed as of the moment everything was actually done.",
   "allow": [
     {
       "column": "native_region",
-      "why": "The 2026-07-30 WCVP tail: 475 plants outside every round manifest validated against Kew's checklist via cross-check-native-region.ts, 53 corrected. The tail is by definition out-of-round — these are rounds 1-5 era rows that predate the manifests — so every correction it makes must land outside round 10's scope, and there is no scope it could land inside instead. Safe as a column waiver rather than 53 named rows because a round-10 plant's own native_region write is IN scope and therefore never becomes a finding here: this entry can only ever match a row round 10 did not seed."
+      "why": "The 2026-07-30 WCVP tail (PR #137): 475 plants outside every round manifest validated against Kew's checklist via cross-check-native-region.ts, 53 corrected. The tail is by definition out-of-round — these are rounds 1-5 era rows that predate the manifests — so every correction it makes must land outside round 10's scope, and there is no scope it could land inside instead. Safe as a column waiver rather than 53 named rows because a round-10 plant's own native_region write is IN scope and therefore never becomes a finding here: this entry can only ever match a row round 10 did not seed."
+    },
+    {
+      "plant": "Iris danfordiae",
+      "why": "Round 9 image hold, remediated 2026-07-29T22:49 by the image-holds session (PR #139 line of work). Out-of-scope for round 10 by definition: a round-9 plant is not in round 10's manifest, and clearing round 9's holds is not round 10's business. Waived rather than left failing because the alternative is round 10 carrying a permanent red count for work that was correct.",
+      "column": "*"
+    },
+    {
+      "plant": "Longwood tussock",
+      "why": "Round 9 image hold, remediated 2026-07-29T22:49 by the image-holds session. Same reasoning as Iris danfordiae.",
+      "column": "*"
+    },
+    {
+      "plant": "Prunus subhirtella",
+      "why": "Round 9 plant re-judged by curate-editorial during the 2026-07-29 image-holds remediation (editorial stamps only). Same reasoning as Iris danfordiae.",
+      "column": "*"
+    },
+    {
+      "plant": "Hamamelis japonica",
+      "why": "Round 9 image hold — the staked nursery sapling named in the round-9 handoff entry — given a new Wikimedia hero and re-approved on 2026-07-29T22:49. This is the row whose is_curated and image_attribution writes show up loudest in the report; all of it is round 9's hold being cleared, not round 10 drifting.",
+      "column": "*"
+    },
+    {
+      "plant": "Amethyst fescue",
+      "why": "Round 9 image hold, remediated 2026-07-29T22:49 by the image-holds session. Same reasoning as Iris danfordiae.",
+      "column": "*"
+    },
+    {
+      "plant": "White-stem bramble",
+      "why": "Round 9 image hold, remediated 2026-07-29T22:49 by the image-holds session. Same reasoning as Iris danfordiae.",
+      "column": "*"
+    },
+    {
+      "plant": "Cushion-pink",
+      "why": "Round 9 image hold — the fringed Dianthus mis-hero named in the round-9 handoff entry (Silene acaulis) — remediated 2026-07-29T22:49. Same reasoning as Iris danfordiae.",
+      "column": "*"
+    },
+    {
+      "plant": "Erysimum cheiri",
+      "why": "Round 9 plant with no usable image upstream at all, re-judged by curate-editorial during the 2026-07-29 remediation (editorial stamps only). Same reasoning as Iris danfordiae.",
+      "column": "*"
     }
-  ]
+  ],
+  "cleared_at": "2026-07-29T23:20:00Z",
+  "cleared_why": "Round 10 is finished: 10/10 pipeline steps, 6/6 artifacts, verify-round --round 10 at 0 failures, and the catalog archive re-captured after the Seaside petunia hero write that had made it stale (PR #139 — the book-end trap, caught by round-progress rather than hours later). Closed now for the reason the round-9 entry gives: the window is baseline-to-now, so leaving it open makes every later catalog-wide pass read as this round's failure, which is how round 8 accumulated 287 false failures. This window had already started doing exactly that to two concurrent sessions. The two write sets that predate this edge are waived by name above rather than swallowed by an early cleared_at, so the record still says who wrote what and why."
 }
