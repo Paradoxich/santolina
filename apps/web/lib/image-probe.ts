@@ -30,7 +30,13 @@ export type ProbeResult =
       height: number
       bytes: number | null
     }
-  | { ok: false; url: string; reason: string }
+  /**
+   * `transient` marks a failure that means "ask again later" and did not stop
+   * meaning that after every retry was spent — a rate limit or an outage, not a
+   * judgment on the photograph. Callers must not treat it as a rejection: the
+   * candidate is of unknown quality, which is a different thing from bad.
+   */
+  | { ok: false; url: string; reason: string; transient?: boolean }
 
 /**
  * Read pixel dimensions out of an image file header.
@@ -256,7 +262,9 @@ async function probeImageOnce(
  * An unreadable header is NOT in this set — retrying it fetches the same bytes
  * and fails identically. It is handled separately below, by reading further.
  */
-function isTransient(result: ProbeResult): boolean {
+type ProbeFailure = Extract<ProbeResult, { ok: false }>
+
+function isTransient(result: ProbeResult): result is ProbeFailure {
   if (result.ok) return false
   const r = result.reason
   if (/^HTTP (429|5\d\d)$/.test(r)) return true
@@ -314,17 +322,39 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 export async function probeImage(
   url: string,
   timeoutMs = 10_000,
-  attempts = 3
+  attempts = 3,
+  /** Injectable so the retry tests do not actually wait out a rate limit. */
+  waitMs: (result: ProbeResult, attempt: number) => number = backoffMs
 ): Promise<ProbeResult> {
   let last = await probeImageOnce(url, timeoutMs)
   for (let i = 1; i < attempts && isTransient(last); i++) {
-    await sleep(400 * i)
+    await sleep(waitMs(last, i))
     last = await probeImageOnce(url, timeoutMs)
   }
   if (wantsMoreBytes(last)) {
     last = await probeImageOnce(url, timeoutMs, ESCALATED_PROBE_BYTES)
   }
+  // Say so when the retries ran out on a transient failure, so the caller can
+  // decline to draw a conclusion. Without this the result is indistinguishable
+  // from a 404 by the time anyone reads it.
+  if (isTransient(last)) return { ...last, transient: true }
   return last
+}
+
+/**
+ * How long to wait before asking again.
+ *
+ * A rate limit and a socket blip are both transient and want very different
+ * waits. 400/800ms rides out a blip and is nowhere near enough for Wikimedia
+ * Commons, which 429s on a handful of sequential requests to the upload host
+ * and stays angry for seconds: on 2026-07-30 nine of fourteen hand-sourced
+ * Commons originals exhausted all three attempts inside 1.2s and were dropped.
+ * Seconds cost nothing here — this path only runs when something already
+ * failed, and the alternative is losing a photograph that was sourced by hand.
+ */
+export function backoffMs(result: ProbeResult, attempt: number): number {
+  const rateLimited = !result.ok && result.reason === 'HTTP 429'
+  return (rateLimited ? 2_000 : 400) * attempt
 }
 
 /** The four media types the Messages API accepts for image blocks. */

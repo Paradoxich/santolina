@@ -1,16 +1,16 @@
 {
   "round": "9",
-  "captured_at": "2026-07-29T16:46:03.864Z",
-  "baseline_dir": "/Users/paradoxich/Desktop/Coding/santolina-round-9/apps/web/backups/2026-07-29T15-31-07-377Z",
-  "baseline_source": "backups",
+  "captured_at": "2026-07-29T22:50:26.003Z",
+  "baseline_dir": "/Users/paradoxich/Desktop/Coding/santolina-image-holds/apps/web/rounds/9/catalog",
+  "baseline_source": "archive",
   "counts": {
     "before": {
       "plants": 595,
       "plant_combinations": 1485
     },
     "after": {
-      "plants": 645,
-      "plant_combinations": 1608
+      "plants": 695,
+      "plant_combinations": 1735
     }
   }
 }

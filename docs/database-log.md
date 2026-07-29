@@ -57,6 +57,10 @@ The run **reported success** with a believable source mix — `trefle-l3=121, na
 
 **This is the trap that keeps coming back, and it is subtle every single time.** It recurred four times in one sitting on 2026-07-29 while sourcing nine photographs (see that session entry): a rate-limited probe read as "bad photo"; a truncated header read as "corrupt file"; an oversized file read as "unusable candidate"; and **the fix for the third returned "this hero is fine" whenever its own size check failed** — written by someone who had spent the previous hour fixing exactly this. The lesson is not "remember the rule". It is that **any function returning a two-way answer about a remote resource is one network failure away from lying**, so give it a third outcome and make the caller handle it. `displayUrlFor` returns `unchanged | rescaled | unmeasured` for that reason.
 
+**A fifth instance, 2026-07-30, and the new part is that the retry already existed.** The fix for the first of those four added a backoff to `probeImage`, and it was 400/800ms — an order of magnitude short of what Wikimedia Commons needs, so all three attempts were spent inside 1.2 seconds. Feeding 14 hand-sourced Commons photos in for the rounds 9/10 editorial holds lost **9 of them** to HTTP 429; the pass then judged each plant on the Trefle photos already known to be inadequate, wrote picks worded "CHANGED, high", and stamped `image_checked_at` so a plain re-run would never look again. Proof it was degradation rather than taste: re-run with a seconds-long backoff, Sweet scented geranium's "high" Trefle wall shot lost to a 6080px Commons photo, and Slender vervain went medium → high the same way.
+
+**So a third outcome is not enough on its own — something has to act on it.** The rule as written stops at "make the caller handle it", and the caller here _did_ handle it: it printed the drop, under a comment explaining that a lost Wikimedia candidate is the one loss nobody would otherwise notice. It printed it and carried on. The generalisation to keep is that **a transient failure has to change what the run DOES, not only what it says.** `pick-plant-images` now splits `rejected` (judged — dead link, too small, wrong aspect) from `unresolved` (could not look), defers any plant holding an unresolved candidate without stamping it, and exits non-zero so a round cannot read the step as finished.
+
 ### 1b. A trigger that silently rewrites rows is only as good as the test you ran against it — ADDED 2026-07-29
 
 `invalidate_editorial_verdict` (migration `20260729120000`) is the first trigger in this schema that MUTATES a row on the way past, and that makes it a different kind of object from every guard script here. A script that gets it wrong prints something wrong. **A trigger that gets it wrong changes data in every write path at once, including paths written before it existed and paths nobody is thinking about.**
@@ -215,6 +219,33 @@ This is trap 7 in different clothes: **an external name lookup that guesses is m
 ## Sessions
 
 <!-- Newest first. Append with: scripts/log-db-session.ts --round <label> -->
+
+### 2026-07-30 — The 16 editorial image holds from rounds 9 and 10
+
+**Branch** `session/2026-07-30-image-holds`. No seed, no migration, no schema change. `log-db-session.ts` cannot write this entry — it is manifest-backed and this was remediation across two rounds, not a round.
+
+Both rounds' holds were image-confidence only, and the handoff's instruction was right: they needed a **new candidate photograph**, not another check. `feed-wikimedia-candidates.ts` resolved a Wikidata P18 for **14 of the 16**; `Erysimum cheiri` and `Prunus subhirtella` have no usable P18 at all.
+
+**Result: 7 of 16 approved, 9 still held.** `verify-round --round 10` → 0 failures. Rounds 9 and 10 archives re-captured after the pass (`archive-round`), per the book-end trap.
+
+```
+approved (7)  Barbados aloe, Slender vervain, Hamamelis japonica, Sempervivum
+              calcareum, Licorice-plant, Osteospermum ecklonis, Sweet scented geranium
+held (9)      Iris danfordiae, Longwood tussock, Prunus subhirtella, Amethyst
+              fescue, Seaside petunia, White-stem bramble, Cushion-pink,
+              Erysimum cheiri, Haworth's aeonium
+```
+
+**`Osteospermum ecklonis` had no image anywhere and now has a high-confidence hero**, which is the single clearest win: a Commons photo existed the whole time and the pass could not see it, because the pass only ever saw what Trefle surfaced.
+
+**The real output is the probe fix — see trap 1's fifth instance.** The first run of this session looked completely clean and had silently thrown away 9 of the 14 photos it had just been given.
+
+**Two findings about the vision pass that are worth keeping.**
+
+1. **The comparative pick can describe a photograph it is not looking at, and `--verify` is what catches it.** Two separate pick runs called Seaside petunia's hero "a small purple tubular flower". The stored hero is a **double yellow** Calibrachoa. Index resolution was checked against the batch manifest and is sound — F was the incumbent and F's URL is what was written — so this is the model narrating the species it expected from the name rather than the image in front of it. The absolute single-image question caught it immediately. **This is the argument for keeping 7a before 7b, stated in evidence rather than in principle.**
+2. **The blind verify independently reproduced a hand-written round-9 note.** `Silene acaulis`'s hero was recorded in round 9 as "a fringed _Dianthus_"; verify, shown only the photo and the name, demoted it to `low` and said the notched fringed petals are Dianthus and that _S. acaulis_ makes a tight moss-like cushion. Two independent routes to the same answer is the strongest evidence this pass works.
+
+**A gap the holds now point at, deliberately left unbuilt (Ana's call, 2026-07-30).** Four of the nine need a hero pointed at **a specific candidate**, and no script can do that: `apply-image-reverts` only points back at `image_url`, and `apply-image-confirmations` only records that a human trusts the current photo. **`Seaside petunia`'s live hero is the wrong species** — a yellow double garden hybrid where _Calibrachoa parviflora_ is small and violet — and its own `image_candidates` already holds a labelled Commons photo of the true species that lost the comparison. Unfixable with today's tooling without a hand-written UPDATE, so it is recorded rather than patched.
 
 ### 2026-07-29 — Round 10
 

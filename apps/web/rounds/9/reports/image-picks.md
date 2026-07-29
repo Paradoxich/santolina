@@ -1,33 +1,13 @@
 # Plant hero image picks — review
 
-644 plant(s) checked: 505 replaced an existing photo, 48 given a hero for the first time, 91 confirmed the existing photo was already the best, 0 with no usable photo.
-Confidence: high 579, medium 62, low 3.
+694 plant(s) checked: 544 replaced an existing photo, 54 given a hero for the first time, 96 confirmed the existing photo was already the best, 0 with no usable photo.
+Confidence: high 627, medium 67, low 0.
 
 Lowest confidence first — that is the queue. A "kept" row means the pass
 confirmed the existing photo rather than changing it, which is a real
 result and not a no-op.
 
-## low (3)
-
-### Iris danfordiae — kept
-
-verify: The image shows a yellow, six-petaled flower with dark speckled markings growing among gravel, which resembles a Moraea or similar iris-family bulb rather than the narrow, small-flowered Iris danfordiae; the shape and spotting pattern don't match this species.
-
-<img src="https://bs.plantnet.org/image/o/171f817a0b408c8cbdfc326e5e1ea5de8f35a5b9" width="280">
-
-### Hamamelis japonica — changed
-
-verify: A young sapling with sparse yellow flowers/branches is staked with a bamboo pole in a nursery or garden setting, with a plant label and mulch at its base; the plant is small, distant, and dominated by the stake and background trees, making species confirmation difficult.
-
-<img src="https://d2seqvvyy3b8p2.cloudfront.net/3b9cf115431e4d6ef762273c19d00160.jpg" width="280">
-
-### Cushion-pink — kept
-
-verify: The photo shows a cluster of pink flowers with deeply fringed, jagged-edged petals and dark centers on slender stems growing among grass and rocks, consistent with a Dianthus (pink) species rather than the low, moss-like cushion mat with unfringed petals typical of Silene acaulis.
-
-<img src="https://bs.plantnet.org/image/o/bd248cbdd330bc42920dab918da98294d843ed97" width="280">
-
-## medium (62)
+## medium (67)
 
 ### Plume poppy — changed
 
@@ -66,6 +46,14 @@ Shows the full clumping habit with characteristic reddish-bronze seed heads agai
 | before                                                                                           | after                                                                                            |
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
 | <img src="https://bs.plantnet.org/image/o/3b7a1e71f98d8ab452faa1f376e4fd2f8bbffeb1" width="280"> | <img src="https://bs.plantnet.org/image/o/c5b22af938281d349bb72bd8bb7c150a8ae1f78e" width="280"> |
+
+### Iris danfordiae — changed
+
+Sharp, well-lit close-up of the yellow iris blooms filling most of the frame with a softly blurred natural background, though the foreground twig debris is slightly distracting.
+
+| before                                                                                           | after                                                                                            |
+| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| <img src="https://bs.plantnet.org/image/o/171f817a0b408c8cbdfc326e5e1ea5de8f35a5b9" width="280"> | <img src="https://bs.plantnet.org/image/o/bc19850235e3b1d9e208ee0b50ac861c13e81254" width="280"> |
 
 ### Fustet — changed
 
@@ -153,7 +141,7 @@ Sharp, well-exposed close-up of holly's characteristic white flower clusters aga
 
 ### Longwood tussock — changed
 
-verify: A large fountain-shaped clump of fine green grass-like foliage arching outward, growing among other garden plants (yellow-flowered kniphofia, silvery foliage) in front of a hedge and stone wall; the foliage is bright green rather than the bronze tone typical of many Carex comans forms, making species identification uncertain.
+C shows a full, healthy tussock plant with its characteristic fine arching foliage clearly filling the frame against a natural garden backdrop, unlike A (has plant tags and dead leaf litter), B (top-down view with distracting surrounding foliage), or D (mostly incidental grass with unclear identification).
 
 | before                                                                                           | after                                                                                            |
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
@@ -257,6 +245,14 @@ D shows a dense, healthy mass of characteristic boxwood foliage in natural light
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
 | <img src="https://bs.plantnet.org/image/o/a23d8744ba10077414e0475c8d49194fed7e9875" width="280"> | <img src="https://bs.plantnet.org/image/o/c77c865937308bfdd548e52f36252c16724cfb00" width="280"> |
 
+### Licorice-plant — changed
+
+E shows a clear close-up of the characteristic soft, silvery, felted round leaves of licorice plant with no clutter, though it lacks visible flowers.
+
+| before                                                                                           | after                                                                                            |
+| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| <img src="https://bs.plantnet.org/image/o/1053b561921ecd440c614277b5014908e2fdcc17" width="280"> | <img src="https://bs.plantnet.org/image/o/979344821bc89173695643f8608610b846934308" width="280"> |
+
 ### Yellow coneflower — changed
 
 Multiple coneflowers in sharp focus with a soft natural meadow background showing the plant's characteristic drooping yellow petals and cone-shaped centers, though the composition is a bit busy with companion plants.
@@ -321,7 +317,7 @@ Shows the full silvery-leaved shrub habit in a scenic coastal setting, giving th
 
 ### Amethyst fescue — changed
 
-verify: A tufted fine-leaved grass with thin flowering stalks is shown surrounded by other garden plants (large hairy leaves and a leafy herb), and a plant label is faintly visible in the background; the grass's blue-green coloring is plausible for fescue but cannot be confirmed as this particular species from this angle.
+Shows the full fescue clump with flowering seed heads in a garden setting, clearly displaying the plant's characteristic fine-bladed habit.
 
 | before                                                                                           | after                                                                                            |
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
@@ -397,6 +393,12 @@ Dense, glossy carpet of heart-shaped Asarum leaves fills the frame nicely with n
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
 | <img src="https://bs.plantnet.org/image/o/c0268b8b179c2eae78b83ec26b0035d2b5cfbbc9" width="280"> | <img src="https://bs.plantnet.org/image/o/d0947dc330f24638a0a862fc2f985479dd461a2b" width="280"> |
 
+### Seaside petunia — kept
+
+F is a sharp close-up of the small purple tubular flower and hairy foliage typical of Calibrachoa parviflora, though it's a partly closed bud rather than a fully open bloom.
+
+<img src="https://bs.plantnet.org/image/o/f9bb13da8597c1533bf1dfbea0063919547ae733" width="280">
+
 ### Queen of the prairie — kept
 
 Close-up of the plant's distinctive fluffy pink flower clusters in sharp focus, though the current image is a tight crop that doesn't show overall habit.
@@ -443,11 +445,13 @@ Shows the full mounded orange-toned habit of Carex testacea filling the frame in
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
 | <img src="https://bs.plantnet.org/image/o/331c4999fe614ab3a7ca1c9402e995063ce58f93" width="280"> | <img src="https://bs.plantnet.org/image/o/c356f71462526bd466ddcba1dd03d22c4e6c101a" width="280"> |
 
-### White-stem bramble — kept
+### White-stem bramble — changed
 
-verify: The image shows a bramble stem with pink/purple star-shaped flowers and green, spiky developing fruits surrounded by serrated leaves, set against a bright, blown-out green foliage background; the distinctive white stems of Rubus cockburnianus are not visible, so species identity can't be confirmed.
+Sharp close-up of the flower clusters with clear detail and natural green foliage background, filling most of the frame.
 
-<img src="https://bs.plantnet.org/image/o/7d05cfa89d7394ccf353b79eb7100466a717ebf2" width="280">
+| before                                                                                           | after                                                                                                                                    |
+| ------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| <img src="https://bs.plantnet.org/image/o/7d05cfa89d7394ccf353b79eb7100466a717ebf2" width="280"> | <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Rubus_cockburnianus.jpg/1920px-Rubus_cockburnianus.jpg" width="280"> |
 
 ### Heart-leaf foamflower — kept
 
@@ -477,6 +481,12 @@ Clear, sharp shot of the distinctive pink-and-cream bell flowers with buds, thou
 
 <img src="https://bs.plantnet.org/image/o/e618202e83d354fa86aa616fbab56f8bc8074774" width="280">
 
+### Cushion-pink — kept
+
+Sharp close-up of the characteristic pink five-petaled flowers with cushion foliage visible behind, though the composition is tight and the flowers are wet with rain droplets.
+
+<img src="https://bs.plantnet.org/image/o/bd248cbdd330bc42920dab918da98294d843ed97" width="280">
+
 ### Autumn fern — changed
 
 Shows the full frond habit with attractive coppery-pink new growth against a neutral concrete background, clearly identifying the plant, though the setting is a bit plain.
@@ -491,13 +501,21 @@ D shows the whole arching, glowing golden-orange grass mound backlit in sunlight
 
 <img src="https://upload.wikimedia.org/wikipedia/commons/c/c3/Anemanthele_lessoniana.jpg" width="280">
 
+### Haworth's aeonium — changed
+
+Sharp, well-lit close-up of the aeonium's flower spike with reddish leaves filling the frame against a clean, uncluttered gray background, clearly showing the species in bloom.
+
+| before                                                                                           | after                                                                                                      |
+| ------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------- |
+| <img src="https://bs.plantnet.org/image/o/3fb68c47a46e89da89511ef7587b804975f6b2b1" width="280"> | <img src="https://upload.wikimedia.org/wikipedia/commons/4/4c/Aeonium_haworthii_PICT3759.jpg" width="280"> |
+
 ### Erysimum linifolium — kept
 
 Shows the full mature shrub covered in characteristic magenta flower spikes in a real garden setting, clearly identifying the plant, though a bit of patio tile and stonework is visible in frame.
 
 <img src="https://bs.plantnet.org/image/o/bc7bfd03127f7f5a3c2b8abc2c8de9a358fc1b1a" width="280">
 
-## high (579)
+## high (627)
 
 ### Jerusalem pine — changed
 
@@ -520,6 +538,14 @@ Full, lush clump filling the frame with abundant purple-tinged blooms in sharp f
 | before                                                                                           | after                                                                                            |
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
 | <img src="https://bs.plantnet.org/image/o/9284f467fc889ccb4d36c4ea9402f793bebda85e" width="280"> | <img src="https://bs.plantnet.org/image/o/909aadf18d90fcb1a9a317eaf2812e9898cbb0b4" width="280"> |
+
+### Florist's cyclamen — changed
+
+verify: A potted cyclamen with characteristic marbled heart-shaped leaves and upright red flowers with reflexed petals sits on a windowsill, with a busy urban rooftop scene visible through the window and part of a plastic pot label reading 'CARTE' at the base.
+
+| before                                                                                           | after                                                                                            |
+| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| <img src="https://bs.plantnet.org/image/o/ce7da6586a285d7c047a47ba9432029808e53484" width="280"> | <img src="https://bs.plantnet.org/image/o/204a5205b9ba44ecd6517a247ed1b5e6c6d1439c" width="280"> |
 
 ### Japanese astilbe — changed
 
@@ -639,6 +665,14 @@ Image F shows numerous bright red Salvia greggii flowers in sharp focus against 
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
 | <img src="https://bs.plantnet.org/image/o/ff02b6bb88bb274f8084aece2fb99b3c952cb50a" width="280"> | <img src="https://bs.plantnet.org/image/o/ace028fd4bb9c575c517614705c6bd8eea43a589" width="280"> |
 
+### Tasteless stonecrop — changed
+
+Sharp, well-exposed close-up of bright yellow star-shaped flowers with succulent foliage clearly visible and an uncluttered natural background.
+
+| before                                                                                           | after                                                                                            |
+| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| <img src="https://bs.plantnet.org/image/o/12171c3cb39adb488c88617d2323c7e304da5e4f" width="280"> | <img src="https://bs.plantnet.org/image/o/4a0d260a13c8446e578eaace750ee8e5485f2308" width="280"> |
+
 ### Japanese crab apple — changed
 
 Sharp, vivid cluster of pink blossoms filling the frame with a soft natural background, clearly showcasing the plant's key feature.
@@ -693,6 +727,14 @@ Sharp, well-lit close-up of the characteristic clustered white flowers with glos
 
 <img src="https://bs.plantnet.org/image/o/7c5bae92e3260801fecaf29ae95993a31b86bc1d" width="280">
 
+### Bedding pansy — changed
+
+Sharp, well-lit close-up of a single flower with clear petal detail against a soft green backdrop, clearly showing the species' characteristic form.
+
+| before                                                                                           | after                                                                                            |
+| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| <img src="https://bs.plantnet.org/image/o/ccb70b81b19b4d3378a46487b417fa139562abe7" width="280"> | <img src="https://bs.plantnet.org/image/o/403c1eca9076904e739a9d90eac0a1568d078856" width="280"> |
+
 ### Korean angelica — kept
 
 Sharp, well-lit close-up of the deep maroon umbel filling the frame against a natural green garden background, clearly identifying the plant.
@@ -714,6 +756,14 @@ Reviewer confirmed the species from this photo, resolving the vision pass uncert
 | before                                                                                           | after                                                                                            |
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
 | <img src="https://bs.plantnet.org/image/o/0a7549cfc69f87fb35495d300aea6ff3b901c491" width="280"> | <img src="https://bs.plantnet.org/image/o/75b0a7a56eac2c8b438663ec6bc270262feeaf9d" width="280"> |
+
+### Barbados aloe — changed
+
+Clear, sharp, well-lit rosette of aloe leaves filling the frame with a natural mulch garden background and no distracting elements.
+
+| before                                                                                           | after                                                                                                       |
+| ------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------- |
+| <img src="https://bs.plantnet.org/image/o/c7fe313538e137b5fda7e68bb14d2abb332da181" width="280"> | <img src="https://upload.wikimedia.org/wikipedia/commons/5/56/Starr_011104-0040_Aloe_vera.jpg" width="280"> |
 
 ### Lavender — changed
 
@@ -1057,6 +1107,14 @@ Sharp, well-lit close-up of the characteristic clustered yellow-cream flowers wi
 
 <img src="https://bs.plantnet.org/image/o/77b9d2c086cfda067b659929f363072dd8466eb3" width="280">
 
+### Black-eyed-susan-vine — changed
+
+Vibrant orange black-eyed-susan blooms densely covering green foliage, sharp focus, natural outdoor setting, clearly showcasing the plant's signature flowers.
+
+| before                                                                                           | after                                                                                            |
+| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| <img src="https://bs.plantnet.org/image/o/15736dc4e507614071a986e9ff3fc01a02d9b98a" width="280"> | <img src="https://bs.plantnet.org/image/o/8ad3cc99b7d14b0cd0a3664a0bbc67930b206a25" width="280"> |
+
 ### Poet's narcissus — changed
 
 Sharp, well-lit close-up filling the frame with the characteristic white petals and red-rimmed yellow eye clearly visible against a soft natural green background.
@@ -1363,6 +1421,14 @@ Sharp, close-up of the flower clusters filling the frame with natural light and 
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
 | <img src="https://bs.plantnet.org/image/o/10e9d65a00ad546797b300f1f9a60468dc5e1223" width="280"> | <img src="https://bs.plantnet.org/image/o/0453882cb77e43f0cd7477bbdfc4698783f619c2" width="280"> |
 
+### Plumbago — changed
+
+Sharp, well-lit close-up of plumbago's distinctive pale blue flower clusters filling the frame against a dark uncluttered background.
+
+| before                                                                                           | after                                                                                            |
+| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| <img src="https://bs.plantnet.org/image/o/ed1bf19a3218b6f518a5cbd37d138facfe4b9e17" width="280"> | <img src="https://bs.plantnet.org/image/o/68aa5093b69106d4c69145f93e6628bd44324a3c" width="280"> |
+
 ### Mountain house-leek — changed
 
 verify: A hairy-stemmed inflorescence with reddish-pink star-shaped flowers rises from a rosette, with several green Sempervivum rosettes with reddish tips growing among rocks in the background, consistent with Sempervivum montanum.
@@ -1399,6 +1465,20 @@ Sharp close-up showing characteristic glossy pleated leaves and white flower clu
 
 <img src="https://bs.plantnet.org/image/o/fff9840056d23c6eb99c1a8f1e98e99bc89b12cf" width="280">
 
+### Apple geranium — kept
+
+Sharp close-up of the flower cluster in focus with soft green foliage background, clearly showing the distinctive white blooms with maroon markings.
+
+<img src="https://bs.plantnet.org/image/o/6c3c15ff099d6d6ad799ba8883cc729af5d1d91c" width="280">
+
+### Common lantana — changed
+
+Sharp, colorful close-up of lantana flower clusters filling the frame with clean green foliage background, clearly showcasing the characteristic multicolored blooms.
+
+| before                                                                                           | after                                                                                            |
+| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| <img src="https://bs.plantnet.org/image/o/c7115d280905bed45922698d808945261c148b56" width="280"> | <img src="https://bs.plantnet.org/image/o/08923d1c1eee04931e9709312e667a6c243d17a2" width="280"> |
+
 ### Calendula — changed
 
 Sharp, well-lit close-up of a full double bloom with clean green foliage background, clearly showcasing the calendula flower.
@@ -1414,6 +1494,14 @@ Vivid pink spiraea flower clusters in sharp focus fill the frame against a natur
 | before                                                                                           | after                                                                                            |
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
 | <img src="https://bs.plantnet.org/image/o/d439cd93a5287dbbd7bee2265493609ae8455816" width="280"> | <img src="https://bs.plantnet.org/image/o/aff0dfd4800af5c0a2049a5a2791c8487df75613" width="280"> |
+
+### Flaming katy — changed
+
+Bright pink Kalanchoe blossfeldiana flowers fill the frame in sharp focus with lush green foliage and no distracting background elements.
+
+| before                                                                                           | after                                                                                            |
+| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| <img src="https://bs.plantnet.org/image/o/54375531dd977ec82664b7a8922b17b4fb068782" width="280"> | <img src="https://bs.plantnet.org/image/o/1928883e4e2adf77259bdbe320a7648134fbbf40" width="280"> |
 
 ### Lily leek — kept
 
@@ -1507,6 +1595,14 @@ Sharp, well-lit close-up of thyme with clusters of pink flowers and green foliag
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
 | <img src="https://bs.plantnet.org/image/o/f608cd2c795da56db796019f9c4b658ae5282aa1" width="280"> | <img src="https://bs.plantnet.org/image/o/5ecd9d5ea561ce96195d0ef55478c7ad0f7a66b7" width="280"> |
 
+### Pink jasmine — changed
+
+Sharp close-up of the characteristic white star-shaped jasmine flowers with pink buds, filling the frame against natural green foliage.
+
+| before                                                                                           | after                                                                                            |
+| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| <img src="https://bs.plantnet.org/image/o/f5dba4261020b50bbd6465bd513acb155e7616d2" width="280"> | <img src="https://bs.plantnet.org/image/o/5798ef1bd4dda9e4771df4a6d8a7a34364b21eee" width="280"> |
+
 ### Purple mullein — changed
 
 Sharp, vibrant cluster of purple mullein flowers fills the frame with a natural blurred green background, clearly showing the species' distinctive blooms.
@@ -1514,6 +1610,14 @@ Sharp, vibrant cluster of purple mullein flowers fills the frame with a natural 
 | before                                                                                           | after                                                                                            |
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
 | <img src="https://bs.plantnet.org/image/o/f0c76e6dc0621d60269f33e3aa05af83271f97b6" width="280"> | <img src="https://bs.plantnet.org/image/o/65bdf3c96a20eeca709ba8e9844634de79d97c25" width="280"> |
+
+### Slender vervain — changed
+
+Sharp, well-lit close-up of the plant with vivid purple bloom clusters and characteristic toothed leaves clearly filling the frame against a natural, uncluttered background.
+
+| before                                                                                           | after                                                                                            |
+| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| <img src="https://bs.plantnet.org/image/o/b14e17794b0a10d4034a510072e1d5753a0c648f" width="280"> | <img src="https://upload.wikimedia.org/wikipedia/commons/f/f7/Verbena_rigida_2.jpg" width="280"> |
 
 ### Early crocus — changed
 
@@ -1594,6 +1698,12 @@ Sharp, well-lit close-up of the characteristic lacecap-style flower clusters fil
 verify: Close-up of pendulous, tubular cream-white flowers with hairy green calyces emerging from a leafy stem, matching the flower form of Symphytum grandiflorum, set against a soft dark green blurred foliage background.
 
 <img src="https://d2seqvvyy3b8p2.cloudfront.net/d202715d26ab2f802415abc9edbaf75c.jpg" width="280">
+
+### Sweetpotato — kept
+
+verify: A pink morning-glory-type flower with a dark magenta throat and heart-shaped leaves typical of Ipomoea batatas, photographed in sharp focus with a chain-link fence and grass softly blurred in the background.
+
+<img src="https://bs.plantnet.org/image/o/e819c377be80a886f62d6e838e169cdd35ecaad2" width="280">
 
 ### Wild marjoram — changed
 
@@ -1699,6 +1809,12 @@ Reviewer preferred the previous photo over the AI pick.
 
 <img src="https://bs.plantnet.org/image/o/6c775943248bdb83d04b46463d57380d7485c254" width="280">
 
+### Scaevola aemula — changed
+
+verify: Fan-shaped purple flowers with yellow-white throats, characteristic of Scaevola aemula (fairy fan-flower), shown in clear focus against green foliage and mulch.
+
+<img src="https://d2seqvvyy3b8p2.cloudfront.net/ca18f6790011f8621a6f3da356705d71.jpg" width="280">
+
 ### Pennyroyal — changed
 
 Sharp, well-lit close-up of the whorled pinkish-purple flower clusters filling the frame against a natural green background, clearly showing the plant's distinctive bloom structure.
@@ -1749,6 +1865,14 @@ Shows the airy, delicate flower panicles of Deschampsia cespitosa clearly in foc
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
 | <img src="https://bs.plantnet.org/image/o/a65a092c96db29993b9d0293ac4b0882d2ad4466" width="280"> | <img src="https://bs.plantnet.org/image/o/056ec8a2b25a0600aaaccc724dd61b5d34814cc8" width="280"> |
 
+### Turkestan onion — changed
+
+D shows a single large, sharp, well-lit Allium karataviense flowerhead with its characteristic broad grey-green leaves clearly visible against a simple garden background, making it instantly identifiable and visually striking.
+
+| before                                                                                           | after                                                                                            |
+| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| <img src="https://bs.plantnet.org/image/o/2c9167e37453da2e8437649ab2ded42f00b29fd9" width="280"> | <img src="https://bs.plantnet.org/image/o/5c2e357210cfb8b0b94549930db01548514cd909" width="280"> |
+
 ### Common dogwood — changed
 
 Sharp, well-lit close-up of the developing flower/bud clusters with clean green foliage filling the frame, clearly showing the plant's identity without distractions.
@@ -1780,6 +1904,14 @@ Sharp, close-up of the distinctive reddish-pink cyathia clusters filling the fra
 | before                                                                                           | after                                                                                            |
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
 | <img src="https://bs.plantnet.org/image/o/1e7239fa4632ee7ff255f7f25f52fec660abff2e" width="280"> | <img src="https://bs.plantnet.org/image/o/06347b819a2102a30fda665c87d5b933ba5ae091" width="280"> |
+
+### Horseshoe geranium — changed
+
+Sharp, well-lit close-up of the red flower cluster filling most of the frame with a natural green leafy background.
+
+| before                                                                                           | after                                                                                            |
+| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| <img src="https://bs.plantnet.org/image/o/09d4fcedb1aab9a753ad6498ab8684b6354dce12" width="280"> | <img src="https://bs.plantnet.org/image/o/d05eb452cf0d05fa9201d352bf1123647627ba0f" width="280"> |
 
 ### Weigelia — kept
 
@@ -1832,6 +1964,12 @@ Large, sharp, well-lit image showing dense clusters of characteristic yellow flo
 | before                                                                                           | after                                                                                            |
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
 | <img src="https://bs.plantnet.org/image/o/5551a38b6450935189ef8ed4ee66934b7d61f132" width="280"> | <img src="https://bs.plantnet.org/image/o/864f9b2bd6f474c443f50a9f771925908aa22df1" width="280"> |
+
+### Erigeron karvinskianus — changed
+
+Sharp, well-lit close-up of a single flower with clear white petals and yellow center, filling the frame against a soft blurred background.
+
+<img src="https://d2seqvvyy3b8p2.cloudfront.net/7d73cb60e6bf19cc2a8a3b67e479d001.jpg" width="280">
 
 ### Chinese windmill palm — changed
 
@@ -1996,6 +2134,14 @@ Sharp, well-lit clusters of the distinctive spidery white-and-purple flowers fil
 | before                                                                                           | after                                                                                            |
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
 | <img src="https://bs.plantnet.org/image/o/7922649911dabe1fab526b3fca00def276b65e4a" width="280"> | <img src="https://bs.plantnet.org/image/o/0821d0683cadb926cbbfd79f65959e3f44522879" width="280"> |
+
+### Paper-flower — changed
+
+Vivid magenta bougainvillea blooms fill the frame in sharp focus against a clean blue sky, clearly showing the plant's cascading habit and flower color.
+
+| before                                                                                           | after                                                                                            |
+| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| <img src="https://bs.plantnet.org/image/o/518e30b32a26b5097b8973045eb3750eeebe7c24" width="280"> | <img src="https://bs.plantnet.org/image/o/e3284474ad5041699147f8ec492b4d08861933f1" width="280"> |
 
 ### Dogtooth-violet — changed
 
@@ -2207,6 +2353,14 @@ Sharp, large, well-lit close-up of a single flower filling the frame with clean 
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
 | <img src="https://bs.plantnet.org/image/o/fca771bda791de0d19eb3602b0afdcabf8e761a4" width="280"> | <img src="https://bs.plantnet.org/image/o/4f8029be6a38e0924c1077420f248ec2dd90feb3" width="280"> |
 
+### Thanksgiving cactus — changed
+
+A full, lush plant covered in bright pink blooms fills the frame with natural light and a relatively uncluttered background, clearly showing the species' characteristic flowering habit.
+
+| before                                                                                           | after                                                                                            |
+| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| <img src="https://bs.plantnet.org/image/o/5644ddb6679f208f5c96053390aa9e6e4baa4d44" width="280"> | <img src="https://bs.plantnet.org/image/o/1f8c7417ca553313bd0eeb16a4a943bc20b5126e" width="280"> |
+
 ### Pineapple lily — changed
 
 Sharp, well-lit close-up showing the distinctive pineapple-like bloom spike with its leafy topknot clearly filling the frame against a simple sky/tree background.
@@ -2282,6 +2436,12 @@ Sharp, well-lit close-up of the characteristic star-shaped white flowers with ye
 | before                                                                                           | after                                                                                            |
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
 | <img src="https://bs.plantnet.org/image/o/db7b2eea280b95e96262a844d1f4e590ac0ea48c" width="280"> | <img src="https://bs.plantnet.org/image/o/d6e17a9527b554ee83e188fdebdb023ef092bb4b" width="280"> |
+
+### Hamamelis japonica — changed
+
+Close-up of vivid yellow-and-red witch hazel blooms in sharp focus against a natural garden backdrop, clearly showcasing the species' characteristic flowers.
+
+<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/Hamamelis_japonica5.jpg/1920px-Hamamelis_japonica5.jpg" width="280">
 
 ### Cistus purpureus — changed
 
@@ -2565,6 +2725,14 @@ Shows the distinctive pipe-shaped flowers in sharp focus with lush heart-shaped 
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
 | <img src="https://bs.plantnet.org/image/o/bac67df12eb673c67133d5d8dedf7718ecd20ee4" width="280"> | <img src="https://bs.plantnet.org/image/o/0990450db34d9e39500d35f46e83877c2cff8424" width="280"> |
 
+### Ashy cranesbill — changed
+
+Sharp, well-lit close-up of a single flower with clear purple veining, filling most of the frame against an uncluttered natural background.
+
+| before                                                                                           | after                                                                                            |
+| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| <img src="https://bs.plantnet.org/image/o/291d47d8b1f92035390da3780eee07d56f572506" width="280"> | <img src="https://bs.plantnet.org/image/o/d31a3d6de00192abc0d4c963001000b70dd467cd" width="280"> |
+
 ### Calico or one-sided or white woodland or starved aster — changed
 
 Sharp, well-lit close-up clearly showing the characteristic pink-centered white daisy flowers and foliage against a soft natural background, making the plant instantly identifiable.
@@ -2622,6 +2790,14 @@ Iconic bright red berries densely covering the herringbone-branched foliage, sha
 | before                                                                                           | after                                                                                            |
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
 | <img src="https://bs.plantnet.org/image/o/0232015d41200677fd4295a5ad575c26902155fa" width="280"> | <img src="https://bs.plantnet.org/image/o/60d87b7901236180ccedbeb8c674ecf18e5cd3bb" width="280"> |
+
+### Ivyleaf geranium — changed
+
+Sharp, well-lit close-up of the characteristic white-pink flowers with the ivy-shaped leaves clearly visible against a natural garden backdrop.
+
+| before                                                                                           | after                                                                                            |
+| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| <img src="https://bs.plantnet.org/image/o/7fbb8c8087963b73ed03cebbef47b1d04d207fc6" width="280"> | <img src="https://bs.plantnet.org/image/o/aee1dd1fba3024eb20a92496390fae55339b94fe" width="280"> |
 
 ### Spotted Joe-Pye weed — changed
 
@@ -2779,6 +2955,14 @@ Full, healthy Ginkgo tree with distinctive fan-shaped leaves clearly visible aga
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
 | <img src="https://bs.plantnet.org/image/o/fddf5c7e8356de4277e08f00857e2c69e7163421" width="280"> | <img src="https://bs.plantnet.org/image/o/9ec09e44ce2c6fb14693a35a23b94564b02c2744" width="280"> |
 
+### Australian-laurel — changed
+
+Sharp, well-lit close-up of characteristic white Pittosporum tobira flower clusters with glossy leaves clearly filling the frame.
+
+| before                                                                                           | after                                                                                            |
+| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| <img src="https://bs.plantnet.org/image/o/ae726afe42fd8d2712ded82aa6bdd08ae6a92864" width="280"> | <img src="https://bs.plantnet.org/image/o/81f677c77999083ba82ed6058335b51e6a516854" width="280"> |
+
 ### Giant snowdrop — changed
 
 Sharp, well-lit close-up of a snowdrop flower with clear green markings and leaves in a natural garden setting, uncluttered background.
@@ -2808,6 +2992,14 @@ Sharp, well-lit close-up of the star-shaped yellow flower filling the frame agai
 | before                                                                                           | after                                                                                            |
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
 | <img src="https://bs.plantnet.org/image/o/5bf2df74894d7c49cb4faf73f5f536a123ee8089" width="280"> | <img src="https://bs.plantnet.org/image/o/d88552bb344ad1e380dab5284ab3650ac9effa34" width="280"> |
+
+### Clove pink — changed
+
+Sharp, vividly colored red carnation blooms fill the frame with natural garden light and uncluttered foliage background, clearly showcasing the flower.
+
+| before                                                                                           | after                                                                                            |
+| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| <img src="https://bs.plantnet.org/image/o/2fe66dd9b372f3a20603a563f3f7c651cdcd9195" width="280"> | <img src="https://bs.plantnet.org/image/o/fe5bbbdcfc8678b7ccd055e35d3d2ce7c11de62b" width="280"> |
 
 ### Shrubby germander — kept
 
@@ -2847,6 +3039,14 @@ Sharp, well-lit full spike of blue echium flowers filling the frame against a na
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
 | <img src="https://bs.plantnet.org/image/o/433f9bcf002ad0e64f1b187a51ef20d0c7db3dce" width="280"> | <img src="https://bs.plantnet.org/image/o/f5f5ca89c39fa26c8585ae6ae4fb4adf23973cc9" width="280"> |
 
+### Sempervivum calcareum — changed
+
+Sharp, well-lit close-up of a single rosette showing the characteristic dark-tipped leaves in a natural garden setting, filling the frame without distracting clutter.
+
+| before                                                                                           | after                                                                                            |
+| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| <img src="https://bs.plantnet.org/image/o/20c74c10eb679be25630ba50207c2da4745ac0e5" width="280"> | <img src="https://bs.plantnet.org/image/o/53ca753a5c084202e6a848e98092461f5c4cd13f" width="280"> |
+
 ### Japanese fatsia — changed
 
 Shows the full characteristic habit of Fatsia japonica with its distinctive palmate leaves and creamy flower clusters, in sharp focus with a natural garden setting.
@@ -2854,6 +3054,18 @@ Shows the full characteristic habit of Fatsia japonica with its distinctive palm
 | before                                                                                           | after                                                                                            |
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
 | <img src="https://bs.plantnet.org/image/o/16ca62e8d45d4872dd5aafb22ecfd679563a243c" width="280"> | <img src="https://bs.plantnet.org/image/o/9761f3b6274909058369a39d5ffff43a23c23ee5" width="280"> |
+
+### Sour orange — kept
+
+Sharp, well-lit close-up of the fragrant white flower with visible stamens against natural green foliage, clearly identifying the plant.
+
+<img src="https://bs.plantnet.org/image/o/48d3746df913ebbd960871cc945f94c12be71e7e" width="280">
+
+### Nemesia caerulea — changed
+
+Sharp, well-lit image showing multiple open flowers with characteristic color and buds clearly displayed against a clean dark background.
+
+<img src="https://d2seqvvyy3b8p2.cloudfront.net/6ffd1d522a703f3c018f8c1b4166eb1c.jpg" width="280">
 
 ### Spotted henbit — changed
 
@@ -2897,6 +3109,14 @@ Snow-covered winter heath with vivid pink blooms in sharp focus, clearly the sub
 
 <img src="https://upload.wikimedia.org/wikipedia/commons/5/5b/Lebenswertes_chemnitz_winter_winterheide_im_schnee_natur.jpg" width="280">
 
+### Fuchsia — changed
+
+verify: Classic double fuchsia flowers with pink sepals and purple corollas hang among green leaves, showing the typical bicolor pendant blooms of Fuchsia magellanica cultivars, with a garden background slightly out of focus.
+
+| before                                                                                           | after                                                                                            |
+| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| <img src="https://bs.plantnet.org/image/o/ea8909d3bbe9a944ca0b80acc27fe45affb01881" width="280"> | <img src="https://bs.plantnet.org/image/o/635d434d54af432cf649f9f774126ac3cc1e66d0" width="280"> |
+
 ### Shrubby scorpion-vetch — changed
 
 Sharp, well-lit close-up of the characteristic yellow flowers with soft blue-green foliage, clearly showing the plant's identity with a clean, uncluttered background.
@@ -2929,6 +3149,12 @@ Sharp, well-lit close-up of abundant redbud blooms on branches with a soft green
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
 | <img src="https://bs.plantnet.org/image/o/fcdbc548969df10f111dbc79402232f04e5338aa" width="280"> | <img src="https://bs.plantnet.org/image/o/612389ab8ed8454f73fcac24170fa8190a21f3d4" width="280"> |
 
+### Osteospermum ecklonis — changed
+
+Sharp, vivid close-up of a single purple Osteospermum flower filling the frame with a natural green foliage background.
+
+<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Osteospermum_ecklonis1.JPG/1920px-Osteospermum_ecklonis1.JPG" width="280">
+
 ### Bellwort — changed
 
 Sharp, well-lit close-up of the distinctive nodding yellow bellwort flower against a clean dark natural background with foliage clearly visible.
@@ -2958,6 +3184,14 @@ Sharp close-up of the distinctive agave bloom cluster against clean blue sky, cl
 | before                                                                                           | after                                                                                            |
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
 | <img src="https://bs.plantnet.org/image/o/bac6570a405695e9a30e822430e97bc870f65e88" width="280"> | <img src="https://bs.plantnet.org/image/o/bd6c9cc90750e78ac6bd2810663d06569c679bff" width="280"> |
+
+### Brazilian-jasmine — changed
+
+Sharp, vivid red mandevilla blooms fill the frame with natural light and a softly blurred green background, clearly showcasing the flower that defines the species.
+
+| before                                                                                           | after                                                                                            |
+| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| <img src="https://bs.plantnet.org/image/o/489e34f44f9b3a682fbb30633b5284414750cb9e" width="280"> | <img src="https://bs.plantnet.org/image/o/f6ca4b3e9d0116bdc8e9ca8353847acfe1e6ab46" width="280"> |
 
 ### Costmary — changed
 
@@ -2991,6 +3225,12 @@ Sharp, well-lit close-up of the creamy plume flowers filling the frame with dist
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
 | <img src="https://bs.plantnet.org/image/o/795840447cbdf454482c1fbe43a97de73a7c8b83" width="280"> | <img src="https://bs.plantnet.org/image/o/10051aa5c7fa45e11830f701fbc5030be6774f2a" width="280"> |
 
+### Treasure-flower — kept
+
+Sharp, vivid, full-frame close-up of a single Gazania bloom with clean dark foliage background, perfectly representative of the species.
+
+<img src="https://bs.plantnet.org/image/o/4510fa00383f414d8b3f79925a891f7031f8f488" width="280">
+
 ### Shiso — changed
 
 Reviewer confirmed the species from this photo, resolving the vision pass uncertainty.
@@ -3023,6 +3263,14 @@ verify: Glossy, holly-like pinnate fern fronds fill the frame, confirmed by an i
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
 | <img src="https://bs.plantnet.org/image/o/ff91c77dbf573f2f8396ae0b82b04ee639c7d85c" width="280"> | <img src="https://bs.plantnet.org/image/o/5399b1e4e5b3c72c22a8148f540e0166dad98104" width="280"> |
 
+### Swan river daisy — changed
+
+Sharp close-up of two vivid purple daisies with clear yellow centers, filling the frame against a natural green garden background.
+
+| before                                                                                           | after                                                                                            |
+| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| <img src="https://bs.plantnet.org/image/o/546f804550fb6711358e9e7a07970215dad1f49e" width="280"> | <img src="https://bs.plantnet.org/image/o/db30ed249cf86301aa0e16c73efbe31abb716254" width="280"> |
+
 ### Indian chrysanthemum — changed
 
 verify: A close-up cluster of double yellow chrysanthemum blooms with spiraling incurved petals, shown against a soft dark green blurred garden background, consistent with Chrysanthemum indicum.
@@ -3044,6 +3292,14 @@ Sharp, well-lit cluster of characteristic yellow Rue flowers filling the frame w
 | before                                                                                           | after                                                                                            |
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
 | <img src="https://bs.plantnet.org/image/o/02499e817c6cc62afb8adaf039c33c98941d606b" width="280"> | <img src="https://bs.plantnet.org/image/o/885720a7ad5d856a93c937c5717a50b2e6c4dab8" width="280"> |
+
+### Rose scented geranium — changed
+
+Sharp, well-lit close-up showing distinctive dark-veined pink petals clearly filling the frame with a natural, uncluttered background.
+
+| before                                                                                           | after                                                                                            |
+| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| <img src="https://bs.plantnet.org/image/o/bbe5e3a200a05d4012e19c0b8b18ebc52c4ef21c" width="280"> | <img src="https://bs.plantnet.org/image/o/91f2d00714574c69cdaecfe98009013f06334043" width="280"> |
 
 ### Zephyr-lily — changed
 
@@ -3461,6 +3717,12 @@ Sharp, vivid magenta bloom fills the frame with characteristic fringed petals an
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
 | <img src="https://bs.plantnet.org/image/o/b276f2c0f975150ad7db526fb529d668305394fd" width="280"> | <img src="https://bs.plantnet.org/image/o/d3668febc6bb56b54cbcee4053ab7ff252f8ac94" width="280"> |
 
+### Convolvulus sabatius — changed
+
+Vivid, sharply focused mass of purple-blue flowers cascading over a stone wall in natural garden light, clearly showing the plant's habit and bloom.
+
+<img src="https://d2seqvvyy3b8p2.cloudfront.net/419cd1715587bd93db20f229c3b15dd6.jpg" width="280">
+
 ### Sweet mock orange — changed
 
 Sharp, well-lit close cluster of characteristic white four-petaled mock orange flowers with yellow stamens against natural green leaf background, filling the frame nicely.
@@ -3565,6 +3827,14 @@ Sharp, well-lit close-up of the characteristic drooping yellow raceme flowers wi
 
 <img src="https://upload.wikimedia.org/wikipedia/commons/9/9d/Laburnum_anagyroides_ENBLA03.jpg" width="280">
 
+### Twinspur — changed
+
+Sharp, well-lit close-up of two pink Diascia flowers with characteristic spurred petals and yellow throats, filling the frame against a naturally blurred background.
+
+| before                                                                                           | after                                                                                            |
+| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| <img src="https://bs.plantnet.org/image/o/77d488811b3b0feb9248760c777c1be76a580cb8" width="280"> | <img src="https://bs.plantnet.org/image/o/96fa92bba4cde189a69799d2d4a8a573335543ee" width="280"> |
+
 ### Dark mullein — kept
 
 Sharp close-up of the characteristic yellow flowers with distinctive purple-haired stamens, well-lit against a natural, uncluttered background.
@@ -3584,6 +3854,14 @@ Sharp, well-lit clump of Leucojum vernum with distinct bell-shaped white flowers
 | before                                                                                           | after                                                                                            |
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
 | <img src="https://bs.plantnet.org/image/o/0dea7836c12aecb864ac3d49be03bb7687630b37" width="280"> | <img src="https://bs.plantnet.org/image/o/0d0b68c6578c53e25000a751953635b086171e53" width="280"> |
+
+### Bunny-ears prickly-pear — changed
+
+verify: A potted Opuntia microdasys with characteristic small, densely glochid-covered flat pads is clearly shown in focus, but the plant is photographed through a dusty window/glass surface with a blurred background, and a pot rim and soil are visible at the bottom.
+
+| before                                                                                           | after                                                                                            |
+| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| <img src="https://bs.plantnet.org/image/o/b2b97c3d594cd940daebb2332feb922d8697e296" width="280"> | <img src="https://bs.plantnet.org/image/o/e4ed1177648f982ae2f049c084aab4f1b51dc9f8" width="280"> |
 
 ### Cabbage tree — changed
 
@@ -3646,6 +3924,14 @@ Shows the full plant habit with dense clusters of pink-purple flowers growing na
 | before                                                                                           | after                                                                                            |
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
 | <img src="https://bs.plantnet.org/image/o/cd5017aa2e24964c09cbdc9272cf2e6ed10d1f07" width="280"> | <img src="https://bs.plantnet.org/image/o/5c993424a89b6d8f220910902036720585870fe7" width="280"> |
+
+### Chinese hibiscus — changed
+
+Sharp, well-lit close-up of a single red hibiscus bloom with clean sky background, clearly showcasing the flower's form.
+
+| before                                                                                           | after                                                                                            |
+| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| <img src="https://bs.plantnet.org/image/o/b24bb8eceadf9c02467c04e5e706de7f3dd4f6c0" width="280"> | <img src="https://bs.plantnet.org/image/o/429efbeba827caf138e7c84cd2e06de01ebbb5fb" width="280"> |
 
 ### Amethyst eryngo — changed
 
@@ -3720,6 +4006,14 @@ Sharp, well-lit close-up of the characteristic dense purple-blue flower spike wi
 | before                                                                                           | after                                                                                            |
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
 | <img src="https://bs.plantnet.org/image/o/df6bc259a4c80df6d0e9a120c0f6774978e984dd" width="280"> | <img src="https://bs.plantnet.org/image/o/058b3a0b7cde85c357804963cb05e8500ee26731" width="280"> |
+
+### Sweet scented geranium — changed
+
+Sharp, high-resolution close-up of the characteristic veined lilac-pink flowers with clean natural garden foliage background, clearly showing the plant as the subject.
+
+| before                                                                                           | after                                                                                                                                                                                                    |
+| ------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| <img src="https://bs.plantnet.org/image/o/16a72d5ebdbf03bfdd1cc89715d58b748317f6e2" width="280"> | <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/%28MHNT%29_Pelargonium_graveolens_flower_and_leaves.jpg/1920px-%28MHNT%29_Pelargonium_graveolens_flower_and_leaves.jpg" width="280"> |
 
 ### Saffron crocus — changed
 
@@ -3931,6 +4225,14 @@ Sharp, well-lit close-up of the characteristic four-petaled lavender flowers wit
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
 | <img src="https://bs.plantnet.org/image/o/22db90f91ec051b02b96c858c84f3837c634570c" width="280"> | <img src="https://bs.plantnet.org/image/o/4b23152042881fb0b2c171f12d21e0ba37afb07e" width="280"> |
 
+### Bengal rose — changed
+
+Sharp, well-lit close-up of a fully open pink-yellow rose bloom filling the frame with a clean green foliage background.
+
+| before                                                                                           | after                                                                                            |
+| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| <img src="https://bs.plantnet.org/image/o/d6bdd755077bb62738b3d56db943423e35aec82e" width="280"> | <img src="https://bs.plantnet.org/image/o/71abdf0ccab4a44e87ee096a4c4387aaed22e4ae" width="280"> |
+
 ### Heartleaf bergenia — changed
 
 Sharp, well-lit close-up of the characteristic pink bell-shaped flower clusters with the leathery reddish-edged leaves clearly visible in a natural garden setting.
@@ -3958,6 +4260,12 @@ Sharp, close-up of pieris blooms with characteristic pendant white flower cluste
 | before                                                                                           | after                                                                                            |
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
 | <img src="https://bs.plantnet.org/image/o/ae4db74badca5817e36bbec08b7928875124c8ba" width="280"> | <img src="https://bs.plantnet.org/image/o/ea08d4cdbdc059807760ece2f1b1a097fdfbeb25" width="280"> |
+
+### Clematis macropetala — changed
+
+Sharp, well-lit close-up of a single flower fully open showing the characteristic star-shaped blue petals and greenish center against a clean natural background.
+
+<img src="https://d2seqvvyy3b8p2.cloudfront.net/942be758854de2ca37b9ceacf3655164.jpg" width="280">
 
 ### Soft tree fern — changed
 
@@ -4183,6 +4491,14 @@ Full, well-formed rowan tree loaded with orange berries against a blue sky with 
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
 | <img src="https://bs.plantnet.org/image/o/bfae47e09db3deada425bf14e779b8cb62160fba" width="280"> | <img src="https://bs.plantnet.org/image/o/5c7232c9363e869a9c36278daf6cc9bdafd401e9" width="280"> |
 
+### Apache beggarticks — changed
+
+Sharp close-up of two vivid yellow blooms with clean foliage background, clearly showing the flower detail that identifies this species.
+
+| before                                                                                           | after                                                                                            |
+| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| <img src="https://bs.plantnet.org/image/o/b7898d3dd9f457f8f3a95e5ce0e7bd51c4dd3398" width="280"> | <img src="https://bs.plantnet.org/image/o/f9e5db2f5045bb7471c67918a82b9ebbc1ef7568" width="280"> |
+
 ### Fragrant viburnum — changed
 
 Sharp close-up of the fully open pink-and-white flower cluster with soft natural background, clearly showing the plant's signature bloom.
@@ -4294,6 +4610,12 @@ Full, lush fern fronds in natural woodland setting, sharp focus, filling the fra
 | before                                                                                           | after                                                                                            |
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
 | <img src="https://bs.plantnet.org/image/o/d4a243dbea6d83546caff54f77165a30ccaa45d6" width="280"> | <img src="https://bs.plantnet.org/image/o/60d4a69b614a38063f5a34d4d1a73e7458a1ed44" width="280"> |
+
+### Violet-flower petunia — kept
+
+Sharp, well-lit close-up of a single magenta petunia flower filling the frame with clean green foliage background, clearly showcasing the bloom.
+
+<img src="https://bs.plantnet.org/image/o/3ff1c6c177cf7f43d3e5208b52621df52405f2a1" width="280">
 
 ### Japanese candelabra primrose — changed
 
@@ -4493,6 +4815,14 @@ Reviewer confirmed the species from this photo, resolving the vision pass uncert
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
 | <img src="https://bs.plantnet.org/image/o/229f0c6e9dd83e6b044c2fa5340c4d879560c641" width="280"> | <img src="https://bs.plantnet.org/image/o/d5dbf5e0d95df0f4daea27d1c2c2673e441c136d" width="280"> |
 
+### Oakleaf geranium — changed
+
+Sharp, well-lit close-up of the distinctive dark-blotched pink flowers with the characteristic lobed, veined foliage clearly visible behind, all in a natural garden setting with no clutter.
+
+| before                                                                                           | after                                                                                            |
+| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| <img src="https://bs.plantnet.org/image/o/dfb765fb3a277bf9c29ab7f5ad926f3aa826a3d0" width="280"> | <img src="https://bs.plantnet.org/image/o/331c187d788092c1973a85a415cb0430218de3af" width="280"> |
+
 ### Rose campion — changed
 
 Sharp, well-exposed close-up of the vivid magenta flower with characteristic silvery foliage clearly visible against a clean natural garden background.
@@ -4525,6 +4855,14 @@ Large, sharp, well-lit shot of the full fern clump filling the frame with natura
 | ------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------- |
 | <img src="https://bs.plantnet.org/image/o/be71aeda0bd6b78e87115b7a484f0f769c41ba87" width="280"> | <img src="https://upload.wikimedia.org/wikipedia/commons/4/4a/Dryopteris_wallichiana_form.jpg" width="280"> |
 
+### Busy lizzy — changed
+
+Vivid, sharply focused mass of red, white, and pink impatiens blooms filling the entire frame with natural garden lighting.
+
+| before                                                                                           | after                                                                                            |
+| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| <img src="https://bs.plantnet.org/image/o/749d1667d849aa624b1793586ee3d6d2da881612" width="280"> | <img src="https://bs.plantnet.org/image/o/03f75b3970ec938b486505f511320f851ad9b6da" width="280"> |
+
 ### Kniphofia rooperi — changed
 
 A is a vivid, detailed color painting of the flower spike with foliage clearly showing the plant's form, unlike B (a monochrome illustration) and C (a dried herbarium specimen).
@@ -4554,6 +4892,12 @@ Bright natural daylight, sharp focus on abundant golden-yellow blooms filling th
 | before                                                                                           | after                                                                                            |
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
 | <img src="https://bs.plantnet.org/image/o/236303faa0962d0c1ad9a202bc5ab529a8a8cc41" width="280"> | <img src="https://bs.plantnet.org/image/o/1a18ec47d80495fd349adca10a79f2a16b64ffbc" width="280"> |
+
+### Origanum laevigatum — kept
+
+Sharp, well-lit close-up densely covered in the plant's characteristic purple-pink blooms against a soft, uncluttered natural background.
+
+<img src="https://bs.plantnet.org/image/o/a9813b43e4fa7a2a767948e9536d97fb60b5da3d" width="280">
 
 ### Trailing bellflower — changed
 
@@ -4592,6 +4936,14 @@ Sharp, well-lit close-up of the characteristic small blue flowers with white cen
 | before                                                                                           | after                                                                                            |
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
 | <img src="https://bs.plantnet.org/image/o/11757b51a900444ff6d6a2942b7c52e6758ae017" width="280"> | <img src="https://bs.plantnet.org/image/o/9f3b3dd049bf523513ae0f44145cd43069ff8610" width="280"> |
+
+### Crimean iris — changed
+
+Image A shows a lush cluster of vividly purple iris blooms in sharp focus within a natural rocky garden setting, clearly showcasing the species without clutter or labels.
+
+| before                                                                                           | after                                                                                            |
+| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| <img src="https://bs.plantnet.org/image/o/38b404c20b938b5d1cb28973a1af848231c855eb" width="280"> | <img src="https://bs.plantnet.org/image/o/0d7f6aee188eee9189686ca95e94c09fb8bbac38" width="280"> |
 
 ### Astrantia — kept
 
@@ -4663,6 +5015,14 @@ Sharp, well-lit close-up of the full flowering plant with visible purple spikes 
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
 | <img src="https://bs.plantnet.org/image/o/8f18bdc1735f43f1562a7c9e0a2dc23226b1683f" width="280"> | <img src="https://bs.plantnet.org/image/o/d018ca562678704eaeb6ca9182297ef4b66d8327" width="280"> |
 
+### Alpine-geranium — changed
+
+Sharp, well-lit close-up of a single vividly veined pink flower with foliage in soft focus, clearly showcasing the plant's distinctive bloom.
+
+| before                                                                                           | after                                                                                            |
+| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| <img src="https://bs.plantnet.org/image/o/7cc8adf98162bcb1c2ef29cbbd70fc6542eb79f2" width="280"> | <img src="https://bs.plantnet.org/image/o/49c0af114ac34ac5b3fdc2f3b031291c30398b4a" width="280"> |
+
 ### Wall germander — changed
 
 Sharp, well-lit close-up of the plant covered in its characteristic pink flowers, filling the frame against a natural rocky background.
@@ -4687,6 +5047,14 @@ verify: A dense colony of deeply lobed, wavy-margined light green fronds consist
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
 | <img src="https://bs.plantnet.org/image/o/5a369c2949e4f29339ee8e0f8c4c53f0bbf9eb9a" width="280"> | <img src="https://bs.plantnet.org/image/o/2350780c0b5075e9730fd643496d707c7162fb11" width="280"> |
 
+### Pearl echeveria — changed
+
+verify: Rosettes of blue-green succulent leaves with pinkish tips, consistent with Echeveria elegans, are shown with tall arching flower stalks bearing pink and yellow blooms; the plants sit in a black plastic pot and on a tiled ledge with a stucco wall behind, giving a slightly documentary, cluttered feel.
+
+| before                                                                                           | after                                                                                            |
+| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| <img src="https://bs.plantnet.org/image/o/505b030393a36b5941fc38e0e5a3946a913c1ae8" width="280"> | <img src="https://bs.plantnet.org/image/o/3c55d71075656dd7603afb752caf8a92a730266c" width="280"> |
+
 ### Hyssop — changed
 
 Sharp, vivid close-up of the characteristic purple-blue hyssop flowers with clean foliage and stem detail, clearly showing the plant's identifying features.
@@ -4694,6 +5062,14 @@ Sharp, vivid close-up of the characteristic purple-blue hyssop flowers with clea
 | before                                                                                           | after                                                                                            |
 | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
 | <img src="https://bs.plantnet.org/image/o/8b6ef758a8fa94dba96820139ae1a96b9679463b" width="280"> | <img src="https://bs.plantnet.org/image/o/cf7b9ff5eed20adbc67d045386793a4ced03b508" width="280"> |
+
+### Moss-rose — changed
+
+Sharp, well-exposed close-up of the characteristic pink-and-white Portulaca flower with attractive succulent foliage and a natural outdoor background.
+
+| before                                                                                           | after                                                                                            |
+| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| <img src="https://bs.plantnet.org/image/o/45a370a3fdfa54913a66532869758fd034baad84" width="280"> | <img src="https://bs.plantnet.org/image/o/3c66f14649b5705c9a4abf406c9862b517e9dee3" width="280"> |
 
 ### Valerian — changed
 

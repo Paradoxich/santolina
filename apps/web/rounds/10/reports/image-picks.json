@@ -275,9 +275,9 @@
     "id": "0dea7532-ef1e-4536-be62-bc08c4f370d8",
     "common_name": "Barbados aloe",
     "image_url": "https://bs.plantnet.org/image/o/c7fe313538e137b5fda7e68bb14d2abb332da181",
-    "image_url_curated": "https://bs.plantnet.org/image/o/c7fe313538e137b5fda7e68bb14d2abb332da181",
-    "image_pick_confidence": "medium",
-    "image_pick_reason": "verify: A close-up of an aloe inflorescence with green-to-yellow tubular buds and flowers on a thick stalk against a plain wall; the fleshy rosette leaves aren't visible, so the species can't be confirmed as Aloe vera specifically rather than another aloe."
+    "image_url_curated": "https://upload.wikimedia.org/wikipedia/commons/5/56/Starr_011104-0040_Aloe_vera.jpg",
+    "image_pick_confidence": "high",
+    "image_pick_reason": "Clear, sharp, well-lit rosette of aloe leaves filling the frame with a natural mulch garden background and no distracting elements."
   },
   {
     "id": "0e369364-220d-440a-9797-50907aab5949",
@@ -699,9 +699,9 @@
     "id": "25097132-5e8e-40a3-943b-ca117bdd6561",
     "common_name": "Iris danfordiae",
     "image_url": "https://bs.plantnet.org/image/o/171f817a0b408c8cbdfc326e5e1ea5de8f35a5b9",
-    "image_url_curated": "https://bs.plantnet.org/image/o/171f817a0b408c8cbdfc326e5e1ea5de8f35a5b9",
-    "image_pick_confidence": "low",
-    "image_pick_reason": "verify: The image shows a yellow, six-petaled flower with dark speckled markings growing among gravel, which resembles a Moraea or similar iris-family bulb rather than the narrow, small-flowered Iris danfordiae; the shape and spotting pattern don't match this species."
+    "image_url_curated": "https://bs.plantnet.org/image/o/bc19850235e3b1d9e208ee0b50ac861c13e81254",
+    "image_pick_confidence": "medium",
+    "image_pick_reason": "Sharp, well-lit close-up of the yellow iris blooms filling most of the frame with a softly blurred natural background, though the foreground twig debris is slightly distracting."
   },
   {
     "id": "25367b53-80cc-4386-b266-54752c8c3e9f",
@@ -1283,9 +1283,9 @@
     "id": "3c4f77ab-aaac-4dba-96f6-d39bb7ca747f",
     "common_name": "Slender vervain",
     "image_url": "https://bs.plantnet.org/image/o/b14e17794b0a10d4034a510072e1d5753a0c648f",
-    "image_url_curated": "https://bs.plantnet.org/image/o/1086588a3a039f004943c66e0b448ae483452468",
-    "image_pick_confidence": "low",
-    "image_pick_reason": "verify: A sprawling verbena with clustered purple flower heads and toothed green leaves is growing out of a crack in a paved area next to a curb and some ivy; the concrete pavement dominates much of the frame, giving it an urban weedy look rather than a garden setting, and the species cannot be confirmed from foliage and flower form alone."
+    "image_url_curated": "https://upload.wikimedia.org/wikipedia/commons/f/f7/Verbena_rigida_2.jpg",
+    "image_pick_confidence": "high",
+    "image_pick_reason": "Sharp, well-lit close-up of the plant with vivid purple bloom clusters and characteristic toothed leaves clearly filling the frame against a natural, uncluttered background."
   },
   {
     "id": "3c934891-9364-4247-b59a-aee5f1b4fb86",
@@ -1429,7 +1429,7 @@
     "image_url": "https://bs.plantnet.org/image/o/ed42d19dbef4bcc0ab15e5ea920325aa81ccfbaa",
     "image_url_curated": "https://bs.plantnet.org/image/o/2eab93c972c8da109a70596a4a7adebd9d127d7a",
     "image_pick_confidence": "medium",
-    "image_pick_reason": "verify: A large fountain-shaped clump of fine green grass-like foliage arching outward, growing among other garden plants (yellow-flowered kniphofia, silvery foliage) in front of a hedge and stone wall; the foliage is bright green rather than the bronze tone typical of many Carex comans forms, making species identification uncertain."
+    "image_pick_reason": "C shows a full, healthy tussock plant with its characteristic fine arching foliage clearly filling the frame against a natural garden backdrop, unlike A (has plant tags and dead leaf litter), B (top-down view with distracting surrounding foliage), or D (mostly incidental grass with unclear identification)."
   },
   {
     "id": "41dfdb88-85a3-4f6c-955c-be24e420161d",
@@ -2243,9 +2243,9 @@
     "id": "6711354d-ee76-4dda-8a71-29bf1842e1a9",
     "common_name": "Hamamelis japonica",
     "image_url": null,
-    "image_url_curated": "https://d2seqvvyy3b8p2.cloudfront.net/3b9cf115431e4d6ef762273c19d00160.jpg",
-    "image_pick_confidence": "low",
-    "image_pick_reason": "verify: A young sapling with sparse yellow flowers/branches is staked with a bamboo pole in a nursery or garden setting, with a plant label and mulch at its base; the plant is small, distant, and dominated by the stake and background trees, making species confirmation difficult."
+    "image_url_curated": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/Hamamelis_japonica5.jpg/1920px-Hamamelis_japonica5.jpg",
+    "image_pick_confidence": "high",
+    "image_pick_reason": "Close-up of vivid yellow-and-red witch hazel blooms in sharp focus against a natural garden backdrop, clearly showcasing the species' characteristic flowers."
   },
   {
     "id": "67469754-ff62-4c22-a0e0-023f207089ef",
@@ -2900,8 +2900,8 @@
     "common_name": "Sempervivum calcareum",
     "image_url": "https://bs.plantnet.org/image/o/20c74c10eb679be25630ba50207c2da4745ac0e5",
     "image_url_curated": "https://bs.plantnet.org/image/o/53ca753a5c084202e6a848e98092461f5c4cd13f",
-    "image_pick_confidence": "medium",
-    "image_pick_reason": "verify: A rosette succulent (Sempervivum sp.) with green leaves tipped in dark maroon, surrounded by dried papery brown leaves, moss and twigs; the tight symmetrical rosette is sharply in focus, but the specific species cannot be confirmed from foliage alone."
+    "image_pick_confidence": "high",
+    "image_pick_reason": "Sharp, well-lit close-up of a single rosette showing the characteristic dark-tipped leaves in a natural garden setting, filling the frame without distracting clutter."
   },
   {
     "id": "843cd1e1-ceaa-4fea-98b9-20d051b45ac7",
@@ -3035,9 +3035,9 @@
     "id": "8a6d178e-d62a-48e5-ba79-4131c04453df",
     "common_name": "Licorice-plant",
     "image_url": "https://bs.plantnet.org/image/o/1053b561921ecd440c614277b5014908e2fdcc17",
-    "image_url_curated": "https://bs.plantnet.org/image/o/6326205aded01cc73a399867bdfbf97b23ea27b3",
+    "image_url_curated": "https://bs.plantnet.org/image/o/979344821bc89173695643f8608610b846934308",
     "image_pick_confidence": "medium",
-    "image_pick_reason": "verify: A dense mat of small, rounded, pale silvery-green leaves fills the entire frame with no flowers or stems visible, consistent with a groundcover but not distinctly identifiable as Helichrysum petiolare rather than a similar foliage plant."
+    "image_pick_reason": "E shows a clear close-up of the characteristic soft, silvery, felted round leaves of licorice plant with no clutter, though it lacks visible flowers."
   },
   {
     "id": "8b72dd3f-7528-4091-9e17-7528c60f88cc",
@@ -3046,6 +3046,14 @@
     "image_url_curated": "https://bs.plantnet.org/image/o/9abde11ca65855ec2fc1d95708aff38830ee5da8",
     "image_pick_confidence": "medium",
     "image_pick_reason": "Multiple coneflowers in sharp focus with a soft natural meadow background showing the plant's characteristic drooping yellow petals and cone-shaped centers, though the composition is a bit busy with companion plants."
+  },
+  {
+    "id": "8bdfa979-38c2-462c-85ae-45a52337e72c",
+    "common_name": "Osteospermum ecklonis",
+    "image_url": null,
+    "image_url_curated": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Osteospermum_ecklonis1.JPG/1920px-Osteospermum_ecklonis1.JPG",
+    "image_pick_confidence": "high",
+    "image_pick_reason": "Sharp, vivid close-up of a single purple Osteospermum flower filling the frame with a natural green foliage background."
   },
   {
     "id": "8c056523-9234-4aa1-b76d-5a7e7cbe06f3",
@@ -3421,7 +3429,7 @@
     "image_url": "https://bs.plantnet.org/image/o/0c63587c146b9e80e1022c680d9b6329944cee4f",
     "image_url_curated": "https://bs.plantnet.org/image/o/3b0b9319e8c771cc9d22f6a6bb344d503ad7ee12",
     "image_pick_confidence": "medium",
-    "image_pick_reason": "verify: A tufted fine-leaved grass with thin flowering stalks is shown surrounded by other garden plants (large hairy leaves and a leafy herb), and a plant label is faintly visible in the background; the grass's blue-green coloring is plausible for fescue but cannot be confirmed as this particular species from this angle."
+    "image_pick_reason": "Shows the full fescue clump with flowering seed heads in a garden setting, clearly displaying the plant's characteristic fine-bladed habit."
   },
   {
     "id": "9f96d820-84ee-458c-9df3-becb2eb1ee90",
@@ -3819,9 +3827,9 @@
     "id": "b439372e-bbab-48e3-a6a4-d5643e8fe3df",
     "common_name": "Seaside petunia",
     "image_url": "https://bs.plantnet.org/image/o/f9bb13da8597c1533bf1dfbea0063919547ae733",
-    "image_url_curated": "https://bs.plantnet.org/image/o/149c81166c7d45955ce93250420abede55cd3e48",
+    "image_url_curated": "https://bs.plantnet.org/image/o/f9bb13da8597c1533bf1dfbea0063919547ae733",
     "image_pick_confidence": "medium",
-    "image_pick_reason": "verify: A close-up shows a small purple tubular five-lobed flower emerging from glandular, hairy succulent-looking green leaves, with a soft blurred brown background; this matches the general look of Calibrachoa but the species cannot be confirmed from this single tight shot."
+    "image_pick_reason": "F is a sharp close-up of the small purple tubular flower and hairy foliage typical of Calibrachoa parviflora, though it's a partly closed bud rather than a fully open bloom."
   },
   {
     "id": "b44eff8a-a631-43c9-bdae-d12f6e0c34ee",
@@ -4131,9 +4139,9 @@
     "id": "c057eb3f-0805-4a53-a5f3-d64b5a77ca9d",
     "common_name": "Sweet scented geranium",
     "image_url": "https://bs.plantnet.org/image/o/16a72d5ebdbf03bfdd1cc89715d58b748317f6e2",
-    "image_url_curated": "https://bs.plantnet.org/image/o/3520cc26b5470fda6db64c9a6241353340232229",
-    "image_pick_confidence": "medium",
-    "image_pick_reason": "verify: A lush climbing plant with deeply lobed, ferny leaves and small pink five-petaled flowers growing against a brick and stucco wall corner, intermixed with ivy at the top; the finely divided foliage resembles a scented Pelargonium but the species cannot be confirmed from this distance."
+    "image_url_curated": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/%28MHNT%29_Pelargonium_graveolens_flower_and_leaves.jpg/1920px-%28MHNT%29_Pelargonium_graveolens_flower_and_leaves.jpg",
+    "image_pick_confidence": "high",
+    "image_pick_reason": "Sharp, high-resolution close-up of the characteristic veined lilac-pink flowers with clean natural garden foliage background, clearly showing the plant as the subject."
   },
   {
     "id": "c080ce19-c6cd-48b9-8bd4-cf9876917a6a",
@@ -4235,9 +4243,9 @@
     "id": "c5780b7e-62b7-4c95-8ed4-7bd4b6aebbfb",
     "common_name": "White-stem bramble",
     "image_url": "https://bs.plantnet.org/image/o/7d05cfa89d7394ccf353b79eb7100466a717ebf2",
-    "image_url_curated": "https://bs.plantnet.org/image/o/7d05cfa89d7394ccf353b79eb7100466a717ebf2",
+    "image_url_curated": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Rubus_cockburnianus.jpg/1920px-Rubus_cockburnianus.jpg",
     "image_pick_confidence": "medium",
-    "image_pick_reason": "verify: The image shows a bramble stem with pink/purple star-shaped flowers and green, spiky developing fruits surrounded by serrated leaves, set against a bright, blown-out green foliage background; the distinctive white stems of Rubus cockburnianus are not visible, so species identity can't be confirmed."
+    "image_pick_reason": "Sharp close-up of the flower clusters with clear detail and natural green foliage background, filling most of the frame."
   },
   {
     "id": "c6f4610f-495b-4b11-a792-5b6dc739f952",
@@ -5164,8 +5172,8 @@
     "common_name": "Cushion-pink",
     "image_url": "https://bs.plantnet.org/image/o/bd248cbdd330bc42920dab918da98294d843ed97",
     "image_url_curated": "https://bs.plantnet.org/image/o/bd248cbdd330bc42920dab918da98294d843ed97",
-    "image_pick_confidence": "low",
-    "image_pick_reason": "verify: The photo shows a cluster of pink flowers with deeply fringed, jagged-edged petals and dark centers on slender stems growing among grass and rocks, consistent with a Dianthus (pink) species rather than the low, moss-like cushion mat with unfringed petals typical of Silene acaulis."
+    "image_pick_confidence": "medium",
+    "image_pick_reason": "Sharp close-up of the characteristic pink five-petaled flowers with cushion foliage visible behind, though the composition is tight and the flowers are wet with rain droplets."
   },
   {
     "id": "f072ceb6-2baa-40f2-b67a-1f992ed1a4d3",
@@ -5411,9 +5419,9 @@
     "id": "fb5941ea-d969-4a5f-9e3b-d3be55a34489",
     "common_name": "Haworth's aeonium",
     "image_url": "https://bs.plantnet.org/image/o/3fb68c47a46e89da89511ef7587b804975f6b2b1",
-    "image_url_curated": "https://bs.plantnet.org/image/o/eb35de43c4f9f4df5bcafe99a997ee5aacd309c5",
+    "image_url_curated": "https://upload.wikimedia.org/wikipedia/commons/4/4c/Aeonium_haworthii_PICT3759.jpg",
     "image_pick_confidence": "medium",
-    "image_pick_reason": "verify: A dense potted rosette succulent, likely Aeonium/Sempervivum-type, with reddish-green rosettes and pale pink-cream flower clusters on tall stalks, shown in a black pot against a decorative tiled wall; the rosette shape looks more compact than typical Aeonium haworthii's loose paddle-like leaves."
+    "image_pick_reason": "Sharp, well-lit close-up of the aeonium's flower spike with reddish leaves filling the frame against a clean, uncluttered gray background, clearly showing the species in bloom."
   },
   {
     "id": "fb6d9a2c-3037-4e0a-a668-30a3afaf61a0",

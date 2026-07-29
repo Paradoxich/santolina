@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import {
+  backoffMs,
   probeImage,
   readImageDimensions,
   wikimediaThumbUrl,
@@ -177,11 +178,42 @@ describe('probeImage retries', () => {
       headers: { 'content-type': 'text/html' },
     })
 
+  /** Real backoff for a 429 is seconds; no test should sit through it. */
+  const noWait = () => 0
+
   it('retries a 429 and succeeds on a later attempt', async () => {
     const calls = stubFetch([rateLimited, rateLimited, ok])
-    const r = await probeImage('https://example.test/a.png')
+    const r = await probeImage('https://example.test/a.png', 10_000, 3, noWait)
     expect(r.ok).toBe(true)
     expect(calls.count).toBe(3)
+  })
+
+  it('waits seconds, not milliseconds, before re-asking a rate limiter', async () => {
+    // Commons 429s on a handful of sequential requests and stays angry for
+    // seconds. The original 400/800ms exhausted all three attempts inside 1.2s,
+    // which is how nine hand-sourced photos were dropped on 2026-07-30.
+    stubFetch([rateLimited, ok])
+    const waits: number[] = []
+    await probeImage('https://example.test/a.png', 10_000, 3, (r, i) => {
+      waits.push(backoffMs(r, i))
+      return 0
+    })
+    expect(waits[0]).toBeGreaterThanOrEqual(2_000)
+  })
+
+  it('marks an exhausted transient failure as transient, not as a rejection', async () => {
+    // The distinction the caller acts on: pick-plant-images defers a plant
+    // whose pool is incomplete instead of judging what happened to load and
+    // stamping the row, which would retire the photo permanently.
+    stubFetch([rateLimited])
+    const r = await probeImage('https://example.test/e.jpg', 10_000, 3, noWait)
+    expect(r.ok === false && r.transient).toBe(true)
+  })
+
+  it('does not mark a real rejection as transient', async () => {
+    stubFetch([notFound])
+    const r = await probeImage('https://example.test/c.jpg', 10_000, 3, noWait)
+    expect(r.ok === false && r.transient).toBeUndefined()
   })
 
   it('re-reads further when an image header is unreadable, rather than rejecting', async () => {
@@ -216,7 +248,7 @@ describe('probeImage retries', () => {
 
   it('gives up after the attempt limit and reports the real reason', async () => {
     const calls = stubFetch([rateLimited])
-    const r = await probeImage('https://example.test/e.jpg')
+    const r = await probeImage('https://example.test/e.jpg', 10_000, 3, noWait)
     expect(r.ok).toBe(false)
     expect(r.ok === false && r.reason).toBe('HTTP 429')
     expect(calls.count).toBe(3)
