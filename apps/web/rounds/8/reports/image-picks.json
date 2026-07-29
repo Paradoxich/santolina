@@ -12,8 +12,8 @@
     "common_name": "Mandarin",
     "image_url": null,
     "image_url_curated": "https://upload.wikimedia.org/wikipedia/commons/4/49/Mandarin_Oranges_%28Citrus_Reticulata%29.jpg",
-    "image_pick_confidence": "medium",
-    "image_pick_reason": "Clear, sharply focused studio shot of three ripe mandarins with leaves and stems on a clean white background, though it shows fruit rather than blooms."
+    "image_pick_confidence": "high",
+    "image_pick_reason": "Reviewer confirmed the species from this photo, resolving the vision pass uncertainty."
   },
   {
     "id": "00b65ac6-1627-437c-b859-00290fcd7fa0",
@@ -220,16 +220,16 @@
     "common_name": "Alexandrian laurel",
     "image_url": "https://bs.plantnet.org/image/o/b8526a7c6f729fda8c0aea1b27da1177c2cf5f5b",
     "image_url_curated": "https://bs.plantnet.org/image/o/85e92cb7d8ef7e32e86231b12c999e1d84fe9b29",
-    "image_pick_confidence": "medium",
-    "image_pick_reason": "Shows a healthy, dense clump of Danae racemosa with characteristic arching phylloclades and small yellow flower buds, in a natural garden setting with clear focus."
+    "image_pick_confidence": "high",
+    "image_pick_reason": "verify: Dense mass of arching stems bearing glossy lance-shaped cladodes with scattered small round red berries, consistent with Danae racemosa in fruit; the shot is a tight overhead view of the foliage mass with dry leaf litter visible beneath, giving a slightly busy, undifferentiated background."
   },
   {
     "id": "0de0ca07-6f3e-489c-928a-e94baf8bf8eb",
     "common_name": "Beaked yucca",
     "image_url": "https://bs.plantnet.org/image/o/0a7549cfc69f87fb35495d300aea6ff3b901c491",
     "image_url_curated": "https://bs.plantnet.org/image/o/75b0a7a56eac2c8b438663ec6bc270262feeaf9d",
-    "image_pick_confidence": "medium",
-    "image_pick_reason": "Shows the characteristic beaked yucca form with trunk and spherical spiky rosette plus a bloom spike, though a building and cactus planters clutter the background."
+    "image_pick_confidence": "high",
+    "image_pick_reason": "Reviewer confirmed the species from this photo, resolving the vision pass uncertainty."
   },
   {
     "id": "0e369364-220d-440a-9797-50907aab5949",
@@ -308,8 +308,8 @@
     "common_name": "Sweet cicely",
     "image_url": "https://bs.plantnet.org/image/o/48f154724a01835acb8d5fc99d22ba9975e85a24",
     "image_url_curated": "https://bs.plantnet.org/image/o/48f154724a01835acb8d5fc99d22ba9975e85a24",
-    "image_pick_confidence": "medium",
-    "image_pick_reason": "Shows the characteristic white umbel flower clusters of sweet cicely in sharp focus against a natural green backdrop, clearly identifying the species."
+    "image_pick_confidence": "high",
+    "image_pick_reason": "Reviewer confirmed the species from this photo, resolving the vision pass uncertainty."
   },
   {
     "id": "125accb4-bb75-4040-9872-e20a2af50625",
@@ -324,8 +324,8 @@
     "common_name": "Lovage",
     "image_url": "https://bs.plantnet.org/image/o/c5531180a35c0e93432c06ff9b372b08f0e52c0a",
     "image_url_curated": "https://bs.plantnet.org/image/o/bcb496fb388e4e60f3e2f8e326310f3e72eb5519",
-    "image_pick_confidence": "medium",
-    "image_pick_reason": "Full, lush lovage plant filling the frame with characteristic celery-like leaves in a garden setting, though the wooden planter edge and background fence are visible."
+    "image_pick_confidence": "high",
+    "image_pick_reason": "Reviewer confirmed the species from this photo, resolving the vision pass uncertainty."
   },
   {
     "id": "1302f404-4913-4cb9-a9c6-944f42e06eda",
@@ -379,9 +379,9 @@
     "id": "154d7279-5a5d-4426-9aee-93f72f8490cb",
     "common_name": "Drooping sedge",
     "image_url": "https://bs.plantnet.org/image/o/c8d3dacebc7749d0b337e82aba54024b326327a1",
-    "image_url_curated": "https://bs.plantnet.org/image/o/f4fc0774f6d58dd3e5832eb986b90e613680cdfc",
-    "image_pick_confidence": "medium",
-    "image_pick_reason": "Shows the characteristic arching, drooping grass-like clumps of Carex pendula clearly filling the frame in a natural woodland setting, though no flowers are visible."
+    "image_url_curated": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/%28MHNT%29_Carex_pendula_-_mature_infrutescences.jpg/1920px-%28MHNT%29_Carex_pendula_-_mature_infrutescences.jpg",
+    "image_pick_confidence": "high",
+    "image_pick_reason": "Sharp, well-composed close-up of the drooping catkin-like flower spikes with fresh green foliage, filling the frame against a natural woodland background."
   },
   {
     "id": "157ff3fd-f9d0-464a-a11d-576f9f04474a",
@@ -444,8 +444,8 @@
     "common_name": "Wintergreen",
     "image_url": "https://bs.plantnet.org/image/o/23e9f2bda3044e04203eb50866e0c8d20cd00341",
     "image_url_curated": "https://bs.plantnet.org/image/o/d679ece3023c2b13edc1a900d47ca937fc402a14",
-    "image_pick_confidence": "medium",
-    "image_pick_reason": "Shows dense foliage with bright red berries filling the frame in natural light, clearly identifying the plant, though it's in a pot on wood flooring rather than a garden setting."
+    "image_pick_confidence": "high",
+    "image_pick_reason": "verify: A potted plant with glossy dark green oval leaves and numerous bright red berries, consistent with Gaultheria procumbens, photographed from above sitting in a terracotta saucer on a wooden floor."
   },
   {
     "id": "17cc8633-d753-4d0f-993d-a1e4aa5caf19",
@@ -483,9 +483,9 @@
     "id": "1d0901e2-4506-47ee-a685-1eb2ff1cbf48",
     "common_name": "Parry's agave",
     "image_url": "https://bs.plantnet.org/image/o/b41469969e3b81653973262ac9c3680ad8e623f6",
-    "image_url_curated": "https://bs.plantnet.org/image/o/ec8543de007e928bbdcc70ed50d0ce61cddc231c",
-    "image_pick_confidence": "medium",
-    "image_pick_reason": "Clear, sharp shot of the classic blue-green rosette filling the frame in a natural rocky setting, though the plant is grown mainly for its striking foliage form rather than the small flowers shown elsewhere."
+    "image_url_curated": "https://bs.plantnet.org/image/o/b41469969e3b81653973262ac9c3680ad8e623f6",
+    "image_pick_confidence": "high",
+    "image_pick_reason": "Reviewer preferred the previous photo over the AI pick."
   },
   {
     "id": "1ea0895a-a94d-4564-9bcd-51298812b7a4",
@@ -812,8 +812,8 @@
     "common_name": "Vervain",
     "image_url": "https://bs.plantnet.org/image/o/c26121decb599d0ae88aea071cfa49bd861f7b3c",
     "image_url_curated": "https://bs.plantnet.org/image/o/c26121decb599d0ae88aea071cfa49bd861f7b3c",
-    "image_pick_confidence": "medium",
-    "image_pick_reason": "Clear close-up of vervain's small lilac flowers with natural greenery background, though a stray grass blade crosses the frame."
+    "image_pick_confidence": "high",
+    "image_pick_reason": "Reviewer confirmed the species from this photo, resolving the vision pass uncertainty."
   },
   {
     "id": "2dc4a7a8-933e-4c10-b9b7-362c141a8e0e",
@@ -836,8 +836,8 @@
     "common_name": "Spotted-laurel",
     "image_url": "https://bs.plantnet.org/image/o/5ef40ae9efdd3bca9f1f63682d1ca8c56a56638a",
     "image_url_curated": "https://bs.plantnet.org/image/o/3114b112f64702d1e74c71daddc46a0f679bf07f",
-    "image_pick_confidence": "medium",
-    "image_pick_reason": "Clear, well-lit shot of the whole variegated shrub in a natural garden setting with ivy groundcover, showing the plant's characteristic speckled foliage without pots or clutter."
+    "image_pick_confidence": "high",
+    "image_pick_reason": "verify: A shrub with variegated green-and-yellow speckled leaves consistent with Aucuba japonica is shown growing among ivy groundcover near a tree trunk; the plant is clear but the surrounding ivy and leaf litter create a busy, unremarkable garden setting."
   },
   {
     "id": "2e07992c-3e57-45f9-b0ec-3bf751118e94",
@@ -852,8 +852,8 @@
     "common_name": "Chinese rice-paper plant",
     "image_url": "https://bs.plantnet.org/image/o/b3b855acea0c468190ec5c6a55382e4ce6deee49",
     "image_url_curated": "https://bs.plantnet.org/image/o/9f6727d5a4d15f2435fc72f2e649cac94f49635c",
-    "image_pick_confidence": "medium",
-    "image_pick_reason": "Shows the full habit of Tetrapanax with its distinctive large lobed leaves against a house wall in natural light, though the setting is a bit cluttered with stairs and a window."
+    "image_pick_confidence": "high",
+    "image_pick_reason": "verify: A multi-stemmed shrub with large palmately-lobed leaves consistent with Tetrapanax papyrifer growing beside a stone house wall, surrounded by other garden plants, a metal staircase, and decking, making the background fairly busy."
   },
   {
     "id": "2ee7595d-d8de-4d10-921d-55dc585cfc19",
@@ -932,8 +932,8 @@
     "common_name": "Lesser calamint",
     "image_url": "https://bs.plantnet.org/image/o/cb49923e1ee0f5e4e2e0cb661666fe77e481ac1b",
     "image_url_curated": "https://bs.plantnet.org/image/o/dd96a40b932b08c93d1cc752038fac27b27516e8",
-    "image_pick_confidence": "medium",
-    "image_pick_reason": "Sharp, well-lit close-up of the characteristic small purple-blue flowers filling the frame with a soft green background, though slightly hazy/soft focus overall."
+    "image_pick_confidence": "high",
+    "image_pick_reason": "Reviewer confirmed the species from this photo, resolving the vision pass uncertainty."
   },
   {
     "id": "323f531f-b0d0-4ecf-b2df-9a86055d3775",
@@ -1147,9 +1147,9 @@
     "id": "3d74ea7b-19d8-452a-a275-817f2111fe77",
     "common_name": "Japanese banana",
     "image_url": "https://bs.plantnet.org/image/o/008312b98fc6d4854ddf1a9e03d08c3715dac413",
-    "image_url_curated": "https://bs.plantnet.org/image/o/04d57df68bbae25c11d3ec35541179a717810190",
-    "image_pick_confidence": "medium",
-    "image_pick_reason": "Clear, well-lit shot of the whole banana clump filling the frame with a garden setting, though a house wall and stairs are visible in the background."
+    "image_url_curated": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/37/Musa_basjoo_-_G%C3%B6ttingen.jpg/1920px-Musa_basjoo_-_G%C3%B6ttingen.jpg",
+    "image_pick_confidence": "high",
+    "image_pick_reason": "Sharp, well-lit full-plant view filling the frame with a natural garden setting and uncluttered background, clearly showing the characteristic Musa basjoo foliage."
   },
   {
     "id": "3da4177f-45ba-427b-af99-ccbc3ed0f5c3",
@@ -1164,8 +1164,8 @@
     "common_name": "Elephant ear",
     "image_url": "https://bs.plantnet.org/image/o/521e14dacdac02f86c7b2065a101af2b574de446",
     "image_url_curated": "https://bs.plantnet.org/image/o/521e14dacdac02f86c7b2065a101af2b574de446",
-    "image_pick_confidence": "medium",
-    "image_pick_reason": "Striking dark elephant ear leaves fill the frame with a natural garden backdrop, though a wall and some clutter are visible."
+    "image_pick_confidence": "high",
+    "image_pick_reason": "verify: Large heart-shaped leaves in deep purple-black and one bronze-green leaf are shown on a Colocasia esculenta plant, set against a lush green garden backdrop with small purple flowers, filling the frame prominently and in good focus."
   },
   {
     "id": "3db62e0d-dc1a-4ba9-a9c8-ef7236254714",
@@ -1196,8 +1196,8 @@
     "common_name": "Creeping comfrey",
     "image_url": null,
     "image_url_curated": "https://d2seqvvyy3b8p2.cloudfront.net/d202715d26ab2f802415abc9edbaf75c.jpg",
-    "image_pick_confidence": "medium",
-    "image_pick_reason": "Sharp, well-lit close-up of the characteristic pale bell flowers with green foliage, filling the frame without distracting elements, though a fly-visited leaf version (B) is also nice but less flower-focused."
+    "image_pick_confidence": "high",
+    "image_pick_reason": "verify: Close-up of pendulous, tubular cream-white flowers with hairy green calyces emerging from a leafy stem, matching the flower form of Symphytum grandiflorum, set against a soft dark green blurred foliage background."
   },
   {
     "id": "3fdd51cc-f5c1-430f-a93c-6fb7b4400e1d",
@@ -1267,7 +1267,7 @@
     "id": "432cf01f-974a-4d60-b828-50cb626982f3",
     "common_name": "Verbascum olympicum",
     "image_url": null,
-    "image_url_curated": "https://upload.wikimedia.org/wikipedia/commons/c/c1/Verb%C3%A1scum_ol%C3%BDmpicum%2C_Visby_Botanical_Gardens%2C_2022.jpg",
+    "image_url_curated": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Verb%C3%A1scum_ol%C3%BDmpicum%2C_Visby_Botanical_Gardens%2C_2022.jpg/1920px-Verb%C3%A1scum_ol%C3%BDmpicum%2C_Visby_Botanical_Gardens%2C_2022.jpg",
     "image_pick_confidence": "high",
     "image_pick_reason": "The striking silvery, felted basal rosette shown from above on a clean gravel bed, characteristic of the species before it bolts."
   },
@@ -1460,8 +1460,8 @@
     "common_name": "Chinese windmill palm",
     "image_url": "https://bs.plantnet.org/image/o/6afa88289bfc169ace0438d740c926eb07927cfd",
     "image_url_curated": "https://bs.plantnet.org/image/o/1372684173fb1fe1edb1b7832c5bb56cbad70cc8",
-    "image_pick_confidence": "medium",
-    "image_pick_reason": "Shows the whole palm's distinctive fan-shaped fronds and fibrous trunk in a natural outdoor setting, clearly identifying the species even with a cat and path visible in the background."
+    "image_pick_confidence": "high",
+    "image_pick_reason": "verify: A fan palm with characteristic hairy brown fibrous trunk and large green palmate fronds, matching Trachycarpus fortunei, photographed against a blue sky with a cat peeking from beneath the fronds."
   },
   {
     "id": "5071e9a7-7fa8-43ca-b20b-fde8d220a08c",
@@ -1580,8 +1580,8 @@
     "common_name": "Welsh poppy",
     "image_url": "https://bs.plantnet.org/image/o/9fbfbfa751fd566522c843d1bae64b48ab793271",
     "image_url_curated": "https://bs.plantnet.org/image/o/5bab009b55e2291b460fb7faf1a3eace95015280",
-    "image_pick_confidence": "medium",
-    "image_pick_reason": "Sharp, well-lit close-up clearly showing the poppy's characteristic orange-yellow flower with visible stamens against a natural green backdrop."
+    "image_pick_confidence": "high",
+    "image_pick_reason": "verify: Orange-yellow poppy flowers with dark stamens and characteristic ferny green foliage typical of Papaver cambricum, shown among buttercups and shaded garden greenery with a wooden stump in the background; the busy backdrop is a mild distraction."
   },
   {
     "id": "575738f0-8718-4596-9ca1-309f5b44b7d1",
@@ -1788,8 +1788,8 @@
     "common_name": "Wild clary",
     "image_url": "https://bs.plantnet.org/image/o/e37e58e7db29b3a188ef5450c79e02126facf8cf",
     "image_url_curated": "https://bs.plantnet.org/image/o/e37e58e7db29b3a188ef5450c79e02126facf8cf",
-    "image_pick_confidence": "medium",
-    "image_pick_reason": "Shows the distinctive showy purple bracts of Salvia viridis in sharp focus against a natural rocky background, clearly identifying the plant, though the frame includes some dried foliage."
+    "image_pick_confidence": "high",
+    "image_pick_reason": "Reviewer confirmed the species from this photo, resolving the vision pass uncertainty."
   },
   {
     "id": "639e03e8-c1a6-4c61-9fda-3f9ed3cb6027",
@@ -1947,7 +1947,7 @@
     "id": "67469754-ff62-4c22-a0e0-023f207089ef",
     "common_name": "Cistus purpureus",
     "image_url": null,
-    "image_url_curated": "https://upload.wikimedia.org/wikipedia/commons/6/68/Orchid_rockrose_%28Cistus_purpureus%29_after_the_rain_%284126223204%29.jpg",
+    "image_url_curated": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/Orchid_rockrose_%28Cistus_purpureus%29_after_the_rain_%284126223204%29.jpg/1920px-Orchid_rockrose_%28Cistus_purpureus%29_after_the_rain_%284126223204%29.jpg",
     "image_pick_confidence": "high",
     "image_pick_reason": "A single dew-flecked pink flower with the characteristic dark basal blotches and yellow centre, sharp against dark foliage."
   },
@@ -1956,8 +1956,8 @@
     "common_name": "Creeping saxifrage",
     "image_url": "https://bs.plantnet.org/image/o/d5a08bd787da532cf86aa03c7d4565ffb67cb988",
     "image_url_curated": "https://bs.plantnet.org/image/o/026c29e4c1fbb975dd299a95ab6e7c53a8c84837",
-    "image_pick_confidence": "medium",
-    "image_pick_reason": "Shows both the characteristic star-shaped white flowers on red stems and a glimpse of the marbled foliage in sharp focus against a natural garden background, though it's a bit busy with other plants at the edges."
+    "image_pick_confidence": "high",
+    "image_pick_reason": "verify: A tall flowering stem with small white, asymmetrical flowers marked with pink and yellow spots, consistent with Saxifraga stolonifera's distinctive irregular petals, set against a cluttered background of potted succulents and other garden plants."
   },
   {
     "id": "67680923-5cd9-4087-8188-c7605c9e3bbc",
@@ -2080,6 +2080,14 @@
     "image_pick_reason": "Sharp, well-lit close-up of the distinctive pink-and-white star-shaped flowers filling the frame against soft green foliage, clearly identifying the species."
   },
   {
+    "id": "6db37674-a64a-4205-9678-d6b48eee3bde",
+    "common_name": "Lavender mist meadow rue",
+    "image_url": null,
+    "image_url_curated": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/Thalictrum_rochebruneanum_1.JPG/1920px-Thalictrum_rochebruneanum_1.JPG",
+    "image_pick_confidence": "medium",
+    "image_pick_reason": "The full flowering stem with pink-lavender blooms and yellow stamens is sharply in focus against a natural green foliage background, clearly showing the plant's characteristic airy sprays."
+  },
+  {
     "id": "6dff513c-27bd-47d2-b514-a89aedf3b6aa",
     "common_name": "Culver's-root",
     "image_url": "https://bs.plantnet.org/image/o/4999f7a7a72facc75a4800187b3cc3ee189a2144",
@@ -2116,8 +2124,16 @@
     "common_name": "Summer savory",
     "image_url": "https://bs.plantnet.org/image/o/d08bd11272656bb0218b7d9fda4e5784a1698b4c",
     "image_url_curated": "https://bs.plantnet.org/image/o/e376583328b57c0840f33e04de1970efe17cbf1d",
-    "image_pick_confidence": "medium",
-    "image_pick_reason": "Shows dense, healthy summer savory foliage with tiny white flowers filling most of the frame in a natural garden setting, without hands or pots dominating."
+    "image_pick_confidence": "high",
+    "image_pick_reason": "Reviewer confirmed the species from this photo, resolving the vision pass uncertainty."
+  },
+  {
+    "id": "6ee0b619-9e25-4604-8ebc-029e7b60cc77",
+    "common_name": "Crown imperial",
+    "image_url": null,
+    "image_url_curated": "https://upload.wikimedia.org/wikipedia/commons/c/c0/Fritillaria_imperialis.jpg",
+    "image_pick_confidence": "high",
+    "image_pick_reason": "Clear, sharp shot of Crown imperial's distinctive yellow bell-shaped blooms with leafy topknots in a natural garden path setting."
   },
   {
     "id": "6f079aa9-5340-4958-8e35-1c61875347a1",
@@ -2204,8 +2220,8 @@
     "common_name": "Holy basil",
     "image_url": "https://bs.plantnet.org/image/o/8a46d091fdce5aa38c87c6d7e36062e35e01e37c",
     "image_url_curated": "https://bs.plantnet.org/image/o/42661baf80e796d026d969a52023f4bd0e2c778c",
-    "image_pick_confidence": "medium",
-    "image_pick_reason": "Close-up of a healthy holy basil sprig with visible flower buds and hairy leaves in sharp focus against a clean neutral background, clearly showing the plant's characteristic features."
+    "image_pick_confidence": "high",
+    "image_pick_reason": "Reviewer confirmed the species from this photo, resolving the vision pass uncertainty."
   },
   {
     "id": "72d76304-2c4f-40ce-b0e8-29829abe14fb",
@@ -2236,8 +2252,8 @@
     "common_name": "Raspberry",
     "image_url": "https://bs.plantnet.org/image/o/c8a73624fd4c545e2c37ace77036cab1d10a439c",
     "image_url_curated": "https://bs.plantnet.org/image/o/3b3a54636d4be030d9ac190474415f3a2f3d7e6b",
-    "image_pick_confidence": "medium",
-    "image_pick_reason": "Shows ripe red raspberries clustered on the plant with autumn-colored leaves in a natural garden setting, clearly identifying the species."
+    "image_pick_confidence": "high",
+    "image_pick_reason": "Reviewer confirmed the species from this photo, resolving the vision pass uncertainty."
   },
   {
     "id": "74c97e12-c7ca-4226-8fc6-966b426e0fc2",
@@ -2404,8 +2420,8 @@
     "common_name": "European fan palm",
     "image_url": "https://bs.plantnet.org/image/o/63210a3cfe646c7fd8a35d9800a8543d39d7b35a",
     "image_url_curated": "https://bs.plantnet.org/image/o/f489e9b8cef8adbd9bc96d2f7dcd57ecdc5177ff",
-    "image_pick_confidence": "medium",
-    "image_pick_reason": "Shows a mature, characteristic multi-trunked fan palm with clear foliage detail in natural garden light, though decking and grass are visible in the background."
+    "image_pick_confidence": "high",
+    "image_pick_reason": "verify: A multi-stemmed fan palm with characteristic pleated, fan-shaped fronds is clearly visible, consistent with Chamaerops humilis, though it is set within a busy, shaded background of other trees and shrubs rather than isolated for showcasing."
   },
   {
     "id": "7e25882f-a8a1-4cf1-bef2-6621b15a0f79",
@@ -2444,8 +2460,8 @@
     "common_name": "Roman chamomile",
     "image_url": "https://bs.plantnet.org/image/o/7c2371ecdc3626cbe19e19dd6c0fa706d734f3eb",
     "image_url_curated": "https://bs.plantnet.org/image/o/7c2371ecdc3626cbe19e19dd6c0fa706d734f3eb",
-    "image_pick_confidence": "medium",
-    "image_pick_reason": "Sharp, well-lit close-up of multiple daisy-like flowers with visible feathery foliage clearly identifying the plant, though the frame is fairly tight and busy with overlapping blooms."
+    "image_pick_confidence": "high",
+    "image_pick_reason": "Reviewer confirmed the species from this photo, resolving the vision pass uncertainty."
   },
   {
     "id": "7f3828d5-8b1e-4ef9-afb4-434fb4422ce7",
@@ -2621,7 +2637,7 @@
     "image_url": "https://bs.plantnet.org/image/o/c1909d610e18c3793b0cd7c401b9e8495bdbd5f5",
     "image_url_curated": "https://bs.plantnet.org/image/o/ecd4509f44a5669e10981224ecfb03bb9e431316",
     "image_pick_confidence": "medium",
-    "image_pick_reason": "Shows a full, healthy rosette of characteristic lobed leaves with flower stalks rising above, in a natural woodland setting, giving a clear representative view of the plant's habit and blooms."
+    "image_pick_reason": "verify: A lobed-leaf rosette with tall wiry flowering stalks bearing small pale flowers is shown against a dark leaf-litter forest floor, consistent with a Heuchera species, but the image quality and angle make definitive species confirmation difficult."
   },
   {
     "id": "8cf4af92-6be4-47f9-82be-66b4414d3f70",
@@ -2643,7 +2659,7 @@
     "id": "8d8e99e0-5863-4f54-a78f-42c4110fe52f",
     "common_name": "Absinthe",
     "image_url": "https://bs.plantnet.org/image/o/56c96fb209db1e9c155075e1087d2e37e2aa78b9",
-    "image_url_curated": "https://upload.wikimedia.org/wikipedia/commons/e/eb/Artemisia_absinthium_P1210748.jpg",
+    "image_url_curated": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/eb/Artemisia_absinthium_P1210748.jpg/1920px-Artemisia_absinthium_P1210748.jpg",
     "image_pick_confidence": "medium",
     "image_pick_reason": "Shows full, lush plants with characteristic silvery-green feathery foliage and emerging bloom spikes in a natural garden setting, filling the frame well."
   },
@@ -2652,8 +2668,8 @@
     "common_name": "Costmary",
     "image_url": "https://bs.plantnet.org/image/o/3c2eec9431cf855a54035034951a77eefdd04d0b",
     "image_url_curated": "https://bs.plantnet.org/image/o/244ba84df5a4027aec310ee1f9dab66ba0fc2669",
-    "image_pick_confidence": "medium",
-    "image_pick_reason": "Sharp, well-lit close-up of the characteristic small yellow button flower clusters with foliage in a natural outdoor setting, clearly showing the plant's distinctive bloom form."
+    "image_pick_confidence": "high",
+    "image_pick_reason": "Reviewer confirmed the species from this photo, resolving the vision pass uncertainty."
   },
   {
     "id": "8e216227-fd5d-41ee-a54c-3115501a5a91",
@@ -2700,8 +2716,8 @@
     "common_name": "Shiso",
     "image_url": "https://bs.plantnet.org/image/o/7c8a35315c468d14c61904655ef1b5ed1a32a670",
     "image_url_curated": "https://bs.plantnet.org/image/o/b196741f83a06b738baa1a3316bc44eae1e72cd7",
-    "image_pick_confidence": "medium",
-    "image_pick_reason": "Vivid, sharply focused shiso foliage filling the frame in natural light, though flowers aren't visible and it's in a planter with background clutter (cars, other flowers)."
+    "image_pick_confidence": "high",
+    "image_pick_reason": "Reviewer confirmed the species from this photo, resolving the vision pass uncertainty."
   },
   {
     "id": "911bee37-b776-4bbc-bf06-1aedaa66e04c",
@@ -2724,8 +2740,8 @@
     "common_name": "Japanese holly fern",
     "image_url": "https://bs.plantnet.org/image/o/ff91c77dbf573f2f8396ae0b82b04ee639c7d85c",
     "image_url_curated": "https://bs.plantnet.org/image/o/5399b1e4e5b3c72c22a8148f540e0166dad98104",
-    "image_pick_confidence": "medium",
-    "image_pick_reason": "Shows dense, glossy, characteristic holly-like fronds filling the frame in a garden setting, though a plant label is visible in the shot."
+    "image_pick_confidence": "high",
+    "image_pick_reason": "verify: Glossy, holly-like pinnate fern fronds fill the frame, confirmed by an identification label reading 'Cyrtomium falcatum, Rochfordianum', but the prominent plant tag is a documentary distraction in an otherwise dense, shaded foliage shot."
   },
   {
     "id": "93b5b83a-c5d7-4845-8635-baf981d3810f",
@@ -2756,8 +2772,8 @@
     "common_name": "Korean tasselfern",
     "image_url": "https://bs.plantnet.org/image/o/227befea8bfa5782c18e5586b12ce2fe651aa922",
     "image_url_curated": "https://bs.plantnet.org/image/o/a90665ab621204ae067d190f3084afaa826405a9",
-    "image_pick_confidence": "medium",
-    "image_pick_reason": "Shows the full fern's characteristic arching, glossy fronds with reddish stipes in a natural garden bed setting, clearly showcasing the plant's habit and form."
+    "image_pick_confidence": "high",
+    "image_pick_reason": "verify: A glossy, arching fern with lacy, tasseled pinnae and dark reddish-brown stipes fanning out from a central crown, consistent with Polystichum polyblepharum, shown in a garden bed with mulch and surrounding foliage."
   },
   {
     "id": "94c02c65-bec4-40e0-893f-a3d4d58633d0",
@@ -2931,9 +2947,9 @@
     "id": "a04a88f4-b623-4ef9-a319-ec1df6d1a2c9",
     "common_name": "Hairy alumroot",
     "image_url": "https://bs.plantnet.org/image/o/90e625c1280325164a00659e74037caae665847c",
-    "image_url_curated": "https://bs.plantnet.org/image/o/c96a01c9c831580829c81e5dbc79687f3276f33b",
-    "image_pick_confidence": "medium",
-    "image_pick_reason": "Sharp, well-lit close-up of the delicate flower sprays with visible bristly stems, though the rocky background is somewhat busy."
+    "image_url_curated": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Hairy_Alumroot_Heuchera_villosa_Purple_Form_Plant_2400px.JPG/1920px-Hairy_Alumroot_Heuchera_villosa_Purple_Form_Plant_2400px.JPG",
+    "image_pick_confidence": "high",
+    "image_pick_reason": "Sharp, well-lit close-up of the distinctive lobed reddish-bronze leaves filling the frame with a natural leaf-litter background, clearly identifying the plant even without flowers."
   },
   {
     "id": "a0eb10e6-0242-4f77-9647-45df667c3415",
@@ -2971,7 +2987,7 @@
     "id": "a2b7bc15-c7e9-4911-9806-d4c5d07fe90b",
     "common_name": "Feather reed grass",
     "image_url": null,
-    "image_url_curated": "https://upload.wikimedia.org/wikipedia/commons/9/9d/Calamagrostis_x_acutiflora_%27Overdam%27_6_2021_Feather_Reed_Grass-_%2851264046536%29.jpg",
+    "image_url_curated": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/Calamagrostis_x_acutiflora_%27Overdam%27_6_2021_Feather_Reed_Grass-_%2851264046536%29.jpg/1920px-Calamagrostis_x_acutiflora_%27Overdam%27_6_2021_Feather_Reed_Grass-_%2851264046536%29.jpg",
     "image_pick_confidence": "high",
     "image_pick_reason": "A full, backlit clump with feathery flowering plumes catching the light in a natural garden bed."
   },
@@ -3059,9 +3075,9 @@
     "id": "a6aeae90-9b1b-4c26-af06-a6ac85c2e21a",
     "common_name": "Persian ironwood",
     "image_url": null,
-    "image_url_curated": "https://d2seqvvyy3b8p2.cloudfront.net/e6a4bbe9e4dba35080d5e87ac281352a.jpg",
+    "image_url_curated": "https://upload.wikimedia.org/wikipedia/commons/2/27/%D8%A8%D8%B1%DA%AF_%D8%AF%D8%B1%D8%AE%D8%AA_%D8%A7%D9%86%D8%AC%DB%8C%D9%84%DB%8C_%D8%AF%D8%B1_%D8%A7%D8%B1%D8%AF%DB%8C%D8%A8%D9%87%D8%B4%D8%AA_%D9%85%D8%A7%D9%87.jpg",
     "image_pick_confidence": "medium",
-    "image_pick_reason": "Full, well-lit shrub filling the frame with distinctive autumn foliage color, clear focus, and clean garden setting, though it doesn't show the winter blooms typical of this species."
+    "image_pick_reason": "verify: The image shows large, glossy, broadly oval leaves with prominent veining backlit by sunlight, but no visible bark, flowers, or fall color that would confirm Persian ironwood versus another broad-leaved shrub or tree like hazel or elm."
   },
   {
     "id": "a78feb53-8be5-42db-8e91-d7a59157e10f",
@@ -3156,8 +3172,8 @@
     "common_name": "Palm sedge",
     "image_url": "https://bs.plantnet.org/image/o/5d923fb8e6e5937399b1bd428f0f1de1ba2c059e",
     "image_url_curated": "https://bs.plantnet.org/image/o/ba9fa8580b166fb6f56e30d6425231606e6a8ea0",
-    "image_pick_confidence": "medium",
-    "image_pick_reason": "Clear, well-lit close-up habit shot showing the characteristic arching, palm-like foliage clusters of Carex muskingumensis without labels or clutter in frame."
+    "image_pick_confidence": "high",
+    "image_pick_reason": "Reviewer confirmed the species from this photo, resolving the vision pass uncertainty."
   },
   {
     "id": "ad776b04-a688-480f-af36-e99cd20801f3",
@@ -3220,8 +3236,8 @@
     "common_name": "Parsley",
     "image_url": "https://bs.plantnet.org/image/o/b098ca85bce8b145263366add324b77179ec3792",
     "image_url_curated": "https://bs.plantnet.org/image/o/dac94b84207fc8ec89a087310fea85bda8999308",
-    "image_pick_confidence": "medium",
-    "image_pick_reason": "Shows dense, healthy parsley foliage clearly filling the frame, though it's in pots with a plastic tray visible."
+    "image_pick_confidence": "high",
+    "image_pick_reason": "Reviewer confirmed the species from this photo, resolving the vision pass uncertainty."
   },
   {
     "id": "b19556c0-82ab-4124-a51c-1005a6b590e1",
@@ -3276,8 +3292,8 @@
     "common_name": "Algerian barrenwort",
     "image_url": "https://bs.plantnet.org/image/o/efb8800f4e5f6fb08b388b9d33c6eb70c43700be",
     "image_url_curated": "https://bs.plantnet.org/image/o/efb8800f4e5f6fb08b388b9d33c6eb70c43700be",
-    "image_pick_confidence": "medium",
-    "image_pick_reason": "Real photo showing the plant's heart-shaped leaves with reddish margins and pendant flowers in a garden mulch setting, clearly identifiable and in bloom despite a busy woodchip background."
+    "image_pick_confidence": "high",
+    "image_pick_reason": "verify: Heart-shaped, red-margined Epimedium leaves with clusters of small pale yellow pendant flowers are shown among wood-chip mulch, consistent with Epimedium perralderianum; the mulchy background is a bit busy and slightly detracts from the plant as a hero image."
   },
   {
     "id": "b653d2bc-d4d7-4307-aabe-46ec774922ad",
@@ -3326,6 +3342,14 @@
     "image_url_curated": "https://bs.plantnet.org/image/o/068db89392842426406520a8dd7b7d289014477d",
     "image_pick_confidence": "high",
     "image_pick_reason": "Vivid, sharply focused pink oleander blooms fill the frame with natural garden light and clean foliage background, clearly identifying the plant."
+  },
+  {
+    "id": "b704fbae-c29f-4235-9b37-138828f8df09",
+    "common_name": "Golden chain tree",
+    "image_url": null,
+    "image_url_curated": "https://upload.wikimedia.org/wikipedia/commons/9/9d/Laburnum_anagyroides_ENBLA03.jpg",
+    "image_pick_confidence": "high",
+    "image_pick_reason": "Sharp, well-lit close-up of the characteristic drooping yellow raceme flowers with green foliage background, clearly showcasing the plant's signature bloom."
   },
   {
     "id": "b73b915c-6ad8-4c7e-99ec-f1c916d1a04f",
@@ -3516,8 +3540,8 @@
     "common_name": "Canna lily",
     "image_url": "https://bs.plantnet.org/image/o/71506c40d143ae452dd276840b6938d7915b4549",
     "image_url_curated": "https://bs.plantnet.org/image/o/16f4c7bd5f07813a0806847ae9b9e09fb7486379",
-    "image_pick_confidence": "medium",
-    "image_pick_reason": "Bright, sharp cluster of red canna flowers with lush foliage filling the frame, though a building wall and window reflection are visible in the background."
+    "image_pick_confidence": "high",
+    "image_pick_reason": "verify: Bright red canna lily flowers with dark purple foliage are clearly shown, but the background includes a blue metal wall, tree trunks, and a white planter box which are somewhat distracting."
   },
   {
     "id": "c1609279-d2f4-45ff-80e0-767286faca9d",
@@ -3540,8 +3564,8 @@
     "common_name": "French sorrel",
     "image_url": "https://bs.plantnet.org/image/o/eaeefb1873013edefb7147c5bca313e42fbd81aa",
     "image_url_curated": "https://bs.plantnet.org/image/o/1836a8434a43ee9b3177331c3c3320473be6dd56",
-    "image_pick_confidence": "medium",
-    "image_pick_reason": "Shows the characteristic blue-green shield-shaped leaves clearly filling the frame in a natural rocky setting, without hands, labels, or pots."
+    "image_pick_confidence": "high",
+    "image_pick_reason": "Reviewer confirmed the species from this photo, resolving the vision pass uncertainty."
   },
   {
     "id": "c22e1a33-22dc-480a-8f84-6cdd10c55379",
@@ -3563,7 +3587,7 @@
     "id": "c3269c6d-7676-4699-a405-166b09f46c09",
     "common_name": "Fritillaria meleagris",
     "image_url": null,
-    "image_url_curated": "https://upload.wikimedia.org/wikipedia/commons/1/15/Fritillaria_meleagris_LJ_barje2.jpg",
+    "image_url_curated": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Fritillaria_meleagris_LJ_barje2.jpg/1920px-Fritillaria_meleagris_LJ_barje2.jpg",
     "image_pick_confidence": "high",
     "image_pick_reason": "A sharp, well-lit close-up of the characteristic checkered maroon nodding flower with grass foliage in a natural meadow setting, clearly the main subject."
   },
@@ -3668,24 +3692,24 @@
     "common_name": "Arctic beauty kiwi",
     "image_url": "https://bs.plantnet.org/image/o/f26f44677dab404bf7a6988e04d30a15d4f49007",
     "image_url_curated": "https://bs.plantnet.org/image/o/219f1d19be327bb72aaa9166dc48e1089260634c",
-    "image_pick_confidence": "medium",
-    "image_pick_reason": "D shows the characteristic pink-and-white variegated foliage covering a full, healthy plant in a natural garden setting, clearly identifying the species even though a wooden fence and pot are visible in the background."
+    "image_pick_confidence": "high",
+    "image_pick_reason": "verify: A vigorous climbing vine with variegated green, pink, and white leaves growing over a wooden fence and trellis, consistent with Actinidia kolomikta's characteristic foliage coloration; a plant pot, pathway, and fence are visible in the frame."
   },
   {
     "id": "c9b3f5bf-62f1-4479-b05e-1f56d185fd06",
     "common_name": "Catmint",
     "image_url": "https://bs.plantnet.org/image/o/7894913ecd4331d36d37c9cae9af695e427d50fd",
     "image_url_curated": "https://bs.plantnet.org/image/o/09745b968031966bad8c7300682bea6ec38a6546",
-    "image_pick_confidence": "medium",
-    "image_pick_reason": "Shows the full plant habit with abundant purple-blue flower spikes in a garden setting, clearly identifiable at a glance despite a plant label and gravel visible in the background."
+    "image_pick_confidence": "high",
+    "image_pick_reason": "Reviewer confirmed the species from this photo, resolving the vision pass uncertainty."
   },
   {
     "id": "c9dcf410-82a2-447b-ac06-49c82be7bdbc",
     "common_name": "Fragrant plantain lily",
     "image_url": "https://bs.plantnet.org/image/o/45f1e53a31120cd8e4272ef2d1ba7d2a6da2fad3",
-    "image_url_curated": "https://bs.plantnet.org/image/o/f471e7ef463e85284c5a6a1ea52fda7545de4105",
-    "image_pick_confidence": "medium",
-    "image_pick_reason": "Clear, sharp lavender hosta blooms fill much of the frame with lush green leaves behind, giving a clean natural-garden look, though slightly less full than an ideal hero shot."
+    "image_url_curated": "https://upload.wikimedia.org/wikipedia/commons/f/f9/Hosta_plantaginea_cv_Royal_Standard_1.jpg",
+    "image_pick_confidence": "high",
+    "image_pick_reason": "Full, lush hosta clump with characteristic white fragrant flowers clearly visible in bright natural garden light, filling the frame well."
   },
   {
     "id": "ca0e532f-6031-4e10-8cd5-4b9e4d9d3854",
@@ -3740,8 +3764,8 @@
     "common_name": "Bowden lily",
     "image_url": "https://bs.plantnet.org/image/o/021d493d4e565000001b784520271b0baee068d4",
     "image_url_curated": "https://bs.plantnet.org/image/o/286c835529b75b8e15bd8d315636b2220066bce6",
-    "image_pick_confidence": "medium",
-    "image_pick_reason": "Full flower umbel in sharp focus with natural garden light, though a red pot rim and background shed are visible."
+    "image_pick_confidence": "high",
+    "image_pick_reason": "verify: A potted plant with clusters of pink strap-petaled lily-like flowers on tall stems, consistent with Nerine bowdenii, set against a busy garden background with a shed, hedge, and terracotta pot rim visible."
   },
   {
     "id": "ce6bacc2-6341-483b-9665-0994b2e6bb4a",
@@ -3779,9 +3803,9 @@
     "id": "cf92bba0-998b-4b00-b7d8-f74117981e4a",
     "common_name": "Common camas",
     "image_url": "https://bs.plantnet.org/image/o/8dd2dc2fd010087bb02ac392eee7343287389476",
-    "image_url_curated": "https://bs.plantnet.org/image/o/8dd2dc2fd010087bb02ac392eee7343287389476",
-    "image_pick_confidence": "medium",
-    "image_pick_reason": "Sharp, well-lit close-up of the characteristic star-shaped purple camas flowers filling the frame against a natural green garden background, though currently in use it still edges out the others which are either too distant or slightly less crisp."
+    "image_url_curated": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/Camassia_quamash_6374.JPG/1920px-Camassia_quamash_6374.JPG",
+    "image_pick_confidence": "high",
+    "image_pick_reason": "Sharp, well-lit close-up of the flower spike with open purple blooms filling much of the frame against a naturally soft garden background."
   },
   {
     "id": "cfbff0e7-840e-443e-b16f-770e56f76986",
@@ -4044,8 +4068,8 @@
     "common_name": "Tarragon",
     "image_url": "https://bs.plantnet.org/image/o/7f727387bcace64f048915846951eb38c7b7be15",
     "image_url_curated": "https://bs.plantnet.org/image/o/8b66b7cc3b8b204dc662ac6f7f0043a707d3f523",
-    "image_pick_confidence": "medium",
-    "image_pick_reason": "Clear, sharp view of tarragon's characteristic narrow feathery leaves and upright habit in a natural garden setting without clutter or people."
+    "image_pick_confidence": "high",
+    "image_pick_reason": "Reviewer confirmed the species from this photo, resolving the vision pass uncertainty."
   },
   {
     "id": "df38e4ef-5876-4193-b44c-ace46b35186a",
@@ -4139,17 +4163,17 @@
     "id": "e21d8661-da3e-4fb9-9660-c93ba7e097e2",
     "common_name": "Japanese candelabra primrose",
     "image_url": null,
-    "image_url_curated": "https://d2seqvvyy3b8p2.cloudfront.net/0dbb1035bef67f48a550100ae90b1e1c.jpg",
-    "image_pick_confidence": "medium",
-    "image_pick_reason": "Sharp, well-lit close-up of the whorled magenta blooms with visible dark centers, filling the frame against a natural leaf-litter background."
+    "image_url_curated": "https://upload.wikimedia.org/wikipedia/commons/3/3d/Primula_japonica_2.jpg",
+    "image_pick_confidence": "high",
+    "image_pick_reason": "verify: A whorled cluster of pink-purple, five-lobed flowers with darker red-purple eyes on an upright stem, surrounded by large green leaves and leaf litter, consistent with a candelabra primrose in bloom."
   },
   {
     "id": "e2577f77-e234-44d8-aa9b-5c2fa9f5a35a",
     "common_name": "Star of Persia",
     "image_url": "https://bs.plantnet.org/image/o/fcde612e8ce7c5f72d7ae99b4e3b1ba78c06e10a",
     "image_url_curated": "https://bs.plantnet.org/image/o/5f270957604ea390642f1dff43d0657a9076c6f9",
-    "image_pick_confidence": "medium",
-    "image_pick_reason": "Vivid, sharply focused purple star-shaped bloom fills the frame with a garden setting, though a chain-link fence is visible in the background."
+    "image_pick_confidence": "high",
+    "image_pick_reason": "verify: A large starry allium seedhead/flower with wiry purple-pink rays and pale star-shaped centers, consistent with Allium cristophii, but the chain-link fence and cluttered garden background are distracting elements behind the bloom."
   },
   {
     "id": "e2b7aeb0-983b-4115-a038-de0ec7bcc888",
@@ -4268,8 +4292,8 @@
     "common_name": "Silvervein creeper",
     "image_url": "https://bs.plantnet.org/image/o/4494d17692c3f22ef97f4401b5ccaa96540c8834",
     "image_url_curated": "https://d2seqvvyy3b8p2.cloudfront.net/f080608038e371ba0d7cd4445a098dd6.jpg",
-    "image_pick_confidence": "medium",
-    "image_pick_reason": "Sharp, well-lit close-up clearly showing the characteristic silver-veined, palmate leaves filling the frame, though a fence and background foliage are visible."
+    "image_pick_confidence": "high",
+    "image_pick_reason": "verify: Close-up of palmate five-leaflet leaves with toothed margins and distinct silvery-white venation against dark green foliage, consistent with Parthenocissus henryana; background shows a wire fence and blurred branches which is somewhat distracting."
   },
   {
     "id": "e7a6ad2e-938a-46a8-9bd0-39e4b6a79400",
@@ -4332,8 +4356,8 @@
     "common_name": "Japanese holly",
     "image_url": "https://bs.plantnet.org/image/o/229f0c6e9dd83e6b044c2fa5340c4d879560c641",
     "image_url_curated": "https://bs.plantnet.org/image/o/d5dbf5e0d95df0f4daea27d1c2c2673e441c136d",
-    "image_pick_confidence": "medium",
-    "image_pick_reason": "Sharp close-up of glossy foliage clearly showing the plant's characteristic small oval leaves, though it lacks flowers and is mostly foliage texture."
+    "image_pick_confidence": "high",
+    "image_pick_reason": "Reviewer confirmed the species from this photo, resolving the vision pass uncertainty."
   },
   {
     "id": "eaee56e8-b7b7-4b63-b1f9-c6e948ed0a5d",
@@ -4363,9 +4387,9 @@
     "id": "ebc391b6-a3ac-4b37-b739-985193363fe9",
     "common_name": "Wallich's wood fern",
     "image_url": "https://bs.plantnet.org/image/o/be71aeda0bd6b78e87115b7a484f0f769c41ba87",
-    "image_url_curated": "https://bs.plantnet.org/image/o/3ecc758cecdc1e9667c018b6cfe7fd38016ffec4",
-    "image_pick_confidence": "medium",
-    "image_pick_reason": "Clear, sharp close-up of the fern's fronds with natural rock and garden setting, filling most of the frame without clutter like labels or sprinkler heads visible."
+    "image_url_curated": "https://upload.wikimedia.org/wikipedia/commons/4/4a/Dryopteris_wallichiana_form.jpg",
+    "image_pick_confidence": "high",
+    "image_pick_reason": "Large, sharp, well-lit shot of the full fern clump filling the frame with natural woodland surroundings and no distracting objects."
   },
   {
     "id": "ecebd3d7-d5b8-43c7-8545-a339bf153752",
@@ -4508,8 +4532,8 @@
     "common_name": "Sensitive fern",
     "image_url": "https://bs.plantnet.org/image/o/5a369c2949e4f29339ee8e0f8c4c53f0bbf9eb9a",
     "image_url_curated": "https://bs.plantnet.org/image/o/2350780c0b5075e9730fd643496d707c7162fb11",
-    "image_pick_confidence": "medium",
-    "image_pick_reason": "Image E shows a lush, dense patch of sensitive fern fronds filling the entire frame in sharp focus with natural woodland lighting, clearly identifying the species by its distinctive pinnatifid leaf shape."
+    "image_pick_confidence": "high",
+    "image_pick_reason": "verify: A dense colony of deeply lobed, wavy-margined light green fronds consistent with sensitive fern sterile leaves, filling the frame in a shaded woodland setting with some twigs and background shrubbery visible."
   },
   {
     "id": "f717c6fe-94a4-48db-8699-c04101f25ae2",
@@ -4604,8 +4628,8 @@
     "common_name": "Signet marigold",
     "image_url": "https://bs.plantnet.org/image/o/539f263584d08c8aee425e4299457d6f28e11a53",
     "image_url_curated": "https://bs.plantnet.org/image/o/c1f58f073c0418dc9675ca05e8b0f079fc135199",
-    "image_pick_confidence": "medium",
-    "image_pick_reason": "Dense, vivid mass of bicolor red-orange marigold blooms filling the frame in sharp focus with a natural garden background, though the composition is busy."
+    "image_pick_confidence": "high",
+    "image_pick_reason": "Reviewer confirmed the species from this photo, resolving the vision pass uncertainty."
   },
   {
     "id": "fb6d9a2c-3037-4e0a-a668-30a3afaf61a0",
@@ -4660,8 +4684,8 @@
     "common_name": "Anise",
     "image_url": "https://bs.plantnet.org/image/o/cd56c9ce307a9ce65c1619f4b448e919d04b1769",
     "image_url_curated": "https://bs.plantnet.org/image/o/e06d4507784d798b47ee1332be5f26b440230802",
-    "image_pick_confidence": "medium",
-    "image_pick_reason": "Fine, feathery anise foliage fills the frame clearly in a natural grassy setting, though there's no flower visible."
+    "image_pick_confidence": "high",
+    "image_pick_reason": "Reviewer confirmed the species from this photo, resolving the vision pass uncertainty."
   },
   {
     "id": "fce21a8c-9917-48d1-be56-f1f470100d0a",

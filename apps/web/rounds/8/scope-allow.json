@@ -1,5 +1,5 @@
 {
-  "note": "Round 8 wrote to 101 plants outside its manifest. Each case was traced to a specific cause before being waived here; none is waived on the grounds that it looked harmless.",
+  "note": "Round 8 wrote to 101 plants outside its manifest, and later catalog-wide passes landed inside its still-open window. Each case was traced to a specific cause before being waived here; none is waived on the grounds that it looked harmless.",
   "allow": [
     {
       "plant": "Wood anemone",
@@ -26,6 +26,57 @@
     {
       "column": "style_tags",
       "why": "the July 28 style re-tag pass (scripts/curate-styles.ts), which judged all 595 plants against the tightened definitions in lib/style-tags.ts and is recorded in docs/database-log.md. Catalog-wide by design and nothing to do with round 8 \u2014 it simply lands inside a baseline-to-now window because it ran after the round. It cannot be excluded by cleared_at either: the style pass finished 13:06 on July 28 and round 8's own greenery and image remediation ran at 15:20 and 15:30, so any window wide enough to hold round 8's real work also holds this."
+    },
+    {
+      "column": "editorial_image_at",
+      "why": "the per-criterion split (migration 20260729140000) backfilled all three stamps from editorial_checked_at for every is_curated row, and the same session then recorded round 7's 76 legacy approvals through review-editorial.ts --legacy. 76 rows, all written 2026-07-29 11:36, all outside round 8 by definition \u2014 a schema backfill and a review of an OLDER round's sign-offs, neither of them round 8 spilling out of its batch. Waived on the same reasoning as the style_tags 450: no window wide enough to hold round 8's real work (which ran until 2026-07-29 14:40) can exclude a catalog-wide pass that ran inside it."
+    },
+    {
+      "column": "editorial_description_at",
+      "why": "the per-criterion split (migration 20260729140000) backfilled all three stamps from editorial_checked_at for every is_curated row, and the same session then recorded round 7's 76 legacy approvals through review-editorial.ts --legacy. 76 rows, all written 2026-07-29 11:36, all outside round 8 by definition \u2014 a schema backfill and a review of an OLDER round's sign-offs, neither of them round 8 spilling out of its batch. Waived on the same reasoning as the style_tags 450: no window wide enough to hold round 8's real work (which ran until 2026-07-29 14:40) can exclude a catalog-wide pass that ran inside it."
+    },
+    {
+      "column": "editorial_tags_at",
+      "why": "the per-criterion split (migration 20260729140000) backfilled all three stamps from editorial_checked_at for every is_curated row, and the same session then recorded round 7's 76 legacy approvals through review-editorial.ts --legacy. 76 rows, all written 2026-07-29 11:36, all outside round 8 by definition \u2014 a schema backfill and a review of an OLDER round's sign-offs, neither of them round 8 spilling out of its batch. Waived on the same reasoning as the style_tags 450: no window wide enough to hold round 8's real work (which ran until 2026-07-29 14:40) can exclude a catalog-wide pass that ran inside it."
+    },
+    {
+      "column": "image_pick_confidence",
+      "why": "round 7's 18 medium-confidence heroes, confirmed BY HAND in the 2026-07-29 images session (reports/image-confirmations.txt \u2192 apply-image-confirmations.ts) and stamped by the --verify pass. A reviewer resolving an older round's held images is deliberate remediation of that round, not round 8 writing outside itself."
+    },
+    {
+      "column": "image_pick_reason",
+      "why": "round 7's 18 medium-confidence heroes, confirmed BY HAND in the 2026-07-29 images session (reports/image-confirmations.txt \u2192 apply-image-confirmations.ts) and stamped by the --verify pass. A reviewer resolving an older round's held images is deliberate remediation of that round, not round 8 writing outside itself."
+    },
+    {
+      "column": "image_verified_at",
+      "why": "round 7's 18 medium-confidence heroes, confirmed BY HAND in the 2026-07-29 images session (reports/image-confirmations.txt \u2192 apply-image-confirmations.ts) and stamped by the --verify pass. A reviewer resolving an older round's held images is deliberate remediation of that round, not round 8 writing outside itself."
+    },
+    {
+      "plant": "Verbascum olympicum",
+      "column": "image_url_curated",
+      "why": "fix-oversized-heroes.ts pointed these five heroes at a 1920px rendition of the SAME Wikimedia photograph. Same picture, same photographer, same licence, same credit \u2014 only the byte count changed, and the verdict was re-asserted rather than dropped. Not an editorial change and not new data."
+    },
+    {
+      "plant": "Cistus purpureus",
+      "column": "image_url_curated",
+      "why": "fix-oversized-heroes.ts pointed these five heroes at a 1920px rendition of the SAME Wikimedia photograph. Same picture, same photographer, same licence, same credit \u2014 only the byte count changed, and the verdict was re-asserted rather than dropped. Not an editorial change and not new data."
+    },
+    {
+      "plant": "Absinthe",
+      "column": "image_url_curated",
+      "why": "fix-oversized-heroes.ts pointed these five heroes at a 1920px rendition of the SAME Wikimedia photograph. Same picture, same photographer, same licence, same credit \u2014 only the byte count changed, and the verdict was re-asserted rather than dropped. Not an editorial change and not new data."
+    },
+    {
+      "plant": "Feather reed grass",
+      "column": "image_url_curated",
+      "why": "fix-oversized-heroes.ts pointed these five heroes at a 1920px rendition of the SAME Wikimedia photograph. Same picture, same photographer, same licence, same credit \u2014 only the byte count changed, and the verdict was re-asserted rather than dropped. Not an editorial change and not new data."
+    },
+    {
+      "plant": "Fritillaria meleagris",
+      "column": "image_url_curated",
+      "why": "fix-oversized-heroes.ts pointed these five heroes at a 1920px rendition of the SAME Wikimedia photograph. Same picture, same photographer, same licence, same credit \u2014 only the byte count changed, and the verdict was re-asserted rather than dropped. Not an editorial change and not new data."
     }
-  ]
+  ],
+  "cleared_at": "2026-07-29T12:57:06.612219+00:00",
+  "cleared_why": "Round 8 is finished. The last three plants with no hero at all (Crown imperial, Golden chain tree, Lavender mist meadow rue) were sourced from Wikimedia on 2026-07-29, picked, verified to high and signed off, taking the round to 97 of 101. The four remaining holds are recorded verdicts, not outstanding work: 2 species no available photograph can confirm (American alumroot, Persian ironwood) and the prickly-pear's tag flag, which has no mechanism to record a rejection. Closing the window here so later catalog-wide work stops being reported as this round spilling out of its batch \u2014 the failure mode that produced 287 false failures the day after the round was called clean."
 }
