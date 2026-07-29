@@ -8,5 +8,7 @@ pnpm-lock.yaml
 
 # Generated files — prettier must not touch these. Reformatting a generated
 # file makes it differ from what its generator produces, which would turn the
-# staleness check (`pnpm catalog:state:check`) into a permanent false alarm.
+# staleness check (`pnpm catalog:state:check`, `pnpm tokens:check`) into a
+# permanent false alarm.
 docs/catalog-state.md
+apps/web/components/design-system/token-consumers.generated.ts

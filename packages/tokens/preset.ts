@@ -57,9 +57,6 @@ const preset = {
         critical: 'var(--color-icon-critical)',
       },
       accent: 'var(--color-accent)',
-      login: {
-        hairline: 'var(--login-hairline)',
-      },
     },
     backgroundColor: {
       ...ramps,
@@ -129,7 +126,6 @@ const preset = {
       accent: 'var(--color-accent)',
       login: {
         DEFAULT: 'var(--login-border)',
-        hairline: 'var(--login-hairline)',
       },
     },
     ringColor: {

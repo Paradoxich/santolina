@@ -23,6 +23,14 @@
     },
     "test": {
       "outputs": ["coverage/**"]
+    },
+    "tokens:check": {
+      "cache": false,
+      "outputs": []
+    },
+    "tokens:usage": {
+      "cache": false,
+      "outputs": []
     }
   }
 }

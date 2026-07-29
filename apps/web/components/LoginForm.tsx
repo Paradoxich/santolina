@@ -152,7 +152,7 @@ export function LoginForm() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Enter your email"
-            className="min-w-0 flex-1 bg-transparent text-body-small font-medium text-primary placeholder:text-login-hairline focus:outline-none"
+            className="min-w-0 flex-1 bg-transparent text-body-small font-medium text-primary placeholder:text-faint focus:outline-none"
           />
           <button
             type="submit"

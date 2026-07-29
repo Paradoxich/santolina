@@ -40,6 +40,13 @@ page). Based on the design-system audit of the same date.
 
 ---
 
+<!-- tokens:historical: the 2026-07-07 audit snapshot. These values are a
+record of what the system looked like that day, including ramps (green, gold,
+gray) that no longer exist — they are history, not a claim about today. For
+current values see /design-system, which reads them live from :root. The
+"Changes since this audit" section at the foot of this file is NOT exempt: a
+drift log that goes stale is worse than no drift log. -->
+
 ## Tier 1 — Primitives (hue-named ramps; raw values live ONLY here)
 
 Four brand ramps seeded from values already in production (exact steps to be
@@ -282,6 +289,8 @@ either font) and are removed.
 - Logo ink unified from raw #000 to `text-primary` (#111); MyPlantsCard image
   gradient unified onto `--thumbnail-scrim` (49%→10%).
 
+<!-- /tokens:historical -->
+
 ## Open items
 
 - `critical` tone values await a designed red ramp (placeholder acceptable).
@@ -294,11 +303,19 @@ This file is a point-in-time record — it isn't rewritten as the system
 evolves. For current values, `/design-system`'s **All Tokens** tab is
 authoritative. Notable drift from the snapshot above:
 
-- **New surface token**: `--color-surface-card-translucent: rgb(237 242 238 / 0.7)`
-  (sage-100 @ 70%) — added for the sidebar's active-nav-item highlight, which
-  needed to read against the sidebar's own translucent background where
-  `surface-active` (the green wash) was already spoken for by the Agent
-  button.
+- **New surface token**: `--color-surface-card-translucent` — added for the
+  sidebar's active-nav-item highlight, which needed to read against the
+  sidebar's own translucent background where `surface-active` (the green wash)
+  was already spoken for by the Agent button. **That is no longer what it
+  does:** the sidebar highlight moved to its own `--color-surface-nav-active`,
+  and `surface-card-translucent` now backs the mobile tab bar's active pill and
+  add-note button. Its value lives in `/design-system` — this entry used to
+  quote one, and it had drifted from the ramp step it named.
+- **Ramp-derived translucent tokens no longer copy their channels.** They use
+  relative colour syntax (`rgb(from var(--color-sage-200) r g b / 0.7)`) so the
+  ramp step stays the single home for the value. The hand-copied `rgb()`
+  triples they replaced had drifted from the steps their comments named; do not
+  paste one back in.
 - **`--card-tile-radius` / `--card-dashboard-radius` de-duplicated**: both were
   independently hardcoded to `1.25rem`, which is exactly the kind of
   same-value-two-places drift this taxonomy exists to prevent.
