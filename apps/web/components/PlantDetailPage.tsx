@@ -6,7 +6,7 @@ import {
   Button,
   Icon,
   IconButton,
-  Lightbox,
+  Gallery,
   Modal,
   Panel,
   Tooltip,
@@ -88,7 +88,7 @@ export function PlantDetailPage({
   const router = useRouter()
   const { toast } = useToast()
 
-  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
+  const [galleryIndex, setGalleryIndex] = useState<number | null>(null)
   const [referenceOpen, setReferenceOpen] = useState(false)
   const [isDiaryOpen, setIsDiaryOpen] = useState(false)
 
@@ -451,7 +451,7 @@ export function PlantDetailPage({
               <button
                 key={src}
                 type="button"
-                onClick={() => setLightboxIndex(i)}
+                onClick={() => setGalleryIndex(i)}
                 aria-label={`View ${plant.common_name} photo ${i + 1}`}
                 className={`${imageClass} cursor-pointer transition-opacity duration-normal hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus`}
                 style={style}
@@ -509,7 +509,7 @@ export function PlantDetailPage({
               heroPhotos={allPhotos}
               subtitle={subtitle}
               todayIso={todayIso}
-              onHeroPhotoClick={setLightboxIndex}
+              onHeroPhotoClick={setGalleryIndex}
               onSeeAllNotes={() => setIsDiaryOpen(true)}
               reference={
                 <Panel
@@ -597,11 +597,11 @@ export function PlantDetailPage({
         />
       )}
 
-      <Lightbox
+      <Gallery
         images={galleryImages}
-        isOpen={lightboxIndex !== null}
-        initialIndex={lightboxIndex ?? 0}
-        onClose={() => setLightboxIndex(null)}
+        isOpen={galleryIndex !== null}
+        initialIndex={galleryIndex ?? 0}
+        onClose={() => setGalleryIndex(null)}
       />
 
       <Modal
