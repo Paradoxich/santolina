@@ -216,6 +216,21 @@ This is trap 7 in different clothes: **an external name lookup that guesses is m
 
 <!-- Newest first. Append with: scripts/log-db-session.ts --round <label> -->
 
+### 2026-07-29 — Demo accounts via anonymous sign-in
+
+**Branch** `worktree-demo-anonymous-signin`. **No catalog data changed** — this session only added rows a demo visitor owns, and removed them again.
+
+**Anonymous sign-in is now the "look around without signing up" path.** A visitor gets a real anonymous auth user, so the `handle_new_user` trigger provisions them a profile and garden exactly as a magic-link signup does, and every RLS policy, server action, and page works unchanged. Verified before building anything, because the whole approach dies if it fails: an `auth.users` insert shaped like `signInAnonymously()` (null email, `{}` metadata, `is_anonymous`), run inside a `DO` block that raised at the end to roll back, produced exactly one profile and one empty garden. `public.users` has no email column at all, so nothing in the provisioning path could have depended on one.
+
+**The demo flag is `auth.users.is_anonymous` and nothing else.** No `is_demo` column, no marker row. A converted visitor stops being anonymous by the same act that converts them, so there is no second copy of the fact to drift.
+
+**TRAP: `auth.admin.listUsers` 500s when `per_page` exceeds the total user count.** `{"code":500,"error_code":"unexpected_failure","msg":"Database error finding users"}`, reproduced by hand against the REST endpoint on 2026-07-29 with 5 users in the project: `per_page=5` returns 200, `per_page=6` returns 500, and it is not the JS SDK — curl does it too. So the endpoint fails _precisely when the user table is small_, which is now, and no fixed page size is safe as the count moves. The purge script reads `auth.users` through the `expired_demo_users` SQL function (migration `20260729170000`, `security definer`, execute revoked from `anon`/`authenticated` and granted to `service_role` alone — verified with `has_function_privilege`) instead. Anything else reaching for `listUsers` will hit this.
+
+**Migration `20260729170000_expired_demo_users` is applied to remote** (applied and verified this session, not merely committed).
+
+**Left behind deliberately: 3 anonymous test accounts.** Created by the smoke test, listed correctly by the purge script's dry run, not deleted — the delete was blocked and is Ana's to run:
+`npx tsx --env-file=.env.local scripts/purge-demo-users.ts --days 0 --apply`
+
 ### 2026-07-29 — The trigger gets a test, and the test finds a bug
 
 **Branch** `session/2026-07-29-trigger-contract` (worktree `santolina-trigger-contract`, off `main` at `f504560`).
