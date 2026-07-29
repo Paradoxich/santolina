@@ -84,8 +84,14 @@ export interface GardenPlantViewProps {
   subtitle: string | null
   /** Opens the page's species-photo lightbox at this index. */
   onHeroPhotoClick: (index: number) => void
-  /** Scrolls to the full story section below the grid. */
+  /** Opens the diary drawer. */
   onSeeAllNotes: () => void
+  /**
+   * The Care reference card, owned by the page because it renders the
+   * reference sections and holds their open/closed state. Rendered as the
+   * middle card of the bottom row, between Photos and the impact card.
+   */
+  reference?: React.ReactNode
   /**
    * Today as YYYY-MM-DD, resolved once on the server and passed down.
    * Calling new Date() here instead produces a different value during SSR
@@ -103,6 +109,7 @@ export function GardenPlantView({
   subtitle,
   onHeroPhotoClick,
   onSeeAllNotes,
+  reference,
   todayIso,
 }: GardenPlantViewProps) {
   const now = new Date(`${todayIso}T12:00:00Z`)
@@ -311,11 +318,11 @@ export function GardenPlantView({
       </Panel>
 
       {/* ============================================================
-          Everything below here is unrevised — Ana's "then we'll do the
-          rest". Left in place so nothing is lost while the top is settled.
+          Photos, the reference entry point, and what the plant does for
+          the garden. Drops a column at a time as its cards drop out.
       ============================================================= */}
       <div
-        className={plant.environment_benefits ? rows.middle : rows.bottomTwoUp}
+        className={plant.environment_benefits ? rows.bottom : rows.bottomTwoUp}
       >
         {notePhotos.length === 0 ? (
           <Panel
@@ -365,6 +372,8 @@ export function GardenPlantView({
             </div>
           </Panel>
         )}
+
+        {reference}
 
         {/* Not every catalog row has this, and an empty impact card would read
             as "this plant does nothing" — so the row drops to 2-up instead. */}

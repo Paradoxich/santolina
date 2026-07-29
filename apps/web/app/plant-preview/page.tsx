@@ -13,7 +13,7 @@
  */
 
 import { useState } from 'react'
-import { ToastProvider } from '@paradoxui/ui'
+import { Panel, ToastProvider } from '@paradoxui/ui'
 import { GardenPlantView } from '@/components/plant-detail/GardenPlantView'
 import { DiaryDrawer } from '@/components/plant-detail/DiaryDrawer'
 import { SAMPLE_PLANT, NOTES_RICH, NOTES_SPARSE, NOTES_NONE } from './sample'
@@ -144,6 +144,22 @@ export default function PlantPreviewPage() {
                 todayIso={TODAY_ISO}
                 onHeroPhotoClick={() => {}}
                 onSeeAllNotes={() => setIsDiaryOpen(true)}
+                reference={
+                  // Shape-only stand-in: the real card is built in
+                  // PlantDetailPage, which owns the reference drawer's state.
+                  <Panel
+                    title="Care reference"
+                    className="min-h-[234px] justify-between lg:h-full lg:min-h-0"
+                  >
+                    <p className="max-w-[70%] text-body text-secondary">
+                      Water, light, soil, pruning, the full year, and the
+                      botanical details.
+                    </p>
+                    <span className="text-body-small text-secondary">
+                      Open reference
+                    </span>
+                  </Panel>
+                }
               />
             </div>
           </div>

@@ -39,6 +39,7 @@ import { StorySection } from './plant-detail/StorySection'
 import { StoryComposer } from './plant-detail/StoryComposer'
 import { GardenPlantView } from './plant-detail/GardenPlantView'
 import { DiaryDrawer } from './plant-detail/DiaryDrawer'
+import { ReferenceDrawer } from './plant-detail/ReferenceDrawer'
 
 /** Photo widths cycle to match the Figma strip (third photo clips at the edge). */
 const PHOTO_WIDTHS = [131, 175, 207]
@@ -523,34 +524,30 @@ export function PlantDetailPage({
               todayIso={todayIso}
               onHeroPhotoClick={setLightboxIndex}
               onSeeAllNotes={() => setIsDiaryOpen(true)}
-            />
-
-            <Panel
-              title="Care reference"
-              description="Water, light, soil, pruning, the full year, and the botanical details"
-              meta={
-                <button
-                  type="button"
-                  onClick={() => setReferenceOpen((open) => !open)}
-                  className="text-body text-secondary underline-offset-2 transition-colors duration-normal hover:text-primary hover:underline"
+              reference={
+                <Panel
+                  title="Care reference"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => setReferenceOpen(true)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault()
+                      setReferenceOpen(true)
+                    }
+                  }}
+                  className="relative isolate min-h-[234px] cursor-pointer justify-between overflow-hidden focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus lg:h-full lg:min-h-0"
                 >
-                  {referenceOpen ? 'Hide' : 'Show'}
-                </button>
+                  <p className="max-w-[70%] text-body text-secondary">
+                    Water, light, soil, pruning, the full year, and the
+                    botanical details.
+                  </p>
+                  <span className="text-body-small text-secondary">
+                    Open reference
+                  </span>
+                </Panel>
               }
-            >
-              {referenceOpen && (
-                <div className="flex w-full flex-col gap-section-break">
-                  <AboutSection description={plant.description} />
-                  <GoodForYourGardenSection bullets={bullets} />
-                  <CareSection plant={plant} />
-                  <SeasonalRhythmSection rhythm={plant.seasonal_rhythm} />
-                  <InYourGardenSection plant={plant} />
-                  <WorksWellWithSection companions={companions} />
-                  <GoodForSection tags={plant.garden_use_tags} />
-                  <DetailsSection plant={plant} />
-                </div>
-              )}
-            </Panel>
+            />
           </div>
         ) : (
           <div className="mt-section-break flex w-full flex-col gap-section-break">
@@ -589,6 +586,15 @@ export function PlantDetailPage({
           </div>
         )}
       </div>
+
+      {referenceOpen && (
+        <ReferenceDrawer
+          plant={plant}
+          companions={companions}
+          bullets={bullets}
+          onClose={() => setReferenceOpen(false)}
+        />
+      )}
 
       {isDiaryOpen && (
         <DiaryDrawer
