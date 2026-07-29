@@ -20,7 +20,8 @@ Newest entry first. Read the top entry before starting work.
 
 - **Historical token values stay legal behind an explicit `<!-- tokens:historical: reason -->` marker.** The 2026-07-07 audit snapshot keeps its record of deleted ramps; the "Changes since this audit" drift log below it does not get the exemption. Explicit rather than inferred, per the `cleared_at` ruling.
 - **`--login-hairline` retired.** Never a hairline — its only use was the login placeholder, now on `text-faint`. Its comment named `gray-900`, a ramp deleted in July.
-- **`--sidebar-surface` derives from sage-200.** The one deliberate _look_ change in the branch: the mobile tab bar is lighter and much less green than the raw `#b2d1b8` it replaced.
+- **`--sidebar-surface` derives from sage-200.** The one deliberate _look_ change in the branch: the mobile tab bar is lighter and much less green than the raw `#b2d1b8` it replaced. **Ana looked at it and approved — settled, do not revisit.**
+- **The login placeholder stays on `text-faint`.** Ana's call, made knowing it measures ~2.1:1 against the field (up from ~1.6:1) and that 4.5:1 would need `text-muted`. A placeholder that passes contrast reads almost as strongly as real input, which defeats the point of a placeholder. Settled.
 - Generated file is prettier-ignored, same reason as `catalog-state.md`: reformatting it would make the staleness diff a permanent false alarm.
 
 **What bit us, and is worth repeating:**
@@ -30,10 +31,8 @@ Newest entry first. Read the top entry before starting work.
 
 **Next steps, in order:**
 
-1. **Look at `--sidebar-surface` on a phone.** It has never been seen in place — the tab bar is `md:hidden` _and_ behind the auth gate. The Vercel preview on PR #125 is the easiest way. If too washed out: sage-300 @ 30% (neutral, more presence) or fern-200 @ 30% (stays green, on-ramp).
-2. **Decide the login placeholder contrast.** Now ~2.1:1 (was ~1.6:1), still short of 4.5:1. `text-faint` is the systemically correct role; only `text-muted` (sage-700) clears the bar. Shipped undecided, on purpose.
-3. **The plant detail page design** — the actual reason this session started, barely begun. Sections live in `apps/web/components/plant-detail/*`.
-4. `--sidebar-surface` aside, `--color-scrim`'s black is the only raw colour left in the token file, and it legitimately is its own value.
+1. **The plant detail page design** — the actual reason this session started, barely begun. Sections live in `apps/web/components/plant-detail/*`.
+2. `--color-scrim`'s black is now the only raw colour left in the token file, and it legitimately is its own value.
 
 **Open questions:**
 
