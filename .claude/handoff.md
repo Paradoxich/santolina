@@ -70,6 +70,42 @@ The catalog's size, the curated count and the per-round step table are
 **generated** into `docs/catalog-state.md` and `docs/round-runbook.md`. Link to
 them; never retype their numbers here.
 
+## 2026-07-30 — session/2026-07-30-image-holds (pipeline; read this one first for pipeline work)
+
+**Status:** merged to main ([PR #135](https://github.com/Paradoxich/santolina/pull/135), merge commit `2e414d7`), CI green on that run. Worktree and branch removed at session end. No migration, no schema change, no seed. Catalog rows were written by the passes themselves, as always — the PR carried the code fix and the provenance.
+
+Did the round-10 entry's next steps 1 and 2: the 16 editorial holds across rounds 9 and 10, every one image-confidence. **7 of 16 approved, 9 still held.** Rounds 9 and 10 archives re-captured after the pass. `verify-round --round 10` → 0 failures on that run.
+
+**Done:**
+
+- **`feed-wikimedia-candidates` resolved a Wikidata P18 for 14 of the 16.** `Erysimum cheiri` and `Prunus subhirtella` have no usable P18 at all.
+- **`Osteospermum ecklonis` went from no image anywhere to a high-confidence hero.** The Commons photo existed the whole time and the pass could not see it, because it only ever saw what Trefle surfaced.
+- **The probe fix, which is the real output** — trap 1's fifth instance, written up in `docs/database-log.md`.
+
+**The bug, because the retry that failed was itself the fix for this trap's first instance.** Commons 429s the upload host after a handful of sequential requests and stays angry for seconds. `probeImage` backed off 400/800ms, spent all three attempts inside 1.2s, and **9 of the 14 hand-sourced photos were dropped as if the photograph were bad.** The pass then judged each plant on the Trefle photos already known to be inadequate, wrote picks worded "CHANGED, high", and stamped `image_checked_at` so a plain re-run would never look again. Nothing failed; the log read as success.
+
+**The generalisation, which is not the one already written down.** Trap 1 said: give a two-way remote answer a third outcome and make the caller handle it. The caller here _did_ handle it — it printed the drop, under a comment explaining that a lost Wikimedia candidate is the one loss nobody would otherwise notice. **It printed it and carried on.** So: a transient failure has to change what the run DOES, not only what it says. `rejected` (judged — dead link, too small, wrong aspect) is now separate from `unresolved` (could not look); a plant holding an unresolved candidate is deferred, unstamped, named, and the script exits non-zero.
+
+**Decisions made:**
+
+- **`--verify` earns its place before the editorial pass, and now there is evidence rather than an argument.** Two separate pick runs described Seaside petunia's hero as "a small purple tubular flower"; it is a double **yellow** Calibrachoa. The batch manifest was checked and index resolution is sound — F was the incumbent and F's URL is what was written — so the model narrated the species it expected from the name. The absolute single-image question caught it at once. **A comparative pick can describe a photograph it is not looking at.**
+- **The blind verify independently reproduced a hand-written round-9 note.** Shown only the photo and the name it demoted `Silene acaulis` to `low` and identified the fringed notched petals as Dianthus, which is what round 9 recorded by hand. Two routes to one answer.
+- **`Prunus subhirtella` was deliberately NOT re-verified.** Its pool never widened, and it already survived a verify in round 9 — re-asking is the re-roll of a disliked judgement that `runVerify`'s own comment warns against.
+- **No further data was written after the verdicts (Ana, this session).** The one-script gap below was offered and declined, so it is recorded rather than patched.
+- **The retry backoff is injectable** so the 429 tests do not sit through seconds of real waiting. Two of the four new assertions fail against the pre-fix code, checked by reverting each half.
+
+**Next steps, in order:**
+
+1. **`Seaside petunia`'s live hero is the wrong species** — a yellow double garden hybrid where _Calibrachoa parviflora_ is small and violet. Its own `image_candidates` already holds the labelled Commons photo of the true species that lost the comparison (`commons/c/c4/P1000498_Petunia_parviflora_(Solanaceae)_Plant.JPG`). This is the most user-visible item left: it is live in Explore.
+2. **Four holds need a hero pointed at a SPECIFIC candidate, and no script can do that.** `apply-image-reverts` only points back at `image_url`; `apply-image-confirmations` only records trust in the current photo. A `set-plant-hero` that validates the URL really is one of the row's candidates, carries its attribution, and stamps through `writePlant` is the missing piece. Offered and declined this session — the operation is manual today.
+3. **Five holds are ordinary "cannot confirm the species from this photo"** — Amethyst fescue, Longwood tussock, Iris danfordiae, White-stem bramble, Haworth's aeonium. These are exactly what `apply-image-confirmations.ts` exists for: a human yes outranks the model's unsure and clears them with no paid pass.
+4. **Two need a hand-sourced photo, nothing upstream helps** — `Erysimum cheiri` (no image at all, placeholder live) and `Prunus subhirtella`. `Cushion-pink` joins them: its P18 is 300x231, under the 500px floor.
+5. Carried over unchanged from round 10: `Symphyotrichum lateriflorum`'s " or " common-name blob; the ~575-plant WCVP tail (never `--apply` against `--all`); the token usage logger; promote hardiness WARN → FAIL when §27 un-parks; `NEXT_PUBLIC_APP_URL` is dead but still advertised.
+
+**Open questions:** none from this session. Outside the repo and unchanged: local Supabase disk cleanup and the Pro-plan decision, both Ana's.
+
+**Worth knowing about this session's cost, since it was raised.** Three Batch API cycles were spent where one should have done — the first pass judged 13 plants on degraded pools, then 9 were re-picked, then 2 more after a cooldown. That is the price of finding out a pool was incomplete only after paying to judge it, and it is the argument for the defer: the second run cost nothing extra because it refused to guess.
+
 ## 2026-07-29 — fix/cap-plant-gallery-at-10 (no worktree; worked in the main checkout)
 
 **Status:** merged to main ([PR #134](https://github.com/Paradoxich/santolina/pull/134), merge commit `b31fe5b`), CI green on that run. Branch deleted local and remote. **This session did not create a worktree** — it started as a data question and grew into a small fix, so it committed on a branch in the main checkout.
