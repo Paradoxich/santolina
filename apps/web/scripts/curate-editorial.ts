@@ -67,7 +67,7 @@
  * Run scripts/backup-catalog.ts first. restore-catalog.ts is the undo.
  */
 
-import { writeFileSync } from 'node:fs'
+import { readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { getSupabaseAdmin } from '../lib/supabase-admin'
 import { fetchAllRows } from '../lib/paginate'
@@ -365,11 +365,50 @@ Respond with ONLY valid JSON: {"verdict": "ok"|"weak", "reason": string}`
 // Report
 // ---------------------------------------------------------------------------
 
-function writeReport(findings: Finding[], scopeLabel: string) {
+/**
+ * Merge this run's findings over whatever the report already held.
+ *
+ * A partial re-run must not destroy the queue. `--new-only` and `--ids` runs
+ * are the NORMAL way this pass is used — re-judging the handful of rows whose
+ * image confidence just moved — and a plain overwrite meant a 9-row run
+ * replaced a 101-row report, taking with it the recorded blockers for every
+ * row still held. That happened on 2026-07-29: six flagged tag errors were
+ * only recoverable because someone had summarised three of them in a handoff.
+ *
+ * This is the same failure `writeReviewReport` in pick-plant-images was fixed
+ * for ("retrying four transient failures replaced a 490-plant review file with
+ * a 4-plant one"), arrived at independently in a second script. The blockers
+ * are the only durable record of WHY a row was held — the database keeps the
+ * verdict but not the reasoning — so the file is the artefact, not a log.
+ *
+ * Newest wins per plant id, and a row this run did not touch is carried
+ * forward untouched.
+ */
+function mergeFindings(previous: Finding[], current: Finding[]): Finding[] {
+  const byId = new Map(previous.map((f) => [f.id, f]))
+  for (const f of current) byId.set(f.id, f)
+  return [...byId.values()].sort((a, b) =>
+    a.common_name.localeCompare(b.common_name)
+  )
+}
+
+function readPreviousFindings(jsonPath: string): Finding[] {
+  try {
+    const parsed = JSON.parse(readFileSync(jsonPath, 'utf8')) as {
+      findings?: Finding[]
+    }
+    return parsed.findings ?? []
+  } catch {
+    return []
+  }
+}
+
+function writeReport(current: Finding[], scopeLabel: string) {
   const slug = scopeLabel.replace(/[^a-z0-9]+/gi, '-').toLowerCase()
   const jsonPath = join(REPORTS_DIR, `editorial-${slug}.json`)
   const mdPath = join(REPORTS_DIR, `editorial-${slug}.md`)
 
+  const findings = mergeFindings(readPreviousFindings(jsonPath), current)
   writeFileSync(jsonPath, JSON.stringify({ findings }, null, 2))
 
   const approved = findings.filter((f) => f.approved)

@@ -19,10 +19,12 @@
  * a URL that is already a rendition, or an original under the threshold, is
  * left exactly as it is.
  *
- * NOT an editorial change — the hero is the same photograph, so
- * `editorial_checked_at` is deliberately left alone. The inverse obligation in
- * migration 20260728220852 is about a review being invalidated by a DIFFERENT
- * image; re-judging a row because the same picture got smaller would be noise.
+ * NOT an editorial change — the hero is the same photograph, so the verdict is
+ * preserved. Since migration 20260729120000 that has to be stated rather than
+ * assumed: a trigger clears `editorial_checked_at` on any write to
+ * `image_url_curated`, and this script opts out by writing the existing stamp
+ * back unchanged. Re-judging a row because the same picture got smaller would
+ * be noise, but the opt-out belongs in the diff where it can be argued with.
  *
  * DRY RUN BY DEFAULT. Pass --apply to write.
  *
@@ -43,10 +45,14 @@ async function main() {
     id: string
     common_name: string
     image_url_curated: string | null
+    is_curated: boolean | null
+    editorial_checked_at: string | null
   }>((from, to) =>
     supabase
       .from('plants')
-      .select('id, common_name, image_url_curated')
+      .select(
+        'id, common_name, image_url_curated, is_curated, editorial_checked_at'
+      )
       .like('image_url_curated', '%upload.wikimedia.org%')
       .order('id')
       .range(from, to)
@@ -75,7 +81,19 @@ async function main() {
     if (apply) {
       const { error } = await supabase
         .from('plants')
-        .update({ image_url_curated: result.url })
+        .update({
+          image_url_curated: result.url,
+          // Declaring the exception, per the invalidate_editorial_verdict
+          // trigger (migration 20260729120000): an UPDATE that writes
+          // editorial_checked_at keeps its verdict. This is a smaller
+          // rendition of the SAME photograph, so no reviewer would judge it
+          // differently, and losing nine sign-offs to a resize would be the
+          // guard working against the thing it protects. Written back
+          // unchanged rather than refreshed — the verdict was made when it
+          // was made.
+          is_curated: p.is_curated,
+          editorial_checked_at: p.editorial_checked_at,
+        })
         .eq('id', p.id)
       if (error) {
         console.log(`  ${p.common_name} — write failed: ${error.message}`)
