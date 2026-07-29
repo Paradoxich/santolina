@@ -8,7 +8,7 @@ import { DemoConvertModal } from '@/components/DemoConvertModal'
 // it; the keeping itself happens in DemoConvertModal, which is the /login card
 // in a dialog.
 //
-// Copy is a draft awaiting Ana's voice pass.
+// Copy approved by Ana, July 29 2026.
 
 export function DemoBanner() {
   const [open, setOpen] = useState(false)

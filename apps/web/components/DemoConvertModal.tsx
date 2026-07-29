@@ -19,7 +19,7 @@ import { createSupabaseBrowserClient } from '@/lib/supabase-client'
 // Signing in normally here would be the wrong thing entirely: it would swap
 // this session for another account and abandon the garden they just built.
 //
-// Copy is a draft awaiting Ana's voice pass.
+// Copy approved by Ana, July 29 2026.
 
 export interface DemoConvertModalProps {
   isOpen: boolean

@@ -228,8 +228,11 @@ This is trap 7 in different clothes: **an external name lookup that guesses is m
 
 **Migration `20260729170000_expired_demo_users` is applied to remote** (applied and verified this session, not merely committed).
 
-**Left behind deliberately: 3 anonymous test accounts.** Created by the smoke test, listed correctly by the purge script's dry run, not deleted — the delete was blocked and is Ana's to run:
+**Conversion verified end to end by Ana.** An anonymous visitor added an email through the "Keep this garden" modal, confirmed the link, and came back to the same garden with the demo bar gone. That is the whole claim of this design proved in one pass: `updateUser({ email })` upgrades the account in place, the user id survives, and the palette and diary carry over. Anonymous sign-ins and manual linking are both enabled on the project (the latter is what `linkIdentity` needs for the Google path).
+
+**Left behind: 4 anonymous test accounts** (3 from the smoke test, 1 from Ana's own click-through), each with a seeded Opatija garden of 8 palette rows and 3 diary entries. Harmless — the purge ages them out after 7 days — and Ana has the command to clear them sooner:
 `npx tsx --env-file=.env.local scripts/purge-demo-users.ts --days 0 --apply`
+The converted account is no longer anonymous and is invisible to the purge by construction, which is the intended behaviour and was confirmed here.
 
 ### 2026-07-29 — The trigger gets a test, and the test finds a bug
 
