@@ -284,7 +284,12 @@ Three steps left the per-round cadence, none of them by lowering a bar:
 
 Migration `20260729140000` gives each criterion its own stamp and narrows the trigger to match. Proved on a live row: a photo change clears only the image stamp, a tag change clears only the tags stamp, the description stamp survives both. Re-clearing a re-opened image criterion then took **0.79 seconds and zero model calls**, because criterion 1 is decided mechanically from the persisted `image_pick_confidence` — where the same row previously cost two Claude calls and a possible rewrite of text nobody asked to change.
 
-**Backfill covered 94 of the 170 curated rows.** The other 76 are round 7's, `is_curated = true` with no `editorial_checked_at` at all — approved before the stamp column existed. They are left exactly as they are: deciding whether a legacy approval counts as three cleared criteria is a judgment about Ana's earlier work, not a migration's call. **Open question for her**, and until it is answered those rows are approvals with no recorded verdict behind them.
+**Backfill covered 94 of the 170 curated rows; the other 76 were round 7's, approved before the stamp column existed.** A migration could not settle those — whether a legacy approval counts as three cleared criteria is a judgment about earlier work — so `review-editorial.ts --legacy` was built to put each plant's photo, copy and tags side by side, and Ana read it and confirmed the set. **All 170 curated rows now carry all three criterion stamps; 0 are approved with a criterion missing.**
+
+Two things came out of doing it:
+
+- **18 of the 76 had only medium-confidence heroes**, the same state that produced a lavender-flowered hosta labelled `Hosta plantaginea`. They went through `apply-image-confirmations.ts` first, so criterion 1 rests on a stated human confirmation rather than on the backfill waving it through. `backfill-legacy-editorial.ts` refuses outright if any row is still below `high`, so it cannot paper over an unmet criterion.
+- **The confirmation write withdrew the approvals it was improving.** Raising confidence `medium → high` changed a field criterion 1 rests on, so the trigger cleared the criterion and set `is_curated = false` — punishing 18 rows for getting better. Fixed at the source: confirming a species IS criterion 1 being cleared by hand, so `apply-image-confirmations` and `apply-image-reverts` now write `editorial_image_at` in the same statement, which records the fact and takes the trigger's escape hatch. **Third time this trigger has surprised its own author in a day** (trap 1b), and the same lesson each time: it was found by running the thing, not by reading it.
 
 **Deliberately not done:**
 

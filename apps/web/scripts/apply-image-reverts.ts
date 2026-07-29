@@ -104,6 +104,7 @@ async function main() {
     }
 
     if (apply) {
+      const now = new Date().toISOString()
       const { error: upErr } = await supabase
         .from('plants')
         .update({
@@ -115,13 +116,13 @@ async function main() {
           image_pick_reason: REVERT_REASON,
           // A reviewer choosing this photo is a verification, and the
           // strongest one available — stamp it so --verify does not re-ask.
-          image_verified_at: new Date().toISOString(),
-          // The inverse obligation from migration 20260728220852. This changes
-          // BOTH the hero image and the confidence, and the editorial verdict
-          // rests on each of them, so leaving the stamp would keep an approval
-          // that was made about a different photograph. Predates that column,
-          // which is why it was missing rather than decided against.
-          editorial_checked_at: null,
+          image_verified_at: now,
+          // It is also criterion 1 of the editorial bar being cleared by hand,
+          // so record that (migration 20260729140000) rather than clearing the
+          // verdict and paying to re-derive what a person just decided.
+          // Written in this same statement so the trigger treats the criterion
+          // as claimed rather than invalidated.
+          editorial_image_at: now,
         })
         .eq('id', id)
       if (upErr) {

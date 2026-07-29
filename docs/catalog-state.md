@@ -39,8 +39,8 @@ One row per step that stamps a column, from the `STEP_DEFS` registry in
 | `curate-styles` | `style_checked_at` | 595 / 595 | 100.0% |
 | `curate-greenery` | `greenery_checked_at` | 595 / 595 | 100.0% |
 | `pick-plant-images` | `image_checked_at` | 592 / 595 | 99.5% |
-| `pick-plant-images --verify` | `image_verified_at` | 26 / 595 | 4.4% |
-| `curate-editorial` | `editorial_checked_at` | 101 / 595 | 17.0% |
+| `pick-plant-images --verify` | `image_verified_at` | 44 / 595 | 7.4% |
+| `curate-editorial` | `editorial_checked_at` | 177 / 595 | 29.7% |
 
 ## Field coverage
 
