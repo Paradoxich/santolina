@@ -2,7 +2,45 @@
 
 Newest entry first. Read the top entry before starting work.
 
-## 2026-07-29 — session/2026-07-29-editorial (read this one first)
+## 2026-07-29 — session/2026-07-29-images (read this one first)
+
+**Status:** merged to main ([PR #124](https://github.com/Paradoxich/santolina/pull/124)). Worktree removed, branch deleted local and remote. `main` at `97ff868`.
+
+**Round 8: 61 → 94 of 101 signed off. Catalog `is_curated` 137 → 170. Rows approved with no verdict recorded: 76 → 0.** Three migrations, all applied to the remote and verified.
+
+**Done:**
+
+- **`pick-plant-images --verify`** — an absolute second look at a `medium` hero (is this the right species, on its own merits) rather than the pick's comparative question. It demoted the Fragrant plantain lily: the hero showed lavender flowers and `Hosta plantaginea` is white-flowered. Nine plants then got new Wikimedia photographs.
+- **A finished round is FROZEN.** All ten pipeline steps refuse to run without a scope and refuse to write outside it. `--all` needs `--why "<reason>"`.
+- **Thirteen steps became ten, and `pnpm round:run --round N` runs them end to end**, resuming from DB state and stopping on failure.
+- **The editorial verdict is three verdicts** (image / description / tags). A photo change now re-opens only the image criterion, which is free.
+- Round 7's 76 legacy approvals reviewed by Ana via `review-editorial.ts --legacy` and recorded.
+
+**Decisions made:**
+
+- A human "yes" outranks the model's "unsure" — the reviewer has context the model was denied. `apply-image-confirmations.ts` is that path, and it writes `editorial_image_at` because confirming a species IS criterion 1 being cleared.
+- A state predicate is not a scope. `WHERE x IS NULL` reads as "the new plants" and means "every plant this pass never reached".
+- `curate-styles` / `curate-greenery` / `draft-hardiness` leave the per-round cadence but stay in `STEP_DEFS` with `perRound: false`, so the stamp-column guard still covers them.
+- Creeping prickly-pear KEEPS `mediterranean` against the model's flag: our definition is a look ("sun-baked, gravel-and-terracotta"), not a provenance.
+
+**Next steps, in order:**
+
+1. **A contract test for the `invalidate_editorial_verdict` trigger.** It surprised its own author three times in one day and every time was caught by RUNNING it, never by reading it — including once where the documentation was wrong and a script was built against the wrong description. Create a scratch row, exercise each case (change a photo / a tag / a bloom colour / write the stamp back unchanged / change the stamp), assert, delete. Needs a real Postgres: remote scratch row now, local Supabase when unblocked.
+2. **One write helper for the plants table.** Four scripts hand-write updates that must each remember the trigger's rule independently. One place to get wrong beats four.
+3. **Run round 9 through `pnpm round:run`.** First real exercise of both the freeze and the runner; expect the freeze to catch something.
+4. Round 8's last holds: 2 species unconfirmable from any available photograph (American alumroot, Persian ironwood), 3 with no candidate image upstream at all.
+5. **No way to record a rejected tag flag.** The prickly-pear stays held forever because nothing is the `MANUAL_EXCLUSIONS` equivalent for editorial flags.
+6. Carried over, unchanged: ~70 medium heroes outside round 8; the ~575-plant WCVP tail (never `--apply` against `--all`); the token usage logger; promote hardiness WARN → FAIL when §27 un-parks; the two colour-bucket calls.
+
+**Open questions:**
+
+- **The prickly-pear ruling** — keep the tag and add an override mechanism, or drop the tag and let it clear? Ana's call.
+- **Local Supabase is still blocked** (disk cleanup), which is what stands between us and step 1 living in CI.
+- CI only runs on `pull_request`, so a pushed branch gets no run until a PR exists.
+
+**Worth knowing:** two traps grew this session. Trap 1 (a failed fetch must not look like a negative result) gained four instances, including a fix that committed the same sin an hour after fixing it. Trap 1b is new and is about this schema's first row-mutating trigger — restores go through it, and its escape hatch is about CHANGING the stamp, not writing it.
+
+## 2026-07-29 — session/2026-07-29-editorial
 
 **Status:** merged to main (PR #123). Worktree removed, branch deleted local and remote. `main` at `e60383e`, clean.
 
