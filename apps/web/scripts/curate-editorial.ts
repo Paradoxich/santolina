@@ -106,6 +106,7 @@ interface PlantRow {
   image_url: string | null
   image_url_curated: string | null
   image_pick_confidence: string | null
+  image_verified_at: string | null
   is_curated: boolean | null
   editorial_checked_at: string | null
 }
@@ -172,9 +173,17 @@ function judgeImage(p: PlantRow): {
   if (conf === 'medium')
     return {
       verdict: 'open',
-      reason:
-        'image pass: medium confidence — plausible but uncommitted, so the ' +
-        'hero is unverified. A targeted vision re-check clears this.',
+      // Two very different situations wear the same confidence, and telling
+      // them apart is the difference between "one cheap command clears this"
+      // and "this needs a photograph nobody has yet".
+      reason: p.image_verified_at
+        ? 'image pass: medium confidence, and it SURVIVED the targeted ' +
+          're-check (pick-plant-images --verify) — the species could not be ' +
+          'confirmed from this photo. Needs a new candidate image, not ' +
+          'another check.'
+        : 'image pass: medium confidence — plausible but uncommitted, so the ' +
+          'hero is unverified. A targeted vision re-check clears this ' +
+          '(pick-plant-images --verify).',
     }
   return { verdict: 'fail', reason: `image pass: ${conf} confidence` }
 }
@@ -411,7 +420,7 @@ async function main() {
     let q = db
       .from('plants')
       .select(
-        'id, common_name, scientific_name, plant_type_label, description, style_tags, space_types, bloom_months, bloom_color, foliage_color, is_greenery, height_min_cm, height_max_cm, image_url, image_url_curated, image_pick_confidence, is_curated, editorial_checked_at'
+        'id, common_name, scientific_name, plant_type_label, description, style_tags, space_types, bloom_months, bloom_color, foliage_color, is_greenery, height_min_cm, height_max_cm, image_url, image_url_curated, image_pick_confidence, image_verified_at, is_curated, editorial_checked_at'
       )
       .order('id')
       .range(from, to)

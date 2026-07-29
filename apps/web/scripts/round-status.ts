@@ -66,6 +66,8 @@ interface StatusRow {
   style_checked_at: string | null
   greenery_checked_at: string | null
   image_checked_at: string | null
+  image_pick_confidence: string | null
+  image_verified_at: string | null
   editorial_checked_at: string | null
 }
 
@@ -117,7 +119,7 @@ interface StepDef {
    * The bookkeeping column this step stamps, when it stamps one.
    *
    * This field is what makes the registry self-checking. `verify-round`
-   * asserts that every `*_checked_at` column on `plants` is claimed by some
+   * asserts that every `*_checked_at` and `*_verified_at` column on `plants` is claimed by some
    * step here, so adding a stamp column without adding its step FAILS instead
    * of going unnoticed — which is precisely how curate-greenery and the image
    * pass stayed invisible through round 8.
@@ -239,6 +241,28 @@ export const STEP_DEFS: StepDef[] = [
     ran: (p) => Boolean(p.image_checked_at),
   },
   {
+    // The remediation half of the image pass, and the only step here that is
+    // CONDITIONAL: a row only owes a verification if the pick came out
+    // `medium`. `high` is settled and `low` needs a new candidate image, not a
+    // second opinion on the same one — so both are outside the obligation
+    // rather than passing it trivially.
+    //
+    // A row cleared to `high` by the verification stops applying, which is
+    // correct: the question it was asked has been answered and the answer is
+    // recorded in image_pick_confidence. A row that stays `medium` keeps
+    // applying and is satisfied by the stamp, so "we looked again and still
+    // could not confirm it" reads as done work with an unresolved answer,
+    // exactly like a held-back editorial verdict.
+    //
+    // WARN, following the pick step it belongs to.
+    step: 'pick-plant-images --verify',
+    evidence: 'image_verified_at NOT NULL (medium-confidence heroes only)',
+    level: 'WARN',
+    stampColumn: 'image_verified_at',
+    applies: (p) => p.image_pick_confidence === 'medium',
+    ran: (p) => Boolean(p.image_verified_at),
+  },
+  {
     // The sign-off step (§3), and deliberately last: it judges the output of
     // every step above it, so it can only run once they have.
     //
@@ -291,6 +315,7 @@ export async function roundStatus(ids: string[]): Promise<StepStatus[]> {
           'botanical_checked_at, native_checked_at, native_region_checked_at, ' +
           'hardiness_rating, seasonal_care, ' +
           'style_checked_at, greenery_checked_at, image_checked_at, ' +
+          'image_pick_confidence, image_verified_at, ' +
           'editorial_checked_at'
       )
       .in('id', ids)
@@ -345,10 +370,17 @@ export async function unregisteredStampColumns(): Promise<string[]> {
   if (!data?.length) return []
 
   const registered = registeredStampColumns()
-  return Object.keys(data[0])
-    .filter((c) => c.endsWith('_checked_at'))
-    .filter((c) => !registered.has(c))
-    .sort()
+  return (
+    Object.keys(data[0])
+      // `_verified_at` as well as `_checked_at`: image_verified_at (migration
+      // 20260729083058) is a bookkeeping stamp in every sense that matters, and
+      // a suffix check looking only for the older name would have sailed past
+      // it — which is the precise failure this function exists to prevent,
+      // repeating itself one naming convention later.
+      .filter((c) => c.endsWith('_checked_at') || c.endsWith('_verified_at'))
+      .filter((c) => !registered.has(c))
+      .sort()
+  )
 }
 
 /** One-line-per-step render, used by both the verifier and the log writer. */

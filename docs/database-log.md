@@ -29,7 +29,7 @@ The numbers **in this file are different and must stay written down**: a dated s
 3. **Scope every script to a round.** Use `--round <label>`, which reads `rounds/<label>/manifest.json`. Never rely on `created_at` heuristics, and see trap 2 before trusting `--new-only`.
 4. **Generate, review, then apply.** Any script offering `--apply` writes nothing until you have read its report. This split is the single reason trap 1 did not corrupt the catalog.
 5. **Never bare `.select()` on a full table.** It silently caps at 1000 rows. Use `fetchAllRows` from `lib/paginate.ts`. `plant_combinations` has already crossed the cap once (round 6: 13 duplicate pairs, 34 plants over the companion limit); current sizes are in [`catalog-state.md`](catalog-state.md).
-6. **`is_curated` is flipped by exactly one script — `curate-editorial.ts` — and by nothing else.** This rule used to read "never flip it; it is Ana's alone", which stopped being true on 2026-07-28 when she ruled that an agent owns the editorial pass, including the flag. What has not changed is that no _other_ script may touch it: a drafting or fact-checking pass that sets `is_curated` is claiming a sign-off it did not make. The bar is defined once in `lib/editorial-standard.ts` (§3, runbook step 7b). **Editorial coverage is still thin** — round 7's 76 rows and round 8's 61 approved; everything seeded before them is unreviewed. Current count in [`catalog-state.md`](catalog-state.md). Round 8's 40 held rows are recorded work with a "no" verdict, not a gap, and 33 of them wait only on an image re-check.
+6. **`is_curated` is flipped by exactly one script — `curate-editorial.ts` — and by nothing else.** This rule used to read "never flip it; it is Ana's alone", which stopped being true on 2026-07-28 when she ruled that an agent owns the editorial pass, including the flag. What has not changed is that no _other_ script may touch it: a drafting or fact-checking pass that sets `is_curated` is claiming a sign-off it did not make. The bar is defined once in `lib/editorial-standard.ts` (§3, runbook step 7b). **Editorial coverage is still thin** — round 7's 76 rows and round 8's 61 approved; everything seeded before them is unreviewed. Current count in [`catalog-state.md`](catalog-state.md). Round 8's held rows are recorded work with a "no" verdict, not a gap. The image re-check (`pick-plant-images.ts --verify`, runbook step 7a) has since cleared 19 of them; what remains needs a new photograph or a tag fix, not another pass.
 7. **After any schema or request-shape change, run `--limit 3` first.** A green typecheck does not verify a runtime API contract.
 8. **Finish with `verify-round.ts --round <label>`.** Without `--round` it checks that data is _valid_ but not that the pipeline actually _ran_.
 9. **Append an entry here.** `scripts/log-db-session.ts --round <label>` writes the factual part for you.
@@ -190,6 +190,31 @@ This is trap 7 in different clothes: **an external name lookup that guesses is m
 ## Sessions
 
 <!-- Newest first. Append with: scripts/log-db-session.ts --round <label> -->
+
+### 2026-07-29 — The medium-confidence heroes, re-checked (and one wrong plant found)
+
+**Branch** `session/2026-07-29-images` (worktree `santolina-images`, off `main` at `68c93ef`).
+
+Round 8's editorial pass left 40 rows held, **33 of them blocked on nothing but a `medium` image confidence**. Built `pick-plant-images.ts --verify` to answer that, ran it over round 8's 32 medium heroes, then re-ran the editorial pass over the rows whose confidence moved.
+
+**Data written:** `image_pick_confidence` + `image_pick_reason` + `image_verified_at` on 32 rows; `editorial_checked_at` nulled on the 20 that changed and then re-judged; `is_curated` on 18 more. Round 8 sign-off **61 → 79 of 101**; catalog-wide **137 → 155**. Migration `20260729083058` adds `image_verified_at`, applied to remote and verified. `verify-round --round 8`: **0 failures, 4 warnings** (unchanged). `round-progress --round 8`: 13/13 steps.
+
+**Why a second script and not a re-run of the pick.** The pick is COMPARATIVE — "which of these six is best?" — so a `medium` there is largely a statement about the field: two were close, or the winner has a pot rim in it. Re-running it just re-stages the same comparison. `--verify` shows the model the ONE image that won, alone, and asks an absolute question: is this the right species, and is it good enough to be the hero? Those are different questions and they get different answers.
+
+**The obvious objection is "you re-rolled until you got `high`", and the three answers are in the code.** The model never names a confidence — it answers two narrow questions (`species_match`, `hero_quality`) and a pure function in the script maps them, so the promotion rule is in the diff and under test (`pick-plant-images.test.ts`) rather than in a prompt asking nicely. An unconfirmed species never clears, at any photo quality. And the pass **can demote**, which it did.
+
+**What it found.** 19 cleared, 12 still medium, **1 demoted to `low`: the Fragrant plantain lily hero shows purple flowers, and `Hosta plantaginea` is white-flowered.** That is criterion 1 doing exactly what it exists for — a wrong plant on a plant's own page, visible to a reader who knows nothing about plants — and it had been sitting in the catalog described by a confident-sounding pick reason.
+
+**The 30-clears estimate in the handoff was wrong; 19 cleared.** The 12 that stayed are honest "cannot confirm the species from this frame" verdicts — a genus-level Camassia, a fern whose diagnostic scales aren't visible, a too-tight Ilex crenata close-up. `image_verified_at` records that the second look happened, so those stay medium instead of being re-billed forever, and `curate-editorial` now words its blocker differently for a verified row: needs a new candidate image, not another check.
+
+**A guard that would have missed its own new column.** `unregisteredStampColumns()` asserts every bookkeeping stamp on `plants` is claimed by a step in `STEP_DEFS` — by matching the suffix `_checked_at`. `image_verified_at` would have sailed straight past it, which is the exact failure that function exists to prevent, recurring one naming convention later. Widened to `_verified_at` as well, and the step is registered (WARN, conditional: a row only owes a verification if its pick came out `medium`).
+
+**Deliberately not done:**
+
+- the 74 medium heroes outside round 8 — the flag is scoped, and this session's mandate was round 8
+- the 12 that stayed medium: they need a new candidate image (Wikimedia or a manual hero), not another check
+- the 6 tag flags from `reports/editorial-8.json` — next in the handoff order, untouched here
+- the 3 plants with no candidate image upstream at all, unchanged
 
 ### 2026-07-29 — Round 8's editorial pass: the sign-off step becomes a script
 
