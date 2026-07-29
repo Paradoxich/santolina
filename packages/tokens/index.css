@@ -348,8 +348,18 @@
     --color-sage-200
   ); /* soft hairline separating the flush sidebar from content — was white, too harsh against surface-page (sage-300) */
   --sidebar-width: 14.5rem; /* 232px — app sidebar */
-  /* main content clearance: sidebar width + 40px gutter (sidebar is flush to the viewport edge) */
-  --sidebar-offset: calc(var(--sidebar-width) + var(--spacing-10));
+  /* Gutter between page content and the shell's edges, on both sides.
+   * Full-bleed elements (tab headers, the Explore search bar) escape the
+   * content column by exactly this much, so it needs one home rather than
+   * the number retyped at every escape: it was 40px on the left and 48px on
+   * the right, and each escape hardcoded whichever edge it sat against.
+   * Changing it here moves the margin and every escape together. */
+  --content-gutter: var(--spacing-10); /* 40px */
+  /* main content clearance: sidebar width + the gutter (sidebar is flush to the viewport edge) */
+  --sidebar-offset: calc(var(--sidebar-width) + var(--content-gutter));
+  /* Content cap: fits a 14in MacBook Pro (1512px) exactly —
+   * 1512 - 232 sidebar - 40 - 40 = 1200. */
+  --content-max: 75rem; /* 1200px */
   --login-border: var(--color-fern-500);
   /* --login-hairline removed July 2026. It was never a hairline: its only use
    * was the login field's placeholder text, so it belongs to the text-faint

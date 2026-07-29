@@ -2,6 +2,7 @@
 // climate). Client-safe — no framework or Supabase imports. Shared by the
 // dashboard Care Tips and the growing cards' stage notes.
 import type { SeasonalRhythm } from './plants-db'
+import { CHART_COLORS } from './chart-colors'
 
 export type Season = keyof SeasonalRhythm
 
@@ -24,3 +25,52 @@ const MONTH_TO_SEASON: Record<number, Season> = {
 export function getCurrentSeason(today: Date = new Date()): Season {
   return MONTH_TO_SEASON[today.getMonth() + 1]!
 }
+
+/**
+ * A chart swatch per stage, from the shared muted palette the dashboard's
+ * bloom chart uses. Roughly seasonal (fresh green through gold and rust to
+ * a cold blue) so the year reads at a glance, but they are decoration for
+ * telling one track from another, not an encoding of anything.
+ */
+export const SEASON_COLORS: Record<Season, string> = {
+  early_spring: CHART_COLORS.sage,
+  late_spring: CHART_COLORS.pink,
+  summer: CHART_COLORS.gold,
+  late_summer: CHART_COLORS.apricot,
+  autumn: CHART_COLORS.red,
+  winter: CHART_COLORS.blue,
+}
+
+/** Display names for the six stages, in seasonal_rhythm key order. */
+export const SEASON_LABELS: Record<Season, string> = {
+  early_spring: 'Early spring',
+  late_spring: 'Late spring',
+  summer: 'Summer',
+  late_summer: 'Late summer',
+  autumn: 'Autumn',
+  winter: 'Winter',
+}
+
+export interface SeasonSpan {
+  season: Season
+  /** 1-12, inclusive. */
+  startMonth: number
+  endMonth: number
+}
+
+/**
+ * The same stages as contiguous calendar runs, January to December, derived
+ * from MONTH_TO_SEASON so the two cannot drift. Winter yields two runs
+ * because it wraps the year end (Jan-Feb, then Dec); a strip drawing the
+ * calendar left to right has to show both rather than pretend it is one.
+ */
+export const SEASON_SPANS: SeasonSpan[] = (() => {
+  const spans: SeasonSpan[] = []
+  for (let month = 1; month <= 12; month++) {
+    const season = MONTH_TO_SEASON[month]!
+    const last = spans[spans.length - 1]
+    if (last && last.season === season) last.endMonth = month
+    else spans.push({ season, startMonth: month, endMonth: month })
+  }
+  return spans
+})()

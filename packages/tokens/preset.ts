@@ -256,6 +256,10 @@ const preset = {
         /* component tier */
         sidebar: 'var(--sidebar-width)',
         'sidebar-offset': 'var(--sidebar-offset)',
+        'content-gutter': 'var(--content-gutter)',
+      },
+      maxWidth: {
+        content: 'var(--content-max)',
       },
       lineHeight: {
         /* named defaults re-pointed at tokens; numeric leading-* stay stock */
