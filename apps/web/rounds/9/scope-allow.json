@@ -1,0 +1,6 @@
+{
+  "note": "Round 9 needed no waivers. check-round-scope reported 0 out-of-scope changes against a pre-seed baseline (595 plants / 1485 pairs -> 645 / 1608), which is the first round to come back clean on its first ask. That is the 2026-07-29 freeze doing its job rather than an absence of evidence: every pipeline step now refuses to write outside the round's manifest, and the one remediation this round needed (the duplicate 'Michaelmas daisy') was deliberately applied to round 9's own row so it would not need a waiver here.",
+  "allow": [],
+  "cleared_at": "2026-07-29T16:40:00Z",
+  "cleared_why": "Round 9 is finished and its window is closed as the last act of the round, not later. verify-round: 0 failures, 52 warnings (50 parked hardiness, 1 plant with no image upstream, 1 image step at 49/50 for that same plant). check-round-scope: 0 out-of-scope, 0 waived. archive-round: before 595 / after 645 committed under rounds/9/catalog. Closing now is the point - the window is baseline-to-now, so leaving it open lets every later catalog-wide pass show up as this round's failure, which is exactly how round 8 accumulated 287 false failures."
+}
