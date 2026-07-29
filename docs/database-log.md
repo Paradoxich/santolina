@@ -175,7 +175,9 @@ Traps 1 and 9 are the pipeline failing to fetch. This one is the fetch succeedin
 
 Two WCVP quirks worth knowing. It occasionally **omits the establishment marker**, so a single unmarked Level 3 row invents a whole Level 2 region — `Galium verum` read as native to Australia off one Tasmania row, while GBIF's own GRIIS-Australia dataset lists it as introduced. And a reviewed decision must outrank it: `Rosmarinus officinalis` has Western Asia deliberately cut and WCVP disagrees, which is why `MANUAL_OVERRIDES` now lives in `lib/native-region-overrides.ts` and is read by both the generator and the checker.
 
-**Status: 20 rows validated (7 corrected), ~575 not.** A 60-plant sample scored 56 clean against 1 genuinely wrong, so the tail is real but small. Do not point `--apply` at `--all`.
+**Status: the tail was worked on 2026-07-30 and the catalog has now been through WCVP** — see that day's session entry for the numbers, and `select count(*) from plants where native_region_checked_at is null` for the remainder, which is the `no-data` set rather than a backlog. Do not point `--apply` at `--all`.
+
+**The sample under-predicted the tail by 5x, and that is the calibration worth keeping.** A 60-plant sample scored 56 clean / 1 wrong and was read as "~2%, roughly a dozen bad rows"; the real rate over 475 rows was **11%, 53 corrected**. The sample was not unlucky, it was drawn from the wrong population — recently seeded rows had already been through the checker, so an unstamped-only sample is the oldest, least-curated end of the catalog. **Sample the population you are about to act on, not the table.**
 
 ### 11. GBIF's `species/match` fails UPWARD, into a genus
 
@@ -210,6 +212,18 @@ This is trap 7 in different clothes: **an external name lookup that guesses is m
 
 **Not yet fixed.** The check is mechanical (list migrations, compare against the directory modulo trap-13 renames) and belongs in CI once the Supabase secrets exist, but nothing enforces it today.
 
+### 15. The WCVP cache mixes GBIF checklists, so a raw `NATIVE` marker is not WCVP — OPEN by design
+
+`reports/wcvp-native-cache.json` stores GBIF's whole `species/{key}/distributions` payload, which aggregates **many** checklist datasets. `cross-check-native-region.ts` filters on `r.source === WCVP_SOURCE` and is correct. **A reviewer reading the cache to audit a finding usually does not**, and the unfiltered rows contradict the script convincingly: `Rudbeckia fulgida` carries `Texas — NATIVE` from the **World Register of Marine Species**, and `Asplenium trichomanes` a `Western Cape — NATIVE` row from another list, each appearing to prove the script had wrongly narrowed a range. Three drops were nearly reversed on that evidence on 2026-07-30.
+
+**The durable rule: filter the cache by `source` before believing anything in it.** This is trap 11's sibling — both are GBIF answering a narrower question than it appears to, and both are caught only by reading the field that says which answer you got (`matchType`, `source`). Left as-is rather than "fixed" by caching only WCVP rows: the full payload is what makes an upstream disagreement visible at all, and _Arbutus unedo_'s Ireland split was worth seeing.
+
+### 16. A closed round's PAIRING check still rots, because pairings carry no timestamp — OPEN, expect it
+
+Found by the round-10 image-holds session on 2026-07-30 and recorded here rather than fixed. `check-round-scope --round 9` returns **120 failures, all "out-of-scope pairing added", all "both plants predate the round"** — they are round 10's `curate-combinations` output. Round 9's window is closed and `cleared_at` works correctly for **plant** writes, because a plant row carries `updated_at` to filter on. **A `plant_combinations` row carries no timestamp**, so there is nothing for the closing edge to compare against, and every later round's pairings fail every earlier closed round permanently. The count only grows.
+
+**So round 9's "0 out-of-scope, window CLOSED" was true when written and can never be reproduced.** Do not read a pairing failure on a closed round as a regression, and do not "fix" it by waiving each pairing — the list grows every round. The real fix is a timestamp on `plant_combinations` (or excluding pairings from a closed round's check entirely), which is a schema change nobody needed yet. Left alone per Ana's 2026-07-29 ruling that the pipeline is finished and the round run's own output is the whole backlog.
+
 ### 12. A round manifest records names as SEEDED, before the name pass
 
 `rounds/<n>/manifest.json` is written by the seed run, so its `common_name` values predate `fix-round8-names.ts`. Per trap 6, Trefle gave no English name to 18 of round 8's 101 rows, and those sit in the manifest under their bare scientific name. Grepping a manifest by common name therefore returns a confidently wrong answer: it is how a review concluded round 8 had seeded nothing that could collide, when it had seeded `Anemonoides nemorosa` — the direct cause of a rename. **Search a manifest by `scientific_name`**, and cross-read the round's name-fix script.
@@ -219,6 +233,33 @@ This is trap 7 in different clothes: **an external name lookup that guesses is m
 ## Sessions
 
 <!-- Newest first. Append with: scripts/log-db-session.ts --round <label> -->
+
+### 2026-07-30 — the WCVP tail (not a round)
+
+**Branch** `session/2026-07-30-wcvp-tail`. No seed, no migration, no AI, no cost — GBIF is public and this guard uses no model. `cross-check-native-region.ts` run over every catalog row that had never been validated, in 9 reviewed batches of 60.
+
+```
+501 unstamped at the start (not the ~575 the backlog predicted — 194 already carried the stamp)
+475 reached a decided verdict and are stamped
+ 53 corrected via --apply   (11%, not the ~2% a 60-plant sample predicted)
+ 26 left NULL as no-data, by design
+```
+
+**The backlog's "do this first" was already done, and this is a third instance of the docs-are-not-evidence rule.** The item said `cross-check-native-region.ts` writes no stamp column and that batching the tail without one would rebuild trap 2 from scratch. It has stamped `native_region_checked_at` since migration `20260728193815`, is registered in `STEP_DEFS` at FAIL, and says so in its own header. The claim was true when written on 2026-07-28 (it is next-step 4 in that day's handoff entry) and was carried forward through four later handoff entries after the thing it asked for shipped. **Verify a stated blocker before designing around it** — `grep -rn native_region_checked_at scripts/` was the whole check.
+
+**The trap worth recording: the GBIF distributions payload mixes checklist datasets, and an `establishmentMeans: NATIVE` in the raw cache is not WCVP saying native.** Reviewing a proposed drop by reading `reports/wcvp-native-cache.json` directly looks like exactly the right diligence and produces confident wrong conclusions. `Rudbeckia fulgida`'s cache carries `Texas — NATIVE`, which contradicted a drop of South-Central U.S.A. and read as the script over-reaching; that row's `source` is **the World Register of Marine Species**. Same shape on `Asplenium trichomanes`, where a `Western Cape … NATIVE` row appeared to contradict dropping five African regions and came from another checklist entirely. The script is right and filters on `r.source === WCVP_SOURCE`. **Any review of a finding must filter the cache by `source` first** — three of this session's drops were nearly reversed on junk evidence.
+
+**Both directions of correction rest on positive WCVP evidence, which is why 53 were applied and none held.** 22 drops carry an explicit `INTRODUCED` marker (the _Imperata_ class this pass exists for). The rest are absences from a WCVP native list — the same shape as the `Polystichum polyblepharum` exclusion, but pointing the other way: that one would have **widened** a range on a single unmarked row, whereas an absence here **narrows** one, which under-claims rather than over-claims on the Explore native filter. Every row was confirmed `matchType: EXACT` with the region genuinely absent from the WCVP-only subset, not present-but-unmarked.
+
+**The most visible single change: `Achillea millefolium` is no longer native to North America** — all ten NA regions dropped, four of them explicitly marked introduced. That is Kew's position (Eurasian native, naturalised in NA) and it will read as wrong to anyone who knows yarrow as a prairie plant. Named here so it is not quietly "fixed" back. Same class: `Arbutus unedo` loses Northern Europe, so the Irish strawberry-tree is not native to Ireland — WCVP marks Ireland `INTRODUCED`, while a second checklist in the same payload splits it as "SW-Ireland native, Northern Ireland introduced". The disagreement is real and upstream; the field follows the declared authority.
+
+**26 rows are stamped nowhere and that is correct** — GBIF returned no WCVP distribution, so nothing was learned, and a stamp would be a permanent record of a check that did not happen. They resurface at the front of every future unstamped sweep. **7 of the 26 are not absences but naming problems**, where the catalog's `scientific_name` is no longer the accepted name and GBIF fails upward: `Aristolochia macrophylla`, `Berberis japonica` and `Sorbus aria` climb to FAMILY, `Blechnum spicant` to `Struthiopteris` and `Pennisetum alopecuroides` to `Cenchrus`, and two are plain misspellings (`Nepeta × faasenii` → `faassenii`, `Viburnum davidii` → `davidi`). Deliberately not fixed here: a `scientific_name` is the key the seeder dedupes on, the image sourcing resolves by, and `lib/demo-garden.ts` looks plants up by, so renaming one is its own change. The other 19 are the `Symphoricarpos albus` shape and need `NO_WCVP_DISTRIBUTION` entries only if they ever land inside a round.
+
+**Round 10's scope window was still open and is now catching two later sessions.** The tail is by definition out-of-round — these are rounds 1-5 era rows that predate every manifest — so all 53 corrections must land outside round 10's scope, and there is no scope they could land inside instead. Waived per column in `rounds/10/scope-allow.json`, which is safe rather than lax: a round-10 plant's own `native_region` write is IN scope and therefore never becomes a finding here, so the entry can only ever match a row round 10 did not seed. This is exactly the accumulation the round-9 entry predicted: a window left open makes every later catalog-wide pass read as that round's failure, and this one had started doing it to two concurrent sessions at once.
+
+**Round 10 was then closed here, and it needed BOTH halves of the mechanism — which is the reusable finding.** `cleared_at` was initially left unset on the grounds that closing a round is its owner's call; the round-10 session confirmed the round green (10/10 steps, 6/6 artifacts, `verify-round` 0 failures, archive re-captured in PR #139) and asked for the closure to be written here, so it is. But **a `cleared_at` alone could not have closed this window honestly.** Round 10's own last remediation — the Seaside petunia hero, 23:03:53 — landed **after** both out-of-round write sets (the round-9 image holds at 22:49, the WCVP tail at ~22:55-23:05), so any closing edge early enough to allow them would have asserted the round was finished at a moment it demonstrably was not. The round-8 precedent applies verbatim: no window holding a round's real work can exclude a pass that ran first. So the two sets are **waived by name** and `cleared_at` sits after everything. Result: `0 out-of-scope, 96 waived, 422 warnings`.
+
+**A plant-scoped waiver needs an explicit `column: "*"`** — `{plant, why}` alone throws. Deliberate on the tool's part (a waiver has to say what it covers), and worth knowing before writing eight of them.
 
 ### 2026-07-30 — The 16 editorial image holds from rounds 9 and 10
 

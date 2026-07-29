@@ -70,6 +70,42 @@ The catalog's size, the curated count and the per-round step table are
 **generated** into `docs/catalog-state.md` and `docs/round-runbook.md`. Link to
 them; never retype their numbers here.
 
+## 2026-07-30 — session/2026-07-30-wcvp-tail (pipeline; read this one first for pipeline work)
+
+**Status:** [PR #137](https://github.com/Paradoxich/santolina/pull/137), rebased onto `main` after the image-holds line of work landed (#135, #136, #138). Whether it merged: `gh pr view 137 --json state,mergedAt`. **The catalog data was already live before the PR** — the pass writes straight to remote Supabase — so what the PR carries is provenance, the scope waiver and round 10's closure.
+
+Ran concurrently with the image-holds session and touched no **code** file it touched, but both sessions appended prose to `docs/database-log.md` and to this file, and both conflicted on rebase. **Two concurrent sessions writing into the same two documents is the one guaranteed collision** — worth expecting rather than being surprised by. Resolved by keeping both entries, newest first.
+
+Did the backlog's WCVP tail: `cross-check-native-region.ts` over every row that had never been validated, 9 reviewed batches of 60, never `--apply` against `--all`. 475 decided and stamped, **53 corrected**, 26 left `no-data`. Free — GBIF is public, no AI.
+
+**Done:**
+
+- **The tail is worked.** Remaining unstamped rows are the `no-data` set, not a backlog: `select count(*) from plants where native_region_checked_at is null`.
+- **Round 10's scope window is closed** in `rounds/10/scope-allow.json` — `cleared_at` plus nine named waivers. `check-round-scope --round 10`: 0 out-of-scope, 96 waived.
+- **Trap 15** (the WCVP cache mixes GBIF checklists) and **trap 16** (a closed round's pairing check rots permanently — the round-10 session's finding) written up in `docs/database-log.md`.
+
+**Decisions made:**
+
+- **Closing round 10 needed BOTH `cleared_at` and named waivers, and the reason generalises.** Round 10's own last remediation (the petunia hero, 23:03:53) landed **after** both out-of-round write sets (22:49 and ~22:55-23:05), so any closing edge early enough to allow them would have asserted the round finished at a moment it had not. Round 8's precedent verbatim: no window holding a round's real work can exclude a pass that ran first. **When a round's tail overlaps another session's writes, waive by name and put `cleared_at` after everything** — do not backdate the edge to swallow them.
+- **Both directions of WCVP correction were applied, none held.** 22 drops carry explicit `INTRODUCED` markers; the rest are genuine absences from the WCVP native list, which **narrows** a range. That is the opposite direction from the `Polystichum polyblepharum` exclusion, which would have **widened** one on a single unmarked row — narrowing under-claims on the Explore native filter, so absence is the safe direction and widening is not.
+- **`docs/catalog-state.md` deliberately not regenerated.** It reads live, so regenerating it mid-session bakes in the other session's in-flight image numbers (`image_verified_at` moved 72 → 67 while this session ran, none of it ours). Regenerate it once things are quiet: `pnpm catalog:state`.
+- **The 7 accepted-name problems were not fixed.** A `scientific_name` is the key the seeder dedupes on, image sourcing resolves by, and `lib/demo-garden.ts` looks up by; renaming one is its own change.
+
+**What bit us, and it is the third instance of one rule:**
+
+- **The backlog item's "do this first" blocker did not exist.** It said the script writes no stamp column and that batching the tail would rebuild trap 2. `native_region_checked_at` has stamped since migration `20260728193815`, is in `STEP_DEFS` at FAIL, and the script's own header documents it. The claim was true on 2026-07-28 (it is next-step 4 in that day's entry) and rode through four later entries after the fix shipped. `grep -rn native_region_checked_at scripts/` was the whole check. **Same shape as the `catalog-state` secrets claim that produced this file's rule.**
+- **A sample drawn from the wrong population under-predicted by 5x.** The item predicted ~2% bad rows off a 60-plant sample that scored 56/1; the real rate over 475 was **11%**. Not bad luck — recently seeded rows had already been checked, so an unstamped-only sample is the oldest, least-curated end of the catalog. **Sample the population you are about to act on, not the table.**
+- **Auditing a finding by reading the raw cache nearly reversed three correct fixes.** `reports/wcvp-native-cache.json` holds GBIF's whole payload across many checklists; `Rudbeckia fulgida` carries `Texas — NATIVE` from the **World Register of Marine Species**. The script filters on `source === WCVP_SOURCE`; a human reviewer must too.
+- **A plant-scoped waiver needs an explicit `column: "*"`.** `{plant, why}` alone throws.
+
+**Next steps, in order:**
+
+1. **Regenerate `docs/catalog-state.md`** once no session is writing (`pnpm catalog:state`). It is stale by design, not by neglect.
+2. **The 7 accepted-name fixes**, if wanted as a batch: `Aristolochia macrophylla`, `Berberis japonica`, `Sorbus aria` (all climb to FAMILY), `Blechnum spicant` → `Struthiopteris`, `Pennisetum alopecuroides` → `Cenchrus`, plus misspellings `Nepeta × faasenii` → `faassenii` and `Viburnum davidii` → `davidi`. Each unblocks a WCVP validation as a side effect.
+3. Carried over from round 10: the 8 editorial image holds (§30/§31 Batch API flow), `Symphyotrichum lateriflorum`'s " or " common-name blob, the token usage logger, hardiness WARN → FAIL when §27 un-parks, `NEXT_PUBLIC_APP_URL` dead but advertised.
+
+**Open questions:** none from this session. The two long-standing ones (local Supabase disk cleanup, the Pro-plan decision) are unchanged and outside the repo.
+
 ## 2026-07-30 — session/2026-07-30-image-holds (pipeline; read this one first for pipeline work)
 
 **Status:** merged to main ([PR #135](https://github.com/Paradoxich/santolina/pull/135), merge commit `2e414d7`), CI green on that run. Worktree and branch removed at session end. No migration, no schema change, no seed. Catalog rows were written by the passes themselves, as always — the PR carried the code fix and the provenance.
