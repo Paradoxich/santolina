@@ -52,7 +52,8 @@
  */
 
 import { mkdirSync, writeFileSync, readFileSync, existsSync } from 'node:fs'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
+import { gunzipSync, gzipSync } from 'node:zlib'
 
 import { MANUAL_OVERRIDES } from '../lib/native-region-overrides'
 import { fetchAllRows } from '../lib/paginate'
@@ -61,7 +62,23 @@ import { requireScope, scopeIds, describeScope } from './scope'
 
 const REPORTS_DIR = join(process.cwd(), 'reports')
 const WGSRPD_GEOJSON = join(REPORTS_DIR, 'level3.geojson')
-const CACHE_PATH = join(REPORTS_DIR, 'wcvp-native-cache.json')
+
+/**
+ * The GBIF lookup cache is COMMITTED, gzipped, and is not a report.
+ *
+ * It used to live in gitignored `reports/`, which made it a 14MB file on one
+ * laptop that `git worktree remove` deletes without asking — the same shape as
+ * the July 28 trap where a backup died with its throwaway worktree. Losing it
+ * is not a small thing: it is ~500 species of rate-limited GBIF lookups at
+ * GBIF_DELAY_MS apiece, and re-earning it is exactly the kind of long
+ * rate-limited fetch loop that produced trap 1 in the first place.
+ *
+ * It is also not per-round provenance, so `rounds/<n>/` is the wrong home: it
+ * is reference data every later round reads and appends to. Gzipped because
+ * 14MB of pretty-printed JSON is 1MB compressed, the same trade the catalog
+ * archives already make.
+ */
+const CACHE_PATH = join(process.cwd(), 'reference', 'wcvp-native-cache.json.gz')
 const JSON_OUT = join(REPORTS_DIR, 'native-region-crosscheck.json')
 const MD_OUT = join(REPORTS_DIR, 'native-region-crosscheck.md')
 
@@ -323,10 +340,19 @@ async function fetchSpecies(scientificName: string): Promise<CachedSpecies> {
 
 function loadCache(): Record<string, CachedSpecies> {
   if (!existsSync(CACHE_PATH)) return {}
-  return JSON.parse(readFileSync(CACHE_PATH, 'utf8')) as Record<
-    string,
-    CachedSpecies
-  >
+  const json = gunzipSync(readFileSync(CACHE_PATH)).toString('utf8')
+  return JSON.parse(json) as Record<string, CachedSpecies>
+}
+
+/**
+ * Written after every fetch rather than once at the end, which is the existing
+ * behaviour and worth keeping: an interrupted run costs nothing, and the whole
+ * value of the file is that a lookup is paid for once. Gzipping ~14MB on each
+ * write is cheap next to the GBIF_DELAY_MS pause that follows it anyway.
+ */
+function saveCache(cache: Record<string, CachedSpecies>): void {
+  mkdirSync(dirname(CACHE_PATH), { recursive: true })
+  writeFileSync(CACHE_PATH, gzipSync(JSON.stringify(cache, null, 2)))
 }
 
 // ---------------------------------------------------------------------------
@@ -633,8 +659,7 @@ async function main() {
     if (!species) {
       species = await fetchSpecies(plant.scientific_name)
       cache[plant.scientific_name] = species
-      mkdirSync(REPORTS_DIR, { recursive: true })
-      writeFileSync(CACHE_PATH, JSON.stringify(cache, null, 2))
+      saveCache(cache)
       await sleep(GBIF_DELAY_MS)
     }
     findings.push(compare(plant, species, l3ToL2))
