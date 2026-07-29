@@ -2,7 +2,58 @@
 
 Newest entry first. Read the top entry before starting work.
 
-## 2026-07-29 — session/2026-07-29-diary-feature-polish (read this one first)
+## 2026-07-29 — session/2026-07-29-round-9 (read this one first)
+
+**Status:** merged to main ([PR #127](https://github.com/Paradoxich/santolina/pull/127), merge commit `996a74a`). CI green. Worktree removed, branch deleted local and remote.
+
+**Catalog 595 → 645 species, 1485 → 1608 pairings.** The data was already live before the merge — the pipeline writes straight to remote Supabase, so the PR landed the code fixes and the provenance, not the plants.
+
+```
+verify-round --round 9        0 failures, 52 warnings (50 parked hardiness, 1 no-image plant)
+check-round-scope --round 9   0 out-of-scope, 0 waived, window CLOSED via cleared_at
+restore-catalog rounds/9/catalog --phase after   0 rows differ
+typecheck / tests             clean, 139 passed
+```
+
+**Done:**
+
+- **Round 9 = small spaces + late season.** `terrace_balcony` was 111/595 and Oct/Nov 70/13. Both were verified as _species_ gaps before being believed.
+- **Three runner bugs found and fixed** — this was `run-round`'s first unattended round. Details below; they are the real output of this session.
+- **Ten `verify-round` failures fixed**: 8 colour values mapped, the duplicate "Michaelmas daisy" resolved, `Symphoricarpos albus` added to `NO_WCVP_DISTRIBUTION` with evidence.
+- Runbook is now **10 steps + 6 book-ends** (was 4), doc regenerated.
+
+**The single most useful thing learned: a low count is not a gap until you have checked it is not the data.** Round 9 was going to be a winter round, off the histogram (Dec 11 vs Jun 341). A seed dry run killed it — **44 of 58 winter candidates were already in the catalog** and 49 plants already flower in Dec/Jan/Feb. December reads as 11 because eleven is roughly how many things flower in December. Every gap this round shipped against was tested that way first (e.g. 13 of 15 obvious balcony plants already carried `terrace_balcony` correctly, proving the low count was species, not tagging). **Do this before picking round 10's theme; it costs minutes.**
+
+**The three bugs, because they share one anatomy — a step the runner did not know it needed:**
+
+1. **A step read as complete because the step feeding it had not run.** `pick-plant-images --verify` applies only to medium-confidence heroes, and nothing has a confidence until the image pass runs, so the predicate was vacuously true and `run-round` froze the plan at read time. **In a fresh round that step could never run**; round 8's only ran because a human invoked it. Fixed by re-reading state after every step. It fired this round and demoted three wrong heroes.
+2. **Only half of a generate-review-apply script was registered.** `regenerate-native-region --apply` replays a plan JSON in gitignored `reports/`; the generate half was in no runbook, so the runner died on a clean checkout. Round 8 survived on a stale local file. **A round must not depend on untracked local state.**
+3. **A step reported success while doing nothing** — the dangerous one. `pick-plant-images` filtered to rows having `image_candidates`; all 50 were null, so it dropped every plant, printed "every plant with candidates has been checked" and exited 0. Surfaced only when `curate-editorial` started holding all 50 for "the image pass never judged this row". Its prerequisite `recover-image-categories` says "use after a new seed batch" in its own header and **had never been in the runbook**. Now step 6, now scoped (it had none — under the runner it would have written catalog-wide), and the vision pass now FAILS on a candidate-less scoped row.
+
+**Decisions made:**
+
+- **The backup must be taken before the seed.** `run-round`'s step 0 runs after seeding, so the runner's own backup is a post-seed rollback point. Round 9's scope window is honest only because one was taken by hand first. Unfixed in the runner — it does not seed, so it cannot own this.
+- **`regenerate-native-region` auto-applies with no review gate**, and that is accepted rather than fixed. `onFail` fires only on failure and generating a plan succeeds. What audits the write is the WCVP cross-check: 45/50 agreement, and it caught the one row where Trefle counted an INTRODUCED range as native (`Erysimum cheiri`). Noted in `runbook.ts`: **if that cross-check ever stops being FAIL-level, this needs a real gate.**
+- **The compound-colour rule is now explicit** in `bloom-colors.ts`: the last word is the bucket, the first only modifies it. `purple-red` is burgundy, `reddish-purple` is purple — not the same colour reversed.
+- **A duplicate name is fixed on the in-scope row.** Round 9's `S. novi-belgii` became _New York aster_ (its own standard name) rather than renaming the older `novae-angliae` row, which would have written outside the manifest.
+- **`no-data` stays unstamped.** `Symphoricarpos albus` is named in `NO_WCVP_DISTRIBUTION` with evidence rather than softening the step — an exception is written down, not switched off.
+
+**Next steps, in order:**
+
+1. **A dry rehearsal of a round, in CI — Ana's explicit ask: "I don't want to learn about bugs in 5 days."** All three bugs above were findable in minutes without spending a cent: seed one scratch plant, run every step in a no-write/plan mode, assert each step reports work to do and the ones that ran actually stamped. Bug 1 needed only the plan output, bug 2 only a clean checkout, bug 3 only "step said 0 rows, next step disagreed". **This is the highest-value item in this file** — it converts "the round finds it after three days" into "the PR finds it in 40 seconds."
+2. **Nobody has yet run a round start-to-finish in one clean pass** with the current runbook. Round 9 took three restarts with fixes between. Treat round 10's first attempt as still testing the runner.
+3. **Round 9's 8 editorial holds** (`rounds/9/reports/editorial-9.md`). Three need a NEW candidate image, not a re-check: `Silene acaulis` (hero is a fringed _Dianthus_), `Hamamelis japonica` (staked nursery sapling), `Carex comans`. Plus `Erysimum cheiri`, which has no image upstream at all.
+4. **`Symphyotrichum lateriflorum` displays as "Calico or one-sided or white woodland or starved aster"** — Trefle gave four common names as one string. Not a verify failure so deliberately not fixed, but it is bad copy live in Explore now. Worth a general guard: a common_name containing " or " is almost certainly a Trefle blob.
+5. Carried over unchanged: round 8's last holds; the ~575-plant WCVP tail (never `--apply` against `--all`); the token usage logger; promote hardiness WARN → FAIL when §27 un-parks; the two colour-bucket calls; `NEXT_PUBLIC_APP_URL` is dead but still advertised.
+
+**Open questions:**
+
+- **The `catalog-state staleness` CI job is still skipping** for want of repo secrets `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`. It has now been inert across several sessions.
+- Blocked, unchanged: local Supabase on disk cleanup; the Pro-plan decision.
+
+**Calibration note:** the base rate says round 10 finds _different_ bugs, not these. Of ~77 incidents across rounds 1-8 only six were repeats. Fixing three does not predict a clean round — automating the pipeline is what makes them visible at all, and that is the improvement.
+
+## 2026-07-29 — session/2026-07-29-diary-feature-polish
 
 **Status:** merged to main ([PR #125](https://github.com/Paradoxich/santolina/pull/125), merge commit `da5da2d`). Worktree removed, branch deleted local and remote. CI green including the new tokens job.
 
