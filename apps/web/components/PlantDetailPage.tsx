@@ -353,7 +353,7 @@ export function PlantDetailPage({
           the viewport by cancelling the app shell's gutters, the same escape
           the Garden and Explore headers use. The page body below stays in the
           640px reading column. */}
-      <header className="flex items-center justify-between gap-inline-gap border-b border-sage-200 py-4 md:ml-[calc(-1*var(--sidebar-offset))] md:mr-[-3rem] md:pl-[var(--sidebar-offset)] md:pr-12">
+      <header className="flex items-center justify-between gap-inline-gap border-b border-sage-200 py-4 md:ml-[calc(-1*var(--sidebar-offset))] md:mr-[calc(-1*var(--content-gutter))] md:pl-[var(--sidebar-offset)] md:pr-content-gutter">
         <Link
           href={backHref}
           className="flex items-center gap-tight-gap text-body text-secondary transition-colors duration-normal hover:text-primary"
@@ -415,7 +415,7 @@ export function PlantDetailPage({
           want the room. Everything else keeps the 640px reading column. */}
       <div
         className={`flex w-full flex-col pt-8 md:pt-12 ${
-          isGrowing ? 'max-w-[1128px]' : 'mx-auto max-w-[640px]'
+          isGrowing ? 'max-w-content' : 'mx-auto max-w-[640px]'
         }`}
       >
         {actionError && (

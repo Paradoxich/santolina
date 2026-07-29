@@ -34,32 +34,30 @@ const DENSITY_LABELS: [Density, string][] = [
 ]
 
 /**
- * The open product question this preview surfaced: the dashboard caps content
- * at 1032px while the app shell hands it the viewport minus the sidebar and a
- * 48px right margin. On a wide display that leaves several hundred px unused.
- * Raising it is a decision about the dashboard too, so all three are shown
- * rather than one being picked quietly.
+ * The shipped cap is --content-max (1200px), sized so a 14in MacBook Pro
+ * shows the whole column with a 40px gutter each side. The alternatives stay
+ * here only so the difference is visible on a wider display.
  */
-type WidthMode = 'product' | 'wide' | 'fill'
+type WidthMode = 'product' | 'narrow' | 'fill'
 
 const WIDTHS: Record<
   WidthMode,
   { label: string; className: string; note: string }
 > = {
   product: {
-    label: 'Plant page (1128)',
-    className: 'max-w-[1128px]',
-    note: "What the real plant page uses. Wider than the dashboard's 1032.",
+    label: 'Shipped (1200)',
+    className: 'max-w-content',
+    note: 'What every page uses. Fits a 14in MacBook Pro exactly: 1512 - 232 sidebar - 40 - 40.',
   },
-  wide: {
-    label: 'Dashboard (1032)',
+  narrow: {
+    label: 'Previous (1032)',
     className: 'max-w-[1032px]',
-    note: 'What the dashboard still uses, for comparison.',
+    note: 'What the dashboard used before the sweep, for comparison.',
   },
   fill: {
     label: 'Fill available',
     className: 'max-w-none',
-    note: 'No cap. Right now becomes a short line in a very wide box, and the 3-up row strands its content left.',
+    note: 'No cap. Care becomes a short line in a very wide box, and the rows strand their content left.',
   },
 }
 
@@ -94,10 +92,10 @@ export default function PlantPreviewPage() {
     // ToastProvider because the diary drawer's story components use useToast,
     // which the real page gets from the (app) layout.
     <ToastProvider>
-      {/* Mimics the real app shell (sidebar offset + mr-12) so the width the
-          cards get here is the width they get in the product. */}
+      {/* Mimics the real app shell (sidebar offset + content-gutter) so the
+          width the cards get here is the width they get in the product. */}
       <div className="min-h-screen bg-surface-page">
-        <div className="px-4 pb-20 md:ml-sidebar-offset md:mr-12 md:px-0 md:pb-0">
+        <div className="px-4 pb-20 md:ml-sidebar-offset md:mr-content-gutter md:px-0 md:pb-0">
           <div className={`${WIDTHS[width].className} pb-16 pt-8 md:pt-12`}>
             <div className="mb-8 flex flex-col gap-item-gap rounded-md border border-divider-subtle bg-surface-subtle p-card-padding">
               <p className="text-label text-muted">

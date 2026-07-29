@@ -9,7 +9,7 @@
 export default function PlantsLoading() {
   return (
     <div className="pb-16">
-      <header className="border-b border-sage-200 pt-8 md:ml-[calc(-1*var(--sidebar-offset))] md:mr-[-3rem] md:pl-[var(--sidebar-offset)] md:pr-12">
+      <header className="border-b border-sage-200 pt-8 md:ml-[calc(-1*var(--sidebar-offset))] md:mr-[calc(-1*var(--content-gutter))] md:pl-[var(--sidebar-offset)] md:pr-content-gutter">
         <div className="flex items-start gap-section-gap">
           <span className='relative inline-flex items-start pb-3 text-body font-semibold text-primary after:absolute after:-bottom-px after:left-0 after:h-px after:w-full after:bg-current after:content-[""]'>
             Growing

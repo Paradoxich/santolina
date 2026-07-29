@@ -87,7 +87,7 @@ export function ExploreClient({
         detail ? 'lg:pr-[480px]' : '',
       ].join(' ')}
     >
-      {/* The 1128 cap sits on this column, not on the flex parent: the
+      {/* The content cap sits on this column, not on the flex parent: the
           parent's lg:pr-[480px] reserves room for a viewport-fixed drawer,
           so capping it would indent the list away from a drawer that has
           not moved. */}
@@ -95,7 +95,7 @@ export function ExploreClient({
         className={
           detail
             ? 'w-full max-w-[680px] shrink-0'
-            : 'min-w-0 max-w-[1128px] flex-1'
+            : 'min-w-0 max-w-content flex-1'
         }
       >
         <header className="flex flex-col gap-item-gap">
@@ -117,7 +117,7 @@ export function ExploreClient({
         <div
           ref={searchRef}
           className={[
-            'sticky top-0 z-10 -mx-4 mt-4 bg-surface-page px-4 py-4 md:-ml-10 md:-mr-12 md:pl-10 md:pr-12',
+            'sticky top-0 z-10 -mx-4 mt-4 bg-surface-page px-4 py-4 md:-ml-content-gutter md:-mr-content-gutter md:pl-content-gutter md:pr-content-gutter',
             'transition-transform duration-normal',
             searchHidden ? '-translate-y-full' : 'translate-y-0',
           ].join(' ')}
@@ -200,11 +200,10 @@ export function ExploreClient({
         {browsing && !detail ? (
           <div className="mt-8">
             {/* Full-bleed rule: the negative margins walk back the layout's
-                gutters (spacing-10 to the sidebar divider, mr-12 to the
-                viewport edge; px-4 on mobile) so the line runs from the
-                sidebar's hairline to the right edge of the screen, in the
-                sidebar hairline's own colour. */}
-            <hr className="-mx-4 border-[var(--sidebar-divider)] md:-ml-10 md:-mr-12" />
+                content-gutter on both sides (px-4 on mobile) so the line
+                runs from the sidebar's hairline to the right edge of the
+                screen, in the sidebar hairline's own colour. */}
+            <hr className="-mx-4 border-[var(--sidebar-divider)] md:-ml-content-gutter md:-mr-content-gutter" />
             <div className="pt-12">
               <ExploreBrowse
                 onSelectStyle={(style) =>

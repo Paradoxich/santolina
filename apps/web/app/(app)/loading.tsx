@@ -6,7 +6,7 @@
 // "loading" on any remaining route without pretending to be a specific layout.
 export default function AppLoading() {
   return (
-    <div className="max-w-[1128px] pb-16 pt-8 md:pt-12" aria-hidden="true">
+    <div className="max-w-content pb-16 pt-8 md:pt-12" aria-hidden="true">
       <div className="h-9 w-40 animate-pulse rounded-md bg-surface-card" />
       <div className="mt-3 h-5 w-72 max-w-full animate-pulse rounded bg-surface-card" />
 

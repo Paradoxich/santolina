@@ -185,7 +185,7 @@ export function GardenClient({ palette }: GardenClientProps) {
     <div className="pb-16">
       {/* Full-bleed, sidebar divider to viewport edge — so it stays outside
           the 1128 column below, whose cap would shorten its escape. */}
-      <header className="border-b border-sage-200 pt-8 md:ml-[calc(-1*var(--sidebar-offset))] md:mr-[-3rem] md:pl-[var(--sidebar-offset)] md:pr-12">
+      <header className="border-b border-sage-200 pt-8 md:ml-[calc(-1*var(--sidebar-offset))] md:mr-[calc(-1*var(--content-gutter))] md:pl-[var(--sidebar-offset)] md:pr-content-gutter">
         <Tabs
           items={[
             { value: 'growing', label: 'Growing', count: growing.length },
@@ -196,7 +196,7 @@ export function GardenClient({ palette }: GardenClientProps) {
         />
       </header>
 
-      <div className="max-w-[1128px]">
+      <div className="max-w-content">
         <h1 className="mt-8 text-title font-semibold text-primary md:mt-12">
           {activeTabLabel}
         </h1>
