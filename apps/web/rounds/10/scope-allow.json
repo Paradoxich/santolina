@@ -1,0 +1,9 @@
+{
+  "note": "Round 10's window is still open, so it is currently catching two later sessions' legitimate out-of-round work — the same accumulation the round-9 entry warned about. This file waives only the WCVP tail's half. It deliberately does NOT set cleared_at: closing round 10 is the round owner's call, and at the time of writing another session was still writing image and editorial columns into this window, so a cleared_at stamped now would close the window over work that had not finished deciding whether it belonged inside it.",
+  "allow": [
+    {
+      "column": "native_region",
+      "why": "The 2026-07-30 WCVP tail: 475 plants outside every round manifest validated against Kew's checklist via cross-check-native-region.ts, 53 corrected. The tail is by definition out-of-round — these are rounds 1-5 era rows that predate the manifests — so every correction it makes must land outside round 10's scope, and there is no scope it could land inside instead. Safe as a column waiver rather than 53 named rows because a round-10 plant's own native_region write is IN scope and therefore never becomes a finding here: this entry can only ever match a row round 10 did not seed."
+    }
+  ]
+}
