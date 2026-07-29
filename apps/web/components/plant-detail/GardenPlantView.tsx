@@ -191,7 +191,12 @@ export function GardenPlantView({
           HERO — who this plant is, and how long it has been yours.
           Not a card: it is the page's own header, on the page surface.
       ============================================================= */}
-      <div className="grid grid-cols-1 gap-section-gap lg:grid-cols-[480fr_520fr] lg:items-start">
+      {/* 40px below the hero, not the 12px the card rows use between
+          themselves: the hero is the page header, and the cards read as one
+          field only if the break above them is bigger than the gaps inside.
+          Expressed as the difference so it stays 40 total if either token
+          moves. */}
+      <div className="mb-[calc(var(--space-section-break)_-_var(--space-item-gap))] grid grid-cols-1 gap-section-gap lg:grid-cols-[480fr_520fr] lg:items-start">
         <div className="flex flex-col gap-item-gap">
           <h1 className="text-title font-semibold text-primary">
             {plant.common_name}
