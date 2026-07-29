@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { ToastProvider } from '@paradoxui/ui'
 import { AppSidebar, type SidebarIdentity } from '@/components/AppSidebar'
 import { AddNoteProvider } from '@/components/AddNoteProvider'
+import { DemoBanner } from '@/components/DemoBanner'
 import { MobileTabBar } from '@/components/MobileTabBar'
 import {
   getSessionGardenContext,
@@ -10,7 +11,8 @@ import {
 
 function toSidebarIdentity(
   profile: SessionProfile,
-  garden: { city: string | null; country: string | null } | null
+  garden: { city: string | null; country: string | null } | null,
+  isAnonymous: boolean
 ): SidebarIdentity {
   const name = profile.displayName?.trim() || profile.email || 'Your account'
   return {
@@ -19,6 +21,7 @@ function toSidebarIdentity(
     email: profile.email,
     city: garden?.city ?? null,
     country: garden?.country ?? null,
+    isAnonymous,
   }
 }
 
@@ -34,12 +37,25 @@ export default async function AppLayout({
   if (!ctx) redirect('/login')
   if (!ctx.garden?.city) redirect('/welcome')
 
-  const identity = toSidebarIdentity(ctx.profile, ctx.garden)
+  const identity = toSidebarIdentity(ctx.profile, ctx.garden, ctx.isAnonymous)
 
   return (
     <ToastProvider>
       <AddNoteProvider>
-        <div className="min-h-screen bg-surface-page">
+        {/* The demo bar spans the full width above everything, so the sidebar
+            has to start below it: --app-chrome-top is the sidebar's top inset,
+            and it must stay in step with the bar's own height (py-3 + one line
+            of body-small). Unset for a normal session, where the sidebar falls
+            back to a 0 inset and nothing moves. */}
+        <div
+          className="min-h-screen bg-surface-page"
+          style={
+            ctx.isAnonymous
+              ? ({ '--app-chrome-top': '2.75rem' } as React.CSSProperties)
+              : undefined
+          }
+        >
+          {ctx.isAnonymous && <DemoBanner />}
           <AppSidebar identity={identity} />
           <main className="px-4 pb-20 md:ml-sidebar-offset md:mr-12 md:px-0 md:pb-0">
             {children}

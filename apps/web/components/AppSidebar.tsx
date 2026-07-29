@@ -21,6 +21,13 @@ export interface SidebarIdentity {
   email: string | null
   city: string | null
   country: string | null
+  /**
+   * A demo visitor (anonymous account). Only changes the sign-out label: an
+   * anonymous session cannot be signed back into, so "Log out" would promise a
+   * way back that does not exist. The abandoned account is cleaned up by
+   * scripts/purge-demo-users.ts.
+   */
+  isAnonymous: boolean
 }
 
 // The avatar is deliberately larger than the nav icons, so every row's glyph
@@ -41,7 +48,10 @@ export function AppSidebar({ identity }: { identity: SidebarIdentity }) {
   const { openAddNote } = useAddNote()
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-10 hidden w-sidebar flex-col border-r border-[var(--sidebar-divider)] bg-surface-page md:flex">
+    // Starts below any full-width chrome pinned above the app (today: the demo
+    // bar, which sets --app-chrome-top). Defaults to 0, so with no chrome the
+    // sidebar is flush to the top exactly as before.
+    <aside className="fixed bottom-0 left-0 top-[var(--app-chrome-top,0px)] z-10 hidden w-sidebar flex-col border-r border-[var(--sidebar-divider)] bg-surface-page md:flex">
       {/* Inline-gap here plus row-gap on the trigger matches the nav's own
           8 + 16, so the avatar starts where the icon slots below do — and it
           gives the hover fill room. */}
@@ -61,7 +71,7 @@ export function AppSidebar({ identity }: { identity: SidebarIdentity }) {
               onSelect: () => setSettingsOpen(true),
             },
             {
-              label: 'Log out',
+              label: identity.isAnonymous ? 'End demo' : 'Log out',
               icon: <Icon src={icons.logout} />,
               onSelect: () => signOut(),
             },

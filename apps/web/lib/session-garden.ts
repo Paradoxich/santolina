@@ -18,6 +18,14 @@ export interface SessionGardenContext {
   userId: string
   garden: Garden | null
   profile: SessionProfile
+  /**
+   * True for a visitor who started a demo from /login rather than signing up.
+   * Read straight off the JWT's `is_anonymous` claim — the only thing that
+   * marks a demo account, so there is nothing to keep in sync. Such a user owns
+   * their garden like anyone else; the flag exists so the UI can offer to make
+   * the account permanent before it is purged.
+   */
+  isAnonymous: boolean
 }
 
 /**
@@ -57,6 +65,7 @@ export const getSessionGardenContext = cache(
 
     return {
       userId: user.id,
+      isAnonymous: user.is_anonymous ?? false,
       garden: (gardenRes.data as Garden) ?? null,
       profile: {
         email: user.email ?? null,
