@@ -317,7 +317,11 @@ Reading the wrong field names leaves the code undefined, every zone falls throug
 
 - `docs/native-to-review-2026-07-30.md` is **not regenerated** — a true refresh is a whole-catalog run (~695 calls, ~1 hour). Its header now records what was applied; treat the table as the input, not current state.
 - The 151 kept rows carry no stamp in the database saying a person read them. The record is the committed review file, not catalog state, so `--new-only` cannot skip them and a later run will rank them again. A "reviewed and kept" column is the real fix and it is a migration, so it is **queued behind standing rule 11 and listed there** rather than only here.
-- `Erysimum cheiri`'s rewrite was a judgement past the stated rule (its phrase named no unsupported place, it was just far too broad for a Greece-only endemic). It is the one edit here that a stricter reading would have left alone.
+
+**Decisions (Ana)**
+
+- **Non-place `native_to` values are fine** — "garden hybrid", "cultivated hybrid with no wild origin", whatever fits. The row only has to tell the reader something, so `Citrus limon` keeps its phrase.
+- **Per-plant botanical calls are not hers to approve.** `Erysimum cheiri`'s rewrite went past the stated rule — its phrase named no unsupported place, it was just far too broad for a Greece-only endemic — and was surfaced for her sign-off. Her ruling: _"I don't need to approve small items like that because I have less knowledge about that plant than you."_ **Decide the range, record the reasoning, do not queue it for her.** She rules on the rule, never on its per-row application. The edit stands.
 
 ### 2026-07-30 — native_to and native_region stop diverging (not a round)
 

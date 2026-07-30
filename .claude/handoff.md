@@ -91,9 +91,4 @@ first twenty rows of a long run before letting it finish. Added this session,
 ones it decided were wrong, so `--new-only` skips them forever. Read the tail of
 a report-only run and re-run with `--apply` in the same session.
 
-**One judgment call worth revisiting if you disagree:** `Erysimum cheiri` went
-from "southern Europe and the Mediterranean" to "Greece". Its phrase named no
-unsupported place, so a stricter reading of the rule would have left it; it was
-rewritten because WCVP records Greece alone and marks the rest introduced.
-
 **Open questions:** none blocking.
