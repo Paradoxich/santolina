@@ -222,6 +222,7 @@ Rules (strict):
 - No em dashes or en dashes anywhere. Plain sentences only.
 - Vocabulary: use "fertilize" for applying fertilizer, NEVER "feed" or "feeding". BUT do NOT call the natural process of foliage nourishing a bulb, corm, rhizome, or roots "fertilize" — that is "replenish" (e.g. "Allow foliage to die back to replenish the bulb", never "fertilize the bulb").
 - Keep it plant-agnostic in phrasing (the plant name is shown separately) — say "Prune after flowering.", not "Prune the rose after flowering."
+- A mulch line earns a stage only when it states a real trigger: protection ahead of cold (autumn/winter), a named seasonal ritual ("spring mulch"), or an explicit bloom or heat window. Generic "to retain moisture" / "to keep roots cool" / "to maintain fertility" with no named trigger is anytime maintenance — use null. (Ana's catalog-wide ruling, July 15 2026: of 16 mulch lines only 5 stated a trigger.)
 ${strictReminder ? `\nYour previous attempt failed validation. Fix ONLY these problems and resend the full object:\n${strictReminder}\n` : ''}
 Respond with ONLY the JSON object, no markdown, no code fences, no preamble.`
 }

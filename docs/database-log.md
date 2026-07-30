@@ -895,3 +895,87 @@ All seven pipeline steps confirmed complete for the round's 101 plants via `veri
 - `cottage` now tags 533 of 595 rows, behaving as a default rather than a signal — curation-prompt question, open
 
 ---
+
+### 2026-07-15 — Care Tips v2: the `seasonal_care` catalog run and three editorial rounds
+
+Backfilled into this log on 2026-07-30, from `architecture.md`, which had been
+carrying it as prose. The design rationale stays there
+([seasonal_care](architecture.md#seasonal-care)); this is the operational
+record of what the pass actually did and what the review found. Merged as
+PR #63.
+
+**The run.** Full catalog: 418/418 filled, 3 correctly all-null. The blind
+check over all 415 non-null rows returned 271 clean and 170 flags across 144
+plants — 19 real-error candidates, 120 one-stage boundary quibbles, 31
+consider-null, and 99 tracing upstream to `seasonal_rhythm` (logged and
+deferred to a separate sweep, per the upstream-correction rule).
+
+**Round 1 — the 19 + 31.** Reviewed via a CSV queue and
+`apply-seasonal-care-fixes.ts`, which verifies the CSV's line still matches the
+DB before writing, refuses to clobber an occupied target on a `move`, and logs
+every before→after. 39 of 50 applied.
+
+**A vocabulary rule over-applied, and the fix was at the source.** The
+"fertilize, not feed" rule hit the "feed the bulb" idiom: 15 plants read "allow
+foliage to die back naturally to **fertilize** the bulb" where the verb is
+**replenish** — foliage nourishing a storage organ is not applying fertilizer.
+Fixed in the prompt, and the validator now rejects `fertilize` co-occurring
+with bulb/corm/rhizome/tuber/root as a recurrence guard. The 15 live rows were
+corrected.
+
+**Round 2 — the 120 boundary quibbles.** 104 kept, 16 flagged (14 moves, 2
+nulls). The bucket was not purely quibbles:
+
+- **8 of the 14 moves were "after flowering" lines sitting in or before the bloom stage itself** — instructing a cut that removes the flowers the action is meant to follow. Two winter/early-spring bloomers (White-forsythia, Early stachyurus) would have been pruned two months late on old wood. Fixed at the source: the prompt now ties "after flowering" phrasing to `bloom_months`.
+- **Three consequential one-offs:** Caucasian boxwood fertilizing in summer, directly contradicting the app's own static tip about not fertilizing in the hottest weeks; Crocosmia's protective mulch sitting in winter, after the cold it protects against; Blue flax deadheading "to encourage further blooming" in late summer, after it had finished.
+- **Two nulls exposed a validator gap:** "Watch for rosettes emerging" is `seasonal_rhythm` narrative wearing an imperative verb. watch/look/note/observe/expect are now a dedicated rejection. A catalog audit found 7 instances, all descriptive.
+- **Collision check on the 14 moves:** 3 were exact duplicates of a line already at the target and became nulls instead. Round 1's lesson held — a flagged line is often a duplicate of a correct one.
+
+**Round 3 — the two sent-back collisions.** Cowslip: deadheading is annual and
+division is every 3–4 years, and the app has no year-position signal, so a
+contested stage goes to the higher-frequency action; division moved to summer.
+Dahlia: planting moved to late spring (last frost is the sharper "why now"),
+displacing staking to summer, which is more correct anyway — a dahlia needs
+support when it is tall, not as a tuber.
+
+**A catalog-wide mulch ruling, which overrode Ana's own earlier calls.** Of 16
+mulch lines, 5 stated a real trigger and were kept, 11 were generic
+anytime-maintenance and were nulled — including 3 she had previously marked
+"keep" before the rule existed. Her reasoning: a consistent catalog-wide bar
+beats row-by-row judgment, and an earlier call should not be protected once a
+better general rule lands. The rule itself now lives in
+`curate-seasonal-care.ts` so it applies at drafting time rather than in review.
+
+**Lesson carried forward: weight a review queue by stakes, not by checker
+confidence.** The 120-quibble bucket was triaged purely by stage distance, which
+is how "fertilize during a heatwave" — a line contradicting the app's own
+advice — landed in the low-priority pile beside genuine one-stage boundary
+calls. Sort by consequence: plant survival, a lost bloom season, a direct
+contradiction of another surface.
+
+### 2026-07-09 — The first cross-check's bulk sun correction
+
+Backfilled into this log on 2026-07-30, from `architecture.md`. The reasoning —
+why a strict-subset flag counts as a real disagreement, and why a bulk pass has
+to stay reversible — is in
+[the botanical cross-check](architecture.md#botanical-cross-check).
+
+The first full `cross-check-plants` run over 201 rows returned 68 flags, 61 of
+them sun disagreements pointing the same way: the stored range narrower than the
+blind check. Ana reviewed the pattern and authorised applying them in one pass
+rather than routing all ~62 rows through the per-plant sweep.
+
+**Applied:** 61 under-reported sun ranges widened to the check's range; one
+contradiction corrected (Ajuga, stored `[full_sun]` on a shade groundcover →
+`[partial_sun, shade]`); two hardiness overstatements the same run flagged
+(`Hedera helix` zone_max 11 → 9, `Salvia officinalis` 10 → 8).
+
+**Guards:** each row updated by id, with `is_curated = false` and an exact match
+on the prior value from the report. Captured as migration
+`20260709092512_correct_crosscheck_botanical_fields.sql`, keyed on
+`scientific_name` rather than live UUIDs so it is portable and idempotent — a
+no-op against corrected rows and against any environment that never held the bad
+values. It is a one-off record, not part of the seed path.
+
+**Not done:** `is_curated` left `false` on every corrected row. A botanical
+correction is not the editorial pass.
