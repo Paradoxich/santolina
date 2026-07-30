@@ -1,9 +1,9 @@
 /**
  * The editorial bar — what `is_curated = true` actually asserts, defined once.
  *
- * `docs/architecture.md` §3 redefined human review in July 2026: the reviewer
+ * docs/architecture.md#curation-layer redefined human review in July 2026: the reviewer
  * is not a botanist, so this flag is an EDITORIAL judgment, not botanical
- * verification. Botanical facts are the cross-checks' job (§20). Three things
+ * verification. Botanical facts are the cross-checks' job (docs/architecture.md#botanical-cross-check). Three things
  * and no more:
  *
  *   1. the image shows the right plant

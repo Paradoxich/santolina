@@ -1,6 +1,6 @@
 /**
  * Post-round invariant checker — the canonical definition of catalog
- * correctness. Asserts the DB state the docs/architecture.md §25 cadence is
+ * correctness. Asserts the DB state the docs/architecture.md#round-runbook cadence is
  * supposed to leave behind, instead of trusting that every step was run:
  *
  *   FAIL (exit 1) — the round is not done:

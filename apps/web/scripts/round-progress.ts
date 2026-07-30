@@ -11,7 +11,7 @@
  *
  * WHY THIS EXISTS. Finishing a *pass* and finishing a *round* feel identical
  * and are not. A curation script prints a tidy summary and looks done, so the
- * §25 book-end steps — the backup, archive-round, check-round-scope, the log
+ * docs/architecture.md#round-runbook book-end steps — the backup, archive-round, check-round-scope, the log
  * entry — get skipped without anything going red. That is not hypothetical:
  * round 8's committed archive sat stale for six hours after two remediation
  * passes, and restoring it would have silently reverted ~200 rows *while

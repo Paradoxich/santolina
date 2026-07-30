@@ -149,9 +149,9 @@ cd apps/web
 ```
 
 Run them in this order — the authoritative runbook, with the rationale for
-each step, is `docs/architecture.md` §25. Individual decisions: provider
-choice and safe upsert (§1, §9), curation (§6), combinations (§19),
-cross-check (§20), native_region (§26), hardiness (§27), seasonal care (§28).
+each step, is [the round runbook](docs/architecture.md#round-runbook). Individual decisions: provider
+choice and safe upsert ([the Trefle-over-Perenual choice](docs/architecture.md#plant-data-provider), [the safe Trefle upsert](docs/architecture.md#safe-upsert)), curation ([the curation model](docs/architecture.md#curation-model)), combinations ([plant combinations](docs/architecture.md#plant-combinations)),
+cross-check ([the botanical cross-check](docs/architecture.md#botanical-cross-check)), native_region ([native_region](docs/architecture.md#native-region)), hardiness ([hardiness](docs/architecture.md#hardiness)), seasonal care ([seasonal_care](docs/architecture.md#seasonal-care)).
 Guard reports land in `apps/web/reports/` (gitignored) and are archived per
 round under `apps/web/rounds/<label>/` (committed); backups under
 `apps/web/backups/` (gitignored).

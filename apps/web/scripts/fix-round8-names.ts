@@ -8,7 +8,7 @@
  * catalog even when they are defensible in a flora:
  *
  *   1. NO NAME. Trefle has no English common name for the species, and the
- *      mapper falls back to the scientific name (§4). The Explore card then
+ *      mapper falls back to the scientific name (docs/architecture.md#trefle-field-mapping). The Explore card then
  *      reads "Thalictrum rochebruneanum" where every other card reads like a
  *      plant you could ask for in a nursery. 18 rows this round.
  *   2. WRONG NAME — including one real collision. Trefle returned "Judastree"
@@ -34,7 +34,7 @@
  * "Checkerberry" was changed only because "Wintergreen" is what the plant is
  * sold as). It does not flip `is_curated`: this is a mechanical correction of
  * names that are absent, wrong, or ambiguous, NOT Ana's editorial voice pass
- * (§3). Every row here still needs her read before `is_curated` goes true.
+ * (docs/architecture.md#curation-layer). Every row here still needs her read before `is_curated` goes true.
  *
  * SAFETY — the same discipline as apply-sun-widening.ts:
  *   - Every entry carries the value it EXPECTS to find. A row whose live
@@ -62,7 +62,7 @@ interface Fix {
 }
 
 // --- rows where Trefle had no English name and the mapper fell back to the
-// --- scientific name (§4). Names chosen as the one a nursery would print.
+// --- scientific name (docs/architecture.md#trefle-field-mapping). Names chosen as the one a nursery would print.
 const MISSING: Fix[] = [
   {
     scientific_name: 'Anemonoides blanda',

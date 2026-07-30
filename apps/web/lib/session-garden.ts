@@ -3,7 +3,7 @@
 // The auth-era replacement for the deleted single-tenant `current-garden.ts`
 // shim. Every user-scoped read/write resolves the garden from the session and
 // runs through the session client, so RLS (`auth.uid() = user_id`) does the
-// scoping — not application code. See docs/architecture.md §24.
+// scoping — not application code. See docs/architecture.md#auth.
 import { cache } from 'react'
 import { createSupabaseServerClient } from './supabase-server'
 import type { Garden } from '@/types/garden'

@@ -2,7 +2,18 @@
 
 This document records the architectural decisions made during the build of the plant data layer. Decisions are ordered chronologically.
 
+**Cite a section by its anchor, never by its number.** Every section carries a
+named `<a id="...">` immediately above its heading, and that slug is the section's
+address: `docs/architecture.md#safe-upsert` from code, `[the safe Trefle
+upsert](#safe-upsert)` from prose. Numbers are display order and will change when
+this file is regrouped; anchors will not. `pnpm docs:links` fails on a reference
+that resolves to nothing and on any new `§N` citation. Numbers cited in artifacts
+that cannot be edited — applied migrations, archived round reports — are mapped in
+[the appendix](#appendix-retired-numbers).
+
 ---
+
+<a id="plant-data-provider"></a>
 
 ## 1. Plant data provider: Trefle, not Perenual
 
@@ -16,10 +27,12 @@ This document records the architectural decisions made during the build of the p
 
 **Trade-offs accepted:**
 
-- Trefle has patchy `growth` data for well-known ornamentals (Lavandula angustifolia, Hydrangea macrophylla, Echinacea purpurea all had entirely null growth objects). This is addressed by the AI curation pass (see §6).
+- Trefle has patchy `growth` data for well-known ornamentals (Lavandula angustifolia, Hydrangea macrophylla, Echinacea purpurea all had entirely null growth objects). This is addressed by the AI curation pass (see [the curation model](#curation-model)).
 - Trefle's rate limit is 120 req/min. The seed script paces at 1.5s between species (2 calls each) to stay safely under the limit.
 
 ---
+
+<a id="provider-agnostic-columns"></a>
 
 ## 2. Database column naming: provider-agnostic
 
@@ -28,6 +41,8 @@ This document records the architectural decisions made during the build of the p
 **Rationale:** During the switch from Perenual to Trefle, the original `perenual_id` column was renamed. The new naming reflects that the column holds whatever the current provider's numeric ID is, making a future provider change non-breaking at the DB level. `data_source` is set explicitly in every upsert from code, not relying on the DB default, so the provider is always traceable in the data itself.
 
 ---
+
+<a id="curation-layer"></a>
 
 ## 3. Plants table is a cache with a manual curation layer
 
@@ -40,13 +55,15 @@ This document records the architectural decisions made during the build of the p
 
 **`is_curated` flag:** Set to `false` on all automated writes. Flipping it to `true` is a deliberate manual step after human review. This means the plants table always has a clear distinction between "machine-drafted" and "human-verified" rows.
 
-**What "human review" means (redefined July 2026):** the reviewer isn't a botanist, so `is_curated = true` asserts an _editorial_ pass, not botanical verification: the image shows the right plant, the description reads well and on-brand, and the style/space tags make product sense. Botanical facts (hardiness, sun, bloom months) are verified by a separate AI cross-check pass — a second, independent model run prompted to fact-check the curation output and flag disagreements for human spot-checking (built; see §20).
+**What "human review" means (redefined July 2026):** the reviewer isn't a botanist, so `is_curated = true` asserts an _editorial_ pass, not botanical verification: the image shows the right plant, the description reads well and on-brand, and the style/space tags make product sense. Botanical facts (hardiness, sun, bloom months) are verified by a separate AI cross-check pass — a second, independent model run prompted to fact-check the curation output and flag disagreements for human spot-checking (built; see [the botanical cross-check](#botanical-cross-check)).
 
-**Note:** this separation was not fully enforced until a bug was found and fixed (see §9). Initially, re-running the Trefle seed against already-curated plants silently overwrote `description`, `care_level`, and `height_min_cm` with Trefle's null values, since these are fields both Trefle and AI can populate. The fix (§9) makes this structurally impossible going forward, not just a convention.
+**Note:** this separation was not fully enforced until a bug was found and fixed (see [the safe Trefle upsert](#safe-upsert)). Initially, re-running the Trefle seed against already-curated plants silently overwrote `description`, `care_level`, and `height_min_cm` with Trefle's null values, since these are fields both Trefle and AI can populate. The fix ([the safe Trefle upsert](#safe-upsert)) makes this structurally impossible going forward, not just a convention.
 
 **`ai_drafted_at` timestamp:** Set on every successful curation pass. Provides a review queue: `WHERE ai_drafted_at IS NOT NULL AND is_curated = false`.
 
 ---
+
+<a id="trefle-field-mapping"></a>
 
 ## 4. Trefle field mapping decisions
 
@@ -66,7 +83,7 @@ This document records the architectural decisions made during the build of the p
 | `peak_season`         | —                                          | Derived: whichever season contains the most `bloom_months` entries                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | `height_min_cm`       | `data.specifications.average_height.cm`    | Average height used as "typical minimum" proxy; already in cm                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | `height_max_cm`       | `data.specifications.maximum_height.cm`    | Already in cm                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| `hardiness_zone_min`  | —                                          | **Mapping removed July 2026 (§27)** — the `minimum_temperature` → USDA-zone derivation was dead code (the field is null for 100% of the catalog) and was deleted; hardiness is now the editorial RHS rating (§27)                                                                                                                                                                                                                                                                              |
+| `hardiness_zone_min`  | —                                          | **Mapping removed July 2026 ([hardiness](#hardiness))** — the `minimum_temperature` → USDA-zone derivation was dead code (the field is null for 100% of the catalog) and was deleted; hardiness is now the editorial RHS rating ([hardiness](#hardiness))                                                                                                                                                                                                                                      |
 | `hardiness_zone_max`  | —                                          | **null** — Trefle's max temp does not cleanly map to a max zone                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | `sun_requirements`    | `data.growth.light` (0–10 integer)         | 0–3 → `shade`, 4–6 → `partial_sun`, 7–10 → `full_sun`                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | `image_url`           | `data.images.flower[0]` → `habit` → others | Prefers flower then habit categories                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
@@ -79,6 +96,8 @@ This document records the architectural decisions made during the build of the p
 - `image_urls` — defaults to `[]` when Trefle has no images (e.g. Centaurea cyanus)
 
 ---
+
+<a id="server-only-clients"></a>
 
 ## 5. Server-only boundary: three clients
 
@@ -94,13 +113,15 @@ All three are lazily instantiated (client created on first call, not at module l
 
 ---
 
+<a id="curation-model"></a>
+
 ## 6. AI curation model: claude-sonnet-4-5
 
 **Decision:** Use `claude-sonnet-4-5` for the curation pass (`CURATION_MODEL` constant in `lib/anthropic-client.ts`).
 
 **Rationale:** Better factual reliability than Haiku for botanical claims (hardiness zones, growth habits, native ranges). Cost is negligible at the volume of a plant catalog seed (~30–200 species).
 
-**Two model constants, deliberately split — do not merge them.** `lib/anthropic-client.ts` exports `CURATION_MODEL` (`claude-sonnet-4-5`) and `VISION_MODEL` (`claude-sonnet-5`). Every **text** curation and cross-check script is pinned to the first: `curate-plants`, `cross-check-plants`, `curate-combinations`, `curate-styles`, `curate-greenery`, `draft-hardiness`, and the seasonal-care pair. Only the image pass (`pick-plant-images`, `feed-wikimedia-candidates`) uses the second, because vision needs current generation — Sonnet 5 reads images at up to 2576px on the long edge where 4.5 downscales to 1568px and loses the focus and framing detail the pick depends on (§30).
+**Two model constants, deliberately split — do not merge them.** `lib/anthropic-client.ts` exports `CURATION_MODEL` (`claude-sonnet-4-5`) and `VISION_MODEL` (`claude-sonnet-5`). Every **text** curation and cross-check script is pinned to the first: `curate-plants`, `cross-check-plants`, `curate-combinations`, `curate-styles`, `curate-greenery`, `draft-hardiness`, and the seasonal-care pair. Only the image pass (`pick-plant-images`, `feed-wikimedia-candidates`) uses the second, because vision needs current generation — Sonnet 5 reads images at up to 2576px on the long edge where 4.5 downscales to 1568px and loses the focus and framing detail the pick depends on ([the hero image pass](#hero-images)).
 
 **Bumping `CURATION_MODEL` is a data migration, not a version bump.** A new model silently re-rolls every field those scripts draft, so it needs its own sample review — the same discipline as the seasonal_care and combinations sample passes. The image pass had no such baseline to protect, which is the only reason it could start on the newer model.
 
@@ -121,12 +142,14 @@ All three are lazily instantiated (client created on first call, not at module l
 
 ---
 
+<a id="seeding-scripts"></a>
+
 ## 7. Seeding architecture
 
 **`scripts/seed-plants.ts`** — fetches from Trefle, writes to Supabase.
 
 - Accepts either Trefle numeric IDs or scientific/common name strings. Names are resolved via `/api/v1/plants/search` first.
-- Upserts on `source_species_id` via the `upsert_trefle_plant` Postgres function (see §9), which is what makes re-runs safe — a plain client-side upsert was found to overwrite curated data and has been replaced.
+- Upserts on `source_species_id` via the `upsert_trefle_plant` Postgres function (see [the safe Trefle upsert](#safe-upsert)), which is what makes re-runs safe — a plain client-side upsert was found to overwrite curated data and has been replaced.
 - Paces at **1.5s between species** (2 Trefle calls each: search + detail) to stay under the 120 req/min rate limit. Full 25-species run takes ~53s.
 - Continues past individual failures; prints a summary at the end; exits 1 if any failed.
 
@@ -154,9 +177,11 @@ The `pnpm seed` script in `package.json` is equivalent to the first command.
 
 ---
 
+<a id="plants-schema"></a>
+
 ## 8. Plants schema overview
 
-Column list as of early July 2026. **Not maintained retroactively** — later migrations added `sun_thrives`/`sun_tolerates` (§22), `native_region` (§26), `hardiness_rating`/`hardiness_verified` (§27), and `seasonal_care` (§28); the migrations themselves are the source of truth for the current schema.
+Column list as of early July 2026. **Not maintained retroactively** — later migrations added `sun_thrives`/`sun_tolerates` ([the two-field sun model](#sun-model)), `native_region` ([native_region](#native-region)), `hardiness_rating`/`hardiness_verified` ([hardiness](#hardiness)), and `seasonal_care` ([seasonal_care](#seasonal-care)); the migrations themselves are the source of truth for the current schema.
 
 | Column                 | Type                         | Source                    |
 | ---------------------- | ---------------------------- | ------------------------- |
@@ -209,6 +234,8 @@ Column list as of early July 2026. **Not maintained retroactively** — later mi
 
 ---
 
+<a id="safe-upsert"></a>
+
 ## 9. Data integrity: safe Trefle upsert function
 
 **The bug:** re-running `seed-plants.ts` against already-curated plants silently overwrote `description`, `care_level`, and `height_min_cm` with Trefle's null values. 25 of 29 plants lost AI-drafted data after a re-seed. The root cause is that Trefle has no data for these fields on most ornamental species, so `mapTrefleDetail()` sets them to `null` in the payload — and a plain `INSERT ... ON CONFLICT DO UPDATE SET *` cannot distinguish "Trefle genuinely has no data for this field" from "intentionally clear this field". Every re-seed was a destructive overwrite.
@@ -227,15 +254,17 @@ Column list as of early July 2026. **Not maintained retroactively** — later mi
 
 **AI-only fields are not referenced anywhere in the function body.** `plant_type`, `plant_type_label`, `style_tags`, `space_types`, `bloom_color`, `foliage_color`, `spread_min_cm`, `spread_max_cm`, `water_needs`, `water_needs_summary`, `light_needs`, `soil_needs`, `maintenance_notes`, `common_issues`, `best_placement`, `environment_benefits`, `seasonal_rhythm`, `garden_use_tags`, and `ai_drafted_at` cannot be overwritten via the Trefle sync path — this is a structural guarantee, not a convention.
 
-**Revised July 9, 2026 — the original rules were fill-only in the wrong direction.** The table above protected fields only when Trefle sends _nothing_: `COALESCE(EXCLUDED.x, plants.x)` lets an incoming non-null Trefle value overwrite the stored one, and the array `CASE` rules pointed the same way. That was fine against Trefle's nulls (the original bug) but destructive wherever Trefle _has_ data and the stored value had since been editorially corrected — the round-3 full re-seed reverted 49 of the 62 editorial `sun_requirements` corrections (§20) this way. `supabase/migrations/20260709210000_fill_only_trefle_upsert.sql` replaces the function with uniform **fill-only** semantics: on UPDATE the stored value always wins and Trefle can only fill gaps (null scalars, empty arrays); `common_name`/`scientific_name`/`data_source` are no longer rewritten either. INSERTs are unchanged. Trade-off: a re-seed can no longer refresh names/images/bloom data on existing rows — refreshing from Trefle now requires explicit tooling that declares which fields it overwrites. Alongside this, `seed-plants.ts` now skips already-cataloged species by default (matched on scientific name, then on resolved Trefle ID to catch synonym remaps); `--include-existing` restores full-list behavior. Verified live: a hostile upsert against a corrected row left every field intact, and a full default seed run made zero writes (145 skipped).
+**Revised July 9, 2026 — the original rules were fill-only in the wrong direction.** The table above protected fields only when Trefle sends _nothing_: `COALESCE(EXCLUDED.x, plants.x)` lets an incoming non-null Trefle value overwrite the stored one, and the array `CASE` rules pointed the same way. That was fine against Trefle's nulls (the original bug) but destructive wherever Trefle _has_ data and the stored value had since been editorially corrected — the round-3 full re-seed reverted 49 of the 62 editorial `sun_requirements` corrections ([the botanical cross-check](#botanical-cross-check)) this way. `supabase/migrations/20260709210000_fill_only_trefle_upsert.sql` replaces the function with uniform **fill-only** semantics: on UPDATE the stored value always wins and Trefle can only fill gaps (null scalars, empty arrays); `common_name`/`scientific_name`/`data_source` are no longer rewritten either. INSERTs are unchanged. Trade-off: a re-seed can no longer refresh names/images/bloom data on existing rows — refreshing from Trefle now requires explicit tooling that declares which fields it overwrites. Alongside this, `seed-plants.ts` now skips already-cataloged species by default (matched on scientific name, then on resolved Trefle ID to catch synonym remaps); `--include-existing` restores full-list behavior. Verified live: a hostile upsert against a corrected row left every field intact, and a full default seed run made zero writes (145 skipped).
 
 ---
+
+<a id="bloom-status"></a>
 
 ## 10. Bloom status computation: derived, not stored
 
 **Decision:** A palette plant's bloom status (`blooming` / `pre-bloom` / `done` / `resting` / `evergreen`) is computed on the fly from `plants.bloom_months` via a pure function, `getBloomStatus()` in `apps/web/lib/bloom-status.ts`. It is never written to a column.
 
-**Rationale:** Unlike hardiness zone derivation (§4), which needed a historical temperature-threshold table to map a Trefle temperature value to a USDA zone, bloom status needs no external data at all — `bloom_months` already exists on every curated plant, and "what's the status today" is a pure function of that array plus the current date. Storing a computed status would mean re-deriving it on a schedule (a cron, a nightly job) to keep it from going stale; computing it at render time makes staleness structurally impossible and needs no extra infrastructure.
+**Rationale:** Unlike hardiness zone derivation ([the Trefle field mapping](#trefle-field-mapping)), which needed a historical temperature-threshold table to map a Trefle temperature value to a USDA zone, bloom status needs no external data at all — `bloom_months` already exists on every curated plant, and "what's the status today" is a pure function of that array plus the current date. Storing a computed status would mean re-deriving it on a schedule (a cron, a nightly job) to keep it from going stale; computing it at render time makes staleness structurally impossible and needs no extra infrastructure.
 
 **The rule:**
 
@@ -256,25 +285,29 @@ Checked in priority order as listed. `currentMonth` is `today.getMonth() + 1` (1
 
 ---
 
+<a id="rls-shim"></a>
+
 ## 11. RLS blocker on `gardens`/`palette_plants`: service-role client, hardcoded garden id
 
-> **Superseded by §24 (auth cutover, July 2026).** `lib/current-garden.ts` and the hardcoded garden id are deleted; server actions now run on the session client and the RLS policies are live. The seed garden referenced below was discarded, not migrated. Kept for the record.
+> **Superseded by [the auth cutover](#auth) (auth cutover, July 2026).** `lib/current-garden.ts` and the hardcoded garden id are deleted; server actions now run on the session client and the RLS policies are live. The seed garden referenced below was discarded, not migrated. Kept for the record.
 
 **The bug:** `getPlantDetail()` always fell back to a hardcoded `DEFAULT_GARDEN` mock object, with a comment claiming this was "while onboarding/auth don't exist yet." That was the wrong diagnosis. The real cause: `gardens`' and `palette_plants`' RLS policies both require `auth.uid()` to match the garden's `user_id` (directly on `gardens`, via a join on `palette_plants`). Since the app has no real auth session, the anon client's `auth.uid()` is always null, so every query against these two tables silently returned zero rows — not because the data didn't exist (a real garden row was seeded and present the whole time), but because RLS was quietly blocking it. The `.maybeSingle()` fallback masked this as "no row yet" instead of surfacing it as a permissions problem.
 
 **Decision:** Reads/writes to `gardens` and `palette_plants` go through the service-role client (`lib/supabase-admin.ts`, same client already used for the Trefle sync) scoped to one hardcoded, known-good garden id, via a new `lib/current-garden.ts` helper (`getCurrentGardenId()`, `getCurrentGarden()`). RLS policies themselves are untouched.
 
-**Why this over a temporary permissive RLS policy:** A permissive policy (e.g. `USING (true)` or an anon-role carve-out) would need to be written now and correctly reverted later — an easy thing to forget, and a real risk if it ships to production. The existing `auth.uid() = user_id` policies are already correct for when real auth exists; bypassing them at the client layer for this one single-tenant test phase keeps the policies untouched and the eventual auth cutover simpler — swap `getCurrentGarden()`'s hardcoded id for a real session lookup, delete `lib/current-garden.ts`, done. It also mirrors a pattern already established in this codebase (§5): service-role access for privileged, script-like operations, kept out of the client bundle.
+**Why this over a temporary permissive RLS policy:** A permissive policy (e.g. `USING (true)` or an anon-role carve-out) would need to be written now and correctly reverted later — an easy thing to forget, and a real risk if it ships to production. The existing `auth.uid() = user_id` policies are already correct for when real auth exists; bypassing them at the client layer for this one single-tenant test phase keeps the policies untouched and the eventual auth cutover simpler — swap `getCurrentGarden()`'s hardcoded id for a real session lookup, delete `lib/current-garden.ts`, done. It also mirrors a pattern already established in this codebase ([the server-only clients](#server-only-clients)): service-role access for privileged, script-like operations, kept out of the client bundle.
 
 **Explicitly temporary:** `lib/current-garden.ts` hardcodes the single seeded garden's id (`7055368c-6158-46b9-a592-223974c7a319`) and is commented as such. It assumes single-tenant, single-garden usage — do not build multi-user or multi-garden features on top of it. It gets deleted, not extended, once onboarding creates real garden rows tied to real auth sessions.
 
 ---
 
+<a id="palette-write-path"></a>
+
 ## 12. Palette write path: application-level upsert, reversible button state machine
 
-> **Client/scoping half superseded by §24 (auth cutover, July 2026)** — palette actions now run on the session client under RLS, not the service-role client with a hardcoded garden id. The application-level upsert and the button state machine below still stand.
+> **Client/scoping half superseded by [the auth cutover](#auth) (auth cutover, July 2026)** — palette actions now run on the session client under RLS, not the service-role client with a hardcoded garden id. The application-level upsert and the button state machine below still stand.
 
-**Decision:** `server/palette-actions.ts` (`addToPalette`, `updateStatus`, `removeFromPalette`, `getPaletteStatus`, `listPalette`) is the write path for `palette_plants`. Same pattern as §11: the service-role client, scoped to `getCurrentGardenId()`. Every write also filters on `garden_id` before mutating — `updateStatus`/`removeFromPalette` no-op (throw) rather than silently touching a row outside the current garden, which matters once this stops being single-tenant.
+**Decision:** `server/palette-actions.ts` (`addToPalette`, `updateStatus`, `removeFromPalette`, `getPaletteStatus`, `listPalette`) is the write path for `palette_plants`. Same pattern as [the RLS service-role shim](#rls-shim): the service-role client, scoped to `getCurrentGardenId()`. Every write also filters on `garden_id` before mutating — `updateStatus`/`removeFromPalette` no-op (throw) rather than silently touching a row outside the current garden, which matters once this stops being single-tenant.
 
 **`addToPalette` is an application-level upsert, not `ON CONFLICT`:** there's no unique constraint on `(garden_id, plant_id)` in the live schema, and adding one was out of scope (no schema changes for this pass). `addToPalette` selects for an existing row on that pair first, then updates it (status/source) if found, or inserts if not. This means clicking "Add to plan" on an already-planned plant, or "I have this" on an already-planted one, just updates the existing row instead of creating a duplicate — the same behavior a DB-level upsert would give, implemented at the application layer instead.
 
@@ -288,17 +321,19 @@ not-in-palette ⇄ planned ⇄ planted
 - **planned:** "Add to plan" becomes "Remove from plan" → `removeFromPalette`, back to not-in-palette. "Add to garden" stays active, unchanged label → `updateStatus(status: 'planted')`, upgrading in place (same `paletteId`, no new row).
 - **planted:** "Add to garden" becomes "Remove from garden" → `removeFromPalette`, back to not-in-palette. "Add to plan" is disabled — downgrading planted→planned isn't a meaningful action via this button, so it's the one non-actionable state rather than a dead-end label pretending to do something.
 
-(Originally shipped as "I have this" — renamed to "Add to garden" for symmetry with "Add to plan" when toast notifications were added, see §13.)
+(Originally shipped as "I have this" — renamed to "Add to garden" for symmetry with "Add to plan" when toast notifications were added, see [toast notifications](#toasts).)
 
 `getPaletteStatus` is fetched on drawer mount and whenever the displayed plant changes (the drawer is a single reused component instance across plant selections in Explore, not remounted per plant — see `ExploreClient`'s static `key`), with a cancellation guard so a fast plant switch can't let a stale response overwrite the newer one.
 
-Loading/error feedback while a request is in flight is local component state: button labels swap to "Adding…"/"Saving…"/"Removing…", and a small inline banner (`text-critical`, same token Badge/Toast already use for their critical variant) shows on failure. My Garden's Planned-tab actions (remove, mark as planted) follow the same local-state pattern, calling `router.refresh()` on success to re-run the server component and pull fresh `listPalette()` data — there's no client-side cache to invalidate. Success feedback (confirmation + undo) is a toast — see §13.
+Loading/error feedback while a request is in flight is local component state: button labels swap to "Adding…"/"Saving…"/"Removing…", and a small inline banner (`text-critical`, same token Badge/Toast already use for their critical variant) shows on failure. My Garden's Planned-tab actions (remove, mark as planted) follow the same local-state pattern, calling `router.refresh()` on success to re-run the server component and pull fresh `listPalette()` data — there's no client-side cache to invalidate. Success feedback (confirmation + undo) is a toast — see [toast notifications](#toasts).
 
 ---
 
+<a id="toasts"></a>
+
 ## 13. Toast notifications: built from scratch, grouped by entity to prevent stale actions
 
-**No toast/notification system existed in the app** before this — `Toast` in `@paradoxui/ui` was an unwired presentational primitive, only ever rendered in the design-system showcase, with no provider, state management, or stacking logic anywhere. Adding confirmation + undo toasts to the palette actions (§12) required building this from scratch.
+**No toast/notification system existed in the app** before this — `Toast` in `@paradoxui/ui` was an unwired presentational primitive, only ever rendered in the design-system showcase, with no provider, state management, or stacking logic anywhere. Adding confirmation + undo toasts to the palette actions ([the palette write path](#palette-write-path)) required building this from scratch.
 
 **Where it lives:** `packages/ui` — a toast provider/hook is generic UI infrastructure with no garden knowledge, so per the project's Layer 2/3 split it belongs in the framework package, not `apps/web`.
 
@@ -323,6 +358,8 @@ Each Undo closure is handwritten per call site rather than derived generically �
 
 ---
 
+<a id="transition-labels"></a>
+
 ## 14. "Add to garden" vs. "Move to growing": two different transitions, two different labels
 
 **The problem:** the drawer's second button used to say "Add to garden" in every state except `planted`, covering two operations that are not the same thing to a user: (1) adding a plant to the palette for the first time (source: `manual`, brand new row) and (2) promoting an already-planned plant to planted (`updateStatus`, same row, no new insert). Reusing one label for both made the button's meaning ambiguous — "Add to garden" on a plant you'd already planned reads as if it might create a duplicate entry, when it actually just changes that plant's status.
@@ -333,6 +370,8 @@ Each Undo closure is handwritten per call site rather than derived generically �
 - **"Move to growing"** — only for promoting an existing `planned` row to `planted`. An `updateStatus` in place, same `paletteId`. Applies to the drawer's second button when `palette.status === 'planned'`, and to the Planned card's primary action in My Garden (`PlannedPlantTile`) — same underlying transition, same label, regardless of where it's triggered from.
 
 Toast copy follows the same split: "Added to your garden" only fires for a fresh insert; "Moved to growing" fires for the promotion, in both the drawer and the My Garden card. `PlantDetailDrawer`'s handler for this button is named `handleSecondaryAction` (not `handleAddToGarden`) precisely because it isn't always "add to garden" — it branches into insert, promote, or remove depending on current state, matching `secondaryActionLabel`'s three-way branch.
+
+<a id="growing-vs-planned"></a>
 
 ## 15. Growing vs. Planned: a record you inspect vs. a draft you act on
 
@@ -345,17 +384,19 @@ Toast copy follows the same split: "Added to your garden" only fires for a fresh
 
 ---
 
+<a id="care-tips-v1"></a>
+
 ## 16. Care tips: `maintenance_notes` for the text, `seasonal_rhythm` only for timing — no new AI or API calls
 
-> **Tier 1 superseded by §28 (Care Tips v2, July 15 2026).** The `maintenance_notes`-as-tip-text decision below was the v1 model; it is replaced by the distilled `seasonal_care` field. `maintenance_notes` leaves the tips system entirely. The season-derivation and fallback mechanics here still stand. Kept for the record.
+> **Tier 1 superseded by [seasonal_care](#seasonal-care) (Care Tips v2, July 15 2026).** The `maintenance_notes`-as-tip-text decision below was the v1 model; it is replaced by the distilled `seasonal_care` field. `maintenance_notes` leaves the tips system entirely. The season-derivation and fallback mechanics here still stand. Kept for the record.
 
-**Decision:** the Dashboard's Care Tips card (`getCareTips()` in `apps/web/lib/care-tips.ts`) is built entirely from data that already exists on curated plants — no new AI generation, no new external API, no new DB column. This is the same "derive at render time" philosophy as bloom status (§10).
+**Decision:** the Dashboard's Care Tips card (`getCareTips()` in `apps/web/lib/care-tips.ts`) is built entirely from data that already exists on curated plants — no new AI generation, no new external API, no new DB column. This is the same "derive at render time" philosophy as bloom status ([bloom status](#bloom-status)).
 
 **Correction — the tip text source was wrong at first:** this originally read `plant.seasonal_rhythm[currentSeason]` for the displayed tip text. `seasonal_rhythm` is _descriptive_ narrative about what the plant is doing that season (e.g. "Peak flowering occurs with masses of papery blooms") — not something a user can act on. `maintenance_notes` is the field actually written as _prescriptive_ care guidance (e.g. "Deadhead spent blooms to encourage reflowering"), which is what a card titled "Care tips" should show. Fixed to read `plant.maintenance_notes` for the tip text; `seasonal_rhythm`/season are no longer used to select the text at all, only kept for prioritization (below).
 
 **Season derivation:** there was no existing month→season mapping onto the 6-value `seasonal_rhythm` vocabulary anywhere in the codebase — `lib/bloom-status.ts` derives a 5-value bloom status from `bloom_months`, and `lib/trefle.ts` has a separate, unexported 4-value month→season map (`spring`/`summer`/`autumn`/`winter`) used only at Trefle-ingestion time to set `peak_season`. Neither fits. `getCurrentSeason()` adds a standalone month→season lookup for a Mediterranean/European climate: Dec–Feb → `winter`, Mar–Apr → `early_spring`, May–Jun → `late_spring`, Jul–Aug → `summer`, Sep → `late_summer`, Oct–Nov → `autumn`. It still drives the `STATIC_SEASONAL_TIPS` fallback and is available for prioritization, even though it no longer picks the tip text itself.
 
-**Selection and prioritization:** for each palette plant with status `planted` or `planned`, `getCareTips()` reads `plant.maintenance_notes`; plants where it's null are skipped rather than erroring (shouldn't happen given full curation, but defended against). Capped at 5 tips. When there are more than 5 candidates, plants currently `blooming` or `pre-bloom` (via the existing `getBloomStatus()`, §10, itself derived from `bloom_months`, independent of `seasonal_rhythm`) are prioritized to the front of the list — a plant actively flowering right now is more actionable than one just sitting dormant — with the remaining slots filled in `listPalette()`'s existing order (most recently added first).
+**Selection and prioritization:** for each palette plant with status `planted` or `planned`, `getCareTips()` reads `plant.maintenance_notes`; plants where it's null are skipped rather than erroring (shouldn't happen given full curation, but defended against). Capped at 5 tips. When there are more than 5 candidates, plants currently `blooming` or `pre-bloom` (via the existing `getBloomStatus()`, [bloom status](#bloom-status), itself derived from `bloom_months`, independent of `seasonal_rhythm`) are prioritized to the front of the list — a plant actively flowering right now is more actionable than one just sitting dormant — with the remaining slots filled in `listPalette()`'s existing order (most recently added first).
 
 **Fallback:** an empty palette, or one where every plant lacks `maintenance_notes`, falls back to `STATIC_SEASONAL_TIPS`, a hardcoded `Record<Season, CareTip[]>` of generic, plant-agnostic seasonal tasks (e.g. "Water deeply in early morning to reduce evaporation loss." for summer) keyed by `getCurrentSeason()`. This was already written as genuine advice, not pulled from `seasonal_rhythm` — unaffected by this fix.
 
@@ -363,14 +404,16 @@ Toast copy follows the same split: "Added to your garden" only fires for a fresh
 
 ---
 
+<a id="weather"></a>
+
 ## 17. Weather integration: Open-Meteo geocoding + forecast, both free, no key
 
 **Decision:** the Dashboard's Weather card is now backed by two Open-Meteo endpoints, neither requiring an API key:
 
 - **Geocoding** (`geocoding-api.open-meteo.com/v1/search`) — called directly from the browser as the user types in the location picker (`components/dashboard/LocationPickerModal.tsx`), debounced 300ms via a new `useDebounce` hook (`hooks/useDebounce.ts` — no debounce utility existed in the codebase before this). Returns `name`/`admin1`/`country` specifically so cities that share a name (e.g. multiple "Springfield"s, multiple "Opatija"s) can be told apart in the results list — confirmed during testing that both cases actually occur in the wild, not just a hypothetical.
-- **Forecast** (`api.open-meteo.com/v1/forecast`, `daily=weathercode,temperature_2m_max,temperature_2m_min`) — called server-side from the dashboard page (`lib/open-meteo.ts` → `getForecast()`), same "derive at render time, no new DB column" philosophy as bloom status (§10) and care tips (§16): the `gardens` table only stores `lat`/`lon` (added in migration `20260707141438_add_garden_coordinates.sql`, before this pass added a matching `lat`/`lon` to the `Garden` TS type — the DB column existed before the type did); the actual forecast is fetched fresh on every dashboard load (`cache: 'no-store'`) rather than cached.
+- **Forecast** (`api.open-meteo.com/v1/forecast`, `daily=weathercode,temperature_2m_max,temperature_2m_min`) — called server-side from the dashboard page (`lib/open-meteo.ts` → `getForecast()`), same "derive at render time, no new DB column" philosophy as bloom status ([bloom status](#bloom-status)) and care tips ([Care Tips v1](#care-tips-v1)): the `gardens` table only stores `lat`/`lon` (added in migration `20260707141438_add_garden_coordinates.sql`, before this pass added a matching `lat`/`lon` to the `Garden` TS type — the DB column existed before the type did); the actual forecast is fetched fresh on every dashboard load (`cache: 'no-store'`) rather than cached.
 
-**Write path:** selecting a city calls `setGardenLocation()` (`server/garden-actions.ts`), a `'use server'` action following the same service-role-client-scoped-to-the-hardcoded-garden-id pattern as `palette-actions.ts` (§11/§12) — writes `city`, `country`, `lat`, `lon` in one update, then the modal closes and calls `router.refresh()`, matching how palette mutations already trigger live updates (no `revalidatePath` anywhere in this codebase; client-side refresh is the established pattern).
+**Write path:** selecting a city calls `setGardenLocation()` (`server/garden-actions.ts`), a `'use server'` action following the same service-role-client-scoped-to-the-hardcoded-garden-id pattern as `palette-actions.ts` ([the RLS service-role shim](#rls-shim)/[the palette write path](#palette-write-path)) — writes `city`, `country`, `lat`, `lon` in one update, then the modal closes and calls `router.refresh()`, matching how palette mutations already trigger live updates (no `revalidatePath` anywhere in this codebase; client-side refresh is the established pattern).
 
 **Icon mapping — a 7-concept collapse, not a 1:1 code map:** `lib/weather-icon.ts` adds `mapWeatherCode(code: number): WeatherIconType`, collapsing Open-Meteo's ~30 numeric weathercodes into 7 semantic concepts (`sunny`, `partly-cloudy`, `cloudy`, `foggy`, `rain`, `snow`, `thunderstorm`). It's pure and keyed only on the code, not time of day — day/night icon variants are an explicit future item, not part of this pass.
 
@@ -390,21 +433,25 @@ Toast copy follows the same split: "Added to your garden" only fires for a fresh
 
 ---
 
+<a id="diary-identity"></a>
+
 ## 18. Diary: identity is (garden, plant), not the palette row
 
 **Decision:** `diary_entries` keys a thread by `garden_id` + `plant_id`, with `palette_plant_id` as a nullable, set-null-on-delete convenience link (`references palette_plants(id) on delete set null`) rather than the thread's real identity.
 
-**Why not key by `palette_plant_id` directly:** `removeFromPalette` (§11/§12) hard-deletes the `palette_plants` row when a plant is removed from the garden. If that row were the diary's foreign key with `on delete cascade`, every note a user wrote about that plant would vanish the moment they removed it from their palette — a much more destructive action than the user is actually taking. Keying on `garden_id`+`plant_id` instead means the notes are about the plant, not about the act of currently tracking it; removing and re-adding the same plant later reattaches its history automatically (new entries just won't have a `palette_plant_id` for the gap in between).
+**Why not key by `palette_plant_id` directly:** `removeFromPalette` ([the RLS service-role shim](#rls-shim)/[the palette write path](#palette-write-path)) hard-deletes the `palette_plants` row when a plant is removed from the garden. If that row were the diary's foreign key with `on delete cascade`, every note a user wrote about that plant would vanish the moment they removed it from their palette — a much more destructive action than the user is actually taking. Keying on `garden_id`+`plant_id` instead means the notes are about the plant, not about the act of currently tracking it; removing and re-adding the same plant later reattaches its history automatically (new entries just won't have a `palette_plant_id` for the gap in between).
 
 **Two sources feed the list:** `lib/diary.ts`'s `getPlantDiaries()` returns one `PlantDiary` per `planted` (growing) row in the _current_ `palette_plants` for the garden (so a freshly-planted plant shows up with an empty thread, ready for its first note) — `planned` plants don't get one yet, since a diary is for tracking something you're actually tending, not a plan. It then adds a second bucket: any plant with `diary_entries` in this garden that's no longer in `palette_plants` at all. Those get `paletteId: null`, and `DiaryListRow` renders a small "Removed from garden" tag next to the plant name instead of hiding the thread — removal is destructive to the palette row, not to the plant's history. Still writable: the composer works the same for a removed plant's diary (e.g. a closing note), since `addDiaryEntry`'s `paletteId` is optional and the schema never required a live palette row.
 
-**Storage — superseded:** the original public-bucket posture ("no real per-user privacy boundary yet — revisit once real auth/profiles exist") expired when auth shipped (§24). The bucket is now private with garden-ownership policies and signed-URL reads — see §29, which supersedes this paragraph. The upload path convention `{gardenId}/{plantId}/{timestamp}-{filename}` (set in `addDiaryEntry`, `server/diary-actions.ts`) is unchanged and is what the ownership policies key on.
+**Storage — superseded:** the original public-bucket posture ("no real per-user privacy boundary yet — revisit once real auth/profiles exist") expired when auth shipped ([the auth cutover](#auth)). The bucket is now private with garden-ownership policies and signed-URL reads — see [private diary photos](#diary-photos-private), which supersedes this paragraph. The upload path convention `{gardenId}/{plantId}/{timestamp}-{filename}` (set in `addDiaryEntry`, `server/diary-actions.ts`) is unchanged and is what the ownership policies key on.
 
-**Not solving now:** ~~`deleteDiaryEntry` removes the `diary_entries` row but leaves its uploaded photos in the bucket — an accepted orphaned-file gap for v1~~ (closed in §29: deletes now remove photo objects best-effort). `deleteDiaryEntry` is also not wired to any UI affordance yet (`NoteCard` has no delete button); it exists in `server/diary-actions.ts` for completeness and future use.
+**Not solving now:** ~~`deleteDiaryEntry` removes the `diary_entries` row but leaves its uploaded photos in the bucket — an accepted orphaned-file gap for v1~~ (closed in [private diary photos](#diary-photos-private): deletes now remove photo objects best-effort). `deleteDiaryEntry` is also not wired to any UI affordance yet (`NoteCard` has no delete button); it exists in `server/diary-actions.ts` for completeness and future use.
 
 **Scope cut — no AI synthesis:** the diary drawer's summary paragraph (`diary.summary`) is the plant's static `plants.description` field (Trefle-sourced botanical description), not a synthesized "how this plant did this season" narrative generated from the diary's own notes. Synthesizing across entries is an explicit future Agent feature (deferred per `CLAUDE.md`) — the chat icon in the drawer header stays present but unwired, not faked with static text pretending to be dynamic.
 
 ---
+
+<a id="plant-combinations"></a>
 
 ## 19. Plant combinations: AI companion pass, capped and idempotent
 
@@ -427,9 +474,11 @@ Toast copy follows the same split: "Added to your garden" only fires for a fresh
 
 ---
 
+<a id="botanical-cross-check"></a>
+
 ## 20. Botanical cross-check: blind second pass, flags only, never edits data
 
-**Why (see §3):** `is_curated = true` is an editorial pass, not botanical verification — the reviewer isn't a botanist. Botanical facts drafted by the first AI pass need an independent check.
+**Why (see [the curation layer](#curation-layer)):** `is_curated = true` is an editorial pass, not botanical verification — the reviewer isn't a botanist. Botanical facts drafted by the first AI pass need an independent check.
 
 **Decision:** `scripts/cross-check-plants.ts` re-derives the four load-bearing botanical fields — `plant_type`, `hardiness_zone_min`/`max`, `sun_requirements`, `bloom_months` — for every plant with `ai_drafted_at` set, and flags disagreements. It **never edits catalog data**; resolving a flag is a human decision. (The one column it does write is the operational `botanical_checked_at` stamp — see below — which is not a botanical or editorial field.)
 
@@ -444,11 +493,11 @@ Toast copy follows the same split: "Added to your garden" only fires for a fresh
 | `sun_requirements` | no set overlap, or stored is a proper subset of the check (under-reported tolerance) | genuine shift: partial overlap that is neither a subset nor a contradiction |
 | `bloom_months`     | no shared months                                                                     | window boundary drifts > 1 month; one side reports no bloom                 |
 
-Annuals with null zones on both sides are not flagged (nulls are correct there, per §6's annual rule).
+Annuals with null zones on both sides are not flagged (nulls are correct there, per [the curation model](#curation-model)'s annual rule).
 
 **Why `sun_requirements` under-reporting is a `disagree`, not `minor`:** the first full run surfaced a systematic first-pass tendency — 61 of 68 flags were sun `minor` drift, almost all the stored range being narrower than the check (e.g. stored `[full_sun]`, checked `[full_sun, partial_sun]`). Because the pattern is directional and pervasive rather than random noise, a stored range that is a strict subset of the check is treated as a real gap worth correcting and flagged `disagree`; only a genuine shift (overlap that is neither a subset nor a contradiction) stays `minor`. The paired forward fix is in `curate-plants.ts`: the `sun_requirements` field spec now instructs the drafter to include every exposure the species reliably grows in, not just its single optimum, so future drafts don't reproduce the narrowing.
 
-**One-time bulk correction (July 9, 2026), Ana-authorized:** rather than route all ~62 flagged rows through the per-plant editorial sweep, the first run's sun disagreements were applied in bulk after Ana reviewed the pattern — the 61 under-reported rows widened to the check's range, and the single contradiction (Ajuga, stored `[full_sun]` on a shade groundcover → `[partial_sun, shade]`) corrected. The update was still human-gated per §3 (Ana made the call), and kept reversible and safe: each row was updated by `id` with a guard on `is_curated = false` **and** an exact match on the prior value, sourced from the cross-check report (which records every stored-vs-checked pair). Two hardiness overstatements the same run flagged were corrected the same way (`Hedera helix` zone_max 11→9, `Salvia officinalis` 10→8). All corrected rows remain `is_curated = false`; the botanical corrections don't substitute for Ana's editorial pass. Future runs' disagreements still default to the sweep unless a pattern again warrants a bulk pass.
+**One-time bulk correction (July 9, 2026), Ana-authorized:** rather than route all ~62 flagged rows through the per-plant editorial sweep, the first run's sun disagreements were applied in bulk after Ana reviewed the pattern — the 61 under-reported rows widened to the check's range, and the single contradiction (Ajuga, stored `[full_sun]` on a shade groundcover → `[partial_sun, shade]`) corrected. The update was still human-gated per [the curation layer](#curation-layer) (Ana made the call), and kept reversible and safe: each row was updated by `id` with a guard on `is_curated = false` **and** an exact match on the prior value, sourced from the cross-check report (which records every stored-vs-checked pair). Two hardiness overstatements the same run flagged were corrected the same way (`Hedera helix` zone_max 11→9, `Salvia officinalis` 10→8). All corrected rows remain `is_curated = false`; the botanical corrections don't substitute for Ana's editorial pass. Future runs' disagreements still default to the sweep unless a pattern again warrants a bulk pass.
 
 **Replayable record:** the corrections are captured as a data migration, `supabase/migrations/20260709092512_correct_crosscheck_botanical_fields.sql`, so the diff isn't the only trace of what was applied. It re-keys off `scientific_name` rather than the live UUIDs (portable across environments) and carries the same guards (`is_curated = false` plus an exact prior-value match), so it is idempotent — a no-op against the already-corrected live rows, and against any environment whose values don't match the recorded pre-correction state. It's a one-off record, not part of the seed path; a fresh seed drafts its own values and these specific corrections simply won't match.
 
@@ -458,11 +507,13 @@ Annuals with null zones on both sides are not flagged (nulls are correct there, 
 
 ---
 
+<a id="sun-widening"></a>
+
 ## 21. Sun-tolerance widening: the cross-check's under-report findings, applied as a repeatable step
 
-> **Superseded by §22 (two-field sun model), same day.** The widening step was the interim backstop under the single-list model; once sun is drafted as `sun_thrives` + `sun_tolerates`, first drafts capture the tolerated range at the source and the corrective sweep drops out of the standard round. The section is kept for the record; `apply-sun-widening.ts` remains as a fallback for a legacy flat-list report.
+> **Superseded by [the two-field sun model](#sun-model) (two-field sun model), same day.** The widening step was the interim backstop under the single-list model; once sun is drafted as `sun_thrives` + `sun_tolerates`, first drafts capture the tolerated range at the source and the corrective sweep drops out of the standard round. The section is kept for the record; `apply-sun-widening.ts` remains as a fallback for a legacy flat-list report.
 
-**Why:** the sun under-reporting from §20 is not a one-time cleanup — it recurs on every new batch. The `curate-plants.ts` prompt instruction to include the full tolerated range does not reliably stop a single draft from naming only the optimum (a lone pass anchors on the textbook answer). Hand-authoring a correction migration each round (as §20 did once) does not scale toward a 500–700 species catalog. `scripts/apply-sun-widening.ts` turns that correction into a routine pipeline step.
+**Why:** the sun under-reporting from [the botanical cross-check](#botanical-cross-check) is not a one-time cleanup — it recurs on every new batch. The `curate-plants.ts` prompt instruction to include the full tolerated range does not reliably stop a single draft from naming only the optimum (a lone pass anchors on the textbook answer). Hand-authoring a correction migration each round (as [the botanical cross-check](#botanical-cross-check) did once) does not scale toward a 500–700 species catalog. `scripts/apply-sun-widening.ts` turns that correction into a routine pipeline step.
 
 **Decision (July 9, 2026):** the widener consumes the latest `cross-check-*.json` report and, for each under-reported-tolerance sun flag, widens the stored range to the check's range. Because it acts only on strict-subset flags, "widen to the check" is exactly the union of the two independent reads — it only ever adds an exposure the blind second pass judged tolerable, never removes one. It writes directly to the DB (like `curate-plants.ts`), not as a migration, and logs each run to `apps/web/reports/sun-widening-*.json` (gitignored).
 
@@ -475,13 +526,15 @@ Annuals with null zones on both sides are not flagged (nulls are correct there, 
 
 **Pipeline order:** `seed → curate-plants → cross-check-plants → apply-sun-widening → curate-combinations`. The widener depends on a fresh cross-check report reflecting current DB state.
 
-**Not the root fix.** This is a corroborated backstop that keeps first-draft narrowing from reaching users, not a cure. The root fix is §22.
+**Not the root fix.** This is a corroborated backstop that keeps first-draft narrowing from reaching users, not a cure. The root fix is [the two-field sun model](#sun-model).
 
 ---
 
+<a id="sun-model"></a>
+
 ## 22. Sun modelled as best + tolerated (the root fix)
 
-**Why:** §20/§21 treated the symptom (a single flat `sun_requirements` list drafts too narrow, so we detect and widen). The cause is the field itself: one list can't say where a plant _thrives_ versus where it merely _tolerates_ an exposure, so the drafter defaults to the optimum and every batch under-reports. Modelling the two ideas separately removes the ambiguity at the source. Chosen July 9, 2026, pulled ahead of the 500–700 species expansion so new plants are captured correctly the first time rather than re-curated later.
+**Why:** [the botanical cross-check](#botanical-cross-check)/[the sun-widening sweep](#sun-widening) treated the symptom (a single flat `sun_requirements` list drafts too narrow, so we detect and widen). The cause is the field itself: one list can't say where a plant _thrives_ versus where it merely _tolerates_ an exposure, so the drafter defaults to the optimum and every batch under-reports. Modelling the two ideas separately removes the ambiguity at the source. Chosen July 9, 2026, pulled ahead of the 500–700 species expansion so new plants are captured correctly the first time rather than re-curated later.
 
 **Model (migration `20260709220000`):**
 
@@ -489,7 +542,7 @@ Annuals with null zones on both sides are not flagged (nulls are correct there, 
 - `sun_tolerates text[]` — additional exposures it accepts but isn't at its best in; disjoint from `sun_thrives`; may be empty.
 - `sun_requirements` (unchanged, app-facing) — a **derived mirror**, kept as `canonical(sun_thrives ∪ sun_tolerates)` by a `BEFORE INSERT OR UPDATE` trigger whenever either source field is non-empty. Every existing read site (`good-for-your-garden.ts`, plant detail, garden tile, `format-plant.ts`) keeps reading `sun_requirements` untouched — the app is unchanged; only the source of the data moved underneath it.
 
-**Integrity** is enforced in the DB, not by convention: CHECK constraints require both sets to be valid exposures, disjoint, and forbid "tolerates without a thrives" (a plant with any sun data must have a best). A bonus effect: because the trigger recomputes `sun_requirements` from the two source fields on every write, the Trefle seed path can no longer perturb a split plant's sun even if the fill-only upsert (§9) ever let a value through — the derived value is a pure function of the AI/editorial source fields.
+**Integrity** is enforced in the DB, not by convention: CHECK constraints require both sets to be valid exposures, disjoint, and forbid "tolerates without a thrives" (a plant with any sun data must have a best). A bonus effect: because the trigger recomputes `sun_requirements` from the two source fields on every write, the Trefle seed path can no longer perturb a split plant's sun even if the fill-only upsert ([the safe Trefle upsert](#safe-upsert)) ever let a value through — the derived value is a pure function of the AI/editorial source fields.
 
 **Curation** (`curate-plants.ts`) now drafts the two fields directly — `sun_thrives` (best) and `sun_tolerates` (additional, disjoint) — instead of the flat list. The two-field ask is what fixes the under-reporting: naming "where it also merely tolerates" explicitly is exactly the question the old single list elided. `sun_requirements` is no longer drafted or sent as known data; the trigger owns it.
 
@@ -497,11 +550,13 @@ Annuals with null zones on both sides are not flagged (nulls are correct there, 
 
 **Editorial boundary unchanged:** all rows stay `is_curated = false`; the split is a data-model change, not an editorial sign-off. When Ana finalizes a plant she edits the two source fields, and the trigger keeps the mirror in sync.
 
-**Standard round is now:** `seed → curate-plants → cross-check-plants → curate-combinations`. The cross-check still fact-checks (it reads the derived `sun_requirements`), but the corrective widening sweep (§21) is retired — first drafts no longer systematically narrow. **Superseded by §25** — the cadence has since grown (native_region regeneration, the bloom-color guard, `--new-only` scoping); §25 is the current end-to-end runbook.
+**Standard round is now:** `seed → curate-plants → cross-check-plants → curate-combinations`. The cross-check still fact-checks (it reads the derived `sun_requirements`), but the corrective widening sweep ([the sun-widening sweep](#sun-widening)) is retired — first drafts no longer systematically narrow. **Superseded by [the round runbook](#round-runbook)** — the cadence has since grown (native_region regeneration, the bloom-color guard, `--new-only` scoping); [the round runbook](#round-runbook) is the current end-to-end runbook.
 
 **Still deferred to post-test:** surfacing the distinction in the UI ("thrives in full sun, tolerates part shade") and using it in matching (prefer thrive-matches, still surface tolerate-matches). The data is captured now; the presentation waits for the test to inform it.
 
 ---
+
+<a id="plant-type-label"></a>
 
 ## 23. `plant_type` is a functional label, not strict botany
 
@@ -513,15 +568,17 @@ Annuals with null zones on both sides are not flagged (nulls are correct there, 
 - **`shrub` vs `tree` by garden use, not ultimate size.** A large shrub / small tree grown as a garden shrub (e.g. `Pittosporum tenuifolium`) stays `shrub`; `tree` is reserved for plants grown as standalone specimens (Taxus, Ilex).
 - **Life-cycle by how it's grown in a temperate ornamental garden.** Tender perennials grown as annuals keep `annual` (`Eschscholzia californica`); short-lived perennials keep `perennial` (`Rudbeckia hirta`).
 
-Corrections that follow this convention are applied by the same guarded, reversible method as §20 (update by `scientific_name`/`id`, guarded on `is_curated = false` and an exact match on the prior value). They do **not** flip `is_curated` — a functional-classification fix is not Ana's editorial pass.
+Corrections that follow this convention are applied by the same guarded, reversible method as [the botanical cross-check](#botanical-cross-check) (update by `scientific_name`/`id`, guarded on `is_curated = false` and an exact match on the prior value). They do **not** flip `is_curated` — a functional-classification fix is not Ana's editorial pass.
 
 ---
 
+<a id="auth"></a>
+
 ## 24. Auth + single-garden identity: the cutover from single-tenant shim to real accounts
 
-**Decided July 10, 2026.** Auth is being pulled forward from post-test into the build. The reasoning: accounts are what make the product "real," and they define the account-settings surface that has to exist before any public launch. This section records the finalized shape. It supersedes the shims documented in §11 (`current-garden.ts`) and §12 (service-role palette writes) — those get _deleted_, not extended, by this work.
+**Decided July 10, 2026.** Auth is being pulled forward from post-test into the build. The reasoning: accounts are what make the product "real," and they define the account-settings surface that has to exist before any public launch. This section records the finalized shape. It supersedes the shims documented in [the RLS service-role shim](#rls-shim) (`current-garden.ts`) and [the palette write path](#palette-write-path) (service-role palette writes) — those get _deleted_, not extended, by this work.
 
-**Auth and onboarding are decoupled.** The original plan (§11, and the Notion spec) bundled auth with the 5-step onboarding wizard and deferred both together. They separate cleanly: auth is infrastructure; the wizard (sun/style/size, which feed palette _recommendations_) is product and stays deferred. What auth needs from onboarding is exactly one field — **location** — because location is the only profile input anything consumes today (it drives the Open-Meteo climate/hardiness/frost derivation in §17, which feeds the weather-derived dashboard copy shipped in PR #18). So we collect location and nothing else.
+**Auth and onboarding are decoupled.** The original plan ([the RLS service-role shim](#rls-shim), and the Notion spec) bundled auth with the 5-step onboarding wizard and deferred both together. They separate cleanly: auth is infrastructure; the wizard (sun/style/size, which feed palette _recommendations_) is product and stays deferred. What auth needs from onboarding is exactly one field — **location** — because location is the only profile input anything consumes today (it drives the Open-Meteo climate/hardiness/frost derivation in [the weather integration](#weather), which feeds the weather-derived dashboard copy shipped in PR #18). So we collect location and nothing else.
 
 **Auth methods: magic link (default) + Google OAuth.** Passwordless email is the default — Supabase ships it out of the box, and it removes password friction at exactly the sign-up moment. Google OAuth sits alongside it (not instead), because European beginners skew toward "sign in with Google." Both are near-zero implementation cost on Supabase. Consequence: **there is no password anywhere**, so account settings has no password management to build.
 
@@ -533,7 +590,7 @@ Corrections that follow this convention are applied by the same guarded, reversi
 
 **The whole app is gated; only the santolina.app landing stays public.** This reverses the earlier documented philosophy ("no account gate, value shown immediately, prompt only at first save") — a conscious change, not drift. Landing page sells the product; everything under it (dashboard, explore, my garden, diary) requires a session. Middleware redirects unauthenticated requests to the landing/login. Consequence: the "prompt at first save" logic never needs building.
 
-**RLS cutover is the real work and the real risk.** Every user-scoped server action (`palette-actions.ts`, `diary-actions.ts`, `garden-actions.ts`) switches from the service-role client (which bypasses RLS) to a session client via `@supabase/ssr`, so the existing `auth.uid()` policies actually run. Service-role is retained _only_ for the plants catalog writes (Trefle sync, curation scripts — §5). The RLS policies in `20260706093045_initial_schema.sql` have never been exercised against a real session, so expect policy bugs on first login — this is the part to test hardest.
+**RLS cutover is the real work and the real risk.** Every user-scoped server action (`palette-actions.ts`, `diary-actions.ts`, `garden-actions.ts`) switches from the service-role client (which bypasses RLS) to a session client via `@supabase/ssr`, so the existing `auth.uid()` policies actually run. Service-role is retained _only_ for the plants catalog writes (Trefle sync, curation scripts — [the server-only clients](#server-only-clients)). The RLS policies in `20260706093045_initial_schema.sql` have never been exercised against a real session, so expect policy bugs on first login — this is the part to test hardest.
 
 **Account settings: the basics only.** Email, sign out, delete account, **reset garden** (destructive-confirm dialog — doubles as the easy way to clear test data), and **edit location** (the one live profile field needs a home; settings is it). Nothing else.
 
@@ -545,32 +602,34 @@ Corrections that follow this convention are applied by the same guarded, reversi
 
 ---
 
+<a id="round-runbook"></a>
+
 ## 25. The plant-expansion round: current end-to-end cadence (runbook)
 
 **Operational history and known traps live in `docs/database-log.md`** — read it before running any of this, and append an entry after. This section is the design rationale; that file is the record of what has actually been done and what has already gone wrong.
 
-**This is the authoritative pipeline for adding plants to the catalog.** It supersedes the shorter "standard round" line in §22, which has since grown. Every step is an offline script under `apps/web/scripts/`, run via `tsx --env-file=.env.local`, none in the request path (§6). The catalog reached **595 species / 1485 combinations** at round 8 (July 27 2026): 29 → 125 → 148 → 201 → 318 → 418 → 494 → 595 across rounds. Round 7 was the first **herbs + decorative-edibles** batch (breaking the earlier ornamental-only pattern); pure salad/veg stays deferred to a later round. Round 8 is the **shade & structure** batch — see the round-8 note at the end of this section.
+**This is the authoritative pipeline for adding plants to the catalog.** It supersedes the shorter "standard round" line in [the two-field sun model](#sun-model), which has since grown. Every step is an offline script under `apps/web/scripts/`, run via `tsx --env-file=.env.local`, none in the request path ([the curation model](#curation-model)). The catalog reached **595 species / 1485 combinations** at round 8 (July 27 2026): 29 → 125 → 148 → 201 → 318 → 418 → 494 → 595 across rounds. Round 7 was the first **herbs + decorative-edibles** batch (breaking the earlier ornamental-only pattern); pure salad/veg stays deferred to a later round. Round 8 is the **shade & structure** batch — see the round-8 note at the end of this section.
 
 Run the steps **in this order** after choosing a batch of species:
 
-1. **Seed.** Add rows from Trefle. Use `seed-plants.ts` (a flat list) or a purpose-built round script (`seed-regional-natives.ts`, `seed-round6.ts`, `seed-round7.ts`) when the batch needs its own resolver or selection rationale. **Seed by verified Trefle ID or exact scientific-name match — never the top name-search hit.** Trefle name search silently resolves to sibling species; the round scripts resolve by exact genus+species (synonym-aware) and log any drift. Cultivars/hybrids rarely resolve — seed the species parent by numeric Trefle ID (see §4, and the round notes). Seeding is skip-by-default on already-cataloged species (§9).
+1. **Seed.** Add rows from Trefle. Use `seed-plants.ts` (a flat list) or a purpose-built round script (`seed-regional-natives.ts`, `seed-round6.ts`, `seed-round7.ts`) when the batch needs its own resolver or selection rationale. **Seed by verified Trefle ID or exact scientific-name match — never the top name-search hit.** Trefle name search silently resolves to sibling species; the round scripts resolve by exact genus+species (synonym-aware) and log any drift. Cultivars/hybrids rarely resolve — seed the species parent by numeric Trefle ID (see [the Trefle field mapping](#trefle-field-mapping), and the round notes). Seeding is skip-by-default on already-cataloged species ([the safe Trefle upsert](#safe-upsert)).
 2. **Curate.** `curate-plants.ts --round <label> --new-only` fills every AI field on rows where `ai_drafted_at IS NULL`, within the round. **A scope flag is mandatory with no default** (July 28 2026 — see the scope-flag note below). `--new-only` is now a filter _inside_ the scope rather than a substitute for one. A transient invalid-JSON failure just leaves that row `ai_drafted_at = NULL`; re-run to pick it up.
-3. **Combinations.** `curate-combinations.ts --round <label>` adds companion pairings (§19). Idempotent, auto-skips plants already at the 5-companion cap. **Scope required.** The scope selects which plants get pairings drafted _for_ them; the candidate roster deliberately stays the whole catalog, because a round's plants should be pairable with everything already grown and the cap arithmetic counts both directions across the whole table. Because saturated (5-companion) plants drop out as candidates, a mature catalog leaves a fresh batch to pair mostly with each other and whatever older plants still have open slots — cap-saturation, not per-batch siloing (mechanism in §19).
-4. **Regenerate native_region.** `regenerate-native-region.ts --round <label>` (generate, review, then `--apply`) — see §26. **Must run after every seed** or new plants stay untagged for the "native to my region" filter. **A scope is now required and there is no default:** `--round` for a seed, `--all` only when the region model itself changes. Full-catalog regeneration was a one-time migration that outlived itself — it kept re-deriving ~600 plants when only the new ones needed it, which both made the Trefle rate limit reachable (§26) and silently rewrote settled rows (round 8's full run changed 20 pre-existing plants alongside its own 101).
-5. **Guards (flag only; fail loudly).** `cross-check-plants.ts --round <label>` blind-fact-checks the batch's botanical fields (§20). `cross-check-native-to.ts --round <label>` is a continent-level gross-error guard on the `native_to` phrases (GBIF + Claude, report-only by default; `--apply` patches only rows rated "gross"). **Its accuracy bar is deliberately ~90%, not 100%** — the guard exists to catch continent-level nonsense, and in-app user flagging is the intended real review; chasing the tail here is not a good use of a Claude pass. **Scope both by `--round`, not `--new-only`** — see the scoping note below; without a scope the guards re-check (and re-bill Claude for) the whole catalog. `check-bloom-colors.ts` fails if the batch invented a `bloom_color` or `foliage_color` shade not mapped in `lib/bloom-colors.ts` / `lib/foliage-colors.ts` — an unmapped value silently drops out of the Explore colour filter, so map each new shade into an existing bucket (or the matching ignore set) before shipping.
+3. **Combinations.** `curate-combinations.ts --round <label>` adds companion pairings ([plant combinations](#plant-combinations)). Idempotent, auto-skips plants already at the 5-companion cap. **Scope required.** The scope selects which plants get pairings drafted _for_ them; the candidate roster deliberately stays the whole catalog, because a round's plants should be pairable with everything already grown and the cap arithmetic counts both directions across the whole table. Because saturated (5-companion) plants drop out as candidates, a mature catalog leaves a fresh batch to pair mostly with each other and whatever older plants still have open slots — cap-saturation, not per-batch siloing (mechanism in [plant combinations](#plant-combinations)).
+4. **Regenerate native_region.** `regenerate-native-region.ts --round <label>` (generate, review, then `--apply`) — see [native_region](#native-region). **Must run after every seed** or new plants stay untagged for the "native to my region" filter. **A scope is now required and there is no default:** `--round` for a seed, `--all` only when the region model itself changes. Full-catalog regeneration was a one-time migration that outlived itself — it kept re-deriving ~600 plants when only the new ones needed it, which both made the Trefle rate limit reachable ([native_region](#native-region)) and silently rewrote settled rows (round 8's full run changed 20 pre-existing plants alongside its own 101).
+5. **Guards (flag only; fail loudly).** `cross-check-plants.ts --round <label>` blind-fact-checks the batch's botanical fields ([the botanical cross-check](#botanical-cross-check)). `cross-check-native-to.ts --round <label>` is a continent-level gross-error guard on the `native_to` phrases (GBIF + Claude, report-only by default; `--apply` patches only rows rated "gross"). **Its accuracy bar is deliberately ~90%, not 100%** — the guard exists to catch continent-level nonsense, and in-app user flagging is the intended real review; chasing the tail here is not a good use of a Claude pass. **Scope both by `--round`, not `--new-only`** — see the scoping note below; without a scope the guards re-check (and re-bill Claude for) the whole catalog. `check-bloom-colors.ts` fails if the batch invented a `bloom_color` or `foliage_color` shade not mapped in `lib/bloom-colors.ts` / `lib/foliage-colors.ts` — an unmapped value silently drops out of the Explore colour filter, so map each new shade into an existing bucket (or the matching ignore set) before shipping.
 
 **Guard scoping: use `--round`, not `--new-only` (fixed July 27 2026, round 8).** Both guards also accept `--new-only`, which is state-based (`botanical_checked_at IS NULL` / `native_checked_at IS NULL`). That only narrows to a fresh batch **once every other row already carries a stamp**, and that baseline was never established: the stamp columns shipped mid-history and the rows seeded before them were never backfilled. At round 8, `botanical_checked_at` was set on 0 of 494 rows and `native_checked_at` on 0, so `cross-check-plants --new-only` selected **all 595 plants instead of the 101 new ones**. Nothing failed — the run simply re-checked and re-billed the whole catalog, which is the exact waste this step warns about, and it was invisible because the run looks identical apart from a count. Both guards now take `--round <label>`, scoping to the ids the seed run recorded in `rounds/<label>/manifest.json`; manifest scoping needs no baseline, which is what manifests were introduced for. **The baseline was backfilled July 28 2026, from evidence** (`scripts/backfill-guard-stamps.ts`). This paragraph previously said backfilling was "considered and rejected — there is no per-row evidence any of them was actually checked", citing a self-test that found older plants at `0/4`. **That test was circular:** `round-status.ts` detects a check by its stamp, so unstamped rows can only report `0/N`. The actual explanation is that the stamp columns arrived in migration `20260716120000` on July 16, so every earlier cross-check physically could not stamp. The archived reports are dated evidence and match the catalog exactly (a 201-row full-catalog run on July 9, then round 6's 100 and round 7's 76), so **451 rows were stamped — 375 botanical + 76 `native_to` — each dated to the report's own `ran_at` rather than to the day of the backfill.** **Deliberately still NULL:** the 116 plants seeded July 12 (no surviving botanical report) and every pre-round-7 row for `native_checked_at` (that guard wrote to a fixed filename and overwrote its own history — the very problem `archive-round.ts` now prevents). Null on those is correct: it leaves them for a future guard run instead of hiding them.
 
 **Scope flags are mandatory, with no default (July 28 2026).** `curate-plants`, `curate-combinations` and `draft-hardiness` each take `--round <label> | --ids <a,b> | --all` and refuse to run without one; the shared parser and its refusal live in `apps/web/scripts/scope.ts`, alongside `seed-plants` (`--round` only), `regenerate-native-region` and both native cross-checks. The rule is that **a state predicate is not a scope**. `ai_drafted_at IS NULL` and `hardiness_rating IS NULL` describe the whole catalog and happen to overlap the fresh batch; when an earlier round leaves a gap they silently widen, which is exactly how round 8 drafted hardiness for 177 plants. A round's plants are the ids its seed run recorded, and nothing else. `--all` still exists and still works — it just has to be typed. Two related rules: an ambiguous pair (`--all --round 9`) is an error rather than a silent preference, and a `--round` whose manifest seeded nothing throws rather than running against an empty set, because a run that reports success having touched nothing is how several entries in `docs/database-log.md` begin.
 
-5b. **Validate native_region against WCVP.** `cross-check-native-region.ts --round <label>` checks the Level 2 tags step 4 just wrote against Kew's World Checklist, read through GBIF (report-only; `--apply` to write). This is the guard §26 never had, and it matters more than it sounds — see the native-vs-introduced section at the end of §26. **It stamps `native_region_checked_at`** on every row that reached a decided verdict (migration `20260728193815`), so even a report-only run writes that one column. Rows GBIF returns no WCVP data for are deliberately left NULL — a failed lookup must not read as a completed check — and the handful of taxa upstream carries nothing for are named in `NO_WCVP_DISTRIBUTION` in `round-status.ts`, rather than the step being softened to a WARN to make them disappear.
+5b. **Validate native_region against WCVP.** `cross-check-native-region.ts --round <label>` checks the Level 2 tags step 4 just wrote against Kew's World Checklist, read through GBIF (report-only; `--apply` to write). This is the guard [native_region](#native-region) never had, and it matters more than it sounds — see the native-vs-introduced section at the end of [native_region](#native-region). **It stamps `native_region_checked_at`** on every row that reached a decided verdict (migration `20260728193815`), so even a report-only run writes that one column. Rows GBIF returns no WCVP data for are deliberately left NULL — a failed lookup must not read as a completed check — and the handful of taxa upstream carries nothing for are named in `NO_WCVP_DISTRIBUTION` in `round-status.ts`, rather than the step being softened to a WARN to make them disappear.
 
-6. **Hardiness.** `draft-hardiness.ts --round <label>` drafts an RHS rating for any unrated rows in the round — see §27. **Scope required**, and this is the step that proves why: its state predicate (`hardiness_rating IS NULL`) is catalog-wide, so round 8's unscoped run drafted 177 plants — its own 101 plus round 7's skipped 76 — while every line on screen said round 8.
-7. **Seasonal care.** `curate-seasonal-care.ts --ids <manifest ids>` distils the batch's `seasonal_care` lines — see §28. **This step was missing from the runbook until round 8**, and its absence is not cosmetic: Care Tips v2 is live and reads `seasonal_care[currentStage]`, so a plant seeded without it shows **no care tip at all**. Prefer `--ids` from the round manifest over this script's own `--new-only`, which is still the fragile `created_at`-day heuristic. **Only the draft step is per-round.** `cross-check-seasonal-care.ts` and `apply-seasonal-care-fixes.ts` are optional editorial follow-ups (§28), not part of the round — a reader of §28 alone would reasonably assume all three run every time.
+6. **Hardiness.** `draft-hardiness.ts --round <label>` drafts an RHS rating for any unrated rows in the round — see [hardiness](#hardiness). **Scope required**, and this is the step that proves why: its state predicate (`hardiness_rating IS NULL`) is catalog-wide, so round 8's unscoped run drafted 177 plants — its own 101 plus round 7's skipped 76 — while every line on screen said round 8.
+7. **Seasonal care.** `curate-seasonal-care.ts --ids <manifest ids>` distils the batch's `seasonal_care` lines — see [seasonal_care](#seasonal-care). **This step was missing from the runbook until round 8**, and its absence is not cosmetic: Care Tips v2 is live and reads `seasonal_care[currentStage]`, so a plant seeded without it shows **no care tip at all**. Prefer `--ids` from the round manifest over this script's own `--new-only`, which is still the fragile `created_at`-day heuristic. **Only the draft step is per-round.** `cross-check-seasonal-care.ts` and `apply-seasonal-care-fixes.ts` are optional editorial follow-ups ([seasonal_care](#seasonal-care)), not part of the round — a reader of [seasonal_care](#seasonal-care) alone would reasonably assume all three run every time.
 
-**Two steps that had silently not run.** Round 8 found round 7's batch unrated by `draft-hardiness` — that step targets `hardiness_rating IS NULL`, so round 8's run picked up **177 plants: its own 101 plus round 7's 76**, unrated since July 15 — and found `seasonal_care` null on every newly seeded row, because no step existed to fill it. Both were invisible for the same reason: **`verify-round` WARNs rather than FAILs on them**, deliberately, because both fields were parked or still in flight when that check was written. That is the right call for a parked field and the wrong one for a shipped one. When §27's hardiness work resumes, or if `seasonal_care` coverage becomes required, promote those warnings to failures — otherwise the next skipped step is equally invisible.
+**Two steps that had silently not run.** Round 8 found round 7's batch unrated by `draft-hardiness` — that step targets `hardiness_rating IS NULL`, so round 8's run picked up **177 plants: its own 101 plus round 7's 76**, unrated since July 15 — and found `seasonal_care` null on every newly seeded row, because no step existed to fill it. Both were invisible for the same reason: **`verify-round` WARNs rather than FAILs on them**, deliberately, because both fields were parked or still in flight when that check was written. That is the right call for a parked field and the wrong one for a shipped one. When [hardiness](#hardiness)'s hardiness work resumes, or if `seasonal_care` coverage becomes required, promote those warnings to failures — otherwise the next skipped step is equally invisible.
 
-7a. **Hero image verification** (only where the image pass has run for this batch). `pick-plant-images.ts --verify --round <label>` re-judges the round's `medium`-confidence heroes, and is the remediation half of §30/§31. Numbered before 7b because it feeds it: the editorial pass's image criterion reads `image_pick_confidence`, and `medium` blocks sign-off.
+7a. **Hero image verification** (only where the image pass has run for this batch). `pick-plant-images.ts --verify --round <label>` re-judges the round's `medium`-confidence heroes, and is the remediation half of [the hero image pass](#hero-images)/[Wikimedia heroes and attribution](#wikimedia-attribution). Numbered before 7b because it feeds it: the editorial pass's image criterion reads `image_pick_confidence`, and `medium` blocks sign-off.
 
     **It asks a different question, not the same one again.** The pick is comparative — up to six candidates, "which is best?" — so `medium` there is largely a statement about the field: two were close, or the winner has a pot rim in it. `--verify` shows the model the single image that won, alone, and asks an absolute question: is this the right species, and is it good enough to be a hero? Re-running the pick could not answer that, it would only re-stage the comparison.
 
@@ -578,7 +637,7 @@ Run the steps **in this order** after choosing a batch of species:
 
     Stamps `image_verified_at` (migration `20260729083058`), so a row still `medium` after the second look is not re-billed every run, and `curate-editorial` reads that stamp to tell "one cheap command clears this" apart from "this needs a photograph nobody has yet". Registered in `STEP_DEFS` at WARN and **conditionally** — a row only owes a verification if its pick came out `medium`. Round 8: 32 verified, 19 cleared, 12 still unconfirmed, 1 demoted. A reviewer resolves what is left: the review page's `I can confirm the species` verdict feeds `apply-image-confirmations.ts`, which promotes the row and nulls `editorial_checked_at` so the sign-off is re-made against the changed fact.
 
-7b. **Editorial sign-off.** `curate-editorial.ts --round <label>` makes the §3 judgment — the image shows the right plant, the description reads well and on-brand, the tags make product sense — and flips `is_curated` on the rows that clear it. Numbered 7b rather than renumbering because it is genuinely last: it judges the output of every step above, so it can only run once they have. The bar lives once in `lib/editorial-standard.ts`.
+7b. **Editorial sign-off.** `curate-editorial.ts --round <label>` makes the [the curation layer](#curation-layer) judgment — the image shows the right plant, the description reads well and on-brand, the tags make product sense — and flips `is_curated` on the rows that clear it. Numbered 7b rather than renumbering because it is genuinely last: it judges the output of every step above, so it can only run once they have. The bar lives once in `lib/editorial-standard.ts`.
 
     Three things about it are deliberate. **The image criterion costs nothing**: it reads the `image_pick_confidence` the vision pass already persisted rather than paying for a second look, and only `high` clears — a `medium` row is reported as *unresolved*, not failed. **Weak descriptions are rewritten, not just flagged**, on the same reasoning that lets `curate-styles` overwrite `style_tags`: the existing text is itself an AI draft and `is_curated = false` is the record that nobody signed it off. And **a rewrite is never judged by the model that wrote it** — a second, blind call sees only the plant's identity and the candidate text. That guard earned its place immediately: it caught a rewrite quietly swapping in a different common name.
 
@@ -590,7 +649,7 @@ Run the steps **in this order** after choosing a batch of species:
 
 **Scope: did the round stay inside its batch?** `check-round-scope.ts --round <label>` is the mirror image of `round-status.ts`. That one asks whether every step ran for the round's plants; this asks whether any step ran on plants that were **not** the round's. It diffs the round's pre-seed backup (step 0) against the live catalog and FAILs on any data column changed on a row the manifest doesn't claim, any plant deleted or inserted without being in the manifest, and any companion pair added or removed between two plants that both predate the round. Bookkeeping stamps (`*_checked_at`, `updated_at`) WARN instead — a guard re-run legitimately re-stamps existing rows. It reads DB state rather than any script's own report, so **it covers every step of a round at once, including steps that write no report and steps not yet written**; a new script that quietly reaches past its batch is caught without the check knowing that script exists.
 
-Run over round 8 retrospectively it returns 101 out-of-scope writes: the 20 `native_region` rewrites already recorded in step 4, plus **76 `hardiness_rating` fills on round 7's batch** — the same event §25 notes as "177 plants: its own 101 plus round 7's 76", but reframed as what it also was, a round writing to another round's rows. Also 3 `common_name` renames and 2 companion pairs between pre-existing plants, both awaiting an editorial ruling. **Not every out-of-scope write is a mistake** — fixing an older row's name mid-round is a real thing to do — so `rounds/<label>/scope-allow.json` waives named cases (`plant` / `column` / `check`, `*` wildcards, a required `why`). The waiver is the point: a legitimate exception gets written down instead of the check getting switched off.
+Run over round 8 retrospectively it returns 101 out-of-scope writes: the 20 `native_region` rewrites already recorded in step 4, plus **76 `hardiness_rating` fills on round 7's batch** — the same event [the round runbook](#round-runbook) notes as "177 plants: its own 101 plus round 7's 76", but reframed as what it also was, a round writing to another round's rows. Also 3 `common_name` renames and 2 companion pairs between pre-existing plants, both awaiting an editorial ruling. **Not every out-of-scope write is a mistake** — fixing an older row's name mid-round is a real thing to do — so `rounds/<label>/scope-allow.json` waives named cases (`plant` / `column` / `check`, `*` wildcards, a required `why`). The waiver is the point: a legitimate exception gets written down instead of the check getting switched off.
 
 **Its window is baseline → now by default**, so a hand edit made after the round still shows up. Run it as the round's last step, while that distinction costs nothing. Rounds 1–7 have no manifest and cannot be scope-checked.
 
@@ -598,7 +657,7 @@ Run over round 8 retrospectively it returns 101 out-of-scope writes: the 20 `nat
 
 **Round 8 keeps its 450 style_tags findings as a waiver rather than a `cleared_at`**, and the reason is worth knowing before reaching for the new field: a `cleared_at` late enough to contain round 8's own greenery and image remediation (15:20 and 15:30 on July 28) also contains the catalog-wide style pass that finished at 13:06. Time cannot separate them, because the unrelated pass ran first. The waiver names the pass and says so.
 
-**Editorial vs. mechanical stays intact throughout.** None of these steps flips `is_curated` (§3): curation drafts, the guards only flag, and botanical/functional fixes (§20, §23) are guarded reversible corrections, not Ana's editorial pass. Cross-check disagreements on `plant_type` are usually the §23 functional-label convention (false positives), not errors.
+**Editorial vs. mechanical stays intact throughout.** None of these steps flips `is_curated` ([the curation layer](#curation-layer)): curation drafts, the guards only flag, and botanical/functional fixes ([the botanical cross-check](#botanical-cross-check), [plant_type as a functional label](#plant-type-label)) are guarded reversible corrections, not Ana's editorial pass. Cross-check disagreements on `plant_type` are usually the [plant_type as a functional label](#plant-type-label) functional-label convention (false positives), not errors.
 
 **Working-tree discipline.** These scripts touch the live Supabase project directly (there is one project, no separate env), so a seed/curate run mutates production data — intended, but know it. When another session shares the git working tree, commit round code from a throwaway `git worktree` off `main` (or the round branch) and stage only your files by explicit path; never `git add -A` on a shared tree.
 
@@ -611,7 +670,9 @@ Run over round 8 retrospectively it returns 101 out-of-scope writes: the 20 `nat
 Two things this round established that outlive it:
 
 - **The synonym table is load-bearing for shade batches.** Woodland genera have been widely segregated (Anemone → Anemonoides, Blechnum → Struthiopteris, Scilla → Othocallis, Ipheion → Tristagma, Sedum → Petrosedum, Meconopsis → Papaver). The exact-match guard caught two candidates that would otherwise have bound to `Anemone quinquefolia`, already in the catalog. A shade round needs its synonym groups written before the dry run, not after.
-- **A seed batch needs a common-name pass, every time.** Trefle is a botanical source, so its names are drawn from floras: 18 of 101 rows had no English name at all and fell back to the scientific name, and several carried a name belonging to a different species. One was a true collision — `Cercis canadensis` arrived as "Judastree", which is `C. siliquastrum`, already in the catalog, so two species would have shared one name with no way for search to separate them (`Primula sieboldii` vs `P. japonica` and a bare "Poppy" against `Papaver rhoeas` were the same class). `scripts/fix-round8-names.ts` corrected 49 rows, guarded the same way as `apply-sun-widening` (each entry carries the value it expects to find, so a drifted row is skipped not overwritten) and **without flipping `is_curated`** — absent and ambiguous names are mechanical, the voice pass is still Ana's (§3).
+- **A seed batch needs a common-name pass, every time.** Trefle is a botanical source, so its names are drawn from floras: 18 of 101 rows had no English name at all and fell back to the scientific name, and several carried a name belonging to a different species. One was a true collision — `Cercis canadensis` arrived as "Judastree", which is `C. siliquastrum`, already in the catalog, so two species would have shared one name with no way for search to separate them (`Primula sieboldii` vs `P. japonica` and a bare "Poppy" against `Papaver rhoeas` were the same class). `scripts/fix-round8-names.ts` corrected 49 rows, guarded the same way as `apply-sun-widening` (each entry carries the value it expects to find, so a drifted row is skipped not overwritten) and **without flipping `is_curated`** — absent and ambiguous names are mechanical, the voice pass is still Ana's ([the curation layer](#curation-layer)).
+
+<a id="native-region"></a>
 
 ## 26. `native_region`: WGSRPD Level-2, regenerated from Trefle (and the `tdwg_code` trap)
 
@@ -625,7 +686,7 @@ Two things this round established that outlive it:
 
 **Re-run after every seed** (step 4 above). The existing catalog is served from `reports/trefle-native-cache.json`, so only new species trigger fresh Trefle fetches — **but note that `reports/` is gitignored, so a fresh clone or `git worktree` has a COLD cache and refetches all ~600.** That is the condition both traps below need.
 
-**The rate-limit trap (fixed July 27 2026, round 8) — the same silent shape as the `tdwg_code` trap, one layer down.** The fetch loop paced at 120ms, roughly 500 req/min against Trefle's documented 120 req/min (§1), so a cold cache began returning **HTTP 429 after about the first 120 species**. The `catch` stored the 429 as a cache entry, and downstream **an errored entry is indistinguishable from an empty native list**, so each one silently routed to the `native_to` prose fallback. The run reported success with a plausible-looking source mix — `trefle-l3=121, native_to-fallback=469` — that was really **466 rate-limit errors laundered into model-derived guesses**. Applying it would have overwritten most of the catalog's authoritative regions, including the 494 rows that had nothing to do with the round, with prose derivations. After the fix the same run reads `trefle-l3=571, native_to-fallback=19`, which is what Trefle's real coverage looks like.
+**The rate-limit trap (fixed July 27 2026, round 8) — the same silent shape as the `tdwg_code` trap, one layer down.** The fetch loop paced at 120ms, roughly 500 req/min against Trefle's documented 120 req/min ([the Trefle-over-Perenual choice](#plant-data-provider)), so a cold cache began returning **HTTP 429 after about the first 120 species**. The `catch` stored the 429 as a cache entry, and downstream **an errored entry is indistinguishable from an empty native list**, so each one silently routed to the `native_to` prose fallback. The run reported success with a plausible-looking source mix — `trefle-l3=121, native_to-fallback=469` — that was really **466 rate-limit errors laundered into model-derived guesses**. Applying it would have overwritten most of the catalog's authoritative regions, including the 494 rows that had nothing to do with the round, with prose derivations. After the fix the same run reads `trefle-l3=571, native_to-fallback=19`, which is what Trefle's real coverage looks like.
 
 Both halves matter: pacing (600ms + capped exponential backoff on 429) so the fetch succeeds, **and `loadTrefleNative` now throws if any fetch is still errored** rather than handing a degraded cache to the planner. The generalisable rule: **when a fallback exists, a failed fetch must never be allowed to look like a negative result** — the fallback converts an outage into confident-looking data, and the report gives no signal. Errored species stay cached as errors, so a re-run retries only those.
 
@@ -633,7 +694,7 @@ Both halves matter: pacing (600ms + capped exponential backoff on 429) so the fe
 
 **Trefle does not separate native range from introduced range (found July 28 2026).** The two traps above are about the pipeline failing to fetch. This one is about the fetch succeeding and the answer being wrong, which no amount of pipeline hardening was ever going to catch. `distributions.native[]` turns out to include naturalised occurrences, so the field it produces is closer to "where this plant now grows" than "where it comes from" — and the native filter is the one feature that depends on the difference.
 
-`cross-check-native-region.ts` is the guard. It compares the stored tags against **WCVP** (Kew's World Checklist), read through GBIF's `species/{key}/distributions`. WCVP is the right authority for a mechanical comparison rather than a judgement call: it is the dataset POWO publishes, it stores **one row per WGSRPD Level 3 region** — the same geography our field rolls up from — and it marks introduced occurrences explicitly. So this check needs **no AI at all**, unlike §20 and §28; two sources speaking the same vocabulary need reconciling, not judging.
+`cross-check-native-region.ts` is the guard. It compares the stored tags against **WCVP** (Kew's World Checklist), read through GBIF's `species/{key}/distributions`. WCVP is the right authority for a mechanical comparison rather than a judgement call: it is the dataset POWO publishes, it stores **one row per WGSRPD Level 3 region** — the same geography our field rolls up from — and it marks introduced occurrences explicitly. So this check needs **no AI at all**, unlike [the botanical cross-check](#botanical-cross-check) and [seasonal_care](#seasonal-care); two sources speaking the same vocabulary need reconciling, not judging.
 
 Run over the 20 rows the round-8 regeneration had rewritten: **13 already matched WCVP exactly, 7 did not.** The worst was `Imperata cylindrica`, tagged China / Eastern Asia / Indo-China — which is precisely the range it was _introduced_ into. Its native range is Africa, the Mediterranean and West Asia: **16 regions wrong, and inverted**, so a user filtering "native to my region" got the opposite of the truth. `Helianthus annuus` claimed most of North America against a real native range of Mexico plus the southwestern U.S.A. And `Citrus limon` turned out to have **no native range at all** — a cultigen (C. medica × C. aurantium) whose 94 WCVP rows are _every one_ introduced; Trefle's list was its cultivation footprint. It is now a `noWildRange` override here and a `KNOWN_HYBRID_EXEMPTIONS` entry in `verify-round.ts`, since an empty value is the correct answer for it, not a gap.
 
@@ -645,13 +706,15 @@ Four design rules the script holds, each guarding a way this could quietly go wr
 - **An unmappable region name is an error, not an omission.** WCVP has modernised country names since the WGSRPD geojson was cut (Türkiye, Eswatini, DR Congo, "Central American Pacific Is."), so unrecognised names are aliased explicitly and anything unknown throws. Dropping them silently would shrink a species' range while looking confident. This fired for real on the first catalog-wide run.
 - **A single Level 3 row can invent a whole Level 2 region.** `Galium verum` picked up "Australia" from one unmarked Tasmania row, while GBIF's GRIIS-Australia dataset lists the species as introduced there outright. Rather than have the script arbitrate between datasets, that contradiction is a `MANUAL_EXCLUSIONS` entry carrying its evidence, and every native region resting on a single Level 3 row is reported as `thin_evidence` for a reviewer's eye.
 
-- **A name lookup that fails upward is worse than one that fails.** GBIF answers an unknown binomial by climbing the taxonomy: `Pennisetum alopecuroides` came back as the **genus `Cenchrus`** with `matchType: HIGHERRANK`, and the script cheerfully fetched the distribution of an entire genus — proposing to widen one grass from "Eastern Asia" to **41 regions including Brazil and New Zealand**. This is the §25 name-resolution trap in a new costume ("never the top name-search hit"), and it surfaced only because the first catalog-wide sample was run report-only. Only an `EXACT` match at species rank, on the name actually requested, is accepted now; `×` is normalised away first, or every hybrid in the catalog reads as unmatched.
+- **A name lookup that fails upward is worse than one that fails.** GBIF answers an unknown binomial by climbing the taxonomy: `Pennisetum alopecuroides` came back as the **genus `Cenchrus`** with `matchType: HIGHERRANK`, and the script cheerfully fetched the distribution of an entire genus — proposing to widen one grass from "Eastern Asia" to **41 regions including Brazil and New Zealand**. This is the [the round runbook](#round-runbook) name-resolution trap in a new costume ("never the top name-search hit"), and it surfaced only because the first catalog-wide sample was run report-only. Only an `EXACT` match at species rank, on the name actually requested, is accepted now; `×` is normalised away first, or every hybrid in the catalog reads as unmatched.
 
 **Review before applying, always.** Two of the failure modes above — the missing establishment marker and the higher-rank match — produce _confident, plausible, badly wrong_ answers rather than errors, and both were found by reading a report, not by anything failing. That is the standing reason this script defaults to report-only, and why `--apply` should follow a human read of the diff rather than replace it.
 
+<a id="hardiness"></a>
+
 ## 27. Hardiness: RHS rating is canonical, drafted then human-verified
 
-**The problem.** Hardiness gates the real user question ("will it survive my winter"), but a July 2026 audit found **no free per-species hardiness source exists**: Trefle's `growth.minimum_temperature` is null for 100% of the catalog (so the old Trefle→USDA-zone mapping was dead code and was removed — see §4); RHS publishes ratings but offers no API or dataset and its content is copyrighted (bulk scraping barred); USDA's APIs map a _location_ to a zone, not a _species_; Wikidata's hardiness properties are effectively empty (23 taxa worldwide). Before this model, every plant's `hardiness_zone_min`/`max` was a single unanchored Claude estimate.
+**The problem.** Hardiness gates the real user question ("will it survive my winter"), but a July 2026 audit found **no free per-species hardiness source exists**: Trefle's `growth.minimum_temperature` is null for 100% of the catalog (so the old Trefle→USDA-zone mapping was dead code and was removed — see [the Trefle field mapping](#trefle-field-mapping)); RHS publishes ratings but offers no API or dataset and its content is copyrighted (bulk scraping barred); USDA's APIs map a _location_ to a zone, not a _species_; Wikidata's hardiness properties are effectively empty (23 taxa worldwide). Before this model, every plant's `hardiness_zone_min`/`max` was a single unanchored Claude estimate.
 
 **Decision (Ana, July 14 2026).** The **RHS hardiness rating (H1a–H7) is the canonical field**, a good fit for the Euro/Med-skewed catalog. USDA zone, where shown, is **derived from the rating at render time** (`lib/hardiness.ts`) — never stored alongside. Two columns (migration `20260714164514`): `hardiness_rating text` (CHECK `H1a…H7`) and `hardiness_verified boolean default false`.
 
@@ -662,7 +725,7 @@ Four design rules the script holds, each guarding a way this could quietly go wr
 
 **`hardiness_verified` gates assertion, it doesn't excuse it.** The UI must only present a hardiness claim confidently when `hardiness_verified = true`; unverified rows say nothing or carry a quiet "approximate" marker. This is the opposite of a confidence flag that would license showing unanchored numbers everywhere.
 
-**Re-seed safe by construction.** `hardiness_rating` is **editorial-owned**, the same category as `style_tags` and Ana's editorial corrections. It is not referenced by `upsert_trefle_plant` (§9), so a Trefle re-seed physically cannot touch it; `curate-plants` doesn't write it; the draft skips rated/verified rows. Verification work survives re-seeds — the failure mode Ana flagged (like the pre-COALESCE editorial wipe, §9) is closed.
+**Re-seed safe by construction.** `hardiness_rating` is **editorial-owned**, the same category as `style_tags` and Ana's editorial corrections. It is not referenced by `upsert_trefle_plant` ([the safe Trefle upsert](#safe-upsert)), so a Trefle re-seed physically cannot touch it; `curate-plants` doesn't write it; the draft skips rated/verified rows. Verification work survives re-seeds — the failure mode Ana flagged (like the pre-COALESCE editorial wipe, [the safe Trefle upsert](#safe-upsert)) is closed.
 
 **Follow-ups (not built yet):** (1) the UI gating above; (2) then **drop the legacy `hardiness_zone_min`/`max` columns** — "don't store both" — but only _after_ the render path derives from the rating, or hardiness display breaks; (3) once verification is done, record in the build log **what fraction of AI drafts survived RHS verification unchanged vs. got corrected** — that ratio is the real measure of the draft's quality.
 
@@ -671,17 +734,19 @@ Four design rules the script holds, each guarding a way this could quietly go wr
 - **The denominator moved.** Verification ran against a much smaller catalog than exists now, so the unverified share has grown with every seed round since — current counts are in [`catalog-state.md`](catalog-state.md), and the gap is larger than the raw verified figure suggests.
 - **`round-status.ts` reports `draft-hardiness` at WARN, not FAIL,** precisely because the field is parked. That is correct for a parked field and wrong for a shipped one — it is the same configuration that let round 7's batch go unrated for twelve days. **Promote it to FAIL in the same change that un-parks this work**, not afterwards.
 
+<a id="seasonal-care"></a>
+
 ## 28. Care Tips v2 Tier 1: `seasonal_care`, a distilled prescriptive field (replaces `maintenance_notes` in the tips system)
 
-**Supersedes §16's Tier 1.** §16 fed the card `maintenance_notes` verbatim. The shipped drawer exposed the flaw (Care Tips v2 spec, Notion, locked July 15 2026): `maintenance_notes` is the plant's _care manual_ — several actions, permanent truths, no timeframe — so at ~20 plants the drawer becomes the encyclopedia re-sorted, with near-duplicate paragraphs. Ruling: a tip is **one action, one plant (or garden), one timeframe — it must answer "why now?"**. `maintenance_notes` fails that and **leaves the tips system**, staying only on the plant detail drawer where it already lives.
+**Supersedes [Care Tips v1](#care-tips-v1)'s Tier 1.** [Care Tips v1](#care-tips-v1) fed the card `maintenance_notes` verbatim. The shipped drawer exposed the flaw (Care Tips v2 spec, Notion, locked July 15 2026): `maintenance_notes` is the plant's _care manual_ — several actions, permanent truths, no timeframe — so at ~20 plants the drawer becomes the encyclopedia re-sorted, with near-duplicate paragraphs. Ruling: a tip is **one action, one plant (or garden), one timeframe — it must answer "why now?"**. `maintenance_notes` fails that and **leaves the tips system**, staying only on the plant detail drawer where it already lives.
 
-**The field.** New `plants.seasonal_care jsonb` (migration `20260715120000`): same six keys as `seasonal_rhythm`, each an **imperative one-liner or `null`**. `null` = "nothing to do this stage" and is the expected value for most plants most stages. Where `seasonal_rhythm` _describes_ (what the plant is doing), `seasonal_care` _prescribes_ (what you do). Only the **current stage's** line surfaces, and only for **planted** plants — so volume self-limits to plants with a current-stage action. Editorial-owned, not in the `upsert_trefle_plant` path (§9), so re-seeds can't touch it.
+**The field.** New `plants.seasonal_care jsonb` (migration `20260715120000`): same six keys as `seasonal_rhythm`, each an **imperative one-liner or `null`**. `null` = "nothing to do this stage" and is the expected value for most plants most stages. Where `seasonal_rhythm` _describes_ (what the plant is doing), `seasonal_care` _prescribes_ (what you do). Only the **current stage's** line surfaces, and only for **planted** plants — so volume self-limits to plants with a current-stage action. Editorial-owned, not in the `upsert_trefle_plant` path ([the safe Trefle upsert](#safe-upsert)), so re-seeds can't touch it.
 
 **Distillation pass** — `scripts/curate-seasonal-care.ts`. Fill-only gate `seasonal_care IS NULL AND seasonal_rhythm IS NOT NULL` (the source must exist). Distills `maintenance_notes` + `seasonal_rhythm` + `bloom_months` into the six lines; no new botanical facts. Net-new **line validation** (a first for the curation scripts — the others enforce length by prompt only): ≤12 words / ~90 chars, imperative-verb allow-set (rejects descriptive `seasonal_rhythm`-style sentences that wander into the wrong field), exactly the six keys, no em/en dashes, "fertilize" never "feed", "autumn" never "fall", and "as needed"/"as required" rejected (an anytime action with a season attached is busywork — the retry nulls the stage; honest "if needed"/"if desired" conditionals pass). One strict retry naming the failures, then the plant is **flagged and not written** — copy is never silently truncated or rewritten. The prompt carries a stage→month legend (mirrors `lib/season.ts`: `late_summer` = September, `autumn` = Oct–Nov) plus timing norms so actions land in the right stage. `--sample [N]` (diverse `plant_type` spread + forced-in thinnest-`maintenance_notes` plants, no writes, JSON to `reports/` including both source fields), `--limit`, `--new-only`, `--ids a,b,c` (targeted re-sample). Review discipline: a ~20-plant sample goes to Ana in Notion before the full run, same as combinations.
 
-**Blind season-sanity second pass** — `scripts/cross-check-seasonal-care.ts`. The distillation reliably kills the error _classes_ (frozen-ground division, as-needed busywork, feed/fall vocabulary), but the exact _season_ for a debatable action (divide spring vs autumn; bulbs early vs mid autumn) is model-stochastic. This pass catches those. Cross-check style (§20): **flags only, never writes.** It hands the checker each care action **with its assigned stage hidden**, gets back the stage(s) it believes are correct, and compares. Runs on the DB after the full run, or on a sample artifact before it (`--from-report`). Like §20 it is a queue for Ana's eye, not ground truth — some flags are genuine slips, some boundary quibbles.
+**Blind season-sanity second pass** — `scripts/cross-check-seasonal-care.ts`. The distillation reliably kills the error _classes_ (frozen-ground division, as-needed busywork, feed/fall vocabulary), but the exact _season_ for a debatable action (divide spring vs autumn; bulbs early vs mid autumn) is model-stochastic. This pass catches those. Cross-check style ([the botanical cross-check](#botanical-cross-check)): **flags only, never writes.** It hands the checker each care action **with its assigned stage hidden**, gets back the stage(s) it believes are correct, and compares. Runs on the DB after the full run, or on a sample artifact before it (`--from-report`). Like [the botanical cross-check](#botanical-cross-check) it is a queue for Ana's eye, not ground truth — some flags are genuine slips, some boundary quibbles.
 
-**Upstream-correction rule (Ana, July 15 2026).** When a wrong-stage flag traces to the plant's own `seasonal_rhythm` — e.g. Scilla's `late_summer` bulb-planting line came straight from its `seasonal_rhythm` ("Late summer... a good time to plant new bulbs") — the fix belongs **upstream in `seasonal_rhythm`, not just on the `seasonal_care` line**, or the same error regenerates on any future re-distillation. The cross-check flags these with `upstream_candidate: true` (a content-word overlap heuristic between the action and the wrongly-assigned stage's `seasonal_rhythm`). This is the provenance principle (§9, §27): fix where the data lives. And it is why **no hard-pin override table** was added ("bulbs → autumn", "divide → early spring"): blanket rules over-claim at the margins (a summer-flowering bulb, bearded iris dividing in summer) — the same lesson as the retired sun-widening sweep (§21→§22). Source-faithful distillation + flags-only second pass + editorial correction beats a rule that silently rewrites correct lines.
+**Upstream-correction rule (Ana, July 15 2026).** When a wrong-stage flag traces to the plant's own `seasonal_rhythm` — e.g. Scilla's `late_summer` bulb-planting line came straight from its `seasonal_rhythm` ("Late summer... a good time to plant new bulbs") — the fix belongs **upstream in `seasonal_rhythm`, not just on the `seasonal_care` line**, or the same error regenerates on any future re-distillation. The cross-check flags these with `upstream_candidate: true` (a content-word overlap heuristic between the action and the wrongly-assigned stage's `seasonal_rhythm`). This is the provenance principle ([the safe Trefle upsert](#safe-upsert), [hardiness](#hardiness)): fix where the data lives. And it is why **no hard-pin override table** was added ("bulbs → autumn", "divide → early spring"): blanket rules over-claim at the margins (a summer-flowering bulb, bearded iris dividing in summer) — the same lesson as the retired sun-widening sweep ([the sun-widening sweep](#sun-widening)→[the two-field sun model](#sun-model)). Source-faithful distillation + flags-only second pass + editorial correction beats a rule that silently rewrites correct lines.
 
 **Work split.** Opus owns the data side (migration + both scripts + the catalog run). Sonnet swaps `getCareTips` Tier 1 source from `maintenance_notes` to `seasonal_care[currentStage]` with the planted-only filter, removes clip handling, regroups the drawer's "Good to know", and adds tests (out of scope here). Out of scope entirely: cross-plant dedup/grouping ("deadhead your astilbes and alumroot") — Agent territory later.
 
@@ -712,20 +777,22 @@ Four design rules the script holds, each guarding a way this could quietly go wr
 
 **Chinese rhubarb new-line follow-up (Ana, July 15 2026).** The future idea above was built: Rheum palmatum is a heavy feeder (standard RHS advice is a generous spring compost/manure application), so early_spring — left `null` by the mulch-rule nulling — earned a dedicated line rather than staying empty. Ana signed off on wording (offered three candidates, picked the material-naming one over a "heavy feeder" framing or a dormancy-break trigger) and it was applied via `apply-seasonal-care-fixes.ts` (`edit` decision against the null baseline): early_spring now reads "Fertilize with compost or manure to fuel spring growth."
 
-**Status: COMPLETE** — the three editorial rounds below were merged as PR #63 (July 15 2026), and the field is filled catalog-wide (see [`catalog-state.md`](catalog-state.md)). Of the three scripts, only `curate-seasonal-care.ts` is a per-round step (§25 step 7); the blind check and apply-fixes scripts are optional editorial follow-ups.
+**Status: COMPLETE** — the three editorial rounds below were merged as PR #63 (July 15 2026), and the field is filled catalog-wide (see [`catalog-state.md`](catalog-state.md)). Of the three scripts, only `curate-seasonal-care.ts` is a per-round step ([the round runbook](#round-runbook) step 7); the blind check and apply-fixes scripts are optional editorial follow-ups.
+
+<a id="diary-photos-private"></a>
 
 ## 29. Diary photos go private: signed URLs on a garden-owned bucket
 
-**Decided July 15, 2026.** §18's public-bucket posture was explicitly temporary ("revisit once real auth/profiles exist"); auth shipped (§24), so this is that revisit. This section supersedes §18's storage paragraph.
+**Decided July 15, 2026.** [diary identity](#diary-identity)'s public-bucket posture was explicitly temporary ("revisit once real auth/profiles exist"); auth shipped ([the auth cutover](#auth)), so this is that revisit. This section supersedes [diary identity](#diary-identity)'s storage paragraph.
 
-**The exposure was worse than §18 documented.** Beyond the bucket being public, the three storage policies from `20260708121933` had no role or ownership restriction: anyone holding the `NEXT_PUBLIC` anon key could **list** the whole bucket via the storage API (so "unguessable UUID paths" protected nothing), **upload** arbitrary objects into it, and **delete** other users' photos. And Supabase doesn't strip EXIF, so public photos likely carried GPS coordinates of users' homes.
+**The exposure was worse than [diary identity](#diary-identity) documented.** Beyond the bucket being public, the three storage policies from `20260708121933` had no role or ownership restriction: anyone holding the `NEXT_PUBLIC` anon key could **list** the whole bucket via the storage API (so "unguessable UUID paths" protected nothing), **upload** arbitrary objects into it, and **delete** other users' photos. And Supabase doesn't strip EXIF, so public photos likely carried GPS coordinates of users' homes.
 
 **The shape now** (migration `20260715100000` + `lib/diary-photos.ts`):
 
 - **Bucket private, policies keyed on garden ownership.** All three operations (select/insert/delete) are restricted to `authenticated` and require the path's first folder — the `{gardenId}` of the unchanged `{gardenId}/{plantId}/{timestamp}-{filename}` convention — to be a garden the caller owns (`storage.foldername(name)[1]` joined to `gardens.user_id = auth.uid()`).
 - **The DB stores storage paths, not URLs.** `addDiaryEntry` writes the bucket-relative path into `photo_urls` (filenames sanitized to safe storage-key characters). Reads sign on the way out: `withSignedPhotoUrls` in `server/diary-actions.ts` batches one `createSignedUrls` call (1h TTL) per read, so `DiaryEntry.photoUrls` is always renderable for callers and **no component or `lib/diary.ts` code changed at all** — signing lives entirely at the module boundary.
 - **No data migration for old rows.** Pre-cutover rows stored full public URLs, percent-encoded — rewriting them to paths in SQL would need URL-decoding, which Postgres lacks natively. Instead `toDiaryPhotoPath` normalizes both formats (URL → decoded path; path → itself) at read time, permanently. Old public URLs die when the bucket flips — by design.
-- **Deletes now remove photo objects.** `deleteDiaryEntry`, `deleteDiaryThread`, `resetGarden`, and `deleteAccount` all remove the entries' photos from storage, best-effort after the row deletes succeed (an orphaned object in a private bucket costs storage, not privacy — so a storage hiccup never fails a delete that already happened). This closes §18's orphaned-file gap and makes the delete-confirm copy ("permanently delete this note and N photos") true. `deleteAccount` does it via the session client _before_ signing out, since the DB cascade can't reach storage.
+- **Deletes now remove photo objects.** `deleteDiaryEntry`, `deleteDiaryThread`, `resetGarden`, and `deleteAccount` all remove the entries' photos from storage, best-effort after the row deletes succeed (an orphaned object in a private bucket costs storage, not privacy — so a storage hiccup never fails a delete that already happened). This closes [diary identity](#diary-identity)'s orphaned-file gap and makes the delete-confirm copy ("permanently delete this note and N photos") true. `deleteAccount` does it via the session client _before_ signing out, since the DB cascade can't reach storage.
 
 **Deploy order matters: code first, then migration.** New code on the still-public bucket works fine (signing works on public buckets; new uploads store paths, which old URLs' normalizer also handles). The migration on old code breaks photo rendering (old code renders stored public URLs raw, which 404 on a private bucket). So: merge + deploy, then apply `20260715100000`.
 
@@ -734,6 +801,8 @@ Four design rules the script holds, each guarding a way this could quietly go wr
 **Post-ship fix (same day, migration `20260715110000`): qualify `objects.name` in the policies.** The original policies referenced the object path as bare `name` inside the `EXISTS (select … from gardens …)` subquery — where Postgres resolved it to `gardens.name` (gardens has its own `name` column), not `storage.objects.name`. Every ownership check compared the garden id against the foldername of the garden's _display name_, always false, so all uploads/reads/deletes were denied for everyone. The rule: in a storage policy whose subquery joins any table with a `name` column, always write `storage.foldername(objects.name)`. Found via prod storage logs (400s) + Postgres logs (`new row violates row-level security policy for table "objects"`), confirmed by impersonated-role inserts. The same incident surfaced a second, unrelated blocker: Next's default 1mb server-action body cap rejected multi-photo notes with an opaque "unexpected response" error — raised to 4mb in `next.config.ts` (just under Vercel's ~4.5mb request ceiling, which no config can raise).
 
 **Client-side photo processing (same day, follow-up to the above).** Real files immediately broke both remaining assumptions: a 5.5mb PNG exceeded even the 4mb cap, and a HEIC uploaded fine (bytes are bytes) but rendered as an empty box forever — neither most browsers nor the Vercel image optimizer (`next/image`) can decode HEIC. Fix: `lib/photo-processing.ts` decodes, downscales (2000px long edge), and re-encodes every picked photo to JPEG in the browser before upload. One step solves three problems: size (a 2000px JPEG lands far under the cap), format (everything stored is renderable JPEG; files the browser can't decode — e.g. HEIC outside Safari — are rejected at pick time with a composer message instead of becoming permanently broken photos), and privacy (canvas re-encoding strips EXIF, closing the GPS-metadata follow-up above — browsers apply EXIF rotation during decode, so orientation survives). Trade-off accepted: animated GIFs flatten to a still frame.
+
+<a id="hero-images"></a>
 
 ## 30. Hero images: category-recovered shortlist, then an AI vision pick
 
@@ -756,13 +825,15 @@ Four design rules the script holds, each guarding a way this could quietly go wr
 
 **Index resolution is manifest-backed, not re-derived.** The batch response returns only a `chosen_index`, so the exact list each request was built from is persisted to `reports/image-pass/<batchId>.json` (gitignored). Re-probing at collection time would be wrong as well as wasteful: probing is a live network call, so a URL reachable at request time but 404ing an hour later would shorten the list and shift every index after it — writing a confidently-worded pick that points at **the wrong photograph**. The manifest also makes `--resume <batchId>` work from a cold start.
 
-**Ownership and review.** Writes `image_url_curated`, never `image_url` — `upsert_trefle_plant` does not reference the new columns, so a Trefle re-seed and this pass cannot clobber each other (same arrangement as `hardiness_rating`, §27). Read paths go through `heroImageUrl()` in `lib/plant-detail.ts`, which prefers the curated pick and falls back through `image_url` to `image_urls[0]` — so the code is safe to ship ahead of the data, and every plant renders exactly as before until a pick lands. Every pick carries `image_pick_confidence` (high/medium/low) and a one-line `image_pick_reason`; low-confidence picks are the review queue, flag-only, same model as the `native_to` QA guard (§ native_to QA) — **nothing here is editorial sign-off**. `image_checked_at` is the state guard, so `--recheck` is opt-in and errored rows stay unstamped for a plain re-run to retry.
+**Ownership and review.** Writes `image_url_curated`, never `image_url` — `upsert_trefle_plant` does not reference the new columns, so a Trefle re-seed and this pass cannot clobber each other (same arrangement as `hardiness_rating`, [hardiness](#hardiness)). Read paths go through `heroImageUrl()` in `lib/plant-detail.ts`, which prefers the curated pick and falls back through `image_url` to `image_urls[0]` — so the code is safe to ship ahead of the data, and every plant renders exactly as before until a pick lands. Every pick carries `image_pick_confidence` (high/medium/low) and a one-line `image_pick_reason`; low-confidence picks are the review queue, flag-only, same model as the `native_to` QA guard (§ native_to QA) — **nothing here is editorial sign-off**. `image_checked_at` is the state guard, so `--recheck` is opt-in and errored rows stay unstamped for a plain re-run to retry.
 
 **Two Batch API traps, both of which fail silently or totally.** (a) **Sonnet 5 runs adaptive thinking when `thinking` is omitted** — Sonnet 4.6 did not — and `max_tokens` covers thinking _and_ the answer. At `max_tokens: 1024` roughly a sixth of requests spent the entire budget thinking and returned a `thinking` block with no JSON, `stop_reason: "max_tokens"`. That reads as a malformed reply rather than the truncation it is, so the collector now names `stop_reason` and the thinking-token count instead of reporting a bare "no text block". Settled on `max_tokens: 4096` with `effort: "medium"` — bound thinking rather than starve it, since this is a visual judgement call. (b) **A nullable enum must be written as `anyOf`**, not `type: ['string','null']` with `null` inside the `enum` — the latter is rejected with _"Enum value 'A' does not match declared type"_. Output-config schemas are validated **per request**, so an invalid schema fails 100% of a batch rather than degrading: this rejected all 487 requests of a full-catalog run in one go. The operational rule that follows: **after any schema, prompt-shape, or model change, re-run `--limit 3` before the full pass.** A green typecheck does not verify a runtime API contract, and the probing work ahead of a rejected batch is wasted wall-clock.
 
+<a id="wikimedia-attribution"></a>
+
 ## 31. Wikimedia hero photos + image attribution
 
-The image pass (§30) can only choose among the photos Trefle surfaced, which are ~89% PlantNet identification snapshots — so even a "high" pick is best-of-a-mediocre-pool. This adds Wikimedia Commons as a second source and the attribution such photos legally require.
+The image pass ([the hero image pass](#hero-images)) can only choose among the photos Trefle surfaced, which are ~89% PlantNet identification snapshots — so even a "high" pick is best-of-a-mediocre-pool. This adds Wikimedia Commons as a second source and the attribution such photos legally require.
 
 **The pass is source-agnostic, so this is a feeder, not a new pipeline.** `scripts/feed-wikimedia-candidates.ts` resolves each plant's Wikidata **P18** image (`lib/wikimedia.ts`: scientific name → taxon by P225 → P18 → Commons imageinfo for the URL + attribution), appends it to `plants.image_candidates` tagged `source: 'wikimedia'`, and clears `image_checked_at` so `pick-plant-images.ts` re-picks that plant across the combined Trefle + Wikimedia pool. `lib/image-shortlist.ts` always force-includes Wikimedia candidates and `rankAndCap` pins them (like the incumbent), so a curated best-image reaches the vision call regardless of how many sharp Trefle snapshots a plant has. Result on the 56 review-flagged plants: **8 Wikimedia photos won**, each a clear upgrade (e.g. Absinthe went from a washed-out crop of stems in dry weeds to a full clump in a garden).
 
@@ -770,13 +841,15 @@ The image pass (§30) can only choose among the photos Trefle surfaced, which ar
 
 **The Wikimedia reliability saga (three traps, all silent).** (a) `probeImage` sent no User-Agent, and Wikimedia's upload host **400s a UA-less request** — so every Wikimedia candidate was silently probe-rejected and 0 won on the first run; the probe now sends `IMAGE_FETCH_UA`. (b) Anthropic's own image fetcher **can't reach `upload.wikimedia.org`** either, so the pass sends Wikimedia images as **base64** (`fetchImageBlob`, capped at 4.5MB) rather than by URL — and the manifest stores the exact sent set, because a dropped over-cap image shifts the A–F labels. (c) Commons' **thumbnail service rate-limits aggressively** (400s under any volume) while originals stay reliable, so we store and serve the **original** URL; `next/image` resizes it for display (`upload.wikimedia.org/wikipedia/commons/**` allowlisted in `next.config.ts`). The feeder is idempotent — it replaces its own prior Wikimedia candidates rather than stacking — which is what let the URL-format fix be re-applied cleanly.
 
-**The gallery shows at most 10 photos, and the rejected alternative is the durable part.** `galleryPhotoUrls` + `GALLERY_MAX_PHOTOS` in `lib/plant-image.ts` build one hero-first, deduped list that both `PlantDetailPage` and `PlantDetailDrawer` call, rather than each carrying its own copy. A plant averages ~28 candidates (§30), so something has to cut them.
+**The gallery shows at most 10 photos, and the rejected alternative is the durable part.** `galleryPhotoUrls` + `GALLERY_MAX_PHOTOS` in `lib/plant-image.ts` build one hero-first, deduped list that both `PlantDetailPage` and `PlantDetailDrawer` call, rather than each carrying its own copy. A plant averages ~28 candidates ([the hero image pass](#hero-images)), so something has to cut them.
 
-The obvious lever — filter to Trefle's `flower`/`habit` labels — was measured and rejected on three counts. **Category describes a photo's subject, not its quality**: a `flower` image can still be a blurry nursery-pot shot, so the filter does not do the job it looks like it does. It has a **coverage cliff**: 59 plants have zero flower/habit candidates, 47 of them with no Wikimedia fallback, so those galleries would empty entirely. And a naive `category IN ('flower','habit')` **deletes all 69 hand-sourced Wikimedia heroes**, which carry no Trefle category at all — the best photographs in the catalog would be the first thing removed. A cap has none of those failure modes. If 10 photos still read poorly the next levers are a category filter that exempts `wikimedia`, or a vision pass over the gallery — priced with `--limit 3 --dry-run` first, per §30's rule.
+The obvious lever — filter to Trefle's `flower`/`habit` labels — was measured and rejected on three counts. **Category describes a photo's subject, not its quality**: a `flower` image can still be a blurry nursery-pot shot, so the filter does not do the job it looks like it does. It has a **coverage cliff**: 59 plants have zero flower/habit candidates, 47 of them with no Wikimedia fallback, so those galleries would empty entirely. And a naive `category IN ('flower','habit')` **deletes all 69 hand-sourced Wikimedia heroes**, which carry no Trefle category at all — the best photographs in the catalog would be the first thing removed. A cap has none of those failure modes. If 10 photos still read poorly the next levers are a category filter that exempts `wikimedia`, or a vision pass over the gallery — priced with `--limit 3 --dry-run` first, per [the hero image pass](#hero-images)'s rule.
+
+<a id="plant-story-subpage"></a>
 
 ## 32. Diary retires as a destination; the plant's story moves onto a dedicated subpage
 
-**Decided July 27, 2026.** The Diary page (`/diary`) duplicated My Plants — most rows sat empty ("Waiting for their first note"), and its drawer was 90% plant info wrapped around a notes timeline. `diary_entries` already keyed a thread by `(garden_id, plant_id)` (§18) — the data model already treated notes as belonging to the plant, not to a separate destination. Nav drops to Overview / My Plants / Explore / Reflections; the `/diary` route, its list page, and its drawer are deleted outright, not just unlinked.
+**Decided July 27, 2026.** The Diary page (`/diary`) duplicated My Plants — most rows sat empty ("Waiting for their first note"), and its drawer was 90% plant info wrapped around a notes timeline. `diary_entries` already keyed a thread by `(garden_id, plant_id)` ([diary identity](#diary-identity)) — the data model already treated notes as belonging to the plant, not to a separate destination. Nav drops to Overview / My Plants / Explore / Reflections; the `/diary` route, its list page, and its drawer are deleted outright, not just unlinked.
 
 **A second split fell out of the same move: species vs. owned instance.** `PlantDetailDrawer` had been serving two different things through one UI — a catalog species browsed from Explore, and a plant actually owned and growing. Splitting them completes the same principle the Diary retirement is built on: **every piece of the plant's story has one home, on the thing the user actually owns.**
 
@@ -799,11 +872,15 @@ The obvious lever — filter to Trefle's `flower`/`habit` labels — was measure
 
 **A structural Next.js constraint learned here, worth stating once.** A parent `loading.tsx` wraps every child route beneath it, so the list skeleton was flashing over `activity` and `notes` on navigation. Overview and My Plants each keep their `loading.tsx` inside a **route group** scoped to the list page alone. **A parent `loading.tsx` must not wrap unrelated child routes.**
 
+<a id="content-width"></a>
+
 ## 33. One content width across the app
 
 **Decided July 29 2026.** Three surfaces disagreed about how wide the app is: the dashboard capped content at 1032px, and **Explore and My Plants were not capped at all**, so on a wide display they ran several hundred pixels wider than the dashboard sitting beside them in the same nav. Recorded here because no single file owns "the app has one width" — the cap, the gutter, and the sidebar offset now derive from one another in `packages/tokens/index.css`, **and that file carries the derivation** (1512 − 232 − 40 − 40) and the history of the 40/48 asymmetry. Do not restate either here.
 
 `lib/chart-colors.ts` exists for the same reason at a smaller scale: the dashboard chart's muted palette was private to `bloom-timeline.ts` until the plant page's year timeline needed it, and the choice was to import it or grow a second copy that drifts.
+
+<a id="plant-dashboard"></a>
 
 ## 34. The plant you own is a dashboard for that plant
 
@@ -819,6 +896,8 @@ The obvious lever — filter to Trefle's `flower`/`habit` labels — was measure
 
 `/plant-preview` is a dev harness behind the auth gate; it renders the real `GardenPlantView` rather than a copy, so it cannot drift.
 
+<a id="explore-ranking"></a>
+
 ## 35. Explore: search results are ranked, and the query stopped over-fetching
 
 **Decided July 30 2026** ([PR #149](https://github.com/Paradoxich/santolina/pull/149)).
@@ -828,3 +907,54 @@ The obvious lever — filter to Trefle's `flower`/`habit` labels — was measure
 **`image_urls` is out of the Explore query, and the correction to the framing is what belongs here** rather than in any one file. The backlog item said the column "ships ~879 kB to the browser." It **never reached the browser at all** — `CatalogPlant` has no field for it. The real cost was **1350 kB of a 1997 kB Postgres read**, fetched and discarded by the Next server on every view of a force-dynamic page. **The number was right-ish and the hop was wrong**; the fix for a payload problem and the fix for a query problem are different fixes, so check which hop a cost sits on before optimising it. Sibling of the docs-are-not-evidence rule.
 
 **Why dropping it loses no image**, which spans three files and therefore has no code home: `heroImageUrl`'s `image_urls[0]` fallback is unreachable from these queries, because `mapImages` in `lib/trefle.ts` resolves a hero from **any** category when no priority category matches — so `image_url` is null only when `image_urls` is empty too. Measured on the live catalog at merge time: 0 of 695 rows relied on it. The parameter stays for callers that do pass the column (`getPlantDetail`'s `select('*')`, and the drawer gallery, which needs the full list).
+
+---
+
+<a id="appendix-retired-numbers"></a>
+
+## Appendix: section numbers cited in frozen artifacts
+
+Applied migrations and archived round reports cite sections by the number they
+carried when they were written, and neither can be edited: a migration that has
+run is history, and a round report is the record of what one run found. This
+table is how those citations stay resolvable now that the numbering is display
+order rather than an address. It is closed. Nothing new should cite a number,
+and `pnpm docs:links` fails if anything does.
+
+| Cited as | Section                                                                                                                                  |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| §1       | [Plant data provider: Trefle, not Perenual](#plant-data-provider)                                                                        |
+| §2       | [Database column naming: provider-agnostic](#provider-agnostic-columns)                                                                  |
+| §3       | [Plants table is a cache with a manual curation layer](#curation-layer)                                                                  |
+| §4       | [Trefle field mapping decisions](#trefle-field-mapping)                                                                                  |
+| §5       | [Server-only boundary: three clients](#server-only-clients)                                                                              |
+| §6       | [AI curation model: claude-sonnet-4-5](#curation-model)                                                                                  |
+| §7       | [Seeding architecture](#seeding-scripts)                                                                                                 |
+| §8       | [Plants schema overview](#plants-schema)                                                                                                 |
+| §9       | [Data integrity: safe Trefle upsert function](#safe-upsert)                                                                              |
+| §10      | [Bloom status computation: derived, not stored](#bloom-status)                                                                           |
+| §11      | [RLS blocker on `gardens`/`palette_plants`: service-role client, hardcoded garden id](#rls-shim)                                         |
+| §12      | [Palette write path: application-level upsert, reversible button state machine](#palette-write-path)                                     |
+| §13      | [Toast notifications: built from scratch, grouped by entity to prevent stale actions](#toasts)                                           |
+| §14      | ["Add to garden" vs. "Move to growing": two different transitions, two different labels](#transition-labels)                             |
+| §15      | [Growing vs. Planned: a record you inspect vs. a draft you act on](#growing-vs-planned)                                                  |
+| §16      | [Care tips: `maintenance_notes` for the text, `seasonal_rhythm` only for timing — no new AI or API calls](#care-tips-v1)                 |
+| §17      | [Weather integration: Open-Meteo geocoding + forecast, both free, no key](#weather)                                                      |
+| §18      | [Diary: identity is (garden, plant), not the palette row](#diary-identity)                                                               |
+| §19      | [Plant combinations: AI companion pass, capped and idempotent](#plant-combinations)                                                      |
+| §20      | [Botanical cross-check: blind second pass, flags only, never edits data](#botanical-cross-check)                                         |
+| §21      | [Sun-tolerance widening: the cross-check's under-report findings, applied as a repeatable step](#sun-widening)                           |
+| §22      | [Sun modelled as best + tolerated (the root fix)](#sun-model)                                                                            |
+| §23      | [`plant_type` is a functional label, not strict botany](#plant-type-label)                                                               |
+| §24      | [Auth + single-garden identity: the cutover from single-tenant shim to real accounts](#auth)                                             |
+| §25      | [The plant-expansion round: current end-to-end cadence (runbook)](#round-runbook)                                                        |
+| §26      | [`native_region`: WGSRPD Level-2, regenerated from Trefle (and the `tdwg_code` trap)](#native-region)                                    |
+| §27      | [Hardiness: RHS rating is canonical, drafted then human-verified](#hardiness)                                                            |
+| §28      | [Care Tips v2 Tier 1: `seasonal_care`, a distilled prescriptive field (replaces `maintenance_notes` in the tips system)](#seasonal-care) |
+| §29      | [Diary photos go private: signed URLs on a garden-owned bucket](#diary-photos-private)                                                   |
+| §30      | [Hero images: category-recovered shortlist, then an AI vision pick](#hero-images)                                                        |
+| §31      | [Wikimedia hero photos + image attribution](#wikimedia-attribution)                                                                      |
+| §32      | [Diary retires as a destination; the plant's story moves onto a dedicated subpage](#plant-story-subpage)                                 |
+| §33      | [One content width across the app](#content-width)                                                                                       |
+| §34      | [The plant you own is a dashboard for that plant](#plant-dashboard)                                                                      |
+| §35      | [Explore: search results are ranked, and the query stopped over-fetching](#explore-ranking)                                              |

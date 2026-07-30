@@ -3,7 +3,7 @@
  * field and the script that checks it.
  *
  * These moved out of regenerate-native-region.ts because two scripts now have
- * an opinion about native_region: the generator (§26) and
+ * an opinion about native_region: the generator (docs/architecture.md#native-region) and
  * cross-check-native-region.ts, which validates the result against WCVP. Two
  * private copies would eventually disagree, and the check would spend its time
  * re-litigating decisions a human already made. Rosmarinus officinalis is the

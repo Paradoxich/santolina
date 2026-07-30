@@ -41,7 +41,7 @@ interface AddNoteModalProps {
  * page covers the in-context case, where the plant is already implied.
  *
  * Only growing plants can be chosen: a planned plant isn't in the ground
- * yet, so it has no story to add to (docs/architecture.md §32).
+ * yet, so it has no story to add to (docs/architecture.md#plant-story-subpage).
  */
 export function AddNoteModal({
   isOpen,

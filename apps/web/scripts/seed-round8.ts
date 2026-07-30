@@ -27,7 +27,7 @@
  * Hardiness note: the subtropical/architectural block (Musa, Colocasia,
  * Tetrapanax, Aeonium, Echeveria, Crassula) is tender in a Croatian winter and
  * is container/overwinter material, not border planting. draft-hardiness.ts
- * will rate them accordingly (§27); the care copy is curate-plants' job.
+ * will rate them accordingly (docs/architecture.md#hardiness); the care copy is curate-plants' job.
  *
  * WHY a dedicated script rather than appending to seed-plants.ts: identical to
  * rounds 6 and 7 — seed-plants.ts takes the top Trefle search hit, which
@@ -44,7 +44,7 @@
  *
  * It does NOT touch native_region — that is regenerated for the whole catalog
  * by regenerate-native-region.ts AFTER this seed + curate-plants --new-only,
- * per the region-data-model cadence (§26).
+ * per the region-data-model cadence (docs/architecture.md#native-region).
  *
  * Usage (from apps/web):
  *   ./node_modules/.bin/tsx --env-file=.env.local scripts/seed-round8.ts --dry-run

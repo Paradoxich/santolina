@@ -2,7 +2,7 @@
  * native_region cross-check — validates the WGSRPD Level 2 tags against an
  * external authority instead of against the source that produced them.
  *
- * §26 generates native_region from Trefle's distribution list. Nothing checked
+ * docs/architecture.md#native-region generates native_region from Trefle's distribution list. Nothing checked
  * it afterwards, and Trefle turns out to be wrong in a specific, invisible way:
  * it does not reliably separate NATIVE range from INTRODUCED range. Imperata
  * cylindrica was tagged China / Eastern Asia / Indo-China, which is precisely
@@ -31,7 +31,7 @@
  * a row that changed since the report is skipped rather than clobbered. Never
  * flips is_curated — this is a mechanical correction, not an editorial pass.
  *
- * TWO DISTINCTIONS THIS SCRIPT REFUSES TO BLUR (see §26's rate-limit trap):
+ * TWO DISTINCTIONS THIS SCRIPT REFUSES TO BLUR (see docs/architecture.md#native-region's rate-limit trap):
  *
  *   · "no WCVP rows at all" is NOT "no native range". The first means we
  *     learned nothing and the row is skipped; the second is a real finding
@@ -44,7 +44,7 @@
  *
  * REPORT-ONLY RUNS DO WRITE ONE THING: plants.native_region_checked_at, on
  * every row that reached a decided verdict. That is operational metadata, not
- * catalog content, so the flags-only rule (§20) still holds — the same
+ * catalog content, so the flags-only rule (docs/architecture.md#botanical-cross-check) still holds — the same
  * precedent migration 20260716120000 set for the other guard stamps, and
  * check-round-scope already demotes *_checked_at writes to a WARN. Without it
  * there is no per-row record of what Kew's checklist has actually seen, which

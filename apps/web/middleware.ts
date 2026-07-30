@@ -3,7 +3,7 @@ import { updateSession } from '@/lib/supabase-middleware'
 
 // Keeps the Supabase auth session fresh on every request and gates protected
 // routes — updateSession redirects unauthenticated requests to /login; the
-// landing and auth routes stay public. See docs/architecture.md §24.
+// landing and auth routes stay public. See docs/architecture.md#auth.
 export async function middleware(request: NextRequest) {
   return await updateSession(request)
 }

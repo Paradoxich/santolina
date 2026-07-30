@@ -2,7 +2,7 @@
 //
 // Every picked photo is decoded, downscaled, and re-encoded to JPEG before
 // it leaves the browser. One step solves three problems at once (see
-// docs/architecture.md §29):
+// docs/architecture.md#diary-photos-private):
 // - size: server actions cap at 4mb (Vercel's request ceiling is ~4.5mb),
 //   while phone photos routinely exceed it; a 2000px JPEG lands well under
 // - format: HEIC uploads fine as bytes but neither most browsers nor the

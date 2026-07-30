@@ -6,7 +6,7 @@
  * debatable action (divide in spring vs autumn, plant bulbs early vs mid autumn)
  * is model-stochastic. This pass catches those timing slips for editorial review.
  *
- * Blind, cross-check style (see cross-check-plants.ts, docs/architecture.md §20):
+ * Blind, cross-check style (see cross-check-plants.ts, docs/architecture.md#botanical-cross-check):
  * the checker is given each care ACTION with its assigned stage hidden, returns
  * the stage(s) it believes are horticulturally correct, and the code compares.
  * A mismatch is flagged; nothing is written to the DB.

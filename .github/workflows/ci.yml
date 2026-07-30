@@ -30,6 +30,11 @@ jobs:
       # Also a pure source scan: the runbook page is generated from the array
       # run-round.ts executes, so this fails when the two drift.
       - run: pnpm runbook:check
+      # Cross-references into the docs: every anchor resolves, and nothing
+      # cites an architecture section by number again. Reads only tracked
+      # files, so like the two above it belongs on pull_request, which is
+      # where a reference breaks.
+      - run: pnpm docs:links
 
   catalog-state:
     # THE NAME CARRIES "(main only)" ON PURPOSE — do not shorten it.

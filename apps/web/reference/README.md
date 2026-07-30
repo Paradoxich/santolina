@@ -14,7 +14,7 @@ The distinction that decides what belongs here:
 ## `wcvp-native-cache.json.gz`
 
 GBIF `species/match` + `species/{key}/distributions` responses, keyed by
-`scientific_name`, read by `scripts/cross-check-native-region.ts` (§26). 518
+`scientific_name`, read by `scripts/cross-check-native-region.ts` ([native_region](../../../docs/architecture.md#native-region)). 518
 species as committed; the script appends after every lookup it pays for.
 
 **Why it is committed.** It lived in gitignored `reports/` until 2026-07-30,

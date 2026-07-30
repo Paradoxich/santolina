@@ -66,7 +66,7 @@
  * does, and are far more likely to die of winter WET in a pot than of cold —
  * that belongs in the care copy, which is curate-plants' job. The tender end
  * is Salvia leucantha, Salvia elegans and Lycoris; draft-hardiness.ts rates
- * them (§27, parked).
+ * them (docs/architecture.md#hardiness, parked).
  *
  * WHY a dedicated script rather than appending to seed-plants.ts: identical to
  * rounds 6-8 — seed-plants.ts takes the top Trefle search hit, which drifts to
@@ -80,7 +80,7 @@
  *
  * It does NOT touch native_region — that is regenerated for the whole catalog
  * by regenerate-native-region.ts AFTER this seed + curate-plants, per the
- * region-data-model cadence (§26).
+ * region-data-model cadence (docs/architecture.md#native-region).
  *
  * Usage (from apps/web):
  *   ./node_modules/.bin/tsx --env-file=.env.local scripts/seed-round9.ts --dry-run

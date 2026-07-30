@@ -328,4 +328,4 @@ authoritative. Notable drift from the snapshot above:
 - **New primitives**: `MediaCard` (packages/ui) unifies the plant tile shell
   used across Growing/Planned/Explore. `Icon` (packages/ui) plus an
   `apps/web/lib/icons.ts` registry now own icon rendering — see
-  `DESIGN_SYSTEM.md` §5 for the pattern.
+  `DESIGN_SYSTEM.md` [the server-only clients](architecture.md#server-only-clients) for the pattern.

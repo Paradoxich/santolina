@@ -23,7 +23,7 @@
  * are disjoint, so the model can't wave through a cross-continent miss.
  *
  * Default run writes a ranked report and never EDITS catalog data — it only
- * stamps the operational native_checked_at column (§20, migration
+ * stamps the operational native_checked_at column (docs/architecture.md#botanical-cross-check, migration
  * 20260716120000) per row. `--apply` patches ONLY rows the check rated "gross"
  * that carry a suggested replacement phrase — the same generate-then-apply
  * safety split as scripts/archive/regenerate-native-to.ts.
