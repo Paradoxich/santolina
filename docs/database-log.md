@@ -53,151 +53,135 @@ The numbers **in this file are different and must stay written down**: a dated s
 
 ## Known traps — do not rediscover these
 
-### 1. A failed fetch must never look like a negative result — FIXED (round 8)
+**Numbers are permanent IDs, never renumbered and never reused.** They are cited from code (`wcvp-lookup.ts`, `migration-drift.ts`, `image-probe.ts`) and from `curation.md`, so the order below is by shape, not by number. A new trap takes the next free number and files under whichever family it belongs to.
 
-`regenerate-native-region.ts` paced Trefle at ~500 req/min against a documented 120 req/min limit, so a cold cache began returning HTTP 429 after ~120 species. The `catch` stored the 429 as a cache entry, and downstream **an errored entry was indistinguishable from "this plant has no native range"**, so each silently routed to the AI prose fallback.
+Twenty-four traps are really four shapes. The entries are the worked examples that make a shape recognisable in the wild — someone who knows the four rules spots the next instance before it costs anything, which is more than someone who has read all twenty-four descriptions once. **Each family's rule is stated once, above its entries. Read that first.**
 
-The run **reported success** with a believable source mix — `trefle-l3=121, native_to-fallback=469` — that was really 466 rate-limit errors converted into model-derived guesses. `--apply` would have overwritten most of the catalog's authoritative regions, including rows unrelated to that round. Correct numbers after the fix: `trefle-l3=571, fallback=19`.
+| family | what it is                                                        | entries                           |
+| ------ | ----------------------------------------------------------------- | --------------------------------- |
+| **A**  | a failure or narrower answer comes back shaped like a real result | 1, 1b, 10, 11, 15, 18, 19, 20, 23 |
+| **B**  | the record disagrees with what actually happened                  | 2, 4, 12, 13, 14, 16, 17          |
+| **C**  | one fact with two homes, and only one got updated                 | 3, 5, 22                          |
+| **D**  | facts about the outside world you cannot design away              | 6, 7, 8, 9, 21                    |
 
-**Rule this generalises to:** wherever a fallback exists, a failed fetch must be structurally distinguishable from a legitimate empty answer, and the script must **throw** rather than degrade. Full write-up: `architecture.md` [native_region](curation.md#native-region).
+A is the one that keeps recurring, and it is subtle every single time.
 
-**This is the trap that keeps coming back, and it is subtle every single time.** It recurred four times in one sitting on 2026-07-29 while sourcing nine photographs (see that session entry): a rate-limited probe read as "bad photo"; a truncated header read as "corrupt file"; an oversized file read as "unusable candidate"; and **the fix for the third returned "this hero is fine" whenever its own size check failed** — written by someone who had spent the previous hour fixing exactly this. The lesson is not "remember the rule". It is that **any function returning a two-way answer about a remote resource is one network failure away from lying**, so give it a third outcome and make the caller handle it. `displayUrlFor` returns `unchanged | rescaled | unmeasured` for that reason.
+---
 
-**A fifth instance, 2026-07-30, and the new part is that the retry already existed.** The fix for the first of those four added a backoff to `probeImage`, and it was 400/800ms — an order of magnitude short of what Wikimedia Commons needs, so all three attempts were spent inside 1.2 seconds. Feeding 14 hand-sourced Commons photos in for the rounds 9/10 editorial holds lost **9 of them** to HTTP 429; the pass then judged each plant on the Trefle photos already known to be inadequate, wrote picks worded "CHANGED, high", and stamped `image_checked_at` so a plain re-run would never look again. Proof it was degradation rather than taste: re-run with a seconds-long backoff, Sweet scented geranium's "high" Trefle wall shot lost to a 6080px Commons photo, and Slender vervain went medium → high the same way.
+### A. A failure, or a narrower answer, comes back shaped like a real result
 
-**So a third outcome is not enough on its own — something has to act on it.** The rule as written stops at "make the caller handle it", and the caller here _did_ handle it: it printed the drop, under a comment explaining that a lost Wikimedia candidate is the one loss nobody would otherwise notice. It printed it and carried on. The generalisation to keep is that **a transient failure has to change what the run DOES, not only what it says.** `pick-plant-images` now splits `rejected` (judged — dead link, too small, wrong aspect) from `unresolved` (could not look), defers any plant holding an unresolved candidate without stamping it, and exits non-zero so a round cannot read the step as finished.
+**The rule:** any call that can fail, match loosely, or answer a narrower question than you asked must be able to say so in a third way — not by returning something that looks like a legitimate result. Give it an outcome the caller must handle, and make a transient failure change what the run **does**, not only what it prints.
 
-### 1b. A trigger that silently rewrites rows is only as good as the test you ran against it — ADDED 2026-07-29
+Nine entries, one idea. If you are about to trust a two-way answer about anything remote or fuzzy, you are probably writing the tenth.
 
-`invalidate_editorial_verdict` (migration `20260729101133`) is the first trigger in this schema that MUTATES a row on the way past, and that makes it a different kind of object from every guard script here. A script that gets it wrong prints something wrong. **A trigger that gets it wrong changes data in every write path at once, including paths written before it existed and paths nobody is thinking about.**
+#### 1. A failed fetch must never look like a negative result — FIXED (round 8)
 
-Three things to know before touching it.
+`regenerate-native-region.ts` paced Trefle at ~500 req/min against a documented 120 req/min limit. The `catch` stored each HTTP 429 as a cache entry, and downstream **an errored entry was indistinguishable from "this plant has no native range"**, so each silently took the AI prose fallback. The run reported success with a believable source mix — `trefle-l3=121, native_to-fallback=469` — that was really 466 rate-limit errors converted into guesses. Correct after the fix: `trefle-l3=571, fallback=19`. Full write-up: [native_region](curation.md#native-region).
 
-**Its escape hatch is about CHANGING the stamp, not writing it,** and the difference is not cosmetic. Postgres cannot distinguish "wrote the same value deliberately" from "did not write this column" — PostgREST sends every column on an update either way — so an unchanged `editorial_checked_at` has to read as "no claim made". `fix-oversized-heroes` was built against the first draft of that comment, passed the old stamp back inside the same update, and was **silently un-curating every row it resized**. It only failed to bite because it had run before the trigger existed. To keep a verdict across a watched write, re-assert it in a SECOND statement, where the old value is a change against the cleared one.
+**It recurred four times in one sitting** (2026-07-29, sourcing nine photographs): a rate-limited probe read as "bad photo", a truncated header as "corrupt file", an oversized file as "unusable candidate" — and the fix for the third returned "this hero is fine" whenever its own size check failed, written by someone who had spent the previous hour fixing exactly this. **Any function returning a two-way answer about a remote resource is one network failure away from lying.** `displayUrlFor` returns `unchanged | rescaled | unmeasured` for that reason.
 
-**Restores go through it.** `restore-catalog.ts` upserts whole backed-up rows, and an upsert that conflicts is an UPDATE, so the trigger fires during disaster recovery — the one moment silent mutation is least acceptable. It happens to be safe today: a restore that changes a watched column almost always changes the stamp too, which takes the escape hatch. "Almost always" is not a guarantee, and a restore whose backup holds the SAME stamp as the live row but a different description or hero would come back with that row un-curated. **Verify `is_curated` counts after any restore** rather than assuming.
+**A fifth instance proved a third outcome is not enough on its own — something has to act on it.** `probeImage` had a backoff, but at 400/800ms against Wikimedia Commons all three attempts fit inside 1.2s; 9 of 14 hand-sourced Commons photos were lost to 429s, judged against the inadequate Trefle photos instead, and stamped so a re-run would never look again. The caller _did_ handle the failure — it printed the drop and carried on. `pick-plant-images` now splits `rejected` (judged) from `unresolved` (could not look), defers unresolved plants without stamping, and exits non-zero.
 
-**Test the trigger, not its description.** Both bugs above were found by writing to a real row and reading it back — the first draft of this migration was applied, and its own author's summary of it was wrong within the hour. The catalog is read-only at runtime (nothing in `app/`, `server/` or `lib/` writes `plants`), so the blast radius is scripts, but that is where every write to this table lives.
+#### 1b. A trigger that silently rewrites rows is only as good as the test you ran against it — ADDED 2026-07-29
 
-**There is now a test, and it is the thing to run: `pnpm trigger:contract`** (`scripts/test-editorial-trigger.ts`, added 2026-07-29). Twelve cases against a real Postgres — all three criteria invalidating separately, a non-criterion column and a no-op changing nothing, the same-stamp-written-back trap, the one-statement sign-off, and the two-statement re-assert. Run it after any change to the trigger, and after any restore. It found a live bug on its first run (session entry below). Deliberately NOT a vitest file: CI has no database secrets on `pull_request`, so it would have to skip, and a guard that skips where it runs automatically is this list's oldest theme.
+`invalidate_editorial_verdict` (migration `20260729101133`) is the first trigger here that MUTATES a row on the way past. A script that gets it wrong prints something wrong; **a trigger that gets it wrong changes data in every write path at once**, including ones written before it existed.
 
-**Its known blind spot, stated so nobody over-trusts it.** The cases name five specific columns by hand, and `lib/plants-write.ts` holds the same five in `CRITERION_FIELDS`. A SIXTH column added to the trigger and not to that map is invisible to both — a script writing it would lose the verdict silently. Nothing checks that the two agree. Carried knowingly; build the guard the day a sixth column is proposed.
+- **Its escape hatch is about CHANGING the stamp, not writing it.** Postgres cannot tell "wrote the same value deliberately" from "did not write this column", so an unchanged `editorial_checked_at` reads as "no claim made". `fix-oversized-heroes` passed the old stamp back inside the same update and was **silently un-curating every row it resized**. To keep a verdict across a watched write, re-assert it in a SECOND statement.
+- **Restores go through it.** `restore-catalog.ts` upserts, and a conflicting upsert is an UPDATE. Safe today only because a restore that changes a watched column usually changes the stamp too. **Verify `is_curated` counts after any restore.**
+- **Test it: `pnpm trigger:contract`** (`scripts/test-editorial-trigger.ts`). Twelve cases against a real Postgres; it found a live bug on its first run. Deliberately not vitest — CI has no database secrets on `pull_request`, and a guard that skips where it runs automatically is this list's oldest theme.
+- **Known blind spot:** the cases name five columns by hand and `lib/plants-write.ts` holds the same five in `CRITERION_FIELDS`. A sixth column added to the trigger and not to that map is invisible to both. Carried knowingly.
 
-### 2. `--new-only` does not scope to a batch — WORKED AROUND (round 8), baseline backfilled (July 28)
+#### 10. Trefle's `distributions.native[]` includes INTRODUCED range — MOSTLY OPEN
 
-Both cross-check guards accept `--new-only`, which keys off `botanical_checked_at` / `native_checked_at` being NULL. That only narrows to a fresh batch **once every other row carries a stamp**, and that baseline was never established — the stamp columns shipped mid-history and older rows were never backfilled.
+Trefle does not reliably separate where a plant is _from_ from where it now _grows_, so `native_region` answered the wrong question — and that field is the entire basis of the "native to my region" filter. `Imperata cylindrica` was tagged China / Eastern Asia / Indo-China, exactly the range it was **introduced** into; it is native to Africa, the Mediterranean and West Asia. Sixteen regions wrong, and inverted.
 
-At round 8: 0 of 494 rows stamped, so `cross-check-plants --new-only` selected **all 595 plants instead of the 101 new ones**. Every round since those columns shipped had been re-billing Claude for the entire catalog. Nothing errored; the only symptom was a count in a log line.
+**Validate with `cross-check-native-region.ts` against WCVP**, report-only by default. Two refusals are deliberate: "no WCVP rows" is no-data rather than an empty native range, and an unmappable region name is an error, never a silent omission. Clearing a row needs `--allow-empty` on top of `--apply`. **Never point `--apply` at `--all`.**
 
-**Use `--round <label>` instead.** It needs no baseline.
+Two WCVP quirks: it occasionally **omits the establishment marker**, so one unmarked Level 3 row invents a whole Level 2 region (`Galium verum` read as native to Australia off one Tasmania row); and a reviewed decision outranks it (`Rosmarinus officinalis` has Western Asia deliberately cut), which is why `MANUAL_OVERRIDES` lives in `lib/native-region-overrides.ts` and is read by generator and checker alike.
 
-**Backfilled July 28 2026 — and the reasoning that had blocked it was wrong.** This entry previously said "there is no per-row evidence they were ever checked", citing a round-8 self-test that found sampled older plants at `0/4`. **That was circular:** `round-status.ts` detects a check _by its stamp_, so unstamped rows can only ever report `0/N`. It proved the stamps were missing, not the checks.
+**Status:** the catalog has been through WCVP (2026-07-30). Remaining unstamped rows are the no-data set, not a backlog — `select count(*) from plants where native_region_checked_at is null`.
 
-The real explanation is simpler: **the stamp columns arrived in migration `20260716120000`, on July 16.** Every cross-check before that date physically could not stamp anything. A null stamp on an older row means the column did not exist yet.
+**Calibration worth keeping:** a 60-plant sample scored 56 clean / 1 wrong and was read as ~2%; the real rate over 475 rows was **11%**. The sample was drawn from the wrong population — unstamped-only means the oldest, least-curated end. **Sample the population you are about to act on, not the table.**
 
-The archived reports are dated evidence, and they line up exactly with the catalog:
+#### 11. GBIF's `species/match` fails UPWARD, into a genus
 
-| report                                 | checked | covers                                     |
-| -------------------------------------- | ------: | ------------------------------------------ |
-| `cross-check-2026-07-09-22-32-26.json` |     201 | the whole catalog that day (29 + 96 + 76)  |
-| `cross-check-2026-07-14-15-36-52.json` |     100 | round 6's batch                            |
-| `cross-check-2026-07-15-19-19-21.json` |      76 | round 7's batch                            |
-| `native-to-crosscheck.json`            |      76 | round 7's batch, **every row named by id** |
+Hand it a binomial it does not know and it climbs the taxonomy rather than returning nothing: `Pennisetum alopecuroides` comes back as the **genus `Cenchrus`**, `matchType: HIGHERRANK`. Accepting that fetches an entire genus's distribution — it was about to widen one grass from "Eastern Asia" to 41 regions including Brazil.
 
-`scripts/backfill-guard-stamps.ts` stamped 451 rows — **375 botanical + 76 `native_to`** — each **dated to the report's own `ran_at`**, not to the day of the backfill. A stamp claiming a July 9 check happened on July 28 would be its own small lie. It refuses to write any group whose live row count disagrees with the report's `checked` figure.
+Require `EXACT` at species rank **and** that the canonical name returned is the one you asked for. Normalise the `×` away first, or every hybrid reads as unmatched.
 
-**What stays NULL, deliberately, and matters more than what got stamped:**
+**It stayed live in a second script until 2026-07-30, where it reached a prompt** — `cross-check-native-to.ts` had its own unguarded lookup, so that grass was handed to Claude as native to 66 regions, presented as the independent authority. **The guard belongs in the shared lookup, not in whichever script the trap was found in:** both native guards now go through `scripts/wcvp-lookup.ts`.
 
-- **the 116 plants seeded 2026-07-12** (the regional-natives round) — no surviving botanical report covers them
-- **every pre-round-7 row for `native_checked_at`** (418) — `cross-check-native-to.ts` wrote to a **fixed filename** and overwrote its own history every run. We know earlier runs happened; the evidence is gone. This is exactly what `archive-round.ts` was later built to prevent.
+#### 15. The WCVP cache mixes GBIF checklists, so a raw `NATIVE` marker is not WCVP — OPEN by design
 
-Null on those rows is the correct answer: it means a future guard run picks them up. **Strength of evidence, stated plainly:** the botanical reports name only the _flagged_ plants, so the clean rows are inferred from "checked count == catalog size on that date". Strong, but an inference. The `native_to` report names every row it covered, so that one is per-row proof.
+`reference/wcvp-native-cache.json.gz` stores GBIF's whole `distributions` payload, which aggregates **many** checklists. The scripts filter on `r.source === WCVP_SOURCE` and are correct. **A human reading the cache to audit a finding usually does not** — `Rudbeckia fulgida` carries `Texas — NATIVE` from the **World Register of Marine Species**, which reads as proof the script wrongly narrowed a range. Three correct drops were nearly reversed on that evidence.
 
-### 3. Full-catalog regeneration outlived its migration — FIXED (round 8)
+**Filter the cache by `source` before believing anything in it.** This is trap 11's sibling — both are GBIF answering a narrower question than it appears to, and both are caught only by reading the field that says which answer you got (`matchType`, `source`). Left unfixed deliberately: the full payload is what makes an upstream disagreement visible at all. The script half was closed 2026-07-30 via the shared lookup; the reviewer is the remaining exposure.
 
-`regenerate-native-region.ts` started as a one-time migration and kept its full-catalog scope long after that migration finished, so every round re-derived all ~600 plants when only the new ones needed it. Two consequences: it is the reason the Trefle rate limit in trap 1 was reachable at all, and it **silently rewrites settled data** — round 8's full run changed 20 pre-existing plants alongside its own 101.
+#### 18. An RLS block and an empty table look identical — ADDED 2026-07-30
 
-The `MANUAL_OVERRIDES` table in that script exists because hand-corrections were being clobbered by re-generation. It patches the symptom one plant at a time.
+`getPlantDetail()` fell back to a hardcoded mock garden behind a comment blaming missing onboarding. Wrong diagnosis: the policies require `auth.uid()` to match the owner, the app had no session, so **every query returned zero rows with a real garden row present the whole time**. `.maybeSingle()` presented a permissions failure as "no row yet".
 
-**The script now refuses to run without `--round <label>` or `--all`.** There is no default.
+**A silently empty result from an RLS-protected table is a policy block until proven otherwise.** Check as the service role, or check `auth.uid()`, before concluding the data is absent.
 
-### 4. Steps can silently not run at all — PARTLY FIXED (round 8), recurred immediately
+#### 19. A test that cannot fail — ADDED 2026-07-30
 
-Every guard in this repo checks whether a value is _wrong_. Until round 8, nothing checked whether work _happened_. Three separate steps had silently not run:
+`expect(errors).toContain(expect.stringMatching(/…/))` matches by identity, so an array of strings can never contain a matcher object: **that assertion passes against every possible input, including the bug it was written to catch.** It sat in a green suite of 20 looking like coverage.
 
-- `--new-only` never scoping (trap 2)
-- **no `seasonal_care` step existed in the runbook**, so every plant seeded after Care Tips v2 shipped had no care tip at all — the feature is live and reads `seasonal_care[currentStage]`
-- **round 7's 76 plants were never hardiness-drafted**, found only because round 8's draft picked up 177 plants instead of 101
+**Ask of any new assertion: what input would make this line fail?** If there isn't one, the test is decoration.
 
-All three were invisible because `verify-round` WARNs rather than FAILs on those fields — correct while a field is parked, wrong once the feature ships.
+#### 20. A judge can cite a fault that cannot exist — ADDED 2026-07-30
 
-**`verify-round.ts --round <label>` now asserts per-step completeness** and exits 1 on a gap (`scripts/round-status.ts`). When [hardiness](curation.md#hardiness) hardiness work resumes, promote its WARN to FAIL there.
+The blind copy judge rejected four rewrites for containing em dashes. `mechanicalCopyFault()` strips every dash before the blind call, so the text it saw provably contained none. The rejections were plausible, specific, and impossible.
 
-**It recurred the same week, and the fix did not see it (2026-07-28).** `round-status.ts` detects a step by a hand-written list, so a step missing from the list is invisible in exactly the way the file exists to prevent. `verify-round --round 8` reported **7/7 green** while `curate-greenery` and the image pass had never run for a single one of round 8's 101 plants — `greenery_checked_at` and `image_checked_at` were null on all of them. It was found by querying the database directly, not by any guard.
+**A model asked to find fault will find one**, including in a space an upstream filter has already emptied. When a judge's reason names something a deterministic check should have made unreachable, verify the reason before acting. Never rewrite content to satisfy a judge — a rewrite that isn't true on its own terms means the hold was correct. Its verdicts are also non-deterministic (same row held, then approved, on identical data), so they are opinions to weigh, not instructions to apply.
 
-That gap was not cosmetic. `is_greenery` is the **only** way into the Explore Green colour bucket (`lib/plant-colors.ts` — plain green foliage deliberately never maps), and it defaults to `false`, so 101 unjudged plants were silently excluded from a live filter. Round 8 was the **shade & structure** batch: 21 of the 101 are ferns, grasses and shrubs, the plants the Green bucket exists for.
+#### 23. Comparing fuzzy prose against an exact vocabulary — ADDED 2026-07-30
 
-`curate-styles`, `curate-greenery` and `pick-plant-images` are now registered steps. **The durable rule: a pipeline step that stamps a column must be added to `round-status.ts` in the same commit.** Every `*_checked_at` column on `plants` should correspond to a step there — if you add the column and not the step, the next round's gap is invisible again.
+The `native_to` vs `native_region` check took three attempts; the first two each shipped a flooded report into a full catalog run before being killed mid-flight.
 
-**Two more shapes of the same invisibility.** Removing a step from the round cadence orphans the column it stamped, and a healthy pipeline then reads as decaying — **rehome what a removed step proved, do not just delete the call** (`style_checked_at`, 2026-07-30). And a step can have a prerequisite no guard checks: `image_checked_at IS NULL` does not tell you whether `image_candidates` was ever populated, so a round that skipped `recover-image-categories` looks identical to one that has not reached the image pass yet.
+**Attempt 1 — ask the model for the verdict.** Roughly **half false positives**: it flagged phrases for _omitting_ regions the tags list, which is a phrase being less specific. `Styrax japonicus` ("Japan, Korea, and China" against tags including China and Eastern Asia) was called a contradiction, when Japan and Korea **are** Eastern Asia here.
 
-### 5. Unmapped colour values vanish from the filter — recurring, guarded
+**Attempt 2 — translate the phrase to Level-2 names, flag any unsupported region.** Looks like the rigorous fix and is worse, because it is confidently mechanical about a comparison that is not. "the Mediterranean" expands to include Western Asia, which `Rosmarinus officinalis` excludes by reviewed override, so the catalog's most obviously correct phrase came back flagged — with `Lavandula` and `Cistus` behind it. Underneath sits a second collision: the Level-2 region "Eastern Asia" is NARROWER than the English words.
 
-A `bloom_color` or `foliage_color` value not present in `lib/bloom-colors.ts` / `lib/foliage-colors.ts` does not error. It **silently drops the plant out of the Explore colour filter**. Every seed invents new shades: round 8 produced 12.
+**What shipped:** the model translates only, code makes every severity call, and `contradicts` fires only where fuzziness cannot explain the gap — zero shared regions, or validated-empty tags against a phrase claiming a range. Partial gaps are a ranked list, not a verdict.
 
-Run `check-bloom-colors.ts` after every seed and map each new value into an existing bucket or the matching ignore set. The map's own rule decides: distinctive standing colour gets a bucket; seasonal turns, new growth, plain-green-plus-a-detail, underside-only, and cultivar-dependent values are ignored.
+**Two rules.** Give the model the translation and keep the comparison. And **a mechanical comparison is only as exact as its fuzzier side.** Both attempts were caught by spot-checking four rows against the database mid-run, which is the only reason ~1300 Claude calls went unpaid: **read the first twenty rows of a long run before letting it finish.**
 
-### 6. Trefle common names are botanical, not horticultural — recurring, expect it
+---
 
-Trefle's names come from floras and USDA lists. Every batch lands three defects:
+### B. The record disagrees with what actually happened
 
-- **no English name at all**, so the mapper falls back to the scientific name (18 of 101 in round 8)
-- **a name belonging to a different species** ("Alpine woodfern" is not _Dryopteris wallichiana_)
-- **the food-crop name for an ornamental** (_Colocasia esculenta_ as "Coco-yam")
+**The rule:** a stamp, a manifest, a migration list or a written note is a claim about the past, and it rots without telling anyone. Verify a load-bearing claim against live state before repeating it — especially an asserted negative ("X never ran", "we are blocked on Y"), because nothing revisits a blocker when the block lifts. **If you write one, name the command that proves it.**
 
-Worst case is a **collision with a species already in the catalog**: round 8 received _Cercis canadensis_ as "Judastree", which is _C. siliquastrum_, already held. Two species then share one display name and search cannot separate them.
+Trap 1b's second lesson — test the object, not its description — belongs here too; the entry lives in A because its failure was silent.
 
-`verify-round` now FAILs on duplicate `common_name`. Pattern a fix pass on `scripts/fix-round8-names.ts` — each entry carries the value it expects to find, so a drifted row is skipped rather than overwritten. **A name pass can create the very collision it exists to remove** (round 8 did: renaming _Anemonoides nemorosa_ to "Wood anemone" collided with _Anemone quinquefolia_), so always re-check duplicates afterwards.
+#### 2. `--new-only` does not scope to a batch — WORKED AROUND (round 8), baseline backfilled (July 28)
 
-### 7. Seed by ID, never by name search — recurring
+`--new-only` keys off `botanical_checked_at` / `native_checked_at` being NULL, which only narrows to a fresh batch **once every other row carries a stamp**. At round 8 that baseline did not exist: 0 of 494 stamped, so `cross-check-plants --new-only` selected **all 595 plants instead of the 101 new ones**, and every round since the columns shipped had been re-billing Claude for the whole catalog. Nothing errored; the only symptom was a count in a log line. **Use `--round <label>` instead** — it needs no baseline.
 
-Trefle's name search silently resolves to sibling species. Seed by verified Trefle ID or exact synonym-aware genus+species match, and log any drift.
+**The reasoning that had blocked the backfill was circular.** This entry once said "no per-row evidence they were ever checked", citing a self-test that found older plants at `0/4` — but `round-status.ts` detects a check _by its stamp_, so unstamped rows can only ever report `0/N`. The real explanation: the stamp columns arrived in migration `20260716120000`. A null stamp on an older row means the column did not exist yet.
 
-**Shade and woodland batches need their synonym groups written before the dry run** — those genera have been widely segregated (Anemone→Anemonoides, Blechnum→Struthiopteris, Scilla→Othocallis, Ipheion→Tristagma, Sedum→Petrosedum, Meconopsis→Papaver). Round 8's exact-match guard caught two candidates that would otherwise have bound to a species already in the catalog.
+`scripts/backfill-guard-stamps.ts` stamped 451 rows from dated archived reports, each **dated to the report's own `ran_at`** rather than the backfill date, refusing any group whose live row count disagrees with the report. What stays NULL is deliberate: the 116 plants seeded 2026-07-12 (no surviving report). **Strength of evidence, stated plainly:** botanical reports name only the _flagged_ plants, so clean rows are inferred from "checked count == catalog size that day" — strong, but an inference.
 
-### 8. `reports/` is gitignored, so a fresh worktree has a cold cache
+The `native_to` half of that backfill was **retired 2026-07-30**: those stamps came from the old unguarded lookup (traps 11, 15), were cleared catalog-wide, and restoring them from the same reports would undo that on purpose.
 
-Rounds are run in `git worktree` checkouts to avoid clashing with other sessions. A new worktree has no `reports/`, so every cache is cold and scripts refetch everything. **This is the condition that surfaces rate-limit and pagination bugs** — trap 1 lay dormant for rounds precisely because existing checkouts had warm caches.
+#### 4. Steps can silently not run at all — PARTLY FIXED (round 8), recurred immediately
 
-### 9. Trefle field names: `tdwg_code` / `tdwg_level`, not `code` / `level`
+Every guard here checks whether a value is _wrong_. Until round 8 nothing checked whether work _happened_. Three steps had silently not run: `--new-only` never scoping (trap 2); no `seasonal_care` step in the runbook, so every plant seeded after Care Tips v2 shipped had no care tip while the feature was live; and round 7's 76 plants never hardiness-drafted. All three were invisible because `verify-round` WARNs rather than FAILs — correct while a field is parked, wrong once the feature ships.
 
-Reading the wrong field names leaves the code undefined, every zone falls through as unmapped, and the plant ends up untagged. See `architecture.md` [native_region](curation.md#native-region).
+**`verify-round.ts --round <label>` now asserts per-step completeness** and exits 1 on a gap. When [hardiness](curation.md#hardiness) resumes, promote its WARN to FAIL there.
 
-### 10. Trefle's `distributions.native[]` includes INTRODUCED range — MOSTLY OPEN
+**It recurred the same week and the fix did not see it.** `round-status.ts` detects a step by a hand-written list, so a step missing from the list is invisible in exactly the way the file exists to prevent: `verify-round --round 8` reported 7/7 green while `curate-greenery` and the image pass had never run for any of round 8's 101 plants. That was not cosmetic — `is_greenery` is the only way into the Explore Green bucket (`lib/plant-colors.ts`; plain green foliage deliberately never maps) and defaults to `false`, and round 8 was the shade & structure batch: 21 of the 101 are ferns, grasses and shrubs. Found by querying the database directly, not by any guard.
 
-Traps 1 and 9 are the pipeline failing to fetch. This one is the fetch succeeding and the answer being wrong, which no amount of pipeline hardening finds. Trefle does not reliably separate where a plant is _from_ from where it now _grows_, so `native_region` has been answering the wrong question — and that field is the entire basis of the "native to my region" filter.
+**A pipeline step that stamps a column must be added to `round-status.ts` in the same commit.** Two further shapes: removing a step orphans the column it stamped and a healthy pipeline then reads as decaying, so **rehome what a removed step proved rather than deleting the call** (`style_checked_at`, 2026-07-30); and a step can have a prerequisite no guard checks — `image_checked_at IS NULL` does not tell you whether `recover-image-categories` ever populated `image_candidates`.
 
-`Imperata cylindrica` was tagged China / Eastern Asia / Indo-China, which is exactly the range it was **introduced** into; it is native to Africa, the Mediterranean and West Asia. Sixteen regions wrong, and inverted.
+#### 12. A round manifest records names as SEEDED, before the name pass
 
-**Validate with `cross-check-native-region.ts` against WCVP** (Kew's checklist, read through GBIF). Report-only by default. Two refusals are deliberate: "no WCVP rows" is treated as no-data rather than as an empty native range (trap 1's lesson), and a region name it cannot map is an error, never a silent omission. Clearing a row needs `--allow-empty` on top of `--apply`.
+`rounds/<n>/manifest.json` is written by the seed run, so its `common_name` values predate the name-fix pass (`scripts/fix-round8-names.ts`). Per trap 6, Trefle gave no English name to 18 of round 8's 101 rows, and those sit in the manifest under their bare scientific name. Grepping a manifest by common name returns a confidently wrong answer: it is how a review concluded round 8 had seeded nothing that could collide, when it had seeded `Anemonoides nemorosa`. **Search a manifest by `scientific_name`.**
 
-Two WCVP quirks worth knowing. It occasionally **omits the establishment marker**, so a single unmarked Level 3 row invents a whole Level 2 region — `Galium verum` read as native to Australia off one Tasmania row, while GBIF's own GRIIS-Australia dataset lists it as introduced. And a reviewed decision must outrank it: `Rosmarinus officinalis` has Western Asia deliberately cut and WCVP disagrees, which is why `MANUAL_OVERRIDES` now lives in `lib/native-region-overrides.ts` and is read by both the generator and the checker.
+#### 13. Applying a migration through the API stamps its OWN version — FIXED July 28 2026
 
-**Status: the tail was worked on 2026-07-30 and the catalog has now been through WCVP** — see that day's session entry for the numbers, and `select count(*) from plants where native_region_checked_at is null` for the remainder, which is the `no-data` set rather than a backlog. Do not point `--apply` at `--all`.
-
-**The sample under-predicted the tail by 5x, and that is the calibration worth keeping.** A 60-plant sample scored 56 clean / 1 wrong and was read as "~2%, roughly a dozen bad rows"; the real rate over 475 rows was **11%, 53 corrected**. The sample was not unlucky, it was drawn from the wrong population — recently seeded rows had already been through the checker, so an unstamped-only sample is the oldest, least-curated end of the catalog. **Sample the population you are about to act on, not the table.**
-
-### 11. GBIF's `species/match` fails UPWARD, into a genus
-
-Hand it a binomial it does not know and it climbs the taxonomy rather than returning nothing: `Pennisetum alopecuroides` comes back as the **genus `Cenchrus`**, `matchType: HIGHERRANK`. Accepting that fetches an entire genus's distribution — it was about to widen one grass from "Eastern Asia" to 41 regions including Brazil and New Zealand.
-
-This is trap 7 in different clothes: **an external name lookup that guesses is more dangerous than one that fails.** Require `EXACT` at species rank _and_ that the canonical name returned is the one you asked for. Normalise the `×` away first, or every hybrid in the catalog reads as unmatched.
-
-**It was still live in a second script until 2026-07-30, and there it reached a prompt.** `cross-check-native-to.ts` had its own unguarded lookup, so that same grass was handed to Claude as native to 66 regions — Alabama, Algeria, Angola, Argentina — presented as the independent authority the guard weighs our phrase against. The guard against a trap has to be in the shared lookup, not in whichever script the trap was discovered in: both native guards now go through `scripts/wcvp-lookup.ts`.
-
-### 13. Applying a migration through the API stamps its OWN version — FIXED July 28 2026
-
-`apply_migration` (the Supabase MCP tool / Management API) records the migration under a version it generates, **not** under your local filename. Four migrations had been applied that way, so the remote ledger and `supabase/migrations/` held the same 26 migrations under four different version stamps:
+`apply_migration` (Supabase MCP / Management API) records the migration under a version it generates, **not** your local filename. Four migrations were applied that way, so local and remote held the same 26 migrations under four different stamps:
 
 | local file       | remote version   | migration               |
 | ---------------- | ---------------- | ----------------------- |
@@ -206,140 +190,125 @@ This is trap 7 in different clothes: **an external name lookup that guesses is m
 | `20260724120000` | `20260724120842` | add_is_greenery         |
 | `20260724120500` | `20260724120938` | add_greenery_checked_at |
 
-**The schema was never wrong — this is ledger drift, not data drift.** The danger is `supabase db push`: it would not recognise those four local filenames as applied and would try to re-run them against production.
+**Ledger drift, not data drift** — the schema was never wrong. The danger is `supabase db push`, which would not recognise those local filenames as applied and would re-run them against production. **Fixed by renaming the local files to the remote versions**, which touches no production state; `supabase migration repair --status applied <version>` is the other direction.
 
-**Fixed by renaming the local files to the remote versions**, not by repairing the remote ledger. The remote versions record when the migrations actually ran, so they are the truthful record, and renaming touches **no production state at all**. Relative apply order was preserved (checked explicitly — `add_is_greenery` still precedes `add_greenery_checked_at`), and local now matches the remote ledger exactly, 26 for 26.
+**Since 2026-07-30 this is checked rather than remembered** — `pnpm migrations:check` reports each drift with the exact `git mv`. It had drifted again by then, two days after the rule was written: **a rule that depends on remembering is a rule with a half-life.** One thing the check cannot do for you: reconciling a version goes stale in prose too — the July 29 renames touched 14 references across `docs/` and script comments.
 
-**The durable rule:** if you apply a migration through the API or MCP rather than `supabase db push`, reconcile the filename to the version the remote recorded in the same session. `supabase migration repair --status applied <version>` is the other direction and is the right tool when the local filename is the truthful one.
+#### 14. A committed migration is not an applied migration — WATCHED since 2026-07-30
 
-**Since 2026-07-30 this is checked rather than remembered** — `pnpm migrations:check` (trap 14) reports each drift with the exact `git mv` that fixes it. It had drifted again by then: three migrations applied on July 29 were still under their local filenames, so "reconcile in the same session" had held for two days and then quietly stopped. **A rule that depends on remembering is a rule with a half-life.** One thing the check cannot decide for you: reconciling a version means every prose citation of it goes stale too. The July 29 renames touched 14 references across `docs/` and script comments, because migrations get cited by version number as identifiers.
+`20260727120000_diary_entries_garden_level.sql` was committed to `main`, merged in PR #121 with the feature that depends on it, deployed — and **never applied to the remote**. `diary_entries.plant_id` stayed `NOT NULL` in production, so saving a garden-level note failed for a day. Nothing was watching: there is no `supabase db push` in any workflow, migrations are applied by hand, and every other guard checks catalog _data_.
 
-### 14. A committed migration is not an applied migration — WATCHED since 2026-07-30
+**The remote's migration list is the truth about what is applied; `supabase/migrations/` is the truth about what was written.** Compare them before assuming a schema change is live, especially after merging a PR that carries one.
 
-`supabase/migrations/20260727120000_diary_entries_garden_level.sql` was committed to `main` on July 27, merged in PR #121 along with the garden-level diary feature that depends on it, deployed — and **never applied to the remote**. `diary_entries.plant_id` stayed `NOT NULL` in production, so saving a garden-level note failed for anyone who tried. It went unnoticed for a day and was found only by diffing the remote's migration list against the directory while applying an unrelated migration (July 28).
+`apps/web/scripts/check-migration-drift.ts` now does it, in CI as `migration drift (main only)`. Whether it is passing: `gh run list --branch main --limit 5`. To ask it yourself: `cd apps/web && pnpm migrations:check`. It needs a `security definer` function (`public.applied_migrations()`) because `supabase_migrations` is not an exposed schema. **It has to understand trap 13 before it can report trap 14** — a version-only set difference would have called three live renames six findings and buried any genuine seventh — so it pairs on name first and reports the two separately.
 
-**Nothing was watching.** There is no `supabase db push` in any workflow, migrations are applied by hand through the MCP, and every guard in the pipeline checks catalog _data_. A migration file in the repo reads as applied to anyone browsing it, and trap 13's ledger drift makes a filename-to-remote comparison non-obvious.
+#### 16. A closed round's PAIRING check still rots, because pairings carry no timestamp — OPEN, expect it
 
-**The durable rule:** the remote's migration list is the truth about what is applied; `supabase/migrations/` is the truth about what was written. Compare them before assuming a schema change is live, and especially after merging a PR that carries one. This is trap 13's sibling — same two-homes-for-one-fact shape, one direction further out.
+`check-round-scope --round 9` returns 120 failures, all "out-of-scope pairing added", all "both plants predate the round" — they are round 10's `curate-combinations` output. `cleared_at` works for **plant** writes because a plant row carries `updated_at`; **a `plant_combinations` row carries no timestamp**, so every later round's pairings fail every earlier closed round permanently, and the count only grows.
 
-**Something is watching now.** `apps/web/scripts/check-migration-drift.ts` compares the two lists and fails; it runs in CI as `migration drift (main only)` on every push to main. Whether it is passing: `gh run list --branch main --limit 5`. To ask it yourself: `cd apps/web && pnpm migrations:check`.
+**Do not read a pairing failure on a closed round as a regression, and do not waive them one by one.** The real fix is a timestamp on `plant_combinations`, which is a schema change nobody has needed yet.
 
-This paragraph used to end "belongs in CI once the Supabase secrets exist", and that sentence outlived its own truth by two days — see trap 17. Both secrets have existed since 2026-07-28, so nothing was ever blocking; it needed writing, not waiting.
+#### 17. A written-down blocker outlives the thing that blocked it — FIXED for the CI-secrets case, expect the shape
 
-**Why the check needs a database function.** `supabase_migrations` is not an exposed schema, so the service role key cannot read the ledger through PostgREST. `public.applied_migrations()` (`security definer`, execute revoked from `anon`/`authenticated`, granted to `service_role` alone — the same shape as `expired_demo_users`) is the narrowest route. The two alternatives were both worse: exposing the whole schema to solve a two-column read, or a Management API personal access token, which would be a **new** repo secret with far more reach than the service role key.
+**"CI has no Supabase secrets" was reported to Ana four times after it stopped being true.** Both secrets were added 2026-07-28 21:43; `gh secret list` has answered it in one command ever since. Every telling came from a session that saw `catalog-state staleness: SKIPPED` on a PR and found a comment in `ci.yml` that was true when written. The actual reason for the skip is `if: github.event_name != 'pull_request'` — deliberate, so no PR-triggered job can read the service role key.
 
-**The check has to understand trap 13 before it can report trap 14, and that is the whole design.** A version-only set difference calls a trap-13 rename one missing migration plus one unknown one. On the day this was written the repo held **three** live filename drifts, so the naive check would have printed six findings, none of them real, and buried any genuine "never applied" seventh. So it pairs on name first and reports the two separately, worst first. **A guard whose output nobody can read is a guard nobody acts on.**
-
-**It found real drift on its first run**, which is also its proof: the three drifts were reconciled in the same PR, and the check went from three findings to `OK — 35 committed migrations`. It was also rehearsed against the failure it exists for — an unapplied migration was planted on disk, reported as `WRITTEN BUT NEVER APPLIED` at the top of the output, and removed.
-
-### 15. The WCVP cache mixes GBIF checklists, so a raw `NATIVE` marker is not WCVP — OPEN by design
-
-`reference/wcvp-native-cache.json.gz` stores GBIF's whole `species/{key}/distributions` payload, which aggregates **many** checklist datasets. `cross-check-native-region.ts` filters on `r.source === WCVP_SOURCE` and is correct. **A reviewer reading the cache to audit a finding usually does not**, and the unfiltered rows contradict the script convincingly: `Rudbeckia fulgida` carries `Texas — NATIVE` from the **World Register of Marine Species**, and `Asplenium trichomanes` a `Western Cape — NATIVE` row from another list, each appearing to prove the script had wrongly narrowed a range. Three drops were nearly reversed on that evidence on 2026-07-30.
-
-**A SCRIPT was doing it too, and that half is now fixed (2026-07-30).** `cross-check-native-to.ts` had its own uncached lookup that read any row GBIF returned, so `Rudbeckia fulgida`'s marine-species row went into a Claude prompt labelled as WCVP's opinion. Both guards now share `scripts/wcvp-lookup.ts`, which filters by `source` in one place — so the trap survives only in the form it was written for, a human reading the raw file. It stays OPEN for that reason: the reviewer is the remaining exposure.
-
-**The durable rule: filter the cache by `source` before believing anything in it.** This is trap 11's sibling — both are GBIF answering a narrower question than it appears to, and both are caught only by reading the field that says which answer you got (`matchType`, `source`). Left as-is rather than "fixed" by caching only WCVP rows: the full payload is what makes an upstream disagreement visible at all, and _Arbutus unedo_'s Ireland split was worth seeing.
-
-### 16. A closed round's PAIRING check still rots, because pairings carry no timestamp — OPEN, expect it
-
-Found by the round-10 image-holds session on 2026-07-30 and recorded here rather than fixed. `check-round-scope --round 9` returns **120 failures, all "out-of-scope pairing added", all "both plants predate the round"** — they are round 10's `curate-combinations` output. Round 9's window is closed and `cleared_at` works correctly for **plant** writes, because a plant row carries `updated_at` to filter on. **A `plant_combinations` row carries no timestamp**, so there is nothing for the closing edge to compare against, and every later round's pairings fail every earlier closed round permanently. The count only grows.
-
-**So round 9's "0 out-of-scope, window CLOSED" was true when written and can never be reproduced.** Do not read a pairing failure on a closed round as a regression, and do not "fix" it by waiving each pairing — the list grows every round. The real fix is a timestamp on `plant_combinations` (or excluding pairings from a closed round's check entirely), which is a schema change nobody needed yet. Left alone per Ana's 2026-07-29 ruling that the pipeline is finished and the round run's own output is the whole backlog.
-
-### 17. A written-down blocker outlives the thing that blocked it — FIXED for the CI-secrets case, expect the shape
-
-**"CI has no Supabase secrets" was reported to Ana four separate times after it stopped being true.** Both secrets were added **2026-07-28 21:43**; `gh secret list` has answered this in one command ever since. Every telling came from a session that saw `catalog-state staleness: SKIPPED` on a pull request, went looking for the reason, and found this in `ci.yml`:
-
-> Until the two repo secrets exist this job is a clean no-op rather than a red X.
-
-The comment was true when written and nothing made it false out loud. **The actual reason for the skip is `if: github.event_name != 'pull_request'`** — deliberate, so no PR-triggered job can read the service role key — and the job runs for real on the push to main straight after merge.
-
-Three things made it recur, and all three are now closed:
-
-- **A silent skip and a real pass looked identical from outside.** The shell guard printed a notice and `exit 0`, so nobody could tell "no secrets" from "checked, clean". It now **fails** — a missing key means somebody removed it, not that setup is pending.
-- **The status line explained nothing.** The job is named `catalog-state staleness (main only)`, so a PR's SKIPPED now states its own reason. Do not shorten that name.
-- **The stale sentence had copies.** It was in `ci.yml` twice, in trap 14 above, and in `.claude/handoff.md`. Fixing one copy is what "we fixed it" meant the previous times.
-
-**The durable rule, and it generalises past this one claim:** an asserted negative — "X is missing", "that isn't wired up", "we're blocked on Y" — gets **verified with one command before it is repeated**, especially when it is being repeated from a document rather than from a run. This is the same failure as the round-30 `native_region_checked_at` claim (the wcvp-tail session found the stated blocker had shipped two days earlier and had ridden through four later entries) and the same shape as traps 13, 14 and [feedback: docs are not evidence]. A blocker is the most dangerous kind of note to write, because nothing revisits it when the block lifts. **If you write one, name the command that proves it.**
-
-### 18. An RLS block and an empty table look identical — ADDED 2026-07-30
-
-Moved here from `architecture.md` on 2026-07-30, when the single-tenant shim's
-section was deleted for describing code that no longer exists. The trap is not
-about the shim and outlived it.
-
-Before real auth, `getPlantDetail()` fell back to a hardcoded mock garden behind
-a comment blaming missing onboarding. That was the wrong diagnosis. The policies
-on `gardens` and `palette_plants` require `auth.uid()` to match the owner; the
-app had no session, so `auth.uid()` was null and **every query returned zero
-rows with a real garden row present the whole time**. `.maybeSingle()` then
-presented a permissions failure as "no row yet", and the wrong explanation
-stuck for as long as the symptom was readable as normal.
-
-**A silently empty result from an RLS-protected table is a policy block until
-proven otherwise.** Check as the service role, or check `auth.uid()`, before
-concluding the data is absent. This is the same shape as trap 1: a failure that
-returns a plausible negative rather than an error.
-
-### 19. A test that cannot fail — ADDED 2026-07-30
-
-`expect(errors).toContain(expect.stringMatching(/…/))` matches by identity, so
-an array of strings can never contain a matcher object: **that assertion passes
-against every possible input, including the bug it was written to catch.** It
-sat in a green suite of 20 looking like coverage. The same session found a code
-comment claiming the contract test kept `CRITERION_FIELDS` honest against the
-trigger, which it did not — asserting a guarantee is cheaper than verifying one,
-which is exactly why the false version gets written.
-
-**Ask of any new assertion: what input would make this line fail?** If there
-isn't one, the test is decoration. This is the test-suite form of trap 17.
-
-### 20. A judge can cite a fault that cannot exist — ADDED 2026-07-30
-
-The blind copy judge rejected four rewrites for containing em dashes.
-`mechanicalCopyFault()` strips every dash before the blind call, so the text it
-saw provably contained none. The rejections were plausible, specific, and
-impossible.
-
-**A model asked to find fault will find one**, including in the space an
-upstream filter has already emptied. When a judge's reason names something a
-deterministic check should have made unreachable, verify the reason before
-acting on it — and never rewrite content to satisfy a judge, since a rewrite
-that isn't true on its own terms means the hold was correct. Related: its
-verdicts are non-deterministic (the same row was held and then approved on
-identical data), so they are opinions to weigh, not instructions to apply.
-
-### 21. `auth.admin.listUsers` 500s when `per_page` exceeds the user count — ADDED 2026-07-30
-
-`{"code":500,"error_code":"unexpected_failure","msg":"Database error finding
-users"}`. Reproduced by hand against the REST endpoint with 5 users in the
-project: `per_page=5` returns 200, `per_page=6` returns 500. Not the JS SDK —
-curl does it too. **The endpoint fails precisely when the user table is small**,
-so no fixed page size is safe as the count moves. Read `auth.users` through a
-`security definer` SQL function instead (`expired_demo_users()`, migration
-`20260729164307`, execute granted to `service_role` alone).
-
-### 12. A round manifest records names as SEEDED, before the name pass
-
-`rounds/<n>/manifest.json` is written by the seed run, so its `common_name` values predate `fix-round8-names.ts`. Per trap 6, Trefle gave no English name to 18 of round 8's 101 rows, and those sit in the manifest under their bare scientific name. Grepping a manifest by common name therefore returns a confidently wrong answer: it is how a review concluded round 8 had seeded nothing that could collide, when it had seeded `Anemonoides nemorosa` — the direct cause of a rename. **Search a manifest by `scientific_name`**, and cross-read the round's name-fix script.
+Three things made it recur, all now closed: a silent skip and a real pass looked identical from outside (it **fails** now); the job name explained nothing (it is `catalog-state staleness (main only)` so a PR's SKIPPED states its own reason — do not shorten it); and the stale sentence had copies, in `ci.yml` twice, in trap 14, and in `.claude/handoff.md`. **Fixing one copy is what "we fixed it" meant the previous times.**
 
 ---
+
+### C. One fact with two homes, and only one of them got updated
+
+**The rule:** the same fact stored in two places will diverge, and the divergence is silent because both copies still look right on their own. Generate the second copy from the first, or delete it. Where neither is possible, the write that changes one must invalidate the other in the same statement.
+
+This is the root cause the July 28 2026 audit landed on, and it is why trap numbers here are never renumbered — they are cited from `wcvp-lookup.ts`, `migration-drift.ts`, `image-probe.ts` and `curation.md`.
+
+#### 3. Full-catalog regeneration outlived its migration — FIXED (round 8)
+
+`regenerate-native-region.ts` began as a one-time migration and kept full-catalog scope long after, so every round re-derived all ~600 plants. It is why the Trefle rate limit in trap 1 was reachable at all, and it **silently rewrites settled data** — round 8's run changed 20 pre-existing plants alongside its own 101. The `MANUAL_OVERRIDES` table exists because hand-corrections were being clobbered by re-generation; it patches the symptom one plant at a time. **The script now refuses to run without `--round <label>` or `--all`.**
+
+#### 5. Unmapped colour values vanish from the filter — recurring, guarded
+
+A `bloom_color` or `foliage_color` value absent from `lib/bloom-colors.ts` / `lib/foliage-colors.ts` does not error — it **silently drops the plant out of the Explore colour filter**. Every seed invents new shades; round 8 produced 12.
+
+Run `check-bloom-colors.ts` after every seed and map each new value into a bucket or the matching ignore set. Distinctive standing colour gets a bucket; seasonal turns, new growth, plain-green-plus-a-detail, underside-only and cultivar-dependent values are ignored.
+
+#### 22. Correcting a field leaves its prose sibling stating the old answer — FIXED 2026-07-30
+
+`native_to` (the phrase on the plant page) and `native_region` (the filter's tags) describe the same origin, and only the tags go through WCVP. The July 30 tail corrected 53 regions and left all 53 phrases saying the old thing, because nothing linked them: `Imperata cylindrica` still named the range it was **introduced** into on its own page while the filter had it right.
+
+The cascade rule had only ever been applied _within_ a field. **Across fields: a correction invalidates every other field answering the same question** — `cross-check-native-region --apply` now nulls `native_checked_at` too. And **where two fields answer one question, the coarse guard passing is not evidence they agree**: the prose guard tested continents, and both the phrase and the truth said "Asia" (trap 23, [`curation.md`](curation.md#native-to)).
+
+---
+
+### D. Facts about the outside world you cannot design away
+
+**No rule, no fix — these are reference.** Quirks of Trefle, GBIF, Supabase or our own environment that you would otherwise pay for twice.
+
+#### 6. Trefle common names are botanical, not horticultural — recurring, expect it
+
+Trefle's names come from floras and USDA lists, and every batch lands three defects: **no English name at all** (18 of 101 in round 8, so the mapper falls back to the scientific name); **a name belonging to a different species** ("Alpine woodfern" is not _Dryopteris wallichiana_); and **the food-crop name for an ornamental** (_Colocasia esculenta_ as "Coco-yam").
+
+Worst case is a **collision with a species already held**: round 8 received _Cercis canadensis_ as "Judastree", which is _C. siliquastrum_. `verify-round` now FAILs on duplicate `common_name`. Pattern a fix pass on `scripts/fix-round8-names.ts` — each entry carries the value it expects to find. **A name pass can create the collision it exists to remove** (renaming _Anemonoides nemorosa_ to "Wood anemone" collided with _Anemone quinquefolia_), so re-check duplicates afterwards.
+
+#### 7. Seed by ID, never by name search — recurring
+
+Trefle's name search silently resolves to sibling species. Seed by verified Trefle ID or exact synonym-aware genus+species match, and log any drift.
+
+**Shade and woodland batches need their synonym groups written before the dry run** — those genera have been widely segregated (Anemone→Anemonoides, Blechnum→Struthiopteris, Scilla→Othocallis, Ipheion→Tristagma, Sedum→Petrosedum, Meconopsis→Papaver).
+
+#### 8. `reports/` is gitignored, so a fresh worktree has a cold cache
+
+Rounds run in `git worktree` checkouts, and a new one has no `reports/`, so every cache is cold and scripts refetch everything. **This is the condition that surfaces rate-limit and pagination bugs** — trap 1 lay dormant for rounds precisely because existing checkouts had warm caches.
+
+#### 9. Trefle field names: `tdwg_code` / `tdwg_level`, not `code` / `level`
+
+Reading the wrong field names leaves the code undefined, every zone falls through as unmapped, and the plant ends up untagged — no error anywhere. See [native_region](curation.md#native-region).
+
+#### 21. `auth.admin.listUsers` 500s when `per_page` exceeds the user count — ADDED 2026-07-30
+
+`{"code":500,"error_code":"unexpected_failure","msg":"Database error finding users"}`. Reproduced against the REST endpoint with 5 users: `per_page=5` returns 200, `per_page=6` returns 500. Not the JS SDK — curl does it too. **The endpoint fails precisely when the user table is small**, so no fixed page size is safe as the count moves. Read `auth.users` through a `security definer` function instead (`expired_demo_users()`, migration `20260729164307`).
 
 ## Sessions
 
 <!-- Newest first. Append with: scripts/log-db-session.ts --round <label> -->
 
-**An entry records events in the past tense. It does not teach.** Tense is the
-test: a dated event cannot go stale ("round 8 took the catalog 494 → 595" is
-true forever), while a present-tense claim ("X is how we do Y") rots the day it
-stops being true. So anything you catch yourself writing in the present tense
-belongs somewhere else — a durable lesson is a **trap**, a design decision is
-[`architecture.md`](architecture.md) or [`curation.md`](curation.md), and an
-implementation story is the commit message. Cite the trap; do not re-explain it.
+### 2026-07-30 — native_to and native_region stop diverging (not a round)
 
-Target 10–25 lines, headings omitted when empty:
+**Branch** `session/2026-07-30-natives-dedup`, off `main` at `d3564b7`. Not a round; no seed, no migration. ~700 Claude calls, plus ~110 in two runs killed mid-flight (trap 23).
 
-```md
+**Changed**
+
+- `cross-check-native-region --apply` nulls `native_checked_at` on rows it corrects (trap 22).
+- `cross-check-native-to`: verdict `contradicts`, the validated tags as a third signal, a ranked partial-gap section, `--report-only`.
+- `L2_NAMES` extracted to `lib/wgsrpd-regions.ts`; two scripts each held a copy.
+- `backfill-guard-stamps`: `native_to` group retired — it would have restored the stamps cleared below from the reports the bad lookup produced.
+- Trap list regrouped into four families, condensed 37%; numbers declared permanent IDs (cited from three scripts and `curation.md`).
+
+**Database**
+
+- All 277 `native_checked_at` stamps cleared: dated July 15/27/29, all predating the shared-lookup fix, so all from the unguarded lookup (traps 11, 15). No catalog field written.
+- Re-checked and re-stamped all 695. Coverage 277 → **695/695**. `gross=0, contradicts=4, no_data=2, minor=126, ok=563`.
+
+**Found**
+
+- 4 contradictions, all real: `Imperata cylindrica`, `Citrus limon`, `Crocus speciosus`, `Perovskia atriplicifolia`.
+- 179 rows claim regions their validated tags exclude, ranked in `docs/native-to-review-2026-07-30.md`.
+- The gap list first shipped 25 no-evidence rows at the top at 100% unsupported — a withheld tag set makes every claimed region trivially unsupported. Trap 1's shape, in code written the same day.
+- 695 plants, 300 distinct phrases: ~395 translations recomputed.
+
+**Not done**
+
+- The 179-row queue is unreviewed; no `native_to` value was edited.
+- `Crocus speciosus` may be a tags problem, not a phrase problem — validated range is `Caucasus` alone.
+- Drafts unchecked: `Perovskia`'s reintroduces "central Asia", the term its tags exclude.
+- Per-phrase translation not split from per-species judgement; would cut ~⅓ of calls.
+
+**Verified**
+
+- 14-plant calibration: `Rosemary`, `Lavandula`, `Cistus`, `Styrax japonicus` clear; `Imperata`, `Citrus limon` fire.
+- All 24 trap bodies preserved byte-for-byte; every cited id resolves; hook exit 0.
+- `catalog:state` regenerated; typecheck clean; `wcvp-lookup` 8/8.
+
 ### <date> — <short title>
 
 **Branch** `<branch>`. <round or not; did it write catalog data>
@@ -349,6 +318,7 @@ Target 10–25 lines, headings omitted when empty:
 **Found** — trap pointers ("another instance of trap 7", "trap 14 closed").
 **Not done** — what was deliberately left. Keep this; the next session needs it.
 **Verified** — what was actually checked.
+
 ```
 
 **A belief that turned out wrong stays, as one struck-through line**:
@@ -895,3 +865,4 @@ Backfilled into this log on 2026-07-30 from `architecture.md`. Reasoning is in [
 **Verified**
 
 - Each update matched an exact prior value from the report before writing.
+```

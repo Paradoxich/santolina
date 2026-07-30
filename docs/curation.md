@@ -259,6 +259,66 @@ confident, plausible, badly wrong answers rather than errors, and both were
 caught by a person reading a report. That is why `--apply` follows a human read
 of the diff instead of replacing it.
 
+<a id="native-to"></a>
+
+## `native_to` and `native_region`: one origin, two fields, one authority
+
+Two columns answer "where is this plant from". `native_to` is the prose phrase
+on the plant page ("the western Mediterranean"); `native_region` is the Level-2
+array behind the Explore filter. They are not redundant — one is copy, one is a
+controlled vocabulary — but they must not disagree, and until July 30 2026
+nothing made them agree.
+
+**The division of authority is deliberate and asymmetric.** WCVP feeds
+`native_region` mechanically. `native_to` is hand-owned, voice-passed copy, and
+is only ever _checked_ against the regions, never generated from them. Deriving
+the phrase is the cheap thing not to do: it is the sentence a beginner reads.
+
+**What went wrong is what the split invites.** The July 30 WCVP tail corrected
+53 `native_region` rows and left all 53 phrases saying the old thing, because
+nothing connected them. `Imperata cylindrica`'s tags moved to Africa and the
+Mediterranean while its phrase went on naming the range it was introduced into.
+The fix is the cascade rule applied _across_ fields instead of within one:
+`cross-check-native-region --apply` nulls `native_checked_at` on every row it
+corrects, so the prose guard sees that row again.
+
+**The prose guard had to get sharper to use it.** A continent test cannot see
+that error — phrase and truth both say "Asia". `cross-check-native-to` now takes
+the tags as a third signal and reports verdict `contradicts`: right continent,
+wrong range.
+
+**Three rules keep it honest.** The tags count as evidence **only once
+`native_region_checked_at` is set** — unvalidated, they are still Trefle's
+naturalised-inclusive range, so believing them would be checking the phrase
+against its own source. `contradicts` rows are **never auto-applied**: a wrong
+continent is a bug, a contradicted range is a copy rewrite, and the drafts the
+run produces are for a voice pass.
+
+And **the verdict fires only where fuzziness cannot explain the gap.** Two
+sharper designs were built first and both flooded the report, for the same
+underlying reason: prose is fuzzy and Level 2 is exact.
+
+- **Asking the model to judge** produced a queue roughly half false positives.
+  It flagged phrases for _omitting_ regions the tags list, which is a phrase
+  being less specific. `Styrax japonicus` — "Japan, Korea, and China" against
+  tags including China and Eastern Asia — was called a contradiction, when Japan
+  and Korea **are** Eastern Asia in this vocabulary.
+- **Translating the phrase and flagging any unsupported region** looks rigorous
+  and is not. An umbrella word manufactures contradictions at its edges: "the
+  Mediterranean" expands to include Western Asia, which `Rosmarinus officinalis`
+  deliberately excludes by reviewed override, so the catalog's most obviously
+  correct phrase came back flagged. `Lavandula` and `Cistus` went the same way.
+
+So the model **translates only** — wording into Level-2 names — and code makes
+every severity call. `contradicts` requires the phrase and the tags to share
+**nothing**, or the tags to be validated-empty while the phrase claims a range.
+Partial gaps are not a verdict: they are a ranked list at the end of the report,
+widest gap first, for a person to read. On a fourteen-plant calibration set that
+leaves two contradictions, both real (`Imperata` and the `Citrus limon`
+cultigen), no false alarms, and every genuine over-claim still visible in the
+list. **A guard that cries wolf on Rosemary is worth less than a short list
+somebody actually reads.**
+
 <a id="hardiness"></a>
 
 ## Hardiness: RHS rating is canonical, drafted then human-verified

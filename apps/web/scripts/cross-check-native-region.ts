@@ -42,6 +42,11 @@
  *     Silently dropping unmapped names would quietly shrink a species' range
  *     and read as a confident answer.
  *
+ * --apply ALSO NULLS plants.native_checked_at on every row it corrects. The
+ * `native_to` prose answers the same question this field does, so a corrected
+ * region invalidates the prose's last check and the prose guard must see the
+ * row again. See applyCorrections().
+ *
  * REPORT-ONLY RUNS DO WRITE ONE THING: plants.native_region_checked_at, on
  * every row that reached a decided verdict. That is operational metadata, not
  * catalog content, so the flags-only rule (docs/curation.md#botanical-cross-check) still holds — the same
@@ -55,6 +60,7 @@ import { mkdirSync, writeFileSync, readFileSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
 
 import { MANUAL_OVERRIDES } from '../lib/native-region-overrides'
+import { L2_NAMES } from '../lib/wgsrpd-regions'
 import { fetchAllRows } from '../lib/paginate'
 import { getSupabaseAdmin } from '../lib/supabase-admin'
 import { requireScope, scopeIds, describeScope } from './scope'
@@ -78,62 +84,6 @@ const MD_OUT = join(REPORTS_DIR, 'native-region-crosscheck.md')
 // Rows per stamping update — the whole batch is decided before anything is
 // written, so the stamps go out in chunks rather than one call per row.
 const STAMP_CHUNK = 100
-
-// Same table as regenerate-native-region.ts — the 52 WGSRPD Level 2 regions.
-const L2_NAMES: Record<number, string> = {
-  10: 'Northern Europe',
-  11: 'Middle Europe',
-  12: 'Southwestern Europe',
-  13: 'Southeastern Europe',
-  14: 'Eastern Europe',
-  20: 'Northern Africa',
-  21: 'Macaronesia',
-  22: 'West Tropical Africa',
-  23: 'West-Central Tropical Africa',
-  24: 'Northeast Tropical Africa',
-  25: 'East Tropical Africa',
-  26: 'South Tropical Africa',
-  27: 'Southern Africa',
-  28: 'Middle Atlantic Ocean',
-  29: 'Western Indian Ocean',
-  30: 'Siberia',
-  31: 'Russian Far East',
-  32: 'Middle Asia',
-  33: 'Caucasus',
-  34: 'Western Asia',
-  35: 'Arabian Peninsula',
-  36: 'China',
-  37: 'Mongolia',
-  38: 'Eastern Asia',
-  40: 'Indian Subcontinent',
-  41: 'Indo-China',
-  42: 'Malesia',
-  43: 'Papuasia',
-  50: 'Australia',
-  51: 'New Zealand',
-  60: 'Southwestern Pacific',
-  61: 'South-Central Pacific',
-  62: 'Northwestern Pacific',
-  63: 'North-Central Pacific',
-  70: 'Subarctic America',
-  71: 'Western Canada',
-  72: 'Eastern Canada',
-  73: 'Northwestern U.S.A.',
-  74: 'North-Central U.S.A.',
-  75: 'Northeastern U.S.A.',
-  76: 'Southwestern U.S.A.',
-  77: 'South-Central U.S.A.',
-  78: 'Southeastern U.S.A.',
-  79: 'Mexico',
-  80: 'Central America',
-  81: 'Caribbean',
-  82: 'Northern South America',
-  83: 'Western South America',
-  84: 'Brazil',
-  85: 'Southern South America',
-  90: 'Subantarctic Islands',
-  91: 'Antarctic Continent',
-}
 
 // WCVP has modernised some country names since the WGSRPD geojson was cut
 // (Türkiye, Eswatini, DR Congo). These are naming drift, not new regions —
@@ -462,9 +412,16 @@ async function applyCorrections(
       skipped++
       continue
     }
+    // Nulling native_checked_at is the cascade rule reaching across fields: a
+    // corrected region means the `native_to` prose describing the same origin
+    // is now suspect, and the prose guard only re-reads rows whose stamp is
+    // null. Without this the two fields silently part company — July 30
+    // corrected 53 regions and left every matching phrase saying the old thing,
+    // Imperata cylindrica among them, still naming the range it was introduced
+    // into.
     const { error: writeError } = await db
       .from('plants')
-      .update({ native_region: f.wcvp_native })
+      .update({ native_region: f.wcvp_native, native_checked_at: null })
       .eq('id', f.id)
     if (writeError)
       throw new Error(
