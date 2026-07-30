@@ -44,7 +44,7 @@ its dev server on :3000 cleaned up too. Trap 14's migration-drift check shipped
 (`pnpm migrations:check`, CI job `migration drift (main only)`) and **its first
 real run on main passed** — reasoning lives in `docs/database-log.md` trap 14. The
 four UI sessions that had been living in this file moved to `docs/architecture.md`
-§32/§33/§34/§35 and `DESIGN_SYSTEM.md`.
+[the plant story subpage](../docs/architecture.md#plant-story-subpage)/[one content width](../docs/architecture.md#content-width)/[the owned-plant dashboard](../docs/architecture.md#plant-dashboard)/[Explore ranking](../docs/architecture.md#explore-ranking) and `DESIGN_SYSTEM.md`.
 
 **Next steps, in order:**
 
@@ -54,7 +54,7 @@ four UI sessions that had been living in this file moved to `docs/architecture.m
    48 of them outside the file, which is why an earlier session declined the split.
    Only then regroup, editing in place. New rule to encode: a decision that
    supersedes another **replaces** it; the rejected alternative survives, the stale
-   current-state description does not. §32 is the worked example — it needed an
+   current-state description does not. [the plant story subpage](../docs/architecture.md#plant-story-subpage) is the worked example — it needed an
    amendment bolted on because its number is an address other text cites.
 2. **The `native_checked_at` re-run**, now that the 5a WCVP lookup is guarded. How
    many rows: `select count(*) from plants where native_checked_at is not null`.

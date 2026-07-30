@@ -7,7 +7,7 @@ import { createSupabaseServerClient } from '@/lib/supabase-server'
 //  - Email OTP links arrive with `?token_hash=&type=` -> verify it.
 // On success we drop the user at `next`, defaulting to /overview (the app's
 // entry point) rather than the marketing landing page at `/`; the first-run
-// location gate takes over from there once it exists (docs/architecture.md §24).
+// location gate takes over from there once it exists (docs/architecture.md#auth).
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')

@@ -8,7 +8,7 @@
  * (whole-database disaster recovery is Supabase's own backups), and this
  * route needs no extra secret and no version-matched local binary.
  *
- * Run before every seed round (step 0 of the docs/architecture.md §25
+ * Run before every seed round (step 0 of the docs/architecture.md#round-runbook
  * cadence):
  *   ./node_modules/.bin/tsx --env-file=.env.local scripts/backup-catalog.ts
  */

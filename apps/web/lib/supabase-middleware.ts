@@ -3,7 +3,7 @@
 // Runs on every matched request: refreshes the auth token, writes the refreshed
 // cookies onto the response, and redirects unauthenticated requests away from
 // protected routes. The santolina.app landing and the auth routes stay public.
-// See docs/architecture.md §24.
+// See docs/architecture.md#auth.
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 

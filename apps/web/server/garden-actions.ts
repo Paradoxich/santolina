@@ -3,7 +3,7 @@
 // Garden writes run through the session client, scoped to the signed-in user's
 // garden. RLS (`gardens.user_id = auth.uid()`) guarantees a user can only touch
 // their own garden, so no application-level ownership check is needed.
-// See docs/architecture.md §24.
+// See docs/architecture.md#auth.
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 
 interface SetGardenLocationInput {

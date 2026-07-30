@@ -257,7 +257,7 @@ export function PlantDetailPage({
   /**
    * Handles the page's second button for the two non-removal states.
    * Removal (planted -> not-in-palette) goes through the trash icon and
-   * performRemoveFromGarden instead — see docs/architecture.md §14 for
+   * performRemoveFromGarden instead — see docs/architecture.md#transition-labels for
    * why "Add to garden" and "Move to growing" have to stay distinct
    * labels rather than one button always saying the same thing.
    */

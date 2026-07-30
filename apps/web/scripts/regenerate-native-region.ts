@@ -187,7 +187,7 @@ type TrefleCache = Record<
   { sci?: string; native?: NativeZone[]; error?: unknown }
 >
 
-// Trefle allows 120 req/min (§1). This makes ONE call per species, so 600ms
+// Trefle allows 120 req/min (docs/architecture.md#plant-data-provider). This makes ONE call per species, so 600ms
 // (~100/min) sits under the ceiling with headroom.
 //
 // THE BUG THIS REPLACED (found round 8, July 27 2026): the delay was 120ms —

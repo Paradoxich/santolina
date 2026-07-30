@@ -2,7 +2,7 @@
  * The editorial pass — the step that decides whether a row is finished.
  *
  * `is_curated = true` is the catalog's only claim that a human-grade judgment
- * was made about a plant (§3). Every other pass drafts or fact-checks; this
+ * was made about a plant (docs/architecture.md#curation-layer). Every other pass drafts or fact-checks; this
  * one signs off. Ana's standing ruling (July 28 2026) is that an agent owns
  * this pass, including flipping the flag, so it is automated here rather than
  * left as a queue nobody works.
@@ -34,7 +34,7 @@
  *    call sees only the plant's identity and the candidate text, never the old
  *    description and never the first model's reasoning, and decides whether it
  *    clears the bar. Self-approval would make the whole pass circular, which
- *    is the same argument the blind cross-checks rest on (§20).
+ *    is the same argument the blind cross-checks rest on (docs/architecture.md#botanical-cross-check).
  *
  * 3. Tags — the same judging call as 2. An empty style_tags list is a valid,
  *    deliberate answer (the July 2026 re-tag pass made 33 plants

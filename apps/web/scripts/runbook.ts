@@ -27,7 +27,8 @@
 export interface Step {
   /** Matches the STEP_DEFS name when the step's completion is DB-detectable. */
   step: string
-  /** §25 number, so the output and the doc can be read side by side. */
+  /** Runbook step number, so the output and docs/architecture.md#round-runbook
+   * can be read side by side. */
   runbook: string
   script: string
   /** Extra flags beyond --round <label>. */
@@ -45,7 +46,7 @@ export interface Step {
 }
 
 /**
- * THE RUNBOOK. Order matters and is the same order as docs/architecture.md §25.
+ * THE RUNBOOK. Order matters and is the same order as docs/architecture.md#round-runbook.
  *
  * Three steps that used to sit in here are gone as of 2026-07-29, and the
  * reasoning is in round-status.ts: curate-styles and curate-greenery are

@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 // The required first-run location step. Reachable only by a signed-in user
 // whose garden has no location yet; everyone else is redirected away. See
-// docs/architecture.md §24.
+// docs/architecture.md#auth.
 export default async function WelcomePage() {
   const ctx = await getSessionGardenContext()
 

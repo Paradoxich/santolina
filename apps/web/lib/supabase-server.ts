@@ -3,7 +3,7 @@
 // so queries run as the signed-in user and Row Level Security applies.
 //
 // This is the client that palette/diary/garden server actions will move onto
-// (replacing the service-role shim) once auth is wired — see docs/architecture.md §24.
+// (replacing the service-role shim) once auth is wired — see docs/architecture.md#auth.
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 

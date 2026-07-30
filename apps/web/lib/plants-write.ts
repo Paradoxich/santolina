@@ -33,7 +33,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 
-/** The three editorial criteria (§3, `lib/editorial-standard.ts`). */
+/** The three editorial criteria (docs/architecture.md#curation-layer, `lib/editorial-standard.ts`). */
 export type Criterion = 'image' | 'description' | 'tags'
 
 export const CRITERIA: readonly Criterion[] = ['image', 'description', 'tags']

@@ -316,7 +316,7 @@ for any future slide-in panel rather than reinventing it:
 1. Pull the frame's design context via the Figma MCP — but treat its values
    as _input_, not truth: map every color/size/spacing onto existing semantic
    roles first.
-2. A value with no matching role → apply rule 2 (§2). Usually the answer is
+2. A value with no matching role → apply rule 2 ([provider-agnostic column naming](docs/architecture.md#provider-agnostic-columns)). Usually the answer is
    an existing role; occasionally it's a new role or tier 3 token added to
    `packages/tokens/index.css` **and** the preset **and** `/design-system`.
 3. Export new assets to `apps/web/public/`, downscaled.

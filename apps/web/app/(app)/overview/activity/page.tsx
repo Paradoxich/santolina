@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic'
 /**
  * The full activity archive, nested under Overview and reached from its
  * card — deliberately not a nav destination, which is what the retired
- * Diary page was (docs/architecture.md §32).
+ * Diary page was (docs/architecture.md#plant-story-subpage).
  *
  * A flat ceiling rather than pagination: a single garden's log doesn't
  * approach this in the test version, and a scroll beats a pager for

@@ -117,7 +117,7 @@ export async function fetchSpecies(
   // failing: "Pennisetum alopecuroides" comes back as the genus Cenchrus with
   // matchType HIGHERRANK. Accepting that fetches the distribution of an entire
   // genus and reads as a species native to forty regions. Same trap the seed
-  // scripts already guard (§25: never the top name-search hit) — so only an
+  // scripts already guard (docs/architecture.md#round-runbook: never the top name-search hit) — so only an
   // EXACT match at species rank, on the name we actually asked for, counts.
   // GBIF drops the hybrid marker from canonicalName ("Mentha × piperita" comes
   // back as "Mentha piperita"), so compare with it normalised away rather than

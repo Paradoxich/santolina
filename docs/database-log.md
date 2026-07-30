@@ -36,7 +36,7 @@ The numbers **in this file are different and must stay written down**: a dated s
 
 4. **Generate, review, then apply.** Any script offering `--apply` writes nothing until you have read its report. This split is the single reason trap 1 did not corrupt the catalog.
 5. **Never bare `.select()` on a full table.** It silently caps at 1000 rows. Use `fetchAllRows` from `lib/paginate.ts`. `plant_combinations` has already crossed the cap once (round 6: 13 duplicate pairs, 34 plants over the companion limit); current sizes are in [`catalog-state.md`](catalog-state.md).
-6. **`is_curated` is SET TRUE by exactly one script — `curate-editorial.ts` — and by nothing else. Since 2026-07-29 it is also CLEARED by a database trigger.** This rule used to read "never flip it; it is Ana's alone", which stopped being true on 2026-07-28 when she ruled that an agent owns the editorial pass, including the flag. What has not changed is that no _other_ script may touch it: a drafting or fact-checking pass that sets `is_curated` is claiming a sign-off it did not make. The bar is defined once in `lib/editorial-standard.ts` (§3, runbook step 7b). **Editorial coverage is still thin** — round 8 is largely signed off and everything seeded before round 7 is unreviewed. Current counts in [`catalog-state.md`](catalog-state.md), which is generated; do not restate them here. Round 8's held rows are recorded work with a "no" verdict, not a gap. The image re-check (`pick-plant-images.ts --verify`, runbook step 7a) has since cleared 19 of them; what remains needs a new photograph or a tag fix, not another pass. **The trigger (`invalidate_editorial_verdict`, migration `20260729101133`) clears the flag whenever a write changes the description, tags or hero — granting approval and withdrawing it are not the same power, and only the granting half was ever Ana's or one script's.** A caller that means to keep a verdict across such a write must re-assert it in a SECOND statement; doing it inside the same one silently fails, which is how the guard's own first consumer was un-curating rows on the day it shipped.
+6. **`is_curated` is SET TRUE by exactly one script — `curate-editorial.ts` — and by nothing else. Since 2026-07-29 it is also CLEARED by a database trigger.** This rule used to read "never flip it; it is Ana's alone", which stopped being true on 2026-07-28 when she ruled that an agent owns the editorial pass, including the flag. What has not changed is that no _other_ script may touch it: a drafting or fact-checking pass that sets `is_curated` is claiming a sign-off it did not make. The bar is defined once in `lib/editorial-standard.ts` ([the curation layer](architecture.md#curation-layer), runbook step 7b). **Editorial coverage is still thin** — round 8 is largely signed off and everything seeded before round 7 is unreviewed. Current counts in [`catalog-state.md`](catalog-state.md), which is generated; do not restate them here. Round 8's held rows are recorded work with a "no" verdict, not a gap. The image re-check (`pick-plant-images.ts --verify`, runbook step 7a) has since cleared 19 of them; what remains needs a new photograph or a tag fix, not another pass. **The trigger (`invalidate_editorial_verdict`, migration `20260729101133`) clears the flag whenever a write changes the description, tags or hero — granting approval and withdrawing it are not the same power, and only the granting half was ever Ana's or one script's.** A caller that means to keep a verdict across such a write must re-assert it in a SECOND statement; doing it inside the same one silently fails, which is how the guard's own first consumer was un-curating rows on the day it shipped.
 7. **After any schema or request-shape change, run `--limit 3` first.** A green typecheck does not verify a runtime API contract.
 8. **Finish with `verify-round.ts --round <label>`.** Without `--round` it checks that data is _valid_ but not that the pipeline actually _ran_.
 9. **Append an entry here.** `scripts/log-db-session.ts --round <label>` writes the factual part for you.
@@ -53,7 +53,7 @@ The numbers **in this file are different and must stay written down**: a dated s
 
 The run **reported success** with a believable source mix — `trefle-l3=121, native_to-fallback=469` — that was really 466 rate-limit errors converted into model-derived guesses. `--apply` would have overwritten most of the catalog's authoritative regions, including rows unrelated to that round. Correct numbers after the fix: `trefle-l3=571, fallback=19`.
 
-**Rule this generalises to:** wherever a fallback exists, a failed fetch must be structurally distinguishable from a legitimate empty answer, and the script must **throw** rather than degrade. Full write-up: `architecture.md` §26.
+**Rule this generalises to:** wherever a fallback exists, a failed fetch must be structurally distinguishable from a legitimate empty answer, and the script must **throw** rather than degrade. Full write-up: `architecture.md` [native_region](architecture.md#native-region).
 
 **This is the trap that keeps coming back, and it is subtle every single time.** It recurred four times in one sitting on 2026-07-29 while sourcing nine photographs (see that session entry): a rate-limited probe read as "bad photo"; a truncated header read as "corrupt file"; an oversized file read as "unusable candidate"; and **the fix for the third returned "this hero is fine" whenever its own size check failed** — written by someone who had spent the previous hour fixing exactly this. The lesson is not "remember the rule". It is that **any function returning a two-way answer about a remote resource is one network failure away from lying**, so give it a third outcome and make the caller handle it. `displayUrlFor` returns `unchanged | rescaled | unmeasured` for that reason.
 
@@ -125,7 +125,7 @@ Every guard in this repo checks whether a value is _wrong_. Until round 8, nothi
 
 All three were invisible because `verify-round` WARNs rather than FAILs on those fields — correct while a field is parked, wrong once the feature ships.
 
-**`verify-round.ts --round <label>` now asserts per-step completeness** and exits 1 on a gap (`scripts/round-status.ts`). When §27 hardiness work resumes, promote its WARN to FAIL there.
+**`verify-round.ts --round <label>` now asserts per-step completeness** and exits 1 on a gap (`scripts/round-status.ts`). When [hardiness](architecture.md#hardiness) hardiness work resumes, promote its WARN to FAIL there.
 
 **It recurred the same week, and the fix did not see it (2026-07-28).** `round-status.ts` detects a step by a hand-written list, so a step missing from the list is invisible in exactly the way the file exists to prevent. `verify-round --round 8` reported **7/7 green** while `curate-greenery` and the image pass had never run for a single one of round 8's 101 plants — `greenery_checked_at` and `image_checked_at` were null on all of them. It was found by querying the database directly, not by any guard.
 
@@ -163,7 +163,7 @@ Rounds are run in `git worktree` checkouts to avoid clashing with other sessions
 
 ### 9. Trefle field names: `tdwg_code` / `tdwg_level`, not `code` / `level`
 
-Reading the wrong field names leaves the code undefined, every zone falls through as unmapped, and the plant ends up untagged. See `architecture.md` §26.
+Reading the wrong field names leaves the code undefined, every zone falls through as unmapped, and the plant ends up untagged. See `architecture.md` [native_region](architecture.md#native-region).
 
 ### 10. Trefle's `distributions.native[]` includes INTRODUCED range — MOSTLY OPEN
 
@@ -466,8 +466,8 @@ Pipeline steps for this round:
 
 **Deliberately not done:**
 
-- hardiness_rating left parked for all 50 (§27, unchanged policy)
-- the 8 image holds left as recorded verdicts, not chased — they need new candidate images, which is the §30/§31 Batch API flow, not this round
+- hardiness_rating left parked for all 50 ([hardiness](architecture.md#hardiness), unchanged policy)
+- the 8 image holds left as recorded verdicts, not chased — they need new candidate images, which is the [the hero image pass](architecture.md#hero-images)/[Wikimedia heroes and attribution](architecture.md#wikimedia-attribution) Batch API flow, not this round
 - nothing pushed, no PR opened
 
 ---
@@ -592,7 +592,7 @@ cheiri`, above.
   woodland or starved aster"** — Trefle handed over four common names as one
   string. Not a verify failure, so not fixed under the only-fix-what-the-round-
   breaks rule, but it is bad product copy sitting in Explore right now.
-- The 50 unrated hardiness warnings are §27 staying parked, unchanged.
+- The 50 unrated hardiness warnings are [hardiness](architecture.md#hardiness) staying parked, unchanged.
 
 ---
 
@@ -676,13 +676,13 @@ Getting there surfaced four bugs, all the same shape — **something failed for 
 
 Round 8 finished at **94 of 101**, catalog **170**. The 7 still held: 3 with no image upstream at all, 2 whose species cannot be confirmed from any available photograph, the prickly-pear disagreement, and Japanese banana (bloom data against `is_greenery` — botanical, so the cross-check's call, not the editorial pass's).
 
-**The pipeline went from thirteen steps to ten, and gained a runner.** Round 8's three days were not compute — eleven batched calls per plant is hours — they were a person standing at thirteen gates. `run-round.ts --round <n>` (`pnpm round:run`) executes the whole of §25 in order, reads DB state first so a killed run skips what is already done rather than re-billing it, and **stops on a failure without retrying, skipping or working around it**. It deliberately does not seed: choosing which species to add against which measured gap is the round's actual judgment.
+**The pipeline went from thirteen steps to ten, and gained a runner.** Round 8's three days were not compute — eleven batched calls per plant is hours — they were a person standing at thirteen gates. `run-round.ts --round <n>` (`pnpm round:run`) executes the whole of [the round runbook](architecture.md#round-runbook) in order, reads DB state first so a killed run skips what is already done rather than re-billing it, and **stops on a failure without retrying, skipping or working around it**. It deliberately does not seed: choosing which species to add against which measured gap is the round's actual judgment.
 
 Three steps left the per-round cadence, none of them by lowering a bar:
 
 - **`curate-styles`** — `curate-plants` already tags new seeds from the SAME tightened definitions (both import `lib/style-tags.ts`), so running it over a fresh batch re-asked a question already answered correctly. It stays as the repair pass for rows drafted under the loose pre-July-28 prompt.
 - **`curate-greenery`** — folded into `curate-plants`. It is one boolean on a call already being made for that plant, so a whole pass disappears for free. The criterion moved to `lib/greenery.ts` so both callers share one definition, the same arrangement `style-tags.ts` has, and for the same reason: two entry points slowly disagreeing is what put cottage on 90% of the catalog.
-- **`draft-hardiness`** — §27 is parked, so a round was paying for a rating that feeds a dormant bullet. When §27 resumes it becomes per-round and FAIL in one change.
+- **`draft-hardiness`** — [hardiness](architecture.md#hardiness) is parked, so a round was paying for a rating that feeds a dormant bullet. When [hardiness](architecture.md#hardiness) resumes it becomes per-round and FAIL in one change.
 
 `STEP_DEFS` keeps all three, with `perRound: false`. The registry is what proves every stamp column on `plants` is claimed by some step, so dropping them from it would re-open the hole that let `greenery_checked_at` and `image_checked_at` sit unclaimed through round 8. They are still registered; they are simply not part of what "round N is done" means.
 
@@ -710,7 +710,7 @@ Two things came out of doing it:
 
 **Schema.** `20260728220852_add_editorial_checked_at` — `plants.editorial_checked_at timestamptz`, applied to the remote (via MCP, so the local filename was named to match the version it recorded — trap 13). `is_curated` records only the **approvals**; without a separate stamp a row the pass judged and deliberately held back is indistinguishable from one nobody has looked at, so every run would re-judge and re-bill the entire flagged remainder. Registered in `STEP_DEFS` at FAIL level in the same commit, as the registry requires.
 
-**What ran.** `curate-editorial.ts --round 8`, the §3 judgment (image / description / tags) with the bar defined once in `lib/editorial-standard.ts`. Ana's ruling: strict, any unresolved doubt leaves the row `false`.
+**What ran.** `curate-editorial.ts --round 8`, the [the curation layer](architecture.md#curation-layer) judgment (image / description / tags) with the bar defined once in `lib/editorial-standard.ts`. Ana's ruling: strict, any unresolved doubt leaves the row `false`.
 
 Result over 101: **61 approved, 40 held, 57 descriptions rewritten.** Catalog-wide `is_curated` 76 → 137. All 101 stamped, so the remainder is recorded work with a "no" verdict, not a gap.
 
@@ -731,7 +731,7 @@ Result over 101: **61 approved, 40 held, 57 descriptions rewritten.** Catalog-wi
 
 **Filenames reconciled (trap 13).** All three applied via the Supabase MCP, which records its own version, so the local files were renamed to match what the remote actually holds: `20260727120000` → `20260728193759` (diary), `20260728163000` → `20260728193815` (this session's), and the pre-existing `20260728150000` → `20260728114824` (style, drifted since July 28).
 
-**The pass now stamps.** `cross-check-native-region.ts` writes `native_region_checked_at` on every row that reached a decided verdict — including rows that agreed, or `--new-only` could never narrow. **A report-only run now writes to the database**, which is a real change in the script's character: it is operational metadata rather than catalog content, so §20's flags-only rule holds and `check-round-scope` already demotes `*_checked_at` writes to WARN. `no-data` verdicts are deliberately **not** stamped — a failed GBIF lookup must not leave a permanent record of a check that did not happen (trap 1 applied to bookkeeping). A closing warning now names rows stamped with corrections still pending, so an un-applied disagreement can't be skipped by a later sweep.
+**The pass now stamps.** `cross-check-native-region.ts` writes `native_region_checked_at` on every row that reached a decided verdict — including rows that agreed, or `--new-only` could never narrow. **A report-only run now writes to the database**, which is a real change in the script's character: it is operational metadata rather than catalog content, so [the botanical cross-check](architecture.md#botanical-cross-check)'s flags-only rule holds and `check-round-scope` already demotes `*_checked_at` writes to WARN. `no-data` verdicts are deliberately **not** stamped — a failed GBIF lookup must not leave a permanent record of a check that did not happen (trap 1 applied to bookkeeping). A closing warning now names rows stamped with corrections still pending, so an un-applied disagreement can't be skipped by a later sweep.
 
 **Round 8 brought to 96/96, honestly.** The existing round-8 report covered **20 plants, not 101** — it validated the out-of-scope `native_region` rewrites, not the batch. Backfilling stamps from it would have left the round at 20/101 while looking addressed, so the pass was simply re-run for the round's 101 (free: GBIF plus a local geojson, no Claude). Result: 91 match, 5 disagree, 5 no-data. All 5 disagreements applied after review, `Sorbus aucuparia` being the textbook case — WCVP marks its Southeastern U.S.A. range INTRODUCED, exactly the native-vs-introduced conflation this guard exists for.
 
@@ -747,7 +747,7 @@ Result over 101: **61 approved, 40 held, 57 descriptions rewritten.** Catalog-wi
 
 **What bit us:** nothing during the run, but the diary migration is the finding of the session and it was found by accident — the schema-drift check that would have caught it does not exist. A migration file committed to `main` is treated as applied by everyone reading the repo, and nothing verifies that. `supabase/migrations/` and the remote's own list are two homes for one fact, which is the exact pattern the July 28 audit named as the root cause of every regression it traced.
 
-**Deliberately not done:** the ~575-row WCVP tail is untouched — it is now properly stampable, which was the prerequisite. No GBIF taxon-alias table was built: only 1 of the 3 unresolved names gains a WCVP row when resolved to its synonym, and that row is too thin to validate against, so the table would carry more maintenance than evidence. `verify-round`'s hardiness WARN stays a WARN until §27 un-parks, per the standing decision.
+**Deliberately not done:** the ~575-row WCVP tail is untouched — it is now properly stampable, which was the prerequisite. No GBIF taxon-alias table was built: only 1 of the 3 unresolved names gains a WCVP row when resolved to its synonym, and that row is too thin to validate against, so the table would carry more maintenance than evidence. `verify-round`'s hardiness WARN stays a WARN until [hardiness](architecture.md#hardiness) un-parks, per the standing decision.
 
 ### 2026-07-28 — Archive refreshed after the greenery/image passes (and a trap walked into)
 
@@ -759,8 +759,8 @@ Refreshed with `archive-round.ts --round 8`. Verified: `restore-catalog rounds/8
 
 **What bit us — two things, same shape:**
 
-1. **The book-end steps are not part of "the pass is done".** Running a curation script feels finished when its own output looks right. `archive-round` is step 8 of §25 for exactly this reason, and nothing enforces it: no guard fails, no hook fires, because the round directory was committed long ago. `check-round-scope`'s report is the only artifact that would have hinted, and it is not run after a remediation pass.
-2. **A backup taken inside a throwaway worktree dies with the worktree.** `backups/` is gitignored and local, so `git worktree remove --force` took the pre-write backup with it. §25 records the July 27 session coming "within one `git worktree remove`" of destroying the sole copy of the pre-round-8 catalog; this session actually did it. **No data was at risk only by luck** — the 11:21 committed archive happened to predate the writes, so a rollback point survived. **Take the backup in the shared checkout, or archive it before removing the worktree.**
+1. **The book-end steps are not part of "the pass is done".** Running a curation script feels finished when its own output looks right. `archive-round` is step 8 of [the round runbook](architecture.md#round-runbook) for exactly this reason, and nothing enforces it: no guard fails, no hook fires, because the round directory was committed long ago. `check-round-scope`'s report is the only artifact that would have hinted, and it is not run after a remediation pass.
+2. **A backup taken inside a throwaway worktree dies with the worktree.** `backups/` is gitignored and local, so `git worktree remove --force` took the pre-write backup with it. [the round runbook](architecture.md#round-runbook) records the July 27 session coming "within one `git worktree remove`" of destroying the sole copy of the pre-round-8 catalog; this session actually did it. **No data was at risk only by luck** — the 11:21 committed archive happened to predate the writes, so a rollback point survived. **Take the backup in the shared checkout, or archive it before removing the worktree.**
 
 Also lost and regenerated: `reports/image-picks.md`, the 592-plant review report, which lived in the deleted worktree's gitignored `reports/`. Recovered with `pick-plant-images.ts --report-only` and now committed into `rounds/8/reports/` — where it should have gone in the first place.
 
@@ -850,12 +850,12 @@ Closes the open question from the round-8 entry: `cottage` tagged 533 of 595 row
 
 Over round 8 it found **101 out-of-scope writes**, every one since traced:
 
-| what               | count | cause                                                                                           |
-| ------------------ | ----: | ----------------------------------------------------------------------------------------------- |
-| `hardiness_rating` |    76 | `draft-hardiness` backfilling round 7's never-drafted batch (trap 4) — remediation, not a stray |
-| `native_region`    |    20 | the known regeneration overreach (trap 3), now validated — see below                            |
-| `common_name`      |     3 | `fix-round8-names.ts`; 1 self-inflicted collision, 2 pre-existing (trap 12 bit the review here) |
-| pairings           |     2 | `curate-combinations` topping up under-cap plants from the whole roster, by design (§19)        |
+| what               | count | cause                                                                                                                                         |
+| ------------------ | ----: | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `hardiness_rating` |    76 | `draft-hardiness` backfilling round 7's never-drafted batch (trap 4) — remediation, not a stray                                               |
+| `native_region`    |    20 | the known regeneration overreach (trap 3), now validated — see below                                                                          |
+| `common_name`      |     3 | `fix-round8-names.ts`; 1 self-inflicted collision, 2 pre-existing (trap 12 bit the review here)                                               |
+| pairings           |     2 | `curate-combinations` topping up under-cap plants from the whole roster, by design ([plant combinations](architecture.md#plant-combinations)) |
 
 All waived in `rounds/8/scope-allow.json`, each entry carrying its cause, so round 8 exits clean and the next round starts from a green baseline instead of a permanently red check. **Exactly one of the 101 was a genuine mistake** — the `native_region` overreach that started this.
 
@@ -891,7 +891,7 @@ All seven pipeline steps confirmed complete for the round's 101 plants via `veri
 
 - `is_curated` left `false` on all 101 — the name work is mechanical, the voice pass is Ana's
 - guard stamps on the older 494 not backfilled (trap 2)
-- image pass not run — 13 plants have no image, 44 rows on placeholder; §30/§31 is a separate Batch API flow
+- image pass not run — 13 plants have no image, 44 rows on placeholder; [the hero image pass](architecture.md#hero-images)/[Wikimedia heroes and attribution](architecture.md#wikimedia-attribution) is a separate Batch API flow
 - `cottage` now tags 533 of 595 rows, behaving as a default rather than a signal — curation-prompt question, open
 
 ---

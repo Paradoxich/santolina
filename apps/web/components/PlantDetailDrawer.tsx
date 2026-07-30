@@ -188,7 +188,7 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
    * docs/architecture.md for why this drawer (the species) never mutates
    * the owned instance, only links to the page that does. "Add to garden"
    * and "Move to growing" have to stay distinct labels rather than one
-   * button always saying the same thing — see docs/architecture.md §14.
+   * button always saying the same thing — see docs/architecture.md#transition-labels.
    */
   const handleSecondaryAction = async () => {
     setActionError(null)

@@ -3,7 +3,7 @@
 // Reads/writes to palette_plants run through the session client, scoped to the
 // signed-in user's garden. RLS (`palette_plants` -> `gardens.user_id = auth.uid()`)
 // enforces ownership; the explicit garden_id filters are kept for correctness
-// and defense-in-depth. See docs/architecture.md §24.
+// and defense-in-depth. See docs/architecture.md#auth.
 import { requireSessionGarden } from '@/lib/session-garden'
 import type { DbPlant } from '@/lib/plants-db'
 

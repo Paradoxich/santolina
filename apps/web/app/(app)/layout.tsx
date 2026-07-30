@@ -33,7 +33,7 @@ export default async function AppLayout({
   const ctx = await getSessionGardenContext()
   // Belt-and-suspenders with the middleware auth gate: no app UI without a
   // session. First-run gate: a signed-in user whose garden has no location
-  // must set one first — a null location IS the flag (docs/architecture.md §24).
+  // must set one first — a null location IS the flag (docs/architecture.md#auth).
   if (!ctx) redirect('/login')
   if (!ctx.garden?.city) redirect('/welcome')
 

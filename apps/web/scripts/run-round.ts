@@ -7,7 +7,7 @@
  * output, notice something, fix it, run the next. `round-progress` already
  * says what comes next; nothing actually ran it.
  *
- * So this is the runbook as code. The ordered list below IS §25, and having it
+ * So this is the runbook as code. The ordered list below IS docs/architecture.md#round-runbook, and having it
  * in one executable place means the order cannot drift from the prose the way
  * the seasonal-care step did (missing from the runbook entirely, so every
  * plant seeded after Care Tips v2 shipped had no care tip).
@@ -73,7 +73,7 @@ async function main() {
   if (!label) {
     console.error(
       '\nrun-round needs --round <label>.\n\n' +
-        'It runs the whole §25 pipeline for one round. Seed the round first — ' +
+        'It runs the whole docs/architecture.md#round-runbook pipeline for one round. Seed the round first — ' +
         'seeding is where the judgment about which species to add lives, and ' +
         'it is a different script every time.\n'
     )

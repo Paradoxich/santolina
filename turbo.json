@@ -32,6 +32,10 @@
       "cache": false,
       "outputs": []
     },
+    "docs:links": {
+      "cache": false,
+      "outputs": []
+    },
     "tokens:usage": {
       "cache": false,
       "outputs": []

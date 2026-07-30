@@ -12,6 +12,7 @@
     "prepare": "husky",
     "tokens:check": "turbo run tokens:check",
     "runbook:check": "turbo run runbook:check",
+    "docs:links": "turbo run docs:links",
     "tokens:usage": "turbo run tokens:usage"
   },
   "devDependencies": {

@@ -3,7 +3,7 @@
 // Reads/writes on diary_entries run through the session client, scoped to the
 // signed-in user's garden via RLS — same pattern as palette actions. The
 // garden is always resolved from the session, never taken from the client.
-// See docs/architecture.md §24.
+// See docs/architecture.md#auth.
 import { requireSessionGarden } from '@/lib/session-garden'
 import type { DiaryEventType } from '@/lib/diary-events'
 import {
