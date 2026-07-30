@@ -38,10 +38,13 @@ cd apps/web && pnpm round:progress --round <n>  # what a round still owes
 
 ## 2026-07-30 — session/2026-07-30-migration-drift
 
-**In flight:** nothing uncommitted. Trap 14's migration-drift check shipped
-(`pnpm migrations:check`, CI job `migration drift (main only)`); reasoning lives
-in `docs/database-log.md` trap 14. The four UI sessions that had been living in
-this file moved to `docs/architecture.md` §32/§33/§34/§35 and `DESIGN_SYSTEM.md`.
+**In flight: nothing.** Merged as [PR #150](https://github.com/Paradoxich/santolina/pull/150)
+(`73c96f8`); worktree removed, branch deleted, `../santolina-explore-ranking` and
+its dev server on :3000 cleaned up too. Trap 14's migration-drift check shipped
+(`pnpm migrations:check`, CI job `migration drift (main only)`) and **its first
+real run on main passed** — reasoning lives in `docs/database-log.md` trap 14. The
+four UI sessions that had been living in this file moved to `docs/architecture.md`
+§32/§33/§34/§35 and `DESIGN_SYSTEM.md`.
 
 **Next steps, in order:**
 

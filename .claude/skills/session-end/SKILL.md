@@ -78,19 +78,32 @@ Ask me explicitly, presenting the summary from step 2:
 
 ## 5. Write the handoff
 
-Update `.claude/handoff.md` at the repo root **on main** (edit it in the main checkout; if the session branch was left unmerged, commit only this file to main). Prepend a new entry at the top, keeping previous entries below:
+Update `.claude/handoff.md` at the repo root **on main** (edit it in the main checkout; if the session branch was left unmerged, commit only this file to main).
 
-```markdown
-## <YYYY-MM-DD> — session/<name>
+**REPLACE the previous session's entry — do not prepend to it.** The file holds
+the current session only, and its own header states the format; follow that
+rather than a copy of it kept here. This used to say "prepend, keeping previous
+entries below", which is how it reached **785 lines in two days** while
+instructing readers to read only the top entry. Roughly 89% of it was text nobody
+was told to read, and it got read anyway by grep, stripped of the date that made
+it safe — the mechanism behind a false CI-secrets claim reaching Ana four times.
 
-**Status:** merged to main | left on branch (waiting for: <reason>)
-**Done:** <2–4 bullets of what actually changed>
-**Decisions made:** <any product/design/tech decisions taken this session, one line each>
-**Next steps:** <concrete, ordered — what the next session should pick up first>
-**Open questions:** <anything unresolved that needs the user's input>
-```
+So before writing, ask what actually belongs here. Two things do:
 
-Keep it tight — the next session reads this cold, so write for that reader.
+1. **In-flight state** — what is uncommitted, undecided, or half-done. The gap
+   between intent and artifact, which no command and no doc can report.
+2. **Next steps, with the reasoning for their order.**
+
+Everything else has a better home, and putting it here is what makes the file
+grow: durable pipeline/data reasoning → `docs/database-log.md`; product and
+structural decisions → `docs/architecture.md`; tokens and visual rules →
+`DESIGN_SYSTEM.md`; backlog → the Notion **Build Backlog**; what changed and when
+→ `git log`. **A decision one file owns belongs in that file's comments, not in a
+doc** — if you find yourself paraphrasing a code comment, stop and link to it.
+
+Fold any still-open next step from the entry you are replacing into your own, so
+nothing is dropped. If the previous entry holds durable reasoning that never made
+it into the docs above, move it there rather than carrying it forward.
 
 ## 6. Final check
 
