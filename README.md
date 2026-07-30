@@ -8,7 +8,7 @@ An AI-native garden planning platform that combines horticultural knowledge, str
 
 ## Overview
 
-Santolina helps beginner to intermediate gardeners design and manage ornamental gardens. Users describe their conditions and style preferences and get a curated plant palette with seasonal guidance.
+Santolina helps beginner to intermediate gardeners manage a small ornamental garden: browse a curated plant catalog, keep a palette of what you are growing and planning, and log dated notes on a plant with seasonal care tips.
 
 The app runs entirely on Supabase: magic-link and Google auth, row-level security on every user-owned table, and private photo storage behind signed URLs.
 

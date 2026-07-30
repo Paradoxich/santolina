@@ -2,9 +2,9 @@
 
 ## What this project is
 
-Santolina is a garden planning and management web app that helps beginner gardeners design beautiful gardens. Users describe their garden conditions and style preference, and get a curated, visual plant palette with seasonal guidance.
+Santolina is a garden app for beginner gardeners with a small ornamental garden. It does three things today: browse a curated plant catalog, keep a palette of what you are growing and planning, and log dated notes on a plant with seasonal care tips.
 
-The project also extracts an open source UI framework called Paradox UI (`@paradoxui`) from the product as it is built.
+The project also extracts an open source design system, Paradox UI (`@paradoxui`), from the product as it is built.
 
 ---
 
@@ -50,7 +50,7 @@ Full UI-building guidance — tokens, typography, styling patterns, component re
 - Pure CSS custom properties in `index.css`
 - Zero dependencies — no React, no Tailwind
 - Consumed by `/packages/ui` and `/apps/web` via Tailwind config
-- Values are placeholders until real design tokens arrive from Figma
+- Values are final (OKLCH-derived sage/fern/honey/brick ramps); each shipped step is annotated in `index.css`
 
 ### `@paradoxui/ui` — `/packages/ui`
 
@@ -65,7 +65,6 @@ Full UI-building guidance — tokens, typography, styling patterns, component re
 - Framer Motion for animations
 - Zustand — installed but not yet used; reserved for future shared client state (see Code conventions)
 - Supabase for database, auth, storage
-- Vercel AI SDK for agent layer
 - Deployed on Vercel
 
 ---
@@ -103,12 +102,12 @@ Seven tables. All IDs are UUIDs. Row-level security required on all user-owned t
 - `users` — extends Supabase auth.users; created (with an empty garden) by the `handle_new_user` trigger on signup
 - `gardens` — garden profile (location + lat/lon, space type, sun, style, size). One per user in v1; only location is populated until the onboarding wizard ships.
 - `plants` — shared plant catalog cached from the Trefle API, enriched by an AI curation pass. Public read, service role write.
-- `palette_plants` — join table between gardens and plants. User's palette. Includes status (planned/planted) and source (generated/manual/existing). The app only moves plants between planned and planted; a legacy `considering` status was dropped from the check constraint July 2026 (see [the palette write path](docs/architecture.md#palette-write-path)).
+- `palette_plants` — join table between gardens and plants. User's palette. Includes status (planned/planted) and source. The check constraint allows `generated`, but nothing writes it — the app only produces `manual` and `existing`. The app only moves plants between planned and planted; a legacy `considering` status was dropped from the check constraint July 2026 (see [the palette write path](docs/architecture.md#palette-write-path)).
 - `plant_combinations` — which plants work well together. Public read, service role write. Populated by `apps/web/scripts/curate-combinations.ts` (see [plant combinations](docs/curation.md#plant-combinations)).
-- `agent_sessions` — rolling agent context summary per garden.
+- `agent_sessions` — reserved for the deferred agent. Nothing reads or writes it.
 - `diary_entries` — user's dated notes and photos. Keyed by garden + plant (not the palette row), so a plant's history survives being removed from the palette; `plant_id` is nullable and a null means a garden-level entry (weather, first frost). User-owned (RLS on garden ownership); photos live in the private `diary-photos` storage bucket (garden-ownership policies, signed-URL reads). See [diary identity](docs/architecture.md#diary-identity) and [private diary photos](docs/architecture.md#diary-photos-private).
 
-Full schema is documented in Notion. Never store passwords — Supabase auth handles that.
+`supabase/migrations/` is the schema. Never store passwords — Supabase auth handles that.
 
 **If you are working on the plant catalog — seeding, curation, the guards, a round — read [`docs/curation.md`](docs/curation.md) first**, then [`docs/database-log.md`](docs/database-log.md) for the traps. That is the whole pipeline in one place; `docs/architecture.md` covers everything else.
 
@@ -152,25 +151,24 @@ Never commit `.env.local`. Never expose service role key to the client.
 - **Ornamental-first, not ornamental-only** — the vision is "a small home garden I want to be beautiful," not farm management. Herbs and a few edibles are welcome; dedicated edible-growing features are a later phase.
 - **Accounts gate the whole app, with a demo way in** — magic link (default) + Google OAuth, no passwords anywhere, plus an anonymous "look around" demo (`POST /auth/demo`) that seeds a temporary garden and converts in place to a real account. Demo-ness is `auth.users.is_anonymous` and nothing else; unconverted accounts are purged by cron after 7 days. Middleware redirects unauthenticated requests to `/login`; only the landing page, `/login`, `/auth/*` and `/design-system` stay public. A garden is auto-created on signup by trigger, never "set up." See [Accounts](docs/architecture.md#auth).
 - **Onboarding wizard deferred, location step is not** — the 5-step wizard (space type, sun, style, size) stays post-test, but location is collected in a required first-run step (`/welcome`, gated on null garden location) because the entire climate layer depends on it. The one deliberate exception to never-forced inputs ([the auth cutover](docs/architecture.md#auth)).
-- **Logging is in scope for the test version** — the Diary is the baseline "memory" of a user's plants. Still never required, never pushed.
-- **Agent = invisible wiring + summonable sidekick** — it quietly powers seasonal logic, memory, and recommendations, and never pops up uninvited. But it does have a visible entry point (sidebar "Agent ⌘K" button; chat icons in the plant/diary drawers open plant-scoped conversations) and, once built, can take or surface actions you discuss with it (e.g. add a plant to Planned). Exact chat behavior is not fully decided. _Deferred post-test — see scope below._
-- **Profile changes never override palette** — system suggests, user decides.
+- **Logging is in scope for the test version** — dated notes are the baseline "memory" of a user's plants. Still never required, never pushed.
 
 ---
 
 ## Scope — phased rollout
 
-Scope changed during design from the original five-feature plan. Current phase is a test version that validates the core garden-tracking loop before investing in onboarding and the agent layer.
+The current phase is a test version that validates the core garden-tracking loop before investing in onboarding or an agent layer. The nav is Overview / My Plants / Explore / Reflections.
 
 **Test version (current phase):**
 
-1. Dashboard
-2. Plant Library / Explore
-3. My Garden / Palette (growing + planned)
-4. Diary
-5. Auth + account settings — pulled forward from post-test in July 2026 (magic link + Google, full-app gate, required location step; see [the auth cutover](docs/architecture.md#auth))
+1. Overview — the dashboard
+2. Explore — the plant catalog
+3. My Plants — the palette, growing and planned, with each plant's own page
+4. Notes — dated entries on a plant page or on the garden; there is no Diary destination
+5. Auth + account settings — magic link, Google, an anonymous demo, a full-app gate and a required location step ([Accounts](docs/architecture.md#auth))
+6. Reflections — in the nav, currently an empty state
 
-**Deferred to post-test (expected a few weeks out):**
+**Deferred to post-test:**
 
 - Garden Profile / onboarding wizard (space type, sun, style, size — auth and the location step already shipped, see above)
 - The Agent
@@ -211,7 +209,7 @@ Everything else is deferred. Do not build edible growing or multiple gardens in 
 ## Project links
 
 - Product: santolina.app
-- Framework: paradoxui.com
-- npm: @paradoxui/tokens, @paradoxui/ui
+- Framework: [paradoxich.github.io/paradoxui](https://paradoxich.github.io/paradoxui) (Storybook)
+- npm: nothing published yet — both packages are `private: true`
 - GitHub: santolina (app), paradoxui (framework)
 - Backlog / roadmap: the Notion **Build Backlog** is the single source of truth (there is no in-repo backlog). Design/architecture rationale still lives in `docs/architecture.md`.
