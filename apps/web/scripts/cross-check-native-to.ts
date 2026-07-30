@@ -8,11 +8,16 @@
  * species labelled South America, etc.).
  *
  * Two independent signals are weighed against the stored phrase:
- *   1. GBIF / WCVP native distribution, fetched live by scientific name — an
- *      external authority, not our own data. Introduced range is filtered out
- *      (WCVP tags it "[I]"); only native regions are kept.
- *   2. Claude's own knowledge of the species (it is NOT shown the GBIF data as
+ *   1. WCVP's native distribution (Kew's World Checklist, read through GBIF) —
+ *      an external authority, not our own data. Introduced range is dropped, so
+ *      only native localities are kept. The lookup, its guards and its cache
+ *      are shared with cross-check-native-region via scripts/wcvp-lookup.ts;
+ *      read that header before changing anything about the evidence here.
+ *   2. Claude's own knowledge of the species (it is NOT shown the WCVP data as
  *      gospel — it reconciles both, and the raw Trefle list when available).
+ * When WCVP has nothing, the prompt says so as missing evidence rather than as
+ * an empty native range, and there is no lower-quality fallback source: a
+ * `NATIVE` marker from some other checklist is not Kew's opinion (trap 15).
  * Claude returns the native continents, the continents our phrase implies, and
  * a verdict. A code-level backstop forces "gross" whenever those continent sets
  * are disjoint, so the model can't wave through a cross-continent miss.
@@ -51,6 +56,14 @@ import {
 import { getAnthropicClient, CURATION_MODEL } from '../lib/anthropic-client'
 import { fetchAllRows } from '../lib/paginate'
 import { readRoundManifest } from './round-manifest'
+// One guarded, cached GBIF/WCVP lookup, shared with cross-check-native-region.
+import {
+  loadCache,
+  lookupSpecies,
+  noEvidenceReason,
+  wcvpNativeLocalities,
+  type CachedSpecies,
+} from './wcvp-lookup'
 
 // ---------------------------------------------------------------------------
 // Config
@@ -58,8 +71,6 @@ import { readRoundManifest } from './round-manifest'
 
 // 2s between Claude calls — same pacing as curate-plants.ts / cross-check-plants.ts
 const INTER_PLANT_DELAY_MS = 2000
-// Be polite to the free GBIF API between lookups.
-const GBIF_DELAY_MS = 200
 
 const REPORTS_DIR = join(process.cwd(), 'reports')
 const JSON_OUT = join(REPORTS_DIR, 'native-to-crosscheck.json')
@@ -160,72 +171,40 @@ function parseLimit(): number | null {
 }
 
 // ---------------------------------------------------------------------------
-// GBIF — independent native distribution, keyed by scientific name
+// WCVP — independent native distribution, keyed by scientific name
 // ---------------------------------------------------------------------------
 
-async function fetchJson(url: string): Promise<any | null> {
-  try {
-    const res = await fetch(url, {
-      headers: { 'User-Agent': 'santolina-crosscheck' },
-    })
-    if (!res.ok) return null
-    return await res.json()
-  } catch {
-    return null
-  }
-}
-
 /**
- * Native regions for a species, filtering out introduced range.
- * Tiered by source reliability:
- *   wcvp        — the authoritative WCVP record; introduced regions carry "[I]"
- *                 markers, so native = the unmarked segments. Best signal.
- *   native-recs — no WCVP record; fall back to records explicitly NATIVE.
- *   weak        — neither; keep anything not tagged introduced (leaky, low trust).
+ * WCVP's native localities for a species, via the shared lookup.
+ *
+ * THIS USED TO BE ITS OWN LOOKUP, and it was the weaker of the two the pipeline
+ * ran (see scripts/wcvp-lookup.ts for the whole story). Three things changed
+ * when it moved onto the shared one, and each closes a recorded trap:
+ *
+ *   · `strict=true` plus a species-rank guard, so an unknown binomial fails
+ *     instead of resolving to its genus and answering for 41 regions (trap 11).
+ *   · rows filtered to `source === WCVP_SOURCE`. The old code accepted any row
+ *     GBIF returned, so a `NATIVE` marker from the World Register of Marine
+ *     Species read as Kew's opinion (trap 15). Its two fallback tiers
+ *     ("native-recs", "weak") were exactly that contamination, handed to Claude
+ *     labelled as an authority — worse than no evidence, because the prompt
+ *     presented it as the independent signal.
+ *   · the committed cache, so this and cross-check-native-region pay GBIF once
+ *     between them rather than once each.
+ *
+ * Dropping the fallback tiers means fewer species carry evidence here. That is
+ * the intended direction: `tier` now says WHY it is missing, and the prompt
+ * states the absence as missing evidence rather than as an empty native range.
+ * A failed or unmatched lookup must never read as "native nowhere" (trap 1).
  */
-async function gbifNativeRegions(
-  sci: string
+async function wcvpNativeSignal(
+  sci: string,
+  cache: Record<string, CachedSpecies>
 ): Promise<{ tier: string; regions: string[] }> {
-  const match = await fetchJson(
-    `https://api.gbif.org/v1/species/match?name=${encodeURIComponent(sci)}`
-  )
-  const key = match?.usageKey
-  if (!key) return { tier: 'no-match', regions: [] }
-
-  const dist = await fetchJson(
-    `https://api.gbif.org/v1/species/${key}/distributions?limit=400`
-  )
-  const records: any[] = dist?.results ?? []
-  const dedup = (xs: string[]) => [
-    ...new Set(xs.map((s) => s.trim()).filter(Boolean)),
-  ]
-
-  const wcvp = records.filter((r) => (r.locality ?? '').includes('[I]'))
-  if (wcvp.length) {
-    const rec = wcvp.reduce((a, b) =>
-      (b.locality ?? '').length > (a.locality ?? '').length ? b : a
-    )
-    const native = String(rec.locality)
-      .split(';')
-      .filter((seg) => !/\[i\]|\[c\]/i.test(seg))
-    return { tier: 'wcvp', regions: dedup(native) }
-  }
-
-  const explicit = records
-    .filter(
-      (r) => String(r.establishmentMeans ?? '').toUpperCase() === 'NATIVE'
-    )
-    .map((r) => r.locality ?? r.country ?? '')
-  if (explicit.length) return { tier: 'native-recs', regions: dedup(explicit) }
-
-  const introduced = ['INTRODUCED', 'NATURALISED', 'INVASIVE', 'MANAGED']
-  const weak = records
-    .filter(
-      (r) =>
-        !introduced.includes(String(r.establishmentMeans ?? '').toUpperCase())
-    )
-    .map((r) => r.locality ?? r.country ?? '')
-  return { tier: 'weak', regions: dedup(weak) }
+  const species = await lookupSpecies(sci, cache)
+  const missing = noEvidenceReason(species)
+  if (missing) return { tier: missing, regions: [] }
+  return { tier: 'wcvp', regions: wcvpNativeLocalities(species).native }
 }
 
 // ---------------------------------------------------------------------------
@@ -245,9 +224,13 @@ function buildPrompt(
     .filter(Boolean)
     .join('\n')
 
+  // Absence of evidence is stated AS absence, with its reason. "(none
+  // returned)" read as "this plant is native nowhere", which is trap 1 wearing
+  // a prompt: a lookup that failed or never matched must not be presented as a
+  // finding about the species.
   const gbifLine = gbif.regions.length
-    ? `GBIF/WCVP native regions (introduced range removed; source tier "${gbif.tier}"):\n${gbif.regions.join(', ').slice(0, 1500)}`
-    : 'GBIF/WCVP native regions: (none returned)'
+    ? `WCVP native distribution (Kew's World Checklist, via GBIF; introduced range removed):\n${gbif.regions.join(', ').slice(0, 1500)}`
+    : `WCVP native distribution: NOT AVAILABLE — ${gbif.tier}. This is missing evidence, NOT evidence that the plant has no native range. Judge from your own knowledge of the species and lower your confidence accordingly.`
 
   const rawLine = raw
     ? `Raw Trefle distribution we originally imported (may contain outdated names): ${raw.slice(0, 800)}`
@@ -512,6 +495,9 @@ async function generate(
   if (limit !== null) plants = plants.slice(0, limit)
 
   const rawByID = loadRawSnapshot()
+  // Loaded once and passed down: lookupSpecies mutates and persists it, so a
+  // species this round already checked against WCVP costs no GBIF call here.
+  const wcvpCache = loadCache()
   console.log(`Cross-checking native_to for ${plants.length} plants...\n`)
   const results: Result[] = []
 
@@ -519,9 +505,8 @@ async function generate(
     const plant = plants[i]!
     try {
       const gbif = plant.scientific_name
-        ? await gbifNativeRegions(plant.scientific_name)
-        : { tier: 'no-name', regions: [] }
-      await sleep(GBIF_DELAY_MS)
+        ? await wcvpNativeSignal(plant.scientific_name, wcvpCache)
+        : { tier: 'row has no scientific_name', regions: [] }
 
       const j = await judge(plant, gbif, rawByID.get(plant.id) ?? null)
       const verdict = reconcileVerdict(j)

@@ -52,41 +52,32 @@
  */
 
 import { mkdirSync, writeFileSync, readFileSync, existsSync } from 'node:fs'
-import { dirname, join } from 'node:path'
-import { gunzipSync, gzipSync } from 'node:zlib'
+import { join } from 'node:path'
 
 import { MANUAL_OVERRIDES } from '../lib/native-region-overrides'
 import { fetchAllRows } from '../lib/paginate'
 import { getSupabaseAdmin } from '../lib/supabase-admin'
 import { requireScope, scopeIds, describeScope } from './scope'
+// The lookup, its guards and its committed cache live in scripts/wcvp-lookup.ts
+// so that this guard and cross-check-native-to share one answer instead of
+// asking GBIF the same question twice per round. See that file's header.
+import {
+  loadCache,
+  lookupSpecies,
+  noEvidenceReason,
+  wcvpRows,
+  type CachedSpecies,
+} from './wcvp-lookup'
 
 const REPORTS_DIR = join(process.cwd(), 'reports')
 const WGSRPD_GEOJSON = join(REPORTS_DIR, 'level3.geojson')
 
-/**
- * The GBIF lookup cache is COMMITTED, gzipped, and is not a report.
- *
- * It used to live in gitignored `reports/`, which made it a 14MB file on one
- * laptop that `git worktree remove` deletes without asking — the same shape as
- * the July 28 trap where a backup died with its throwaway worktree. Losing it
- * is not a small thing: it is ~500 species of rate-limited GBIF lookups at
- * GBIF_DELAY_MS apiece, and re-earning it is exactly the kind of long
- * rate-limited fetch loop that produced trap 1 in the first place.
- *
- * It is also not per-round provenance, so `rounds/<n>/` is the wrong home: it
- * is reference data every later round reads and appends to. Gzipped because
- * 14MB of pretty-printed JSON is 1MB compressed, the same trade the catalog
- * archives already make.
- */
-const CACHE_PATH = join(process.cwd(), 'reference', 'wcvp-native-cache.json.gz')
 const JSON_OUT = join(REPORTS_DIR, 'native-region-crosscheck.json')
 const MD_OUT = join(REPORTS_DIR, 'native-region-crosscheck.md')
 
-const GBIF_DELAY_MS = 400
 // Rows per stamping update — the whole batch is decided before anything is
 // written, so the stamps go out in chunks rather than one call per row.
 const STAMP_CHUNK = 100
-const WCVP_SOURCE = 'The World Checklist of Vascular Plants (WCVP)'
 
 // Same table as regenerate-native-region.ts — the 52 WGSRPD Level 2 regions.
 const L2_NAMES: Record<number, string> = {
@@ -192,18 +183,6 @@ interface PlantRow {
   native_region: string[] | null
 }
 
-interface DistRow {
-  locality: string | null
-  source: string | null
-  establishmentMeans: string | null
-}
-
-interface CachedSpecies {
-  lookupKey: number | null
-  matchType: string | null
-  rows: DistRow[]
-}
-
 interface Finding {
   id: string
   common_name: string
@@ -259,103 +238,6 @@ function loadL3NameMap(): Map<string, number> {
 }
 
 // ---------------------------------------------------------------------------
-// GBIF
-// ---------------------------------------------------------------------------
-
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
-
-async function gbifJson<T>(url: string): Promise<T> {
-  for (let attempt = 0; ; attempt++) {
-    try {
-      const res = await fetch(url, {
-        headers: { 'User-Agent': 'santolina-catalog-check/1.0' },
-      })
-      if (res.status === 429 || res.status >= 500)
-        throw new Error(`HTTP ${res.status}`)
-      if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`)
-      return (await res.json()) as T
-    } catch (err) {
-      // Retry transient failures, then give up loudly. A species that cannot be
-      // fetched must surface as no-data, never as an empty native range.
-      if (attempt >= 4) throw err
-      await sleep(1000 * (attempt + 1))
-    }
-  }
-}
-
-const SPECIES_RANKS = new Set(['SPECIES', 'SUBSPECIES', 'VARIETY', 'FORM'])
-
-async function fetchSpecies(scientificName: string): Promise<CachedSpecies> {
-  const match = await gbifJson<{
-    usageKey?: number
-    acceptedUsageKey?: number
-    matchType?: string
-    rank?: string
-    canonicalName?: string
-  }>(
-    `https://api.gbif.org/v1/species/match?strict=true&name=${encodeURIComponent(scientificName)}`
-  )
-
-  // GBIF answers an unknown binomial by walking UP the taxonomy rather than
-  // failing: "Pennisetum alopecuroides" comes back as the genus Cenchrus with
-  // matchType HIGHERRANK. Accepting that fetches the distribution of an entire
-  // genus and reads as a species native to forty regions. Same trap the seed
-  // scripts already guard (§25: never the top name-search hit) — so only an
-  // EXACT match at species rank, on the name we actually asked for, counts.
-  // GBIF drops the hybrid marker from canonicalName ("Mentha × piperita" comes
-  // back as "Mentha piperita"), so compare with it normalised away rather than
-  // rejecting every hybrid in the catalog as unmatched.
-  const normalise = (name: string) =>
-    name
-      .toLowerCase()
-      .replace(/\s*[×x]\s+/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim()
-  const exact =
-    match.matchType === 'EXACT' &&
-    SPECIES_RANKS.has(match.rank ?? '') &&
-    normalise(match.canonicalName ?? '') === normalise(scientificName)
-  if (!exact)
-    return {
-      lookupKey: null,
-      matchType: `${match.matchType ?? 'NONE'} → ${match.canonicalName ?? '?'} (${match.rank ?? '?'})`,
-      rows: [],
-    }
-
-  // A synonym's distribution hangs off the accepted taxon, not the synonym.
-  const key = match.acceptedUsageKey ?? match.usageKey ?? null
-  if (!key)
-    return { lookupKey: null, matchType: match.matchType ?? null, rows: [] }
-
-  const rows: DistRow[] = []
-  for (let offset = 0; ; offset += 1000) {
-    const page = await gbifJson<{ results: DistRow[]; endOfRecords: boolean }>(
-      `https://api.gbif.org/v1/species/${key}/distributions?limit=1000&offset=${offset}`
-    )
-    rows.push(...page.results)
-    if (page.endOfRecords) break
-  }
-  return { lookupKey: key, matchType: match.matchType ?? null, rows }
-}
-
-function loadCache(): Record<string, CachedSpecies> {
-  if (!existsSync(CACHE_PATH)) return {}
-  const json = gunzipSync(readFileSync(CACHE_PATH)).toString('utf8')
-  return JSON.parse(json) as Record<string, CachedSpecies>
-}
-
-/**
- * Written after every fetch rather than once at the end, which is the existing
- * behaviour and worth keeping: an interrupted run costs nothing, and the whole
- * value of the file is that a lookup is paid for once. Gzipping ~14MB on each
- * write is cheap next to the GBIF_DELAY_MS pause that follows it anyway.
- */
-function saveCache(cache: Record<string, CachedSpecies>): void {
-  mkdirSync(dirname(CACHE_PATH), { recursive: true })
-  writeFileSync(CACHE_PATH, gzipSync(JSON.stringify(cache, null, 2)))
-}
-
-// ---------------------------------------------------------------------------
 // Comparison
 // ---------------------------------------------------------------------------
 
@@ -376,8 +258,9 @@ function compare(
     stored,
   }
 
-  const wcvpRows = species.rows.filter((r) => r.source === WCVP_SOURCE)
-  if (!wcvpRows.length)
+  const rows = wcvpRows(species)
+  const noEvidence = noEvidenceReason(species)
+  if (noEvidence)
     return {
       ...base,
       wcvp_native: [],
@@ -388,9 +271,7 @@ function compare(
       extra_are_introduced: [],
       thin_evidence: [],
       verdict: 'no-data',
-      note: species.lookupKey
-        ? 'GBIF has the taxon but carries no WCVP distribution for it'
-        : `no exact species-rank GBIF match (${species.matchType ?? 'none'})`,
+      note: noEvidence,
     }
 
   const nativeL2 = new Set<string>()
@@ -399,7 +280,7 @@ function compare(
   let nativeL3Count = 0
   const unmapped: string[] = []
 
-  for (const row of wcvpRows) {
+  for (const row of rows) {
     const locality = (row.locality ?? '').trim()
     if (!locality) continue
     const canonical = WCVP_NAME_ALIASES[locality] ?? locality
@@ -655,13 +536,7 @@ async function main() {
       console.log(`  skip ${plant.common_name} — no scientific_name`)
       continue
     }
-    let species = cache[plant.scientific_name]
-    if (!species) {
-      species = await fetchSpecies(plant.scientific_name)
-      cache[plant.scientific_name] = species
-      saveCache(cache)
-      await sleep(GBIF_DELAY_MS)
-    }
+    const species = await lookupSpecies(plant.scientific_name, cache)
     findings.push(compare(plant, species, l3ToL2))
   }
 
