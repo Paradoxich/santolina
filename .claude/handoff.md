@@ -61,11 +61,20 @@ product does. Rules live in the files they govern; nothing durable is only here.
    authority feeding `native_region` mechanically; `native_to` stays hand-owned
    copy that gets _checked_ against it. Not a round fix — `native_to` is
    voice-passed copy that must not become machine-derived.
-3. **A local Supabase stack, before the next migration.** `supabase/` holds only
-   `migrations/`; there is no `config.toml`, so migrations and RLS have never run
-   anywhere but production. The storage-policy bug where a bare `name` resolved
-   to `gardens.name` is exactly the class `supabase start` catches, and this was
-   already named as the real gap when staging was ruled out for catalog data.
+3. **A local Supabase stack — trigger: the next migration, not before.** Nothing
+   is blocked on it today; the rule (agreed with Ana July 30) is that **no new
+   migration is applied until the local stack exists and has replayed the
+   existing 35 first**, and CLI-driven migrations (`supabase db push`) lands in
+   that same session with nothing else in it — it is the only work that touches
+   prod schema. Why it matters: `supabase/` holds only `migrations/`, no
+   `config.toml`, so migrations and RLS have only ever run in production, and a
+   wrong RLS policy fails silently (the bare-`name` → `gardens.name` storage bug
+   is the class this catches). The stack is also the free restore target the db
+   backup has never been rehearsed against. Disk was the blocker, not RAM: 11 GB
+   free July 28, 20 GB free July 30 — the lighter
+   `supabase start -x studio,realtime,storage-api,imgproxy,edge-runtime,inbucket,vector,logflare`
+   (≈2 GB, Postgres + auth + PostgREST) fits; cap Docker's disk allowance so the
+   VM can't balloon.
 
 **Open question, needs Ana:** `README.md`'s opening still claims "intelligent
 recommendations". The user-flow sentence under it was corrected this session; the
