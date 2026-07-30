@@ -212,7 +212,7 @@ This is trap 7 in different clothes: **an external name lookup that guesses is m
 
 **The durable rule:** the remote's migration list is the truth about what is applied; `supabase/migrations/` is the truth about what was written. Compare them before assuming a schema change is live, and especially after merging a PR that carries one. This is trap 13's sibling — same two-homes-for-one-fact shape, one direction further out.
 
-**Not yet fixed.** The check is mechanical (list migrations, compare against the directory modulo trap-13 renames) and belongs in CI once the Supabase secrets exist, but nothing enforces it today.
+**Not yet fixed, and NOT blocked.** The check is mechanical: list the remote migrations, compare against the directory modulo trap-13 renames. This paragraph used to end "belongs in CI once the Supabase secrets exist" — **both secrets have existed since 2026-07-28** (`gh secret list`), and the `catalog-state staleness (main only)` job already uses them on every push to main. The only thing between this and a CI gate is somebody writing it. Nothing enforces it today; that is a choice, not a dependency. See trap 17 for why that sentence outlived the thing it described.
 
 ### 15. The WCVP cache mixes GBIF checklists, so a raw `NATIVE` marker is not WCVP — OPEN by design
 
@@ -227,6 +227,22 @@ This is trap 7 in different clothes: **an external name lookup that guesses is m
 Found by the round-10 image-holds session on 2026-07-30 and recorded here rather than fixed. `check-round-scope --round 9` returns **120 failures, all "out-of-scope pairing added", all "both plants predate the round"** — they are round 10's `curate-combinations` output. Round 9's window is closed and `cleared_at` works correctly for **plant** writes, because a plant row carries `updated_at` to filter on. **A `plant_combinations` row carries no timestamp**, so there is nothing for the closing edge to compare against, and every later round's pairings fail every earlier closed round permanently. The count only grows.
 
 **So round 9's "0 out-of-scope, window CLOSED" was true when written and can never be reproduced.** Do not read a pairing failure on a closed round as a regression, and do not "fix" it by waiving each pairing — the list grows every round. The real fix is a timestamp on `plant_combinations` (or excluding pairings from a closed round's check entirely), which is a schema change nobody needed yet. Left alone per Ana's 2026-07-29 ruling that the pipeline is finished and the round run's own output is the whole backlog.
+
+### 17. A written-down blocker outlives the thing that blocked it — FIXED for the CI-secrets case, expect the shape
+
+**"CI has no Supabase secrets" was reported to Ana four separate times after it stopped being true.** Both secrets were added **2026-07-28 21:43**; `gh secret list` has answered this in one command ever since. Every telling came from a session that saw `catalog-state staleness: SKIPPED` on a pull request, went looking for the reason, and found this in `ci.yml`:
+
+> Until the two repo secrets exist this job is a clean no-op rather than a red X.
+
+The comment was true when written and nothing made it false out loud. **The actual reason for the skip is `if: github.event_name != 'pull_request'`** — deliberate, so no PR-triggered job can read the service role key — and the job runs for real on the push to main straight after merge.
+
+Three things made it recur, and all three are now closed:
+
+- **A silent skip and a real pass looked identical from outside.** The shell guard printed a notice and `exit 0`, so nobody could tell "no secrets" from "checked, clean". It now **fails** — a missing key means somebody removed it, not that setup is pending.
+- **The status line explained nothing.** The job is named `catalog-state staleness (main only)`, so a PR's SKIPPED now states its own reason. Do not shorten that name.
+- **The stale sentence had copies.** It was in `ci.yml` twice, in trap 14 above, and in `.claude/handoff.md`. Fixing one copy is what "we fixed it" meant the previous times.
+
+**The durable rule, and it generalises past this one claim:** an asserted negative — "X is missing", "that isn't wired up", "we're blocked on Y" — gets **verified with one command before it is repeated**, especially when it is being repeated from a document rather than from a run. This is the same failure as the round-30 `native_region_checked_at` claim (the wcvp-tail session found the stated blocker had shipped two days earlier and had ridden through four later entries) and the same shape as traps 13, 14 and [feedback: docs are not evidence]. A blocker is the most dangerous kind of note to write, because nothing revisits it when the block lifts. **If you write one, name the command that proves it.**
 
 ### 12. A round manifest records names as SEEDED, before the name pass
 
