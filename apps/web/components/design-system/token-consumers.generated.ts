@@ -11,7 +11,6 @@ export const tokenConsumers: Record<string, string[]> = {
     'apps/web/components/AuthOptions.tsx',
     'apps/web/components/design-system/TokenRef.tsx',
     'apps/web/components/design-system/chapters/colors.tsx',
-    'apps/web/components/design-system/chapters/overview.tsx',
     'packages/ui/src/components/SearchField.tsx',
   ],
   '--color-sage-50': [
