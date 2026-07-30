@@ -6,12 +6,12 @@ function Rules() {
     <Panel title="The rules" meta="tiers & naming">
       <ul className="flex flex-col" role="list">
         <ChecklistItem>
-          Grammar: --color-{'{category}'}-{'{role}'}. Roles describe function
-          (surface-card), never location (background-close-button). Location
-          names are allowed in tier 3 only.
+          Grammar: --{'{category}'}-{'{role}'}-{'{variant?}'}-{'{state?}'}.
+          Roles describe function (surface-card), never location
+          (background-close-button). Location names are allowed in tier 3 only.
         </ChecklistItem>
         <ChecklistItem>
-          Tier by vocabulary: primitives are hues (green-600), semantics are
+          Tier by vocabulary: primitives are hues (fern-700), semantics are
           roles (accent), component tokens are components (chip-radius). Raw
           values live in tier 1 only; dark mode will override tier 2 only.
         </ChecklistItem>
@@ -26,8 +26,8 @@ function Rules() {
         </ChecklistItem>
         <ChecklistItem tone="warning">
           Tone vocabulary is positive / warning / critical. “success”, “error”,
-          “caution” and Tailwind stock colors (bg-white, text-black) do not
-          exist — they will not compile.
+          “caution” and Tailwind stock colors (text-black, border-gray-200) do
+          not exist — they will not compile. White is the one stock name kept.
         </ChecklistItem>
       </ul>
     </Panel>
@@ -44,7 +44,7 @@ function Intro() {
         Live reference for Paradox UI tokens and components. This page renders
         straight from <code>@paradoxui/tokens</code> — the code is the source of
         truth, and every value shown here is read from the rendered CSS, so it
-        cannot drift. Taxonomy and rules: <code>docs/token-taxonomy.md</code>.
+        cannot drift. Taxonomy and rules: <code>DESIGN_SYSTEM.md</code>.
       </p>
     </header>
   )
