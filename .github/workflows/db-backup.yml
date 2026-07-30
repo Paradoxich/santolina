@@ -1,0 +1,64 @@
+name: Database backup
+
+# The automated floor under standing rule 10 (docs/database-log.md): a weekly
+# pg_dump of public + auth + storage, uploaded by backup-database.ts to the
+# private db-backups bucket. The runner's local copy evaporates with the job —
+# the bucket copy is the point. Laptop copies (pre-migration runs of
+# `pnpm db:backup`) remain the hedge against losing the Supabase project
+# itself, since the bucket dies with the project.
+#
+# The script prunes bucket copies older than 90 days after each upload, so
+# this never walks into the Free plan's storage cap.
+#
+# Weekly is calibrated to the test phase (mostly demo accounts, ~1.6MB a
+# dump). Bump the cron to daily when the app has real users.
+
+on:
+  schedule:
+    # Mondays 03:12 UTC. Off the top of the hour on purpose — GitHub delays or
+    # drops :00 cron runs under load.
+    - cron: '12 3 * * 1'
+  workflow_dispatch:
+
+jobs:
+  backup:
+    name: pg_dump to db-backups bucket
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # ubuntu-latest ships an older postgresql-client than the server's
+      # Postgres 17, and pg_dump refuses to dump a server newer than itself.
+      # PGDG's own setup script adds the right apt repo.
+      - name: Install postgresql-client-17
+        run: |
+          sudo apt-get -y install postgresql-common
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          sudo apt-get -y install postgresql-client-17
+      - name: Run backup-database.ts
+        env:
+          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SERVICE_ROLE: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        # Fails rather than exiting 0 on a missing secret, same reasoning as
+        # ci.yml's catalog-state job: a silent skip and a real pass look
+        # identical from outside, and a backup job is the worst place for
+        # that — it reads as covered right up until the restore that isn't.
+        run: |
+          if [ -z "$SERVICE_ROLE" ] || [ -z "$DB_URL" ]; then
+            echo "::error::SUPABASE_SERVICE_ROLE_KEY or SUPABASE_DB_URL is not" \
+                 "set, so the weekly database backup DID NOT RUN. All three" \
+                 "secrets have existed since 2026-07-30; a missing one was" \
+                 "removed. Restore it with 'gh secret set <name>' — and run" \
+                 "'gh secret list' before reporting anything about which" \
+                 "secrets exist."
+            exit 1
+          fi
+          printf 'NEXT_PUBLIC_SUPABASE_URL=%s\nSUPABASE_SERVICE_ROLE_KEY=%s\nSUPABASE_DB_URL=%s\n' \
+            "$SUPABASE_URL" "$SERVICE_ROLE" "$DB_URL" > apps/web/.env.local
+          pnpm --filter santolina-web db:backup

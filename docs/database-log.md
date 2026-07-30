@@ -45,6 +45,7 @@ The numbers **in this file are different and must stay written down**: a dated s
 7. **After any schema or request-shape change, run `--limit 3` first.** A green typecheck does not verify a runtime API contract.
 8. **Finish with `verify-round.ts --round <label>`.** Without `--round` it checks that data is _valid_ but not that the pipeline actually _ran_.
 9. **Append an entry here.** `scripts/log-db-session.ts --round <label>` writes the factual part for you.
+10. **The catalog backup is not a database backup.** Rules 1 and 2 cover `plants`, `plant_combinations` and the buckets — nothing else. `users`, `gardens`, `palette_plants`, `diary_entries`, `agent_sessions` and the auth users behind them are covered by `scripts/backup-database.ts` alone (`pnpm db:backup`): one `pg_dump` of `public` + `auth` + `storage` into gitignored `backups/db/` AND the private `db-backups` bucket. On the Free plan this is the only recoverable copy of user data — Supabase's own snapshots cannot be downloaded or restored (rule 1). Run it before every migration and before any bulk write to user-owned tables. Needs `SUPABASE_DB_URL`, the SESSION POOLER string — the direct `db.<ref>` host is IPv6-only on the Free plan and will not resolve from most networks. The dump holds private user data: never commit it, same as `diary-photos` in rule 2. **The automated floor is `.github/workflows/db-backup.yml`** — weekly cron, bucket copy only, pruning bucket dumps older than 90 days; it FAILS loudly on a missing secret. The pre-migration laptop run stays manual and stays required: the bucket dies with the project, the laptop copy does not.
 
 **Rule 9 is enforced, not encouraged.** `.husky/check-db-log.sh` runs on every commit and blocks it if a round directory is committed without an entry naming that round, if a migration is committed without touching this file, or if this file still contains the `TODO —` placeholders the script writes. Git cannot see what you ran against Supabase — only what you commit — so the hook checks the artifacts database work leaves behind, and the honest reading of a green hook is "you recorded something", not "you recorded enough". `--no-verify` exists and is occasionally right (a revert, a docs fixup). It is not the normal path, and whatever you skip is inherited by whoever comes next.
 
@@ -358,6 +359,31 @@ needs the correction _there_, not in a later entry they have no reason to open.
 An **identifier** that has since moved — a renamed migration version, a moved
 path — is just updated. That is a pointer, not a belief, and a dangling pointer
 preserves nothing.
+
+### 2026-07-30 — The five unbacked-up tables get a backup (not a round)
+
+**Branch** `session/2026-07-30-backups` (worktree `santolina-backups`). Not a round; no catalog data written. First database write outside `public`: the `db-backups` bucket.
+
+**Changed**
+
+- New `scripts/backup-database.ts` (`pnpm db:backup`): one custom-format `pg_dump` of `public` + `auth` + `storage` to gitignored `backups/db/<stamp>/`, plus an upload of the same file to a new private `db-backups` bucket. Standing rule 10 added above.
+- `SUPABASE_DB_URL` added to `.env.example` and the CLAUDE.md env list — the session-pooler string; the direct host is IPv6-only on the Free plan. `pg_dump` came from `brew install libpq` (18.4 against server Postgres 17).
+
+**Database**
+
+- Private bucket `db-backups` created (service role, first run of the script).
+- First backup taken: 1,673,522 bytes, rows at that moment — users 8, gardens 8, plants 695, palette_plants 57, plant_combinations 1735, agent_sessions 0, diary_entries 23.
+
+**Not done**
+
+- Restore never rehearsed past `pg_restore --list` — a Free plan has no second project to restore into. The recovery shape is in the script header.
+- ~~No schedule; the run is manual. When it should recur (cron, or a pre-migration hook) was not decided.~~ — decided later the same session: weekly GitHub Actions cron (`.github/workflows/db-backup.yml`, Mondays 03:12 UTC) with 90-day bucket retention; pre-migration runs stay manual. A husky enforcement of rule 10 was rejected — backups are gitignored and machine-local, so git cannot honestly verify one happened.
+- The cron's first real run needs the workflow merged to main and `SUPABASE_DB_URL` set as a repo secret (Ana's command; the classifier stopped the session doing it).
+
+**Verified**
+
+- `pg_restore --list` on the dump shows TABLE DATA for all 7 public tables, `auth.users` + `auth.identities`, and storage metadata.
+- The bucket object exists, `public = false`, byte size identical to the local file (checked in `storage.objects`, not inferred from the upload response).
 
 ### 2026-07-30 — Something watches the migration ledger now (not a round)
 
