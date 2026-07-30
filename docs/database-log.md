@@ -185,6 +185,8 @@ Hand it a binomial it does not know and it climbs the taxonomy rather than retur
 
 This is trap 7 in different clothes: **an external name lookup that guesses is more dangerous than one that fails.** Require `EXACT` at species rank _and_ that the canonical name returned is the one you asked for. Normalise the `×` away first, or every hybrid in the catalog reads as unmatched.
 
+**It was still live in a second script until 2026-07-30, and there it reached a prompt.** `cross-check-native-to.ts` had its own unguarded lookup, so that same grass was handed to Claude as native to 66 regions — Alabama, Algeria, Angola, Argentina — presented as the independent authority the guard weighs our phrase against. The guard against a trap has to be in the shared lookup, not in whichever script the trap was discovered in: both native guards now go through `scripts/wcvp-lookup.ts`.
+
 ### 13. Applying a migration through the API stamps its OWN version — FIXED July 28 2026
 
 `apply_migration` (the Supabase MCP tool / Management API) records the migration under a version it generates, **not** under your local filename. Four migrations had been applied that way, so the remote ledger and `supabase/migrations/` held the same 26 migrations under four different version stamps:
@@ -214,7 +216,9 @@ This is trap 7 in different clothes: **an external name lookup that guesses is m
 
 ### 15. The WCVP cache mixes GBIF checklists, so a raw `NATIVE` marker is not WCVP — OPEN by design
 
-`reports/wcvp-native-cache.json` stores GBIF's whole `species/{key}/distributions` payload, which aggregates **many** checklist datasets. `cross-check-native-region.ts` filters on `r.source === WCVP_SOURCE` and is correct. **A reviewer reading the cache to audit a finding usually does not**, and the unfiltered rows contradict the script convincingly: `Rudbeckia fulgida` carries `Texas — NATIVE` from the **World Register of Marine Species**, and `Asplenium trichomanes` a `Western Cape — NATIVE` row from another list, each appearing to prove the script had wrongly narrowed a range. Three drops were nearly reversed on that evidence on 2026-07-30.
+`reference/wcvp-native-cache.json.gz` stores GBIF's whole `species/{key}/distributions` payload, which aggregates **many** checklist datasets. `cross-check-native-region.ts` filters on `r.source === WCVP_SOURCE` and is correct. **A reviewer reading the cache to audit a finding usually does not**, and the unfiltered rows contradict the script convincingly: `Rudbeckia fulgida` carries `Texas — NATIVE` from the **World Register of Marine Species**, and `Asplenium trichomanes` a `Western Cape — NATIVE` row from another list, each appearing to prove the script had wrongly narrowed a range. Three drops were nearly reversed on that evidence on 2026-07-30.
+
+**A SCRIPT was doing it too, and that half is now fixed (2026-07-30).** `cross-check-native-to.ts` had its own uncached lookup that read any row GBIF returned, so `Rudbeckia fulgida`'s marine-species row went into a Claude prompt labelled as WCVP's opinion. Both guards now share `scripts/wcvp-lookup.ts`, which filters by `source` in one place — so the trap survives only in the form it was written for, a human reading the raw file. It stays OPEN for that reason: the reviewer is the remaining exposure.
 
 **The durable rule: filter the cache by `source` before believing anything in it.** This is trap 11's sibling — both are GBIF answering a narrower question than it appears to, and both are caught only by reading the field that says which answer you got (`matchType`, `source`). Left as-is rather than "fixed" by caching only WCVP rows: the full payload is what makes an upstream disagreement visible at all, and _Arbutus unedo_'s Ireland split was worth seeing.
 
@@ -233,6 +237,50 @@ Found by the round-10 image-holds session on 2026-07-30 and recorded here rather
 ## Sessions
 
 <!-- Newest first. Append with: scripts/log-db-session.ts --round <label> -->
+
+### 2026-07-30 — One WCVP lookup for both native guards, and a rehomed stamp (not a round)
+
+**Branch** `fix/share-wcvp-lookup` (worktree `santolina-wcvp-lookup`, off `main` at `c838931`). No seed, no migration, no AI spend. One catalog write: 100 `style_checked_at` stamps.
+
+Started as a review question — is any step of the round pipeline redundant? — and the answer was **no step, but two joins**. Nothing here was found by reading the runbook; both came out of reading the two guards side by side.
+
+**`cross-check-native-to` and `cross-check-native-region` were asking GBIF the same question twice per round, and the paid half had none of the guards.** Both need "what does Kew's checklist say this species is native to?". native-region used `strict=true`, a species-rank guard, pagination and the committed cache. native-to used none of them, cached nothing, and read **any** row GBIF returned rather than only WCVP's. It is also the half that bills Claude per plant.
+
+The lookup, its cache and both trap guards now live in `scripts/wcvp-lookup.ts`; both guards call it. A species one guard has already fetched this round now costs the other zero GBIF calls.
+
+**What bit us — the old lookup was not merely uncached, it was wrong on every species probed**, including two that are not trap cases. Measured against live GBIF before and after (no DB, no model):
+
+| species                    | OLD                                                                | NEW                                                                    |
+| -------------------------- | ------------------------------------------------------------------ | ---------------------------------------------------------------------- |
+| `Pennisetum alopecuroides` | `weak` tier, **66 regions** — Alabama, Algeria, Angola, Argentina… | no match: `HIGHERRANK → Cenchrus (GENUS)`                              |
+| `Rudbeckia fulgida`        | one unsplit blob                                                   | 16 native localities; **27 non-WCVP `NATIVE` rows discarded**          |
+| `Rosmarinus officinalis`   | `native-recs` tier, **1 region: "Portugal Continental"**           | 19 regions — Albania, Algeria, Baleares, Corse, Cyprus, Egypt, France… |
+| `Mentha × piperita`        | `weak` tier, 40 raw `[c]`-marked locality blobs                    | 24 native, 99 introduced-only                                          |
+
+Trap 11 was live in a prompt: the grass really was handed to Claude as native to 66 regions, labelled as the independent authority. Rosemary is the one worth remembering, because it is an ordinary species nobody would have thought to check — the guard was presenting _"Portugal Continental"_ as WCVP's opinion on a Mediterranean plant.
+
+**The two fallback tiers were the contamination, not a weaker signal.** `native-recs` and `weak` both read non-WCVP rows (trap 15), and the prompt vouched for them as the external evidence. Removed. When WCVP has nothing, the prompt now names the reason and says it is **missing evidence, not an empty native range** — trap 1, in prompt form this time.
+
+**Bounded, but not zero.** The `gross` backstop reads Claude's continent sets rather than the GBIF regions, and the prompt always told it to weigh its own knowledge, so a species Claude knows well likely survived. A species it does not know well did not. **277 rows carry `native_checked_at` from runs on that evidence.** Ana's call on 2026-07-30: leave them, revisit in a future session. The stamp currently claims a check that ran on bad evidence, and that is a known, recorded debt rather than a discovered one.
+
+**`style_checked_at` had no owner, so a healthy pipeline read as decaying.** `curate-styles` owns the column in `STEP_DEFS` and correctly left the round cadence on 2026-07-29 (repair pass for older data; `curate-plants` already does the job for a new seed from the same `lib/style-tags.ts` definitions). The stamp did not move with the job. So rounds 9 and 10 wrote 100 rows of good `style_tags` that read as never judged, and `docs/catalog-state.md` reported style coverage sliding 50 rows a round on data that was fine. **Removing a step means rehoming what it proved, not just deleting the call.**
+
+`curate-plants` now stamps as it writes. The 100 existing rows were backfilled through a new state-derived section in `backfill-guard-stamps.ts` — that script previously only knew report-derived evidence, and there is no report here because the pass that made the judgment was never the pass that owned the column.
+
+**The witness is the round manifest, so this is per-row proof, not an inference.** A row was stamped only if its id is in round 9's or round 10's manifest AND it has `style_tags` AND it has `ai_drafted_at`. Dry run: 100 unstamped, 100 in scope, **0 outside both manifests** — the population and the evidence agreed exactly, which is what made it safe to apply. Each row carries **its own `ai_drafted_at`**, not the date of the backfill: verified afterwards as 100 rows where `style_checked_at = ai_drafted_at` and **0 rows stamped 2026-07-30**. Same rule the report-derived section already followed.
+
+**Data written:** 100 `style_checked_at` stamps. `style_checked_at` 595/695 → **695/695**. `verify-round`: 0 failures, 101 warnings (the parked hardiness track on rounds 9–10, plus `Erysimum cheiri`'s missing image — both pre-existing).
+
+**Worth knowing for the next reader:** the report-derived half of `backfill-guard-stamps.ts` printed `✗ missing, skipped` four times on this run. That is trap 8, not a fault — `reports/` is gitignored, so a fresh worktree has no archived reports, and those stamps were applied on 2026-07-28 anyway. The script correctly refuses to write a group whose witness it cannot read.
+
+**Deliberately not done:**
+
+- the 277 `native_checked_at` rows, per above
+- no re-run of `cross-check-native-to` on anything; the fix is forward-looking
+- `curate-styles` left registered in `STEP_DEFS` and out of the cadence, unchanged
+- nothing pushed, no PR opened
+
+---
 
 ### 2026-07-30 — the WCVP tail (not a round)
 
