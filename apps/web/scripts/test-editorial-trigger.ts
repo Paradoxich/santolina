@@ -11,7 +11,7 @@
  * both run against a real Postgres.
  *
  * So the trigger's behaviour is asserted here rather than described anywhere.
- * This is the executable half of migrations 20260729120000 and 20260729140000;
+ * This is the executable half of migrations 20260729101133 and 20260729112046;
  * their comments are the reasoning, this file is the contract.
  *
  * WHY IT IS NOT A VITEST TEST. `pnpm test` runs in CI, and CI has no database
@@ -300,7 +300,7 @@ async function main() {
     )
 
     // The v1 hatch is GONE and this is the assertion that says so. Under
-    // migration 20260729120000, changing editorial_checked_at returned early
+    // migration 20260729101133, changing editorial_checked_at returned early
     // and protected the whole row. Since the per-criterion split it protects
     // nothing: the guard is per criterion, on that criterion's own stamp. Any
     // script still written against the old contract loses a stamp here.

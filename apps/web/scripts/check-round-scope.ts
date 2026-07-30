@@ -74,7 +74,7 @@ type Row = Record<string, unknown>
 // is a legitimate whole-catalog write — worth seeing, not worth failing on.
 //
 // Matched by PATTERN, not by a hand-kept list. The list version had already
-// rotted: `style_checked_at` shipped in migration 20260728150000 and was never
+// rotted: `style_checked_at` shipped in migration 20260728114824 and was never
 // added, so the next `curate-styles --new-only` would have been reported as an
 // out-of-scope data write on every row it re-stamped. Any new bookkeeping
 // column is covered the day it exists.

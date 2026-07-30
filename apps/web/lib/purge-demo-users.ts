@@ -46,7 +46,7 @@ export async function purgeExpiredDemoUsers({
   // error finding users") whenever per_page exceeds the project's total user
   // count, so it fails on small projects at any page size. The
   // `expired_demo_users` SQL function reads auth.users directly instead. See
-  // supabase/migrations/20260729170000_expired_demo_users.sql.
+  // supabase/migrations/20260729164307_expired_demo_users.sql.
   const { data, error } = await admin.rpc('expired_demo_users', {
     cutoff: cutoff.toISOString(),
   })

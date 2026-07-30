@@ -445,7 +445,7 @@ async function main() {
     const tag = `[${i + 1}/${selected.length}] ${p.common_name}`
     try {
       // ONLY judge what is actually open. Each criterion carries its own
-      // stamp (migration 20260729140000), so a row whose photo changed has
+      // stamp (migration 20260729112046), so a row whose photo changed has
       // exactly one open criterion — and that one is decided mechanically,
       // for free, from the confidence the vision pass already persisted.
       //

@@ -4,7 +4,7 @@
  * THE SITUATION. 76 plants — round 7, the herb and edible batch — carried
  * `is_curated = true` with no `editorial_checked_at` at all. They were approved
  * before that column existed, so the flag claimed a sign-off with nothing
- * recorded behind it. The per-criterion split (migration 20260729140000) made
+ * recorded behind it. The per-criterion split (migration 20260729112046) made
  * that visible rather than merely true: three stamps, all empty, on a row
  * calling itself finished.
  *

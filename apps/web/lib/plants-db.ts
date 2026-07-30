@@ -90,7 +90,7 @@ export interface DbPlant {
   // Greenery identity — grown for green mass/form rather than blooms. Drives
   // Green-bucket membership in the Explore colour filter (lib/plant-colors.ts)
   // alongside green blooms. Curated by scripts/curate-greenery.ts; editorial-
-  // owned, not in the upsert_trefle_plant path. See migration 20260724120000.
+  // owned, not in the upsert_trefle_plant path. See migration 20260724120842.
   is_greenery: boolean
   spread_min_cm: number | null
   spread_max_cm: number | null

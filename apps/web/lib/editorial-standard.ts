@@ -14,7 +14,7 @@
  * rule from the July 28 audit). `curate-editorial.ts` imports it; anything
  * else that needs to state the bar imports it rather than restating it.
  *
- * THE THREE ARE JUDGED AND RECORDED SEPARATELY (migration 20260729140000).
+ * THE THREE ARE JUDGED AND RECORDED SEPARATELY (migration 20260729112046).
  * Each has its own stamp, and `is_curated` is true only when all three are
  * set. That is not bookkeeping neatness: under a single flag, changing any one
  * of these re-opened all three, and re-opening the description means this pass

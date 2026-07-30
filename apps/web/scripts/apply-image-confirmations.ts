@@ -118,7 +118,7 @@ async function main() {
     if (apply) {
       // `claim: ['image']` because confirming the species IS criterion 1 of the
       // editorial bar being cleared, by the strongest evidence available
-      // (migration 20260729140000). The stamp has to land in the same statement
+      // (migration 20260729112046). The stamp has to land in the same statement
       // as the confidence change or the change withdraws the approval it was
       // recording — punishing the row for getting BETTER, which is what
       // happened to round 7's 18 confirmed heroes. `plants-write.ts` owns that

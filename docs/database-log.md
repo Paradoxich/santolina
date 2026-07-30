@@ -294,6 +294,14 @@ Did trap 14's check, which the previous session left as the highest-value item o
 
 **The design point: a guard has to model the FALSE alarm before it can report the real one.** Trap 13 means a file and its remote row routinely share a name and differ in version. A version-only set difference calls that one missing migration plus one unknown one — and the repo held **three** live drifts, so the naive check would have printed six wrong findings and buried a genuine "never applied" seventh. It pairs on name first, reports the two classes separately, and sorts `not-applied` above everything. The three drifts were reconciled in the same PR; the check went from three findings to `OK — 35 committed migrations`.
 
+**Filenames reconciled (trap 13), same as July 28.** All three had been applied through the Supabase MCP, which records its own version, so the local files were renamed to what the remote actually holds. No production state touched; relative order preserved (checked — the reconciled versions ascend in the same sequence the filenames did).
+
+| local file       | remote version   | migration                       |
+| ---------------- | ---------------- | ------------------------------- |
+| `20260729120000` | `20260729101133` | invalidate_editorial_verdict    |
+| `20260729140000` | `20260729112046` | editorial_verdict_per_criterion |
+| `20260729170000` | `20260729164307` | expired_demo_users              |
+
 **It was rehearsed against the failure it exists for, not just against the drift it happened to find.** An unapplied migration was planted on disk and the check reported `WRITTEN BUT NEVER APPLIED` at the top of its output, then the file was removed. Finding real drift on the first run is encouraging and is **not** evidence the dangerous branch works — that branch had never executed.
 
 **What bit us, and it is the same anatomy as `StepStatus.vacuous`.** One assertion in the new test file was `expect(findings.map(f => f.remedy)).not.toContain(expect.stringContaining('git mv'))`. `toContain` matches by identity, so an array of strings can never contain a matcher object: **that assertion passes against every possible input, including the bug it was written to catch.** It sat in a green suite of 20 looking like coverage. Same family as a step reporting success having done nothing — a check whose pass carries no information. Caught only by asking "what would make this line fail?", which is the question the mutation-testing rule exists to force.

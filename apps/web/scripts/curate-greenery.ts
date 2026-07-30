@@ -16,7 +16,7 @@
  * distinctive-foliage question again. Fill-only: a populated foliage_color is
  * NEVER overwritten. Most re-asks are expected to come back null again.
  *
- * Stamps greenery_checked_at on every judged row (migration 20260724120500);
+ * Stamps greenery_checked_at on every judged row (migration 20260724120938);
  * --new-only targets NULL stamps, so future seed rounds curate only their own
  * plants. Not in the upsert_trefle_plant path; re-seeds cannot touch either
  * field.
