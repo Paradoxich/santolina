@@ -47,3 +47,41 @@ from gitignored `reports/level3.geojson`, so **the script cannot run on a clean
 checkout**. It is third-party TDWG data and its licence and canonical download URL
 want checking before it is vendored — an unattributed 1.8MB dataset in the tree is
 its own problem. Until then it is a documented gap rather than a silent one.
+
+It cost a session again on 2026-07-30: the guard died on the missing file in a
+fresh worktree and the copy was taken from the shared checkout by hand. The
+error names the fix, which is the only reason it cost minutes rather than a
+re-download.
+
+## `native-to-fixes-<date>.json`
+
+The reviewed decisions behind a `native_to` rewrite pass, applied by
+`scripts/apply-native-to-fixes.ts` ([native_to](../../../docs/curation.md#native-to)).
+One object per edited row: `expect` (the phrase the decision was made against,
+so a row edited since review is skipped rather than clobbered), `phrase`, and
+`why` — the country evidence for the change.
+
+**Why it is committed.** It is the only record of why a phrase says what it
+says. The queue that produced it (`docs/native-to-review-<date>.md`) is a
+snapshot that goes stale the moment a phrase is edited, and the report it was
+read from lives in gitignored `reports/`. A decision file also makes the pass
+replayable: re-running it reproduces the edits or names the rows that have moved
+on since.
+
+Files are per-pass and are never rewritten. `-cascade` in a name means those
+rows were requeued by a `native_region` correction rather than by the queue.
+
+## `native-to-review-<date>.json`
+
+The other half of the same pass: **every** row of the ranked queue with its
+verdict, including the ones left alone. A queue rewrites a minority of what it
+lists, and without this the majority verdict is invisible — the next run
+produces the same ranked list with no way to tell "considered and kept" from
+"nobody has looked". That is the same failure as trap 24 read from the other
+side: there, a stamp recorded a check that was never acted on; here, a decision
+not to act left no record at all.
+
+`phrase_at_review` is what each row said when it was judged, so a phrase edited
+later is detectable rather than silently re-inheriting an old verdict. Rewritten
+rows carry their evidence in the `native-to-fixes-*` files instead, and the two
+files are cross-checked against each other when this one is built.

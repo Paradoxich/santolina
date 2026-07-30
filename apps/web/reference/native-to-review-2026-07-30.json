@@ -1,0 +1,1597 @@
+{
+  "reviewed": "2026-07-30",
+  "queue": "docs/native-to-review-2026-07-30.md",
+  "rewrites": "reference/native-to-fixes-2026-07-30.json and -cascade.json",
+  "note": "One entry per row of the ranked queue. A keep is a decision, not an absence of one: the phrase was read against WCVP country-level evidence and left as it stood. phrase_at_review records what the row said when it was judged, so a later edit is detectable. Rows rewritten from outside this queue (the three contradicts, and Erysimum cheiri via the region cascade) are not here.",
+  "counts": {
+    "rows": 179,
+    "keep": 151,
+    "rewritten": 28
+  },
+  "rows": [
+    {
+      "rank": 1,
+      "unsupported_share": 90,
+      "verdict": "keep",
+      "scientific_name": "Hibiscus rosa-sinensis",
+      "common_name": "Chinese hibiscus",
+      "phrase_at_review": "tropical Asia and the Pacific",
+      "reason": "No WCVP countries recorded at all, so nothing contradicts the phrase, and the Southwestern Pacific tag supports the Pacific half."
+    },
+    {
+      "rank": 2,
+      "unsupported_share": 83,
+      "verdict": "keep",
+      "scientific_name": "Helianthus annuus",
+      "common_name": "Sunflower",
+      "phrase_at_review": "North America",
+      "reason": "North America is an umbrella word covering the Mexican and southwestern US countries listed; being broader than the range is not an error."
+    },
+    {
+      "rank": 3,
+      "unsupported_share": 80,
+      "verdict": "rewritten",
+      "scientific_name": "Tulipa clusiana",
+      "common_name": "Lady tulip",
+      "phrase_at_review": "central Asia and the Mediterranean"
+    },
+    {
+      "rank": 4,
+      "unsupported_share": 80,
+      "verdict": "keep",
+      "scientific_name": "Chelone obliqua",
+      "common_name": "Red turtlehead",
+      "phrase_at_review": "eastern North America",
+      "reason": "All nine states lie in eastern North America, so the phrase is merely less specific than the tags."
+    },
+    {
+      "rank": 5,
+      "unsupported_share": 75,
+      "verdict": "keep",
+      "scientific_name": "Origanum majorana",
+      "common_name": "Sweet marjoram",
+      "phrase_at_review": "the Mediterranean and Turkey",
+      "reason": "Türkiye is Turkey and Cyprus is a Mediterranean country, so both halves of the phrase are supported."
+    },
+    {
+      "rank": 6,
+      "unsupported_share": 75,
+      "verdict": "keep",
+      "scientific_name": "Calendula officinalis",
+      "common_name": "Calendula",
+      "phrase_at_review": "southern Europe and the Mediterranean",
+      "reason": "Spain is both southern Europe and Mediterranean; the extra regions are umbrella overshoot."
+    },
+    {
+      "rank": 7,
+      "unsupported_share": 75,
+      "verdict": "keep",
+      "scientific_name": "Lathyrus odoratus",
+      "common_name": "Sweet-pea",
+      "phrase_at_review": "southern Italy and the Mediterranean region",
+      "reason": "Italy and Sicilia support southern Italy and sit squarely in the Mediterranean."
+    },
+    {
+      "rank": 8,
+      "unsupported_share": 75,
+      "verdict": "keep",
+      "scientific_name": "Hyacinthus orientalis",
+      "common_name": "Hyacinth",
+      "phrase_at_review": "Turkey and the eastern Mediterranean",
+      "reason": "Türkiye plus Lebanon-Syria, Palestine and Iraq are exactly the eastern Mediterranean."
+    },
+    {
+      "rank": 9,
+      "unsupported_share": 75,
+      "verdict": "keep",
+      "scientific_name": "Santolina chamaecyparissus",
+      "common_name": "Lavender cotton",
+      "phrase_at_review": "the central Mediterranean",
+      "reason": "Italy and the NW Balkan Peninsula are the central Mediterranean."
+    },
+    {
+      "rank": 10,
+      "unsupported_share": 75,
+      "verdict": "keep",
+      "scientific_name": "Dianthus caryophyllus",
+      "common_name": "Clove pink",
+      "phrase_at_review": "the Mediterranean region",
+      "reason": "Albania, Greece and the NW Balkan Peninsula are Mediterranean countries; the phrase is just broader."
+    },
+    {
+      "rank": 11,
+      "unsupported_share": 75,
+      "verdict": "keep",
+      "scientific_name": "Antirrhinum majus",
+      "common_name": "Snapdragon",
+      "phrase_at_review": "the Mediterranean region",
+      "reason": "France and Spain are Mediterranean countries and the rest is umbrella overshoot, as with rosemary."
+    },
+    {
+      "rank": 12,
+      "unsupported_share": 75,
+      "verdict": "keep",
+      "scientific_name": "Eryngium amethystinum",
+      "common_name": "Amethyst eryngo",
+      "phrase_at_review": "central and southern Europe",
+      "reason": "The NW Balkan Peninsula reaches Slovenia and Croatia, commonly read as central Europe, so the claim is not clearly unsupported."
+    },
+    {
+      "rank": 13,
+      "unsupported_share": 75,
+      "verdict": "rewritten",
+      "scientific_name": "Crocus sativus",
+      "common_name": "Saffron crocus",
+      "phrase_at_review": "the Mediterranean and western Asia"
+    },
+    {
+      "rank": 14,
+      "unsupported_share": 75,
+      "verdict": "keep",
+      "scientific_name": "Tropaeolum majus",
+      "common_name": "Garden nasturtium",
+      "phrase_at_review": "South America",
+      "reason": "Peru is in South America; the umbrella word simply expands wider than the range."
+    },
+    {
+      "rank": 15,
+      "unsupported_share": 75,
+      "verdict": "keep",
+      "scientific_name": "Erodium reichardii",
+      "common_name": "Alpine-geranium",
+      "phrase_at_review": "the western Mediterranean",
+      "reason": "Baleares is the WCVP name for the Balearics, which are in the western Mediterranean."
+    },
+    {
+      "rank": 16,
+      "unsupported_share": 67,
+      "verdict": "keep",
+      "scientific_name": "Citrus reticulata",
+      "common_name": "Mandarin",
+      "phrase_at_review": "southeastern Asia and China",
+      "reason": "China Southeast is literally the southeast of Asia and the phrase anchors correctly on China."
+    },
+    {
+      "rank": 17,
+      "unsupported_share": 67,
+      "verdict": "rewritten",
+      "scientific_name": "Coriandrum sativum",
+      "common_name": "Coriander",
+      "phrase_at_review": "southern Europe and western Asia"
+    },
+    {
+      "rank": 18,
+      "unsupported_share": 67,
+      "verdict": "keep",
+      "scientific_name": "Citrus japonica",
+      "common_name": "Kumquat",
+      "phrase_at_review": "southern China and southeast Asia",
+      "reason": "China Southeast and Hainan sit on the edge of the Southeast Asian tropics, so the phrase is not clearly wrong."
+    },
+    {
+      "rank": 19,
+      "unsupported_share": 67,
+      "verdict": "keep",
+      "scientific_name": "Pulmonaria saccharata",
+      "common_name": "Bethlehem lungwort",
+      "phrase_at_review": "central and southern Europe",
+      "reason": "France borders and overlaps what beginners call central and southern Europe, so the overshoot is mild and uncertain."
+    },
+    {
+      "rank": 20,
+      "unsupported_share": 67,
+      "verdict": "rewritten",
+      "scientific_name": "Narcissus jonquilla",
+      "common_name": "Jonquil",
+      "phrase_at_review": "southern Europe and northern Africa"
+    },
+    {
+      "rank": 21,
+      "unsupported_share": 67,
+      "verdict": "keep",
+      "scientific_name": "Tiarella cordifolia",
+      "common_name": "Heart-leaf foamflower",
+      "phrase_at_review": "eastern North America",
+      "reason": "All five states are in eastern North America; the phrase is only less specific."
+    },
+    {
+      "rank": 22,
+      "unsupported_share": 67,
+      "verdict": "rewritten",
+      "scientific_name": "Silene coronaria",
+      "common_name": "Rose campion",
+      "phrase_at_review": "southern Europe and North Africa"
+    },
+    {
+      "rank": 23,
+      "unsupported_share": 67,
+      "verdict": "keep",
+      "scientific_name": "Origanum laevigatum",
+      "common_name": "Origanum laevigatum",
+      "phrase_at_review": "Turkey and the eastern Mediterranean",
+      "reason": "Türkiye, Cyprus and Lebanon-Syria are exactly Turkey and the eastern Mediterranean."
+    },
+    {
+      "rank": 24,
+      "unsupported_share": 60,
+      "verdict": "rewritten",
+      "scientific_name": "Capsicum chinense",
+      "common_name": "Biquinho pepper",
+      "phrase_at_review": "Central and South America"
+    },
+    {
+      "rank": 25,
+      "unsupported_share": 58,
+      "verdict": "keep",
+      "scientific_name": "Osmunda regalis",
+      "common_name": "Royal fern",
+      "phrase_at_review": "Europe, Asia, Africa, and North America",
+      "reason": "Europe, Asia and Africa are all well supported, and WCVP records no North American row at all because it splits those plants at variety rank. Silence, not contradiction."
+    },
+    {
+      "rank": 26,
+      "unsupported_share": 57,
+      "verdict": "keep",
+      "scientific_name": "Polypodium vulgare",
+      "common_name": "Common polypody",
+      "phrase_at_review": "Europe, western Asia, and North America",
+      "reason": "Europe and western Asia solidly supported; the North American absence is a taxonomic split, not a contradiction (no INTRODUCED rows there)."
+    },
+    {
+      "rank": 27,
+      "unsupported_share": 57,
+      "verdict": "keep",
+      "scientific_name": "Hepatica nobilis",
+      "common_name": "Hepatica",
+      "phrase_at_review": "Europe and Asia",
+      "reason": "West Siberia covers the Asian half of the phrase and the European countries are extensive."
+    },
+    {
+      "rank": 28,
+      "unsupported_share": 57,
+      "verdict": "rewritten",
+      "scientific_name": "Humulus lupulus",
+      "common_name": "Common hop",
+      "phrase_at_review": "Europe, western Asia, and North America"
+    },
+    {
+      "rank": 29,
+      "unsupported_share": 53,
+      "verdict": "keep",
+      "scientific_name": "Dictamnus albus",
+      "common_name": "Burningbush",
+      "phrase_at_review": "southern Europe and Asia",
+      "reason": "Iran, Kazakhstan, Pakistan and West Himalaya support Asia; Europe is supported by Italy, Greece and Spain."
+    },
+    {
+      "rank": 30,
+      "unsupported_share": 50,
+      "verdict": "keep",
+      "scientific_name": "Athyrium filix-femina",
+      "common_name": "Common ladyfern",
+      "phrase_at_review": "Europe, Asia, and North America",
+      "reason": "Europe and Asia supported; North American ladyferns are varieties of this species and WCVP carries no North American row, so this is silence rather than contradiction."
+    },
+    {
+      "rank": 31,
+      "unsupported_share": 50,
+      "verdict": "keep",
+      "scientific_name": "Agastache foeniculum",
+      "common_name": "Blue giant-hyssop",
+      "phrase_at_review": "North America",
+      "reason": "Canadian provinces and northern US states are North America; the umbrella is just broader than the range."
+    },
+    {
+      "rank": 32,
+      "unsupported_share": 50,
+      "verdict": "keep",
+      "scientific_name": "Inula helenium",
+      "common_name": "Elecampane",
+      "phrase_at_review": "Europe and western Asia",
+      "reason": "Greece, Italy and the Balkans cover Europe while Türkiye, Iran and Transcaucasus cover western Asia."
+    },
+    {
+      "rank": 33,
+      "unsupported_share": 50,
+      "verdict": "keep",
+      "scientific_name": "Cistus ladanifer",
+      "common_name": "Common gum cistus",
+      "phrase_at_review": "western Mediterranean",
+      "reason": "Spain, Portugal, France, Morocco and Algeria are the western Mediterranean."
+    },
+    {
+      "rank": 34,
+      "unsupported_share": 50,
+      "verdict": "keep",
+      "scientific_name": "Lavandula angustifolia",
+      "common_name": "Lavender",
+      "phrase_at_review": "the Mediterranean",
+      "reason": "France, Italy and Spain are Mediterranean countries; the missing regions are umbrella edges."
+    },
+    {
+      "rank": 35,
+      "unsupported_share": 50,
+      "verdict": "keep",
+      "scientific_name": "Amelanchier lamarckii",
+      "common_name": "Snowy mespilus",
+      "phrase_at_review": "eastern North America",
+      "reason": "New York, Vermont and Ontario are all in eastern North America."
+    },
+    {
+      "rank": 36,
+      "unsupported_share": 50,
+      "verdict": "keep",
+      "scientific_name": "Asphodelus albus",
+      "common_name": "White asphodel",
+      "phrase_at_review": "the Mediterranean region",
+      "reason": "France, Italy and Spain are Mediterranean countries and the phrase is simply broader than the tags."
+    },
+    {
+      "rank": 37,
+      "unsupported_share": 50,
+      "verdict": "keep",
+      "scientific_name": "Physalis peruviana",
+      "common_name": "Cape gooseberry",
+      "phrase_at_review": "South America",
+      "reason": "South America is an umbrella word covering Bolivia and Brazil; only omission and umbrella overshoot here."
+    },
+    {
+      "rank": 38,
+      "unsupported_share": 50,
+      "verdict": "keep",
+      "scientific_name": "Omphalodes verna",
+      "common_name": "Creeping-forget-me-not",
+      "phrase_at_review": "central and southern Europe",
+      "reason": "Austria and Romania cover central Europe, Italy and Albania cover southern Europe; the phrase is just less specific than the tags."
+    },
+    {
+      "rank": 39,
+      "unsupported_share": 50,
+      "verdict": "keep",
+      "scientific_name": "Satureja hortensis",
+      "common_name": "Summer savory",
+      "phrase_at_review": "southern Europe and the Mediterranean",
+      "reason": "Italy and Albania support southern Europe and Italy plus Türkiye support the Mediterranean; the extra tags are omissions, not over-claims."
+    },
+    {
+      "rank": 40,
+      "unsupported_share": 50,
+      "verdict": "keep",
+      "scientific_name": "Aloysia citrodora",
+      "common_name": "Lemon verbena",
+      "phrase_at_review": "South America",
+      "reason": "Argentina, Bolivia and Paraguay are all South America; the flag is umbrella overshoot."
+    },
+    {
+      "rank": 41,
+      "unsupported_share": 50,
+      "verdict": "keep",
+      "scientific_name": "Chamaemelum nobile",
+      "common_name": "Roman chamomile",
+      "phrase_at_review": "western Europe and the Mediterranean",
+      "reason": "France, Britain and Ireland cover western Europe and Algeria, Morocco and Spain cover the Mediterranean."
+    },
+    {
+      "rank": 42,
+      "unsupported_share": 50,
+      "verdict": "rewritten",
+      "scientific_name": "Ocimum basilicum",
+      "common_name": "Sweet basil",
+      "phrase_at_review": "tropical regions from central Africa to southeast Asia"
+    },
+    {
+      "rank": 43,
+      "unsupported_share": 50,
+      "verdict": "keep",
+      "scientific_name": "Colutea arborescens",
+      "common_name": "Bladder-senna",
+      "phrase_at_review": "southern Europe and the Mediterranean region",
+      "reason": "Spain, Italy, Greece and France cover both southern Europe and the Mediterranean; the flagged regions are umbrella edges."
+    },
+    {
+      "rank": 44,
+      "unsupported_share": 50,
+      "verdict": "keep",
+      "scientific_name": "Petroselinum crispum",
+      "common_name": "Parsley",
+      "phrase_at_review": "the Mediterranean region",
+      "reason": "Algeria, Morocco, Greece and the Balkan coast are Mediterranean; the flag is the umbrella word overshooting."
+    },
+    {
+      "rank": 45,
+      "unsupported_share": 50,
+      "verdict": "keep",
+      "scientific_name": "Calibrachoa parviflora",
+      "common_name": "Seaside petunia",
+      "phrase_at_review": "South America",
+      "reason": "Argentina, Brazil South, Chile, Paraguay and Uruguay are all South America; the phrase merely omits the northern tags."
+    },
+    {
+      "rank": 46,
+      "unsupported_share": 50,
+      "verdict": "keep",
+      "scientific_name": "Thymus vulgaris",
+      "common_name": "Garden thyme",
+      "phrase_at_review": "western Mediterranean",
+      "reason": "Baleares, Spain, France and Italy are the western Mediterranean exactly; the flagged regions are umbrella edges."
+    },
+    {
+      "rank": 47,
+      "unsupported_share": 50,
+      "verdict": "keep",
+      "scientific_name": "Opuntia humifusa",
+      "common_name": "Creeping prickly-pear",
+      "phrase_at_review": "eastern and central North America",
+      "reason": "The countries run from New England to Alabama, Mississippi and Kentucky, which a beginner reads as eastern and east-central North America."
+    },
+    {
+      "rank": 48,
+      "unsupported_share": 50,
+      "verdict": "keep",
+      "scientific_name": "Iris lutescens",
+      "common_name": "Crimean iris",
+      "phrase_at_review": "southern Europe and the western Mediterranean",
+      "reason": "France, Italy, Spain and Portugal support both southern Europe and the western Mediterranean."
+    },
+    {
+      "rank": 49,
+      "unsupported_share": 50,
+      "verdict": "keep",
+      "scientific_name": "Salvia officinalis",
+      "common_name": "Sage",
+      "phrase_at_review": "the Mediterranean",
+      "reason": "Spain, France, Italy, Greece and the Balkan coast are Mediterranean; the flag is umbrella overshoot only."
+    },
+    {
+      "rank": 50,
+      "unsupported_share": 50,
+      "verdict": "rewritten",
+      "scientific_name": "Cosmos bipinnatus",
+      "common_name": "Garden cosmos",
+      "phrase_at_review": "Mexico and Central America"
+    },
+    {
+      "rank": 51,
+      "unsupported_share": 50,
+      "verdict": "keep",
+      "scientific_name": "Hosta ventricosa",
+      "common_name": "Blue plantain-lily",
+      "phrase_at_review": "eastern Asia",
+      "reason": "China is part of eastern Asia; the phrase is simply broader than the tag."
+    },
+    {
+      "rank": 52,
+      "unsupported_share": 50,
+      "verdict": "rewritten",
+      "scientific_name": "Levisticum officinale",
+      "common_name": "Lovage",
+      "phrase_at_review": "southwestern Asia and southern Europe"
+    },
+    {
+      "rank": 53,
+      "unsupported_share": 50,
+      "verdict": "rewritten",
+      "scientific_name": "Acer japonicum",
+      "common_name": "Fullmoon maple",
+      "phrase_at_review": "Japan, Korea, and eastern China"
+    },
+    {
+      "rank": 54,
+      "unsupported_share": 50,
+      "verdict": "keep",
+      "scientific_name": "Sesleria autumnalis",
+      "common_name": "Autumn moor grass",
+      "phrase_at_review": "southern Europe and the Balkans",
+      "reason": "Italy and Greece are southern Europe and Albania and the Balkan peninsula are the Balkans."
+    },
+    {
+      "rank": 55,
+      "unsupported_share": 50,
+      "verdict": "keep",
+      "scientific_name": "Helleborus multifidus",
+      "common_name": "Early green hellebore",
+      "phrase_at_review": "the Balkans and southern Europe",
+      "reason": "Italy and Sicilia cover southern Europe and Albania and the Balkan peninsula cover the Balkans."
+    },
+    {
+      "rank": 56,
+      "unsupported_share": 50,
+      "verdict": "rewritten",
+      "scientific_name": "Acer palmatum",
+      "common_name": "Japanese maple",
+      "phrase_at_review": "Japan, Korea, and eastern China"
+    },
+    {
+      "rank": 57,
+      "unsupported_share": 50,
+      "verdict": "rewritten",
+      "scientific_name": "Nandina domestica",
+      "common_name": "Chinese-bamboo",
+      "phrase_at_review": "China and Japan"
+    },
+    {
+      "rank": 58,
+      "unsupported_share": 50,
+      "verdict": "keep",
+      "scientific_name": "Campanula garganica",
+      "common_name": "Adriatic bellflower",
+      "phrase_at_review": "southern Italy and the Balkans",
+      "reason": "Italy covers southern Italy and Greece is a Balkan country, so both halves of the phrase hold."
+    },
+    {
+      "rank": 59,
+      "unsupported_share": 50,
+      "verdict": "keep",
+      "scientific_name": "Crocus tommasinianus",
+      "common_name": "Early crocus",
+      "phrase_at_review": "southern and eastern Europe",
+      "reason": "Hungary and Bulgaria read as eastern Europe to a beginner and the Balkan countries cover southern Europe."
+    },
+    {
+      "rank": 60,
+      "unsupported_share": 50,
+      "verdict": "keep",
+      "scientific_name": "Symphytum grandiflorum",
+      "common_name": "Creeping comfrey",
+      "phrase_at_review": "the Caucasus and eastern Europe",
+      "reason": "North Caucasus sits on the European side of Russia, so eastern Europe is a defensible reading rather than a clear over-claim. Borderline: WGSRPD assigns North Caucasus to the Caucasus, not Eastern Europe, so this was kept only under the default-to-keep rule."
+    },
+    {
+      "rank": 61,
+      "unsupported_share": 50,
+      "verdict": "keep",
+      "scientific_name": "Papaver cambricum",
+      "common_name": "Welsh poppy",
+      "phrase_at_review": "western Europe",
+      "reason": "France, Britain, Ireland and Spain are western Europe; the phrase is just less specific than the tags."
+    },
+    {
+      "rank": 62,
+      "unsupported_share": 50,
+      "verdict": "keep",
+      "scientific_name": "Capsicum pubescens",
+      "common_name": "Rocoto",
+      "phrase_at_review": "the Andes mountains of South America",
+      "reason": "Bolivia and Peru are Andean South America, exactly what the phrase says."
+    },
+    {
+      "rank": 63,
+      "unsupported_share": 50,
+      "verdict": "keep",
+      "scientific_name": "Aconitum carmichaelii",
+      "common_name": "Sichuan aconite",
+      "phrase_at_review": "China and eastern Asia",
+      "reason": "China, Manchuria and Inner Mongolia sit inside eastern Asia; the phrase only broadens the tag."
+    },
+    {
+      "rank": 64,
+      "unsupported_share": 50,
+      "verdict": "keep",
+      "scientific_name": "Primula denticulata",
+      "common_name": "Drumstick primula",
+      "phrase_at_review": "the Himalayas and mountains of central Asia",
+      "reason": "Afghanistan, Pakistan and Tibet are commonly read as the central Asian mountains alongside the Himalayas, so the phrase is not a clear over-claim."
+    },
+    {
+      "rank": 65,
+      "unsupported_share": 50,
+      "verdict": "rewritten",
+      "scientific_name": "Scilla forbesii",
+      "common_name": "Glory-of-the-snow",
+      "phrase_at_review": "western and central Asia"
+    },
+    {
+      "rank": 66,
+      "unsupported_share": 50,
+      "verdict": "rewritten",
+      "scientific_name": "Iris pallida",
+      "common_name": "Sweet iris",
+      "phrase_at_review": "the eastern Mediterranean and the Balkans"
+    },
+    {
+      "rank": 67,
+      "unsupported_share": 50,
+      "verdict": "rewritten",
+      "scientific_name": "Pittosporum tobira",
+      "common_name": "Australian-laurel",
+      "phrase_at_review": "eastern Asia, Japan and China",
+      "reason": "Triage first kept this (\"Taiwan and the Ryukyus sit on the Chinese coastal fringe\"), then the region cascade overturned it: WCVP marks China South-Central, China Southeast and Hainan INTRODUCED."
+    },
+    {
+      "rank": 68,
+      "unsupported_share": 50,
+      "verdict": "keep",
+      "scientific_name": "Allium tuberosum",
+      "common_name": "Garlic chives",
+      "phrase_at_review": "eastern Asia",
+      "reason": "China North-Central is in eastern Asia; the phrase merely omits the Himalayan part of the range."
+    },
+    {
+      "rank": 69,
+      "unsupported_share": 50,
+      "verdict": "keep",
+      "scientific_name": "Sempervivum calcareum",
+      "common_name": "Sempervivum calcareum",
+      "phrase_at_review": "the Alps and Jura Mountains",
+      "reason": "France and Italy contain both the Alps and the French Jura, so the phrase is supported."
+    },
+    {
+      "rank": 70,
+      "unsupported_share": 50,
+      "verdict": "keep",
+      "scientific_name": "Ruta graveolens",
+      "common_name": "Rue",
+      "phrase_at_review": "southern Europe and the Balkans",
+      "reason": "The Balkan countries and Krym are southern Europe, so the flag is umbrella overshoot."
+    },
+    {
+      "rank": 71,
+      "unsupported_share": 50,
+      "verdict": "keep",
+      "scientific_name": "Hydrangea macrophylla",
+      "common_name": "Hortensia",
+      "phrase_at_review": "Japan and coastal East Asia",
+      "reason": "Japan and Kazan-retto are coastal East Asia; the phrase is vaguer than the tag but not wrong."
+    },
+    {
+      "rank": 72,
+      "unsupported_share": 50,
+      "verdict": "rewritten",
+      "scientific_name": "Narcissus bulbocodium",
+      "common_name": "Petticoat daffodil",
+      "phrase_at_review": "southwestern Europe and North Africa"
+    },
+    {
+      "rank": 73,
+      "unsupported_share": 50,
+      "verdict": "keep",
+      "scientific_name": "Nassella tenuissima",
+      "common_name": "Argentine needlegrass",
+      "phrase_at_review": "southwestern North America and Argentina",
+      "reason": "New Mexico, Texas, Colorado and Mexico cover southwestern North America, and Argentina is listed outright."
+    },
+    {
+      "rank": 74,
+      "unsupported_share": 50,
+      "verdict": "keep",
+      "scientific_name": "Achillea clypeolata",
+      "common_name": "Moonshine yarrow",
+      "phrase_at_review": "southeastern Europe and Turkey",
+      "reason": "Turkey is present as Türkiye-in-Europe, a WCVP name for European Turkey."
+    },
+    {
+      "rank": 75,
+      "unsupported_share": 50,
+      "verdict": "keep",
+      "scientific_name": "Angelica archangelica",
+      "common_name": "Angelica",
+      "phrase_at_review": "northern Europe and western Asia",
+      "reason": "West Siberia and North Caucasus give a real Asian presence, so the phrase only reads slightly broad."
+    },
+    {
+      "rank": 76,
+      "unsupported_share": 50,
+      "verdict": "rewritten",
+      "scientific_name": "Salvia elegans",
+      "common_name": "Pineapple sage",
+      "phrase_at_review": "Mexico and Guatemala"
+    },
+    {
+      "rank": 77,
+      "unsupported_share": 50,
+      "verdict": "keep",
+      "scientific_name": "Pseudofumaria lutea",
+      "common_name": "Yellow corydalis",
+      "phrase_at_review": "southern Europe",
+      "reason": "Italy is southern Europe, so the umbrella word is supported even though the range is small."
+    },
+    {
+      "rank": 78,
+      "unsupported_share": 50,
+      "verdict": "keep",
+      "scientific_name": "Knautia macedonica",
+      "common_name": "Knautia macedonica",
+      "phrase_at_review": "the Balkans and Romania",
+      "reason": "Romania is in the country list alongside the Balkan states."
+    },
+    {
+      "rank": 79,
+      "unsupported_share": 50,
+      "verdict": "rewritten",
+      "scientific_name": "Sesleria caerulea",
+      "common_name": "Blue moor grass",
+      "phrase_at_review": "mountains from the Pyrenees to the Balkans"
+    },
+    {
+      "rank": 80,
+      "unsupported_share": 50,
+      "verdict": "keep",
+      "scientific_name": "Tulipa gesneriana",
+      "common_name": "Gesner's tulip",
+      "phrase_at_review": "Turkey and central Asia",
+      "reason": "Türkiye is the only country listed, but the tag set is Western Asia only and the phrase already leads with Turkey."
+    },
+    {
+      "rank": 81,
+      "unsupported_share": 50,
+      "verdict": "keep",
+      "scientific_name": "Dianthus cruentus",
+      "common_name": "Dianthus cruentus",
+      "phrase_at_review": "the Balkans and eastern Europe",
+      "reason": "Bulgaria and the Balkan states are commonly called eastern Europe in plain prose, so the phrase is loose rather than wrong."
+    },
+    {
+      "rank": 82,
+      "unsupported_share": 50,
+      "verdict": "keep",
+      "scientific_name": "Pimpinella anisum",
+      "common_name": "Anise",
+      "phrase_at_review": "the eastern Mediterranean and western Asia",
+      "reason": "Cyprus, Lebanon-Syria, Palestine and Türkiye are all eastern Mediterranean and western Asian."
+    },
+    {
+      "rank": 83,
+      "unsupported_share": 43,
+      "verdict": "keep",
+      "scientific_name": "Achillea millefolium",
+      "common_name": "Milfoil",
+      "phrase_at_review": "Europe, Asia, and North America",
+      "reason": "Europe and Asia are heavily covered and Greenland supplies a North American occurrence, so the umbrella words overshoot rather than misinform."
+    },
+    {
+      "rank": 84,
+      "unsupported_share": 43,
+      "verdict": "keep",
+      "scientific_name": "Koeleria glauca",
+      "common_name": "Koeleria glauca",
+      "phrase_at_review": "Europe and Asia",
+      "reason": "Kazakhstan, Siberia and Mongolia support Asia; the flagged regions are just umbrella overshoot."
+    },
+    {
+      "rank": 85,
+      "unsupported_share": 43,
+      "verdict": "keep",
+      "scientific_name": "Fritillaria meleagris",
+      "common_name": "Fritillaria meleagris",
+      "phrase_at_review": "Europe and western Asia",
+      "reason": "Kazakhstan, Altay and West Siberia put the range in Asia, so western Asia is imprecise rather than unsupported."
+    },
+    {
+      "rank": 86,
+      "unsupported_share": 40,
+      "verdict": "keep",
+      "scientific_name": "Anethum graveolens",
+      "common_name": "Dill",
+      "phrase_at_review": "southwestern Asia and the Mediterranean",
+      "reason": "Algeria, Libya, Tunisia, Morocco and Cyprus are Mediterranean countries in the list."
+    },
+    {
+      "rank": 87,
+      "unsupported_share": 37,
+      "verdict": "keep",
+      "scientific_name": "Aruncus dioicus",
+      "common_name": "Goat's-beard",
+      "phrase_at_review": "Europe, Asia, and North America",
+      "reason": "All three continents are directly represented, and the flagged regions are edges of umbrella words."
+    },
+    {
+      "rank": 88,
+      "unsupported_share": 36,
+      "verdict": "keep",
+      "scientific_name": "Silene acaulis",
+      "common_name": "Cushion-pink",
+      "phrase_at_review": "arctic and alpine regions of the northern hemisphere",
+      "reason": "The list spans arctic and alpine countries across Europe, Asia and North America exactly as the phrase says."
+    },
+    {
+      "rank": 89,
+      "unsupported_share": 33,
+      "verdict": "keep",
+      "scientific_name": "Artemisia absinthium",
+      "common_name": "Absinthe",
+      "phrase_at_review": "Europe, North Africa, and Asia",
+      "reason": "Algeria, Egypt, Libya and Morocco cover North Africa and the Asian occurrences are extensive."
+    },
+    {
+      "rank": 90,
+      "unsupported_share": 33,
+      "verdict": "rewritten",
+      "scientific_name": "Erythronium dens-canis",
+      "common_name": "Dogtooth-violet",
+      "phrase_at_review": "Europe and western Asia"
+    },
+    {
+      "rank": 91,
+      "unsupported_share": 33,
+      "verdict": "keep",
+      "scientific_name": "Rudbeckia fulgida",
+      "common_name": "Orange coneflower",
+      "phrase_at_review": "eastern North America",
+      "reason": "The phrase merely omits that the range stops short of Canada, which is a lack of precision, not an over-claim."
+    },
+    {
+      "rank": 92,
+      "unsupported_share": 33,
+      "verdict": "keep",
+      "scientific_name": "Dicentra eximia",
+      "common_name": "Wild bleeding-heart",
+      "phrase_at_review": "eastern North America",
+      "reason": "The Appalachian states listed sit squarely in eastern North America."
+    },
+    {
+      "rank": 93,
+      "unsupported_share": 33,
+      "verdict": "keep",
+      "scientific_name": "Verbascum phoeniceum",
+      "common_name": "Purple mullein",
+      "phrase_at_review": "southern Europe and western Asia",
+      "reason": "Albania, Bulgaria, Greece and Italy support southern Europe, and Türkiye and Iran support western Asia."
+    },
+    {
+      "rank": 94,
+      "unsupported_share": 33,
+      "verdict": "keep",
+      "scientific_name": "Lamium orvala",
+      "common_name": "Balm-leaved archangel",
+      "phrase_at_review": "central and southern Europe",
+      "reason": "Austria and Hungary cover central Europe, Italy and the NW Balkan Peninsula cover southern Europe."
+    },
+    {
+      "rank": 95,
+      "unsupported_share": 33,
+      "verdict": "keep",
+      "scientific_name": "Geranium nodosum",
+      "common_name": "Knotted crane's-bill",
+      "phrase_at_review": "central and southern Europe",
+      "reason": "France and the Alpine edge of its range make central Europe a loose reading rather than a false one."
+    },
+    {
+      "rank": 96,
+      "unsupported_share": 33,
+      "verdict": "keep",
+      "scientific_name": "Cercis canadensis",
+      "common_name": "Eastern redbud",
+      "phrase_at_review": "eastern North America",
+      "reason": "Eastern United States and eastern Mexico occurrences make eastern North America accurate."
+    },
+    {
+      "rank": 97,
+      "unsupported_share": 33,
+      "verdict": "keep",
+      "scientific_name": "Digitalis ferruginea",
+      "common_name": "Rusty foxglove",
+      "phrase_at_review": "southern Europe and western Asia",
+      "reason": "Italy, Greece and Albania cover southern Europe, Türkiye and Transcaucasus cover western Asia."
+    },
+    {
+      "rank": 98,
+      "unsupported_share": 33,
+      "verdict": "keep",
+      "scientific_name": "Heuchera villosa",
+      "common_name": "Hairy alumroot",
+      "phrase_at_review": "eastern North America",
+      "reason": "The Appalachian and southeastern states listed are eastern North America."
+    },
+    {
+      "rank": 99,
+      "unsupported_share": 33,
+      "verdict": "keep",
+      "scientific_name": "Dianthus gratianopolitanus",
+      "common_name": "Cheddar pink",
+      "phrase_at_review": "central and southern Europe",
+      "reason": "France sits in the southwestern part of Europe, so southern Europe is imprecise rather than unsupported."
+    },
+    {
+      "rank": 100,
+      "unsupported_share": 33,
+      "verdict": "keep",
+      "scientific_name": "Convolvulus sabatius",
+      "common_name": "Convolvulus sabatius",
+      "phrase_at_review": "southern Europe and North Africa",
+      "reason": "Italy supports southern Europe and Algeria and Morocco support North Africa."
+    },
+    {
+      "rank": 101,
+      "unsupported_share": 33,
+      "verdict": "keep",
+      "scientific_name": "Filipendula rubra",
+      "common_name": "Queen of the prairie",
+      "phrase_at_review": "eastern North America",
+      "reason": "The listed midwestern and eastern states fall within eastern North America."
+    },
+    {
+      "rank": 102,
+      "unsupported_share": 33,
+      "verdict": "keep",
+      "scientific_name": "Helleborus niger",
+      "common_name": "Christmas-rose",
+      "phrase_at_review": "central and southern Europe",
+      "reason": "Austria, Germany and Switzerland cover central Europe, Italy and the NW Balkan Peninsula cover southern Europe."
+    },
+    {
+      "rank": 103,
+      "unsupported_share": 33,
+      "verdict": "keep",
+      "scientific_name": "Aurinia saxatilis",
+      "common_name": "Basket-of-gold",
+      "phrase_at_review": "central and southern Europe",
+      "reason": "Austria, Czechia-Slovakia and Poland cover central Europe, Italy and Greece cover southern Europe."
+    },
+    {
+      "rank": 104,
+      "unsupported_share": 31,
+      "verdict": "keep",
+      "scientific_name": "Hylotelephium telephium",
+      "common_name": "Hylotelephium telephium",
+      "phrase_at_review": "Europe and Asia",
+      "reason": "European and Siberian to Chinese occurrences both support the phrase."
+    },
+    {
+      "rank": 105,
+      "unsupported_share": 31,
+      "verdict": "keep",
+      "scientific_name": "Convallaria majalis",
+      "common_name": "Lily-of-the-valley",
+      "phrase_at_review": "Europe and Asia",
+      "reason": "Kazakhstan, Irkutsk, Krasnoyarsk and Transcaucasus support Asia."
+    },
+    {
+      "rank": 106,
+      "unsupported_share": 30,
+      "verdict": "rewritten",
+      "scientific_name": "Ornithogalum umbellatum",
+      "common_name": "Garden star-of-bethlehem",
+      "phrase_at_review": "Europe, the Mediterranean, and western Asia"
+    },
+    {
+      "rank": 107,
+      "unsupported_share": 29,
+      "verdict": "keep",
+      "scientific_name": "Sternbergia lutea",
+      "common_name": "Lily-of-the-field",
+      "phrase_at_review": "the Mediterranean region and southwestern Asia",
+      "reason": "Iran, Iraq, Lebanon-Syria and Türkiye support southwestern Asia and the Mediterranean countries are well covered."
+    },
+    {
+      "rank": 108,
+      "unsupported_share": 29,
+      "verdict": "keep",
+      "scientific_name": "Echinacea purpurea",
+      "common_name": "Eastern purple-coneflower",
+      "phrase_at_review": "eastern and central North America",
+      "reason": "The listed states span eastern and central United States, and Canada is only an umbrella edge."
+    },
+    {
+      "rank": 109,
+      "unsupported_share": 25,
+      "verdict": "keep",
+      "scientific_name": "Thalictrum aquilegiifolium",
+      "common_name": "French meadow-rue",
+      "phrase_at_review": "Europe and Asia",
+      "reason": "Europe and Asia is broadly correct; the list spans France to Japan and Kazakhstan, and the flagged gaps are umbrella-word overshoot."
+    },
+    {
+      "rank": 110,
+      "unsupported_share": 25,
+      "verdict": "keep",
+      "scientific_name": "Myosotis sylvatica",
+      "common_name": "Garden forget-me-not",
+      "phrase_at_review": "Europe and Asia",
+      "reason": "Both continents well supported (Great Britain to Japan, Nepal, Pakistan, West Himalaya); flagged China and Mongolia are umbrella overshoot only."
+    },
+    {
+      "rank": 111,
+      "unsupported_share": 25,
+      "verdict": "keep",
+      "scientific_name": "Rosa gallica",
+      "common_name": "Hungarian rose",
+      "phrase_at_review": "Europe and western Asia",
+      "reason": "Western Asia is real (Türkiye, Iraq, Transcaucasus, North Caucasus) and Europe is heavily represented."
+    },
+    {
+      "rank": 112,
+      "unsupported_share": 25,
+      "verdict": "keep",
+      "scientific_name": "Capsicum baccatum",
+      "common_name": "Ají pepper",
+      "phrase_at_review": "South America",
+      "reason": "Every country listed is in South America, so the phrase is simply less specific than the tags."
+    },
+    {
+      "rank": 113,
+      "unsupported_share": 25,
+      "verdict": "keep",
+      "scientific_name": "Rosmarinus officinalis",
+      "common_name": "Rosemary",
+      "phrase_at_review": "the Mediterranean region",
+      "reason": "The canonical umbrella case: \"the Mediterranean region\" is correct even though it mechanically expands into Western Asia."
+    },
+    {
+      "rank": 114,
+      "unsupported_share": 25,
+      "verdict": "keep",
+      "scientific_name": "Borago officinalis",
+      "common_name": "Borage",
+      "phrase_at_review": "the Mediterranean region",
+      "reason": "All countries are Mediterranean basin; the Western Asia flag is umbrella overshoot."
+    },
+    {
+      "rank": 115,
+      "unsupported_share": 25,
+      "verdict": "keep",
+      "scientific_name": "Eranthis hyemalis",
+      "common_name": "Winter-aconite",
+      "phrase_at_review": "southern Europe and the eastern Mediterranean",
+      "reason": "Lebanon-Syria supports the eastern Mediterranean and France, Italy and the Balkans support southern Europe."
+    },
+    {
+      "rank": 116,
+      "unsupported_share": 25,
+      "verdict": "keep",
+      "scientific_name": "Verbena rigida",
+      "common_name": "Slender vervain",
+      "phrase_at_review": "South America",
+      "reason": "All countries sit in South America; the phrase only omits detail."
+    },
+    {
+      "rank": 117,
+      "unsupported_share": 25,
+      "verdict": "keep",
+      "scientific_name": "Weigela florida",
+      "common_name": "Weigelia",
+      "phrase_at_review": "northeastern Asia",
+      "reason": "Manchuria, Primorye, Korea, Japan and north-central China are exactly northeastern Asia."
+    },
+    {
+      "rank": 118,
+      "unsupported_share": 25,
+      "verdict": "keep",
+      "scientific_name": "Euphorbia rigida",
+      "common_name": "Upright myrtle spurge",
+      "phrase_at_review": "the Mediterranean region and Turkey",
+      "reason": "Türkiye is listed and the Mediterranean is covered by Cyprus, so both halves of the phrase are supported."
+    },
+    {
+      "rank": 119,
+      "unsupported_share": 25,
+      "verdict": "keep",
+      "scientific_name": "Satureja montana",
+      "common_name": "Savory",
+      "phrase_at_review": "southern Europe and the Mediterranean",
+      "reason": "France, Italy, Spain, Greece and the Balkans support both halves of the phrase; Northern Africa is umbrella overshoot."
+    },
+    {
+      "rank": 120,
+      "unsupported_share": 25,
+      "verdict": "keep",
+      "scientific_name": "Lathyrus latifolius",
+      "common_name": "Everlasting-pea",
+      "phrase_at_review": "southern Europe and the Mediterranean",
+      "reason": "Southern Europe and the Mediterranean are both strongly supported, including Algeria, Morocco and Tunisia."
+    },
+    {
+      "rank": 121,
+      "unsupported_share": 25,
+      "verdict": "keep",
+      "scientific_name": "Linum narbonense",
+      "common_name": "Flax",
+      "phrase_at_review": "the Mediterranean region",
+      "reason": "Every country is Mediterranean; the Western Asia flag comes from the umbrella word, not the data."
+    },
+    {
+      "rank": 122,
+      "unsupported_share": 25,
+      "verdict": "keep",
+      "scientific_name": "Spartium junceum",
+      "common_name": "Genet",
+      "phrase_at_review": "the Mediterranean region",
+      "reason": "Mediterranean coverage is thorough; the phrase merely omits the Azores."
+    },
+    {
+      "rank": 123,
+      "unsupported_share": 25,
+      "verdict": "keep",
+      "scientific_name": "Cistus albidus",
+      "common_name": "White-leaf rock-rose",
+      "phrase_at_review": "the western Mediterranean region",
+      "reason": "Spain, Portugal, France, Morocco, Algeria and the western islands are precisely the western Mediterranean."
+    },
+    {
+      "rank": 124,
+      "unsupported_share": 25,
+      "verdict": "keep",
+      "scientific_name": "Cyclamen hederifolium",
+      "common_name": "Sowbread",
+      "phrase_at_review": "the Mediterranean region",
+      "reason": "Greece, Italy, France, the Balkans and Türkiye are all Mediterranean; the Northern Africa flag is overshoot."
+    },
+    {
+      "rank": 125,
+      "unsupported_share": 25,
+      "verdict": "keep",
+      "scientific_name": "Chamaerops humilis",
+      "common_name": "European fan palm",
+      "phrase_at_review": "the Mediterranean region",
+      "reason": "All countries ring the Mediterranean, so the phrase is accurate if unspecific."
+    },
+    {
+      "rank": 126,
+      "unsupported_share": 25,
+      "verdict": "keep",
+      "scientific_name": "Teucrium fruticans",
+      "common_name": "Shrubby germander",
+      "phrase_at_review": "the Mediterranean",
+      "reason": "Every country is Mediterranean basin; Western Asia is umbrella-edge noise."
+    },
+    {
+      "rank": 127,
+      "unsupported_share": 25,
+      "verdict": "keep",
+      "scientific_name": "Agave americana",
+      "common_name": "American agave",
+      "phrase_at_review": "Mexico and the southern United States",
+      "reason": "Texas and Arizona support the southern United States and six Mexican regions support Mexico."
+    },
+    {
+      "rank": 128,
+      "unsupported_share": 25,
+      "verdict": "keep",
+      "scientific_name": "Paeonia mascula",
+      "common_name": "Coral peony",
+      "phrase_at_review": "southern Europe and the Mediterranean",
+      "reason": "Southern Europe and the Mediterranean are both well covered from Spain and France to Cyprus and Palestine."
+    },
+    {
+      "rank": 129,
+      "unsupported_share": 25,
+      "verdict": "keep",
+      "scientific_name": "Acis autumnalis",
+      "common_name": "Autumn snowflake",
+      "phrase_at_review": "the western Mediterranean",
+      "reason": "Spain, Portugal, Morocco, Algeria, Tunisia and the western islands are the western Mediterranean exactly."
+    },
+    {
+      "rank": 130,
+      "unsupported_share": 25,
+      "verdict": "rewritten",
+      "scientific_name": "Alkekengi officinarum",
+      "common_name": "Chinese lantern",
+      "phrase_at_review": "central and southern Europe to eastern Asia"
+    },
+    {
+      "rank": 131,
+      "unsupported_share": 25,
+      "verdict": "keep",
+      "scientific_name": "Bupleurum fruticosum",
+      "common_name": "Shrubby hare's-ear",
+      "phrase_at_review": "the Mediterranean region",
+      "reason": "All countries are Mediterranean; the Western Asia flag is umbrella overshoot."
+    },
+    {
+      "rank": 132,
+      "unsupported_share": 25,
+      "verdict": "keep",
+      "scientific_name": "Cynara cardunculus",
+      "common_name": "Spanish artichoke",
+      "phrase_at_review": "the Mediterranean region",
+      "reason": "Mediterranean coverage is complete; the phrase only omits the Canaries and Madeira."
+    },
+    {
+      "rank": 133,
+      "unsupported_share": 25,
+      "verdict": "keep",
+      "scientific_name": "Allium siculum",
+      "common_name": "Honey garlic",
+      "phrase_at_review": "the Mediterranean region and southwestern Asia",
+      "reason": "Türkiye covers southwestern Asia and the Mediterranean half is supported by Italy, France, Greece and the islands."
+    },
+    {
+      "rank": 134,
+      "unsupported_share": 25,
+      "verdict": "keep",
+      "scientific_name": "Juniperus oxycedrus",
+      "common_name": "Cade juniper",
+      "phrase_at_review": "the Mediterranean region",
+      "reason": "Every country is Mediterranean basin; the flag is umbrella-edge only."
+    },
+    {
+      "rank": 135,
+      "unsupported_share": 23,
+      "verdict": "keep",
+      "scientific_name": "Leucanthemum vulgare",
+      "common_name": "Oxeye daisy",
+      "phrase_at_review": "Europe and Asia",
+      "reason": "Asia is genuinely present via Iran, Türkiye, Kazakhstan, the Central Asian states and Siberia."
+    },
+    {
+      "rank": 136,
+      "unsupported_share": 23,
+      "verdict": "keep",
+      "scientific_name": "Echium vulgare",
+      "common_name": "Blue echium",
+      "phrase_at_review": "Europe and Asia",
+      "reason": "Asia is supported by Xinjiang, Kazakhstan, Turkmenistan, Siberia and Transcaucasus."
+    },
+    {
+      "rank": 137,
+      "unsupported_share": 22,
+      "verdict": "keep",
+      "scientific_name": "Origanum vulgare",
+      "common_name": "Wild marjoram",
+      "phrase_at_review": "Europe, North Africa, and Asia",
+      "reason": "All three named areas are present, including Algeria, Morocco and Tunisia for North Africa."
+    },
+    {
+      "rank": 138,
+      "unsupported_share": 20,
+      "verdict": "keep",
+      "scientific_name": "Helianthus tuberosus",
+      "common_name": "Jerusalem artichoke",
+      "phrase_at_review": "North America",
+      "reason": "The whole list is US states and Canadian provinces; the phrase is a correct umbrella."
+    },
+    {
+      "rank": 139,
+      "unsupported_share": 20,
+      "verdict": "keep",
+      "scientific_name": "Verbena hastata",
+      "common_name": "American blue vervain",
+      "phrase_at_review": "North America",
+      "reason": "Entirely North American; the phrase only omits detail."
+    },
+    {
+      "rank": 140,
+      "unsupported_share": 20,
+      "verdict": "keep",
+      "scientific_name": "Capsicum annuum",
+      "common_name": "Chilli pepper",
+      "phrase_at_review": "Central and South America",
+      "reason": "Central America and South America are both real (Guatemala, Panamá, Colombia, Peru, Brazil); Southern South America is overshoot."
+    },
+    {
+      "rank": 141,
+      "unsupported_share": 20,
+      "verdict": "keep",
+      "scientific_name": "Thymus praecox",
+      "common_name": "Mother of thyme",
+      "phrase_at_review": "Europe",
+      "reason": "Almost every country is European, so the phrase is accurate and simply less specific."
+    },
+    {
+      "rank": 142,
+      "unsupported_share": 20,
+      "verdict": "keep",
+      "scientific_name": "Capsicum frutescens",
+      "common_name": "Tabasco pepper",
+      "phrase_at_review": "Central and South America",
+      "reason": "Central and South American countries are both plentiful in the list."
+    },
+    {
+      "rank": 143,
+      "unsupported_share": 20,
+      "verdict": "keep",
+      "scientific_name": "Iris unguicularis",
+      "common_name": "Algerian iris",
+      "phrase_at_review": "the Mediterranean region and Algeria",
+      "reason": "Algeria is listed and the rest of the range is Mediterranean, so the phrase is redundant rather than wrong."
+    },
+    {
+      "rank": 144,
+      "unsupported_share": 20,
+      "verdict": "keep",
+      "scientific_name": "Phlomis fruticosa",
+      "common_name": "Jerusalem-sage",
+      "phrase_at_review": "the Mediterranean region and the Caucasus",
+      "reason": "Transcaucasus supports the Caucasus and Greece, Italy and the islands support the Mediterranean."
+    },
+    {
+      "rank": 145,
+      "unsupported_share": 19,
+      "verdict": "keep",
+      "scientific_name": "Polygonatum odoratum",
+      "common_name": "Solomon's-seal",
+      "phrase_at_review": "Europe and Asia",
+      "reason": "Both halves supported: European countries throughout, plus Japan, Korea, China, Vietnam and Siberia for Asia."
+    },
+    {
+      "rank": 146,
+      "unsupported_share": 17,
+      "verdict": "keep",
+      "scientific_name": "Galium verum",
+      "common_name": "Lady's bedstraw",
+      "phrase_at_review": "Europe, Asia, and North Africa",
+      "reason": "Europe, Asia (Iran, Türkiye, Japan, Korea, Kazakhstan) and North Africa (Algeria, Morocco, Tunisia) are all in the country list."
+    },
+    {
+      "rank": 147,
+      "unsupported_share": 17,
+      "verdict": "keep",
+      "scientific_name": "Carex pendula",
+      "common_name": "Drooping sedge",
+      "phrase_at_review": "Europe and western Asia",
+      "reason": "Western Asia is real (Türkiye, Cyprus, Lebanon-Syria, Iraq, Palestine) and the Eastern Europe flag is only the Europe umbrella stretching wider than the range."
+    },
+    {
+      "rank": 148,
+      "unsupported_share": 17,
+      "verdict": "keep",
+      "scientific_name": "Lilium martagon",
+      "common_name": "Martagon lily",
+      "phrase_at_review": "Europe and western Asia",
+      "reason": "Türkiye and Transcaucasus cover western Asia, and the Northern Europe flag is umbrella overshoot."
+    },
+    {
+      "rank": 149,
+      "unsupported_share": 17,
+      "verdict": "keep",
+      "scientific_name": "Lonicera periclymenum",
+      "common_name": "Woodbine",
+      "phrase_at_review": "Europe and northwestern Africa",
+      "reason": "Morocco supports northwestern Africa and the Eastern Europe flag is only the Europe umbrella overshooting."
+    },
+    {
+      "rank": 150,
+      "unsupported_share": 17,
+      "verdict": "keep",
+      "scientific_name": "Ilex aquifolium",
+      "common_name": "English holly",
+      "phrase_at_review": "Europe and the Mediterranean",
+      "reason": "Mediterranean occurrence well supported (Algeria, Tunisia, Morocco, Italy, Greece); the Western Asia flag is the classic Mediterranean umbrella edge, exactly like rosemary."
+    },
+    {
+      "rank": 151,
+      "unsupported_share": 17,
+      "verdict": "keep",
+      "scientific_name": "Salvia verticillata",
+      "common_name": "Lilac sage",
+      "phrase_at_review": "Europe and western Asia",
+      "reason": "Iran, Iraq, Lebanon-Syria and Türkiye support western Asia; the Northern Europe flag is umbrella overshoot."
+    },
+    {
+      "rank": 152,
+      "unsupported_share": 17,
+      "verdict": "keep",
+      "scientific_name": "Salvia nemorosa",
+      "common_name": "Woodland sage",
+      "phrase_at_review": "Europe and central Asia",
+      "reason": "Kazakhstan, Uzbekistan, Tadzhikistan and Afghanistan support central Asia; the Northern Europe flag is umbrella overshoot."
+    },
+    {
+      "rank": 153,
+      "unsupported_share": 17,
+      "verdict": "rewritten",
+      "scientific_name": "Dianthus deltoides",
+      "common_name": "Maiden pink",
+      "phrase_at_review": "Europe and western Asia"
+    },
+    {
+      "rank": 154,
+      "unsupported_share": 17,
+      "verdict": "keep",
+      "scientific_name": "Lamium maculatum",
+      "common_name": "Spotted henbit",
+      "phrase_at_review": "Europe to western Asia",
+      "reason": "Türkiye, Lebanon-Syria, Palestine and Transcaucasus support western Asia; the Northern Europe flag is umbrella overshoot."
+    },
+    {
+      "rank": 155,
+      "unsupported_share": 17,
+      "verdict": "keep",
+      "scientific_name": "Anthriscus cerefolium",
+      "common_name": "Chervil",
+      "phrase_at_review": "Europe and western Asia",
+      "reason": "Iran, Iraq, Türkiye and Transcaucasus support western Asia; the Northern Europe flag is umbrella overshoot."
+    },
+    {
+      "rank": 156,
+      "unsupported_share": 17,
+      "verdict": "rewritten",
+      "scientific_name": "Verbascum nigrum",
+      "common_name": "Dark mullein",
+      "phrase_at_review": "Europe and western Asia"
+    },
+    {
+      "rank": 157,
+      "unsupported_share": 17,
+      "verdict": "keep",
+      "scientific_name": "Hesperis matronalis",
+      "common_name": "Damask-violet",
+      "phrase_at_review": "Europe and western Asia",
+      "reason": "Türkiye, North Caucasus and Transcaucasus support western Asia; the Northern Europe flag is umbrella overshoot."
+    },
+    {
+      "rank": 158,
+      "unsupported_share": 17,
+      "verdict": "rewritten",
+      "scientific_name": "Salvia pratensis",
+      "common_name": "Meadow clary",
+      "phrase_at_review": "Europe and western Asia"
+    },
+    {
+      "rank": 159,
+      "unsupported_share": 17,
+      "verdict": "rewritten",
+      "scientific_name": "Thymus serpyllum",
+      "common_name": "Creeping thyme",
+      "phrase_at_review": "Europe and western Asia"
+    },
+    {
+      "rank": 160,
+      "unsupported_share": 15,
+      "verdict": "keep",
+      "scientific_name": "Primula veris",
+      "common_name": "Cowslip",
+      "phrase_at_review": "Europe and Asia",
+      "reason": "Iran, Türkiye, Kazakhstan, Kirgizstan, Xinjiang and Khabarovsk make Asia true; the flagged regions are just the umbrella edges."
+    },
+    {
+      "rank": 161,
+      "unsupported_share": 14,
+      "verdict": "keep",
+      "scientific_name": "Lantana camara",
+      "common_name": "Common lantana",
+      "phrase_at_review": "tropical Americas and the Caribbean",
+      "reason": "Tropical American and Caribbean occurrence is thoroughly supported and the phrase never claims southern South America."
+    },
+    {
+      "rank": 162,
+      "unsupported_share": 14,
+      "verdict": "keep",
+      "scientific_name": "Papaver rhoeas",
+      "common_name": "Shirley poppy",
+      "phrase_at_review": "Europe, North Africa, and western Asia",
+      "reason": "Europe, North Africa (Algeria, Egypt, Libya, Morocco, Tunisia) and western Asia (Iran, Iraq, Türkiye) are all present."
+    },
+    {
+      "rank": 163,
+      "unsupported_share": 14,
+      "verdict": "rewritten",
+      "scientific_name": "Sambucus nigra",
+      "common_name": "Elder",
+      "phrase_at_review": "Europe, western Asia, and North Africa"
+    },
+    {
+      "rank": 164,
+      "unsupported_share": 14,
+      "verdict": "keep",
+      "scientific_name": "Ribes uva-crispa",
+      "common_name": "Gooseberry",
+      "phrase_at_review": "Europe and western Asia",
+      "reason": "Iran, Türkiye and Transcaucasus support western Asia; the Northern Europe flag is umbrella overshoot."
+    },
+    {
+      "rank": 165,
+      "unsupported_share": 14,
+      "verdict": "keep",
+      "scientific_name": "Armeria maritima",
+      "common_name": "Marsh daisy",
+      "phrase_at_review": "northern coasts of Europe, Asia, and North America",
+      "reason": "Northern Asian coasts are covered by Kamchatka, Magadan, Sakhalin, Kuril Is. and Yakutiya, so the Eastern Asia flag is an umbrella edge."
+    },
+    {
+      "rank": 166,
+      "unsupported_share": 14,
+      "verdict": "rewritten",
+      "scientific_name": "Euphorbia amygdaloides",
+      "common_name": "Wood spurge",
+      "phrase_at_review": "Europe, North Africa, and southwestern Asia"
+    },
+    {
+      "rank": 167,
+      "unsupported_share": 14,
+      "verdict": "keep",
+      "scientific_name": "Buxus sempervirens",
+      "common_name": "Caucasian boxwood",
+      "phrase_at_review": "Europe, North Africa, and western Asia",
+      "reason": "Algeria, Libya and Morocco support North Africa and Iran, Türkiye and Transcaucasus support western Asia."
+    },
+    {
+      "rank": 168,
+      "unsupported_share": 14,
+      "verdict": "keep",
+      "scientific_name": "Nepeta cataria",
+      "common_name": "Catnip",
+      "phrase_at_review": "Europe, western Asia, and North Africa",
+      "reason": "Morocco supports North Africa and Iran, Iraq and Türkiye support western Asia."
+    },
+    {
+      "rank": 169,
+      "unsupported_share": 14,
+      "verdict": "keep",
+      "scientific_name": "Delphinium elatum",
+      "common_name": "Alpine delphinium",
+      "phrase_at_review": "Europe to central Asia and Siberia",
+      "reason": "Kazakhstan and Kirgizstan support central Asia and the Siberian regions are all present."
+    },
+    {
+      "rank": 170,
+      "unsupported_share": 14,
+      "verdict": "keep",
+      "scientific_name": "Sanguisorba officinalis",
+      "common_name": "Burnet bloodwort",
+      "phrase_at_review": "Europe, Asia, and North America",
+      "reason": "Alaska, California, Oregon, Maine and eastern Canada support North America; the flagged US regions are umbrella edges."
+    },
+    {
+      "rank": 171,
+      "unsupported_share": 14,
+      "verdict": "keep",
+      "scientific_name": "Fragaria vesca",
+      "common_name": "Alpine strawberry",
+      "phrase_at_review": "Europe, Asia, and North America",
+      "reason": "All three continents are heavily supported; the flagged Asian sub-regions are umbrella overshoot."
+    },
+    {
+      "rank": 172,
+      "unsupported_share": 13,
+      "verdict": "keep",
+      "scientific_name": "Dryopteris filix-mas",
+      "common_name": "Male fern",
+      "phrase_at_review": "Europe, Asia, and North America",
+      "reason": "Europe, Asia (Iran, Kazakhstan, Pakistan, West Himalaya) and North America are all present."
+    },
+    {
+      "rank": 173,
+      "unsupported_share": 11,
+      "verdict": "keep",
+      "scientific_name": "Deschampsia cespitosa",
+      "common_name": "Tufted hairgrass",
+      "phrase_at_review": "Europe, Asia, and North America",
+      "reason": "The species is genuinely circumboreal across all three named continents."
+    },
+    {
+      "rank": 174,
+      "unsupported_share": 11,
+      "verdict": "keep",
+      "scientific_name": "Helianthemum nummularium",
+      "common_name": "Common rock-rose",
+      "phrase_at_review": "Europe and the Mediterranean region",
+      "reason": "Algeria plus Spain, Italy, Greece and Türkiye support a Mediterranean claim; the North Africa flag is the usual umbrella edge."
+    },
+    {
+      "rank": 175,
+      "unsupported_share": 10,
+      "verdict": "keep",
+      "scientific_name": "Helenium autumnale",
+      "common_name": "Common sneezeweed",
+      "phrase_at_review": "North America",
+      "reason": "The plant is North American throughout the US and Canada; the Mexico flag is only the umbrella word reaching further than the range."
+    },
+    {
+      "rank": 176,
+      "unsupported_share": 9,
+      "verdict": "keep",
+      "scientific_name": "Panicum virgatum",
+      "common_name": "Blackwell switch grass",
+      "phrase_at_review": "North America and Central America",
+      "reason": "Belize, El Salvador, Honduras and Nicaragua support Central America, and the Subarctic America flag is an umbrella edge."
+    },
+    {
+      "rank": 177,
+      "unsupported_share": 9,
+      "verdict": "keep",
+      "scientific_name": "Briza media",
+      "common_name": "Perennial quaking grass",
+      "phrase_at_review": "Europe to the Himalayas",
+      "reason": "West Himalaya, East Himalaya, Nepal and Tibet are all present, so the phrase eastern endpoint is correct."
+    },
+    {
+      "rank": 178,
+      "unsupported_share": 8,
+      "verdict": "keep",
+      "scientific_name": "Asplenium trichomanes",
+      "common_name": "Maidenhair spleenwort",
+      "phrase_at_review": "Europe, Asia, and North America",
+      "reason": "Europe, Asia (China, India, Nepal, Iran, Taiwan) and North America are all supported."
+    },
+    {
+      "rank": 179,
+      "unsupported_share": 4,
+      "verdict": "keep",
+      "scientific_name": "Juniperus communis",
+      "common_name": "Common juniper",
+      "phrase_at_review": "Europe, Asia, and North America",
+      "reason": "The species is circumboreal across all three continents and the single flagged region is an umbrella edge."
+    }
+  ]
+}

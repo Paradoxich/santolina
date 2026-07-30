@@ -1,0 +1,242 @@
+[
+  {
+    "id": "41e12209-2c6c-49f4-a430-04647bdc8129",
+    "scientific_name": "Tulipa clusiana",
+    "common_name": "Lady tulip",
+    "expect": "central Asia and the Mediterranean",
+    "phrase": "Iran, Afghanistan, and the western Himalaya",
+    "why": "phrase claimed the Mediterranean; WCVP native range is Afghanistan, Iran, Iraq, Pakistan and the West Himalaya, with no Mediterranean country"
+  },
+  {
+    "id": "c080ce19-c6cd-48b9-8bd4-cf9876917a6a",
+    "scientific_name": "Crocus sativus",
+    "common_name": "Saffron crocus",
+    "expect": "the Mediterranean and western Asia",
+    "phrase": "Greece",
+    "why": "phrase claimed the Mediterranean and western Asia; WCVP records Greece alone"
+  },
+  {
+    "id": "1173d8d3-8c11-40fa-a2b6-f110b1a9f06b",
+    "scientific_name": "Coriandrum sativum",
+    "common_name": "Coriander",
+    "expect": "southern Europe and western Asia",
+    "phrase": "the eastern Mediterranean and western Asia",
+    "why": "phrase claimed southern Europe; every WCVP country is Asian"
+  },
+  {
+    "id": "9981a70f-2beb-427c-b48b-d65a424d914b",
+    "scientific_name": "Narcissus jonquilla",
+    "common_name": "Jonquil",
+    "expect": "southern Europe and northern Africa",
+    "phrase": "Spain and Portugal",
+    "why": "phrase claimed northern Africa; WCVP records Portugal and Spain only"
+  },
+  {
+    "id": "eaee56e8-b7b7-4b63-b1f9-c6e948ed0a5d",
+    "scientific_name": "Silene coronaria",
+    "common_name": "Rose campion",
+    "expect": "southern Europe and North Africa",
+    "phrase": "southeastern Europe and western Asia",
+    "why": "phrase claimed North Africa; no African country in the WCVP range"
+  },
+  {
+    "id": "9fe98215-8beb-4fc1-a1d5-715dcbfd3473",
+    "scientific_name": "Capsicum chinense",
+    "common_name": "Biquinho pepper",
+    "expect": "Central and South America",
+    "phrase": "northern South America",
+    "why": "phrase claimed Central America; WCVP records Brazil North, Guyana and Suriname"
+  },
+  {
+    "id": "622474f3-5515-408d-930d-ff34a460dad7",
+    "scientific_name": "Humulus lupulus",
+    "common_name": "Common hop",
+    "expect": "Europe, western Asia, and North America",
+    "phrase": "Europe, western Asia, and Siberia",
+    "why": "phrase claimed North America, where WCVP marks all 30 localities INTRODUCED"
+  },
+  {
+    "id": "8e690d97-e9d5-493d-a4d1-9e2c0012b99c",
+    "scientific_name": "Ocimum basilicum",
+    "common_name": "Sweet basil",
+    "expect": "tropical regions from central Africa to southeast Asia",
+    "phrase": "India to southeast Asia and northern Australia",
+    "why": "phrase claimed central Africa; the WCVP range is entirely Asian and Australasian"
+  },
+  {
+    "id": "0262177b-b5f0-4cfe-af0d-26c062a985a2",
+    "scientific_name": "Cosmos bipinnatus",
+    "common_name": "Garden cosmos",
+    "expect": "Mexico and Central America",
+    "phrase": "Mexico",
+    "why": "phrase claimed Central America; all five WCVP regions are Mexican"
+  },
+  {
+    "id": "12cf3773-69ed-4075-a1b3-823a8f0836a8",
+    "scientific_name": "Levisticum officinale",
+    "common_name": "Lovage",
+    "expect": "southwestern Asia and southern Europe",
+    "phrase": "Iran and Afghanistan",
+    "why": "phrase claimed southern Europe; WCVP records Afghanistan and Iran only"
+  },
+  {
+    "id": "170d456d-ac50-40ee-a85d-ff5e940a8f64",
+    "scientific_name": "Acer japonicum",
+    "common_name": "Fullmoon maple",
+    "expect": "Japan, Korea, and eastern China",
+    "phrase": "Japan",
+    "why": "phrase claimed Korea and eastern China; WCVP records Japan and the Kuril Is."
+  },
+  {
+    "id": "28f73dfc-f242-457d-8a7f-ac6261991a7c",
+    "scientific_name": "Acer palmatum",
+    "common_name": "Japanese maple",
+    "expect": "Japan, Korea, and eastern China",
+    "phrase": "Japan and Korea",
+    "why": "phrase claimed eastern China; WCVP records Japan and Korea"
+  },
+  {
+    "id": "3286d5bc-52df-4f84-9b9f-47fbda10ce44",
+    "scientific_name": "Nandina domestica",
+    "common_name": "Chinese-bamboo",
+    "expect": "China and Japan",
+    "phrase": "China",
+    "why": "phrase claimed Japan; all three WCVP regions are Chinese"
+  },
+  {
+    "id": "6e26aa15-f8f8-4918-89bf-b745e9f88bef",
+    "scientific_name": "Scilla forbesii",
+    "common_name": "Glory-of-the-snow",
+    "expect": "western and central Asia",
+    "phrase": "Turkey",
+    "why": "phrase claimed central Asia; WCVP records Türkiye alone"
+  },
+  {
+    "id": "71babd0a-8139-4715-bfbd-1eb5f40bf1f7",
+    "scientific_name": "Iris pallida",
+    "common_name": "Sweet iris",
+    "expect": "the eastern Mediterranean and the Balkans",
+    "phrase": "Italy and the western Balkans",
+    "why": "phrase claimed the eastern Mediterranean; WCVP records Italy and the NW Balkan Peninsula"
+  },
+  {
+    "id": "a1a0cbf6-5a0d-42a8-bc55-0a7d9aae03ee",
+    "scientific_name": "Narcissus bulbocodium",
+    "common_name": "Petticoat daffodil",
+    "expect": "southwestern Europe and North Africa",
+    "phrase": "southwestern Europe",
+    "why": "phrase claimed North Africa; WCVP records France, Portugal and Spain"
+  },
+  {
+    "id": "c22e1a33-22dc-480a-8f84-6cdd10c55379",
+    "scientific_name": "Salvia elegans",
+    "common_name": "Pineapple sage",
+    "expect": "Mexico and Guatemala",
+    "phrase": "Mexico",
+    "why": "phrase claimed Guatemala; all five WCVP regions are Mexican"
+  },
+  {
+    "id": "d4dc6edc-5148-4f19-b028-ec15c22e4809",
+    "scientific_name": "Sesleria caerulea",
+    "common_name": "Blue moor grass",
+    "expect": "mountains from the Pyrenees to the Balkans",
+    "phrase": "mountains from the Alps to the Balkans",
+    "why": "phrase claimed the Pyrenees; neither France nor Spain is in the WCVP range"
+  },
+  {
+    "id": "5a535570-caa0-4ce2-86fa-901422a4e340",
+    "scientific_name": "Erythronium dens-canis",
+    "common_name": "Dogtooth-violet",
+    "expect": "Europe and western Asia",
+    "phrase": "central and southern Europe",
+    "why": "phrase claimed western Asia; every WCVP country is European"
+  },
+  {
+    "id": "568d9630-25e9-4b4b-968f-7adf157c6399",
+    "scientific_name": "Ornithogalum umbellatum",
+    "common_name": "Garden star-of-bethlehem",
+    "expect": "Europe, the Mediterranean, and western Asia",
+    "phrase": "Europe and the Mediterranean",
+    "why": "phrase claimed western Asia; every WCVP country is European"
+  },
+  {
+    "id": "be7efd3d-8afe-436b-8ce7-c50f553ba1f5",
+    "scientific_name": "Alkekengi officinarum",
+    "common_name": "Chinese lantern",
+    "expect": "central and southern Europe to eastern Asia",
+    "phrase": "southeastern Europe to eastern Asia",
+    "why": "phrase claimed central Europe; no Middle Europe country in the WCVP range"
+  },
+  {
+    "id": "822ad657-f123-4d7e-a217-7e85cedb4ef1",
+    "scientific_name": "Dianthus deltoides",
+    "common_name": "Maiden pink",
+    "expect": "Europe and western Asia",
+    "phrase": "Europe and Siberia",
+    "why": "phrase claimed western Asia; the eastern range is Siberian"
+  },
+  {
+    "id": "b73b915c-6ad8-4c7e-99ec-f1c916d1a04f",
+    "scientific_name": "Verbascum nigrum",
+    "common_name": "Dark mullein",
+    "expect": "Europe and western Asia",
+    "phrase": "Europe and Siberia",
+    "why": "phrase claimed western Asia; the eastern range is Siberian"
+  },
+  {
+    "id": "eb82a0af-e21e-48b1-93d3-91f74d7594ae",
+    "scientific_name": "Salvia pratensis",
+    "common_name": "Meadow clary",
+    "expect": "Europe and western Asia",
+    "phrase": "Europe",
+    "why": "phrase claimed western Asia; every WCVP country is European"
+  },
+  {
+    "id": "f8e0508e-f4d4-4b43-9741-ab3e1f537324",
+    "scientific_name": "Thymus serpyllum",
+    "common_name": "Creeping thyme",
+    "expect": "Europe and western Asia",
+    "phrase": "Europe and western Siberia",
+    "why": "phrase claimed western Asia; the eastern range is West Siberia"
+  },
+  {
+    "id": "42bf09d2-bced-40fb-bb9f-d9f9cfa05196",
+    "scientific_name": "Sambucus nigra",
+    "common_name": "Elder",
+    "expect": "Europe, western Asia, and North Africa",
+    "phrase": "Europe and western Asia",
+    "why": "phrase claimed North Africa; the only Atlantic island is the Azores, which is Macaronesia"
+  },
+  {
+    "id": "69778467-89e5-4dd8-b108-d3cb00761109",
+    "scientific_name": "Euphorbia amygdaloides",
+    "common_name": "Wood spurge",
+    "expect": "Europe, North Africa, and southwestern Asia",
+    "phrase": "Europe and southwestern Asia",
+    "why": "phrase claimed North Africa; no African country in the WCVP range"
+  },
+  {
+    "id": "64e1a536-3aea-4213-8d0e-194c9d97162e",
+    "scientific_name": "Citrus limon",
+    "common_name": "Lemon",
+    "expect": "southern Asia",
+    "phrase": "cultivated hybrid with no wild origin",
+    "why": "contradicts: a cultigen with no WCVP native range, matching its reviewed native_region override"
+  },
+  {
+    "id": "423d69ee-9a52-4009-9ea3-dfdbd3c6e5ff",
+    "scientific_name": "Imperata cylindrica",
+    "common_name": "Sharp grass",
+    "expect": "eastern and southeastern Asia",
+    "phrase": "Africa, southern Europe, and western Asia",
+    "why": "contradicts: phrase named the range it was introduced into; none of its 81 native localities is East or Southeast Asian"
+  },
+  {
+    "id": "d1c2b1dc-f362-4fab-8893-914ad7918676",
+    "scientific_name": "Perovskia atriplicifolia",
+    "common_name": "Russian-sage",
+    "expect": "central Asia",
+    "phrase": "Afghanistan, Pakistan, and the western Himalaya",
+    "why": "contradicts: central Asia is the one region its validated tags exclude; WCVP records Afghanistan, Pakistan, Tibet, West Himalaya and Xinjiang"
+  }
+]

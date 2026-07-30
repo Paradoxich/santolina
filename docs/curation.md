@@ -319,6 +319,31 @@ cultigen), no false alarms, and every genuine over-claim still visible in the
 list. **A guard that cries wolf on Rosemary is worth less than a short list
 somebody actually reads.**
 
+**Working the queue: judge against countries, not against the tags.** The
+markdown ranks rows by Level-2 gap, which is the right way to _sort_ a queue and
+the wrong way to _decide_ one — every row in it claims something the tags lack,
+by construction. The run's JSON carries WCVP's botanical-country list per row
+(`Albania, Algeria, Baleares…`), and that is what the decision is made against.
+The 2026-07-30 pass took 30 of 179 rows that way with no new Claude spend.
+
+Two rules do most of the work. **Omission is not a defect** — a phrase less
+specific than the tags is a phrase, not an error, and flagging it is how the
+first design flooded. **Only an over-claim is**, and even then only where the
+named place has no native occurrence at all: an umbrella word overshooting its
+edges is not one. And the sharp test for the class that matters:
+**silence is not contradiction.** `Humulus lupulus` claimed North America and
+WCVP carries 30 North American localities, all `INTRODUCED` — a real defect, the
+`Imperata` shape. `Osmunda regalis` claimed it too and WCVP carries no North
+American row at all, because it splits those plants off at variety rank — not a
+defect, and left alone. Read `establishmentMeans` before rewriting a continent
+out of a phrase.
+
+Decisions are applied by `scripts/apply-native-to-fixes.ts` from a committed
+decision file, never by the guard: it asserts the stored phrase still matches
+what was reviewed, refuses a replacement carrying a dash or semicolon, and nulls
+`native_checked_at` so the rewritten phrase is re-read rather than inheriting a
+stamp earned by different words.
+
 <a id="hardiness"></a>
 
 ## Hardiness: RHS rating is canonical, drafted then human-verified
