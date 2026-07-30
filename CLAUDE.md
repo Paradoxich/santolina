@@ -190,6 +190,14 @@ Everything else is deferred. Do not build edible growing or multiple gardens in 
 
 ---
 
+## Before you hand-roll a control
+
+**Find out whether the problem has a name.** Rate limits, pagination caps, auth quirks and schema formats are documented, and the fix is usually a flag or a library, not a control you write. Before writing pacing, retry, chunking, or a cap-dodging loop, name the limit and cite where you read it. This repo has already paid for the 1000-row PostgREST cap, a pacing loop set four times too fast, and a hand-written JSON Schema that rejected an entire batch — all documented upstream, all one search away (`docs/database-log.md`, traps).
+
+**If you are the third script working around the same thing, say so instead of doing it again.** Three scripts dodging a pagination cap means the transport is wrong for those jobs, not that pagination is hard. Matching the surrounding code is the default failure mode here: local consistency is easier than asking whether the shape is right.
+
+---
+
 ## What NOT to build yet
 
 - Changesets — added before first npm publish
