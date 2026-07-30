@@ -36,43 +36,61 @@ cd apps/web && pnpm round:progress --round <n>  # what a round still owes
 
 ---
 
-## 2026-07-30 — session/2026-07-30-natives-dedup
+## 2026-07-30 — session/2026-07-30-179
 
-**In flight: nothing.** Merged into `main` as `5ada2a9` + `0ff54d7`; no PR
-raised, nothing pushed to origin yet. Worktree and branch removed at session end.
-The `native_to` / `native_region` duplication carried by the last three handoffs
-is closed: `cross-check-native-region --apply` nulls `native_checked_at` on rows
-it corrects, so a corrected region requeues its own phrase, and
-`cross-check-native-to` reports `contradicts` when phrase and validated tags
-share no region. All 277 contaminated stamps cleared, all 695 rows re-checked
-(coverage now 695/695). Mechanics in [`curation.md`](../docs/curation.md#native-to),
-numbers in that day's `database-log.md` entry. `native_to` was NOT edited and
-must not become machine-derived — that ruling is unchanged.
+**In flight: nothing.** Merged into `main` as `64fe9c5` + `430770c`; `main` and
+the branch are pushed to origin, no PR raised. The 179-row `native_to` queue the
+last handoff carried is worked: **32 phrases rewritten, 151 kept, all four
+`contradicts` closed**, every rewritten row re-passing the guard at gross 0,
+contradicts 0. Six `native_region` rows were corrected on the way (trap 24).
+Method and rulings in [`curation.md`](../docs/curation.md#native-to), numbers in
+that day's `database-log.md` entry. `native_to` was NOT machine-derived — every
+edit was decided against WCVP country evidence and committed with its reason.
+
+**Standing item — do not work around this one. Ana's instruction, 2026-07-30.**
+
+The 151 kept rows are recorded in
+`apps/web/reference/native-to-review-2026-07-30.json`, **not in catalog state**.
+Nothing in the database says a person read them, so `cross-check-native-to` will
+rank them again on any later run, and the queue will look unworked when it is
+not. The fix is a "phrase reviewed and kept" stamp on `plants`, which is a
+migration, so it is **queued behind standing rule 11** and listed in that rule
+alongside trap 16's `plant_combinations` timestamp.
+
+Until that migration lands: **leave it.** Do not re-review those rows, do not
+rebuild the triage, and do not add a workaround that stores the verdict
+somewhere else — a second home for it is the failure this repo keeps paying for.
+A future run re-ranking them is expected, not a regression. Check before assuming
+it is still open:
+
+```bash
+grep -A 12 'Queued behind this rule' docs/database-log.md  # what is still queued behind rule 11
+ls supabase/migrations | wc -l                             # 35 means no new migration has landed
+```
 
 **Next steps, in order:**
 
-1. **Work the 179-row queue in `docs/native-to-review-2026-07-30.md`.** Editorial,
-   so it is an agent's job, not Ana's. Read from the top: it is ranked by how much
-   of the phrase its validated tags do not support, and the tail is broad wording
-   being broad, not defects. Three things to know before starting. The four
-   `contradicts` rows are the real rewrites. `Crocus speciosus` may be a **tags**
-   problem rather than a phrase problem — its validated range is `Caucasus` alone,
-   and the guard only reports that two fields disagree, never which side is wrong.
-   And the drafts need checking, not applying: `Perovskia`'s reintroduces "central
-   Asia", the exact term its tags exclude. The run's full per-row JSON is committed
-   at `apps/web/reference/native-to-crosscheck-2026-07-30.json.gz`; gunzip it into
-   `apps/web/reports/native-to-crosscheck.json` to use `--report-only` instead of
-   re-billing ~695 Claude calls.
-2. **A local Supabase stack — trigger: the next migration, not before.** Nothing is
-   blocked on it today. The full rule now lives in `docs/database-log.md` as
-   **standing rule 11** rather than being retyped here each session; it names the
-   stack command, the restore rehearsal it owes, and the order for the next
-   migration.
+1. **A local Supabase stack — still the trigger for everything above.** Rule 11
+   holds the stack command, the restore rehearsal it owes, the order for the next
+   migration, and now the list of what is waiting on it. Two queued schema changes
+   make it worth doing rather than merely owed. If you bring the stack up and
+   apply neither, say so in that session's entry — an unexplained empty list next
+   time reads as "there was nothing".
+2. **Nothing else is owed on the catalog.** The pipeline is finished and a further
+   round is optional (July 29 ruling). `docs/native-to-review-2026-07-30.md` is
+   deliberately **not** regenerated: a true refresh is a whole-catalog run
+   (~695 Claude calls, ~1 hour), and its header records what was applied, so read
+   the table as the input to that pass rather than current state.
 
-**Worth knowing before the next long AI pass:** two designs for this session's
-check shipped a flooded report into a full catalog run and were killed on
-spot-checks of four rows against the database. Trap 23 has both, plus the cheap
-rule that saved ~1300 calls — read the first twenty rows of a long run before
-letting it finish.
+**Worth knowing before the next long AI pass:** trap 23 still applies — read the
+first twenty rows of a long run before letting it finish. Added this session,
+**trap 24**: a report-only guard run stamps every row it decided, including the
+ones it decided were wrong, so `--new-only` skips them forever. Read the tail of
+a report-only run and re-run with `--apply` in the same session.
+
+**One judgment call worth revisiting if you disagree:** `Erysimum cheiri` went
+from "southern Europe and the Mediterranean" to "Greece". Its phrase named no
+unsupported place, so a stricter reading of the rule would have left it; it was
+rewritten because WCVP records Greece alone and marks the rest introduced.
 
 **Open questions:** none blocking.
