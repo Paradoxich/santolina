@@ -1,20 +1,28 @@
 /**
  * Guards the token layer's one-home rule. Run by `pnpm tokens:check` and CI.
  *
- * The failure this exists to prevent, concretely: `docs/token-taxonomy.md`
- * carried `--color-surface-card-translucent: rgb(237 242 238 / 0.7)` next to a
+ * The failure this exists to prevent, concretely: a drift log in docs/
+ * (token-taxonomy.md, since deleted) carried
+ * `--color-surface-card-translucent: rgb(237 242 238 / 0.7)` next to a
  * sentence naming the component that used it. Over time the value drifted from
  * the ramp step it claimed, and the token was reassigned to a different
  * component. Both halves read as current fact. Neither was.
  *
- * Three checks:
+ * Four checks:
  *
  *   A. No token VALUE in prose. `packages/tokens/index.css` is the only home.
  *      Docs may point at /design-system, which reads values live from :root.
- *   B. No colour literal in an index.css comment. The drifted copies were
- *      comments like `/* sage-200 @ 70% *\/` sitting beside a hand-typed
- *      triple. Ramp-derived values use `rgb(from var(--step) r g b / a)`.
+ *      Scans docs/ recursively plus the root-level *.md files.
+ *   B. No token re-types another token's channels — whether the copy is the
+ *      whole value or a literal buried inside a compound value (the
+ *      landing-scrim gradient carried sage-950's channels as a hand-typed
+ *      rgb() for weeks). Black is excepted: it is --color-scrim's own value,
+ *      and every shadow legitimately composes black at some alpha.
+ *      Ramp-derived values use `rgb(from var(--step) r g b / a)`.
  *   C. The design-system token list covers index.css exactly, both ways.
+ *   D. Every fill/stroke in apps/web/public/icons is a current token value.
+ *      The weather-*.svg set is exempt by design: illustrations with their
+ *      own fixed palette, not UI glyphs (see DESIGN_SYSTEM.md).
  *
  * WHAT A GREEN RUN DOES NOT MEAN. This proves no token value is duplicated and
  * no token is missing from the design-system page. It proves nothing about
@@ -67,6 +75,11 @@ function listDocs(): string[] {
     }
   }
   walk(DOCS_DIR)
+  // Root-level docs (DESIGN_SYSTEM.md, README.md, CLAUDE.md) hold the rules
+  // and are the likeliest place a value gets pasted next to a token name.
+  for (const entry of readdirSync(REPO_ROOT)) {
+    if (entry.endsWith('.md')) out.push(entry)
+  }
   return out.sort()
 }
 
@@ -178,6 +191,27 @@ function checkNoChannelCopies(tokens: { name: string; value: string }[]) {
         'from the step its comment names, which is how this started.',
     })
   }
+
+  // A literal buried inside a compound value (gradient, shadow) is the same
+  // copy in a place the whole-value parse can't see. Black is excepted: it is
+  // --color-scrim's own value, and shadows legitimately compose it.
+  for (const { name, value } of tokens) {
+    if (channelsOf(value)) continue // whole values handled above
+    for (const literal of value.matchAll(
+      /#[0-9a-f]{3,8}\b|\brgba?\(\s*\d+[\s,]+\d+[\s,]+\d+[^)]*\)/gi
+    )) {
+      const ch = channelsOf(literal[0])
+      if (!ch || ch === '0,0,0') continue
+      const source = primitives.get(ch)
+      if (!source || source === name) continue
+      failures.push({
+        where: `packages/tokens/index.css:${lineOf(name)}`,
+        detail:
+          `${name} embeds the channels of ${source} inside a compound value. ` +
+          `Derive that stop instead: rgb(from var(${source}) r g b / <alpha>).`,
+      })
+    }
+  }
 }
 
 /** C. The design-system token list matches index.css in both directions. */
@@ -214,6 +248,34 @@ function checkDesignSystemCoverage(tokenNames: Set<string>) {
   }
 }
 
+/** D. Icon SVGs carry only current token colours (weather set exempt). */
+const ICONS_DIR = 'apps/web/public/icons'
+
+function checkIconColors(tokens: { name: string; value: string }[]) {
+  const current = new Set<string>()
+  for (const { value } of tokens) {
+    const ch = channelsOf(value)
+    if (ch) current.add(ch)
+  }
+  for (const entry of readdirSync(join(REPO_ROOT, ICONS_DIR)).sort()) {
+    if (!entry.endsWith('.svg')) continue
+    if (entry.startsWith('weather-')) continue // illustrations, own palette
+    const svg = readRepoFile(`${ICONS_DIR}/${entry}`)
+    for (const attr of svg.matchAll(/(?:fill|stroke|stop-color)="([^"]+)"/gi)) {
+      const raw = attr[1]!
+      if (raw === 'none' || raw === 'currentColor') continue
+      const ch = channelsOf(raw === 'white' ? '#ffffff' : raw)
+      if (ch && current.has(ch)) continue
+      failures.push({
+        where: `${ICONS_DIR}/${entry}`,
+        detail:
+          `${raw} is not a current token value. If a ramp step moved, ` +
+          're-export the icon; decorative palettes are weather-only.',
+      })
+    }
+  }
+}
+
 function main() {
   const tokens = readTokenDeclarations()
   const names = new Set(tokens.map((t) => t.name))
@@ -221,11 +283,12 @@ function main() {
   checkDocs(names)
   checkNoChannelCopies(tokens)
   checkDesignSystemCoverage(names)
+  checkIconColors(tokens)
 
   if (failures.length === 0) {
     console.log(
       `tokens: OK — ${tokens.length} declared, no values in prose, ` +
-        'design-system list matches'
+        'icon colours current, design-system list matches'
     )
     return
   }

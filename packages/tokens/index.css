@@ -2,24 +2,10 @@
  * @paradoxui/tokens
  * Design token definitions as CSS custom properties.
  *
- * THIS FILE IS THE SOURCE OF TRUTH for the design system. Figma Variables
- * are synced FROM this structure, not the other way around.
- *
- * Taxonomy: docs/token-taxonomy.md. Three tiers:
- *   1. Primitives — hue/scale names (--color-fern-600). Raw values live
- *      ONLY here.
- *   2. Semantic — role names (--color-text-muted). Always aliases of tier 1
- *      (translucent compositions excepted, marked inline). Components
- *      consume this tier ~95% of the time. Dark mode overrides this tier
- *      and nothing else.
- *   3. Component — component names (--chip-radius). Sparse. Must alias
- *      tier 1/2 or encode a measured value — never introduce a new hue.
- *
- * Rules:
- *   - Role names describe function, never location. "surface-card", not
- *     "background-close-button". Location names allowed in tier 3 only.
- *   - New semantic role: only if its usage rule fits one sentence.
- *   - New raw value: only if design actually chose one.
+ * THIS FILE IS THE SOURCE OF TRUTH for the design system: the only place a
+ * token value may be written. Taxonomy, tier rules, and styling patterns
+ * live in DESIGN_SYSTEM.md's tokens section (one home — not repeated here).
+ * Live visual reference: /design-system in the running app.
  */
 
 /* Public Sans lives with the tokens so consumers outside the monorepo get
@@ -41,16 +27,16 @@
   /* Sage — THE neutral ramp (H 152). Light end carries surfaces, dark end
    * carries text. Hand-tuned by Ana in Figma (see docs/architecture.md);
    * 700/600 now read lighter than the OKLCH draft — text-muted is back
-   * under 4.5:1 (3.9 on card, 3.6 on page) and the sage-600 icon step
-   * under 3:1 (2.76) until the semantic remap addresses it. */
+   * under 4.5:1 (3.6 on card, 3.2 on page) and the sage-600 icon step
+   * under 3:1 (2.6) until the semantic remap addresses it. */
   --color-sage-50: #f4f9f5;
   --color-sage-100: #e8f2ea; /* shipped — sidebar nav hover/selected */
   --color-sage-200: #e2ebe2; /* shipped — surface-card, surface-drawer, divider */
   --color-sage-300: #d1e0d3; /* shipped — surface-page, hover tints */
   --color-sage-400: #c4d0c6;
   --color-sage-500: #adb8ae; /* ~was gray-100 — disabled/faint only */
-  --color-sage-600: #8b948c; /* icon/large-text de-emphasis — now 2.76:1, below 3:1 */
-  --color-sage-700: #727a73; /* ~was gray-500 — now 3.9:1 on card, below 4.5:1 */
+  --color-sage-600: #8b948c; /* icon/large-text de-emphasis — now 2.6:1, below 3:1 */
+  --color-sage-700: #727a73; /* ~was gray-500 — now 3.6:1 on card, below 4.5:1 */
   --color-sage-800: #464d47; /* ~was gray-600 */
   --color-sage-900: #2f3330;
   --color-sage-950: #111411; /* ~was gray-900 */
@@ -76,7 +62,7 @@
   --color-honey-400: #c79d59;
   --color-honey-500: #ac7c26;
   --color-honey-600: #8e6201;
-  --color-honey-700: #714d00; /* warning text — 6.2:1 on honey-100 */
+  --color-honey-700: #714d00; /* warning text — 5.6:1 on honey-100 */
   --color-honey-800: #593c00;
   --color-honey-900: #382500;
   --color-honey-950: #1b0f00;
@@ -378,6 +364,6 @@
   --landing-scrim: linear-gradient(
     to top,
     var(--color-sage-950),
-    rgb(17 20 17 / 0) 94%
+    rgb(from var(--color-sage-950) r g b / 0) 94%
   );
 }
