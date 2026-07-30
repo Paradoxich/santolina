@@ -71,8 +71,9 @@ product does. Rules live in the files they govern; nothing durable is only here.
 recommendations". The user-flow sentence under it was corrected this session; the
 headline is public positioning, so it was left alone. It stays or it goes.
 
-**Untriaged, filed nowhere:** four places a standard tool beats what is here — a
-direct Postgres connection for the offline scripts (removes the 1000-row cap
-class, gives transactions), a rate-limit library, `zod` for model-output schemas,
-and CLI-driven migrations so applied and committed are one act. None is urgent.
-They belong in the Notion **Build Backlog**, not in this file.
+**Filed in the Notion Build Backlog** (Now → Database), not here: `zod` for
+model-output schemas (~2–3h), a rate-limit library (~1–2h), a direct Postgres
+connection for new offline scripts (half a day of groundwork, no retrofit), and
+CLI-driven migrations (pair it with the local-Supabase item, it is the only one
+that can touch prod schema). Three shipped items were also marked done and three
+stale doc references in that backlog corrected.
