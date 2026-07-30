@@ -1,0 +1,18 @@
+[
+  {
+    "id": "7ed70055-adc1-44e6-88d4-f87f397d7bbd",
+    "scientific_name": "Pittosporum tobira",
+    "common_name": "Australian-laurel",
+    "expect": "eastern Asia, Japan and China",
+    "phrase": "Japan, Korea, and Taiwan",
+    "why": "phrase claimed China, which WCVP marks INTRODUCED (China South-Central, China Southeast, Hainan); native range is Japan, Korea, Nansei-shoto and Taiwan"
+  },
+  {
+    "id": "f61e87a6-f6a4-4f1a-a417-e9a53029ea7f",
+    "scientific_name": "Erysimum cheiri",
+    "common_name": "Erysimum cheiri",
+    "expect": "southern Europe and the Mediterranean",
+    "phrase": "Greece",
+    "why": "region correction cut its tags from four regions to Southeastern Europe alone; WCVP records Greece as the only native locality and marks the rest of the Mediterranean INTRODUCED, so the old breadth no longer holds"
+  }
+]

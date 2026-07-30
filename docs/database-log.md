@@ -49,6 +49,15 @@ The numbers **in this file are different and must stay written down**: a dated s
 
 11. **No new migration is applied until a local Supabase stack exists and has replayed the existing 35.** Agreed with Ana 2026-07-30. `supabase/` holds only `migrations/` — no `config.toml` — so every migration and every RLS policy this project has ever had ran first in production, and a wrong RLS policy fails silently rather than erroring (the bare-`name` → `gardens.name` storage bug is the class this catches; trap 18 is the same shape from the reading side). The stack is also the only free restore target the database backup has ever had, so **rehearse `pg_restore --data-only` from a `db-backups` dump in that same session** (rule 10). Bring up the light stack — `supabase start -x studio,realtime,storage-api,imgproxy,edge-runtime,inbucket,vector,logflare` (≈2 GB, Postgres + auth + PostgREST) — and cap Docker's disk allowance so the VM cannot balloon. **CLI-driven migrations (`supabase db push`) land in that same session and nothing else does**: it is the only work that touches prod schema, and it is what ends trap 13's rename dance. Order for the next migration: stack up → laptop `pnpm db:backup` → replay + rehearse restore → `db push`.
 
+    **Queued behind this rule — read this list when the stack comes up, and add to it rather than starting one elsewhere.** A deferral recorded only where the blocked work is described is invisible at the moment the block lifts; that is trap 17, and this list exists so these do not repeat it. Names and pointers only, no restated reasoning:
+
+    | Wants                                          | Why it is waiting                                                                                                  | Where it is explained                |
+    | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------ |
+    | A timestamp on `plant_combinations`            | Closed rounds fail their pairing check permanently and the count only grows                                        | Trap 16                              |
+    | A "phrase reviewed and kept" stamp on `plants` | 151 kept `native_to` rows are recorded in a committed file, not in catalog state, so every later run re-ranks them | The 2026-07-30 native_to queue entry |
+
+    Neither is urgent on its own, which is exactly why both need somewhere to be found. **If you bring the stack up and apply nothing from this list, say so in that session's entry** — an unexplained empty list next time reads as "there was nothing", and it will not be true.
+
 **Rule 9 is enforced, not encouraged.** `.husky/check-db-log.sh` runs on every commit and blocks it if a round directory is committed without an entry naming that round, if a migration is committed without touching this file, or if this file still contains the `TODO —` placeholders the script writes. Git cannot see what you ran against Supabase — only what you commit — so the hook checks the artifacts database work leaves behind, and the honest reading of a green hook is "you recorded something", not "you recorded enough". `--no-verify` exists and is occasionally right (a revert, a docs fixup). It is not the normal path, and whatever you skip is inherited by whoever comes next.
 
 ---
@@ -208,13 +217,21 @@ Every guard here checks whether a value is _wrong_. Until round 8 nothing checke
 
 `check-round-scope --round 9` returns 120 failures, all "out-of-scope pairing added", all "both plants predate the round" — they are round 10's `curate-combinations` output. `cleared_at` works for **plant** writes because a plant row carries `updated_at`; **a `plant_combinations` row carries no timestamp**, so every later round's pairings fail every earlier closed round permanently, and the count only grows.
 
-**Do not read a pairing failure on a closed round as a regression, and do not waive them one by one.** The real fix is a timestamp on `plant_combinations`, which is a schema change nobody has needed yet.
+**Do not read a pairing failure on a closed round as a regression, and do not waive them one by one.** The real fix is a timestamp on `plant_combinations`, which is a schema change nobody has needed yet — queued behind standing rule 11, and listed there.
 
 #### 17. A written-down blocker outlives the thing that blocked it — FIXED for the CI-secrets case, expect the shape
 
 **"CI has no Supabase secrets" was reported to Ana four times after it stopped being true.** Both secrets were added 2026-07-28 21:43; `gh secret list` has answered it in one command ever since. Every telling came from a session that saw `catalog-state staleness: SKIPPED` on a PR and found a comment in `ci.yml` that was true when written. The actual reason for the skip is `if: github.event_name != 'pull_request'` — deliberate, so no PR-triggered job can read the service role key.
 
 Three things made it recur, all now closed: a silent skip and a real pass looked identical from outside (it **fails** now); the job name explained nothing (it is `catalog-state staleness (main only)` so a PR's SKIPPED states its own reason — do not shorten it); and the stale sentence had copies, in `ci.yml` twice, in trap 14, and in `.claude/handoff.md`. **Fixing one copy is what "we fixed it" meant the previous times.**
+
+#### 24. A guard stamp records that the check RAN, not that its finding was acted on — ADDED 2026-07-30
+
+A report-only `cross-check-native-region` run stamps `native_region_checked_at` on every row it decided, including the rows it decided were **wrong**. Nothing else revisits them: `--new-only` selects on the stamp, so a disagreement found and left unapplied is stamped out of every later sweep. Six rows sat in exactly that state, `Crocus speciosus` among them — tagged `Caucasus` alone while WCVP gave it Bulgaria, Iran, Krym, the Caucasus and Türkiye, so the Explore native filter hid it from the Balkan users it is native to.
+
+It surfaced only because the `native_to` queue ranked a phrase against those tags and the phrase turned out to be **right**. The script prints `⚠ N row(s) are stamped as checked but their corrections are still pending` and that warning is the whole defence — it is printed once, at the end of a long run, and a stamped row looks identical to a clean one afterwards.
+
+**Read the tail of a report-only run before you close the terminal, and re-run with `--apply` in the same session.** The general shape: when a stamp means "seen", never let it be read as "settled". Verifying is the cheap half — `--ids <uuid>` re-checks one row against the cache for free.
 
 ---
 
@@ -273,6 +290,34 @@ Reading the wrong field names leaves the code undefined, every zone falls throug
 ## Sessions
 
 <!-- Newest first. Append with: scripts/log-db-session.ts --round <label> -->
+
+### 2026-07-30 — The 179-row native_to queue, worked (not a round)
+
+**Branch** `session/2026-07-30-179`, off `main` at `afbe3bf`. Not a round; no seed, no migration. ~36 Claude calls (the re-check only — the queue itself was resolved from the committed run at `reference/native-to-crosscheck-2026-07-30.json.gz`, saving ~695). GBIF cache warm, no fetches.
+
+**Database**
+
+- **32 `native_to` phrases rewritten**, `native_checked_at` nulled on each. Decisions committed at `reference/native-to-fixes-2026-07-30.json` (30) and `-cascade.json` (2), each carrying the country evidence for its edit; applied by the new `scripts/apply-native-to-fixes.ts`.
+- **6 `native_region` rows corrected** via `cross-check-native-region --apply` (trap 24): `Osmanthus heterophyllus` +Indo-China, `Helianthemum nummularium` +Northern Africa, `Crocus speciosus` +3 regions, and `Pittosporum tobira`, `Calibrachoa parviflora`, `Erysimum cheiri` losing regions WCVP marks INTRODUCED.
+- **151 of the 179 queued rows reviewed and deliberately left**, each with its verdict and reason recorded in `reference/native-to-review-2026-07-30.json`. Only 28 of the 32 rewrites were queue rows: the three `contradicts` rows are excluded from the ranked list by design, and `Erysimum cheiri` arrived through the region cascade. `179 - 32` is the wrong subtraction and gives 147.
+
+**Found**
+
+- Trap 24, above. The whole-catalog region re-check that found it also proves the tags are otherwise sound: **659 match, 2 reviewed, 6 disagree, 26 no-data**, so the queue's premise held.
+- **The report JSON carries WCVP botanical-country lists that the markdown queue drops.** Judging a phrase against `Albania, Algeria, Baleares…` is a different task from judging it against four Level-2 names, and it is the reason 30 of 179 rows could be decided without re-billing. The markdown is the summary; the JSON is the evidence.
+- **Silence and contradiction are not the same finding.** Four phrases claimed North America against a WCVP range without it. `Humulus lupulus` has 30 North American localities, every one `INTRODUCED` — the `Imperata` shape, rewritten. `Osmunda regalis`, `Polypodium vulgare` and `Athyrium filix-femina` have no North American rows at all, because WCVP splits those populations off at variety rank; the phrase is not wrong and they were left. The establishment marker is what separates the two, and only one of them is a defect.
+- `Crocus speciosus` was a **tags** defect wearing a phrase defect's costume — the handoff suspected this and it is confirmed. Its phrase was correct all along and is unchanged.
+
+**Verified**
+
+- `cross-check-native-to --all --new-only` over all 36 requeued rows: **gross 0, contradicts 0**, minor 3, no_data 1 (`Citrus limon`, the cultigen, by design). The queue's four contradicts are closed.
+- 30/30 and 2/2 writes re-read and matched, 0 stale. 0 phrases in the catalog contain an em or en dash.
+
+**Not done**
+
+- `docs/native-to-review-2026-07-30.md` is **not regenerated** — a true refresh is a whole-catalog run (~695 calls, ~1 hour). Its header now records what was applied; treat the table as the input, not current state.
+- The 151 kept rows carry no stamp in the database saying a person read them. The record is the committed review file, not catalog state, so `--new-only` cannot skip them and a later run will rank them again. A "reviewed and kept" column is the real fix and it is a migration, so it is **queued behind standing rule 11 and listed there** rather than only here.
+- `Erysimum cheiri`'s rewrite was a judgement past the stated rule (its phrase named no unsupported place, it was just far too broad for a Greece-only endemic). It is the one edit here that a stricter reading would have left alone.
 
 ### 2026-07-30 — native_to and native_region stop diverging (not a round)
 

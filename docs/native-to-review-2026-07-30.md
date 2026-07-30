@@ -1,5 +1,22 @@
 # `native_to` review queue — run of 2026-07-30
 
+> **WORKED 2026-07-30. This table is the input, not current state.** 32 phrases
+> were rewritten and 6 `native_region` rows corrected; the remaining **151**
+> queued rows were reviewed and deliberately left, with a verdict and reason per
+> row in
+> [`native-to-review-2026-07-30.json`](../apps/web/reference/native-to-review-2026-07-30.json).
+> (28, not 32, of the rewrites were queue rows — the three `contradicts` rows are
+> not in this ranked list and `Erysimum cheiri` came in through the region
+> cascade.) The rewrite decisions, each with the WCVP country evidence behind it,
+> are in
+> [`native-to-fixes-2026-07-30.json`](../apps/web/reference/native-to-fixes-2026-07-30.json)
+> and [`-cascade.json`](../apps/web/reference/native-to-fixes-2026-07-30-cascade.json);
+> the account is that day's [`database-log.md`](database-log.md) entry. Every
+> rewritten row re-passed the guard at `gross 0, contradicts 0`. Regenerating
+> this file honestly costs a whole-catalog run, so it was left as the record of
+> the run it describes: **any phrase below that was rewritten now reads
+> differently in the database.**
+
 **Generated output, not a hand-written document.** It is a snapshot of one run
 and goes stale the moment a phrase is edited; the date in the filename is part
 of its name for that reason. Committed because `apps/web/reports/` is gitignored
