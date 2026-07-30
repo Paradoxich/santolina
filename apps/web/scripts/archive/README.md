@@ -9,7 +9,7 @@ done — not because they are expected to run again.
 One-off remediation scripts stay as history. A past correction is kept
 runnable so the next person can see exactly what was done rather than infer it
 from a diff, but it is **not** a routine pipeline step and must never be
-treated as one. The per-round cadence is [the round runbook](../../../../docs/architecture.md#round-runbook); if a
+treated as one. The per-round cadence is [the round runbook](../../../../docs/curation.md#round-runbook); if a
 script is not listed there, it is not part of a round.
 
 This rule existed before this directory did — it lived only in the Notion
@@ -37,12 +37,12 @@ before reuse, and copy from a current script instead.
 
 ## What is here, and why it is finished
 
-| script                          | what it did                                                                                                                     | why it is done                                                                                                                                                                                                             |
-| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `backfill-sun-split.ts`         | Split `sun_requirements` into `sun_thrives` / `sun_tolerates` (migration `20260709220000`), set-preservingly, across 152 plants | Spent. `verify-round` FAILs on an empty `sun_thrives` and passes on all 595 rows, so there is nothing left to backfill. Rationale: `architecture.md` [the two-field sun model](../../../../docs/architecture.md#sun-model) |
-| `dry-run-native-region.ts`      | Previewed two zoom levels for the region model so the A vs A' choice could be made — wrote nothing                              | Decision closed July 13 2026 (Option A, WGSRPD Level 2, PR #44). Superseded by `regenerate-native-region.ts`, which has its own generate-then-review flow                                                                  |
-| `derive-empty-native-region.ts` | Part 2 of the same dry run: a fallback for the 14 plants Trefle returns no native distribution for — wrote nothing              | Same closed decision. Archived with its other half rather than left behind alone                                                                                                                                           |
-| `regenerate-native-to.ts`       | Replaced Trefle's raw TDWG dump in `native_to` with short readable phrases                                                      | Ran July 2026. **The most likely of these to be wanted again** — `native_to` unification is still open — so read it before reusing rather than copying it                                                                  |
+| script                          | what it did                                                                                                                     | why it is done                                                                                                                                                                                                         |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `backfill-sun-split.ts`         | Split `sun_requirements` into `sun_thrives` / `sun_tolerates` (migration `20260709220000`), set-preservingly, across 152 plants | Spent. `verify-round` FAILs on an empty `sun_thrives` and passes on all 595 rows, so there is nothing left to backfill. Rationale: `architecture.md` [the two-field sun model](../../../../docs/curation.md#sun-model) |
+| `dry-run-native-region.ts`      | Previewed two zoom levels for the region model so the A vs A' choice could be made — wrote nothing                              | Decision closed July 13 2026 (Option A, WGSRPD Level 2, PR #44). Superseded by `regenerate-native-region.ts`, which has its own generate-then-review flow                                                              |
+| `derive-empty-native-region.ts` | Part 2 of the same dry run: a fallback for the 14 plants Trefle returns no native distribution for — wrote nothing              | Same closed decision. Archived with its other half rather than left behind alone                                                                                                                                       |
+| `regenerate-native-to.ts`       | Replaced Trefle's raw TDWG dump in `native_to` with short readable phrases                                                      | Ran July 2026. **The most likely of these to be wanted again** — `native_to` unification is still open — so read it before reusing rather than copying it                                                              |
 
 `regenerate-native-to.ts` is also the worked example behind the cascade rule in
 `architecture.md`: a script that mutates a checked field must null the matching

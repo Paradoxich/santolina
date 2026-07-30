@@ -34,7 +34,7 @@
  *    call sees only the plant's identity and the candidate text, never the old
  *    description and never the first model's reasoning, and decides whether it
  *    clears the bar. Self-approval would make the whole pass circular, which
- *    is the same argument the blind cross-checks rest on (docs/architecture.md#botanical-cross-check).
+ *    is the same argument the blind cross-checks rest on (docs/curation.md#botanical-cross-check).
  *
  * 3. Tags — the same judging call as 2. An empty style_tags list is a valid,
  *    deliberate answer (the July 2026 re-tag pass made 33 plants

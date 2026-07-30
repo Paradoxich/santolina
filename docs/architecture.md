@@ -24,7 +24,7 @@ which means the overlong version does not just waste space, it stops the load-
 bearing parts from being read at all.
 
 - [Plant data: the source, the schema, and the trust boundary](#group-plant-data)
-- [The curation pipeline](#group-curation)
+- [The curation pipeline](curation.md) — its own document
 - [Accounts, sessions, and access](#group-accounts)
 - [The garden you own](#group-garden)
 - [Views derived at render time](#group-derived)
@@ -63,7 +63,7 @@ migration, and to a paragraph restating a script header.
 
 **Trade-offs accepted:**
 
-- Trefle has patchy `growth` data for well-known ornamentals (Lavandula angustifolia, Hydrangea macrophylla, Echinacea purpurea all had entirely null growth objects). This is addressed by the AI curation pass (see [the curation model](#curation-model)).
+- Trefle has patchy `growth` data for well-known ornamentals (Lavandula angustifolia, Hydrangea macrophylla, Echinacea purpurea all had entirely null growth objects). This is addressed by the AI curation pass (see [the curation model](curation.md#curation-model)).
 - Trefle's rate limit is 120 req/min. The seed script paces at 1.5s between species (2 calls each) to stay safely under the limit.
 
 <a id="provider-agnostic-columns"></a>
@@ -84,7 +84,7 @@ restated here — a hand-copied table drifts, and this one did: it described
 stopped taking it from Trefle at all. What belongs here is the handful of
 mapping calls that are judgements rather than plumbing:
 
-- **Every mapping was confirmed against live API responses before any code was written.** Trefle's docs and its payloads disagree in places, which is also how the `tdwg_code` trap ([native_region](#native-region)) was possible.
+- **Every mapping was confirmed against live API responses before any code was written.** Trefle's docs and its payloads disagree in places, which is also how the `tdwg_code` trap ([native_region](curation.md#native-region)) was possible.
 - **`care_level` is left null rather than derived.** Trefle has no equivalent and a plausible guess would be indistinguishable from a real value.
 - **`height_min_cm` takes Trefle's _average_ height** as a "typical minimum" proxy. There is no true minimum in the payload, and an absent range reads worse than a slightly conservative one.
 - **`image_urls` captures every category key, including undocumented ones.** Trefle sometimes returns an unnamed `""` image category, so `mapImages` iterates `Object.keys(images)` instead of a fixed list, and `TrefleImages` carries an index signature so the type admits the open-ended shape. The hero still comes from a priority list, with unknown categories last.
@@ -138,7 +138,7 @@ merged.
 
 **AI-only fields are not referenced anywhere in the function body.** `plant_type`, `plant_type_label`, `style_tags`, `space_types`, `bloom_color`, `foliage_color`, `spread_min_cm`, `spread_max_cm`, `water_needs`, `water_needs_summary`, `light_needs`, `soil_needs`, `maintenance_notes`, `common_issues`, `best_placement`, `environment_benefits`, `seasonal_rhythm`, `garden_use_tags`, and `ai_drafted_at` cannot be overwritten via the Trefle sync path — this is a structural guarantee, not a convention.
 
-**Revised July 9, 2026 — the original rules were fill-only in the wrong direction.** The table above protected fields only when Trefle sends _nothing_: `COALESCE(EXCLUDED.x, plants.x)` lets an incoming non-null Trefle value overwrite the stored one, and the array `CASE` rules pointed the same way. That was fine against Trefle's nulls (the original bug) but destructive wherever Trefle _has_ data and the stored value had since been editorially corrected — the round-3 full re-seed reverted 49 of the 62 editorial `sun_requirements` corrections ([the botanical cross-check](#botanical-cross-check)) this way. `supabase/migrations/20260709210000_fill_only_trefle_upsert.sql` replaces the function with uniform **fill-only** semantics: on UPDATE the stored value always wins and Trefle can only fill gaps (null scalars, empty arrays); `common_name`/`scientific_name`/`data_source` are no longer rewritten either. INSERTs are unchanged. Trade-off: a re-seed can no longer refresh names/images/bloom data on existing rows — refreshing from Trefle now requires explicit tooling that declares which fields it overwrites. Alongside this, `seed-plants.ts` now skips already-cataloged species by default (matched on scientific name, then on resolved Trefle ID to catch synonym remaps); `--include-existing` restores full-list behavior. Verified live: a hostile upsert against a corrected row left every field intact, and a full default seed run made zero writes (145 skipped).
+**Revised July 9, 2026 — the original rules were fill-only in the wrong direction.** The table above protected fields only when Trefle sends _nothing_: `COALESCE(EXCLUDED.x, plants.x)` lets an incoming non-null Trefle value overwrite the stored one, and the array `CASE` rules pointed the same way. That was fine against Trefle's nulls (the original bug) but destructive wherever Trefle _has_ data and the stored value had since been editorially corrected — the round-3 full re-seed reverted 49 of the 62 editorial `sun_requirements` corrections ([the botanical cross-check](curation.md#botanical-cross-check)) this way. `supabase/migrations/20260709210000_fill_only_trefle_upsert.sql` replaces the function with uniform **fill-only** semantics: on UPDATE the stored value always wins and Trefle can only fill gaps (null scalars, empty arrays); `common_name`/`scientific_name`/`data_source` are no longer rewritten either. INSERTs are unchanged. Trade-off: a re-seed can no longer refresh names/images/bloom data on existing rows — refreshing from Trefle now requires explicit tooling that declares which fields it overwrites. Alongside this, `seed-plants.ts` now skips already-cataloged species by default (matched on scientific name, then on resolved Trefle ID to catch synonym remaps); `--include-existing` restores full-list behavior. Verified live: a hostile upsert against a corrected row left every field intact, and a full default seed run made zero writes (145 skipped).
 
 <a id="curation-layer"></a>
 
@@ -153,7 +153,7 @@ merged.
 
 **`is_curated` flag:** Set to `false` on all automated writes. Flipping it to `true` is a deliberate manual step after human review. This means the plants table always has a clear distinction between "machine-drafted" and "human-verified" rows.
 
-**What "human review" means (redefined July 2026):** the reviewer isn't a botanist, so `is_curated = true` asserts an _editorial_ pass, not botanical verification: the image shows the right plant, the description reads well and on-brand, and the style/space tags make product sense. Botanical facts (hardiness, sun, bloom months) are verified by a separate AI cross-check pass — a second, independent model run prompted to fact-check the curation output and flag disagreements for human spot-checking (built; see [the botanical cross-check](#botanical-cross-check)).
+**What "human review" means (redefined July 2026):** the reviewer isn't a botanist, so `is_curated = true` asserts an _editorial_ pass, not botanical verification: the image shows the right plant, the description reads well and on-brand, and the style/space tags make product sense. Botanical facts (hardiness, sun, bloom months) are verified by a separate AI cross-check pass — a second, independent model run prompted to fact-check the curation output and flag disagreements for human spot-checking (built; see [the botanical cross-check](curation.md#botanical-cross-check)).
 
 **Note:** this separation was not fully enforced until a bug was found and fixed (see [the safe Trefle upsert](#safe-upsert)). Initially, re-running the Trefle seed against already-curated plants silently overwrote `description`, `care_level`, and `height_min_cm` with Trefle's null values, since these are fields both Trefle and AI can populate. The fix ([the safe Trefle upsert](#safe-upsert)) makes this structurally impossible going forward, not just a convention.
 
@@ -171,7 +171,7 @@ merged.
 - **`shrub` vs `tree` by garden use, not ultimate size.** A large shrub / small tree grown as a garden shrub (e.g. `Pittosporum tenuifolium`) stays `shrub`; `tree` is reserved for plants grown as standalone specimens (Taxus, Ilex).
 - **Life-cycle by how it's grown in a temperate ornamental garden.** Tender perennials grown as annuals keep `annual` (`Eschscholzia californica`); short-lived perennials keep `perennial` (`Rudbeckia hirta`).
 
-Corrections that follow this convention are applied by the same guarded, reversible method as [the botanical cross-check](#botanical-cross-check) (update by `scientific_name`/`id`, guarded on `is_curated = false` and an exact match on the prior value). They do **not** flip `is_curated` — a functional-classification fix is not Ana's editorial pass.
+Corrections that follow this convention are applied by the same guarded, reversible method as [the botanical cross-check](curation.md#botanical-cross-check) (update by `scientific_name`/`id`, guarded on `is_curated = false` and an exact match on the prior value). They do **not** flip `is_curated` — a functional-classification fix is not Ana's editorial pass.
 
 ---
 
@@ -179,477 +179,9 @@ Corrections that follow this convention are applied by the same guarded, reversi
 
 ## The curation pipeline
 
-<a id="curation-model"></a>
-
-### AI curation model: claude-sonnet-4-5
-
-**Decision:** Use `claude-sonnet-4-5` for the curation pass (`CURATION_MODEL` constant in `lib/anthropic-client.ts`).
-
-**Rationale:** Better factual reliability than Haiku for botanical claims (hardiness zones, growth habits, native ranges). Cost is negligible at the volume of a plant catalog seed (~30–200 species).
-
-**Two model constants, deliberately split — do not merge them.** `lib/anthropic-client.ts` exports `CURATION_MODEL` (`claude-sonnet-4-5`) and `VISION_MODEL` (`claude-sonnet-5`). Every **text** curation and cross-check script is pinned to the first: `curate-plants`, `cross-check-plants`, `curate-combinations`, `curate-styles`, `curate-greenery`, `draft-hardiness`, and the seasonal-care pair. Only the image pass (`pick-plant-images`, `feed-wikimedia-candidates`) uses the second, because vision needs current generation — Sonnet 5 reads images at up to 2576px on the long edge where 4.5 downscales to 1568px and loses the focus and framing detail the pick depends on ([the hero image pass](#hero-images)).
-
-**Bumping `CURATION_MODEL` is a data migration, not a version bump.** A new model silently re-rolls every field those scripts draft, so it needs its own sample review — the same discipline as the seasonal_care and combinations sample passes. The image pass had no such baseline to protect, which is the only reason it could start on the newer model.
-
-**Prompt strategy:**
-
-- System prompt: `"Respond with ONLY valid JSON, no markdown, no code fences, no preamble, no explanation."`
-- The model sometimes still wraps output in a ` ```json ``` ` fence — the parser defensively strips it before `JSON.parse`.
-- Each prompt sends the plant's known data and requests **only the missing fields** — never asks Claude to regenerate data Trefle already provided.
-- `plant_type` is requested first in every prompt since it gates the hardiness zone decision.
-
-**Annual hardiness logic:**
-
-- If `plant_type === 'annual'` (either already in the DB or returned by Claude in the same response): `hardiness_zone_min` and `hardiness_zone_max` are explicitly set to `null` in the DB patch, overriding any model output. Annuals complete their lifecycle in one season; USDA zones are not applicable.
-
-**Confidence flagging:**
-
-- Claude is instructed to set `hardiness_confidence: 'low'` when it has meaningfully lower confidence (uncommon species, cultivar-specific range, ambiguous). Low-confidence rows are listed in the terminal summary and surfaced in the review queue.
-
-<a id="seeding-scripts"></a>
-
-### Every pass is resumable, and none of them aborts a batch
-
-The scripts' flags and usage live in their own headers and in `package.json`;
-this section used to copy them and ended up printing a `seed-plants.ts` command
-that no longer runs, since scope flags became mandatory
-([the round runbook](#round-runbook)).
-
-The durable shape is that **a failure is per-row, never per-run.** A species
-Trefle cannot resolve, or a plant whose curation call returns unparseable JSON,
-is counted in the summary and skipped; the run continues and exits non-zero.
-Nothing is half-written, so the fix is always to run the same command again.
-Every later guard inherits this through its `*_checked_at` stamp — a killed run
-leaves the rest unstamped and the next pass picks up exactly there
-([the botanical cross-check](#botanical-cross-check)).
-
-<a id="plant-combinations"></a>
-
-### Plant combinations: AI companion pass, capped and idempotent
-
-**The gap:** the "Works well with" drawer section and the "Pairs naturally with" bullet were fully built read-side (`lib/plant-detail.ts`, `components/plant-detail/WorksWellWithSection.tsx`, `lib/good-for-your-garden.ts`), but `plant_combinations` had no write path anywhere — the feature was invisible except for a handful of hand-seeded rows.
-
-**Decision:** `scripts/curate-combinations.ts` populates the table via the same AI-pass pattern as `curate-plants.ts` (Claude via `CURATION_MODEL`, service-role writes, 2s pacing, per-plant loop with a summary). Chosen over hand-seeding or raw SQL — recorded July 8, 2026.
-
-**Constraints enforced by the script, not just the prompt:**
-
-- **Catalog-only pairs.** The FK requires both sides to exist in `plants`. Claude is given a roster of candidate ids and told to copy them exactly; every returned id is validated against the roster in code, and unknown/invented ids are dropped and counted in the summary (`⚠ N invalid id(s) dropped`).
-- **Cap of 5 companions per plant** (the UI shows at most 5), counting _both_ directions of existing rows. Counts are seeded from the DB at startup and updated in memory as rows are inserted, so a plant filled up by earlier iterations stops being offered as a candidate. Plants already at cap are skipped without an API call.
-- **Reversed-pair dedupe.** The schema has a no-self-pair check but no pair-uniqueness constraint, so the script canonicalizes every pair to a sorted-id key and skips any pair already present in either direction. This is what makes re-runs idempotent — existing rows are never deleted or overwritten, only missing pairs added, so the script is safe to re-run as new plants are seeded.
-- **Enum coercion, not rejection.** `combination_type` (`visual`/`ecological`/`seasonal`) and `strength` (`strong`/`moderate`/`weak`) are check-constrained but nullable; an invalid model value is coerced to `null` rather than losing the pair.
-
-**Prompt shape:** the target plant is described with its drafted metadata (type, styles, sun, bloom months/colors, height); candidates are a compact `id — scientific (common)` roster — Claude's own botanical knowledge fills in the rest. The model is explicitly told fewer suggestions beat weak ones, and that `combination_type` is the _dominant_ reason the pair works.
-
-**Why new plants pair mostly among themselves (cap-saturation, not siloing).** The candidate roster is drawn from the _whole_ catalog, not the current seed batch — a new plant can in principle pair with any existing species. But the 5-companion cap counts both directions, so any older plant already at 5 companions is excluded as a candidate. After a few rounds most established plants are saturated, leaving a fresh batch to pair with whatever older plants still have open slots plus each other. The effect looks like per-batch siloing but is purely the cap filling up on a first-come basis: the additive, never-rewire design means later rounds can only fill leftover slots, never displace an existing pairing. This is intended for the current data-completeness goal; revisiting it is tracked as a future inspiration-layer rethink (see the Build Backlog).
-
-<a id="botanical-cross-check"></a>
-
-### Botanical cross-check: blind second pass, flags only, never edits data
-
-**Why (see [the curation layer](#curation-layer)):** `is_curated = true` is an editorial pass, not botanical verification — the reviewer isn't a botanist. Botanical facts drafted by the first AI pass need an independent check.
-
-**Decision:** `scripts/cross-check-plants.ts` re-derives the four load-bearing botanical fields — `plant_type`, `hardiness_zone_min`/`max`, `sun_requirements`, `bloom_months` — for every plant with `ai_drafted_at` set, and flags disagreements. It **never edits catalog data**; resolving a flag is a human decision. (The one column it does write is the operational `botanical_checked_at` stamp — see below — which is not a botanical or editorial field.)
-
-**Blind by design:** the check prompt contains only the species identity (common name, scientific name, family) — never the stored values — so the second pass can't be anchored by the first pass's answers. Independence comes from blindness, not from a different model (`CURATION_MODEL` is used for both).
-
-**Comparison happens in code, with tolerance rules** — botanical sources legitimately disagree at the margins, so exact-match would drown real errors in noise:
-
-| Field              | `disagree` (spot-check)                                                              | `minor` (listed, likely fine)                                               |
-| ------------------ | ------------------------------------------------------------------------------------ | --------------------------------------------------------------------------- |
-| `plant_type`       | any mismatch                                                                         | —                                                                           |
-| `hardiness_zone_*` | ≥ 2 zones apart                                                                      | one side null (±1 zone passes silently)                                     |
-| `sun_requirements` | no set overlap, or stored is a proper subset of the check (under-reported tolerance) | genuine shift: partial overlap that is neither a subset nor a contradiction |
-| `bloom_months`     | no shared months                                                                     | window boundary drifts > 1 month; one side reports no bloom                 |
-
-Annuals with null zones on both sides are not flagged (nulls are correct there, per [the curation model](#curation-model)'s annual rule).
-
-**A directional error pattern is a design signal, not noise.** The first full
-run flagged 68 disagreements of which 61 were sun, and almost all in the same
-direction: the stored range narrower than the check. Random disagreement is
-tolerance; a pattern is a defect in how the field is drafted. So a stored range
-that is a strict subset of the check is treated as a real gap and flagged
-`disagree` rather than `minor`, and the drafting prompt was changed to ask for
-every exposure the species reliably grows in. The eventual root fix was to stop
-using one list at all ([the two-field sun model](#sun-model)).
-
-**A bulk correction is allowed, and must stay reversible.** When a pattern
-rather than a scatter is found, the flags may be applied in one pass instead of
-per-plant — but each row is updated by id, guarded on `is_curated = false` **and
-an exact match on the prior value** taken from the report, so a row that drifted
-since is skipped rather than overwritten. Corrections are also captured as a
-data migration keyed on `scientific_name` rather than live UUIDs, which makes
-them portable and idempotent: a no-op against already-corrected rows and against
-any environment that never had the bad values. What the one such pass actually
-changed is in [`database-log.md`](database-log.md). A botanical correction never
-flips `is_curated` — it is not the editorial pass.
-
-**Output:** terminal report grouped disagreements-first, plus a timestamped JSON report in `apps/web/reports/` (gitignored) recording every flag with stored vs checked values — the artifact for Ana's spot-check sweep and the source of record for any bulk correction. `--limit N` for testing.
-
-**Checked-at stamp — guard scoping (July 2026, migration `20260716120000`).** The guard stamps `plants.botanical_checked_at` on each row the moment it finishes checking it (flagged or clean — the stamp records that the check _ran_, not its verdict). This is operational metadata, not catalog content, so the flags-only rule holds — it never touches a botanical or editorial field. The stamp makes `--new-only` state-based (`WHERE botanical_checked_at IS NULL`): exact (no UTC-midnight batch split), and resumable — a killed run leaves the rest unstamped for the next pass, replacing the earlier newest-calendar-day heuristic. It's a timestamp, not a boolean, so a prompt revision can re-scope by date (`... OR botanical_checked_at < '<date>'`). **Cascade rule:** any script that _mutates_ a checked field must null the matching stamp so the guard re-checks — e.g. `scripts/archive/regenerate-native-to.ts` nulls `native_checked_at` in the same write that rewrites `native_to`. The sibling `native_to` guard (`cross-check-native-to.ts`) carries its own `native_checked_at` stamp on the identical model; `check-bloom-colors.ts` has none by design (a free local validator with no Claude call, it always runs over the whole catalog).
-
-<a id="sun-model"></a>
-
-### Sun modelled as best + tolerated (the root fix)
-
-**Why:** one flat `sun_requirements` list cannot say where a plant _thrives_
-versus where it merely _tolerates_ an exposure, so the drafter names the
-textbook optimum and every batch under-reports. That was first treated as a
-detect-and-widen problem — a corrective sweep applied the blind check's wider
-range — but a backstop that keeps bad drafts off the page is not the same as
-drafting well. Modelling the two ideas separately removes the ambiguity at the
-source, and was pulled ahead of the 500–700 species expansion so new plants are
-captured correctly the first time rather than re-curated later.
-
-**Two rules the retired sweep left behind**, both of which outlive it and are
-not specific to sun. **A machine may widen toward a corroborated second read; it
-may never narrow** — widening on a strict-subset disagreement is exactly the
-union of two independent reads, so it can add a value but never remove one,
-while a contradiction needs a person, because nothing automatic tells "narrow
-but right" from "wrong direction". And **`is_curated = true` is a freeze line**:
-an uncurated row is machine-maintained toward the corroborated range, a curated
-one is human-owned and untouchable. The sweep's first version ignored that and
-widened a shade groundcover a human had deliberately narrowed.
-
-**Model (migration `20260709220000`):**
-
-- `sun_thrives text[]` — exposures where the plant performs at its best (usually one, sometimes two; non-empty once curated).
-- `sun_tolerates text[]` — additional exposures it accepts but isn't at its best in; disjoint from `sun_thrives`; may be empty.
-- `sun_requirements` (unchanged, app-facing) — a **derived mirror**, kept as `canonical(sun_thrives ∪ sun_tolerates)` by a `BEFORE INSERT OR UPDATE` trigger whenever either source field is non-empty. Every existing read site (`good-for-your-garden.ts`, plant detail, garden tile, `format-plant.ts`) keeps reading `sun_requirements` untouched — the app is unchanged; only the source of the data moved underneath it.
-
-**Integrity** is enforced in the DB, not by convention: CHECK constraints require both sets to be valid exposures, disjoint, and forbid "tolerates without a thrives" (a plant with any sun data must have a best). A bonus effect: because the trigger recomputes `sun_requirements` from the two source fields on every write, the Trefle seed path can no longer perturb a split plant's sun even if the fill-only upsert ([the safe Trefle upsert](#safe-upsert)) ever let a value through — the derived value is a pure function of the AI/editorial source fields.
-
-**Curation** (`curate-plants.ts`) now drafts the two fields directly — `sun_thrives` (best) and `sun_tolerates` (additional, disjoint) — instead of the flat list. The two-field ask is what fixes the under-reporting: naming "where it also merely tolerates" explicitly is exactly the question the old single list elided. `sun_requirements` is no longer drafted or sent as known data; the trigger owns it.
-
-**The backfill was set-preserving, which is the part worth copying.** Splitting
-the existing catalog only ever partitioned the exposures a plant _already had_,
-clamped in code, so `sun_thrives ∪ sun_tolerates` always equalled the previous
-`sun_requirements`. The app-visible value was provably unchanged for every row,
-so no prior editorial correction or widening could be lost by a data-model
-change. A migration that reshapes a field should be able to prove it did not
-alter what the field means.
-
-**Editorial boundary unchanged:** all rows stay `is_curated = false`; the split is a data-model change, not an editorial sign-off. When Ana finalizes a plant she edits the two source fields, and the trigger keeps the mirror in sync.
-
-**Still deferred to post-test:** surfacing the distinction in the UI ("thrives in full sun, tolerates part shade") and using it in matching (prefer thrive-matches, still surface tolerate-matches). The data is captured now; the presentation waits for the test to inform it.
-
-<a id="native-region"></a>
-
-### `native_region`: WGSRPD Level-2, and why the source needed a second opinion
-
-**Model (Option A, Ana signed off).** `native_region text[]` holds TDWG WGSRPD
-**Level-2** region names — 52 regions, one consistent zoom level for the whole
-catalog — and powers Explore's "native to my region" lens. It replaced an ad-hoc
-`mediterranean`/`balkans`/`croatia` tag set that was a prompt artifact. The
-reason a controlled vocabulary was worth the migration: **a filter fails
-invisibly.** A wrong or missing tag does not error, it just hides a plant from
-the person looking for it.
-
-**Generated from Trefle Level-3 codes rolled up to Level-2**, with the plant's
-prose as a fallback where Trefle's native list is empty, and a small reviewed
-override table. It is generate-then-`--apply`, and it must re-run after every
-seed or new plants stay untagged. The mechanics are in
-`regenerate-native-region.ts`; the failures are worth keeping here because they
-share one shape.
-
-**Two traps, one shape: a failure that looks like an answer.** Trefle's zone
-objects carry the region under `tdwg_code`, not `code`, so a misread produced
-untagged plants rather than an error — and it stayed dormant for weeks because
-the existing catalog was served from cache and only new species forced a fetch
-(trap 9). Then the fetch loop paced at ~500 req/min against a 120 req/min limit,
-the resulting 429s were cached as entries, and **an errored entry was
-indistinguishable from an empty native list**, so each one silently took the
-prose fallback. The run reported success with a plausible source mix that was
-really 466 rate-limit errors laundered into model guesses (trap 1). The rule
-both produce: **where a fallback exists, a failed fetch must never be allowed to
-look like a negative result.** The loader now throws rather than hand back a
-degraded cache.
-
-**Trefle does not separate native range from introduced range.** This one is
-different — the fetch succeeds and the answer is wrong, which no amount of
-pipeline hardening was going to catch. `distributions.native[]` includes
-naturalised occurrences, so the field is closer to "where this grows now" than
-"where it comes from", and the native filter is the one feature that depends on
-the difference. `Imperata cylindrica` was tagged with precisely the range it was
-_introduced_ into: 16 regions wrong, and inverted.
-
-**The guard needs no AI, which is the point.** `cross-check-native-region.ts`
-compares the tags against WCVP, Kew's World Checklist, read through GBIF. WCVP
-is the right authority for a mechanical comparison rather than a judgement call:
-it is what POWO publishes, it stores one row per WGSRPD Level 3 region — the
-same geography this field rolls up from — and it marks introduced occurrences
-explicitly. Two sources speaking the same vocabulary need reconciling, not
-judging, unlike [the botanical cross-check](#botanical-cross-check).
-
-**How widespread the problem was belongs in the log** — and the numbers moved. A
-60-plant sample read as ~2%; the real rate over the 475 rows the tail covered
-was 11%, because the sample was drawn from a different population than the job
-([`database-log.md`](database-log.md)). The design consequence is what stays:
-the rate was never knowable in advance, which is why the script defaults to
-report-only.
-
-**Four ways this could go quietly wrong, guarded in the script.** Three are
-documented at their code sites: a lookup returning nothing is not a finding that
-a plant has no native range (clearing a row needs `--allow-empty`, not just
-`--apply`); an unrecognised region name throws instead of being dropped, since
-silently shrinking a range looks confident; and a Level 2 region resting on one
-Level 3 row is reported as thin evidence rather than arbitrated by the script.
-The fourth is worth stating here because it is a shape, not a detail: **a name
-lookup that fails upward is worse than one that fails.** GBIF answers an unknown
-binomial by climbing the taxonomy, so `Pennisetum alopecuroides` came back as
-the genus `Cenchrus` and the script cheerfully proposed widening one grass to 41
-regions including Brazil. Only an exact match at species rank is accepted now.
-It is the seed-by-ID trap in a new costume, and it surfaced only because the run
-was report-only.
-
-**Review before applying, always.** Both of the worst failure modes produced
-confident, plausible, badly wrong answers rather than errors, and both were
-caught by a person reading a report. That is why `--apply` follows a human read
-of the diff instead of replacing it.
-
-<a id="hardiness"></a>
-
-### Hardiness: RHS rating is canonical, drafted then human-verified
-
-**The problem.** Hardiness gates the real user question ("will it survive my winter"), but a July 2026 audit found **no free per-species hardiness source exists**: Trefle's `growth.minimum_temperature` is null for 100% of the catalog (so the old Trefle→USDA-zone mapping was dead code and was removed — see [the Trefle field mapping](#trefle-field-mapping)); RHS publishes ratings but offers no API or dataset and its content is copyrighted (bulk scraping barred); USDA's APIs map a _location_ to a zone, not a _species_; Wikidata's hardiness properties are effectively empty (23 taxa worldwide). Before this model, every plant's `hardiness_zone_min`/`max` was a single unanchored Claude estimate.
-
-**Decision (Ana, July 14 2026).** The **RHS hardiness rating (H1a–H7) is the canonical field**, a good fit for the Euro/Med-skewed catalog. USDA zone, where shown, is **derived from the rating at render time** (`lib/hardiness.ts`) — never stored alongside. Two columns (migration `20260714164514`): `hardiness_rating text` (CHECK `H1a…H7`) and `hardiness_verified boolean default false`.
-
-**Draft-then-verify flow:**
-
-- **Draft baseline** — `draft-hardiness.ts` rates every plant **blind**, on species identity alone, the same discipline as the cross-check, and leaves `hardiness_verified = false`. Verified rows are never re-selected.
-- **Human verification** — a person confirms each rating against RHS public plant pages (reading pages by hand is fine; only bulk scraping is barred) and flips `hardiness_verified = true`, in **priority order: the six garden-style starter palettes first** (highest user exposure); the long tail can stay drafted-but-unverified.
-
-**`hardiness_verified` gates assertion, it doesn't excuse it.** The UI must only present a hardiness claim confidently when `hardiness_verified = true`; unverified rows say nothing or carry a quiet "approximate" marker. This is the opposite of a confidence flag that would license showing unanchored numbers everywhere.
-
-**Re-seed safe by construction.** `hardiness_rating` is **editorial-owned**, the same category as `style_tags` and Ana's editorial corrections. It is not referenced by `upsert_trefle_plant` ([the safe Trefle upsert](#safe-upsert)), so a Trefle re-seed physically cannot touch it; `curate-plants` doesn't write it; the draft skips rated/verified rows. Verification work survives re-seeds — the failure mode Ana flagged (like the pre-COALESCE editorial wipe, [the safe Trefle upsert](#safe-upsert)) is closed.
-
-**Follow-ups (not built yet):** (1) the UI gating above; (2) then **drop the legacy `hardiness_zone_min`/`max` columns** — "don't store both" — but only _after_ the render path derives from the rating, or hardiness display breaks; (3) once verification is done, record in the build log **what fraction of AI drafts survived RHS verification unchanged vs. got corrected** — that ratio is the real measure of the draft's quality.
-
-**Status: PARKED** (code merged via PR #58, July 15 2026). The rating feeds only the dormant survive-winter bullet, so verification stopped partway and the track waits on that feature plus location wiring being scheduled. Two consequences worth knowing before resuming:
-
-- **The denominator moved.** Verification ran against a much smaller catalog than exists now, so the unverified share has grown with every seed round since — current counts are in [`catalog-state.md`](catalog-state.md), and the gap is larger than the raw verified figure suggests.
-- **`round-status.ts` reports `draft-hardiness` at WARN, not FAIL,** precisely because the field is parked. That is correct for a parked field and wrong for a shipped one — it is the same configuration that let round 7's batch go unrated for twelve days. **Promote it to FAIL in the same change that un-parks this work**, not afterwards.
-
-<a id="seasonal-care"></a>
-
-### Care Tips v2: `seasonal_care`, a field built to answer "why now?"
-
-**Supersedes Care Tips v1.** The shipped v1 drawer exposed the
-flaw: `maintenance_notes` is the plant's care manual — several actions,
-permanent truths, no timeframe — so at ~20 plants the card became the
-encyclopedia re-sorted. The ruling (Notion spec, locked July 15 2026): **a tip
-is one action, one plant, one timeframe, and it must answer "why now?"**.
-`maintenance_notes` cannot, and left the tips system entirely.
-
-**The field.** `plants.seasonal_care jsonb` (migration `20260715120000`) carries
-the same six stage keys as `seasonal_rhythm`, each an imperative one-liner or
-`null`. `null` means "nothing to do this stage" and is the expected value for
-most plants most stages. Where `seasonal_rhythm` _describes_, `seasonal_care`
-_prescribes_. Only the current stage surfaces, and only for planted plants, so
-volume self-limits to plants with an action due. Editorial-owned, outside the
-Trefle upsert path ([the safe Trefle upsert](#safe-upsert)).
-
-**It is distilled from existing fields, never freshly invented.**
-`curate-seasonal-care.ts` rewrites `maintenance_notes` + `seasonal_rhythm` +
-`bloom_months` into the six lines and adds no botanical facts, because a new
-generation would be a new set of claims nobody had checked. Its line validator
-is the first in the curation scripts to enforce shape in code rather than by
-prompt — length, imperative verb, vocabulary, no "as needed". A line that fails
-twice is **flagged and not written**: copy is never silently truncated or
-rewritten to fit. The rules themselves live in the script, next to the code that
-applies them.
-
-**A blind second pass checks the season, because that is the part that is
-genuinely arguable.** Distillation reliably kills the error classes;
-whether a given plant divides in spring or autumn is model-stochastic.
-`cross-check-seasonal-care.ts` hides each action's assigned stage, asks where it
-belongs, and compares — flags only, in the style of
-[the botanical cross-check](#botanical-cross-check). Only the draft step is part
-of a round; the check and `apply-seasonal-care-fixes.ts` are editorial
-follow-ups.
-
-**Upstream-correction rule (Ana, July 15 2026).** When a wrong-stage flag traces
-to the plant's own `seasonal_rhythm` — Scilla's late-summer bulb-planting line
-came straight from it — the fix belongs in `seasonal_rhythm`, not only on the
-`seasonal_care` line, or the same error regenerates on the next distillation.
-Fix where the data lives.
-
-**No hard-pin override table**, and this is the reasoning worth keeping: rules
-like "bulbs → autumn" or "divide → early spring" are right often enough to look
-correct and wrong at exactly the margins a catalog is full of — a
-summer-flowering bulb, a bearded iris divided in summer. Source-faithful
-distillation, a flags-only second pass and human correction beat a rule that
-silently rewrites correct lines. The retired sun-widening sweep taught the same
-lesson ([the two-field sun model](#sun-model)).
-
-**Status: COMPLETE**, merged as PR #63 (July 15 2026); coverage is in
-[`catalog-state.md`](catalog-state.md). Three editorial rounds over the flags,
-including the per-plant decisions and the two systematic checker biases they
-exposed, are recorded in [`database-log.md`](database-log.md).
-
-<a id="hero-images"></a>
-
-### Hero images: a category-recovered shortlist, then an AI vision pick
-
-**The problem.** `plants.image_url` was never a curation decision — `mapImages`
-takes the first image of the highest-priority category Trefle returned, and ~89%
-of candidate URLs are PlantNet identification photos. So the catalog's heroes
-included herbarium sheets, hands holding a leaf, and nursery pots with plastic
-labels. Once Explore went image-forward this was its most visible quality gap.
-
-**A measurement changed the design.** The backlog assumed a heuristic prefilter
-on resolution and sharpness would cut each plant to ~6 candidates. Measured, the
-catalog averaged **27.7 candidates per plant, ~13.7k images** — so the prefilter
-was the engineering problem, not the vision call. Two facts settled it:
-
-- **Trefle labels every image** `flower` / `habit` / `leaf` / `bark` / `fruit`, and `mapImages` was throwing the label away. That label is the strongest prefilter available and maps straight onto quality: a `flower` image is a bloom shot by construction. Recovering it cost 494 API calls and **zero image downloads**, where sharpness scoring would have cost 13.7k downloads to approximate something the model judges better anyway.
-- **Resolution still has to be measured**, because the model cannot see it. It is shown a resized copy, so a well-composed 320px photo looks identical to a 2000px one and would win a pick it cannot deliver on a full-bleed card.
-
-The pipeline that follows — recover categories, shortlist, probe, pick — is
-described in `recover-image-categories.ts` and `pick-plant-images.ts`, and the
-shortlist and probe rules are in `lib/image-shortlist.ts` and
-`lib/image-probe.ts` with their tests.
-
-**Two design rules from it that generalise.** **A header parse, not a
-content-type, decides whether a URL is an image**: Trefle's CloudFront images,
-the highest-resolution in the catalog, serve valid JPEGs as
-`application/octet-stream`, so gating on content-type would have rejected all
-1,138 of them, while the failure actually worth catching — an HTML error page
-returned as HTTP 200 — can claim any content-type and never parses as an image
-header. And **the incumbent is pinned inside the candidate cap**, so the model
-judges the current hero against the alternatives; unpinned, a low-resolution
-incumbent sorts below six sharper options, gets sliced off, and the pass
-"upgrades" a plant without ever comparing the two — and could never confirm an
-already-good hero.
-
-**Index resolution is manifest-backed, not re-derived.** The batch returns only
-a `chosen_index`, so the exact list each request was built from is persisted.
-Re-probing at collection time would be wrong as well as wasteful: probing is a
-live network call, so a URL reachable at request time and 404ing an hour later
-would shorten the list and shift every index after it, writing a confidently
-worded pick that points at **the wrong photograph**.
-
-**Ownership.** Writes `image_url_curated`, never `image_url`, so a Trefle
-re-seed and this pass cannot clobber each other — the same arrangement as
-`hardiness_rating` ([hardiness](#hardiness)). Reads go through `heroImageUrl()`,
-which prefers the curated pick and falls back, so the code was safe to ship
-ahead of the data. Every pick carries a confidence and a one-line reason, and
-low confidence is a review queue, not a rejection. **None of this is editorial
-sign-off** ([the curation layer](#curation-layer)).
-
-<a id="wikimedia-attribution"></a>
-
-### Wikimedia heroes, and the attribution they oblige
-
-The vision pass can only choose among the photos Trefle surfaced, which are ~89%
-PlantNet identification snapshots — so even a confident pick is best-of-a-poor
-pool. Wikimedia Commons is a second source, added as a **feeder rather than a
-new pipeline**: `feed-wikimedia-candidates.ts` resolves each plant's Wikidata
-P18 image, appends it to the candidate list tagged as Wikimedia, and clears the
-checked-at stamp so the existing pass re-picks across the combined pool. The
-shortlist force-includes and pins Wikimedia candidates, so a curated photograph
-always reaches the vision call no matter how many sharp Trefle snapshots a plant
-has. On the 56 review-flagged plants, 8 Wikimedia photos won, each a clear
-upgrade.
-
-**Attribution is the real product work, not the fetching.** CC-BY and CC-BY-SA
-oblige a visible credit, so `plants.image_attribution` is written whenever a
-credited photo wins and cleared when a Trefle photo wins or a revert lands. It
-renders as one line in the plant detail drawer, not on browse cards: "any
-reasonable manner" is satisfied by a reachable credit, so the cards stay clean.
-**The licence guard runs before ingest** — `isCommercialSafeLicense()` rejects
-NC, ND and GFDL-only files, because Santolina is a commercial product. It has
-already kept a GFDL-1.2 photo out of the catalog.
-
-Three Wikimedia-specific reliability traps, all of which failed silently, are
-documented at their call sites in `lib/wikimedia.ts` and `pick-plant-images.ts`.
-The shape they share is worth carrying: **the whole integration was
-zero-for-zero on its first run and nothing errored** — a missing User-Agent had
-every candidate rejected at probe time, and the pass simply reported that no
-Wikimedia photo had won.
-
-**The gallery caps at 10 photos, and the rejected alternative is the durable
-part.** A plant averages ~28 candidates, so something has to cut them. Filtering
-to Trefle's `flower`/`habit` labels was the obvious lever and lost on three
-counts: **category describes a photo's subject, not its quality**, so a `flower`
-image can still be a blurry nursery-pot shot; it has a **coverage cliff**, with
-59 plants holding zero flower or habit candidates and 47 of those having no
-Wikimedia fallback, so their galleries would empty; and a naive category filter
-**deletes every hand-sourced Wikimedia hero**, which carry no Trefle category at
-all — the best photographs in the catalog would be the first thing removed. A
-cap has none of those failure modes.
-
-<a id="round-runbook"></a>
-
-### Why a plant round is shaped the way it is
-
-**The steps are not here.** [`round-runbook.md`](round-runbook.md) is generated
-from the array `run-round.ts` actually executes, so it cannot describe an order
-different from the one that runs; a hand-written copy can, and this section was
-one until July 30 2026. What went wrong on a given round is in
-[`database-log.md`](database-log.md) — read its standing rules and traps before
-running anything, and append an entry after. This section is only the reasoning
-behind the shape.
-
-**A round is a batch with an identity, not a date range.** Every step scopes to
-`rounds/<label>/manifest.json`, the ids the seed run recorded. The alternative
-looks equivalent and is not: a state predicate like `hardiness_rating IS NULL`
-reads as "the new plants" and means "every plant this pass has never reached",
-so it silently widens the moment an earlier round leaves a gap. That is one
-mechanism behind most cross-round writes this project has had to trace by hand
-(log standing rule 3, trap 2). It is also why a manifest that seeded nothing
-throws instead of running: a pass reporting success having touched nothing is
-how several log entries begin.
-
-**Seeding sits outside the runner** because it is where a round's judgment
-lives — which species, chosen against which measured gap — and it is a different
-script each time. The one rule that never varies is **seed by verified Trefle ID
-or exact scientific-name match, never the top name-search hit** (trap 7); name
-search resolves to sibling species silently, and woodland genera in particular
-have been widely re-segregated, so synonym groups belong in the dry run.
-
-**Guards flag; they do not fix.** A cross-check writes nothing but its own
-`*_checked_at` stamp, because resolving a disagreement is a judgment and a
-machine that quietly "corrects" the catalog destroys the evidence that it
-disagreed. Two consequences worth stating: the stamp makes every guard resumable
-and re-runnable without re-billing, and a guard's accuracy bar is a product
-decision. `cross-check-native-to` is deliberately aimed at ~90%, catching
-continent-level nonsense only, because in-app user flagging is the real review
-and chasing the tail costs a Claude pass to buy very little.
-
-**The image verification pass asks a different question, not the same one
-again.** The pick is comparative — six candidates, which is best — so a `medium`
-confidence is often a statement about the field rather than the winner.
-`--verify` shows the model the single winning image alone and asks an absolute
-question: right species, good enough to be a hero. Re-running the pick could not
-answer that; it would only re-stage the comparison. The promotion rule is code
-rather than prompt wording, so "an unconfirmed species never clears, at any
-photo quality" is under test instead of asked for politely.
-
-**Editorial sign-off is genuinely last**, not merely numbered last: it judges
-the output of every step above, so it cannot run until they have. Nothing else
-in the pipeline touches `is_curated` ([the curation layer](#curation-layer)) —
-curation drafts, guards flag, and botanical or functional corrections are
-guarded reversible fixes, not a sign-off.
-
-**A WARN is right for a parked field and wrong for a shipped one.** The step
-registry grades each step, and two steps went unrun for weeks because they were
-graded WARN when the features behind them had gone live
-([hardiness](#hardiness) is still parked and still correctly WARN). Promote the
-grade in the same change that un-parks the work, never afterwards.
-
-**The catalog is the one thing that cannot be regenerated**, which is why a
-gzipped copy is committed per round rather than left in a gitignored local
-backup. Curation is a stochastic model pass and the editorial corrections on top
-are one of a kind, so a lost catalog is not re-derivable at any price; Free-plan
-Supabase projects also cannot restore their own daily backups. The mechanics are
-log standing rule 1.
-
-**Working-tree discipline.** These scripts write to the live Supabase project —
-there is one, and no staging for catalog data — so a seed or curate run mutates
-production. When another session shares the checkout, run round code from a
-`git worktree` and stage by explicit path; never `git add -A` on a tree you do
-not own.
+The plant catalog's data layer — how species are seeded, drafted, fact-checked
+and signed off — is complex enough to be read on its own, and is usually read
+by someone doing only that. It lives in **[curation.md](curation.md)**.
 
 <a id="group-accounts"></a>
 
@@ -989,40 +521,40 @@ table keeps those citations resolvable. It is closed — nothing new should cite
 a number, and `pnpm docs:links` fails if anything does. Rows carry the anchor rather than a copied title, so nothing here goes
 stale when a heading is reworded.
 
-| Cited as | Section                                                 |
-| -------- | ------------------------------------------------------- |
-| §1       | [plant-data-provider](#plant-data-provider)             |
-| §2       | [provider-agnostic-columns](#provider-agnostic-columns) |
-| §3       | [curation-layer](#curation-layer)                       |
-| §4       | [trefle-field-mapping](#trefle-field-mapping)           |
-| §5       | [server-only-clients](#server-only-clients)             |
-| §6       | [curation-model](#curation-model)                       |
-| §7       | [seeding-scripts](#seeding-scripts)                     |
-| §8       | [plants-schema](#plants-schema)                         |
-| §9       | [safe-upsert](#safe-upsert)                             |
-| §10      | [bloom-status](#bloom-status)                           |
-| §11      | removed — the shim is gone; see [Accounts](#auth)       |
-| §12      | [palette-write-path](#palette-write-path)               |
-| §13      | [toasts](#toasts)                                       |
-| §14      | [transition-labels](#transition-labels)                 |
-| §15      | [growing-vs-planned](#growing-vs-planned)               |
-| §16      | removed — see [Care Tips v2](#seasonal-care)            |
-| §17      | [weather](#weather)                                     |
-| §18      | [diary-identity](#diary-identity)                       |
-| §19      | [plant-combinations](#plant-combinations)               |
-| §20      | [botanical-cross-check](#botanical-cross-check)         |
-| §21      | removed — see [the two-field sun model](#sun-model)     |
-| §22      | [sun-model](#sun-model)                                 |
-| §23      | [plant-type-label](#plant-type-label)                   |
-| §24      | [auth](#auth)                                           |
-| §25      | [round-runbook](#round-runbook)                         |
-| §26      | [native-region](#native-region)                         |
-| §27      | [hardiness](#hardiness)                                 |
-| §28      | [seasonal-care](#seasonal-care)                         |
-| §29      | [diary-photos-private](#diary-photos-private)           |
-| §30      | [hero-images](#hero-images)                             |
-| §31      | [wikimedia-attribution](#wikimedia-attribution)         |
-| §32      | [plant-story-subpage](#plant-story-subpage)             |
-| §33      | [content-width](#content-width)                         |
-| §34      | [plant-dashboard](#plant-dashboard)                     |
-| §35      | [explore-ranking](#explore-ranking)                     |
+| Cited as | Section                                                        |
+| -------- | -------------------------------------------------------------- |
+| §1       | [plant-data-provider](#plant-data-provider)                    |
+| §2       | [provider-agnostic-columns](#provider-agnostic-columns)        |
+| §3       | [curation-layer](#curation-layer)                              |
+| §4       | [trefle-field-mapping](#trefle-field-mapping)                  |
+| §5       | [server-only-clients](#server-only-clients)                    |
+| §6       | [curation-model](curation.md#curation-model)                   |
+| §7       | [seeding-scripts](curation.md#seeding-scripts)                 |
+| §8       | [plants-schema](#plants-schema)                                |
+| §9       | [safe-upsert](#safe-upsert)                                    |
+| §10      | [bloom-status](#bloom-status)                                  |
+| §11      | removed — the shim is gone; see [Accounts](#auth)              |
+| §12      | [palette-write-path](#palette-write-path)                      |
+| §13      | [toasts](#toasts)                                              |
+| §14      | [transition-labels](#transition-labels)                        |
+| §15      | [growing-vs-planned](#growing-vs-planned)                      |
+| §16      | removed — see [Care Tips v2](curation.md#seasonal-care)        |
+| §17      | [weather](#weather)                                            |
+| §18      | [diary-identity](#diary-identity)                              |
+| §19      | [plant-combinations](curation.md#plant-combinations)           |
+| §20      | [botanical-cross-check](curation.md#botanical-cross-check)     |
+| §21      | removed — see [the two-field sun model](curation.md#sun-model) |
+| §22      | [sun-model](curation.md#sun-model)                             |
+| §23      | [plant-type-label](#plant-type-label)                          |
+| §24      | [auth](#auth)                                                  |
+| §25      | [round-runbook](curation.md#round-runbook)                     |
+| §26      | [native-region](curation.md#native-region)                     |
+| §27      | [hardiness](curation.md#hardiness)                             |
+| §28      | [seasonal-care](curation.md#seasonal-care)                     |
+| §29      | [diary-photos-private](#diary-photos-private)                  |
+| §30      | [hero-images](curation.md#hero-images)                         |
+| §31      | [wikimedia-attribution](curation.md#wikimedia-attribution)     |
+| §32      | [plant-story-subpage](#plant-story-subpage)                    |
+| §33      | [content-width](#content-width)                                |
+| §34      | [plant-dashboard](#plant-dashboard)                            |
+| §35      | [explore-ranking](#explore-ranking)                            |

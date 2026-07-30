@@ -2,7 +2,7 @@
  * Render `docs/round-runbook.md` from the RUNBOOK array.
  *
  * WHY GENERATED. The order of a round has lived in prose (`architecture.md`
- * docs/architecture.md#round-runbook, the Notion runbook, handoff notes) and in code, and the prose is what
+ * docs/curation.md#round-runbook, the Notion runbook, handoff notes) and in code, and the prose is what
  * went wrong: the seasonal-care step was missing from the written runbook
  * entirely, so every plant seeded after Care Tips v2 shipped had no care tip.
  * Nobody noticed for weeks, because the document looked complete.
@@ -91,7 +91,7 @@ ${bookends
 
 \`curate-styles\` and \`curate-greenery\` are repair passes for older data —
 \`curate-plants\` already does both jobs for a new seed, from the same shared
-definitions. \`draft-hardiness\` feeds a parked feature ([hardiness](architecture.md#hardiness)). All three stay
+definitions. \`draft-hardiness\` feeds a parked feature ([hardiness](curation.md#hardiness)). All three stay
 registered in \`STEP_DEFS\` so their stamp columns are still claimed; they are
 simply not run every round.
 

@@ -1,6 +1,6 @@
 # Round provenance
 
-Committed record of each plant-expansion round (see [the round runbook](../../../docs/architecture.md#round-runbook)).
+Committed record of each plant-expansion round (see [the round runbook](../../../docs/curation.md#round-runbook)).
 One directory per round label:
 
 ```
@@ -20,7 +20,7 @@ rounds/8/
 projects cannot download or restore the platform's own daily backups — so
 without this, a dead disk loses a catalog that cannot be regenerated (curation
 is a stochastic model pass; the editorial corrections on top are one-of-a-kind).
-About 2.3MB per round gzipped, against 5.9MB raw.
+Roughly 2.5-3MB per round gzipped, and growing with the catalog.
 
 Restore from it directly — the archive is not decoration:
 

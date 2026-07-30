@@ -21,7 +21,7 @@ page). Based on the design-system audit of the same date.
   `background-close-button` (a location). Location names are banned from tiers 1–2
   and allowed only in tier 3, where they are the point.
 - Tier is encoded by vocabulary, not prefix: primitives use **hue/scale names**
-  (`green-600`), semantics use **role names** (`accent`), component tokens use
+  (`fern-600`), semantics use **role names** (`accent`), component tokens use
   **component names** (`chip-radius`).
 
 ### The two rules that keep the system small
@@ -293,7 +293,6 @@ either font) and are removed.
 
 ## Open items
 
-- `critical` tone values await a designed red ramp (placeholder acceptable).
 - Figma Variable collections to be rebuilt from this file (Primitives hidden,
   Semantic with Light/Dark modes, Component).
 
@@ -305,12 +304,12 @@ authoritative. Notable drift from the snapshot above:
 
 - **New surface token**: `--color-surface-card-translucent` — added for the
   sidebar's active-nav-item highlight, which needed to read against the
-  sidebar's own translucent background where `surface-active` (the green wash)
-  was already spoken for by the Agent button. **That is no longer what it
-  does:** the sidebar highlight moved to its own `--color-surface-nav-active`,
-  and `surface-card-translucent` now backs the mobile tab bar's active pill and
-  add-note button. Its value lives in `/design-system` — this entry used to
-  quote one, and it had drifted from the ramp step it named.
+  sidebar's own translucent background. **That is no longer what it does:** the
+  sidebar highlight moved to its own `--color-surface-nav-active`, and
+  `surface-card-translucent` now backs the mobile tab bar's active pill. Which
+  components consume a token is generated into `token-consumers.generated.ts`
+  and shown on `/design-system`; naming them in prose here is how this entry
+  came to claim the add-note button, which uses `surface-nav-active`.
 - **Ramp-derived translucent tokens no longer copy their channels.** They use
   relative colour syntax (`rgb(from var(--color-sage-200) r g b / 0.7)`) so the
   ramp step stays the single home for the value. The hand-copied `rgb()`
@@ -327,5 +326,5 @@ authoritative. Notable drift from the snapshot above:
   above is superseded.
 - **New primitives**: `MediaCard` (packages/ui) unifies the plant tile shell
   used across Growing/Planned/Explore. `Icon` (packages/ui) plus an
-  `apps/web/lib/icons.ts` registry now own icon rendering — see
-  `DESIGN_SYSTEM.md` [the server-only clients](architecture.md#server-only-clients) for the pattern.
+  `apps/web/lib/icons.ts` registry now own icon rendering — see the Icons
+  section of `DESIGN_SYSTEM.md` for the pattern.

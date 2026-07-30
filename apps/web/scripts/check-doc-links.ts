@@ -55,11 +55,18 @@ interface Failure {
 const failures: Failure[] = []
 
 function trackedFiles(): string[] {
-  const out = execFileSync('git', ['ls-files', '-z'], {
-    cwd: REPO_ROOT,
-    encoding: 'utf8',
-    maxBuffer: 32 * 1024 * 1024,
-  })
+  const out = execFileSync(
+    'git',
+    // --others so a doc that exists but is not staged yet is still checked: the
+    // curation.md split was written, linked, and passed this check while three
+    // of its links pointed at anchors that had stayed behind in another file.
+    ['ls-files', '-z', '--cached', '--others', '--exclude-standard'],
+    {
+      cwd: REPO_ROOT,
+      encoding: 'utf8',
+      maxBuffer: 32 * 1024 * 1024,
+    }
+  )
   return out.split('\0').filter(Boolean)
 }
 

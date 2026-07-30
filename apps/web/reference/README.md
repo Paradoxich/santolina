@@ -14,8 +14,9 @@ The distinction that decides what belongs here:
 ## `wcvp-native-cache.json.gz`
 
 GBIF `species/match` + `species/{key}/distributions` responses, keyed by
-`scientific_name`, read by `scripts/cross-check-native-region.ts` ([native_region](../../../docs/architecture.md#native-region)). 518
-species as committed; the script appends after every lookup it pays for.
+`scientific_name`, read by `scripts/cross-check-native-region.ts` ([native_region](../../../docs/curation.md#native-region)). The script
+appends after every lookup it pays for, so the species count is whatever is
+committed — read the file, do not trust a number typed here.
 
 **Why it is committed.** It lived in gitignored `reports/` until 2026-07-30,
 which made it a 14MB file on one laptop that `git worktree remove` deletes

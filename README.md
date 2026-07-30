@@ -36,7 +36,7 @@ santolina/
 
 - **Package manager**: pnpm with workspaces
 - **Monorepo orchestration**: Turborepo
-- **Node version**: 20 LTS
+- **Node version**: 22 LTS
 - **App**: Next.js 15, TypeScript, Tailwind CSS, Framer Motion, Supabase
 - **Plant data pipeline**: Trefle API + Anthropic API (Claude) — offline curation and cross-check scripts, see below
 - **UI library**: React 19, TypeScript, Tailwind CSS, Storybook 8
@@ -46,7 +46,7 @@ santolina/
 
 ### Prerequisites
 
-- Node.js 20 LTS (`nvm use`)
+- Node.js 22 LTS (`nvm use`)
 - pnpm 9 (`npm install -g pnpm@9`)
 
 ### Install
@@ -149,9 +149,9 @@ cd apps/web
 ```
 
 Run them in this order — the authoritative runbook, with the rationale for
-each step, is [the round runbook](docs/architecture.md#round-runbook). Individual decisions: provider
-choice and safe upsert ([the Trefle-over-Perenual choice](docs/architecture.md#plant-data-provider), [the safe Trefle upsert](docs/architecture.md#safe-upsert)), curation ([the curation model](docs/architecture.md#curation-model)), combinations ([plant combinations](docs/architecture.md#plant-combinations)),
-cross-check ([the botanical cross-check](docs/architecture.md#botanical-cross-check)), native_region ([native_region](docs/architecture.md#native-region)), hardiness ([hardiness](docs/architecture.md#hardiness)), seasonal care ([seasonal_care](docs/architecture.md#seasonal-care)).
+each step, is [the round runbook](docs/curation.md#round-runbook). Individual decisions: provider
+choice and safe upsert ([the Trefle-over-Perenual choice](docs/architecture.md#plant-data-provider), [the safe Trefle upsert](docs/architecture.md#safe-upsert)), curation ([the curation model](docs/curation.md#curation-model)), combinations ([plant combinations](docs/curation.md#plant-combinations)),
+cross-check ([the botanical cross-check](docs/curation.md#botanical-cross-check)), native_region ([native_region](docs/curation.md#native-region)), hardiness ([hardiness](docs/curation.md#hardiness)), seasonal care ([seasonal_care](docs/curation.md#seasonal-care)).
 Guard reports land in `apps/web/reports/` (gitignored) and are archived per
 round under `apps/web/rounds/<label>/` (committed); backups under
 `apps/web/backups/` (gitignored).
