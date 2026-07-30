@@ -336,7 +336,10 @@ silently rewrites correct lines. The retired sun-widening sweep taught the same
 lesson ([the two-field sun model](#sun-model)).
 
 **Status: COMPLETE**, merged as PR #63 (July 15 2026); coverage is in
-[`catalog-state.md`](catalog-state.md). Three editorial rounds over the flags,
+[`catalog-state.md`](catalog-state.md). **Weight a review queue by stakes, not
+by checker confidence** — triaging those rounds purely by stage distance put
+"fertilize during a heatwave", a line contradicting the app's own advice, in the
+low-priority pile beside genuine boundary calls. Three editorial rounds over the flags,
 including the per-plant decisions and the two systematic checker biases they
 exposed, are recorded in [`database-log.md`](database-log.md).
 
@@ -478,6 +481,11 @@ question: right species, good enough to be a hero. Re-running the pick could not
 answer that; it would only re-stage the comparison. The promotion rule is code
 rather than prompt wording, so "an unconfirmed species never clears, at any
 photo quality" is under test instead of asked for politely.
+
+**A held tag finding is a live defect, not a parked warning.** A held image
+waits on a photograph nobody has; a held tag means the catalog is wrong right
+now. Scan a round's `editorial-<n>.md` for `tags:` blockers before calling it
+done.
 
 **Editorial sign-off is genuinely last**, not merely numbered last: it judges
 the output of every step above, so it cannot run until they have. Nothing else
