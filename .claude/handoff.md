@@ -36,32 +36,24 @@ cd apps/web && pnpm round:progress --round <n>  # what a round still owes
 
 ---
 
-## 2026-07-30 — session/2026-07-30-agent-rules
+## 2026-07-30 — session/2026-07-30-backups
 
-**In flight: nothing.** Merged as [PR #156](https://github.com/Paradoxich/santolina/pull/156)
-(`38c54c6`); worktree removed, branch deleted local and origin. Documentation
-only, across four PRs: [#152](https://github.com/Paradoxich/santolina/pull/152)
-shortened `architecture.md`, [#153](https://github.com/Paradoxich/santolina/pull/153)
-fact-checked the remaining docs and split out `docs/curation.md`,
-[#154](https://github.com/Paradoxich/santolina/pull/154) compressed the session
-log, #156 added two agent rules to `CLAUDE.md` and corrected what it claims the
-product does. Rules live in the files they govern; nothing durable is only here.
+**In flight: nothing.** Merged as [PR #157](https://github.com/Paradoxich/santolina/pull/157)
+(`7425d10`); worktree removed, branch deleted local and origin. The five
+unbacked-up tables are covered: `backup-database.ts` (`pnpm db:backup`, standing
+rule 10 in `docs/database-log.md`) plus a weekly cron
+(`.github/workflows/db-backup.yml`, Mondays 03:12 UTC, dispatch-tested green,
+`SUPABASE_DB_URL` secret set). A failed cron run emails Ana — silence means it
+ran. Also ruled this session: `README.md` keeps "intelligent recommendations";
+question closed.
 
 **Next steps, in order:**
 
-1. **Back up the five tables nothing backs up.** `backup-catalog.ts` dumps
-   `plants` and `plant_combinations` only. `users`, `gardens`, `palette_plants`,
-   `diary_entries` and `agent_sessions` have no backup at all, and the Free plan
-   cannot restore its own snapshots. This costs nothing today, when the only
-   accounts are demo ones, and becomes unrecoverable the day it has users — so it
-   belongs before launch, not after. `pg_dump` to object storage covers all seven
-   tables plus the schema in one command. Record it as a standing rule in
-   `docs/database-log.md` when it lands.
-2. **The `native_to` / `native_region` duplication** (carried). WCVP as the single
+1. **The `native_to` / `native_region` duplication** (carried). WCVP as the single
    authority feeding `native_region` mechanically; `native_to` stays hand-owned
    copy that gets _checked_ against it. Not a round fix — `native_to` is
    voice-passed copy that must not become machine-derived.
-3. **A local Supabase stack — trigger: the next migration, not before.** Nothing
+2. **A local Supabase stack — trigger: the next migration, not before.** Nothing
    is blocked on it today; the rule (agreed with Ana July 30) is that **no new
    migration is applied until the local stack exists and has replayed the
    existing 35 first**, and CLI-driven migrations (`supabase db push`) lands in
@@ -70,19 +62,9 @@ product does. Rules live in the files they govern; nothing durable is only here.
    `config.toml`, so migrations and RLS have only ever run in production, and a
    wrong RLS policy fails silently (the bare-`name` → `gardens.name` storage bug
    is the class this catches). The stack is also the free restore target the db
-   backup has never been rehearsed against. Disk was the blocker, not RAM: 11 GB
-   free July 28, 20 GB free July 30 — the lighter
+   backup has never been rehearsed against — rehearse
+   `pg_restore --data-only` from a `db-backups` dump in that same session. Disk
+   was the blocker, not RAM: 11 GB free July 28, 20 GB free July 30 — the lighter
    `supabase start -x studio,realtime,storage-api,imgproxy,edge-runtime,inbucket,vector,logflare`
    (≈2 GB, Postgres + auth + PostgREST) fits; cap Docker's disk allowance so the
    VM can't balloon.
-
-**Open question, needs Ana:** `README.md`'s opening still claims "intelligent
-recommendations". The user-flow sentence under it was corrected this session; the
-headline is public positioning, so it was left alone. It stays or it goes.
-
-**Filed in the Notion Build Backlog** (Now → Database), not here: `zod` for
-model-output schemas (~2–3h), a rate-limit library (~1–2h), a direct Postgres
-connection for new offline scripts (half a day of groundwork, no retrofit), and
-CLI-driven migrations (pair it with the local-Supabase item, it is the only one
-that can touch prod schema). Three shipped items were also marked done and three
-stale doc references in that backlog corrected.
