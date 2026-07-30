@@ -1,6 +1,6 @@
 # Round provenance
 
-Committed record of each plant-expansion round (see [the round runbook](../../../docs/architecture.md#round-runbook)).
+Committed record of each plant-expansion round (see [the round runbook](../../../docs/curation.md#round-runbook)).
 One directory per round label:
 
 ```

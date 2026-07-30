@@ -5,7 +5,7 @@
  * edit per row.
  *
  * Guarded, reversible-by-record, same discipline as the botanical corrections
- * (docs/architecture.md#botanical-cross-check, docs/architecture.md#plant-type-label):
+ * (docs/curation.md#botanical-cross-check, docs/architecture.md#plant-type-label):
  * - Verifies the CSV's `line` still matches the DB before touching a row; a row
  *   whose stored line has since changed is STALE and skipped (never clobbered).
  * - A `move` into an already-occupied target stage is skipped and flagged, not

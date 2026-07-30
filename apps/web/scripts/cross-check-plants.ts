@@ -11,7 +11,7 @@
  *
  * Never EDITS catalog data — output is a terminal report plus a JSON report
  * file for human spot-checking (reports/ is gitignored). The only column it
- * writes is the operational botanical_checked_at stamp (docs/architecture.md#botanical-cross-check, migration
+ * writes is the operational botanical_checked_at stamp (docs/curation.md#botanical-cross-check, migration
  * 20260716120000), recording when each row was checked.
  *
  * Usage (from apps/web):
@@ -143,7 +143,7 @@ function parseRound(): string | null {
 // to re-run after a prompt revision, or filter by date on the column.
 
 // Stamp a row as botanically checked. Operational metadata only — never
-// touches a catalog field, so the flags-only rule (docs/architecture.md#botanical-cross-check) holds.
+// touches a catalog field, so the flags-only rule (docs/curation.md#botanical-cross-check) holds.
 /**
  * The id to stamp, refusing if it is outside the active scope.
  *

@@ -11,7 +11,7 @@
  * the round's slice, and that surfaced only because someone read the plan
  * report by hand. Running this over round 8 finds a second case nobody had
  * spotted: draft-hardiness, which targets `hardiness_rating IS NULL`, filled
- * round 7's 76 plants at the same time (docs/architecture.md#round-runbook records the count, not that those
+ * round 7's 76 plants at the same time (docs/curation.md#round-runbook records the count, not that those
  * rows were outside the batch).
  *
  * The check works off DB state rather than any script's own report, so it
@@ -21,7 +21,7 @@
  *   ./node_modules/.bin/tsx --env-file=.env.local scripts/check-round-scope.ts --round 8
  *
  * Baseline: the newest backups/ snapshot taken at or before the manifest's
- * started_at, or --baseline <dir> to name one. Step 0 of the docs/architecture.md#round-runbook cadence
+ * started_at, or --baseline <dir> to name one. Step 0 of the docs/curation.md#round-runbook cadence
  * (backup-catalog.ts) is what puts it there, so a round run to the runbook
  * already has what this needs.
  *

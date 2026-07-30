@@ -14,7 +14,7 @@ The distinction that decides what belongs here:
 ## `wcvp-native-cache.json.gz`
 
 GBIF `species/match` + `species/{key}/distributions` responses, keyed by
-`scientific_name`, read by `scripts/cross-check-native-region.ts` ([native_region](../../../docs/architecture.md#native-region)). The script
+`scientific_name`, read by `scripts/cross-check-native-region.ts` ([native_region](../../../docs/curation.md#native-region)). The script
 appends after every lookup it pays for, so the species count is whatever is
 committed — read the file, do not trust a number typed here.
 

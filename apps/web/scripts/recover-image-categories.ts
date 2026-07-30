@@ -114,7 +114,7 @@ async function main() {
   if (whyAll) console.log(`Whole-catalog run, because: ${whyAll}`)
 
   // Never a bare .select() — Supabase caps unpaginated reads at 1000 rows and
-  // the catalog is past that (see docs/architecture.md#round-runbook). Ordered by id
+  // the catalog is past that (see docs/curation.md#round-runbook). Ordered by id
   // rather than common_name because paging needs a unique column to be stable.
   let plants = await fetchAllRows<PlantRow>((from, to) => {
     let q = supabase
