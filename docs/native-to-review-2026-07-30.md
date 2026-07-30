@@ -13,9 +13,12 @@ Regenerate (from `apps/web`, ~1 hour, bills Claude):
 ./node_modules/.bin/tsx --env-file=.env.local scripts/cross-check-native-to.ts --all --why "<reason>" --new-only
 ```
 
-Rebuild only the markdown from the JSON already on disk (free):
+Rebuild only the markdown from the JSON already on disk (free). The run's full
+per-row JSON is committed at `apps/web/reference/native-to-crosscheck-2026-07-30.json.gz`
+because `reports/` is gitignored and dies with its worktree; restore it first:
 
 ```bash
+gunzip -c reference/native-to-crosscheck-2026-07-30.json.gz > reports/native-to-crosscheck.json
 ./node_modules/.bin/tsx --env-file=.env.local scripts/cross-check-native-to.ts --report-only
 ```
 
