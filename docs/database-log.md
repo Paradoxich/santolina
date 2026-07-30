@@ -36,7 +36,7 @@ The numbers **in this file are different and must stay written down**: a dated s
 
 4. **Generate, review, then apply.** Any script offering `--apply` writes nothing until you have read its report. This split is the single reason trap 1 did not corrupt the catalog.
 5. **Never bare `.select()` on a full table.** It silently caps at 1000 rows. Use `fetchAllRows` from `lib/paginate.ts`. `plant_combinations` has already crossed the cap once (round 6: 13 duplicate pairs, 34 plants over the companion limit); current sizes are in [`catalog-state.md`](catalog-state.md).
-6. **`is_curated` is SET TRUE by exactly one script — `curate-editorial.ts` — and by nothing else. Since 2026-07-29 it is also CLEARED by a database trigger.** This rule used to read "never flip it; it is Ana's alone", which stopped being true on 2026-07-28 when she ruled that an agent owns the editorial pass, including the flag. What has not changed is that no _other_ script may touch it: a drafting or fact-checking pass that sets `is_curated` is claiming a sign-off it did not make. The bar is defined once in `lib/editorial-standard.ts` (§3, runbook step 7b). **Editorial coverage is still thin** — round 8 is largely signed off and everything seeded before round 7 is unreviewed. Current counts in [`catalog-state.md`](catalog-state.md), which is generated; do not restate them here. Round 8's held rows are recorded work with a "no" verdict, not a gap. The image re-check (`pick-plant-images.ts --verify`, runbook step 7a) has since cleared 19 of them; what remains needs a new photograph or a tag fix, not another pass. **The trigger (`invalidate_editorial_verdict`, migration `20260729120000`) clears the flag whenever a write changes the description, tags or hero — granting approval and withdrawing it are not the same power, and only the granting half was ever Ana's or one script's.** A caller that means to keep a verdict across such a write must re-assert it in a SECOND statement; doing it inside the same one silently fails, which is how the guard's own first consumer was un-curating rows on the day it shipped.
+6. **`is_curated` is SET TRUE by exactly one script — `curate-editorial.ts` — and by nothing else. Since 2026-07-29 it is also CLEARED by a database trigger.** This rule used to read "never flip it; it is Ana's alone", which stopped being true on 2026-07-28 when she ruled that an agent owns the editorial pass, including the flag. What has not changed is that no _other_ script may touch it: a drafting or fact-checking pass that sets `is_curated` is claiming a sign-off it did not make. The bar is defined once in `lib/editorial-standard.ts` (§3, runbook step 7b). **Editorial coverage is still thin** — round 8 is largely signed off and everything seeded before round 7 is unreviewed. Current counts in [`catalog-state.md`](catalog-state.md), which is generated; do not restate them here. Round 8's held rows are recorded work with a "no" verdict, not a gap. The image re-check (`pick-plant-images.ts --verify`, runbook step 7a) has since cleared 19 of them; what remains needs a new photograph or a tag fix, not another pass. **The trigger (`invalidate_editorial_verdict`, migration `20260729101133`) clears the flag whenever a write changes the description, tags or hero — granting approval and withdrawing it are not the same power, and only the granting half was ever Ana's or one script's.** A caller that means to keep a verdict across such a write must re-assert it in a SECOND statement; doing it inside the same one silently fails, which is how the guard's own first consumer was un-curating rows on the day it shipped.
 7. **After any schema or request-shape change, run `--limit 3` first.** A green typecheck does not verify a runtime API contract.
 8. **Finish with `verify-round.ts --round <label>`.** Without `--round` it checks that data is _valid_ but not that the pipeline actually _ran_.
 9. **Append an entry here.** `scripts/log-db-session.ts --round <label>` writes the factual part for you.
@@ -63,7 +63,7 @@ The run **reported success** with a believable source mix — `trefle-l3=121, na
 
 ### 1b. A trigger that silently rewrites rows is only as good as the test you ran against it — ADDED 2026-07-29
 
-`invalidate_editorial_verdict` (migration `20260729120000`) is the first trigger in this schema that MUTATES a row on the way past, and that makes it a different kind of object from every guard script here. A script that gets it wrong prints something wrong. **A trigger that gets it wrong changes data in every write path at once, including paths written before it existed and paths nobody is thinking about.**
+`invalidate_editorial_verdict` (migration `20260729101133`) is the first trigger in this schema that MUTATES a row on the way past, and that makes it a different kind of object from every guard script here. A script that gets it wrong prints something wrong. **A trigger that gets it wrong changes data in every write path at once, including paths written before it existed and paths nobody is thinking about.**
 
 Three things to know before touching it.
 
@@ -204,7 +204,9 @@ This is trap 7 in different clothes: **an external name lookup that guesses is m
 
 **The durable rule:** if you apply a migration through the API or MCP rather than `supabase db push`, reconcile the filename to the version the remote recorded in the same session. `supabase migration repair --status applied <version>` is the other direction and is the right tool when the local filename is the truthful one.
 
-### 14. A committed migration is not an applied migration — OPEN
+**Since 2026-07-30 this is checked rather than remembered** — `pnpm migrations:check` (trap 14) reports each drift with the exact `git mv` that fixes it. It had drifted again by then: three migrations applied on July 29 were still under their local filenames, so "reconcile in the same session" had held for two days and then quietly stopped. **A rule that depends on remembering is a rule with a half-life.** One thing the check cannot decide for you: reconciling a version means every prose citation of it goes stale too. The July 29 renames touched 14 references across `docs/` and script comments, because migrations get cited by version number as identifiers.
+
+### 14. A committed migration is not an applied migration — WATCHED since 2026-07-30
 
 `supabase/migrations/20260727120000_diary_entries_garden_level.sql` was committed to `main` on July 27, merged in PR #121 along with the garden-level diary feature that depends on it, deployed — and **never applied to the remote**. `diary_entries.plant_id` stayed `NOT NULL` in production, so saving a garden-level note failed for anyone who tried. It went unnoticed for a day and was found only by diffing the remote's migration list against the directory while applying an unrelated migration (July 28).
 
@@ -212,7 +214,15 @@ This is trap 7 in different clothes: **an external name lookup that guesses is m
 
 **The durable rule:** the remote's migration list is the truth about what is applied; `supabase/migrations/` is the truth about what was written. Compare them before assuming a schema change is live, and especially after merging a PR that carries one. This is trap 13's sibling — same two-homes-for-one-fact shape, one direction further out.
 
-**Not yet fixed, and NOT blocked.** The check is mechanical: list the remote migrations, compare against the directory modulo trap-13 renames. This paragraph used to end "belongs in CI once the Supabase secrets exist" — **both secrets have existed since 2026-07-28** (`gh secret list`), and the `catalog-state staleness (main only)` job already uses them on every push to main. The only thing between this and a CI gate is somebody writing it. Nothing enforces it today; that is a choice, not a dependency. See trap 17 for why that sentence outlived the thing it described.
+**Something is watching now.** `apps/web/scripts/check-migration-drift.ts` compares the two lists and fails; it runs in CI as `migration drift (main only)` on every push to main. Whether it is passing: `gh run list --branch main --limit 5`. To ask it yourself: `cd apps/web && pnpm migrations:check`.
+
+This paragraph used to end "belongs in CI once the Supabase secrets exist", and that sentence outlived its own truth by two days — see trap 17. Both secrets have existed since 2026-07-28, so nothing was ever blocking; it needed writing, not waiting.
+
+**Why the check needs a database function.** `supabase_migrations` is not an exposed schema, so the service role key cannot read the ledger through PostgREST. `public.applied_migrations()` (`security definer`, execute revoked from `anon`/`authenticated`, granted to `service_role` alone — the same shape as `expired_demo_users`) is the narrowest route. The two alternatives were both worse: exposing the whole schema to solve a two-column read, or a Management API personal access token, which would be a **new** repo secret with far more reach than the service role key.
+
+**The check has to understand trap 13 before it can report trap 14, and that is the whole design.** A version-only set difference calls a trap-13 rename one missing migration plus one unknown one. On the day this was written the repo held **three** live filename drifts, so the naive check would have printed six findings, none of them real, and buried any genuine "never applied" seventh. So it pairs on name first and reports the two separately, worst first. **A guard whose output nobody can read is a guard nobody acts on.**
+
+**It found real drift on its first run**, which is also its proof: the three drifts were reconciled in the same PR, and the check went from three findings to `OK — 35 committed migrations`. It was also rehearsed against the failure it exists for — an unapplied migration was planted on disk, reported as `WRITTEN BUT NEVER APPLIED` at the top of the output, and removed.
 
 ### 15. The WCVP cache mixes GBIF checklists, so a raw `NATIVE` marker is not WCVP — OPEN by design
 
@@ -253,6 +263,53 @@ Three things made it recur, and all three are now closed:
 ## Sessions
 
 <!-- Newest first. Append with: scripts/log-db-session.ts --round <label> -->
+
+**How to edit an older entry.** These are dated records, so the default is to
+leave them alone — but "never touch" is too blunt, and it was applied wrongly on
+2026-07-30. The distinction that matters:
+
+- **A belief or a measurement is never silently revised.** "Cottage ran at 89.6%",
+  "the job is waiting for secrets" — if it was wrong, correct it **visibly, in
+  place**, with strikethrough or a stated correction. Deleting it destroys
+  evidence: trap 17 was only reconstructible because four sessions' stale copies
+  survived, and a reader who lands on the bad line needs the fix _there_, not in
+  a later entry they have no reason to open.
+- **An identifier that has since moved is just updated.** A renamed migration
+  version, a moved file path. That is a pointer, not a belief — the claim it sits
+  inside ("PR #130 added this migration") stays exactly as true, and preserving a
+  dangling reference preserves nothing. **A pointer has no historical value.**
+
+The test: would a reader try to _open_ it? Then fix it. Would a reader learn
+what someone once thought? Then correct it in place and leave the record.
+
+### 2026-07-30 — Something watches the migration ledger now (not a round)
+
+**Branch** `session/2026-07-30-migration-drift` (worktree `santolina-migration-drift`, off `main` at `e830a17`). No seed, no AI spend, **no catalog data written at all**. One migration, applied and verified: `20260730082104_applied_migrations`.
+
+Did trap 14's check, which the previous session left as the highest-value item on the grounds that the failure it catches reached real users. Written by hand rather than through `log-db-session.ts`, which needs a round manifest.
+
+**What shipped.** `lib/migration-drift.ts` (pure, 20 unit tests, no DB) does the classification; `scripts/check-migration-drift.ts` reads both lists and fails; `pnpm migrations:check` runs it; the CI job is `migration drift (main only)`. Trap 14 is updated from OPEN.
+
+**The check reads the ledger through a database function, and the reasoning generalises to any CI check against Supabase internals.** `supabase_migrations` is not an exposed schema, so the service role key cannot see it through PostgREST. `public.applied_migrations()` is `security definer` with execute granted to `service_role` alone (verified through `pg_proc.proacl`: `postgres` and `service_role`, nothing else). The alternative worth naming because it looks easier: the Management API's migrations endpoint needs a **personal access token**, which is a new repo secret that can act on every project in the organisation. **Reaching for a broader credential to avoid writing a narrower function is a bad trade**, and it would also have made this blocked on Ana rather than doable.
+
+**The design point: a guard has to model the FALSE alarm before it can report the real one.** Trap 13 means a file and its remote row routinely share a name and differ in version. A version-only set difference calls that one missing migration plus one unknown one — and the repo held **three** live drifts, so the naive check would have printed six wrong findings and buried a genuine "never applied" seventh. It pairs on name first, reports the two classes separately, and sorts `not-applied` above everything. The three drifts were reconciled in the same PR; the check went from three findings to `OK — 35 committed migrations`.
+
+**It was rehearsed against the failure it exists for, not just against the drift it happened to find.** An unapplied migration was planted on disk and the check reported `WRITTEN BUT NEVER APPLIED` at the top of its output, then the file was removed. Finding real drift on the first run is encouraging and is **not** evidence the dangerous branch works — that branch had never executed.
+
+**What bit us, and it is the same anatomy as `StepStatus.vacuous`.** One assertion in the new test file was `expect(findings.map(f => f.remedy)).not.toContain(expect.stringContaining('git mv'))`. `toContain` matches by identity, so an array of strings can never contain a matcher object: **that assertion passes against every possible input, including the bug it was written to catch.** It sat in a green suite of 20 looking like coverage. Same family as a step reporting success having done nothing — a check whose pass carries no information. Caught only by asking "what would make this line fail?", which is the question the mutation-testing rule exists to force.
+
+**Reconciling a version invalidates every prose citation of it**, and that is the cost the trap-13 rule does not mention. Migrations get cited by version number as identifiers — "migration `20260729140000` gives each criterion its own stamp" — so renaming three files meant updating **14 references** across `docs/architecture.md`, `docs/database-log.md` and seven scripts.
+
+**And that half had already been missed once**, which is how we know it is a real failure mode rather than a tidiness worry. Sweeping every 14-digit version cited anywhere in `apps/web` and `docs` against the files that exist turned up `20260728150000` still cited as live in **`curate-styles.ts` and `check-round-scope.ts`** — that migration was renamed to `20260728114824` in the July 28 reconciliation, and both comments have pointed at a nonexistent file since. Fixed here. The sweep is worth re-running after any rename:
+
+```bash
+grep -rhoE "\b20[0-9]{12}\b" --include="*.ts" --include="*.md" apps/web docs \
+  | sort -u | while read v; do ls supabase/migrations/${v}_*.sql >/dev/null 2>&1 || echo "MISSING $v"; done
+```
+
+Read its output with the trap-13 table and trap 14 in hand: a version that names a **pre-rename** filename is a correct historical record, and the test fixtures are synthetic on purpose. What you are looking for is a comment or a doc pointing at a file a reader would try to open.
+
+**Deliberately not done.** The dated session entries in `.claude/handoff.md` still cite the old versions. They are records of what happened, and that file's own rule is that archive entries are not rewritten.
 
 ### 2026-07-30 — One WCVP lookup for both native guards, and a rehomed stamp (not a round)
 
@@ -415,9 +472,9 @@ Pipeline steps for this round:
 
 **The demo flag is `auth.users.is_anonymous` and nothing else.** No `is_demo` column, no marker row. A converted visitor stops being anonymous by the same act that converts them, so there is no second copy of the fact to drift.
 
-**TRAP: `auth.admin.listUsers` 500s when `per_page` exceeds the total user count.** `{"code":500,"error_code":"unexpected_failure","msg":"Database error finding users"}`, reproduced by hand against the REST endpoint on 2026-07-29 with 5 users in the project: `per_page=5` returns 200, `per_page=6` returns 500, and it is not the JS SDK — curl does it too. So the endpoint fails _precisely when the user table is small_, which is now, and no fixed page size is safe as the count moves. The purge script reads `auth.users` through the `expired_demo_users` SQL function (migration `20260729170000`, `security definer`, execute revoked from `anon`/`authenticated` and granted to `service_role` alone — verified with `has_function_privilege`) instead. Anything else reaching for `listUsers` will hit this.
+**TRAP: `auth.admin.listUsers` 500s when `per_page` exceeds the total user count.** `{"code":500,"error_code":"unexpected_failure","msg":"Database error finding users"}`, reproduced by hand against the REST endpoint on 2026-07-29 with 5 users in the project: `per_page=5` returns 200, `per_page=6` returns 500, and it is not the JS SDK — curl does it too. So the endpoint fails _precisely when the user table is small_, which is now, and no fixed page size is safe as the count moves. The purge script reads `auth.users` through the `expired_demo_users` SQL function (migration `20260729164307`, `security definer`, execute revoked from `anon`/`authenticated` and granted to `service_role` alone — verified with `has_function_privilege`) instead. Anything else reaching for `listUsers` will hit this.
 
-**Migration `20260729170000_expired_demo_users` is applied to remote** (applied and verified this session, not merely committed).
+**Migration `20260729164307_expired_demo_users` is applied to remote** (applied and verified this session, not merely committed).
 
 **Conversion verified end to end by Ana.** An anonymous visitor added an email through the "Keep this garden" modal, confirmed the link, and came back to the same garden with the demo bar gone. That is the whole claim of this design proved in one pass: `updateUser({ email })` upgrades the account in place, the user id survives, and the palette and diary carry over. Anonymous sign-ins and manual linking are both enabled on the project (the latter is what `linkIdentity` needs for the Google path).
 
@@ -539,7 +596,7 @@ cheiri`, above.
 
 **`pnpm trigger:contract` exists** — twelve cases, all passing, described in trap 1b above. Written because the trigger had surprised its own author three times in one day and every time was caught by running it, never by reading it.
 
-**It found a real bug on its first run.** `fix-oversized-heroes` predates the per-criterion split (`20260729140000`). It resizes a hero, which clears `editorial_image_at`, then re-asserts `is_curated` and `editorial_checked_at` **only** — never the image stamp. The row comes back **approved with criterion 1 outstanding**, which is the one state the trigger exists to make impossible. Latent, not fired: the script has not run since the split, and the live table has 0 rows in that state. Fixed.
+**It found a real bug on its first run.** `fix-oversized-heroes` predates the per-criterion split (`20260729112046`). It resizes a hero, which clears `editorial_image_at`, then re-asserts `is_curated` and `editorial_checked_at` **only** — never the image stamp. The row comes back **approved with criterion 1 outstanding**, which is the one state the trigger exists to make impossible. Latent, not fired: the script has not run since the split, and the live table has 0 rows in that state. Fixed.
 
 **`is_curated` was nobody's job in the upward direction.** The trigger only ever takes a verdict away. Nothing recomputed the flag from the three criterion stamps, so a row held on its image alone — 33 of round 8's 40 holds — could clear all three criteria and sit unapproved until someone paid for another editorial pass to notice. Proved on a scratch row, then closed.
 
@@ -596,7 +653,7 @@ Getting there surfaced four bugs, all the same shape — **something failed for 
 
 **The guard shipped with a bug in its own escape hatch, found by testing it rather than reading it.** `fix-oversized-heroes` re-stated the verdict inside the same UPDATE that changed the hero, which the trigger cannot tell from not writing it at all — so the opt-out did nothing and the script would have un-curated every row it resized. It escaped only because it had already run before the trigger existed (verified: 9 resized heroes, 3 curated, 0 inconsistent). Fixed to re-assert in a second statement, and written up as trap 1b along with the two other ways this trigger can surprise someone.
 
-**The obligation became a trigger.** Migration `20260729120000` clears `editorial_checked_at` and `is_curated` whenever an UPDATE changes something the verdict rests on — `description`, `style_tags`, `space_types`, `image_url_curated`, `image_pick_confidence`, and nothing else. Three scripts had needed this by hand in two days and none had it. A rule stated in a column comment is a rule every new script gets a fresh chance to miss, and the database is the only place that sees every write. **The escape hatch is narrow and deliberate:** an UPDATE that writes `editorial_checked_at` itself is left alone, which is how `curate-editorial` rewrites a description and signs it off in one statement, and how `fix-oversized-heroes` declares that swapping a hero for a smaller rendition of the same photograph is not an editorial change. Verified on a live row before being trusted: a bloom-colour write left the verdict standing, a description rewrite cleared it, and re-stating the stamp restored it.
+**The obligation became a trigger.** Migration `20260729101133` clears `editorial_checked_at` and `is_curated` whenever an UPDATE changes something the verdict rests on — `description`, `style_tags`, `space_types`, `image_url_curated`, `image_pick_confidence`, and nothing else. Three scripts had needed this by hand in two days and none had it. A rule stated in a column comment is a rule every new script gets a fresh chance to miss, and the database is the only place that sees every write. **The escape hatch is narrow and deliberate:** an UPDATE that writes `editorial_checked_at` itself is left alone, which is how `curate-editorial` rewrites a description and signs it off in one statement, and how `fix-oversized-heroes` declares that swapping a hero for a smaller rendition of the same photograph is not an editorial change. Verified on a live row before being trusted: a bloom-colour write left the verdict standing, a description rewrite cleared it, and re-stating the stamp restored it.
 
 **Then the tag flags — and the report that was supposed to hold them had eaten itself.** `curate-editorial` overwrote `reports/editorial-<scope>.json` wholesale, so a 9-row `--new-only` run replaced the 101-row report and took every held row's recorded blockers with it. The blockers are the only durable record of WHY a row was held: the database keeps the verdict, not the reasoning. **This is the same failure `writeReviewReport` in `pick-plant-images` was fixed for** ("retrying four transient failures replaced a 490-plant review file with a 4-plant one"), arrived at independently in a second script. Findings now merge by plant id, newest wins, untouched rows carried forward. The lost flags were only recoverable because a handoff had summarised three of them in prose.
 
@@ -623,7 +680,7 @@ Three steps left the per-round cadence, none of them by lowering a bar:
 
 **The editorial verdict is now three verdicts, which is what Ana's question exposed.** `is_curated` was one yes/no over three separate judgments, so touching any one of them re-opened all three — and re-opening the description means the pass may **rewrite the copy**. That is not hypothetical: removing a single style tag from Rowan brought its description back rewritten, and the trigger added earlier the same day makes that happen more often, not less.
 
-Migration `20260729140000` gives each criterion its own stamp and narrows the trigger to match. Proved on a live row: a photo change clears only the image stamp, a tag change clears only the tags stamp, the description stamp survives both. Re-clearing a re-opened image criterion then took **0.79 seconds and zero model calls**, because criterion 1 is decided mechanically from the persisted `image_pick_confidence` — where the same row previously cost two Claude calls and a possible rewrite of text nobody asked to change.
+Migration `20260729112046` gives each criterion its own stamp and narrows the trigger to match. Proved on a live row: a photo change clears only the image stamp, a tag change clears only the tags stamp, the description stamp survives both. Re-clearing a re-opened image criterion then took **0.79 seconds and zero model calls**, because criterion 1 is decided mechanically from the persisted `image_pick_confidence` — where the same row previously cost two Claude calls and a possible rewrite of text nobody asked to change.
 
 **Backfill covered 94 of the 170 curated rows; the other 76 were round 7's, approved before the stamp column existed.** A migration could not settle those — whether a legacy approval counts as three cleared criteria is a judgment about earlier work — so `review-editorial.ts --legacy` was built to put each plant's photo, copy and tags side by side, and Ana read it and confirmed the set. **All 170 curated rows now carry all three criterion stamps; 0 are approved with a criterion missing.**
 
