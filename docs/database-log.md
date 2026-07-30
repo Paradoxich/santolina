@@ -49,6 +49,15 @@ The numbers **in this file are different and must stay written down**: a dated s
 
 11. **No new migration is applied until a local Supabase stack exists and has replayed the existing 35.** Agreed with Ana 2026-07-30. `supabase/` holds only `migrations/` — no `config.toml` — so every migration and every RLS policy this project has ever had ran first in production, and a wrong RLS policy fails silently rather than erroring (the bare-`name` → `gardens.name` storage bug is the class this catches; trap 18 is the same shape from the reading side). The stack is also the only free restore target the database backup has ever had, so **rehearse `pg_restore --data-only` from a `db-backups` dump in that same session** (rule 10). Bring up the light stack — `supabase start -x studio,realtime,storage-api,imgproxy,edge-runtime,inbucket,vector,logflare` (≈2 GB, Postgres + auth + PostgREST) — and cap Docker's disk allowance so the VM cannot balloon. **CLI-driven migrations (`supabase db push`) land in that same session and nothing else does**: it is the only work that touches prod schema, and it is what ends trap 13's rename dance. Order for the next migration: stack up → laptop `pnpm db:backup` → replay + rehearse restore → `db push`.
 
+    **Queued behind this rule — read this list when the stack comes up, and add to it rather than starting one elsewhere.** A deferral recorded only where the blocked work is described is invisible at the moment the block lifts; that is trap 17, and this list exists so these do not repeat it. Names and pointers only, no restated reasoning:
+
+    | Wants                                          | Why it is waiting                                                                                                  | Where it is explained                |
+    | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------ |
+    | A timestamp on `plant_combinations`            | Closed rounds fail their pairing check permanently and the count only grows                                        | Trap 16                              |
+    | A "phrase reviewed and kept" stamp on `plants` | 151 kept `native_to` rows are recorded in a committed file, not in catalog state, so every later run re-ranks them | The 2026-07-30 native_to queue entry |
+
+    Neither is urgent on its own, which is exactly why both need somewhere to be found. **If you bring the stack up and apply nothing from this list, say so in that session's entry** — an unexplained empty list next time reads as "there was nothing", and it will not be true.
+
 **Rule 9 is enforced, not encouraged.** `.husky/check-db-log.sh` runs on every commit and blocks it if a round directory is committed without an entry naming that round, if a migration is committed without touching this file, or if this file still contains the `TODO —` placeholders the script writes. Git cannot see what you ran against Supabase — only what you commit — so the hook checks the artifacts database work leaves behind, and the honest reading of a green hook is "you recorded something", not "you recorded enough". `--no-verify` exists and is occasionally right (a revert, a docs fixup). It is not the normal path, and whatever you skip is inherited by whoever comes next.
 
 ---
@@ -208,7 +217,7 @@ Every guard here checks whether a value is _wrong_. Until round 8 nothing checke
 
 `check-round-scope --round 9` returns 120 failures, all "out-of-scope pairing added", all "both plants predate the round" — they are round 10's `curate-combinations` output. `cleared_at` works for **plant** writes because a plant row carries `updated_at`; **a `plant_combinations` row carries no timestamp**, so every later round's pairings fail every earlier closed round permanently, and the count only grows.
 
-**Do not read a pairing failure on a closed round as a regression, and do not waive them one by one.** The real fix is a timestamp on `plant_combinations`, which is a schema change nobody has needed yet.
+**Do not read a pairing failure on a closed round as a regression, and do not waive them one by one.** The real fix is a timestamp on `plant_combinations`, which is a schema change nobody has needed yet — queued behind standing rule 11, and listed there.
 
 #### 17. A written-down blocker outlives the thing that blocked it — FIXED for the CI-secrets case, expect the shape
 
@@ -307,7 +316,7 @@ Reading the wrong field names leaves the code undefined, every zone falls throug
 **Not done**
 
 - `docs/native-to-review-2026-07-30.md` is **not regenerated** — a true refresh is a whole-catalog run (~695 calls, ~1 hour). Its header now records what was applied; treat the table as the input, not current state.
-- The 151 kept rows carry no stamp in the database saying a person read them. The record is the committed review file, not catalog state, so `--new-only` cannot skip them and a later run will rank them again. A "reviewed and kept" column is the real fix and it is a migration, so it waits on standing rule 11.
+- The 151 kept rows carry no stamp in the database saying a person read them. The record is the committed review file, not catalog state, so `--new-only` cannot skip them and a later run will rank them again. A "reviewed and kept" column is the real fix and it is a migration, so it is **queued behind standing rule 11 and listed there** rather than only here.
 - `Erysimum cheiri`'s rewrite was a judgement past the stated rule (its phrase named no unsupported place, it was just far too broad for a Greece-only endemic). It is the one edit here that a stricter reading would have left alone.
 
 ### 2026-07-30 — native_to and native_region stop diverging (not a round)
