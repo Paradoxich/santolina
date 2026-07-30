@@ -62,6 +62,11 @@ import { getSupabaseAdmin } from '../lib/supabase-admin'
 const SCHEMAS = ['public', 'auth', 'storage'] as const
 const BUCKET = 'db-backups'
 
+/** Bucket copies older than this are pruned after each upload — the weekly
+ * cron would otherwise walk the bucket into the Free plan's 1GB storage cap.
+ * Local copies under backups/db/ are never touched. */
+const BUCKET_RETENTION_DAYS = 90
+
 /** The seven app tables — counted before the dump so meta.json records what a
  * complete backup contained, and a truncated dump is noticeable. */
 const APP_TABLES = [
@@ -149,6 +154,34 @@ async function upload(localFile: string, objectPath: string) {
   if (error) throw new Error(`upload ${objectPath}: ${error.message}`)
 }
 
+/** Stamp folders sort chronologically, so a date-prefix comparison is enough.
+ * Prunes only after a successful upload — a failed run never deletes anything. */
+async function pruneBucket() {
+  const db = getSupabaseAdmin()
+  const cutoff = new Date(Date.now() - BUCKET_RETENTION_DAYS * 86_400_000)
+    .toISOString()
+    .slice(0, 10)
+
+  const { data: folders, error } = await db.storage.from(BUCKET).list()
+  if (error) throw new Error(`list ${BUCKET}: ${error.message}`)
+
+  for (const folder of folders ?? []) {
+    if (folder.name.slice(0, 10) >= cutoff) continue
+    const { data: files, error: listErr } = await db.storage
+      .from(BUCKET)
+      .list(folder.name)
+    if (listErr)
+      throw new Error(`list ${BUCKET}/${folder.name}: ${listErr.message}`)
+    const paths = (files ?? []).map((f) => `${folder.name}/${f.name}`)
+    if (!paths.length) continue
+    const { error: rmErr } = await db.storage.from(BUCKET).remove(paths)
+    if (rmErr) throw new Error(`prune ${folder.name}: ${rmErr.message}`)
+    console.log(
+      `  pruned ${folder.name} (older than ${BUCKET_RETENTION_DAYS}d)`
+    )
+  }
+}
+
 async function main() {
   const skipUpload = process.argv.includes('--skip-upload')
 
@@ -199,6 +232,7 @@ async function main() {
   } else {
     await upload(localFile, `${stamp}/${fileName}`)
     console.log(`  uploaded → ${BUCKET}/${stamp}/${fileName} (private bucket)`)
+    await pruneBucket()
   }
 
   console.log(
