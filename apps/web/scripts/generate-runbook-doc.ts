@@ -91,7 +91,7 @@ ${bookends
 
 \`curate-styles\` and \`curate-greenery\` are repair passes for older data —
 \`curate-plants\` already does both jobs for a new seed, from the same shared
-definitions. \`draft-hardiness\` feeds a parked feature (docs/architecture.md#hardiness). All three stay
+definitions. \`draft-hardiness\` feeds a parked feature ([hardiness](architecture.md#hardiness)). All three stay
 registered in \`STEP_DEFS\` so their stamp columns are still claimed; they are
 simply not run every round.
 

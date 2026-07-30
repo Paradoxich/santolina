@@ -40,7 +40,7 @@ import { getSupabaseAdmin } from './../lib/supabase-admin'
 import { fetchAllRows } from './../lib/paginate'
 
 export interface StepStatus {
-  /** Step name, matching the docs/architecture.md#round-runbook runbook order. */
+  /** Step name, matching the runbook order (docs/architecture.md#round-runbook). */
   step: string
   /** How many of the round's plants carry this step's evidence. */
   done: number
@@ -143,7 +143,7 @@ export interface StepContext {
 }
 
 interface StepDef {
-  /** Step name, matching the docs/architecture.md#round-runbook runbook order. */
+  /** Step name, matching the runbook order (docs/architecture.md#round-runbook). */
   step: string
   /** The DB state that counts as evidence — printed so a reader can check it. */
   evidence: string
@@ -251,10 +251,10 @@ export const STEP_DEFS: StepDef[] = [
     ran: (p) => nonEmpty(p.seasonal_care),
   },
   {
-    // docs/architecture.md#hardiness hardiness is PARKED — it feeds only a dormant survive-winter
+    // Hardiness is PARKED (docs/architecture.md#hardiness) — it feeds only a dormant survive-winter
     // bullet, so a round does not owe it. Drafting a rating per round for a
     // feature nobody can see is a paid step that buys a warning symbol.
-    // When docs/architecture.md#hardiness resumes: perRound true and level FAIL, in one change.
+    // When that work resumes: perRound true and level FAIL, in one change.
     step: 'draft-hardiness',
     evidence: 'hardiness_rating NOT NULL',
     level: 'WARN',
@@ -293,7 +293,8 @@ export const STEP_DEFS: StepDef[] = [
   },
   {
     // WARN, not FAIL: the vision pick is a separate costed Batch API flow
-    // (docs/architecture.md#hero-images/docs/architecture.md#wikimedia-attribution), deliberately not part of the per-round cadence, and
+    // (docs/architecture.md#hero-images, docs/architecture.md#wikimedia-attribution),
+    // deliberately not part of the per-round cadence, and
     // PlantImage falls back to a placeholder. Visible so a round cannot
     // quietly ship without one, but it should not redden every round.
     step: 'pick-plant-images',
@@ -359,7 +360,7 @@ export function registeredStampColumns(): Set<string> {
  * Inspect the live DB and report which pipeline steps have run for `ids`.
  *
  * FAIL vs WARN mirrors whether the underlying feature is shipped or parked
- * (docs/architecture.md#hardiness hardiness is parked; everything else is live). The round-8 lesson is
+ * (hardiness is parked, docs/architecture.md#hardiness; everything else is live). The round-8 lesson is
  * that a WARN is correct for a parked field and WRONG for a shipped one —
  * `seasonal_care` sat at WARN while Care Tips v2 was live in front of users,
  * which is exactly why a whole batch shipped without tips. When hardiness

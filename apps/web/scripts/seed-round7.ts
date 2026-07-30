@@ -5,7 +5,7 @@
  *
  * WHY this round exists: rounds 1-6 were ornamental-only. The catalog held a
  * handful of Mediterranean subshrubs that happen to be culinary (rosemary,
- * thyme, sage, oregano, lavender — all filed `shrub` per architecture.md docs/architecture.md#plant-type-label),
+ * thyme, sage, oregano, lavender — all filed `shrub`, docs/architecture.md#plant-type-label),
  * but zero tender aromatics and zero fruiting edibles. This round fills the
  * "a beautiful garden with a couple of edible things" gap that CLAUDE.md's
  * ornamental-FIRST-not-ornamental-ONLY line explicitly invites.

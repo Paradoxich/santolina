@@ -1,8 +1,8 @@
 /**
  * Guards cross-references into the docs. Run by `pnpm docs:links` and CI.
  *
- * `docs/architecture.md` used to be addressed by section number — `§24` from a
- * code comment, "see §9" from a sibling doc, ~142 of them, 48 outside the file.
+ * `docs/architecture.md` used to be addressed by section number in the `§N` form
+ * — 220 citations, 116 of them in other files, mostly code comments.
  * A number is a position, so the numbering could not change without silently
  * repointing every one of those citations at the wrong section, which is why an
  * earlier session declined to reorganise the file at all. Sections are now
@@ -14,7 +14,7 @@
  *
  *   A. Every relative markdown link from a tracked file resolves — the file
  *      exists, and if the link carries a `#fragment`, that anchor exists in it.
- *   B. Every bare `some/doc.md#anchor` in a code comment resolves the same way.
+ *   B. Every bare `<doc>.md#<anchor>` in a code comment resolves the same way.
  *      Code comments cannot render a link, so they cite the path directly and
  *      would otherwise be checked by nothing.
  *   C. No `§N` citation outside the frozen artifacts listed below.
@@ -184,19 +184,21 @@ function checkFile(relPath: string): void {
       }
     }
 
-    // B. Bare doc paths in code comments. Only paths carrying a fragment: a
-    // plain "see docs/database-log.md" is prose, and checking every mention of
-    // every filename in the repo would find far more noise than breakage.
+    // B. Doc paths in code comments, resolved from the repository root, which
+    // is the convention every such comment here already follows. Two
+    // deliberate limits. Only paths carrying a fragment, because a plain "see
+    // docs/database-log.md" is prose and checking every filename mentioned
+    // anywhere would find far more noise than breakage. And only paths
+    // carrying a directory, because a bare `foo.md#bar` in a .ts file has no
+    // knowable base: generate-runbook-doc.ts holds one inside a template
+    // literal, where it is a link relative to the docs/ page it will be
+    // written into, not to the script. That generated page is itself checked
+    // as markdown, so nothing goes unverified.
     if (!isMarkdown) {
-      for (const m of line.matchAll(/([\w./-]+\.md)#([\w-]+)/g)) {
+      for (const m of line.matchAll(/([\w./-]+\/[\w./-]*\.md)#([\w-]+)/g)) {
         const [, path, fragment] = m
         if (!path || !fragment) continue
-        resolveTarget(
-          path.includes('/') ? '.' : relPath,
-          `${path}#${fragment}`,
-          where,
-          m[0]
-        )
+        resolveTarget('.', `${path}#${fragment}`, where, m[0])
       }
     }
   })
