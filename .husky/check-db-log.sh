@@ -107,4 +107,62 @@ cannot reconstruct."
   fi
 fi
 
+# --- 4. A session entry is an event record, not an essay ---------------------
+# The log grew to 21,608 words by 2026-07-30, of which the session section was
+# 15,382 — because almost every entry explained its own reasoning, and several
+# re-taught a lesson the trap list already owned. Compressed to 4,268 words the
+# same day. A rule nobody enforces regrows, so this is the enforcement.
+#
+# Two mechanical signals, both cheap and neither a judgement call: length, and
+# the phrases that mean "I am about to teach something here". A durable lesson
+# belongs in the trap list; a design decision belongs in architecture.md or
+# curation.md; an implementation story belongs in the commit message.
+#
+# The fenced template at the top of the Sessions section is skipped — it
+# contains a specimen "### <date>" heading that is not an entry.
+if printf '%s\n' "$STAGED" | grep -qx "$LOG_PATH"; then
+  OVERLONG=$(
+    git show ":$LOG_PATH" | awk '
+      /^## Sessions/       { in_sessions = 1 }
+      /^```/               { fence = !fence; next }
+      fence                { next }
+      !in_sessions         { next }
+      /^### / {
+        if (title != "" && n > MAX) printf "  %s (%d lines)\n", title, n
+        title = substr($0, 5); n = 0; next
+      }
+      title != ""          { n++ }
+      END { if (title != "" && n > MAX) printf "  %s (%d lines)\n", title, n }
+    ' MAX=45
+  )
+  if [ -n "$OVERLONG" ]; then
+    fail "Session entries over 45 lines:
+
+$OVERLONG
+Target is 10-25 lines: Changed / Database / Found / Not done / Verified, in
+the past tense. If the extra length is a durable lesson, it is a trap — add it
+to the trap section and cite it. If it is reasoning, it belongs in the commit
+message, architecture.md or curation.md."
+  fi
+
+  PREACHING=$(
+    git show ":$LOG_PATH" | awk '
+      /^## Sessions/ { in_sessions = 1 }
+      /^```/         { fence = !fence; next }
+      fence          { next }
+      in_sessions && /[Tt]he durable lesson|[Ww]orth remembering|[Tt]he lesson here|[Tt]he generalisable rule|[Tt]he takeaway/ {
+        printf "  line %d: %s\n", NR, substr($0, 1, 70)
+      }
+    '
+  )
+  if [ -n "$PREACHING" ]; then
+    fail "A session entry is teaching:
+
+$PREACHING
+Those phrases mean the sentence is a durable lesson, and durable lessons live
+in the trap section so the next session finds them without reading history.
+Add or extend a trap, then cite it from the entry."
+  fi
+fi
+
 exit 0
