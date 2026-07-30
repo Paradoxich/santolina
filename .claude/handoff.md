@@ -36,37 +36,29 @@ cd apps/web && pnpm round:progress --round <n>  # what a round still owes
 
 ---
 
-## 2026-07-30 — session/2026-07-30-migration-drift
+## 2026-07-30 — session/2026-07-30-token-docs
 
-**In flight: nothing.** Merged as [PR #150](https://github.com/Paradoxich/santolina/pull/150)
-(`73c96f8`); worktree removed, branch deleted, `../santolina-explore-ranking` and
-its dev server on :3000 cleaned up too. Trap 14's migration-drift check shipped
-(`pnpm migrations:check`, CI job `migration drift (main only)`) and **its first
-real run on main passed** — reasoning lives in `docs/database-log.md` trap 14. The
-four UI sessions that had been living in this file moved to `docs/architecture.md`
-[the plant story subpage](../docs/architecture.md#plant-story-subpage)/[one content width](../docs/architecture.md#content-width)/[the owned-plant dashboard](../docs/architecture.md#plant-dashboard)/[Explore ranking](../docs/architecture.md#explore-ranking) and `DESIGN_SYSTEM.md`.
+**In flight: nothing.** Merged as [PR #155](https://github.com/Paradoxich/santolina/pull/155);
+worktree removed, branch deleted local and origin. The token/design-system audit
+became a consolidation: `docs/token-taxonomy.md` deleted (grammar moved into
+`DESIGN_SYSTEM.md`, six referencers repointed), all five ramp-contrast claims
+recomputed against the final ramps, `--landing-scrim` now derives from sage-950,
+and `tokens:check` grew — check B scans compound values, new check D verifies
+icon colours (weather set exempt by design), check A covers root-level docs.
+Rules and rulings live in `DESIGN_SYSTEM.md`; nothing durable is only here.
+
+**A second session was active in parallel:** [PR #156](https://github.com/Paradoxich/santolina/pull/156)
+(`session/2026-07-30-agent-rules`, worktree `../santolina-agent-rules`) was open
+when this session closed. If it finished after this, its entry replaces this one.
 
 **Next steps, in order:**
 
-1. **Restructure `docs/architecture.md` around features rather than numbered
-   entries.** Agreed with Ana this session, deliberately not started. Sequence
-   matters: **named anchors and a link check first** — ~142 `§` references exist,
-   48 of them outside the file, which is why an earlier session declined the split.
-   Only then regroup, editing in place. New rule to encode: a decision that
-   supersedes another **replaces** it; the rejected alternative survives, the stale
-   current-state description does not. [the plant story subpage](../docs/architecture.md#plant-story-subpage) is the worked example — it needed an
-   amendment bolted on because its number is an address other text cites.
-2. **The `native_checked_at` re-run**, now that the 5a WCVP lookup is guarded. How
-   many rows: `select count(*) from plants where native_checked_at is not null`.
-3. **The `native_to` / `native_region` duplication.** One fact in two shapes.
-   Destination: WCVP as single authority feeding `native_region` mechanically,
-   `native_to` staying hand-owned copy that gets _checked_ against it. Not a round
-   fix — the two are partly causal, and `native_to` is voice-passed copy that must
-   not become machine-derived.
+1. **The `native_to` / `native_region` duplication** (carried; the other two
+   steps from the previous entry shipped — the architecture anchor restructure
+   in PRs #151–153, now guarded by `pnpm docs:links`, and the WCVP tail per
+   `docs/database-log.md`). Destination unchanged: WCVP as single authority
+   feeding `native_region` mechanically; `native_to` stays hand-owned copy that
+   gets _checked_ against it. Not a round fix — `native_to` is voice-passed copy
+   that must not become machine-derived.
 
 **Open questions:** none blocking.
-
-**Everything previously carried here now lives in Notion** under Build Backlog →
-_Carried from the handoff restructure — needs triage_. It is untriaged: owner tags
-and time-horizon placement are Ana's calls. Two backlog items are ticked-ready
-there (Explore ranking and the `image_urls` trim, both shipped in PR #149).
