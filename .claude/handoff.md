@@ -36,29 +36,43 @@ cd apps/web && pnpm round:progress --round <n>  # what a round still owes
 
 ---
 
-## 2026-07-30 — session/2026-07-30-token-docs
+## 2026-07-30 — session/2026-07-30-agent-rules
 
-**In flight: nothing.** Merged as [PR #155](https://github.com/Paradoxich/santolina/pull/155);
-worktree removed, branch deleted local and origin. The token/design-system audit
-became a consolidation: `docs/token-taxonomy.md` deleted (grammar moved into
-`DESIGN_SYSTEM.md`, six referencers repointed), all five ramp-contrast claims
-recomputed against the final ramps, `--landing-scrim` now derives from sage-950,
-and `tokens:check` grew — check B scans compound values, new check D verifies
-icon colours (weather set exempt by design), check A covers root-level docs.
-Rules and rulings live in `DESIGN_SYSTEM.md`; nothing durable is only here.
-
-**A second session was active in parallel:** [PR #156](https://github.com/Paradoxich/santolina/pull/156)
-(`session/2026-07-30-agent-rules`, worktree `../santolina-agent-rules`) was open
-when this session closed. If it finished after this, its entry replaces this one.
+**In flight: nothing.** Merged as [PR #156](https://github.com/Paradoxich/santolina/pull/156)
+(`38c54c6`); worktree removed, branch deleted local and origin. Documentation
+only, across four PRs: [#152](https://github.com/Paradoxich/santolina/pull/152)
+shortened `architecture.md`, [#153](https://github.com/Paradoxich/santolina/pull/153)
+fact-checked the remaining docs and split out `docs/curation.md`,
+[#154](https://github.com/Paradoxich/santolina/pull/154) compressed the session
+log, #156 added two agent rules to `CLAUDE.md` and corrected what it claims the
+product does. Rules live in the files they govern; nothing durable is only here.
 
 **Next steps, in order:**
 
-1. **The `native_to` / `native_region` duplication** (carried; the other two
-   steps from the previous entry shipped — the architecture anchor restructure
-   in PRs #151–153, now guarded by `pnpm docs:links`, and the WCVP tail per
-   `docs/database-log.md`). Destination unchanged: WCVP as single authority
-   feeding `native_region` mechanically; `native_to` stays hand-owned copy that
-   gets _checked_ against it. Not a round fix — `native_to` is voice-passed copy
-   that must not become machine-derived.
+1. **Back up the five tables nothing backs up.** `backup-catalog.ts` dumps
+   `plants` and `plant_combinations` only. `users`, `gardens`, `palette_plants`,
+   `diary_entries` and `agent_sessions` have no backup at all, and the Free plan
+   cannot restore its own snapshots. This costs nothing today, when the only
+   accounts are demo ones, and becomes unrecoverable the day it has users — so it
+   belongs before launch, not after. `pg_dump` to object storage covers all seven
+   tables plus the schema in one command. Record it as a standing rule in
+   `docs/database-log.md` when it lands.
+2. **The `native_to` / `native_region` duplication** (carried). WCVP as the single
+   authority feeding `native_region` mechanically; `native_to` stays hand-owned
+   copy that gets _checked_ against it. Not a round fix — `native_to` is
+   voice-passed copy that must not become machine-derived.
+3. **A local Supabase stack, before the next migration.** `supabase/` holds only
+   `migrations/`; there is no `config.toml`, so migrations and RLS have never run
+   anywhere but production. The storage-policy bug where a bare `name` resolved
+   to `gardens.name` is exactly the class `supabase start` catches, and this was
+   already named as the real gap when staging was ruled out for catalog data.
 
-**Open questions:** none blocking.
+**Open question, needs Ana:** `README.md`'s opening still claims "intelligent
+recommendations". The user-flow sentence under it was corrected this session; the
+headline is public positioning, so it was left alone. It stays or it goes.
+
+**Untriaged, filed nowhere:** four places a standard tool beats what is here — a
+direct Postgres connection for the offline scripts (removes the 1000-row cap
+class, gives transactions), a rate-limit library, `zod` for model-output schemas,
+and CLI-driven migrations so applied and committed are one act. None is urgent.
+They belong in the Notion **Build Backlog**, not in this file.
