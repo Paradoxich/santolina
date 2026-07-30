@@ -70,6 +70,47 @@ The catalog's size, the curated count and the per-round step table are
 **generated** into `docs/catalog-state.md` and `docs/round-runbook.md`. Link to
 them; never retype their numbers here.
 
+## 2026-07-30 (later) — durability pass: the hero fix, round 10's closure, and two things that could delete themselves
+
+**Status:** five PRs, all merged — [#138](https://github.com/Paradoxich/santolina/pull/138) hero fix, [#139](https://github.com/Paradoxich/santolina/pull/139) archive refresh, [#140](https://github.com/Paradoxich/santolina/pull/140) catalog-state, [#141](https://github.com/Paradoxich/santolina/pull/141) WCVP cache, [#142](https://github.com/Paradoxich/santolina/pull/142) + [#143](https://github.com/Paradoxich/santolina/pull/143) the worktree guard. Latest merge commit `96b5a91`. Ran alongside the wcvp-tail session below and touched none of its files. One migration: none. No schema change.
+
+This started as "fix one hero" and turned into closing three ways the project could silently lose work. Read it for those; the hero fix itself is two paragraphs.
+
+**Round 10 is closed, and the closure is worth understanding.** `check-round-scope --round 10` → 0 out-of-scope / 96 waived; `verify-round --round 10` → 0 failures; `round-progress --round 10` → 10/10 steps, 6/6 artifacts. The wcvp-tail session wrote the closure and got it right in a way this session's first read did not: **a `cleared_at` alone could not have closed it honestly.** Round 10's own last remediation (the petunia hero, 23:03:53) landed *after* both out-of-round write sets, so any edge early enough to allow those would have asserted the round finished at a moment it demonstrably had not. So `cleared_at` sits after everything and the two pre-closure sets are waived **by name**. Round 8's precedent, restated: no window holding a round's real work can exclude a pass that ran first.
+
+**`Seaside petunia`'s hero was the wrong species and is fixed.** It showed a double yellow garden hybrid; *Calibrachoa parviflora* is small and violet, and the labelled Commons photo of the true species was already in the row's own `image_candidates`, having lost the pick's comparison. `is_curated` flipped in the same write because the row was held on its image alone — **so the image-holds entry below reads 7 of 16 approved and the real figure is 8 of 16.** That entry's item 1 is struck through accordingly; the 7/9 numbers elsewhere in it were true when written.
+
+**`scripts/set-plant-hero.ts` exists because neither human-verdict path could say this.** `apply-image-reverts` only points `image_url_curated` back at `image_url`, so it can only ever choose the photo Trefle listed first; `apply-image-confirmations` only records that a person trusts the photo already in place. Re-running the pass cannot help — it already compared these candidates and preferred the wrong one. **The safety property is that the URL must already be one of the row's candidates**, so the script cannot introduce an unvetted file, an NC licence, or a host `next/image` will refuse (the new-host rule is deploy-gated). `--why` is mandatory and lands in `image_pick_reason`. Three holds still want this operation.
+
+**The archive went stale the moment the hero changed, and `round-progress` caught it.** The petunia write was 23:03:53, the archives were captured 22:50:27, and restoring either would have reverted it. That is the book-end trap — `archive-round` after **any** remediation, not just after a seed — caught by the tool built for it rather than six hours later. **A data fix, however small, ages the round's archive.**
+
+**The WCVP lookup cache was 14MB on one laptop and is now committed.** It lived in gitignored `reports/`, and the wcvp-tail session's worktree was removed minutes after it finished — the cache survived only because someone looked inside the folder first. `apps/web/reference/` is a **third category** alongside the two that existed: `rounds/<n>/` is provenance, `reports/` is disposable output, `reference/` is *input that was expensive to earn and that every later round reads*. `cross-check-native-region.ts` reads and appends there now, gzipped 14MB → 1MB. Both paths were exercised, because the write path could have corrupted the cache on the next run: a cached species left the file byte-identical and made no GBIF call; an uncached one appended and re-gzipped to a still-valid file.
+
+**`git worktree remove` can no longer quietly eat a file.** Two layers, because the first is only advice:
+
+- `session-end` gained **step 3**, which sorts every ignored path into reproducible / expensive-or-irreplaceable / ask-me before any removal, and **step 6** now has to state whether anything is left for Ana to handle. The rule it states: **"ignored" means disposable by convention, not by fact** — the test is what a thing costs to get back.
+- `.claude/hooks/guard-worktree-remove.sh` **mechanically denies** the command while anything non-reproducible is inside, `--force` included. Escape hatch is `# artifacts-checked` appended to the command — a marker rather than an env var, so a bypass is recorded in the transcript. Verified live: a planted 2.9MB file blocked the removal and both file and worktree survived.
+
+**Decisions made:**
+
+- **No catalog data was written beyond the verdicts and the one hero (Ana).** A `set-plant-hero` sweep over the other three holds was offered and declined, then the single fix was asked for. The tool exists; the remaining three are deliberately unapplied.
+- **`.claude/settings.json` and `.claude/hooks/` are now tracked.** `.gitignore` had `.claude/*` with exceptions only for skills and the handoff, so the hook and the settings enabling it **would have been local-only files on one laptop — the exact failure the hook exists to prevent.** `settings.local.json` stays ignored, so personal permissions and machine paths still do not travel. This is the repo's first committed `.claude/settings.json`; a running session may need `/hooks` opened once to pick it up.
+- **`Prunus subhirtella` was not re-verified.** Its pool never widened and it already survived a verify in round 9; re-asking is the re-roll `runVerify` warns against.
+
+**Next steps, in order:**
+
+1. **Three holds want `set-plant-hero`**, and each needs a candidate fed in first if Wikimedia has none: `Cushion-pink` (P18 is 300x231, under the 500px floor), `Erysimum cheiri` (no image anywhere, placeholder live), `Prunus subhirtella` (no P18).
+2. **Five holds are ordinary "cannot confirm the species from this photo"** — Amethyst fescue, Longwood tussock, Iris danfordiae, White-stem bramble, Haworth's aeonium. `apply-image-confirmations.ts` clears these with a human yes and no paid pass.
+3. **`level3.geojson` is still only in gitignored `reports/`, so `cross-check-native-region.ts` cannot run on a clean checkout.** Third-party TDWG data; its licence and canonical download URL want checking before it is vendored. Named in `apps/web/reference/README.md` so it is a documented gap rather than a silent one.
+4. **The seven `no-data` accepted-name renames** from the tail entry below. Handle one at a time and mind that `scientific_name` is also what `lib/demo-garden.ts` resolves by — a rename there fails **silently**, just quietly not seeding a demo plant.
+5. Carried: `Symphyotrichum lateriflorum`'s " or " common-name blob; the token usage logger; hardiness WARN → FAIL when §27 un-parks; `NEXT_PUBLIC_APP_URL` dead but advertised.
+
+**Open questions:** none. Outside the repo and unchanged: local Supabase disk cleanup and the Pro-plan decision.
+
+**Worth knowing, because it cost a cycle each.** A heredoc inside `$( )` does not reliably protect apostrophes or backticks from the shell parser — build hook messages with `printf`. And **zsh's `echo` expands the `\n` escapes inside a hook's JSON**, so testing hook output with `echo "$out" | jq` reports a parse error that is entirely the harness; use `printf '%s'`.
+
+**On process, from Ana this session:** a session must not hand her artifacts to sort out, and an answer to a small question should be small. The three-category digression about where a cache belongs was the wrong shape of reply to "commit the cache somewhere durable". Step 6 of `session-end` now encodes the first half.
+
 ## 2026-07-30 — session/2026-07-30-wcvp-tail (pipeline; read this one first for pipeline work)
 
 **Status:** [PR #137](https://github.com/Paradoxich/santolina/pull/137), rebased onto `main` after the image-holds line of work landed (#135, #136, #138). Whether it merged: `gh pr view 137 --json state,mergedAt`. **The catalog data was already live before the PR** — the pass writes straight to remote Supabase — so what the PR carries is provenance, the scope waiver and round 10's closure.
