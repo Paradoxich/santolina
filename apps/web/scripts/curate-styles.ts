@@ -15,7 +15,7 @@
  * can't anchor it. An empty result is a valid judgment (style-neutral) —
  * curate-plants treats [] as answered and only NULL as missing.
  *
- * Stamps style_checked_at on every judged row (migration 20260728150000);
+ * Stamps style_checked_at on every judged row (migration 20260728114824);
  * --new-only targets NULL stamps, so future seed rounds curate only their
  * own plants.
  *

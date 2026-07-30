@@ -20,11 +20,11 @@
  * left exactly as it is.
  *
  * NOT an editorial change — the hero is the same photograph, so the verdict is
- * preserved. Since migration 20260729120000 that has to be DONE rather than
+ * preserved. Since migration 20260729101133 that has to be DONE rather than
  * assumed: a trigger clears the image criterion on any write to
  * `image_url_curated`, so this script resizes and then re-asserts the verdict
  * in a second statement. See the comment at that write for why one statement
- * cannot work. Since 20260729140000 the criterion cleared is
+ * cannot work. Since 20260729112046 the criterion cleared is
  * `editorial_image_at`, and the re-assert has to restore that stamp too —
  * `is_curated` alone would be an approval with a criterion outstanding. Re-judging a row because the same picture got smaller would be
  * noise, but the opt-out belongs in the diff where it can be argued with.

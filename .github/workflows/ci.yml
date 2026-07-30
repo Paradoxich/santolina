@@ -89,3 +89,59 @@ jobs:
           printf 'NEXT_PUBLIC_SUPABASE_URL=%s\nSUPABASE_SERVICE_ROLE_KEY=%s\n' \
             "$SUPABASE_URL" "$SERVICE_ROLE" > apps/web/.env.local
           pnpm --filter santolina-web catalog:state:check
+
+  migration-drift:
+    # SAME "(main only)" CONVENTION AS THE JOB ABOVE, for the same reason — a
+    # bare SKIPPED in a PR's check list sent four sessions hunting for a cause
+    # and produced a false "CI has no secrets" claim each time. The status line
+    # states its own reason. Do not shorten this name.
+    #
+    # A SEPARATE JOB rather than a step on catalog-state: these fail for
+    # unrelated reasons and a failure named "catalog-state staleness" when the
+    # real defect is an unapplied migration is the same class of misleading
+    # status line.
+    name: migration drift (main only)
+    # Trap 14: a migration committed to main and never applied. The check reads
+    # the remote's own ledger, so it needs the service role key and can never
+    # run on pull_request — same trade as catalog-state above.
+    #
+    # THIS `if:` IS THE ONLY REASON A PR SEES THIS JOB SKIPPED. Not the
+    # secrets: `gh secret list` settles that in one command.
+    #
+    # Main-only is the right timing on its own merits, not a compromise.
+    # Migrations here are applied by hand through the MCP around the moment a
+    # PR merges, so a PR-time check would be asking the question before the
+    # answer exists. The push to main straight after the merge is exactly when
+    # "did anyone actually apply it?" is worth asking — which is the day-long
+    # window trap 14 slipped through.
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Check supabase/migrations against the remote ledger
+        env:
+          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SERVICE_ROLE: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        # Fails rather than exiting 0 on a missing key, for the reason spelled
+        # out on the job above: a silent skip and a real pass looked identical
+        # from outside, and that is what let a stale claim survive four
+        # tellings. A missing key means somebody removed it.
+        run: |
+          if [ -z "$SERVICE_ROLE" ]; then
+            echo "::error::SUPABASE_SERVICE_ROLE_KEY is not set, so" \
+                 "supabase/migrations cannot be compared against the remote" \
+                 "ledger. Both secrets have existed since 2026-07-28, so this" \
+                 "means one was removed — restore it with 'gh secret set" \
+                 "SUPABASE_SERVICE_ROLE_KEY'. Run 'gh secret list' before" \
+                 "reporting this as CI never having had secrets."
+            exit 1
+          fi
+          printf 'NEXT_PUBLIC_SUPABASE_URL=%s\nSUPABASE_SERVICE_ROLE_KEY=%s\n' \
+            "$SUPABASE_URL" "$SERVICE_ROLE" > apps/web/.env.local
+          pnpm --filter santolina-web migrations:check

@@ -108,7 +108,7 @@ async function main() {
       // `claim: ['image']` — a reviewer choosing this photograph is criterion 1
       // being cleared by hand, so record it rather than clearing the verdict
       // and paying to re-derive what a person just decided
-      // (migration 20260729140000). `plants-write.ts` owns the same-statement
+      // (migration 20260729112046). `plants-write.ts` owns the same-statement
       // rule that makes the claim stick, and settles `is_curated` afterwards.
       try {
         await writePlant(
