@@ -52,8 +52,12 @@ storybook-static
 
 # Claude Code
 # Local and machine-specific by default (settings.local.json, launch.json).
-# Skills are the exception: they are shared workflow rather than local config,
-# and are no use if every session has to be handed them out of band.
+# Skills, hooks and the shared settings file are the exceptions: they are shared
+# workflow rather than local config, and are no use if every session has to be
+# handed them out of band. settings.local.json stays ignored, so personal
+# permissions and machine paths still do not travel.
 .claude/*
 !.claude/skills/
+!.claude/hooks/
+!.claude/settings.json
 !.claude/handoff.md
