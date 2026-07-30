@@ -36,35 +36,43 @@ cd apps/web && pnpm round:progress --round <n>  # what a round still owes
 
 ---
 
-## 2026-07-30 — session/2026-07-30-backups
+## 2026-07-30 — session/2026-07-30-natives-dedup
 
-**In flight: nothing.** Merged as [PR #157](https://github.com/Paradoxich/santolina/pull/157)
-(`7425d10`); worktree removed, branch deleted local and origin. The five
-unbacked-up tables are covered: `backup-database.ts` (`pnpm db:backup`, standing
-rule 10 in `docs/database-log.md`) plus a weekly cron
-(`.github/workflows/db-backup.yml`, Mondays 03:12 UTC, dispatch-tested green,
-`SUPABASE_DB_URL` secret set). A failed cron run emails Ana — silence means it
-ran. Also ruled this session: `README.md` keeps "intelligent recommendations";
-question closed.
+**In flight: nothing.** Merged into `main` as `5ada2a9` + `0ff54d7`; no PR
+raised, nothing pushed to origin yet. Worktree and branch removed at session end.
+The `native_to` / `native_region` duplication carried by the last three handoffs
+is closed: `cross-check-native-region --apply` nulls `native_checked_at` on rows
+it corrects, so a corrected region requeues its own phrase, and
+`cross-check-native-to` reports `contradicts` when phrase and validated tags
+share no region. All 277 contaminated stamps cleared, all 695 rows re-checked
+(coverage now 695/695). Mechanics in [`curation.md`](../docs/curation.md#native-to),
+numbers in that day's `database-log.md` entry. `native_to` was NOT edited and
+must not become machine-derived — that ruling is unchanged.
 
 **Next steps, in order:**
 
-1. **The `native_to` / `native_region` duplication** (carried). WCVP as the single
-   authority feeding `native_region` mechanically; `native_to` stays hand-owned
-   copy that gets _checked_ against it. Not a round fix — `native_to` is
-   voice-passed copy that must not become machine-derived.
-2. **A local Supabase stack — trigger: the next migration, not before.** Nothing
-   is blocked on it today; the rule (agreed with Ana July 30) is that **no new
-   migration is applied until the local stack exists and has replayed the
-   existing 35 first**, and CLI-driven migrations (`supabase db push`) lands in
-   that same session with nothing else in it — it is the only work that touches
-   prod schema. Why it matters: `supabase/` holds only `migrations/`, no
-   `config.toml`, so migrations and RLS have only ever run in production, and a
-   wrong RLS policy fails silently (the bare-`name` → `gardens.name` storage bug
-   is the class this catches). The stack is also the free restore target the db
-   backup has never been rehearsed against — rehearse
-   `pg_restore --data-only` from a `db-backups` dump in that same session. Disk
-   was the blocker, not RAM: 11 GB free July 28, 20 GB free July 30 — the lighter
-   `supabase start -x studio,realtime,storage-api,imgproxy,edge-runtime,inbucket,vector,logflare`
-   (≈2 GB, Postgres + auth + PostgREST) fits; cap Docker's disk allowance so the
-   VM can't balloon.
+1. **Work the 179-row queue in `docs/native-to-review-2026-07-30.md`.** Editorial,
+   so it is an agent's job, not Ana's. Read from the top: it is ranked by how much
+   of the phrase its validated tags do not support, and the tail is broad wording
+   being broad, not defects. Three things to know before starting. The four
+   `contradicts` rows are the real rewrites. `Crocus speciosus` may be a **tags**
+   problem rather than a phrase problem — its validated range is `Caucasus` alone,
+   and the guard only reports that two fields disagree, never which side is wrong.
+   And the drafts need checking, not applying: `Perovskia`'s reintroduces "central
+   Asia", the exact term its tags exclude. The run's full per-row JSON is committed
+   at `apps/web/reference/native-to-crosscheck-2026-07-30.json.gz`; gunzip it into
+   `apps/web/reports/native-to-crosscheck.json` to use `--report-only` instead of
+   re-billing ~695 Claude calls.
+2. **A local Supabase stack — trigger: the next migration, not before.** Nothing is
+   blocked on it today. The full rule now lives in `docs/database-log.md` as
+   **standing rule 11** rather than being retyped here each session; it names the
+   stack command, the restore rehearsal it owes, and the order for the next
+   migration.
+
+**Worth knowing before the next long AI pass:** two designs for this session's
+check shipped a flooded report into a full catalog run and were killed on
+spot-checks of four rows against the database. Trap 23 has both, plus the cheap
+rule that saved ~1300 calls — read the first twenty rows of a long run before
+letting it finish.
+
+**Open questions:** none blocking.
