@@ -9,6 +9,7 @@ You are starting a new work session in this repo. Follow these steps in order an
 ## 1. Read the handoff first
 
 Read `.claude/handoff.md` (at the repo root, on main). If it exists, summarize for me before doing anything else:
+
 - what the last session did,
 - its listed next steps,
 - any open questions.
@@ -33,12 +34,29 @@ Run `git worktree list` and `git branch --list 'session/*'`.
 ## 4. Make the workspace runnable
 
 Inside the new worktree:
+
 - If dependencies are needed and not present (no `node_modules`), install them.
 - Run `git status` and confirm it is clean.
+
+If this session needs a dev server, two things will cost you time silently:
+
+- **Do not start it with `preview_start`.** That reads `.claude/launch.json` from the
+  repo root and serves the **main checkout** — you end up reading main's code while
+  editing the worktree, and nothing in the output says so. Start it by hand from the
+  worktree directory and verify the cwd.
+- **Prefer port 3000, and know what you lose off it.** Getting into the app is fine on
+  any port — the demo sign-in on `/login` is anonymous and redirects origin-relative, so
+  it never touches the allow-list. But **real sign-in is pinned to :3000**: the Supabase
+  redirect allow-list holds `localhost:3000` and nothing else, so on any other port magic
+  link and Google OAuth ignore `emailRedirectTo` and bounce you to `/login` or to
+  santolina.app, with nothing in the app's own code to blame. If this session touches
+  the sign-in flow or needs a real (non-anonymous) account, you need :3000 — and only one
+  worktree can hold it, so stop another session's server first and tell me.
 
 ## 5. Confirm
 
 End with a short block I can see at a glance:
+
 - Worktree path
 - Branch name
 - Handoff next-steps carried into this session (if any)
