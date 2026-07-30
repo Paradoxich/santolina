@@ -39,10 +39,9 @@ cd apps/web && pnpm round:progress --round <n>  # what a round still owes
 ## 2026-07-30 — session/2026-07-30-179
 
 **In flight: nothing.** Merged into `main` as `2fffb5a`, pushed, CI green (both
-main-only jobs ran rather than skipping). No PR raised. Worktree and local branch
-removed at session end; **`origin/session/2026-07-30-179` still exists** and is
-fully merged, so `git push origin --delete session/2026-07-30-179` is safe
-whenever you want it gone. The 179-row `native_to` queue the
+main-only jobs ran rather than skipping). No PR raised. Worktree, local branch and
+remote branch all removed at session end, so nothing of this session survives
+outside `main`. The 179-row `native_to` queue the
 last handoff carried is worked: **32 phrases rewritten, 151 kept, all four
 `contradicts` closed**, every rewritten row re-passing the guard at gross 0,
 contradicts 0. Six `native_region` rows were corrected on the way (trap 24).
