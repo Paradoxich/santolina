@@ -70,6 +70,55 @@ The catalog's size, the curated count and the per-round step table are
 **generated** into `docs/catalog-state.md` and `docs/round-runbook.md`. Link to
 them; never retype their numbers here.
 
+## 2026-07-30 (latest) — the pipeline redundancy review: two joins, and the CI-secrets claim killed at the source
+
+**Status:** both merged — [#145](https://github.com/Paradoxich/santolina/pull/145) the shared WCVP lookup + style stamp, [#146](https://github.com/Paradoxich/santolina/pull/146) the CI-secrets claim. Merge commit `ac536fa`. No migration, no schema change, no seed, no AI spend. One catalog write: 100 `style_checked_at` stamps. Both worktrees removed, both branches deleted with `-d`.
+
+Started as a question — **is any step of the round pipeline redundant?** — and the answer shapes the whole entry: **no step is, but two joins were.** The three genuinely redundant steps had already been cut on 2026-07-29, so there was nothing left to delete. Every finding was in a _relationship between_ steps, which is why reading the runbook could not have produced any of them; reading two guards side by side did.
+
+**Worth keeping from that review, because it will come up again.** Information gain is a good test for whether to _add_ a step and a bad one for whether to _keep_ one — `backup`, `archive` and `scope-check` all fail it, and they matter most. Rounds 9 and 10 were **integrity failures, not architectural ones**: steps reporting success having done nothing. Two different frameworks tried during the review both scored all 16 steps as justified, because both test a step in isolation. The rule that actually did the work: **prefer state over self-report**, which is why `check-round-scope` reads the database rather than any script's report.
+
+### The expensive guard was running on the unguarded lookup
+
+`cross-check-native-to` and `cross-check-native-region` both need _what does Kew's checklist say this species is native to?_ 5b had `strict=true`, a species-rank guard, pagination and the committed cache. 5a had **none of them**, cached nothing, and read **any** row GBIF returned rather than only WCVP's — and 5a is the half that bills Claude per plant.
+
+**Proven by measurement, not inference.** A before/after probe against live GBIF (no DB, no model) found the old lookup wrong on **all four** species tried, two of which are not trap cases:
+
+- `Pennisetum alopecuroides` → **66 regions** (the whole genus `Cenchrus`; trap 11, and it was reaching a prompt)
+- `Rudbeckia fulgida` → one unsplit blob, including a `NATIVE` row from the World Register of Marine Species (trap 15)
+- `Rosmarinus officinalis` → **one region, "Portugal Continental"**, for a Mediterranean plant
+- `Mentha × piperita` → 40 raw `[c]`-marked locality blobs
+
+Both fallback tiers (`native-recs`, `weak`) were that contamination handed to Claude **labelled as the independent authority** — worse than no evidence, because the prompt vouched for it. Removed. Absence now names its reason and says _missing evidence, not an empty native range_.
+
+**Bounded, not zero, and left deliberately.** The `gross` backstop reads Claude's continent sets rather than the GBIF regions, and the prompt always said to weigh its own knowledge, so a species Claude knows well likely survived. **Ana's call: the rows stamped `native_checked_at` are left for a future session** rather than re-run. How many: `select count(*) from plants where native_checked_at is not null`.
+
+### Removing a step means rehoming what it proved
+
+`curate-styles` owns `style_checked_at` and correctly left the round cadence on 2026-07-29. **The stamp did not move with the job**, so rounds 9 and 10 wrote good `style_tags` that read as never judged and the generated coverage doc slid every round on data that was fine. `curate-plants` stamps as it writes now; the existing rows were backfilled through a new **state-derived** section in `backfill-guard-stamps.ts`, which previously knew only report-derived evidence.
+
+**The witness is the round manifest**, which makes it per-row proof rather than a date inference — a row was stamped only if its id is in round 9's or 10's manifest AND it has `style_tags` AND it has `ai_drafted_at`, and anything unstamped outside both manifests is left NULL and named in the output. The dry run agreed exactly (100 unstamped, 100 in scope, 0 orphans), which is what made it safe to apply. **Each row carries its own `ai_drafted_at`, not the backfill date** — same rule the report-derived half already followed. Current coverage: `pnpm catalog:state:check`.
+
+### The CI-secrets claim, and the uncomfortable part
+
+**This file's own header already documented this exact claim, named this exact job, and counted three consecutive sessions. I made it four**, in the same session that had read the Notion entry recording it. The failure was not that the correction was missing — it was here, at the top, in the worked example — it was that I **grepped this file instead of reading it**, and the header describes the claim as a job "waiting for secrets" while my pattern searched for _"secrets exist"_ and _"supabase secrets"_. **A keyword grep cannot find a correction that is phrased differently from the claim.** Read the top of this file; do not search it.
+
+So #146 does what prose could not: the job is renamed `catalog-state staleness (main only)` so a PR's SKIPPED **states its own reason in the check list**, and the missing-secret branch **exits 1** instead of printing a notice and exiting 0 — that silent no-op is what made a skip and a real pass indistinguishable from outside. Four copies of the stale sentence corrected. Whether the secrets exist: `gh secret list`.
+
+**A second false blocker fell out of it.** Trap 14 said its own fix was _"blocked until the Supabase secrets exist"_ — the secrets arrived the day after that line was written, so the migration-drift check is **unwritten, not blocked**. Corrected, because those are different backlog items. That check is the one that would have caught garden-level diary notes failing in production for a day.
+
+**Trap 17** now holds the general shape: an asserted negative — "X is missing", "we're blocked on Y" — gets verified with one command before it is repeated, especially when repeated from a document rather than a run. **A blocker is the most dangerous kind of note to write, because nothing revisits it when the block lifts. If you write one, name the command that proves it.** Three instances on 2026-07-30 alone.
+
+### Next steps, in order
+
+1. **Write trap 14's migration-drift check.** Unblocked, mechanical, and it belongs in CI: list the remote migrations, diff against `supabase/migrations/` modulo the trap-13 renames. Highest-value item left, because the failure it catches reached real users.
+2. **The `native_checked_at` re-run**, if the 5a verdicts matter — now that the lookup is trustworthy, a re-run means something it did not before.
+3. **The `native_to` / `native_region` duplication.** One fact in two shapes, which is the only reason two guards exist. Destination: WCVP as single authority feeding `native_region` mechanically, `native_to` staying hand-owned copy that gets _checked_ against it. Not a round fix — `native_region` currently derives from Trefle with a `native_to` prose fallback, so the two are partly **causal** rather than parallel, and `native_to` is voice-passed copy that must not become machine-derived.
+
+### Open questions
+
+- Nothing blocking. Item 1 above needs no decision, only a session.
+
 ## 2026-07-30 (later) — durability pass: the hero fix, round 10's closure, and two things that could delete themselves
 
 **Status:** five PRs, all merged — [#138](https://github.com/Paradoxich/santolina/pull/138) hero fix, [#139](https://github.com/Paradoxich/santolina/pull/139) archive refresh, [#140](https://github.com/Paradoxich/santolina/pull/140) catalog-state, [#141](https://github.com/Paradoxich/santolina/pull/141) WCVP cache, [#142](https://github.com/Paradoxich/santolina/pull/142) + [#143](https://github.com/Paradoxich/santolina/pull/143) the worktree guard. Latest merge commit `96b5a91`. Ran alongside the wcvp-tail session below and touched none of its files. One migration: none. No schema change.
