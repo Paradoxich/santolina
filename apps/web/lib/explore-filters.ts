@@ -105,25 +105,14 @@ export function toggleValue(list: string[], value: string): string[] {
 }
 
 /**
- * Whether typed search text matches this plant — by name, or by any facet
- * label (style, colour, sun, season, type) the catalog tags it with. Lets
- * the plain search box double as a lightweight single-facet filter (e.g.
- * typing "modern" or "shade") independent of the multi-select filter panel,
- * and is how a browse-collection tile is represented once clicked (its
- * label is dropped straight into the search box rather than the `filters`
- * state — see ExploreClient).
+ * Whether a facet label the catalog tags this plant with contains the query —
+ * style, sun, type, colour or bloom season. This is what lets the plain search
+ * box double as a lightweight single-facet filter (typing "modern" or "shade")
+ * independent of the multi-select filter panel, and is how a browse-collection
+ * tile is represented once clicked (its label is dropped straight into the
+ * search box rather than the `filters` state — see ExploreClient).
  */
-export function matchesSearchTerm(plant: CatalogPlant, query: string): boolean {
-  const q = query.trim().toLowerCase()
-  if (!q) return true
-
-  if (
-    plant.commonName.toLowerCase().includes(q) ||
-    plant.botanicalName.toLowerCase().includes(q) ||
-    plant.aliases.some((a) => a.toLowerCase().includes(q))
-  )
-    return true
-
+function matchesFacetLabel(plant: CatalogPlant, q: string): boolean {
   const facetMatches = (options: FilterOption[], values: string[]) =>
     options.some(
       (o) => o.label.toLowerCase().includes(q) && values.includes(o.value)
@@ -153,6 +142,71 @@ export function matchesSearchTerm(plant: CatalogPlant, query: string): boolean {
     return true
 
   return false
+}
+
+/**
+ * How well a plant matches typed search text, best first. Lower is better, so
+ * these sort directly.
+ *
+ * The point of the ladder is that a name hit always beats a facet hit: before
+ * ranking existed the results came back alphabetically, so searching "sage"
+ * could put every summer-blooming plant in the catalog above Salvia itself.
+ *
+ * "Name" means any of the three things a person might type — common name,
+ * botanical name, alias — because all three already match. Only the top tier
+ * cares which one hit, and it cares for a measured reason: Lantana camara
+ * carries the literal alias "sage", so on a single exact tier it tied Salvia
+ * officinalis and won on alphabetical order. Searching "sage" and getting
+ * lantana first is the kind of result that reads as broken, and an exact hit on
+ * the plant's own primary name is the strongest signal in the catalog, so it
+ * gets a tier of its own. Below that, which field matched stops mattering.
+ */
+export const SEARCH_RANK = {
+  /** The plant's own common name is exactly the query. */
+  EXACT_COMMON_NAME: 0,
+  /** A botanical name or alias is exactly the query. */
+  EXACT_OTHER_NAME: 1,
+  /** A name starts with the query — "sage" finding "Sagebrush". */
+  NAME_PREFIX: 2,
+  /** A name contains the query — "sage" finding "Russian sage". */
+  NAME_SUBSTRING: 3,
+  /** No name matched; the plant is only here because a facet label did. */
+  FACET: 4,
+  /** Not a result at all. */
+  NO_MATCH: 5,
+} as const
+
+export type SearchRank = (typeof SEARCH_RANK)[keyof typeof SEARCH_RANK]
+
+export function searchRank(plant: CatalogPlant, query: string): SearchRank {
+  const q = query.trim().toLowerCase()
+  // No query: everything matches and nothing is more relevant than anything
+  // else. The value only has to be uniform — a stable sort then leaves the
+  // catalog's alphabetical order untouched.
+  if (!q) return SEARCH_RANK.EXACT_COMMON_NAME
+
+  const commonName = plant.commonName.toLowerCase()
+  const otherNames = [plant.botanicalName, ...plant.aliases]
+    .filter(Boolean)
+    .map((n) => n.toLowerCase())
+  const names = [commonName, ...otherNames]
+
+  if (commonName === q) return SEARCH_RANK.EXACT_COMMON_NAME
+  if (otherNames.some((n) => n === q)) return SEARCH_RANK.EXACT_OTHER_NAME
+  if (names.some((n) => n.startsWith(q))) return SEARCH_RANK.NAME_PREFIX
+  if (names.some((n) => n.includes(q))) return SEARCH_RANK.NAME_SUBSTRING
+  if (matchesFacetLabel(plant, q)) return SEARCH_RANK.FACET
+
+  return SEARCH_RANK.NO_MATCH
+}
+
+/**
+ * Whether typed search text matches this plant at all. Derived from
+ * `searchRank` rather than repeating its conditions, so the predicate and the
+ * ranking can never disagree about what counts as a hit.
+ */
+export function matchesSearchTerm(plant: CatalogPlant, query: string): boolean {
+  return searchRank(plant, query) !== SEARCH_RANK.NO_MATCH
 }
 
 /**
@@ -189,4 +243,31 @@ export function matchesFilters(
   }
 
   return true
+}
+
+/**
+ * The Explore results: everything passing the search text and the filter row,
+ * best search match first.
+ *
+ * The sort is stable and `plants` arrives ordered by common name (see
+ * getExplorePlants), so plants sharing a tier stay alphabetical — the ranking
+ * only ever lifts a better match above a worse one, it never scrambles equals.
+ * Ranks are computed once per plant here rather than inside the comparator,
+ * which would re-derive colour buckets on every comparison.
+ */
+export function visiblePlants(
+  plants: CatalogPlant[],
+  query: string,
+  filters: ExploreFilterState,
+  gardenRegions: string[]
+): CatalogPlant[] {
+  return plants
+    .map((plant) => ({ plant, rank: searchRank(plant, query) }))
+    .filter(
+      ({ plant, rank }) =>
+        rank !== SEARCH_RANK.NO_MATCH &&
+        matchesFilters(plant, filters, gardenRegions)
+    )
+    .sort((a, b) => a.rank - b.rank)
+    .map(({ plant }) => plant)
 }

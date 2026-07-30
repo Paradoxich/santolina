@@ -16,8 +16,7 @@ import {
   STYLE_OPTIONS,
   SUN_OPTIONS,
   countActiveFilters,
-  matchesFilters,
-  matchesSearchTerm,
+  visiblePlants,
 } from '@/lib/explore-filters'
 import { icons } from '@/lib/icons'
 import type { PlantDetail } from '@/lib/plant-detail'
@@ -45,12 +44,13 @@ export function ExploreClient({
     useHideOnScroll(searchRef)
 
   // Browse tiles (style / colour / condition) are represented as plain
-  // search text rather than the `filters` state — matchesSearchTerm already
+  // search text rather than the `filters` state — searchRank already
   // understands these facet labels, so dropping one into the search box
   // both filters the catalogue and gives the user a familiar, single-click
   // way back to browse (clear the search). This is deliberately separate
   // from the multi-select filter panel, which stays the tool for combining
-  // more than one facet at once.
+  // more than one facet at once. A tile's label is a facet, so its results
+  // all land in the facet tier and stay alphabetical.
   const selectSearchTerm = (label: string) => {
     setQuery(label)
     searchInputRef.current?.focus()
@@ -70,10 +70,7 @@ export function ExploreClient({
   }, [detail, router])
 
   const activeFilterCount = countActiveFilters(filters)
-  const visible = plants.filter(
-    (p) =>
-      matchesSearchTerm(p, query) && matchesFilters(p, filters, gardenRegions)
-  )
+  const visible = visiblePlants(plants, query, filters, gardenRegions)
 
   // Browse view (style / colour / condition) until the user searches or
   // filters; then it swaps to the flat results. Opening a plant also leaves

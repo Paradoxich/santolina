@@ -22,7 +22,23 @@ export interface PlantDetail {
   garden: Garden
 }
 
-/** All catalog plants, shaped for the explore grid/list and its filter row. */
+/**
+ * All catalog plants, shaped for the explore grid/list and its filter row.
+ *
+ * `image_urls` is deliberately NOT selected, though heroImageUrl accepts it.
+ * It holds every photo Trefle returned (26 per plant on average, 43 at the
+ * worst) and was 1350 kB of a 1997 kB read, fetched to render one thumbnail
+ * each, on a force-dynamic page that re-reads on every view. It never reached
+ * the browser — CatalogPlant has no field for it — so the cost was Postgres to
+ * the server, paid and discarded.
+ *
+ * Dropping it loses no image, because the fallback it fed cannot fire: mapImages
+ * in lib/trefle.ts resolves the hero from any category when no priority category
+ * matches, so image_url is null only when image_urls is empty too. Measured
+ * against the live catalog 2026-07-30, rows relying on image_urls[0] as their
+ * hero: 0 of 695. The one row with no photo anywhere shows the placeholder, as
+ * it did before.
+ */
 export async function getExplorePlants(): Promise<CatalogPlant[]> {
   const supabase = getSupabase()
   const data = await fetchAllRows<{
@@ -32,7 +48,6 @@ export async function getExplorePlants(): Promise<CatalogPlant[]> {
     description: string | null
     image_url: string | null
     image_url_curated: string | null
-    image_urls: string[] | null
     common_name_aliases: string[] | null
     plant_type: string | null
     style_tags: string[] | null
@@ -46,7 +61,7 @@ export async function getExplorePlants(): Promise<CatalogPlant[]> {
     supabase
       .from('plants')
       .select(
-        'id, common_name, scientific_name, description, image_url, image_url_curated, image_urls, common_name_aliases, plant_type, style_tags, sun_thrives, bloom_months, bloom_color, foliage_color, is_greenery, native_region'
+        'id, common_name, scientific_name, description, image_url, image_url_curated, common_name_aliases, plant_type, style_tags, sun_thrives, bloom_months, bloom_color, foliage_color, is_greenery, native_region'
       )
       .order('common_name')
       // common_name isn't unique — the id tiebreak keeps paging stable
@@ -106,7 +121,9 @@ export async function getPlantDetail(
   if (companionIds.length > 0) {
     const { data } = await supabase
       .from('plants')
-      .select('id, common_name, image_url, image_url_curated, image_urls')
+      // image_urls omitted for the same reason as getExplorePlants: it is a
+      // fallback that cannot fire, at 26 URLs per companion thumbnail.
+      .select('id, common_name, image_url, image_url_curated')
       .in('id', companionIds)
     // Resolve to the editorial pick before the has-an-image filter, so a plant
     // whose only usable photo is the curated one still shows as a companion.
