@@ -32,11 +32,24 @@ jobs:
       - run: pnpm runbook:check
 
   catalog-state:
-    name: catalog-state staleness
+    # THE NAME CARRIES "(main only)" ON PURPOSE — do not shorten it.
+    #
+    # This job is skipped on every pull request by design (see the `if:`
+    # below), and a bare "catalog-state staleness: SKIPPED" in a PR's check
+    # list explains nothing. Four separate sessions have read that SKIPPED,
+    # gone looking for a reason, landed on the comment below this one, and
+    # reported to Ana that CI has no Supabase secrets. It has had them since
+    # 2026-07-28. The status line now states the reason itself, so nobody has
+    # to infer one.
+    name: catalog-state staleness (main only)
     # Reads the live catalog, so it needs the service role key. Never on
     # pull_request: a PR-triggered job that can read SUPABASE_SERVICE_ROLE_KEY
     # widens the blast radius of any workflow edit for no benefit. Drift is
     # caught on the push to main immediately after merge.
+    #
+    # THIS `if:` IS THE ONLY REASON A PR SEES THIS JOB SKIPPED. It is not the
+    # secrets, it is not the shell guard further down. Verify with
+    # `gh secret list` before repeating any claim about which secrets exist.
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     steps:
@@ -51,13 +64,27 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SERVICE_ROLE: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        # BOTH REPO SECRETS EXIST (added 2026-07-28) and this step runs for
+        # real on every push to main. It is not a no-op and has not been one
+        # since that date — `gh secret list` is the check, and this comment is
+        # not evidence of anything.
+        #
+        # A missing key therefore means somebody REMOVED it, which is a broken
+        # staleness gate, not a pending setup task. So it FAILS here rather
+        # than printing a notice and exiting 0. The old silent `exit 0` is what
+        # made "CI has no secrets" survive four tellings: a green run and a
+        # skipped run looked identical from the outside.
+        #
         # The secrets context is not available in job- or step-level `if:`, so
-        # the skip has to happen inside the shell. Until the two repo secrets
-        # exist this job is a clean no-op rather than a red X.
+        # this check has to happen inside the shell.
         run: |
           if [ -z "$SERVICE_ROLE" ]; then
-            echo "::notice::Supabase secrets not set - skipping catalog:state:check."
-            exit 0
+            echo "::error::SUPABASE_SERVICE_ROLE_KEY is not set, so docs/catalog-state.md" \
+                 "cannot be checked against the live catalog. Both secrets have existed" \
+                 "since 2026-07-28, so this means one was removed — restore it with" \
+                 "'gh secret set SUPABASE_SERVICE_ROLE_KEY'. Do NOT report this as CI" \
+                 "never having had secrets; run 'gh secret list' first."
+            exit 1
           fi
           printf 'NEXT_PUBLIC_SUPABASE_URL=%s\nSUPABASE_SERVICE_ROLE_KEY=%s\n' \
             "$SUPABASE_URL" "$SERVICE_ROLE" > apps/web/.env.local
