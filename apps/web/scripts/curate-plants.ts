@@ -109,6 +109,9 @@ type PlantPatch = Omit<CurationResponse, 'hardiness_confidence'> & {
   ai_drafted_at: string
   // Written alongside is_greenery so a "false" can be told from "never asked".
   greenery_checked_at?: string
+  // Written alongside style_tags, for the same reason — see the note at the
+  // assignment for why this pass owns a stamp named after another script.
+  style_checked_at?: string
 }
 
 // ---------------------------------------------------------------------------
@@ -309,8 +312,20 @@ function buildPatch(plant: DbPlant, response: CurationResponse): PlantPatch {
 
   // [] is a real answer (style-neutral) and must be written, or the row
   // would read as never-asked forever.
-  if (plant.style_tags == null && response.style_tags != null)
+  //
+  // STAMPED HERE TOO, even though `style_checked_at` is named after
+  // curate-styles. That script owns the column in round-status's STEP_DEFS, and
+  // on 2026-07-29 it left the round cadence — correctly, because it is a repair
+  // pass for older data and this pass already does the job for a new seed, from
+  // the same shared definitions in lib/style-tags.ts. What nobody moved was the
+  // stamp, so every plant seeded since read as never style-judged: rounds 9 and
+  // 10 wrote 100 rows of perfectly good style_tags and docs/catalog-state.md
+  // reported style coverage sliding 50 rows a round. Removing a step means
+  // rehoming what it proved, not just deleting the call.
+  if (plant.style_tags == null && response.style_tags != null) {
     patch.style_tags = response.style_tags
+    patch.style_checked_at = new Date().toISOString()
+  }
   if (!plant.space_types?.length && response.space_types?.length)
     patch.space_types = response.space_types
   if (!plant.garden_use_tags?.length && response.garden_use_tags?.length)
