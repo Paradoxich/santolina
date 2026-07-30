@@ -254,6 +254,25 @@ Three things made it recur, and all three are now closed:
 
 **The durable rule, and it generalises past this one claim:** an asserted negative — "X is missing", "that isn't wired up", "we're blocked on Y" — gets **verified with one command before it is repeated**, especially when it is being repeated from a document rather than from a run. This is the same failure as the round-30 `native_region_checked_at` claim (the wcvp-tail session found the stated blocker had shipped two days earlier and had ridden through four later entries) and the same shape as traps 13, 14 and [feedback: docs are not evidence]. A blocker is the most dangerous kind of note to write, because nothing revisits it when the block lifts. **If you write one, name the command that proves it.**
 
+### 18. An RLS block and an empty table look identical — ADDED 2026-07-30
+
+Moved here from `architecture.md` on 2026-07-30, when the single-tenant shim's
+section was deleted for describing code that no longer exists. The trap is not
+about the shim and outlived it.
+
+Before real auth, `getPlantDetail()` fell back to a hardcoded mock garden behind
+a comment blaming missing onboarding. That was the wrong diagnosis. The policies
+on `gardens` and `palette_plants` require `auth.uid()` to match the owner; the
+app had no session, so `auth.uid()` was null and **every query returned zero
+rows with a real garden row present the whole time**. `.maybeSingle()` then
+presented a permissions failure as "no row yet", and the wrong explanation
+stuck for as long as the symptom was readable as normal.
+
+**A silently empty result from an RLS-protected table is a policy block until
+proven otherwise.** Check as the service role, or check `auth.uid()`, before
+concluding the data is absent. This is the same shape as trap 1: a failure that
+returns a plausible negative rather than an error.
+
 ### 12. A round manifest records names as SEEDED, before the name pass
 
 `rounds/<n>/manifest.json` is written by the seed run, so its `common_name` values predate `fix-round8-names.ts`. Per trap 6, Trefle gave no English name to 18 of round 8's 101 rows, and those sit in the manifest under their bare scientific name. Grepping a manifest by common name therefore returns a confidently wrong answer: it is how a review concluded round 8 had seeded nothing that could collide, when it had seeded `Anemonoides nemorosa` — the direct cause of a rename. **Search a manifest by `scientific_name`**, and cross-read the round's name-fix script.

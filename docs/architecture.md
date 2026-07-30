@@ -1,9 +1,15 @@
 # Santolina — Architecture Decisions
 
-This document holds the **rationale** behind Santolina's architecture: why a
-thing is shaped the way it is, and what was rejected on the way. Sections are
-grouped by the part of the product they govern, oldest first within a group, so
-a decision and the one that replaced it read as one story.
+This document describes **the architecture as it is today**, and why it is
+shaped that way. Sections are grouped by the part of the product they govern.
+
+**It is not a history of what we decided along the way.** A decision that no
+longer describes anything in the codebase does not earn a section, however hard
+it was to make at the time. When something is replaced, rewrite the section to
+describe what is true now; do not keep the old version alongside it and do not
+bolt an amendment on the end. The superseded thing is worth a sentence only when
+it stops someone retaking the same wrong turn — and if what it left behind is a
+trap rather than a design, it belongs in [`database-log.md`](database-log.md).
 
 **What one round found is not rationale.** Counts, dated run results, per-plant
 editorial calls and "this is what went wrong on July 27" belong in
@@ -32,11 +38,10 @@ pointed at those numbers. `pnpm docs:links` fails on a reference that resolves
 to nothing and on any new `§N`; the numbers still cited by applied migrations
 and archived reports are mapped in [the appendix](#appendix-retired-numbers).
 
-**A decision that supersedes another replaces it.** Cut the superseded section
-down to what only it holds — the alternative that was rejected and why it looked
-right — and delete the current-state description, which now lives in the section
-that replaced it. Two copies is precisely what rots: one gets updated, both keep
-reading as fact. Never bolt an amendment on the end.
+**Two copies of a fact is what rots**, whichever direction the duplication runs:
+one gets updated and both keep reading as true. That applies to a superseded
+section left standing beside its replacement, to a table copied out of a
+migration, and to a paragraph restating a script header.
 
 ---
 
@@ -282,36 +287,28 @@ flips `is_curated` — it is not the editorial pass.
 
 **Checked-at stamp — guard scoping (July 2026, migration `20260716120000`).** The guard stamps `plants.botanical_checked_at` on each row the moment it finishes checking it (flagged or clean — the stamp records that the check _ran_, not its verdict). This is operational metadata, not catalog content, so the flags-only rule holds — it never touches a botanical or editorial field. The stamp makes `--new-only` state-based (`WHERE botanical_checked_at IS NULL`): exact (no UTC-midnight batch split), and resumable — a killed run leaves the rest unstamped for the next pass, replacing the earlier newest-calendar-day heuristic. It's a timestamp, not a boolean, so a prompt revision can re-scope by date (`... OR botanical_checked_at < '<date>'`). **Cascade rule:** any script that _mutates_ a checked field must null the matching stamp so the guard re-checks — e.g. `scripts/archive/regenerate-native-to.ts` nulls `native_checked_at` in the same write that rewrites `native_to`. The sibling `native_to` guard (`cross-check-native-to.ts`) carries its own `native_checked_at` stamp on the identical model; `check-bloom-colors.ts` has none by design (a free local validator with no Claude call, it always runs over the whole catalog).
 
-<a id="sun-widening"></a>
-
-### The sun-widening sweep: treating a symptom, and the two rules it left behind
-
-> **Superseded by [the two-field sun model](#sun-model) the same day.** Once sun
-> is drafted as `sun_thrives` + `sun_tolerates`, first drafts capture the
-> tolerated range at the source and the corrective sweep leaves the round.
-> `apply-sun-widening.ts` survives as a fallback for a legacy flat-list report,
-> and its header holds the mechanism.
-
-**Why it existed:** a single flat `sun_requirements` list drafts too narrow on
-every batch, because one list cannot distinguish where a plant thrives from
-where it merely copes, so the model names the textbook optimum. Prompt wording
-did not fix it, and hand-writing a correction migration per round does not scale
-to a 500 species catalog. The sweep automated the correction.
-
-Two rules from it outlived it, and both generalise past sun:
-
-- **A machine may widen toward a corroborated second read; it may not narrow.** Widening on strict-subset flags only is exactly the union of two independent reads, so the sweep could add an exposure but never remove one. Contradictions and lateral shifts went to a person, because nothing automatic can tell "narrow but right" from "wrong direction".
-- **`is_curated = true` is a freeze line.** An uncurated row is machine-maintained toward the corroborated range; a curated one is human-owned and untouchable. The first version ignored this and widened `Ajuga`, a shade groundcover a human had deliberately narrowed, back to full sun.
-
-**It was never the cure.** A backstop that keeps bad drafts off the page is not
-the same as drafting well, which is what [the two-field sun model](#sun-model)
-went on to do.
-
 <a id="sun-model"></a>
 
 ### Sun modelled as best + tolerated (the root fix)
 
-**Why:** [the botanical cross-check](#botanical-cross-check)/[the sun-widening sweep](#sun-widening) treated the symptom (a single flat `sun_requirements` list drafts too narrow, so we detect and widen). The cause is the field itself: one list can't say where a plant _thrives_ versus where it merely _tolerates_ an exposure, so the drafter defaults to the optimum and every batch under-reports. Modelling the two ideas separately removes the ambiguity at the source. Chosen July 9, 2026, pulled ahead of the 500–700 species expansion so new plants are captured correctly the first time rather than re-curated later.
+**Why:** one flat `sun_requirements` list cannot say where a plant _thrives_
+versus where it merely _tolerates_ an exposure, so the drafter names the
+textbook optimum and every batch under-reports. That was first treated as a
+detect-and-widen problem — a corrective sweep applied the blind check's wider
+range — but a backstop that keeps bad drafts off the page is not the same as
+drafting well. Modelling the two ideas separately removes the ambiguity at the
+source, and was pulled ahead of the 500–700 species expansion so new plants are
+captured correctly the first time rather than re-curated later.
+
+**Two rules the retired sweep left behind**, both of which outlive it and are
+not specific to sun. **A machine may widen toward a corroborated second read; it
+may never narrow** — widening on a strict-subset disagreement is exactly the
+union of two independent reads, so it can add a value but never remove one,
+while a contradiction needs a person, because nothing automatic tells "narrow
+but right" from "wrong direction". And **`is_curated = true` is a freeze line**:
+an uncurated row is machine-maintained toward the corroborated range, a curated
+one is human-owned and untouchable. The sweep's first version ignored that and
+widened a shade groundcover a human had deliberately narrowed.
 
 **Model (migration `20260709220000`):**
 
@@ -437,7 +434,7 @@ of the diff instead of replacing it.
 
 ### Care Tips v2: `seasonal_care`, a field built to answer "why now?"
 
-**Supersedes [Care Tips v1](#care-tips-v1).** The shipped v1 drawer exposed the
+**Supersedes Care Tips v1.** The shipped v1 drawer exposed the
 flaw: `maintenance_notes` is the plant's care manual — several actions,
 permanent truths, no timeframe — so at ~20 plants the card became the
 encyclopedia re-sorted. The ruling (Notion spec, locked July 15 2026): **a tip
@@ -482,8 +479,8 @@ like "bulbs → autumn" or "divide → early spring" are right often enough to l
 correct and wrong at exactly the margins a catalog is full of — a
 summer-flowering bulb, a bearded iris divided in summer. Source-faithful
 distillation, a flags-only second pass and human correction beat a rule that
-silently rewrites correct lines. Same lesson as
-[the sun-widening sweep](#sun-widening).
+silently rewrites correct lines. The retired sun-widening sweep taught the same
+lesson ([the two-field sun model](#sun-model)).
 
 **Status: COMPLETE**, merged as PR #63 (July 15 2026); coverage is in
 [`catalog-state.md`](catalog-state.md). Three editorial rounds over the flags,
@@ -672,61 +669,57 @@ Three clients are server-only and must never be imported into client components:
 
 All three are lazily instantiated (client created on first call, not at module load time) so they don't throw at import time in contexts where env vars aren't set.
 
-<a id="rls-shim"></a>
-
-### The single-tenant shim, and why it wasn't a permissive RLS policy
-
-> **Superseded by [the auth cutover](#auth), July 2026.** `lib/current-garden.ts`,
-> the hardcoded garden id and the seed garden are all deleted. What follows is
-> the diagnosis and the rejected alternative, which are the parts still worth
-> having.
-
-**RLS returning zero rows looks exactly like no data.** `getPlantDetail()` fell
-back to a hardcoded mock garden behind a comment blaming missing onboarding.
-That was the wrong diagnosis. The policies on `gardens` and `palette_plants`
-require `auth.uid()` to match the owner, the app had no session, so `auth.uid()`
-was null and every query returned nothing — with a real garden row present the
-whole time. `.maybeSingle()` then presented a permissions failure as "no row
-yet". **A silently empty result from an RLS-protected table should be suspected
-as a policy block before it is read as absent data.**
-
-**The rejected alternative was a temporary permissive policy** (`USING (true)`,
-or an anon carve-out). It lost because it had to be written now and correctly
-reverted later, and an un-reverted one is a production data leak. Bypassing RLS
-at the client layer instead — service-role, scoped to one garden id — left the
-real `auth.uid() = user_id` policies untouched and correct, so the cutover
-became a client swap and a file deletion rather than a policy migration. That
-turned out right: the cutover deleted the shim exactly as planned.
-
 <a id="auth"></a>
 
-### Auth + single-garden identity: the cutover from single-tenant shim to real accounts
+### Accounts: passwordless, one garden, provisioned on signup
 
-**Decided July 10, 2026.** Auth is being pulled forward from post-test into the build. The reasoning: accounts are what make the product "real," and they define the account-settings surface that has to exist before any public launch. This section records the finalized shape. It supersedes the shims documented in [the RLS service-role shim](#rls-shim) (`current-garden.ts`) and [the palette write path](#palette-write-path) (service-role palette writes) — those get _deleted_, not extended, by this work.
+**There is no password anywhere.** Magic link is the default and Google OAuth
+sits alongside it, both near-zero on Supabase. The consequence is the useful
+part: account settings has no password management to build, no reset flow, no
+credential storage, and the "forgot password" surface that usually follows
+signup does not exist.
 
-**Auth and onboarding are decoupled.** The original plan ([the RLS service-role shim](#rls-shim), and the Notion spec) bundled auth with the 5-step onboarding wizard and deferred both together. They separate cleanly: auth is infrastructure; the wizard (sun/style/size, which feed palette _recommendations_) is product and stays deferred. What auth needs from onboarding is exactly one field — **location** — because location is the only profile input anything consumes today (it drives the Open-Meteo climate/hardiness/frost derivation in [the weather integration](#weather), which feeds the weather-derived dashboard copy shipped in PR #18). So we collect location and nothing else.
+**A demo visitor is a real user, not a special case.** `POST /auth/demo` signs
+them in anonymously, which creates an ordinary `auth.users` row, so the same
+trigger provisions them a profile and garden and every RLS policy, server action
+and page works unchanged. **The demo flag is `auth.users.is_anonymous` and
+nothing else** — no `is_demo` column, no marker row, so there is no second copy
+of the fact to drift, and converting a visitor stops them being anonymous by the
+same act that converts them. Conversion is `updateUser({ email })`, which
+upgrades the account in place: same user id, same garden, palette and diary
+carried over. Unconverted demo accounts are purged after 7 days.
 
-**Auth methods: magic link (default) + Google OAuth.** Passwordless email is the default — Supabase ships it out of the box, and it removes password friction at exactly the sign-up moment. Google OAuth sits alongside it (not instead), because European beginners skew toward "sign in with Google." Both are near-zero implementation cost on Supabase. Consequence: **there is no password anywhere**, so account settings has no password management to build.
+**Provisioning is a trigger, so a garden always exists.** `handle_new_user` on
+`auth.users` insert creates the `users` row and an empty `gardens` row. Nobody
+ever "creates a garden" — v1 is one per user, so there is nothing to choose. The
+schema allows more; the app does not.
 
-**Garden provisioning: auto-created, never "set up."** v1 is one garden per user, so there is nothing to choose or configure. A Postgres trigger on `auth.users` insert creates the `users` row _and_ an empty `gardens` row. The user never "creates a garden" — it exists the moment they exist.
+**The whole app requires a session.** Only the landing page, `/login`,
+`/auth/*` and `/design-system` are public; middleware refreshes the session and
+redirects everything else. With the demo path in place this costs a visitor
+nothing — "look around first" is a click, not an exemption in the auth layer.
 
-**The garden profile exists as data but has no UI.** All `gardens` profile columns (location, space type, sun, style, size) are present from day one, but only `location` is populated this phase (by the first-run step below). The rest stay null until the deferred onboarding wizard fills them. There is **no profile screen** — the profile is plumbing, not a surface.
+**Location is the one required input, and a null location is the gate.** A user
+whose garden has no location is routed to a one-field capture before they reach
+the app. There is no `onboarding_complete` flag to keep in sync, because the
+condition is the data itself. It is required — the one deliberate exception to
+never forcing input — because the entire climate layer depends on it, and
+guaranteeing it lets every downstream surface assume a location instead of
+carrying a fallback path.
 
-**First-run: a single required location step. Null location _is_ the gate — no separate "onboarded" flag.** After auth, a user whose garden has a null `location` is routed to a one-field location capture; once set, they reach the app. The gate logic is a single condition (`garden.location IS NULL → location step`), so there is no `onboarding_complete` boolean to keep in sync. Location is **required** (not skippable) on purpose: guaranteeing it exists before the dashboard lets us delete all profile-less-fallback code — the app may always assume a location. This is the one "forced" input, a deliberate exception to the never-required ethos, justified because the entire climate layer depends on it.
+**The garden profile is data with no screen.** All the profile columns exist
+(space type, sun, style, size), and only location is populated; the rest wait
+for the deferred onboarding wizard. The profile is plumbing, not a surface.
 
-**The whole app is gated; only the santolina.app landing stays public.** This reverses the earlier documented philosophy ("no account gate, value shown immediately, prompt only at first save") — a conscious change, not drift. Landing page sells the product; everything under it (dashboard, explore, my garden, diary) requires a session. Middleware redirects unauthenticated requests to the landing/login. Consequence: the "prompt at first save" logic never needs building.
+**RLS is load-bearing, not decorative.** Every user-scoped server action runs on
+a session client via `@supabase/ssr`, so the `auth.uid()` policies actually
+execute. Service role is retained **only** for catalog writes — the Trefle sync
+and the curation scripts ([the server-only clients](#server-only-clients)) —
+which are garden-independent and public-read.
 
-**RLS cutover is the real work and the real risk.** Every user-scoped server action (`palette-actions.ts`, `diary-actions.ts`, `garden-actions.ts`) switches from the service-role client (which bypasses RLS) to a session client via `@supabase/ssr`, so the existing `auth.uid()` policies actually run. Service-role is retained _only_ for the plants catalog writes (Trefle sync, curation scripts — [the server-only clients](#server-only-clients)). The RLS policies in `20260706093045_initial_schema.sql` have never been exercised against a real session, so expect policy bugs on first login — this is the part to test hardest.
-
-**Account settings: the basics only.** Email, sign out, delete account, **reset garden** (destructive-confirm dialog — doubles as the easy way to clear test data), and **edit location** (the one live profile field needs a home; settings is it). Nothing else.
-
-**The seed garden is discarded.** `7055368c…` holds 5 palette rows and 1 diary entry — throwaway test data, not real plants. It is not migrated or claimed; it's dropped. The shared `plants`/`plant_combinations` catalog is garden-independent (public read) and wholly unaffected — every new user sees all catalog species immediately.
-
-**Sidebar identity** is wired to the authenticated user / `users` table, replacing the hardcoded "PA / Paradoxich" in `AppSidebar.tsx`.
-
-**Ordered work items:** (1) `@supabase/ssr` + three client flavors + `middleware.ts` session refresh; (2) `handle_new_user` trigger creating `users` + empty `gardens`; (3) magic-link + Google auth UI and callback route; (4) required first-run location step, gated on null `location`; (5) flip the three server actions to the session client, delete `current-garden.ts` and its hardcoded id; (6) full-app middleware gate, landing stays public; (7) sidebar identity from `users`; (8) account settings surface. Operational, not code: custom SMTP (Resend/Postmark) for magic-link deliverability before public launch — Supabase's built-in sender is rate-limited; and a Google Cloud OAuth app + redirect URLs configured in Google and Supabase.
-
----
+**Account settings holds the basics only:** email, sign out, delete account,
+reset garden, and edit location, which is the one live profile field and needs
+a home.
 
 <a id="group-garden"></a>
 
@@ -823,7 +816,7 @@ deferred. Until it exists, nothing fakes it with static text.
 
 <a id="diary-photos-private"></a>
 
-### Diary photos go private: signed URLs on a garden-owned bucket
+### Diary photos: a private bucket, signed URLs, garden-owned
 
 **Decided July 15, 2026.** [diary identity](#diary-identity)'s public-bucket posture was explicitly temporary ("revisit once real auth/profiles exist"); auth shipped ([the auth cutover](#auth)), so this is that revisit. This section supersedes [diary identity](#diary-identity)'s storage paragraph.
 
@@ -846,7 +839,7 @@ deferred. Until it exists, nothing fakes it with static text.
 
 <a id="plant-story-subpage"></a>
 
-### Diary retires as a destination; the plant's story moves onto a dedicated subpage
+### The plant's story lives on the plant, not in a Diary
 
 **Decided July 27, 2026.** The Diary page (`/diary`) duplicated My Plants — most rows sat empty ("Waiting for their first note"), and its drawer was 90% plant info wrapped around a notes timeline. `diary_entries` already keyed a thread by `(garden_id, plant_id)` ([diary identity](#diary-identity)) — the data model already treated notes as belonging to the plant, not to a separate destination. Nav drops to Overview / My Plants / Explore / Reflections; the `/diary` route, its list page, and its drawer are deleted outright, not just unlinked.
 
@@ -907,27 +900,6 @@ The algorithm and its known limitation — a bloom window crossing December into
 January breaks the `min`/`max` boundary, and no catalog plant currently does —
 are documented on the function itself, which is the only place they can be
 checked against the code.
-
-<a id="care-tips-v1"></a>
-
-### Care Tips v1: descriptive text is not actionable text
-
-> **Superseded by [seasonal_care](#seasonal-care), July 15 2026.** The tips
-> system no longer reads `maintenance_notes`, and none of v1's selection
-> mechanics survive. One finding does.
-
-The first Care Tips card displayed `seasonal_rhythm[currentSeason]`, which
-sounded right and was not: `seasonal_rhythm` **describes** what the plant is
-doing ("Peak flowering occurs with masses of papery blooms"), where a card
-titled "Care tips" has to **prescribe** what you do ("Deadhead spent blooms to
-encourage reflowering"). v1 fixed this by switching to `maintenance_notes`.
-
-That switch was itself only half right, and the reason is the durable one: a
-care manual is not a tip either. `maintenance_notes` holds several actions with
-no timeframe, so at ~20 plants the card became the encyclopedia re-sorted. Both
-mistakes are the same mistake — **taking a field that exists and hoping it
-answers "why now?"** — which is what produced the purpose-built field in
-[seasonal_care](#seasonal-care).
 
 <a id="weather"></a>
 
@@ -1014,43 +986,43 @@ Applied migrations and archived round reports cite sections by the number they
 carried when they were written, and neither can be edited: a migration that has
 run is history, and a round report is the record of what one run found. This
 table keeps those citations resolvable. It is closed — nothing new should cite
-a number, and `pnpm docs:links` fails if anything does. Titles are the sections'
-current ones, which in several cases are not what the citing artifact saw.
+a number, and `pnpm docs:links` fails if anything does. Rows carry the anchor rather than a copied title, so nothing here goes
+stale when a heading is reworded.
 
-| Cited as | Section                                                                                                                                  |
-| -------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| §1       | [Plant data provider: Trefle, not Perenual](#plant-data-provider)                                                                        |
-| §2       | [Database column naming: provider-agnostic](#provider-agnostic-columns)                                                                  |
-| §3       | [Plants table is a cache with a manual curation layer](#curation-layer)                                                                  |
-| §4       | [Trefle field mapping decisions](#trefle-field-mapping)                                                                                  |
-| §5       | [Server-only boundary: three clients](#server-only-clients)                                                                              |
-| §6       | [AI curation model: claude-sonnet-4-5](#curation-model)                                                                                  |
-| §7       | [Every pass is resumable, and none of them aborts a batch](#seeding-scripts)                                                             |
-| §8       | [What writes which column](#plants-schema)                                                                                               |
-| §9       | [Data integrity: safe Trefle upsert function](#safe-upsert)                                                                              |
-| §10      | [Bloom status computation: derived, not stored](#bloom-status)                                                                           |
-| §11      | [The single-tenant shim, and why it wasn't a permissive RLS policy](#rls-shim)                                                           |
-| §12      | [Palette write path: an application-level upsert](#palette-write-path)                                                                   |
-| §13      | [Toasts live in the framework package, and group by entity](#toasts)                                                                     |
-| §14      | ["Add to garden" vs. "Move to growing": two different transitions, two different labels](#transition-labels)                             |
-| §15      | [Growing vs. Planned: a record you inspect vs. a draft you act on](#growing-vs-planned)                                                  |
-| §16      | [Care Tips v1: descriptive text is not actionable text](#care-tips-v1)                                                                   |
-| §17      | [Weather integration: Open-Meteo geocoding + forecast, both free, no key](#weather)                                                      |
-| §18      | [Diary: identity is (garden, plant), not the palette row](#diary-identity)                                                               |
-| §19      | [Plant combinations: AI companion pass, capped and idempotent](#plant-combinations)                                                      |
-| §20      | [Botanical cross-check: blind second pass, flags only, never edits data](#botanical-cross-check)                                         |
-| §21      | [The sun-widening sweep: treating a symptom, and the two rules it left behind](#sun-widening)                                            |
-| §22      | [Sun modelled as best + tolerated (the root fix)](#sun-model)                                                                            |
-| §23      | [`plant_type` is a functional label, not strict botany](#plant-type-label)                                                               |
-| §24      | [Auth + single-garden identity: the cutover from single-tenant shim to real accounts](#auth)                                             |
-| §25      | [The plant-expansion round: current end-to-end cadence (runbook)](#round-runbook)                                                        |
-| §26      | [`native_region`: WGSRPD Level-2, regenerated from Trefle (and the `tdwg_code` trap)](#native-region)                                    |
-| §27      | [Hardiness: RHS rating is canonical, drafted then human-verified](#hardiness)                                                            |
-| §28      | [Care Tips v2 Tier 1: `seasonal_care`, a distilled prescriptive field (replaces `maintenance_notes` in the tips system)](#seasonal-care) |
-| §29      | [Diary photos go private: signed URLs on a garden-owned bucket](#diary-photos-private)                                                   |
-| §30      | [Hero images: category-recovered shortlist, then an AI vision pick](#hero-images)                                                        |
-| §31      | [Wikimedia hero photos + image attribution](#wikimedia-attribution)                                                                      |
-| §32      | [Diary retires as a destination; the plant's story moves onto a dedicated subpage](#plant-story-subpage)                                 |
-| §33      | [One content width across the app](#content-width)                                                                                       |
-| §34      | [The plant you own is a dashboard for that plant](#plant-dashboard)                                                                      |
-| §35      | [Explore: search results are ranked, and the query stopped over-fetching](#explore-ranking)                                              |
+| Cited as | Section                                                 |
+| -------- | ------------------------------------------------------- |
+| §1       | [plant-data-provider](#plant-data-provider)             |
+| §2       | [provider-agnostic-columns](#provider-agnostic-columns) |
+| §3       | [curation-layer](#curation-layer)                       |
+| §4       | [trefle-field-mapping](#trefle-field-mapping)           |
+| §5       | [server-only-clients](#server-only-clients)             |
+| §6       | [curation-model](#curation-model)                       |
+| §7       | [seeding-scripts](#seeding-scripts)                     |
+| §8       | [plants-schema](#plants-schema)                         |
+| §9       | [safe-upsert](#safe-upsert)                             |
+| §10      | [bloom-status](#bloom-status)                           |
+| §11      | removed — the shim is gone; see [Accounts](#auth)       |
+| §12      | [palette-write-path](#palette-write-path)               |
+| §13      | [toasts](#toasts)                                       |
+| §14      | [transition-labels](#transition-labels)                 |
+| §15      | [growing-vs-planned](#growing-vs-planned)               |
+| §16      | removed — see [Care Tips v2](#seasonal-care)            |
+| §17      | [weather](#weather)                                     |
+| §18      | [diary-identity](#diary-identity)                       |
+| §19      | [plant-combinations](#plant-combinations)               |
+| §20      | [botanical-cross-check](#botanical-cross-check)         |
+| §21      | removed — see [the two-field sun model](#sun-model)     |
+| §22      | [sun-model](#sun-model)                                 |
+| §23      | [plant-type-label](#plant-type-label)                   |
+| §24      | [auth](#auth)                                           |
+| §25      | [round-runbook](#round-runbook)                         |
+| §26      | [native-region](#native-region)                         |
+| §27      | [hardiness](#hardiness)                                 |
+| §28      | [seasonal-care](#seasonal-care)                         |
+| §29      | [diary-photos-private](#diary-photos-private)           |
+| §30      | [hero-images](#hero-images)                             |
+| §31      | [wikimedia-attribution](#wikimedia-attribution)         |
+| §32      | [plant-story-subpage](#plant-story-subpage)             |
+| §33      | [content-width](#content-width)                         |
+| §34      | [plant-dashboard](#plant-dashboard)                     |
+| §35      | [explore-ranking](#explore-ranking)                     |
