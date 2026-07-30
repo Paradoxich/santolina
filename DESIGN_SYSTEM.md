@@ -159,14 +159,15 @@ className =
   'bg-[var(--color-surface-card)] text-[length:var(--font-size-body-small)]'
 
 // Broken — Tailwind's stock palette is removed; these do not compile
-className = 'bg-white text-black text-[13px] border-gray-200'
+className = 'text-black text-[13px] border-gray-200'
 ```
 
 Notes:
 
-- Tailwind's default palette is intentionally gone. `bg-white` produces no
-  CSS — the visible breakage is the point. White is `--color-border-card` /
-  `bg-gray-0`; near-black surfaces are `surface-inverse`.
+- Tailwind's default palette is intentionally gone, so `text-black` and
+  `border-gray-200` produce no CSS — the visible breakage is the point. White
+  is the one stock name kept: `bg-white` / `--color-white`. Near-black surfaces
+  are `surface-inverse`.
 - Bare `border` utilities default to `border-divider`. The soft white card
   outlines this design language uses everywhere are `border-card`.
 - Type roles are composite: `text-body-small` sets size + line-height +
@@ -212,10 +213,8 @@ Every primitive must have:
 Extend an existing primitive with a variant prop before creating a near
 duplicate. Create a new component when the behavior differs, not just the skin.
 
-Existing primitives: Button, Input, SearchField, Card (+Header/Body/Footer),
-Badge, Chip, Tabs, Avatar, Spinner, Modal, Toast, Tooltip, Panel,
-ChecklistItem, CompanionThumbnail, DetailRow, SeasonalStageRow, StatCard,
-MediaCard, Icon.
+The current primitives are whatever `packages/ui/src/index.ts` exports. That
+list is not copied here; a copied list goes stale and this one had.
 
 ---
 
@@ -284,30 +283,27 @@ surface hexes, fixed in `eb4b922`):
 
 ### Drawers / slide-in edge panels
 
-`PlantDetailDrawer` and `DiaryDetailDrawer` establish the pattern — follow it
-for any future slide-in panel rather than reinventing it:
+Use the `Drawer` and `DrawerSection` primitives from `packages/ui`. Every
+slide-in panel in the app is built on them — `PlantDetailDrawer`,
+`CareTipsDrawer`, `ReferenceDrawer` — so a new one should not rebuild the
+shell. Three decisions are baked into the primitive and worth knowing before
+changing it:
 
-- **Split the shell from the scroll region.** The header (close button +
-  actions) is a `shrink-0` sibling _outside_ the scrollable area, not a
-  `position: sticky` child inside it. Sticky-inside-scroll works but is
-  fragile (flex `gap` collapses oddly once the gap itself scrolls past, and
-  Firefox can visibly flash content above a sticky bar during fast/trackpad
-  scrolling). A plain two-sibling column — header, then
-  `flex-1 overflow-y-auto` content — sidesteps both and needs no
-  `will-change` workarounds.
-- **Motion**: a `motion.aside` (`framer-motion`) with
-  `initial={{ x: '100%' }}` `animate={{ x: 0 }}` `exit={{ x: '100%' }}`,
-  wrapped in `<AnimatePresence>` by the parent so the exit animation plays
-  before unmount instead of the element vanishing instantly. Framer Motion
-  can't read CSS custom properties, so the transition is a local constant
-  that mirrors `--duration-slow` / `--ease-in-out` —
-  `{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }` — keep the two in sync by hand
-  if those tokens ever change.
-- **Shape**: flush against the true viewport edge it slides in from (no
-  radius, no border there), `lg:rounded-l-lg` plus a border on the other
-  three sides, and `lg:top-2 lg:bottom-2` (not `inset-y-0`) so it floats off
-  the top/bottom the way the sidebar does. An edge-attached panel, not a
-  floating modal — but not a hard flush rectangle either.
+- **The shell is split from the scroll region.** The header is a `shrink-0`
+  sibling _outside_ the scrollable area, not a `position: sticky` child inside
+  it. Sticky-inside-scroll works but is fragile: flex `gap` collapses oddly
+  once the gap scrolls past, and Firefox can flash content above a sticky bar
+  during trackpad scrolling. A two-sibling column needs no `will-change`
+  workarounds.
+- **The kit carries no framer-motion dependency.** Motion is injected by the
+  app through `panelComponent={motion.aside}` and `panelProps={DRAWER_MOTION}`.
+  Framer Motion cannot read CSS custom properties, so `DRAWER_MOTION`
+  (`apps/web/lib/drawer-motion.ts`) mirrors `--duration-slow` and
+  `--ease-in-out` by hand and is the single place to change if those move.
+  Exit animation needs the caller to wrap the drawer in `<AnimatePresence>`.
+- **It is an edge-attached panel, not a floating modal.** Flush against the
+  viewport edge it slides from, rounded and bordered on the other three sides,
+  and floating off the top and bottom the way the sidebar does.
 
 ---
 
@@ -316,7 +312,7 @@ for any future slide-in panel rather than reinventing it:
 1. Pull the frame's design context via the Figma MCP — but treat its values
    as _input_, not truth: map every color/size/spacing onto existing semantic
    roles first.
-2. A value with no matching role → apply rule 2 ([provider-agnostic column naming](docs/architecture.md#provider-agnostic-columns)). Usually the answer is
+2. A value with no matching role → apply rule 2 above. Usually the answer is
    an existing role; occasionally it's a new role or tier 3 token added to
    `packages/tokens/index.css` **and** the preset **and** `/design-system`.
 3. Export new assets to `apps/web/public/`, downscaled.

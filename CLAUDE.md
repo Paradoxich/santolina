@@ -82,6 +82,8 @@ Full UI-building guidance — tokens, typography, styling patterns, component re
   /types            ← TypeScript type definitions
   /server           ← server actions and API route handlers
   /scripts          ← data scripts (seed, curate, cross-check, combinations) — run via tsx, see [the round runbook](docs/architecture.md#round-runbook)
+  /rounds           ← per-round provenance, committed (manifests, reports, catalog archives)
+  /reference        ← committed lookup caches the guards read
 ```
 
 No `/store` yet — the app holds no global client state (see Code conventions). A `/store` directory arrives only if Zustand is adopted. `/reports` may appear at runtime for cross-check output; it is gitignored, not source.
@@ -104,7 +106,7 @@ Seven tables. All IDs are UUIDs. Row-level security required on all user-owned t
 - `palette_plants` — join table between gardens and plants. User's palette. Includes status (planned/planted) and source (generated/manual/existing). The app only moves plants between planned and planted; a legacy `considering` status was dropped from the check constraint July 2026 (see [the palette write path](docs/architecture.md#palette-write-path)).
 - `plant_combinations` — which plants work well together. Public read, service role write. Populated by `apps/web/scripts/curate-combinations.ts` (see [plant combinations](docs/architecture.md#plant-combinations)).
 - `agent_sessions` — rolling agent context summary per garden.
-- `diary_entries` — user's dated notes and photos per plant. Keyed by garden + plant (not the palette row), so a plant's history survives being removed from the palette. User-owned (RLS on garden ownership); photos live in the private `diary-photos` storage bucket (garden-ownership policies, signed-URL reads). See [diary identity](docs/architecture.md#diary-identity) and [private diary photos](docs/architecture.md#diary-photos-private).
+- `diary_entries` — user's dated notes and photos. Keyed by garden + plant (not the palette row), so a plant's history survives being removed from the palette; `plant_id` is nullable and a null means a garden-level entry (weather, first frost). User-owned (RLS on garden ownership); photos live in the private `diary-photos` storage bucket (garden-ownership policies, signed-URL reads). See [diary identity](docs/architecture.md#diary-identity) and [private diary photos](docs/architecture.md#diary-photos-private).
 
 Full schema is documented in Notion. Data-layer decisions (provider choice, curation flow, safe upsert strategy) are recorded in `docs/architecture.md`. Never store passwords — Supabase auth handles that.
 
@@ -114,7 +116,7 @@ Full schema is documented in Notion. Data-layer decisions (provider choice, cura
 
 - **Open-Meteo** — weather data. Free, no API key. City-level resolution. Used today for two things only: geocoding the location picker (`/welcome`, dashboard modal) and the dashboard's 7-day forecast. Climate zone / frost-date derivation from location is a future idea, not built; hardiness is modelled via editorial RHS ratings instead ([hardiness](docs/architecture.md#hardiness), currently parked).
 - **Trefle API** — plant species data (`TREFLE_API_KEY`). Plants are cached in the `plants` table; Trefle populates botanical facts only. Replaced Perenual, whose free tier returned paywalled nulls — see [the Trefle-over-Perenual choice](docs/architecture.md#plant-data-provider).
-- **Anthropic API** — powers a growing set of offline data scripts (`ANTHROPIC_API_KEY`, model `claude-sonnet-4-5`), all under `apps/web/scripts/`, none in the request path. Full current list and run order: [the round runbook](docs/architecture.md#round-runbook). Representative examples:
+- **Anthropic API** — powers a growing set of offline data scripts (`ANTHROPIC_API_KEY`; `CURATION_MODEL` = `claude-sonnet-4-5` for text, `VISION_MODEL` = `claude-sonnet-5` for the hero-image pass — see `lib/anthropic-client.ts`), all under `apps/web/scripts/`, none in the request path. Full current list and run order: [the round runbook](docs/architecture.md#round-runbook). Representative examples:
   - `curate-plants.ts` — fills gaps Trefle can't (care instructions, style tags, seasonal rhythm). Never overwrites existing data.
   - `curate-combinations.ts` — populates `plant_combinations` with companion pairings (see [plant combinations](docs/architecture.md#plant-combinations)).
   - `cross-check-plants.ts` — blind second pass that fact-checks botanical fields and flags disagreements; never edits catalog data (writes only its own `botanical_checked_at` stamp — see [the botanical cross-check](docs/architecture.md#botanical-cross-check)).
@@ -135,6 +137,7 @@ OPENAI_API_KEY=
 TREFLE_API_KEY=
 ANTHROPIC_API_KEY=
 NEXT_PUBLIC_APP_URL=
+CRON_SECRET=
 ```
 
 Never commit `.env.local`. Never expose service role key to the client.
@@ -145,7 +148,7 @@ Never commit `.env.local`. Never expose service role key to the client.
 
 - **Web first** — desktop optimised, mobile responsive. No native mobile app in v1.
 - **Ornamental-first, not ornamental-only** — the vision is "a small home garden I want to be beautiful," not farm management. Herbs and a few edibles are welcome; dedicated edible-growing features are a later phase.
-- **Accounts shipped July 2026, gating the whole app** — magic link (default) + Google OAuth, no passwords anywhere. Middleware redirects unauthenticated requests to `/login`; only the landing page, `/login`, `/auth/*`, and `/design-system` stay public. A garden is auto-created on signup (trigger), never "set up." This consciously reversed the earlier "no account gate, prompt at first save" plan — see [the auth cutover](docs/architecture.md#auth).
+- **Accounts gate the whole app, with a demo way in** — magic link (default) + Google OAuth, no passwords anywhere, plus an anonymous "look around" demo (`POST /auth/demo`) that seeds a temporary garden and converts in place to a real account. Demo-ness is `auth.users.is_anonymous` and nothing else; unconverted accounts are purged by cron after 7 days. Middleware redirects unauthenticated requests to `/login`; only the landing page, `/login`, `/auth/*` and `/design-system` stay public. A garden is auto-created on signup by trigger, never "set up." See [Accounts](docs/architecture.md#auth).
 - **Onboarding wizard deferred, location step is not** — the 5-step wizard (space type, sun, style, size) stays post-test, but location is collected in a required first-run step (`/welcome`, gated on null garden location) because the entire climate layer depends on it. The one deliberate exception to never-forced inputs ([the auth cutover](docs/architecture.md#auth)).
 - **Logging is in scope for the test version** — the Diary is the baseline "memory" of a user's plants. Still never required, never pushed.
 - **Agent = invisible wiring + summonable sidekick** — it quietly powers seasonal logic, memory, and recommendations, and never pops up uninvited. But it does have a visible entry point (sidebar "Agent ⌘K" button; chat icons in the plant/diary drawers open plant-scoped conversations) and, once built, can take or surface actions you discuss with it (e.g. add a plant to Planned). Exact chat behavior is not fully decided. _Deferred post-test — see scope below._

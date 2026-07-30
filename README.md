@@ -36,7 +36,7 @@ santolina/
 
 - **Package manager**: pnpm with workspaces
 - **Monorepo orchestration**: Turborepo
-- **Node version**: 20 LTS
+- **Node version**: 22 LTS
 - **App**: Next.js 15, TypeScript, Tailwind CSS, Framer Motion, Supabase
 - **Plant data pipeline**: Trefle API + Anthropic API (Claude) — offline curation and cross-check scripts, see below
 - **UI library**: React 19, TypeScript, Tailwind CSS, Storybook 8
@@ -46,7 +46,7 @@ santolina/
 
 ### Prerequisites
 
-- Node.js 20 LTS (`nvm use`)
+- Node.js 22 LTS (`nvm use`)
 - pnpm 9 (`npm install -g pnpm@9`)
 
 ### Install
