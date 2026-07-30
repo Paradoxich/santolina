@@ -16,7 +16,7 @@ import type { Config } from 'tailwindcss'
  * ramps (e.g. `bg-fern-200`) — but reach for a semantic role first.
  *
  * Naming: utilities read as roles — `text-primary`, `bg-surface-card`,
- * `border-divider`, `ring-focus` — matching DESIGN_SYSTEM.md §2.
+ * `border-divider`, `ring-focus` — matching DESIGN_SYSTEM.md's token grammar.
  */
 
 const steps = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950] as const

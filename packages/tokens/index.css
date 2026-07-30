@@ -4,8 +4,8 @@
  *
  * THIS FILE IS THE SOURCE OF TRUTH for the design system: the only place a
  * token value may be written. Taxonomy, tier rules, and styling patterns
- * live in DESIGN_SYSTEM.md §2 (one home — not repeated here). Live visual
- * reference: /design-system in the running app.
+ * live in DESIGN_SYSTEM.md's tokens section (one home — not repeated here).
+ * Live visual reference: /design-system in the running app.
  */
 
 /* Public Sans lives with the tokens so consumers outside the monorepo get

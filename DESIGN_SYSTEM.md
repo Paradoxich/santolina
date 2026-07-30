@@ -4,8 +4,9 @@ How to build UI in this repo. This is the reference for humans and AI agents
 alike — read it before adding or changing any visual code.
 
 **Source of truth: the code.** Tokens live in `packages/tokens/index.css`,
-named by the grammar in §2, and rendered live at `/design-system` in the app.
-There is no Figma counterpart yet — see §7.
+named by the grammar in the tokens section below, and rendered live at
+`/design-system` in the app. There is no Figma counterpart yet — see the
+final section, Syncing code → Figma.
 
 ---
 
