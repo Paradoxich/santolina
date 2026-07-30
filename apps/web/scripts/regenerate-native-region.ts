@@ -49,6 +49,7 @@ import { getAnthropicClient, CURATION_MODEL } from '../lib/anthropic-client'
 import { fetchAllRows } from '../lib/paginate'
 import { MANUAL_OVERRIDES as SHARED_OVERRIDES } from '../lib/native-region-overrides'
 import { readRoundManifest } from './round-manifest'
+import { L2_NAMES, L2_VOCAB, L2_SET } from '../lib/wgsrpd-regions'
 
 // ---------------------------------------------------------------------------
 // Paths
@@ -60,66 +61,6 @@ const TREFLE_CACHE = join(REPORTS_DIR, 'trefle-native-cache.json')
 const NATIVE_TO_CACHE = join(REPORTS_DIR, 'native_to-l2-cache.json')
 const PLAN_JSON = join(REPORTS_DIR, 'native-region-regen.json')
 const PLAN_MD = join(REPORTS_DIR, 'native-region-regen.md')
-
-// ---------------------------------------------------------------------------
-// WGSRPD Level 2 region names (canonical, stable — 52 regions).
-// ---------------------------------------------------------------------------
-const L2_NAMES: Record<number, string> = {
-  10: 'Northern Europe',
-  11: 'Middle Europe',
-  12: 'Southwestern Europe',
-  13: 'Southeastern Europe',
-  14: 'Eastern Europe',
-  20: 'Northern Africa',
-  21: 'Macaronesia',
-  22: 'West Tropical Africa',
-  23: 'West-Central Tropical Africa',
-  24: 'Northeast Tropical Africa',
-  25: 'East Tropical Africa',
-  26: 'South Tropical Africa',
-  27: 'Southern Africa',
-  28: 'Middle Atlantic Ocean',
-  29: 'Western Indian Ocean',
-  30: 'Siberia',
-  31: 'Russian Far East',
-  32: 'Middle Asia',
-  33: 'Caucasus',
-  34: 'Western Asia',
-  35: 'Arabian Peninsula',
-  36: 'China',
-  37: 'Mongolia',
-  38: 'Eastern Asia',
-  40: 'Indian Subcontinent',
-  41: 'Indo-China',
-  42: 'Malesia',
-  43: 'Papuasia',
-  50: 'Australia',
-  51: 'New Zealand',
-  60: 'Southwestern Pacific',
-  61: 'South-Central Pacific',
-  62: 'Northwestern Pacific',
-  63: 'North-Central Pacific',
-  70: 'Subarctic America',
-  71: 'Western Canada',
-  72: 'Eastern Canada',
-  73: 'Northwestern U.S.A.',
-  74: 'North-Central U.S.A.',
-  75: 'Northeastern U.S.A.',
-  76: 'Southwestern U.S.A.',
-  77: 'South-Central U.S.A.',
-  78: 'Southeastern U.S.A.',
-  79: 'Mexico',
-  80: 'Central America',
-  81: 'Caribbean',
-  82: 'Northern South America',
-  83: 'Western South America',
-  84: 'Brazil',
-  85: 'Southern South America',
-  90: 'Subantarctic Islands',
-  91: 'Antarctic Continent',
-}
-const L2_VOCAB = Object.values(L2_NAMES)
-const L2_SET = new Set(L2_VOCAB)
 
 // A plant whose native_to says it has no wild range — empty is correct.
 const NO_WILD_RANGE =

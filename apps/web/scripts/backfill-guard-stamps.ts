@@ -29,15 +29,16 @@
  *     catalog size that day, so it was a full-catalog run
  *   · cross-check-2026-07-14-15-36-52.json — checked 100, round 6's batch
  *   · cross-check-2026-07-15-19-19-21.json — checked 76, round 7's batch
- *   · native-to-crosscheck.json — 76 rows, each named by id
+ *
+ * `native_checked_at` IS NO LONGER BACKFILLED (retired 2026-07-30, see GROUPS).
+ * Its stamps were cleared catalog-wide because the runs behind them used the
+ * old unguarded lookup, and restoring them from those same reports would undo
+ * that on purpose.
  *
  * WHAT IS DELIBERATELY LEFT NULL, and it matters more than what gets stamped:
  *
  *   · the 117 plants seeded 2026-07-12 (the regional-natives round) have no
  *     surviving botanical report at all
- *   · every pre-round-7 row for `native_checked_at`, because
- *     cross-check-native-to.ts wrote to a FIXED filename and overwrote its own
- *     history every run — we know earlier runs happened, the evidence is gone
  *
  * A null stamp on those is correct: it means a future guard run should pick
  * them up. Stamping them on an assumption would permanently hide a genuinely
@@ -46,8 +47,7 @@
  * STRENGTH OF EVIDENCE, stated honestly: the botanical reports name only the
  * FLAGGED plants, not the clean ones, so per-row proof exists for the flagged
  * subset and the rest is inferred from "checked count == catalog size on that
- * date". That inference is strong but it is an inference. The native_to report
- * names every row it covers, so that one is per-row proof.
+ * date". That inference is strong but it is an inference.
  *
  * Dry-run by default. Never overwrites an existing stamp. Refuses to write a
  * group whose live row count disagrees with the report's own `checked` figure —
@@ -103,13 +103,13 @@ const EVIDENCE: Evidence[] = [
     expected: 76,
     note: "round 7's batch",
   },
-  {
-    report: 'native-to-crosscheck.json',
-    column: 'native_checked_at',
-    scope: { kind: 'ids-in-report' },
-    expected: 76,
-    note: 'names every row it covered, so this is per-row proof',
-  },
+  // RETIRED 2026-07-30 — the native-to-crosscheck.json group is deliberately
+  // gone, not lost. Every native_checked_at stamp in the catalog was cleared
+  // that day because the checks behind them ran on the old unguarded GBIF
+  // lookup (traps 11 and 15), and this group would restore them from the very
+  // reports those runs produced — quietly re-asserting a check we invalidated
+  // on purpose. Do not re-add it: the guard has since re-run catalog-wide and
+  // writes its own stamps.
 ]
 
 interface PlantRow {
@@ -385,8 +385,10 @@ async function main() {
   )
   console.log(
     'Deliberately left null: the 117 plants seeded 2026-07-12 (no surviving ' +
-      'botanical report) and every pre-round-7 row for native_to (reports were ' +
-      'overwritten). A future guard run should pick those up.'
+      'botanical report). A future guard run should pick those up.'
+  )
+  console.log(
+    'native_to is no longer backfilled at all — see the retired group above.'
   )
 }
 
