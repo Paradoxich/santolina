@@ -360,6 +360,30 @@ An **identifier** that has since moved — a renamed migration version, a moved
 path — is just updated. That is a pointer, not a belief, and a dangling pointer
 preserves nothing.
 
+### 2026-07-30 — The five unbacked-up tables get a backup (not a round)
+
+**Branch** `session/2026-07-30-backups` (worktree `santolina-backups`). Not a round; no catalog data written. First database write outside `public`: the `db-backups` bucket.
+
+**Changed**
+
+- New `scripts/backup-database.ts` (`pnpm db:backup`): one custom-format `pg_dump` of `public` + `auth` + `storage` to gitignored `backups/db/<stamp>/`, plus an upload of the same file to a new private `db-backups` bucket. Standing rule 10 added above.
+- `SUPABASE_DB_URL` added to `.env.example` and the CLAUDE.md env list — the session-pooler string; the direct host is IPv6-only on the Free plan. `pg_dump` came from `brew install libpq` (18.4 against server Postgres 17).
+
+**Database**
+
+- Private bucket `db-backups` created (service role, first run of the script).
+- First backup taken: 1,673,522 bytes, rows at that moment — users 8, gardens 8, plants 695, palette_plants 57, plant_combinations 1735, agent_sessions 0, diary_entries 23.
+
+**Not done**
+
+- Restore never rehearsed past `pg_restore --list` — a Free plan has no second project to restore into. The recovery shape is in the script header.
+- No schedule; the run is manual. When it should recur (cron, or a pre-migration hook) was not decided.
+
+**Verified**
+
+- `pg_restore --list` on the dump shows TABLE DATA for all 7 public tables, `auth.users` + `auth.identities`, and storage metadata.
+- The bucket object exists, `public = false`, byte size identical to the local file (checked in `storage.objects`, not inferred from the upload response).
+
 ### 2026-07-30 — Something watches the migration ledger now (not a round)
 
 **Branch** `session/2026-07-30-migration-drift` (worktree `santolina-migration-drift`, off `main` at `e830a17`). Not a round; no seed, no AI spend, no catalog data written.
