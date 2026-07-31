@@ -11,6 +11,24 @@
             "if": "Bash(git worktree remove*)",
             "timeout": 15,
             "statusMessage": "Checking the worktree for local-only files"
+          },
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/guard-main-checkout-head.sh\"",
+            "timeout": 15,
+            "statusMessage": "Checking whether this moves HEAD in the shared checkout"
+          },
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/guard-build-during-dev.sh\"",
+            "timeout": 15,
+            "statusMessage": "Checking for a running dev server"
+          },
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/guard-blind-all.sh\"",
+            "timeout": 15,
+            "statusMessage": "Checking for a blind --all run"
           }
         ]
       }
