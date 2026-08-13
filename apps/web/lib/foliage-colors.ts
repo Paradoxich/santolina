@@ -19,6 +19,12 @@
 // bed the eye groups blue fescue, rue and eucalyptus with the true silvers —
 // one cool metallic family against the greens.
 //
+// MIXED VALUES BUCKET BY GROUND COLOUR, NOT MARKING (round 8 ruling, written
+// down 2026-08-13). "Burgundy and silver markings" is a burgundy leaf marked
+// silver → burgundy; "silvery grey-green with burgundy" is a silver-grey leaf
+// with burgundy in it → silver. The bucket answers "what colour is the leaf
+// you'd see across the bed", and that is the ground, never the accent.
+//
 // scripts/check-bloom-colors.ts walks the catalog and fails on any value
 // missing from this map — run it after every seed, same cadence as the
 // cross-check.
@@ -47,12 +53,16 @@ export const FOLIAGE_RAW_TO_BUCKET: Record<string, string> = {
   'silver-marked green': 'silver',
   'silver-spotted green': 'silver',
   'grey-green with silver undersides': 'silver',
+  // ground colour, not marking: a silver-grey leaf WITH burgundy stays silver
+  // (Athyrium niponicum) — see the header rule
   'silvery grey-green with burgundy': 'silver',
   'dark green with silver veining': 'silver',
   // burgundy — dark/moody standing foliage
   'near-black': 'burgundy',
   'bronze-purple': 'burgundy',
   'mottled bronze-maroon': 'burgundy',
+  // ground colour, not marking: a burgundy leaf MARKED silver stays burgundy
+  // (Heuchera americana) — the mirror of the Athyrium row above
   'burgundy and silver markings': 'burgundy',
   // pink — variegation that is the species' own standing colour, not a
   // cultivar selection (Actinidia kolomikta colours its own leaf tips)
