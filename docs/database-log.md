@@ -47,16 +47,9 @@ The numbers **in this file are different and must stay written down**: a dated s
 9. **Append an entry here.** `scripts/log-db-session.ts --round <label>` writes the factual part for you.
 10. **The catalog backup is not a database backup.** Rules 1 and 2 cover `plants`, `plant_combinations` and the buckets — nothing else. `users`, `gardens`, `palette_plants`, `diary_entries`, `agent_sessions` and the auth users behind them are covered by `scripts/backup-database.ts` alone (`pnpm db:backup`): one `pg_dump` of `public` + `auth` + `storage` into gitignored `backups/db/` AND the private `db-backups` bucket. On the Free plan this is the only recoverable copy of user data — Supabase's own snapshots cannot be downloaded or restored (rule 1). Run it before every migration and before any bulk write to user-owned tables. Needs `SUPABASE_DB_URL`, the SESSION POOLER string — the direct `db.<ref>` host is IPv6-only on the Free plan and will not resolve from most networks. The dump holds private user data: never commit it, same as `diary-photos` in rule 2. **The automated floor is `.github/workflows/db-backup.yml`** — weekly cron, bucket copy only, pruning bucket dumps older than 90 days; it FAILS loudly on a missing secret. The pre-migration laptop run stays manual and stays required: the bucket dies with the project, the laptop copy does not.
 
-11. **No new migration is applied until a local Supabase stack exists and has replayed the existing 35.** Agreed with Ana 2026-07-30. `supabase/` holds only `migrations/` — no `config.toml` — so every migration and every RLS policy this project has ever had ran first in production, and a wrong RLS policy fails silently rather than erroring (the bare-`name` → `gardens.name` storage bug is the class this catches; trap 18 is the same shape from the reading side). The stack is also the only free restore target the database backup has ever had, so **rehearse `pg_restore --data-only` from a `db-backups` dump in that same session** (rule 10). Bring up the light stack — `supabase start -x studio,realtime,storage-api,imgproxy,edge-runtime,inbucket,vector,logflare` (≈2 GB, Postgres + auth + PostgREST) — and cap Docker's disk allowance so the VM cannot balloon. **CLI-driven migrations (`supabase db push`) land in that same session and nothing else does**: it is the only work that touches prod schema, and it is what ends trap 13's rename dance. Order for the next migration: stack up → laptop `pnpm db:backup` → replay + rehearse restore → `db push`.
+11. **Every migration replays on the local Supabase stack before it touches production, and `supabase db push` is the only thing that touches prod schema.** Agreed with Ana 2026-07-30; the stack exists since 2026-08-13 (`supabase/config.toml` is committed). Bring it up with `supabase start -x studio,realtime,storage-api,imgproxy,edge-runtime,inbucket,vector,logflare` (≈2 GB, Postgres + auth + PostgREST; Docker's disk allowance is capped at 8 GB so the VM cannot balloon). A wrong RLS policy fails silently rather than erroring, which is why replay-first is the rule (the bare-`name` → `gardens.name` storage bug is the class this catches; trap 18 is the same shape from the reading side) — and the very first replay caught both a false trap premise (16) and grants that existed nowhere in the repo (25). Order for a migration session: laptop `pnpm db:backup` → replay locally (`supabase migration up`; a fresh stack replays everything) → rehearse `pg_restore --data-only` from a `db-backups` dump (rule 10; rehearsed 2026-08-13, every table's count matched live — the only errors are the auth/storage services' own migration bookkeeping tables, expected) → `supabase db push --db-url "$SUPABASE_DB_URL"` → `pnpm migrations:check`.
 
-    **Queued behind this rule — read this list when the stack comes up, and add to it rather than starting one elsewhere.** A deferral recorded only where the blocked work is described is invisible at the moment the block lifts; that is trap 17, and this list exists so these do not repeat it. Names and pointers only, no restated reasoning:
-
-    | Wants                                          | Why it is waiting                                                                                                  | Where it is explained                |
-    | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------ |
-    | A timestamp on `plant_combinations`            | Closed rounds fail their pairing check permanently and the count only grows                                        | Trap 16                              |
-    | A "phrase reviewed and kept" stamp on `plants` | 151 kept `native_to` rows are recorded in a committed file, not in catalog state, so every later run re-ranks them | The 2026-07-30 native_to queue entry |
-
-    Neither is urgent on its own, which is exactly why both need somewhere to be found. **If you bring the stack up and apply nothing from this list, say so in that session's entry** — an unexplained empty list next time reads as "there was nothing", and it will not be true.
+    The queue this rule used to hold was **cleared 2026-08-13**: the `plant_combinations` timestamp needed no migration (trap 16, corrected — the column already existed) and the reviewed-and-kept stamp landed as migration `20260813110500`. Details in that date's session entry. A newly deferred schema change goes back on a list HERE, not only where the blocked work is described — a deferral recorded only at the blocked site is invisible at the moment the block lifts (trap 17).
 
 **Rule 9 is enforced, not encouraged.** `.husky/check-db-log.sh` runs on every commit and blocks it if a round directory is committed without an entry naming that round, if a migration is committed without touching this file, or if this file still contains the `TODO —` placeholders the script writes. Git cannot see what you ran against Supabase — only what you commit — so the hook checks the artifacts database work leaves behind, and the honest reading of a green hook is "you recorded something", not "you recorded enough". `--no-verify` exists and is occasionally right (a revert, a docs fixup). It is not the normal path, and whatever you skip is inherited by whoever comes next.
 
@@ -66,12 +59,12 @@ The numbers **in this file are different and must stay written down**: a dated s
 
 **Numbers are permanent IDs, never renumbered and never reused.** They are cited from code (`wcvp-lookup.ts`, `migration-drift.ts`, `image-probe.ts`) and from `curation.md`, so the order below is by shape, not by number. A new trap takes the next free number and files under whichever family it belongs to.
 
-Twenty-four traps are really four shapes. The entries are the worked examples that make a shape recognisable in the wild — someone who knows the four rules spots the next instance before it costs anything, which is more than someone who has read all twenty-four descriptions once. **Each family's rule is stated once, above its entries. Read that first.**
+Twenty-five traps are really four shapes. The entries are the worked examples that make a shape recognisable in the wild — someone who knows the four rules spots the next instance before it costs anything, which is more than someone who has read all twenty-four descriptions once. **Each family's rule is stated once, above its entries. Read that first.**
 
 | family | what it is                                                        | entries                           |
 | ------ | ----------------------------------------------------------------- | --------------------------------- |
 | **A**  | a failure or narrower answer comes back shaped like a real result | 1, 1b, 10, 11, 15, 18, 19, 20, 23 |
-| **B**  | the record disagrees with what actually happened                  | 2, 4, 12, 13, 14, 16, 17          |
+| **B**  | the record disagrees with what actually happened                  | 2, 4, 12, 13, 14, 16, 17, 25      |
 | **C**  | one fact with two homes, and only one got updated                 | 3, 5, 22                          |
 | **D**  | facts about the outside world you cannot design away              | 6, 7, 8, 9, 21                    |
 
@@ -213,11 +206,17 @@ Every guard here checks whether a value is _wrong_. Until round 8 nothing checke
 
 `apps/web/scripts/check-migration-drift.ts` now does it, in CI as `migration drift (main only)`. Whether it is passing: `gh run list --branch main --limit 5`. To ask it yourself: `cd apps/web && pnpm migrations:check`. It needs a `security definer` function (`public.applied_migrations()`) because `supabase_migrations` is not an exposed schema. **It has to understand trap 13 before it can report trap 14** — a version-only set difference would have called three live renames six findings and buried any genuine seventh — so it pairs on name first and reports the two separately.
 
-#### 16. A closed round's PAIRING check still rots, because pairings carry no timestamp — OPEN, expect it
+#### 16. A closed round's PAIRING check still rots, because pairings carry no timestamp — FIXED 2026-08-13, and the premise was false
 
-`check-round-scope --round 9` returns 120 failures, all "out-of-scope pairing added", all "both plants predate the round" — they are round 10's `curate-combinations` output. `cleared_at` works for **plant** writes because a plant row carries `updated_at`; **a `plant_combinations` row carries no timestamp**, so every later round's pairings fail every earlier closed round permanently, and the count only grows.
+`check-round-scope --round 9` returned 120 failures, all "out-of-scope pairing added", all "both plants predate the round" — they are round 10's `curate-combinations` output. `cleared_at` works for **plant** writes because a plant row carries `updated_at`; ~~a `plant_combinations` row carries no timestamp~~ — corrected 2026-08-13: **`plant_combinations` has carried `created_at` since the initial schema** (`20260706093045`, second line of its DDL), with real write times on every prod row. The claim was never checked against the migrations — "docs are not evidence", ignored inside the document that preaches it — and the queued schema change died on its first local replay with "column already exists".
 
-**Do not read a pairing failure on a closed round as a regression, and do not waive them one by one.** The real fix is a timestamp on `plant_combinations`, which is a schema change nobody has needed yet — queued behind standing rule 11, and listed there.
+The real fix was code-only: an added-pairing finding now carries its row's `created_at` and `applyClearedAt` demotes it past `cleared_at` exactly like a plant write. Round 9 exits 0 FAIL with all 120 demoted on their true timestamps. A REMOVED pairing still has no timestamp to judge — the row is gone — so **do not read a removed-pairing failure on a closed round as a regression; waive it by name**.
+
+#### 25. The replayed schema was not the production schema: table grants lived outside the repo — FIXED 2026-08-13, expect the shape
+
+**No migration has ever granted a table privilege.** Production's `anon` / `authenticated` / `service_role` hold full DML on every public table because the platform's default privileges said so when the project was created in July 2026 — and current Supabase images ship a harder baseline where API roles get no SELECT / INSERT / UPDATE / DELETE at all. So the first local replay produced a database where all 35 migrations "succeeded", RLS and policies looked perfect, and PostgREST answered `permission denied for table plants` (found by the cross-check smoke test against the local stack, not by any schema diff — nothing in the repo could have shown it, which is the point).
+
+The fresh instance is not hypothetical: it is the disaster-recovery path. The `db-backups` dump restores INTO a newly created project by replaying this directory first, and until 2026-08-13 the result was broken in a way no test had ever run far enough to see. Migration `20260813120000` codifies the grants — verified identical to prod's live grants before pushing, so a no-op there, load-bearing everywhere else. **The shape to expect:** anything the platform or dashboard did for you that a migration never recorded is missing on the day you replay from scratch, and it is missing silently.
 
 #### 17. A written-down blocker outlives the thing that blocked it — FIXED for the CI-secrets case, expect the shape
 
@@ -290,6 +289,43 @@ Reading the wrong field names leaves the code undefined, every zone falls throug
 ## Sessions
 
 <!-- Newest first. Append with: scripts/log-db-session.ts --round <label> -->
+
+### 2026-08-13 — The local stack exists, and the rule-11 queue is cleared (not a round)
+
+**Branch** `session/2026-08-13-local-stack`. Not a round; no catalog content touched — two migrations pushed, one of them stamping 151 rows.
+
+**Changed**
+
+- `supabase/config.toml` committed (`supabase init`); rule 11 rewritten to its steady-state form now the stack exists.
+- `check-round-scope.ts`: added-pairing findings carry their row's `created_at` and `applyClearedAt` demotes on it (trap 16); `isStampColumn` also matches `*_reviewed_at` — the verdict-stamp shape.
+- `cross-check-native-to.ts`: selects `native_to_reviewed_at`; one shared `inGapQueue` predicate for the report section and the console tail; reviewed-and-kept rows are excluded from the queue and counted out loud, never silently.
+
+**Database**
+
+- Pre-migration laptop backup `2026-08-13T10-09-37` (1.6 MB, laptop + `db-backups` bucket).
+- Migration `20260813110500`: `plants.native_to_reviewed_at`, the `invalidate_native_to_review` trigger (mirror of `invalidate_editorial_verdict`, same escape hatch), and the backfill from `reference/native-to-review-2026-07-30.json` — matched **exactly 151/151** kept rows against a restored copy of prod, then again in prod.
+- Migration `20260813120000`: explicit table grants (trap 25) — read prod's live grants first and mirrored them, so prod was a no-op by construction.
+- Both pushed with `supabase db push` (Ana ran the push). 37 committed = 37 applied, `migrations:check` green.
+
+**Found**
+
+- **Trap 16's premise was false** — `plant_combinations.created_at` has existed since the initial schema. The planned migration died on first local replay with "column already exists"; correction recorded in the trap itself. Prod pairing rows carry true July write times, so round 9's 120 standing failures demote on real timestamps, not by amnesty.
+- **Trap 25, new**: production held table grants no migration ever wrote; a fresh replay yields a database the app cannot read. Found because the cross-check smoke test ran against the local stack instead of prod.
+- The restore rehearsal's only collisions are `auth.schema_migrations` and `storage.migrations` — the services' own version bookkeeping, present on both sides. Expected, not user data, ignore them in any future restore.
+
+**Not done**
+
+- The full stack (Studio, storage-api, realtime…) has never been brought up; the light stack is the standing shape and nothing yet needs more.
+- `native_to_reviewed_at` is not in any app-side type — nothing in the app reads it; the scripts that consume it type their own rows.
+- `supabase` CLI is 2.109.1, 2.114.0 available; not updated mid-session.
+
+**Verified**
+
+- All 35 pre-existing migrations replay clean on the fresh stack: RLS enabled on all 7 tables, 11 policies, every trigger present (`invalidate_editorial_verdict`, `on_auth_user_created`, the `updated_at` set).
+- `pg_restore --data-only --disable-triggers` from the day's dump: **every table count matches live** — users 13, gardens 13, plants 695, palette_plants 82, plant_combinations 1735, agent_sessions 0, diary_entries 33, auth.users 13, buckets 3, objects 8.
+- The new trigger, 4/4 behaviors on the local stack: phrase edit clears; same-statement re-stamp survives; unrelated edit survives; writing the OLD stamp value back while editing the phrase clears (value-equality semantics, same as editorial — the fix-oversized-heroes lesson, retested here).
+- `check-round-scope --round 9` after the code fix: **0 FAIL**, all 120 pairing findings demoted with their `created_at` in the waiver line.
+- Cross-check smoke (`--ids`, one stamped + one unstamped row, against the local stack): new select works, stamped row stays out of the gap queue with the exclusion line printed.
 
 ### 2026-07-30 — The 179-row native_to queue, worked (not a round)
 
