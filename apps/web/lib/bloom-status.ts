@@ -17,11 +17,11 @@ function normalizeMonth(month: number): number {
  * (1–12, no ordering guaranteed). Pure function of the plant's data and
  * a reference date — no stored status, no external API.
  *
- * Known limitation: assumes bloomMonths is a single contiguous window.
- * Bloom periods that cross the December→January boundary (e.g. [11, 12, 1, 2])
- * will get the wrong min/max, and therefore the wrong pre-bloom/done month.
- * None of the currently curated plants hit this, so it's an accepted v1
- * limitation, not a bug to fix now.
+ * The window is circular: [12, 1, 2, 3] is one window running December→March,
+ * so winter bloomers get the right pre-bloom/done months. Assumes a single
+ * contiguous window per year (wrapping or not); a plant with two separate
+ * windows gets the boundary nearest the end of the array's iteration, which
+ * no catalog plant currently exercises. All 12 months = always 'blooming'.
  */
 export function getBloomStatus(
   bloomMonths: number[],
@@ -32,13 +32,34 @@ export function getBloomStatus(
   const currentMonth = today.getMonth() + 1
   if (bloomMonths.includes(currentMonth)) return 'blooming'
 
-  const minMonth = Math.min(...bloomMonths)
-  const maxMonth = Math.max(...bloomMonths)
+  const bounds = windowBounds(bloomMonths)
+  if (!bounds) return 'blooming' // all 12 months; unreachable past the includes check
 
-  if (currentMonth === normalizeMonth(minMonth - 1)) return 'pre-bloom'
-  if (currentMonth === normalizeMonth(maxMonth + 1)) return 'done'
+  if (currentMonth === normalizeMonth(bounds.start - 1)) return 'pre-bloom'
+  if (currentMonth === normalizeMonth(bounds.end + 1)) return 'done'
 
   return 'resting'
+}
+
+/**
+ * First and last month of the bloom window, treating the year as circular:
+ * the start is the bloom month whose previous month is not a bloom month,
+ * so [12, 1, 2] starts in December, not January. Null when the plant blooms
+ * all 12 months — no boundary exists.
+ */
+function windowBounds(
+  bloomMonths: number[]
+): { start: number; end: number } | null {
+  const set = new Set(bloomMonths)
+  if (set.size >= 12) return null
+
+  let start = Math.min(...bloomMonths)
+  let end = Math.max(...bloomMonths)
+  for (const m of set) {
+    if (!set.has(normalizeMonth(m - 1))) start = m
+    if (!set.has(normalizeMonth(m + 1))) end = m
+  }
+  return { start, end }
 }
 
 // The UI merges 'done' into Resting (a five-way status vocabulary wasn't
@@ -71,10 +92,12 @@ const EVERGREEN_NOTES: Record<Season, string> = {
  * restates the stage. Pure function of bloom_months and a reference date.
  *
  * Resting plants (dormant, but they flower) look forward to their next bloom
- * month; the 2 catalog plants with no bloom_months at all get a season-keyed
- * evergreen line. Position within blooming compares the current month to the
- * window's first/last month, so it shares getBloomStatus's wrap-around
- * limitation. Always returns a string — the card line is never blank.
+ * month; plants with no bloom_months at all (ferns, conifers, foliage
+ * evergreens — count them live, do not write the number down here) get a
+ * season-keyed evergreen line. The window is circular, matching
+ * getBloomStatus, so a December→March bloomer resting in August looks
+ * forward to December. Always returns a string — the card line is never
+ * blank.
  */
 export function getStageNote(
   bloomMonths: number[],
@@ -87,14 +110,14 @@ export function getStageNote(
   if (status === 'pre-bloom') return 'Buds forming now'
   if (status === 'done') return 'Flowering just finished'
 
-  const minMonth = Math.min(...bloomMonths)
-  const maxMonth = Math.max(...bloomMonths)
+  const bounds = windowBounds(bloomMonths)
+  if (!bounds) return 'Flowering all year' // blooms all 12 months
 
-  if (status === 'resting') return `Blooms again in ${monthName(minMonth)}`
+  if (status === 'resting') return `Blooms again in ${monthName(bounds.start)}`
 
   // blooming — position within the window
-  if (minMonth === maxMonth) return 'Peak flowering now'
-  if (currentMonth === minMonth) return 'First flowers opening'
-  if (currentMonth === maxMonth) return 'Bloom ending soon'
+  if (bounds.start === bounds.end) return 'Peak flowering now'
+  if (currentMonth === bounds.start) return 'First flowers opening'
+  if (currentMonth === bounds.end) return 'Bloom ending soon'
   return 'Peak flowering now'
 }

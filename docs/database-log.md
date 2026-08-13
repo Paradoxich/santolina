@@ -290,6 +290,19 @@ Reading the wrong field names leaves the code undefined, every zone falls throug
 
 <!-- Newest first. Append with: scripts/log-db-session.ts --round <label> -->
 
+### 2026-08-13 — Two single-row editorial fixes and the December-wrap bloom bug, from the blog-evidence scan (not a round)
+
+Found while gathering evidence for the part-3 database post; fixed under the don't-split-small-fixes rule. Both writes direct, guarded on exact current values. Branch `fix/bloom-status-wrap`.
+
+**Database**
+
+- `Symphyotrichum lateriflorum` `common_name`: "Calico or one-sided or white woodland or starved aster" (Trefle's four concatenated names, 54 chars, shipped knowingly in round 9) → **"Calico aster"**. Checked for collisions first — no other row uses the name. The row's `is_curated = true` survived: the `invalidate_editorial_verdict` trigger does not watch `common_name`, so a name fix keeps the verdict. Deliberate here; worth knowing it is the one editorial field a write does not invalidate.
+- `Erysimum cheiri` hero image: Ana picked from a contact sheet of 8 (48 Commons candidates fetched, filtered to commercial-safe licenses and real photos; 3 artworks and one wrong-species file — _E. cheiranthoides_ — excluded by eye). Ingested via the manual-override path: `image_url_curated` = the original Commons upload URL ("Erysimum cheiri 2019-04-16 1107.jpg", Salicyna, CC BY-SA 4.0, 4000×3000, probed 206 image/jpeg), `image_attribution` in the standard shape, confidence high, `image_checked_at` stamped so `--new-only` re-runs skip it. **No-image plants: 1 → 0.** No new host: `upload.wikimedia.org` already allowlisted.
+
+**Code (same PR)**
+
+- The scan also found `getBloomStatus` inverting December-wrapping bloom windows via `min`/`max` — 12 plants (rounds 8–10 winter bloomers) rendering "Blooms again in January" or a permanent peak, behind a comment written when the count was 0. Fixed wrap-aware in `lib/bloom-status.ts` with `bloom-status.test.ts` (13 cases; the file had none). The wider lesson is trap family C in one line: the comment hardcoded a catalog count, and prose cannot notice the world moving — the docstrings no longer state counts.
+
 ### 2026-08-13 — The local stack exists, and the rule-11 queue is cleared (not a round)
 
 **Branch** `session/2026-08-13-local-stack`. Not a round; no catalog content touched — two migrations pushed, one of them stamping 151 rows.
