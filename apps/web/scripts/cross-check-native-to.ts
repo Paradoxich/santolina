@@ -131,6 +131,7 @@ interface PlantRow {
   native_to: string | null
   native_region: string[] | null
   native_region_checked_at: string | null
+  native_to_reviewed_at: string | null
   created_at: string
 }
 
@@ -199,6 +200,8 @@ interface Result extends Judgment {
   region_tags: string[]
   /** Regions the phrase claims that the validated tags do not list. */
   claimed_not_in_tags: string[]
+  /** When a person last read this phrase against the evidence and kept it. */
+  native_to_reviewed_at: string | null
 }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
@@ -534,18 +537,39 @@ const RANK: Record<Verdict, number> = {
  * Ranked by how much of the phrase is unsupported, so the reading stops paying
  * off from the top rather than the bottom.
  */
+/**
+ * Would this row rank in the partial-gap queue? One predicate for the report
+ * section and the console tail, so the two can never disagree.
+ *
+ * wcvp-validated ONLY. A row whose tags were withheld has an empty tag set,
+ * so every region the phrase claims is trivially "not in the tags" and it
+ * sorts to the top at 100% unsupported — no-evidence wearing the costume of
+ * the strongest finding in the report. The first run put 25 of them there.
+ *
+ * A native_to_reviewed_at stamp removes a row from the queue: a person read
+ * exactly this phrase against this evidence and kept it (the 2026-07-30
+ * review, in the database since migration 20260813110500). The stamp dies
+ * with the phrase — a trigger clears it on any native_to edit — so a changed
+ * phrase re-enters the queue by itself. Excluded rows are still counted and
+ * named in the report, never silently dropped.
+ */
+const inGapQueue = (r: Result): boolean =>
+  r.region_tier === 'wcvp-validated' &&
+  r.verdict !== 'contradicts' &&
+  r.claimed_not_in_tags.length > 0 &&
+  !r.native_to_reviewed_at
+
+/** Gap-queue rows held out only by their reviewed-and-kept stamp. */
+const gapReviewedKept = (r: Result): boolean =>
+  r.region_tier === 'wcvp-validated' &&
+  r.verdict !== 'contradicts' &&
+  r.claimed_not_in_tags.length > 0 &&
+  r.native_to_reviewed_at !== null
+
 function gapSection(results: Result[]): string[] {
+  const kept = results.filter(gapReviewedKept).length
   const gaps = results
-    // wcvp-validated ONLY. A row whose tags were withheld has an empty tag set,
-    // so every region the phrase claims is trivially "not in the tags" and it
-    // sorts to the top at 100% unsupported — no-evidence wearing the costume of
-    // the strongest finding in the report. The first run put 25 of them there.
-    .filter(
-      (r) =>
-        r.region_tier === 'wcvp-validated' &&
-        r.verdict !== 'contradicts' &&
-        r.claimed_not_in_tags.length
-    )
+    .filter(inGapQueue)
     .map((r) => ({
       r,
       share:
@@ -565,6 +589,14 @@ function gapSection(results: Result[]): string[] {
     `${gaps.length} rows. Ranked by the share of the phrase that the tags do not`,
     'support. Read from the top; most of the tail is a broad word being broad.',
     'Nothing here is auto-applied.',
+    ...(kept > 0
+      ? [
+          '',
+          `${kept} more row(s) with the same gap shape are not listed: their phrase`,
+          'was reviewed and kept (native_to_reviewed_at). An edit to the phrase',
+          'clears the stamp and re-enters the row here.',
+        ]
+      : []),
     '',
     '| unsupported | plant | stored phrase | claims not in tags | validated regions | draft from tags |',
     '| --- | --- | --- | --- | --- | --- |',
@@ -630,16 +662,17 @@ function writeReport(results: Result[]): void {
       '\nApply the gross fixes with:  tsx --env-file=.env.local scripts/cross-check-native-to.ts --apply'
     )
   }
-  const gapCount = results.filter(
-    (r) =>
-      r.region_tier === 'wcvp-validated' &&
-      r.verdict !== 'contradicts' &&
-      r.claimed_not_in_tags.length
-  ).length
+  const gapCount = results.filter(inGapQueue).length
+  const gapKept = results.filter(gapReviewedKept).length
   if (gapCount > 0) {
     console.log(
       `\n${gapCount} more row(s) claim regions the tags do not list — ranked in\n` +
         'the report under "Phrases claiming regions the validated tags exclude".'
+    )
+  }
+  if (gapKept > 0) {
+    console.log(
+      `${gapKept} row(s) with that gap shape are reviewed-and-kept (native_to_reviewed_at) and stay out of the queue.`
     )
   }
   if ((counts['contradicts'] ?? 0) > 0) {
@@ -739,7 +772,7 @@ async function generate(
     let q = db
       .from('plants')
       .select(
-        'id, common_name, scientific_name, family, native_to, native_region, native_region_checked_at, created_at'
+        'id, common_name, scientific_name, family, native_to, native_region, native_region_checked_at, native_to_reviewed_at, created_at'
       )
     if (newOnly) q = q.is('native_checked_at', null)
     if (roundIds) q = q.in('id', roundIds)
@@ -776,6 +809,7 @@ async function generate(
         region_tier: region.tier,
         region_tags: region.regions,
         claimed_not_in_tags: claimedExtra,
+        native_to_reviewed_at: plant.native_to_reviewed_at,
         ...j,
         verdict,
       })

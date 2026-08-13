@@ -78,8 +78,15 @@ type Row = Record<string, unknown>
 // added, so the next `curate-styles --new-only` would have been reported as an
 // out-of-scope data write on every row it re-stamped. Any new bookkeeping
 // column is covered the day it exists.
+//
+// *_reviewed_at is the verdict-stamp shape (native_to_reviewed_at, migration
+// 20260813110500) — same class as editorial_checked_at, which the suffix
+// pattern already covers: it records that a person read the row, never what
+// the row says.
 const isStampColumn = (column: string): boolean =>
-  column === 'updated_at' || column.endsWith('_checked_at')
+  column === 'updated_at' ||
+  column.endsWith('_checked_at') ||
+  column.endsWith('_reviewed_at')
 
 interface Finding {
   level: 'FAIL' | 'WARN' | 'ALLOWED'
@@ -91,6 +98,12 @@ interface Finding {
   before?: unknown
   after?: unknown
   why?: string
+  /**
+   * When the row behind this finding was written, where the row itself says so
+   * (plant_combinations.created_at). Plant findings leave this unset — their
+   * timestamp lives in afterPlants and is looked up by id in applyClearedAt.
+   */
+  writtenAt?: string
 }
 
 // rounds/<label>/scope-allow.json — the deliberate exceptions. `plant` matches
@@ -225,9 +238,11 @@ function readClearedAt(label: string): { at: string; why: string } | null {
  * style pass — correctly detected, and about a round that had been finished for
  * a day.
  *
- * Keyed on plants.updated_at, so it only covers plant findings. A combination
- * finding has no timestamp to judge and stays where it was; if a later session
- * adds pairs between old plants, waive them by name like anything else.
+ * Plant findings are keyed on plants.updated_at, looked up by id. An
+ * added-pairing finding carries its own writtenAt (plant_combinations has had
+ * created_at since the initial schema — trap 16 believed otherwise, corrected
+ * 2026-08-13). A REMOVED pairing still has no timestamp to judge — the row is
+ * gone — so it stays where it was; waive it by name like anything else.
  *
  * This narrows what a check FAILS on. It does not hide anything: the findings
  * stay in the report under their own level, counted and labelled.
@@ -243,13 +258,14 @@ function applyClearedAt(
     afterPlants.map((r) => [String(r.id), String(r.updated_at ?? '')])
   )
   return findings.map((f) => {
-    if (f.level !== 'FAIL' || !f.id) return f
-    const updated = Date.parse(updatedById.get(f.id) ?? '')
-    if (!Number.isFinite(updated) || updated <= closed) return f
+    if (f.level !== 'FAIL') return f
+    const written = f.writtenAt ?? (f.id ? updatedById.get(f.id) : undefined)
+    const writtenMs = Date.parse(written ?? '')
+    if (!Number.isFinite(writtenMs) || writtenMs <= closed) return f
     return {
       ...f,
       level: 'ALLOWED',
-      why: `written ${updatedById.get(f.id)}, after this round closed at ${cleared.at} — ${cleared.why}`,
+      why: `written ${written}, after this round closed at ${cleared.at} — ${cleared.why}`,
     }
   })
 }
@@ -353,6 +369,9 @@ function checkCombos(
 
   const beforeKeys = new Set(before.map(key))
   const afterKeys = new Set(after.map(key))
+  const createdByKey = new Map(
+    after.map((r) => [key(r), String(r.created_at ?? '')])
+  )
   const outOfScope = (k: string) => !k.split('|').some((id) => seeded.has(id))
 
   for (const k of afterKeys) {
@@ -362,6 +381,7 @@ function checkCombos(
       check: 'out-of-scope pairing added',
       plant: label(k),
       detail: 'both plants predate the round',
+      writtenAt: createdByKey.get(k) || undefined,
     })
   }
   for (const k of beforeKeys) {

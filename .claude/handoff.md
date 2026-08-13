@@ -27,48 +27,44 @@ gh pr list --state open                 # what is open
 git worktree list                       # who else is working, and where
 git branch --list 'session/*'           # session branches alive
 gh run list --branch main --limit 5     # did CI pass on main
-gh secret list                          # which repo secrets exist
-lsof -nP -iTCP:3000 -sTCP:LISTEN        # is :3000 free for a real sign-in
 cd apps/web && pnpm migrations:check            # is the live schema what the repo says
 cd apps/web && pnpm catalog:state:check         # is the catalog doc stale
-cd apps/web && pnpm round:progress --round <n>  # what a round still owes
+supabase start -x studio,realtime,storage-api,imgproxy,edge-runtime,inbucket,vector,logflare  # the light local stack (rule 11)
 ```
 
 ---
 
-## 2026-07-31 — harness session, directly on main (no branch)
+## 2026-08-13 — session/2026-08-13-local-stack
 
-**In flight: nothing.** This session added the `/curation-round` skill and three
-PreToolUse guards (shared-checkout HEAD moves, `next build` during `next dev`,
-blind `--all` catalog runs), committed as `e8708ea` directly on main — no
-worktree existed and no other session was live — and pushed. No app code
-touched, so no build was run; the guards were tested against synthetic payloads
-(all deny/allow/bypass cases pass) and `settings.json` validates. **Hooks arm
-from the next session** — hook config is read at session start — so the first
-session that trips one should sanity-check the message and its bypass marker.
+**In flight: this branch, unmerged.** The local Supabase stack now exists and
+the whole rule-11 backlog cleared through it in one session: pre-migration
+backup taken, all 35 migrations replayed clean, `pg_restore` rehearsed (every
+table count matched live), and two migrations pushed to prod by Ana
+(`20260813110500` reviewed-and-kept stamp + 151-row backfill, `20260813120000`
+explicit table grants). `migrations:check` is green: 37 committed = 37 applied.
+Full detail in the 2026-08-13 entry in `docs/database-log.md`.
 
-**Standing item — carried from 2026-07-30, Ana's instruction. Leave it.**
-The 151 kept `native_to` rows live in
-`apps/web/reference/native-to-review-2026-07-30.json`, not in catalog state, so
-`cross-check-native-to` will re-rank them on any later run — expected, not a
-regression. The "reviewed and kept" stamp is a migration queued behind standing
-rule 11. Do not re-review, rebuild, or store the verdict anywhere else.
+**Two findings worth knowing before trusting old text:** trap 16's premise was
+false (`plant_combinations.created_at` existed since the initial schema — the
+fix was code-only, round 9 now exits 0 FAIL), and new trap 25 (production's
+table grants existed in no migration; a fresh replay was unreadable by the app
+until `20260813120000`). Both recorded in the traps section.
 
-```bash
-grep -A 12 'Queued behind this rule' docs/database-log.md  # what is still queued behind rule 11
-ls supabase/migrations | wc -l                             # 35 means no new migration has landed
-```
+**The 151 kept `native_to` rows are now stamped in the database** —
+`native_to_reviewed_at`, trigger-cleared on phrase edits. The 2026-07-30
+standing item is closed; `cross-check-native-to` excludes stamped rows from its
+gap queue and says how many it held out.
 
 **Next steps, in order:**
 
-1. **A local Supabase stack — carried, still the trigger for the queued schema
-   changes.** Rule 11 holds the stack command, the restore rehearsal it owes,
-   and the migration order. If you bring the stack up and apply nothing, say so
-   in that session's entry.
+1. **Merge this branch** (PR review, then delete the worktree per session-end).
+   Everything on it is docs, scripts, and the two already-pushed migrations —
+   prod already runs the schema this branch records, so an unmerged branch is
+   the drift.
 2. **Remaining hook candidates, when Ana asks ("later", 2026-07-31):**
    database-log nag after catalog scripts run, SessionStart node-version check
-   against `.nvmrc`, and a `.env.local` staging guard. Reasoning for the split
-   (what hooks can and cannot check) is in this date's Notion Session Log entry.
+   against `.nvmrc`, and a `.env.local` staging guard. Reasoning in the
+   2026-07-31 Notion Session Log entry.
 3. **Nothing is owed on the catalog.** Pipeline finished, further rounds
    optional (July 29 ruling). Before any long AI pass, traps 23 and 24 in
    `docs/database-log.md`.
