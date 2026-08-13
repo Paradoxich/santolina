@@ -16,7 +16,7 @@ Read, in this order, in full — not from memory of a previous session:
 1. `docs/round-runbook.md` — the generated step order. It is generated from the
    array `run-round.ts` executes, so it is the authority on what runs and when.
 2. `docs/curation.md` — the reasoning behind the shape, especially the
-   [round-runbook section](../../docs/curation.md#round-runbook) and the
+   [round-runbook section](../../../docs/curation.md#round-runbook) and the
    sections for whichever passes this round touches.
 3. `docs/database-log.md` — the **standing rules** and the **entire traps
    section**. The traps list grows; a summary you remember is stale by
