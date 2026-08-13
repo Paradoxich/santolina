@@ -428,10 +428,13 @@ arithmetic. Computing at render time makes staleness structurally impossible.
 The same reasoning governs the weather forecast ([weather](#weather)) and, for a
 while, care tips.
 
-The algorithm and its known limitation — a bloom window crossing December into
-January breaks the `min`/`max` boundary, and no catalog plant currently does —
-are documented on the function itself, which is the only place they can be
-checked against the code.
+The window is circular — a December→March bloomer is one window, so winter
+bloomers get the right pre-bloom/done months and the right next-bloom
+lookahead. The algorithm and its remaining assumption (one contiguous window
+per year) are documented on the function itself, which is the only place they
+can be checked against the code. An earlier version broke on December-wrapping
+windows behind a comment claiming no catalog plant had one; twelve did by
+round 10, which is why the comment no longer states catalog counts.
 
 <a id="weather"></a>
 
