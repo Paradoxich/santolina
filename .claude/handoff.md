@@ -34,17 +34,16 @@ supabase start -x studio,realtime,storage-api,imgproxy,edge-runtime,inbucket,vec
 
 ---
 
-## 2026-08-13 — session/2026-08-13-colour-bucket-rule, merged as `d0bf953`
+## 2026-08-13 — blog-evidence scan + fix/bloom-status-wrap, merged as PR #159 (`d27f04f`)
 
-**In flight: nothing.** Second session today (the local-stack session merged
-and closed this morning). This one closed the round 8 colour-bucket backlog
-item: the mixed-foliage rule (ground colour, not marking) is written into
-`lib/foliage-colors.ts` — comment-only, merged as `a46561d`, worktree and
-branch removed. The item's Aucuba rider was stale (prod already `true` since
-2026-07-28; no data touched), and the Pro item's "no backup at all" warning
-predated the July 30 backups session — both Notion backlog notes corrected in
-place. Detail: today's Notion Session Log page. **Main is not pushed** —
-`d0bf953` and the handoff commit exist only locally.
+**In flight: nothing.** Third session today. Gathered the evidence for the
+part-3 database post (findings: today's Notion Session Log entry and the
+2026-08-13 database-log entry), then fixed what the scan surfaced: the
+December-wrap `getBloomStatus` bug (PR #159, merged), the Calico aster rename
+and the wallflower hero ingest (both direct guarded writes, logged). No-image
+plants is 0/695 for the first time. The colour-bucket session's local-only
+commits (`d0bf953` + handoff) were still unpushed when PR #159 landed on
+origin; reconciled with merge `4de33f8`, everything pushed.
 
 **Standing shape (unchanged):** any migration session is laptop
 `pnpm db:backup` → local replay → restore rehearsal → `db push`, per rule 11.
@@ -52,15 +51,19 @@ Docker is capped at 8 GB and Docker Desktop does not auto-start.
 
 **Next steps, in order:**
 
-1. **Pick the next build item from the Notion Build Backlog** — dashboard
+1. **Ana drafts post 3** — the evidence pack is in today's Notion Session Log
+   entry (incidents with numbers, the two corrected figures, the
+   diary-post-overlap warning). The December-wrap incident now has its ending
+   (found and fixed same afternoon), which is the shape posts 1 and 2 ran on.
+2. **Pick the next build item from the Notion Build Backlog** — dashboard
    polish and the 8 audit findings are the queued front-end thread (Notion
-   Session Log, sidebar-redesign entry). The database column is now clean:
+   Session Log, sidebar-redesign entry). The database column is clean:
    nothing owed, remaining items are trigger-gated or Ana's decisions
    (Privacy Policy, Pro).
-2. **Nothing is owed on the database or the catalog.** Pipeline finished,
+3. **Nothing is owed on the database or the catalog.** Pipeline finished,
    further rounds optional (July 29 ruling). Before any long AI pass, traps 23
    and 24 in `docs/database-log.md`.
-3. **Remaining hook candidates, when Ana asks ("later", 2026-07-31):**
+4. **Remaining hook candidates, when Ana asks ("later", 2026-07-31):**
    database-log nag after catalog scripts run, SessionStart node-version check
    against `.nvmrc`, and a `.env.local` staging guard. Reasoning in the
    2026-07-31 Notion Session Log entry.
