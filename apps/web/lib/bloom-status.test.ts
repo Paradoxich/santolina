@@ -81,7 +81,7 @@ describe('getStageNote', () => {
 
   it('never pins an all-year bloomer to a window position', () => {
     const allYear = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
-    expect(getStageNote(allYear, inMonth(8))).toBe('In flower all year')
+    expect(getStageNote(allYear, inMonth(8))).toBe('Flowering all year')
   })
 
   it('always returns a non-empty string', () => {

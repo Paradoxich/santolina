@@ -111,7 +111,7 @@ export function getStageNote(
   if (status === 'done') return 'Flowering just finished'
 
   const bounds = windowBounds(bloomMonths)
-  if (!bounds) return 'In flower all year' // blooms all 12 months
+  if (!bounds) return 'Flowering all year' // blooms all 12 months
 
   if (status === 'resting') return `Blooms again in ${monthName(bounds.start)}`
 
