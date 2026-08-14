@@ -59,14 +59,14 @@ The numbers **in this file are different and must stay written down**: a dated s
 
 **Numbers are permanent IDs, never renumbered and never reused.** They are cited from code (`wcvp-lookup.ts`, `migration-drift.ts`, `image-probe.ts`) and from `curation.md`, so the order below is by shape, not by number. A new trap takes the next free number and files under whichever family it belongs to.
 
-Twenty-five traps are really four shapes. The entries are the worked examples that make a shape recognisable in the wild — someone who knows the four rules spots the next instance before it costs anything, which is more than someone who has read all twenty-four descriptions once. **Each family's rule is stated once, above its entries. Read that first.**
+Twenty-seven traps are really four shapes. The entries are the worked examples that make a shape recognisable in the wild — someone who knows the four rules spots the next instance before it costs anything, which is more than someone who has read all twenty-four descriptions once. **Each family's rule is stated once, above its entries. Read that first.**
 
 | family | what it is                                                        | entries                           |
 | ------ | ----------------------------------------------------------------- | --------------------------------- |
 | **A**  | a failure or narrower answer comes back shaped like a real result | 1, 1b, 10, 11, 15, 18, 19, 20, 23 |
-| **B**  | the record disagrees with what actually happened                  | 2, 4, 12, 13, 14, 16, 17, 25      |
+| **B**  | the record disagrees with what actually happened                  | 2, 4, 12, 13, 14, 16, 17, 25, 26  |
 | **C**  | one fact with two homes, and only one got updated                 | 3, 5, 22                          |
-| **D**  | facts about the outside world you cannot design away              | 6, 7, 8, 9, 21                    |
+| **D**  | facts about the outside world you cannot design away              | 6, 7, 8, 9, 21, 27                |
 
 A is the one that keeps recurring, and it is subtle every single time.
 
@@ -224,6 +224,41 @@ The fresh instance is not hypothetical: it is the disaster-recovery path. The `d
 
 Three things made it recur, all now closed: a silent skip and a real pass looked identical from outside (it **fails** now); the job name explained nothing (it is `catalog-state staleness (main only)` so a PR's SKIPPED states its own reason — do not shorten it); and the stale sentence had copies, in `ci.yml` twice, in trap 14, and in `.claude/handoff.md`. **Fixing one copy is what "we fixed it" meant the previous times.**
 
+#### 26. A NOT NULL DEFAULT makes "was this ever asked?" unanswerable, and the dead branch looks fine — ADDED 2026-08-14 (round 11)
+
+`curate-plants` has **never written a style tag**. Its guard was
+`if (plant.style_tags == null)`, and `style_tags` is `NOT NULL DEFAULT '{}'`, so
+the condition is unreachable: the field was never requested from the model and
+never written. Nothing errored, the pass reported 25/25 succeeded, and the code
+reads correctly — `[]` really is a valid style-neutral verdict, so testing the
+value looks like the careful thing to do.
+
+**The damage was the reasoning built on top.** On 2026-07-29 `curate-styles`
+left the round cadence because "curate-plants already does the job for a new
+seed". It did not. Then `backfill-guard-stamps` stamped
+`style_checked_at = ai_drafted_at` across rounds 9 and 10 to repair the stamps
+those (non-existent) writes should have left, on a header asserting they "wrote
+100 rows of perfectly good style_tags". **All 100 are empty**, and they are now
+stamped, so `curate-styles --new-only` skips them forever (trap 24's shape).
+125 plants were absent from Explore's style filter; a missing tag does not
+error, it just hides the plant (trap 5's shape).
+
+**Its stated witness proved the wrong proposition.** The backfill checked each
+row against the round manifest, which establishes that the row belongs to the
+round — never in doubt. Nothing checked `style_tags` was non-empty, the single
+fact the stamp asserts. **A proof of the wrong proposition is not a weaker
+proof; it is not a proof.**
+
+**Two rules.** Where a column has a non-null default, only a stamp can separate
+"judged, and the answer was empty" from "never asked" — the codebase already
+learned this once and added `greenery_checked_at` for the `false` default, and
+`style_tags` needed the same and did not get it. And before deleting a step
+because another one covers it, run the count that proves the cover.
+
+**Still open:** rounds 9 and 10's 100 rows. Repairing them reaches into frozen
+rounds, so it needs `--all --why` and its own entry, and `--new-only` will not
+select them — the stamp is the damage.
+
 #### 24. A guard stamp records that the check RAN, not that its finding was acted on — ADDED 2026-07-30
 
 A report-only `cross-check-native-region` run stamps `native_region_checked_at` on every row it decided, including the rows it decided were **wrong**. Nothing else revisits them: `--new-only` selects on the stamp, so a disagreement found and left unapplied is stamped out of every later sweep. Six rows sat in exactly that state, `Crocus speciosus` among them — tagged `Caucasus` alone while WCVP gave it Bulgaria, Iran, Krym, the Caucasus and Türkiye, so the Explore native filter hid it from the Balkan users it is native to.
@@ -282,6 +317,35 @@ Rounds run in `git worktree` checkouts, and a new one has no `reports/`, so ever
 
 Reading the wrong field names leaves the code undefined, every zone falls through as unmapped, and the plant ends up untagged — no error anywhere. See [native_region](curation.md#native-region).
 
+#### 27. A Latin epithet changes gender with its genus, so one species is spelled two ways — ADDED 2026-08-14 (round 11)
+
+Adjectival species epithets agree in grammatical gender with the genus, so
+moving a species between genera changes its ending. Exact-name matching — which
+this pipeline relies on everywhere, correctly, to avoid binding to a sibling
+species — misses the same plant spelled the other way. **Five instances in one
+25-plant round**, at two different stages:
+
+- **Seeding.** `Selinum wallichianum` is Trefle's `Ligusticopsis wallichian**a**`
+  and `Rhodochiton atrosanguine**us**` is `R. atrosanguine**um**`. The
+  `SYNONYM_GENERA` table cannot help: it is consulted only when the epithets
+  already match. Both reported `miss` — the guard working, not failing.
+- **WCVP lookup.** `Andropogon gerardii` matched GBIF only FUZZY →
+  `Andropogon gerard**i**`, so the check returned no-data — while GBIF carried
+  **60 WCVP rows** under that spelling. `Rhodochiton` again, this time yielding
+  a single thin row.
+
+**The fix differs by which side is thin, and the count decides.** 60 rows is a
+naming miss: `GBIF_NAME_ALIASES` in `wcvp-lookup.ts` asks GBIF the spelling it
+indexes and keeps the exact-match guard intact (loosening it to accept FUZZY
+would re-open trap 11). One row is not: that is a `NO_WCVP_DISTRIBUTION` case,
+the same call already made for `Viburnum davidii`. **Get the row count before
+choosing** — waiving a taxon with sixty rows of evidence records "upstream has
+no data" about data that exists.
+
+**A miss is the correct output here, so nothing alerts you.** Both stages
+reported cleanly and carried on; the only signal was a species quietly absent
+from a result set. Read the miss list.
+
 #### 21. `auth.admin.listUsers` 500s when `per_page` exceeds the user count — ADDED 2026-07-30
 
 `{"code":500,"error_code":"unexpected_failure","msg":"Database error finding users"}`. Reproduced against the REST endpoint with 5 users: `per_page=5` returns 200, `per_page=6` returns 500. Not the JS SDK — curl does it too. **The endpoint fails precisely when the user table is small**, so no fixed page size is safe as the count moves. Read `auth.users` through a `security definer` function instead (`expired_demo_users()`, migration `20260729164307`).
@@ -289,6 +353,42 @@ Reading the wrong field names leaves the code undefined, every zone falls throug
 ## Sessions
 
 <!-- Newest first. Append with: scripts/log-db-session.ts --round <label> -->
+
+### 2026-08-14 — Round 11
+
+**Branch** `session/2026-08-14-round-11`. Round; 25 seeded. The first with no theme: winter, modern/New-Perennial and climbers were each gap-tested and each came back ~70% already held — round 9's ratio for killing a theme — so this list is the residue of those probes. Reasoning in the commit message and `seed-round11.ts`'s header.
+
+**Changed**
+
+- New `seed-round11.ts` and `fix-round11-names.ts`; the name pass adds a collision pre-check round 8's version lacked, and it refused one of this round's own renames.
+- `curate-plants.ts` + `DbPlant`: the style guard keys on `style_checked_at` instead of the unreachable `style_tags == null` (trap 26). The false claim it rested on is corrected in `curate-plants.ts` and `backfill-guard-stamps.ts`.
+- `wcvp-lookup.ts`: `GBIF_NAME_ALIASES`, with a test that fails on a cross-genus entry (trap 27). `round-status.ts`: two `NO_WCVP_DISTRIBUTION` entries, each with the row count justifying it. `bloom-colors.ts`: `coral red`, `grey-blue` (trap 5, as every seed).
+
+**Database**
+
+- 695 → 720 species, 1735 → 1795 pairs; `is_curated` 265 → 285 (20 of 25 approved, 5 held on image confidence that survived `--verify`).
+- 13 common names corrected, one a real collision: Trefle's "Woodbine" for _Parthenocissus quinquefolia_ is _Lonicera periclymenum_, already held under it (trap 6).
+- `style_tags` written for all 25 — none had any (trap 26). Three `native_region` corrections: _Achnatherum calamagrostis_ lost an INTRODUCED region, _Cenolophium denudatum_ was rewritten east, _Andropogon gerardii_ went 5 → 10 regions once the alias let the lookup see it at all.
+- Two Wikimedia heroes sourced (_Hydrangea hydrangeoides_, _Ligusticopsis wallichiana_); plants with no image at all back to **0**.
+
+**Found**
+
+- Traps 26 (no style tag ever drafted; 100 rows of rounds 9/10 stamped as judged while empty) and 27 (gender-variant epithets — five instances in one 25-plant round).
+- Trap 24 fired exactly as written: the report-only cross-check left two corrections stamped-but-pending behind a one-line warning. Applied in the same session.
+- **Standing rule 1 and the runner disagree about where a backup lives.** The rule says the shared checkout so it survives `git worktree remove`; `resolveBaselineDir` scans `process.cwd()/backups` only, so obeying the rule makes `run-round` refuse to start. Copied the snapshot into the worktree — `run-round` has no `--baseline` passthrough, so the next round hits this too.
+
+**Not done**
+
+- Rounds 9 and 10's 100 style-less, stamped rows: frozen rounds, so repair needs `--all --why` and its own entry, and `--new-only` cannot select them. Ana's call.
+- _Cenolophium denudatum_'s correction rests on a single Level 3 row for three of its four added regions and drops Northern Europe from a plant called Baltic parsley — the one correction here worth re-reading.
+- _Hydrangea anomala_ and _H. petiolaris_ are now both in the catalog (Trefle holds both `accepted` at species rank, so nothing was deleted), leaving a beginner two near-identical climbing hydrangeas. Species-list judgment, so Ana's.
+- 5 held rows need new candidate photographs; 125 plants unrated for hardiness (parked track, correctly WARN).
+
+**Verified**
+
+- `verify-round --round 11`: 0 failures, all ten steps complete. `check-round-scope`: 0 out-of-scope changes, 0 waived — the first round needing none. Archive committed under `rounds/11/catalog/`. 208 unit tests pass; `check-bloom-colors` green across all 720.
+
+---
 
 ### 2026-08-13 — Two single-row editorial fixes and the December-wrap bloom bug, from the blog-evidence scan (not a round)
 

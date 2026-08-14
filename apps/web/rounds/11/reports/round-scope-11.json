@@ -1,0 +1,15 @@
+{
+  "round": "11",
+  "baseline": "/Users/paradoxich/Desktop/Coding/santolina-round-11/apps/web/backups/2026-08-14T10-50-32-590Z",
+  "window": "live",
+  "cleared_at": null,
+  "seeded_count": 25,
+  "plants_before": 695,
+  "plants_after": 720,
+  "counts": {
+    "fail": 0,
+    "allowed": 0,
+    "warn": 0
+  },
+  "findings": []
+}

@@ -1,0 +1,86 @@
+[
+  {
+    "id": "e954e957-79bd-420d-b77b-45093a026cc8",
+    "common_name": "Chilean glory flower",
+    "scientific_name": "Eccremocarpus scaber",
+    "url": "https://d2seqvvyy3b8p2.cloudfront.net/3fa21406f2722d7ba6798f48dd7f1f4e.jpg",
+    "prior_confidence": "medium",
+    "prior_reason": "Sharp close-up of clustered orange-yellow tubular flowers filling the frame against a natural green foliage background, clearly showing the plant's distinctive bloom shape, though a fly on one flower is a minor distraction.",
+    "species_match": "yes",
+    "hero_quality": "good",
+    "confidence": "high",
+    "reason": "Clusters of tubular orange-yellow flowers with hairy calyces on a vine with tendrils and small compound leaves, matching Eccremocarpus scaber, shot in good sunlight against a green foliage background."
+  },
+  {
+    "id": "787fc2a8-ffbf-4ec2-998a-e3137aae683c",
+    "common_name": "Purple love grass",
+    "scientific_name": "Eragrostis spectabilis",
+    "url": "https://bs.plantnet.org/image/o/c3406ab0c745dc3c62e0addd22a2edee43654b4c",
+    "prior_confidence": "medium",
+    "prior_reason": "Sharp overhead view of a full purple love grass clump showing its distinctive diffuse pinkish-purple inflorescence, filling the frame against a natural grassy background.",
+    "species_match": "yes",
+    "hero_quality": "good",
+    "confidence": "high",
+    "reason": "An overhead view of a diffuse, cloud-like clump of fine reddish-pink to purple grass inflorescences radiating outward, consistent with purple love grass, surrounded by green lawn grass."
+  },
+  {
+    "id": "2ea74371-9c10-4d5f-9606-9e52d55f37ab",
+    "common_name": "Big bluestem",
+    "scientific_name": "Andropogon gerardii",
+    "url": "https://bs.plantnet.org/image/o/b27e3d5c6a9d4816f2d133d743939aadaefc9832",
+    "prior_confidence": "medium",
+    "prior_reason": "Sharp close-up of the distinctive turkey-foot inflorescence with purple stigmas and orange anthers against a natural green background, clearly showing the diagnostic bloom feature of big bluestem.",
+    "species_match": "unsure",
+    "hero_quality": "acceptable",
+    "confidence": "medium",
+    "reason": "A tall grass with reddish-purple, finger-like seed head clusters against a plain vinyl siding wall, consistent with a bluestem grass but not confirmed to species from this angle alone."
+  },
+  {
+    "id": "0e9280a5-3a03-4761-aa5c-6a89b5b8aece",
+    "common_name": "Silver spear grass",
+    "scientific_name": "Achnatherum calamagrostis",
+    "url": "https://bs.plantnet.org/image/o/ff47b5b7e2f4c3f5ea7730b33776c1f9ae5b6750",
+    "prior_confidence": "medium",
+    "prior_reason": "Shows the full grass clump with its characteristic feathery plumes in a natural mountain setting, giving the best sense of the plant's habit and bloom, though the composition is a bit busy with background scenery.",
+    "species_match": "unsure",
+    "hero_quality": "good",
+    "confidence": "medium",
+    "reason": "A grass with feathery golden-green flowering plumes fills the foreground against a mountain valley backdrop with conifers and a waterfall; the growth habit and plume shape are consistent with Achnatherum calamagrostis but cannot be confirmed with certainty."
+  },
+  {
+    "id": "982be5c0-faf7-4f11-9b4a-6facbc202327",
+    "common_name": "Baltic parsley",
+    "scientific_name": "Cenolophium denudatum",
+    "url": "https://bs.plantnet.org/image/o/50ba12f0801edc0d50072de114dc3302e41ccac3",
+    "prior_confidence": "medium",
+    "prior_reason": "Shows the umbel flower heads clearly against a natural grassy background without any visible tags or labels, whereas A and B include a plastic plant label in frame.",
+    "species_match": "unsure",
+    "hero_quality": "acceptable",
+    "confidence": "medium",
+    "reason": "A tall umbellifer with compound umbels of small pale flowers/seed heads and finely divided leaves is shown against a blurred grassy background; the plant's features are broadly consistent with Cenolophium but cannot be confirmed to species from this view."
+  },
+  {
+    "id": "c295f59a-63ac-4e3b-8fcc-37f225692787",
+    "common_name": "Pale purple coneflower",
+    "scientific_name": "Echinacea pallida",
+    "url": "https://bs.plantnet.org/image/o/734f24cc66df2217879ed93bd9ed34aea5b18713",
+    "prior_confidence": "medium",
+    "prior_reason": "E shows a single sharp flower with the narrow, drooping pale pink petals characteristic of Echinacea pallida against a simple green garden background.",
+    "species_match": "unsure",
+    "hero_quality": "acceptable",
+    "confidence": "medium",
+    "reason": "A single coneflower with narrow, drooping pinkish-white ray petals and a spiky brownish-green center cone is shown atop a hairy green stem with lance-shaped leaves against a grassy background; the narrow petals suggest a pale coneflower but the species cannot be confirmed with certainty from this angle."
+  },
+  {
+    "id": "845912ef-0ef8-41b8-bc6d-6f86affb86b6",
+    "common_name": "Asian-jasmine",
+    "scientific_name": "Trachelospermum asiaticum",
+    "url": "https://bs.plantnet.org/image/o/504ea57c543905b9ab58f738291fa4758a8e608d",
+    "prior_confidence": "medium",
+    "prior_reason": "Sharp, well-composed close-up of a single white flower with clean green leaf background, clearly showing the species' bloom shape.",
+    "species_match": "unsure",
+    "hero_quality": "good",
+    "confidence": "medium",
+    "reason": "A close-up of a white five-petaled pinwheel-shaped jasmine-like flower with a yellow center among glossy green leaves, consistent with Trachelospermum but not definitively distinguishable from related jasmine species from this image alone."
+  }
+]

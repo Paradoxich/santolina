@@ -1,0 +1,45 @@
+{
+  "findings": [
+    {
+      "id": "2ea74371-9c10-4d5f-9606-9e52d55f37ab",
+      "common_name": "Big bluestem",
+      "scientific_name": "Andropogon gerardii",
+      "stored": [
+        "Eastern Canada",
+        "North-Central U.S.A.",
+        "Northeastern U.S.A.",
+        "South-Central U.S.A.",
+        "Southeastern U.S.A."
+      ],
+      "wcvp_native": [
+        "Central America",
+        "Eastern Canada",
+        "Mexico",
+        "North-Central U.S.A.",
+        "Northeastern U.S.A.",
+        "Northwestern U.S.A.",
+        "South-Central U.S.A.",
+        "Southeastern U.S.A.",
+        "Southwestern U.S.A.",
+        "Western Canada"
+      ],
+      "wcvp_introduced_only": [
+        "Indo-China",
+        "North-Central Pacific",
+        "Southwestern Europe"
+      ],
+      "native_l3_count": 57,
+      "missing": [
+        "Central America",
+        "Mexico",
+        "Northwestern U.S.A.",
+        "Southwestern U.S.A.",
+        "Western Canada"
+      ],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": [],
+      "verdict": "disagrees"
+    }
+  ]
+}

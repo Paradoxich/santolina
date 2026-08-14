@@ -1,0 +1,16 @@
+{
+  "round": "11",
+  "captured_at": "2026-08-14T11:51:50.618Z",
+  "baseline_dir": "/Users/paradoxich/Desktop/Coding/santolina-round-11/apps/web/backups/2026-08-14T10-50-32-590Z",
+  "baseline_source": "backups",
+  "counts": {
+    "before": {
+      "plants": 695,
+      "plant_combinations": 1735
+    },
+    "after": {
+      "plants": 720,
+      "plant_combinations": 1795
+    }
+  }
+}
