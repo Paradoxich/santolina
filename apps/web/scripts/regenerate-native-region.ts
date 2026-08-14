@@ -34,9 +34,9 @@
  *
  * Usage (from apps/web):
  *   ./node_modules/.bin/tsx --env-file=.env.local scripts/regenerate-native-region.ts --round 8
- *   ./node_modules/.bin/tsx --env-file=.env.local scripts/regenerate-native-region.ts --all
+ *   ./node_modules/.bin/tsx --env-file=.env.local scripts/regenerate-native-region.ts --all --why "<reason>"
  *   ./node_modules/.bin/tsx --env-file=.env.local scripts/regenerate-native-region.ts --round 8 --limit 20
- *   ./node_modules/.bin/tsx --env-file=.env.local scripts/regenerate-native-region.ts --apply
+ *   ./node_modules/.bin/tsx --env-file=.env.local scripts/regenerate-native-region.ts --round 8 --apply
  *
  * A scope (--round, --ids, or --all --why) is REQUIRED in both modes; there
  * is no default. See the note above main(), and scripts/scope.ts.
@@ -505,10 +505,24 @@ async function generate(
     `fallback model calls: ${fallbackCount} | empty after regen: ${emptyNew.length} | unmapped L3: ${unknownCodes.size}`
   )
   console.log(`review -> ${PLAN_MD}`)
+  // The printed command must carry the scope: --apply without one exits 1
+  // (assertPlanScope needs a command line to compare the plan against).
   console.log(
-    `then apply -> ./node_modules/.bin/tsx --env-file=.env.local scripts/regenerate-native-region.ts --apply`
+    `then apply -> ./node_modules/.bin/tsx --env-file=.env.local scripts/regenerate-native-region.ts ${scopeFlags(scope)} --apply`
   )
   return plan
+}
+
+/** The scope, spelled back as the flags that reproduce it. */
+function scopeFlags(scope: Scope): string {
+  switch (scope.kind) {
+    case 'round':
+      return `--round ${scope.label}`
+    case 'ids':
+      return `--ids ${scope.ids.join(',')}`
+    case 'all':
+      return '--all --why "<same reason>"'
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -564,13 +578,28 @@ async function apply(cliScope: Scope): Promise<void> {
       'No plan found. Run the default (generate) mode and review it first.'
     )
   }
-  const { scope: planScope, plan } = JSON.parse(
-    readFileSync(PLAN_JSON, 'utf8')
-  ) as {
+  const {
+    scope: planScope,
+    generatedAt,
+    plan,
+  } = JSON.parse(readFileSync(PLAN_JSON, 'utf8')) as {
     scope?: unknown
+    generatedAt?: string | null
     plan: PlanEntry[]
   }
   assertPlanScope(planScope, cliScope)
+
+  // Age is printed, not enforced: the scope check above already blocks the
+  // accidental replay, and an --all plan is behind a typed --why. But the
+  // operator deciding "is this still the plan I reviewed?" needs the date in
+  // front of them, not in a gitignored file they would have to open.
+  if (generatedAt) {
+    const hours = (Date.now() - Date.parse(generatedAt)) / 3_600_000
+    console.log(
+      `Plan generated ${generatedAt} (${hours.toFixed(1)}h ago)` +
+        (hours > 24 ? ' — OLDER THAN A DAY; regenerate if in doubt.' : '')
+    )
+  }
 
   // Belt and braces: the scope check above proves the plan's PROVENANCE; this
   // guard proves each WRITE. A hand-edited plan row outside the round still
