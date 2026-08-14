@@ -161,11 +161,15 @@ async function main() {
   L.push(
     `| \`is_curated\` | editorially reviewed | ${count((p) => p.is_curated === true)} |`
   )
+  // Split on the STAMP, never the value: style_tags is NOT NULL DEFAULT '{}'
+  // so `=== null` is unreachable (trap 26) — the old NULL row here printed 0
+  // in all 16 committed versions while 100 unjudged rows sat in the neutral
+  // row above it, dressed as verdicts.
   L.push(
-    `| \`style_tags\` | style-neutral (\`[]\`, a valid judgment) | ${count((p) => Array.isArray(p.style_tags) && p.style_tags.length === 0)} |`
+    `| \`style_tags\` | style-neutral (stamped, \`[]\` — a valid judgment) | ${count((p) => p.style_checked_at != null && Array.isArray(p.style_tags) && p.style_tags.length === 0)} |`
   )
   L.push(
-    `| \`style_tags\` | never judged (NULL — a gap) | ${count((p) => p.style_tags === null)} |`
+    `| \`style_tags\` | never judged (\`style_checked_at\` NULL — a gap) | ${count((p) => p.style_checked_at == null)} |`
   )
   L.push(
     `| \`seasonal_care\` | null | ${count((p) => p.seasonal_care == null)} |`
