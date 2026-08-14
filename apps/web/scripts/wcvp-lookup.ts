@@ -99,10 +99,42 @@ async function gbifJson<T>(url: string): Promise<T> {
 
 const SPECIES_RANKS = new Set(['SPECIES', 'SUBSPECIES', 'VARIETY', 'FORM'])
 
+/**
+ * Catalog spelling → the spelling GBIF's backbone accepts, for ORTHOGRAPHIC
+ * VARIANTS ONLY — the same species, spelled differently, never a synonym and
+ * never a different taxon. GBIF's synonym handling is already correct and is
+ * left alone (`acceptedUsageKey` below); this exists solely because a one-letter
+ * difference makes the exact-match guard reject a name GBIF holds in full.
+ *
+ * WHY IT IS SAFE. The guard below is not relaxed: the lookup still demands
+ * EXACT, at species rank, on the name it asked for — it just asks the spelling
+ * GBIF indexes. Loosening it to accept FUZZY instead would re-open trap 11,
+ * where an unknown binomial resolves upward into a whole genus.
+ *
+ * WHY IT IS NEEDED (round 11, 2026-08-14). `Andropogon gerardii` matched only
+ * FUZZY → `Andropogon gerardi`, so the lookup returned no-data and the round's
+ * verify failed — while GBIF carried **60 WCVP rows** under that spelling.
+ * Waiving it into NO_WCVP_DISTRIBUTION would have recorded "upstream has no
+ * data" about a taxon with sixty rows of it, which is the opposite of true.
+ *
+ * ADD AN ENTRY ONLY WITH THE COUNT THAT JUSTIFIES IT. Confirm by hand that the
+ * target spelling is the same species and returns WCVP rows; a fuzzy match that
+ * yields one thin row is a NO_WCVP_DISTRIBUTION case (see `Viburnum davidii`
+ * and `Rhodochiton atrosanguineum` there), not an alias.
+ */
+export const GBIF_NAME_ALIASES: Record<string, string> = {
+  // 60 WCVP rows under "gerardi"; both spellings are in botanical use for this
+  // species (Vitman's original vs the doubled-i correction).
+  'Andropogon gerardii': 'Andropogon gerardi',
+}
+
 /** Uncached lookup. Prefer `lookupSpecies` — this is what it calls on a miss. */
 export async function fetchSpecies(
   scientificName: string
 ): Promise<CachedSpecies> {
+  // Ask GBIF the spelling it indexes; every comparison below is against this,
+  // so the exact-match guard still applies to the name actually queried.
+  const queryName = GBIF_NAME_ALIASES[scientificName] ?? scientificName
   const match = await gbifJson<{
     usageKey?: number
     acceptedUsageKey?: number
@@ -110,7 +142,7 @@ export async function fetchSpecies(
     rank?: string
     canonicalName?: string
   }>(
-    `https://api.gbif.org/v1/species/match?strict=true&name=${encodeURIComponent(scientificName)}`
+    `https://api.gbif.org/v1/species/match?strict=true&name=${encodeURIComponent(queryName)}`
   )
 
   // GBIF answers an unknown binomial by walking UP the taxonomy rather than
@@ -131,7 +163,7 @@ export async function fetchSpecies(
   const exact =
     match.matchType === 'EXACT' &&
     SPECIES_RANKS.has(match.rank ?? '') &&
-    normalise(match.canonicalName ?? '') === normalise(scientificName)
+    normalise(match.canonicalName ?? '') === normalise(queryName)
   if (!exact)
     return {
       lookupKey: null,

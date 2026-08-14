@@ -143,9 +143,13 @@ function buildPrompt(plant: DbPlant): string {
       'hardiness_zone_max',
       'hardiness_confidence'
     )
-  // [] is a real judgment (style-neutral, per curate-styles.ts) — only NULL
-  // means the question was never asked.
-  if (plant.style_tags == null) missing.push('style_tags')
+  // [] is a real judgment (style-neutral, per curate-styles.ts), so the VALUE
+  // cannot say whether the question was asked — and `style_tags` is
+  // NOT NULL DEFAULT '{}', so the old `== null` test was unreachable and this
+  // pass never once drafted a style tag (round 11, 2026-08-14). The stamp is
+  // the only thing that can tell "judged style-neutral" from "never asked",
+  // exactly as `greenery_checked_at` does for the `false` default below.
+  if (!plant.style_checked_at) missing.push('style_tags')
   if (!plant.space_types?.length) missing.push('space_types')
   if (!plant.garden_use_tags?.length) missing.push('garden_use_tags')
   if (!plant.bloom_color?.length) missing.push('bloom_color')
@@ -315,14 +319,19 @@ function buildPatch(plant: DbPlant, response: CurationResponse): PlantPatch {
   //
   // STAMPED HERE TOO, even though `style_checked_at` is named after
   // curate-styles. That script owns the column in round-status's STEP_DEFS, and
-  // on 2026-07-29 it left the round cadence — correctly, because it is a repair
-  // pass for older data and this pass already does the job for a new seed, from
-  // the same shared definitions in lib/style-tags.ts. What nobody moved was the
-  // stamp, so every plant seeded since read as never style-judged: rounds 9 and
-  // 10 wrote 100 rows of perfectly good style_tags and docs/catalog-state.md
-  // reported style coverage sliding 50 rows a round. Removing a step means
-  // rehoming what it proved, not just deleting the call.
-  if (plant.style_tags == null && response.style_tags != null) {
+  // on 2026-07-29 it left the round cadence on the grounds that this pass
+  // already does the job for a new seed, from the same shared definitions in
+  // lib/style-tags.ts.
+  //
+  // CORRECTED 2026-08-14: it did not. The guard here was `style_tags == null`,
+  // and the column is NOT NULL DEFAULT '{}', so the branch was unreachable and
+  // this pass has never written a style tag. The claim that "rounds 9 and 10
+  // wrote 100 rows of perfectly good style_tags" — repeated in this comment and
+  // in backfill-guard-stamps.ts, and used to justify stamping them — was false:
+  // all 100 of those rows are empty. Verify a claim like that with a count
+  // before building on it. The guard is now the stamp, which is the only thing
+  // that can distinguish a style-neutral verdict from an unasked question.
+  if (!plant.style_checked_at && response.style_tags != null) {
     patch.style_tags = response.style_tags
     patch.style_checked_at = new Date().toISOString()
   }

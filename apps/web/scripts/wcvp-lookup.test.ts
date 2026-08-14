@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  GBIF_NAME_ALIASES,
   WCVP_SOURCE,
   noEvidenceReason,
   wcvpNativeLocalities,
@@ -94,5 +95,45 @@ describe('noEvidenceReason', () => {
     expect(noEvidenceReason(species([]))).toBe(
       'GBIF has the taxon but carries no WCVP distribution for it'
     )
+  })
+})
+
+// Levenshtein, small and local — only used to bound how far apart a spelling
+// variant may be below.
+function editDistance(a: string, b: string): number {
+  const d: number[][] = Array.from({ length: a.length + 1 }, (_, i) =>
+    Array.from({ length: b.length + 1 }, (_, j) =>
+      i === 0 ? j : j === 0 ? i : 0
+    )
+  )
+  for (let i = 1; i <= a.length; i++)
+    for (let j = 1; j <= b.length; j++)
+      d[i]![j] = Math.min(
+        d[i - 1]![j]! + 1,
+        d[i]![j - 1]! + 1,
+        d[i - 1]![j - 1]! + (a[i - 1] === b[j - 1] ? 0 : 1)
+      )
+  return d[a.length]![b.length]!
+}
+
+describe('GBIF_NAME_ALIASES', () => {
+  // The mistake this guards against is easy to make and silent: putting a
+  // genuine SYNONYM here (Schizophragma hydrangeoides → Hydrangea
+  // hydrangeoides, from this very round) instead of an orthographic variant.
+  // GBIF already resolves synonyms itself through acceptedUsageKey, so an
+  // alias that crosses taxa would fetch a DIFFERENT plant's distribution and
+  // report it as this one's — trap 11's damage arriving through the front door.
+  it('holds only same-genus spelling variants, never cross-taxon synonyms', () => {
+    for (const [from, to] of Object.entries(GBIF_NAME_ALIASES)) {
+      const [fromGenus, fromEpithet = ''] = from.toLowerCase().split(' ')
+      const [toGenus, toEpithet = ''] = to.toLowerCase().split(' ')
+
+      expect(fromGenus, `${from} → ${to} changes genus`).toBe(toGenus)
+      expect(fromEpithet, `${from} → ${to} is a no-op`).not.toBe(toEpithet)
+      expect(
+        editDistance(fromEpithet, toEpithet),
+        `${from} → ${to} is too far apart to be a spelling variant`
+      ).toBeLessThanOrEqual(2)
+    }
   })
 })

@@ -83,6 +83,7 @@ export const RAW_TO_BUCKET: Record<string, string> = {
   scarlet: 'red',
   'orange-red': 'red',
   'coral-red': 'red', // round 9, Kniphofia rooperi — see the compound rule below
+  'coral red': 'red', // round 11, Lonicera sempervirens — unhyphenated twin of the above
   // burgundy — the dark/moody bloom bucket
   burgundy: 'burgundy',
   maroon: 'burgundy',
@@ -137,6 +138,11 @@ export const RAW_TO_BUCKET: Record<string, string> = {
   'purple-blue': 'blue', // round 9, Festuca amethystina — compound rule above
   'pale blue': 'blue',
   'steel blue': 'blue',
+  // round 11, Eryngium giganteum. Compound rule: grey is not a bucket of its
+  // own, so it modifies rather than wins — unlike 'silver-blue' and
+  // 'lavender-blue', where the first word IS a bucket and takes it. 'steel
+  // blue' is the direct precedent: same greyed blue, already filed here.
+  'grey-blue': 'blue',
   'deep blue': 'blue',
   // green
   green: 'green',
