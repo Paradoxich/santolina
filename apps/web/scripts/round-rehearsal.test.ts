@@ -116,6 +116,20 @@ describe('a freshly seeded round owes every step', () => {
     expect(verify.complete).toBe(false)
   })
 
+  it('a drafted row without its style and greenery stamps does not close curate-plants', () => {
+    // Trap 26, pinned. The drafting call owns the style and greenery
+    // questions, so ai_drafted_at alone must never count as done — that is
+    // exactly the state the silent style no-op left rounds 9 and 10 in,
+    // and those rounds closed green.
+    const drafted: StatusRow = {
+      ...freshlySeededPlant(),
+      ai_drafted_at: '2026-08-14T00:00:00Z',
+    }
+    const status = computeStatus([drafted], noContext())
+    const draft = status.find((s) => s.step === 'curate-plants')!
+    expect(draft.complete).toBe(false)
+  })
+
   it('an empty round is vacuous for nothing — there is no work to misreport', () => {
     // Guard on the guard: `vacuous` must mean "this step's filter excluded
     // everything", not "the round has no plants". Otherwise a zero-plant round
