@@ -1,0 +1,79 @@
+{
+  "ran_at": "2026-08-14T11:16:18.293Z",
+  "model": "claude-sonnet-4-5",
+  "checked": 25,
+  "clean": 21,
+  "flagged": [
+    {
+      "id": "2ea74371-9c10-4d5f-9606-9e52d55f37ab",
+      "common_name": "Big bluestem",
+      "scientific_name": "Andropogon gerardii",
+      "flags": [
+        {
+          "field": "sun_requirements",
+          "severity": "minor",
+          "stored": ["full_sun", "partial_sun"],
+          "checked": ["full_sun"],
+          "detail": "partial overlap"
+        }
+      ]
+    },
+    {
+      "id": "57d66233-c50d-4933-aecc-24e33e48517b",
+      "common_name": "Maidenhair vine",
+      "scientific_name": "Muehlenbeckia complexa",
+      "flags": [
+        {
+          "field": "sun_requirements",
+          "severity": "minor",
+          "stored": ["full_sun", "partial_sun", "shade"],
+          "checked": ["full_sun", "partial_sun"],
+          "detail": "partial overlap"
+        }
+      ]
+    },
+    {
+      "id": "a2b8da23-281f-4c5d-86d6-19b541572b89",
+      "common_name": "Wallich milk parsley",
+      "scientific_name": "Ligusticopsis wallichiana",
+      "flags": [
+        {
+          "field": "sun_requirements",
+          "severity": "minor",
+          "stored": ["full_sun", "partial_sun"],
+          "checked": ["partial_sun", "shade"],
+          "detail": "partial overlap"
+        }
+      ]
+    },
+    {
+      "id": "b8bc0b3b-4940-45ac-a2cb-3bb302a0c9c9",
+      "common_name": "Heavenly-blue morning-glory",
+      "scientific_name": "Ipomoea tricolor",
+      "flags": [
+        {
+          "field": "hardiness_zone_min",
+          "severity": "minor",
+          "stored": null,
+          "checked": 10,
+          "detail": "one side has no value"
+        },
+        {
+          "field": "hardiness_zone_max",
+          "severity": "minor",
+          "stored": null,
+          "checked": 12,
+          "detail": "one side has no value"
+        },
+        {
+          "field": "sun_requirements",
+          "severity": "minor",
+          "stored": ["full_sun", "partial_sun"],
+          "checked": ["full_sun"],
+          "detail": "partial overlap"
+        }
+      ]
+    }
+  ],
+  "failures": []
+}

@@ -135,6 +135,19 @@ const NO_WCVP_DISTRIBUTION: Record<string, string> = {
   // unstamped rather than recorded as validated.
   'Bidens ferulifolia':
     'GBIF has the taxon, no WCVP distribution rows (round 10)',
+  // Round 11, both checked by hand against GBIF on 2026-08-14 before being
+  // written here — the discipline this list is under, since an entry claims
+  // upstream has nothing and a wrong claim hides real data.
+  'Vernonia noveboracensis':
+    'GBIF has the taxon (EXACT, usageKey 8271565) and returns 2 distribution rows, 0 of them WCVP (round 11)',
+  // The Viburnum davidii case exactly: species-rank match only via the gender
+  // variant "atrosanguineus", which carries a single WCVP row — too thin to
+  // validate a range against, so this is a no-data row and NOT a naming miss.
+  // Contrast Andropogon gerardii from the same round: its variant spelling
+  // carries 60 WCVP rows, so it is an alias (GBIF_NAME_ALIASES in
+  // scripts/wcvp-lookup.ts) and deliberately not listed here.
+  'Rhodochiton atrosanguineum':
+    'no species-rank GBIF match; gender variant R. atrosanguineus resolves but carries a single WCVP row (round 11)',
 }
 
 /** State a step needs beyond the plant row itself. */

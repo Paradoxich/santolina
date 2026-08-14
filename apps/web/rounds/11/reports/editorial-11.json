@@ -1,0 +1,518 @@
+{
+  "findings": [
+    {
+      "id": "55a49b7b-71eb-4e89-bf5a-53a461a0cdde",
+      "common_name": "Aromatic aster",
+      "scientific_name": "Symphyotrichum oblongifolium",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": false
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "845912ef-0ef8-41b8-bc6d-6f86affb86b6",
+      "common_name": "Asian-jasmine",
+      "scientific_name": "Trachelospermum asiaticum",
+      "image": {
+        "verdict": "open",
+        "reason": "image pass: medium confidence, and it SURVIVED the targeted re-check (pick-plant-images --verify) — the species could not be confirmed from this photo. Needs a new candidate image, not another check."
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": false
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": false,
+      "blockers": [
+        "image: image pass: medium confidence, and it SURVIVED the targeted re-check (pick-plant-images --verify) — the species could not be confirmed from this photo. Needs a new candidate image, not another check."
+      ]
+    },
+    {
+      "id": "982be5c0-faf7-4f11-9b4a-6facbc202327",
+      "common_name": "Baltic parsley",
+      "scientific_name": "Cenolophium denudatum",
+      "image": {
+        "verdict": "open",
+        "reason": "image pass: medium confidence, and it SURVIVED the targeted re-check (pick-plant-images --verify) — the species could not be confirmed from this photo. Needs a new candidate image, not another check."
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": false
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": false,
+      "blockers": [
+        "image: image pass: medium confidence, and it SURVIVED the targeted re-check (pick-plant-images --verify) — the species could not be confirmed from this photo. Needs a new candidate image, not another check."
+      ]
+    },
+    {
+      "id": "2ea74371-9c10-4d5f-9606-9e52d55f37ab",
+      "common_name": "Big bluestem",
+      "scientific_name": "Andropogon gerardii",
+      "image": {
+        "verdict": "open",
+        "reason": "image pass: medium confidence, and it SURVIVED the targeted re-check (pick-plant-images --verify) — the species could not be confirmed from this photo. Needs a new candidate image, not another check."
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": false
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": false,
+      "blockers": [
+        "image: image pass: medium confidence, and it SURVIVED the targeted re-check (pick-plant-images --verify) — the species could not be confirmed from this photo. Needs a new candidate image, not another check."
+      ]
+    },
+    {
+      "id": "e954e957-79bd-420d-b77b-45093a026cc8",
+      "common_name": "Chilean glory flower",
+      "scientific_name": "Eccremocarpus scaber",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": false
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "72163846-2c69-4244-b6f6-aa53fb1595c9",
+      "common_name": "Chinese trumpet-creeper",
+      "scientific_name": "Campsis grandiflora",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": false
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "858ac794-1901-4d4d-a17c-18198e37c469",
+      "common_name": "Clustered mountain-mint",
+      "scientific_name": "Pycnanthemum muticum",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": false
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "86aa9c2f-ecc7-4e54-9486-22f913cf4886",
+      "common_name": "Coral honeysuckle",
+      "scientific_name": "Lonicera sempervirens",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": false
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "6a0f58a4-0705-4da5-84e2-5677507c2663",
+      "common_name": "Cup plant",
+      "scientific_name": "Silphium perfoliatum",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": false
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "922f7961-3d4a-4074-abc8-29df0f18690a",
+      "common_name": "Cup-and-saucer-vine",
+      "scientific_name": "Cobaea scandens",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": false
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "89da2bce-c98d-4bcd-b2f8-342ebb3ee6ea",
+      "common_name": "Flame nasturtium",
+      "scientific_name": "Tropaeolum speciosum",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": false
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "b8bc0b3b-4940-45ac-a2cb-3bb302a0c9c9",
+      "common_name": "Heavenly-blue morning-glory",
+      "scientific_name": "Ipomoea tricolor",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": false
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "96881685-26b3-4bf0-b801-4666dd75a0b8",
+      "common_name": "Japanese climbing hydrangea",
+      "scientific_name": "Hydrangea petiolaris",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": false
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "3d9faa58-07f4-409b-b428-8481f387f899",
+      "common_name": "Japanese hydrangea vine",
+      "scientific_name": "Hydrangea hydrangeoides",
+      "image": {
+        "verdict": "pass",
+        "reason": "image pass: high confidence"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": true,
+        "before": "A climbing hydrangea with attractive lacecap flowers and glossy green leaves. It uses aerial roots to cling to walls and other structures, creating excellent coverage over time. The plant produces delicate white flowers in summer that contrast beautifully with the foliage.",
+        "after": "A climbing hydrangea that uses aerial roots to cling to walls and other structures, creating excellent coverage over time. Glossy green leaves provide the backdrop for lacecap flowers in summer. The white blooms are held in flat clusters above the foliage.",
+        "blind_verdict": "ok",
+        "blind_reason": ""
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "57d66233-c50d-4933-aecc-24e33e48517b",
+      "common_name": "Maidenhair vine",
+      "scientific_name": "Muehlenbeckia complexa",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": false
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "5845f508-3c75-400d-8b87-360fd10a1b3e",
+      "common_name": "Miss Willmott's ghost",
+      "scientific_name": "Eryngium giganteum",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": false
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "bb98305e-5498-4c0c-a1aa-a9ca5dea7b37",
+      "common_name": "New York ironweed",
+      "scientific_name": "Vernonia noveboracensis",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": false
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "c295f59a-63ac-4e3b-8fcc-37f225692787",
+      "common_name": "Pale purple coneflower",
+      "scientific_name": "Echinacea pallida",
+      "image": {
+        "verdict": "open",
+        "reason": "image pass: medium confidence, and it SURVIVED the targeted re-check (pick-plant-images --verify) — the species could not be confirmed from this photo. Needs a new candidate image, not another check."
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": false
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": false,
+      "blockers": [
+        "image: image pass: medium confidence, and it SURVIVED the targeted re-check (pick-plant-images --verify) — the species could not be confirmed from this photo. Needs a new candidate image, not another check."
+      ]
+    },
+    {
+      "id": "7a2b0613-7e5c-45bd-9932-f7c7b9484abf",
+      "common_name": "Pink muhly grass",
+      "scientific_name": "Muhlenbergia capillaris",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": false
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "cc1641e9-3b36-43e1-810e-59fdbe6b1798",
+      "common_name": "Purple bell vine",
+      "scientific_name": "Rhodochiton atrosanguineum",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": false
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "787fc2a8-ffbf-4ec2-998a-e3137aae683c",
+      "common_name": "Purple love grass",
+      "scientific_name": "Eragrostis spectabilis",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": false
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "0e9280a5-3a03-4761-aa5c-6a89b5b8aece",
+      "common_name": "Silver spear grass",
+      "scientific_name": "Achnatherum calamagrostis",
+      "image": {
+        "verdict": "open",
+        "reason": "image pass: medium confidence, and it SURVIVED the targeted re-check (pick-plant-images --verify) — the species could not be confirmed from this photo. Needs a new candidate image, not another check."
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": false
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": false,
+      "blockers": [
+        "image: image pass: medium confidence, and it SURVIVED the targeted re-check (pick-plant-images --verify) — the species could not be confirmed from this photo. Needs a new candidate image, not another check."
+      ]
+    },
+    {
+      "id": "bef544b5-fcc0-4e97-93f6-1317a4d27044",
+      "common_name": "Sweet Joe-Pye weed",
+      "scientific_name": "Eutrochium purpureum",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": false
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "b38873a7-fe11-4aeb-9ed4-f02540f4d9f3",
+      "common_name": "Virginia creeper",
+      "scientific_name": "Parthenocissus quinquefolia",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": false
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "a2b8da23-281f-4c5d-86d6-19b541572b89",
+      "common_name": "Wallich milk parsley",
+      "scientific_name": "Ligusticopsis wallichiana",
+      "image": {
+        "verdict": "pass",
+        "reason": "image pass: high confidence"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": false
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    }
+  ]
+}

@@ -115,6 +115,11 @@ export interface DbPlant {
   botanical_checked_at: string | null
   native_checked_at: string | null
   greenery_checked_at: string | null
+  // `style_tags` is NOT NULL DEFAULT '{}', so an empty list cannot be told from
+  // "never asked" without this. Its absence here is why curate-plants tested
+  // `style_tags == null` — a condition the column makes unreachable — and
+  // silently drafted no style tag for any round (found round 11, 2026-08-14).
+  style_checked_at: string | null
   created_at: string
   updated_at: string
 }

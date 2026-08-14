@@ -192,6 +192,23 @@ const STYLE_BACKFILL_ROUNDS = ['9', '10']
  * docs/catalog-state.md reported style coverage sliding 50 rows a round.
  * curate-plants now stamps as it writes; this is the one-time repair behind it.
  *
+ * ⚠ THE PARAGRAPH ABOVE IS FALSE, AND THIS SCRIPT ALREADY ACTED ON IT (found
+ * 2026-08-14, round 11). curate-plants never wrote a style tag at all: its
+ * guard read `style_tags == null` against a NOT NULL DEFAULT '{}' column, so
+ * the branch was unreachable. Rounds 9 and 10 did not write "100 rows of
+ * perfectly good style_tags" — all 100 are EMPTY, and this backfill stamped
+ * every one of them as style-judged. They are now invisible to
+ * `curate-styles --new-only`, which selects on `style_checked_at IS NULL`.
+ *
+ * The witness described below is the flaw worth reading twice: the manifest
+ * proves the row belongs to the round, which was never in doubt. Nothing here
+ * checked that `style_tags` was non-empty — the one fact the stamp asserts. A
+ * proof of the wrong proposition is not a weaker proof; it is not a proof.
+ *
+ * DO NOT re-run the style section to "repair" rounds 9/10 — the stamp is the
+ * damage. They need a real `curate-styles` pass scoped by `--round`, not
+ * `--new-only`, or the stamp must be cleared first.
+ *
  * THE WITNESS IS THE ROUND MANIFEST, which makes this per-row proof rather than
  * an inference. A row is stamped only if all three hold:
  *
