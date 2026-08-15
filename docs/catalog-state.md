@@ -40,16 +40,16 @@ One row per step that stamps a column, from the `STEP_DEFS` registry in
 | `curate-greenery` | `greenery_checked_at` | 720 / 720 | 100.0% |
 | `pick-plant-images` | `image_checked_at` | 720 / 720 | 100.0% |
 | `pick-plant-images --verify` | `image_verified_at` | 74 / 720 | 10.3% |
-| `curate-editorial` | `editorial_checked_at` | 301 / 720 | 41.8% |
+| `curate-editorial` | `editorial_checked_at` | 216 / 720 | 30.0% |
 
 ## Field coverage
 
 | field | state | count |
 | --- | --- | ---: |
 | `ai_drafted_at` | drafted | 720 |
-| `is_curated` | editorially reviewed | 285 |
-| `style_tags` | style-neutral (`[]`, a valid judgment) | 134 |
-| `style_tags` | never judged (NULL — a gap) | 0 |
+| `is_curated` | editorially reviewed | 206 |
+| `style_tags` | style-neutral (stamped, `[]` — a valid judgment) | 48 |
+| `style_tags` | never judged (`style_checked_at` NULL — a gap) | 0 |
 | `seasonal_care` | null | 0 |
 | `native_region` | empty | 3 |
 | `is_greenery` | true | 110 |
@@ -66,9 +66,9 @@ warns above that bar on every full run.
 
 | tag | plants | share |
 | --- | ---: | ---: |
-| cottage | 301 | 41.8% |
-| mediterranean | 162 | 22.5% |
-| wildflower | 108 | 15.0% |
-| lush | 106 | 14.7% |
-| classic | 101 | 14.0% |
-| modern | 100 | 13.9% |
+| cottage | 354 | 49.2% |
+| mediterranean | 195 | 27.1% |
+| classic | 119 | 16.5% |
+| wildflower | 117 | 16.3% |
+| modern | 112 | 15.6% |
+| lush | 108 | 15.0% |

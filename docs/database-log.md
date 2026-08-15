@@ -381,6 +381,30 @@ from a result set. Read the miss list.
 
 <!-- Newest first. Append with: scripts/log-db-session.ts --round <label> -->
 
+### 2026-08-15 — The trap-26 repair, and the upsert lockdown (not a round)
+
+**Branch** `session/2026-08-14-pipeline-audit`, same session past midnight.
+
+**Database**
+
+- `curate-styles --round 9` then `--round 10` (no `--new-only`): the 100
+  rows the deleted backfill had stamped as style-judged-while-empty were
+  re-judged blind — 86 tagged, 14 genuinely style-neutral. The fingerprint
+  `style_checked_at = ai_drafted_at AND style_tags = '{}'` went **100 → 0**;
+  never-judged is 0. Trap 26's "still open" rows are closed. Backups first:
+  catalog `2026-08-15T21-15-12` (shared checkout), db `2026-08-15T21-10-42`
+  (local + private bucket). `docs/catalog-state.md` regenerated: style-neutral
+  48, never judged 0 — the first honest style row since round 9.
+- F-0 lockdown migration `20260815230948_lock_down_upsert_trefle_plant`
+  written and replayed on the local stack: `proacl` is postgres+service_role
+  only, `search_path` pinned, body proven working in a rolled-back insert,
+  anon probe now 401/42501 (was 25006, i.e. reached the INSERT). **Prod apply
+  blocked by the session's permission gate — handed to Ana as one command.**
+  Until it runs, prod still has the PUBLIC grant.
+
+**Verified** — fingerprint query on prod (read-only), catalog-state diff,
+local psql ACL check + rolled-back function call.
+
 ### 2026-08-14 — The pipeline audit, and the witness fixes (not a round)
 
 **Branch** `session/2026-08-14-pipeline-audit`. Findings, refuted claims and
