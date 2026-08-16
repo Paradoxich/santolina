@@ -110,6 +110,46 @@ async function fetchCurrent(table: string): Promise<Map<string, Row>> {
   }
 }
 
+/**
+ * Columns a TRIGGER owns, so a difference in them is not a data difference.
+ *
+ * PREVENTIVE, AND MEASURED BEFORE BEING CALLED A FIX. The audit expected these
+ * columns to be inflating the count. They are not, today: against both phases
+ * of round 11's snapshot the old whole-row comparison and this one both report
+ * 100 rows (which are the trap-26 repair's 100, written after the snapshot).
+ * The reason is that a trigger-owned column rarely differs ALONE —
+ * `plants_set_updated_at` fires on writes that also change real data, and
+ * `trg_sync_sun_requirements` derives `sun_requirements` from the two sun
+ * arrays, which are themselves data.
+ *
+ * The case it is here for is the one where they do: an idempotent re-upsert
+ * (`seed-plants --include-existing` over rows with no gaps to fill) bumps
+ * `updated_at` on every row it touches and changes nothing else, so the next
+ * restore diff would read as "the whole catalog differs". A count that is
+ * always large is a count nobody reads, and that is how a stale snapshot gets
+ * restored over live work. The trigger-only figure is printed separately so the
+ * distinction stays visible instead of being silently absorbed.
+ *
+ * Key ORDER is normalised here for the same reason: the two sides come from
+ * different places, one a JSON file and one PostgREST, so the old comparison
+ * was one column reordering away from reporting a total mismatch. It agrees
+ * today — this keeps it agreeing.
+ */
+const TRIGGER_OWNED: Record<string, readonly string[]> = {
+  plants: ['updated_at', 'sun_requirements'],
+  plant_combinations: ['updated_at'],
+}
+
+function canonicalRow(row: Row, table: string): string {
+  const skip = new Set(TRIGGER_OWNED[table] ?? [])
+  return JSON.stringify(
+    Object.keys(row)
+      .filter((k) => !skip.has(k))
+      .sort()
+      .map((k) => [k, row[k]])
+  )
+}
+
 async function restoreTable(
   dir: string,
   table: string,
@@ -121,8 +161,20 @@ async function restoreTable(
 
   const changed = backedUp.filter((row) => {
     const now = current.get(row.id)
-    return !now || JSON.stringify(now) !== JSON.stringify(row)
+    return !now || canonicalRow(now, table) !== canonicalRow(row, table)
   })
+  // Rows whose ONLY difference is a column a trigger owns. Counted apart from
+  // `changed` rather than folded into it, because that is the difference
+  // between "this restore has real work to do" and "a trigger has fired since
+  // the snapshot was taken".
+  const triggerOnly = backedUp.filter((row) => {
+    const now = current.get(row.id)
+    if (!now) return false
+    return (
+      canonicalRow(now, table) === canonicalRow(row, table) &&
+      JSON.stringify(now) !== JSON.stringify(row)
+    )
+  }).length
   const missing = changed.filter((row) => !current.has(row.id)).length
   const backedUpIds = new Set(backedUp.map((r) => r.id))
   const createdSince = [...current.keys()].filter((id) => !backedUpIds.has(id))
@@ -130,7 +182,10 @@ async function restoreTable(
   console.log(`\n${table}:`)
   console.log(`  backup ${backedUp.length} rows, live ${current.size} rows`)
   console.log(
-    `  ${changed.length} row(s) differ (${missing} deleted since backup)`
+    `  ${changed.length} row(s) differ (${missing} deleted since backup)` +
+      (triggerOnly
+        ? `, plus ${triggerOnly} differing only in trigger-owned columns`
+        : '')
   )
 
   // A snapshot is a picture of one moment, and the catalog keeps moving after

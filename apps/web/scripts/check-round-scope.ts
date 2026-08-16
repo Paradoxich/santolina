@@ -66,6 +66,7 @@ import { readSnapshot, resolveBaselineDir } from './catalog-snapshot'
 import { fetchAllRows } from '../lib/paginate'
 import { getSupabaseAdmin } from '../lib/supabase-admin'
 import { readRoundManifest, roundDir, sanitizeLabel } from './round-manifest'
+import { isStampColumn } from './stamp-columns'
 
 type Row = Record<string, unknown>
 
@@ -83,10 +84,12 @@ type Row = Record<string, unknown>
 // 20260813110500) — same class as editorial_checked_at, which the suffix
 // pattern already covers: it records that a person read the row, never what
 // the row says.
-const isStampColumn = (column: string): boolean =>
-  column === 'updated_at' ||
-  column.endsWith('_checked_at') ||
-  column.endsWith('_reviewed_at')
+// The suffix vocabulary is shared with round-status.ts via ./stamp-columns.ts
+// since 2026-08-16; this file used to hold its own two of the three suffixes.
+// `updated_at` is local to this question: it is trigger-derived, so it is a
+// bookkeeping WRITE without being a stamp anyone claims.
+const isBookkeepingWrite = (column: string): boolean =>
+  column === 'updated_at' || isStampColumn(column)
 
 interface Finding {
   level: 'FAIL' | 'WARN' | 'ALLOWED'
@@ -307,7 +310,7 @@ function checkPlants(
       const a = canonical(old[column])
       const b = canonical(now[column])
       if (a === b) continue
-      if (isStampColumn(column)) {
+      if (isBookkeepingWrite(column)) {
         changedStamps.push(column)
         continue
       }
