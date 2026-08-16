@@ -37,41 +37,34 @@ supabase start -x studio,realtime,storage-api,imgproxy,edge-runtime,inbucket,vec
 
 ---
 
-## 2026-08-16 — Rule 14 gets a scan; the audit reports are records only
+## 2026-08-16 — The demo purge stops losing photos quietly
 
-**PR [#166](https://github.com/Paradoxich/santolina/pull/166) is MERGED** as
-`60dbece`; branch and worktree are gone. All seven checks re-run green on merged
-main, and the three main-only CI jobs run for the first time with `docs:claims`
-in the `check` job. Session entry in `docs/database-log.md`; Notion Session Log
-updated. **Nothing from this session is in flight.**
+**PR [#167](https://github.com/Paradoxich/santolina/pull/167) is MERGED** as
+`f872ad5`; branch and worktree are gone. CI green on the PR, all seven checks
+re-run green on merged main. **Nothing from this session is in flight.**
 
-**What is now live on main.** `pnpm docs:claims` makes standing rule 14
-executable and extends it past `database-log.md`. `invariants:check` gains shape
-13 (`HAND_ROLLED_PAGINATION`) and shape 14 (`OPEN_FINDINGS`, each entry carrying
-a witness that matches WHILE its defect is present, so it fails the day someone
-fixes it). **`pnpm backlog` now replaces most of what this file used to
-restate — run it before trusting any count below.**
+`OPEN_FINDINGS['demo-purge-swallows-storage-failure']` is CLOSED, 5 findings → 4. The decision it was blocked on, and the reason it is not a code comment: a
+storage failure does **not** block the account deletion. Storage and Postgres
+cannot be deleted atomically, so aborting on an external failure does not
+prevent loss — it converts one recoverable orphan into an unbounded queue of
+demo accounts that never expire behind a single bad object. The best-effort
+policy was right; the silence was the defect. Mechanism is in
+`lib/purge-demo-users.ts` and the new bullet in
+[private diary photos](../docs/architecture.md#diary-photos-private).
 
-**The two dated audit reports are records only now.** Every finding in both was
-re-verified against the code; the still-open ones are ratchet entries. Do not
-read either report to find out what is left.
+**A claim in that finding was overstated, and it changes what is still owed.**
+It called this the only case whose lost state cannot be reconstructed. Orphans
+are enumerable: upload paths are `{gardenId}/…` and `gardens` is a live table,
+so any object whose first path segment has no live garden is an orphan — from
+ANY source, including the four request-path callers that still shrug at a
+storage error. A service-role reconciliation sweep would find every one already
+sitting in the bucket. **Not built deliberately**: it deletes user photos on the
+basis of a computed diff, so it wants its own session, a dry run, and Ana's
+sign-off rather than a slip into a fix commit. It is a **Build Backlog row**,
+not a ratchet entry — nothing is defective today, so no witness would match.
 
-**One routed finding wants attention on its own merits, and waiting has a cost.**
-`purge-demo-users` discards a Storage deletion error and then deletes the user,
-cascading away the `diary_entries` rows holding `photo_urls` — the only pointer
-to those objects. It reports `photosRemoved: 0` with an empty failures list,
-which is indistinguishable from a clean purge. User data, private
-`diary-photos` bucket, running in production on Vercel Cron, and the only
-finding in either audit whose lost state cannot be reconstructed. Recorded as
-`OPEN_FINDINGS['demo-purge-swallows-storage-failure']`. Not fixed because
-whether a storage failure should also BLOCK the account deletion is a real
-decision, and today's best-effort behaviour is deliberate — it is blocked on
-that answer, not on implementation time. Every expired demo account until then
-is another chance to orphan photos silently, so it should not sit behind a long
-round by accident.
-
-**Next steps, in order. The order is unchanged from the previous entry — round
-12 was not run this session and nothing below was consumed.**
+**Next steps, in order. Round 12 was not run this session; 1 through 5 are
+carried forward unconsumed from the previous entry.**
 
 1. **Run round 12.** Nothing in the pipeline is waiting on more infrastructure.
    Two behaviours nobody has watched yet, both intended, both worth reading the
@@ -132,20 +125,22 @@ decides whether they join `REQUIRED_DRAFTED_FIELDS`. Plus a Build Backlog row
 for the `curate-styles` withdrawal counter, which #166 classified as design
 rather than a witness: its remedy is "count and print withdrawn approvals", so
 the defect is the absence of a number in a summary, and a regex asserting an
-absence stays true forever whether or not anyone acts.
+absence stays true forever whether or not anyone acts. Plus a second Build
+Backlog row for the orphaned-photo reconciliation sweep described above.
 
 **Standing:** the next audit is round 12's close or 2026-09-14, whichever first,
 early if a PR adds a stamp column, adds a script, or touches
 `upsert_trefle_plant`. It should come back **shorter**; if it does not, the
 diagnosis was wrong and gets redone rather than the fixes repeated. Fresh session.
 
-**What this session adds to the same lesson.** The rule against unchecked claims
-was itself an unchecked claim, and the sentence it failed on had already been
-found stale by an audit, hand-corrected, and gone stale again two days later. The
-scan written to fix that shipped a check that could not fail — `String.replace`
-with a string pattern substitutes only the first occurrence — and it was found by
-mutating the docs, not by rereading the code. **Break a new check on purpose
-before you believe it**, which is the same conclusion as the last three sessions
-and is now cheap to act on.
+**What this session adds to the same lesson.** Breaking the new check on purpose
+is now habit, and it paid twice. The new test was mutated before being believed
+(restoring the swallow reds 3 of them). And the fix's own first draft counted
+removed objects from `remove()`'s `data` array — until the vendored types showed
+its documented example returning `data: []` for a delete that SUCCEEDED
+(`@supabase/storage-js` 2.110.2). That would have replaced a wrong number with a
+differently wrong number that looked measured. **A count is only as good as the
+contract underneath it**; read the contract in `node_modules`, which is the
+version actually running, rather than the vendor's website.
 
 **Open questions:** none.
