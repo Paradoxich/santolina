@@ -34,21 +34,51 @@ supabase start -x studio,realtime,storage-api,imgproxy,edge-runtime,inbucket,vec
 
 ---
 
-## 2026-08-14 — Round 11, and the style-tag bug it uncovered
+## 2026-08-15/16 — The pipeline audit, its fixes, and the schema design review
 
-**In flight: branch `session/2026-08-14-round-11`, 2 commits (`83b1912`, `d939bb3`), NOT pushed.** Worktree `../santolina-round-11`. Ana has not called merge yet.
+**In flight: nothing.** PR [#161](https://github.com/Paradoxich/santolina/pull/161)
+merged as `a651cb4`, branch and worktree gone, CI green on main. Round 11's
+branch merged earlier as #160. Reports: `docs/pipeline-audit-2026-08-14.md`,
+`docs/schema-design-review-2026-08-14.md`; the two session entries in
+`docs/database-log.md`.
 
-Round 11 seeded 25 species (695 → 720 plants, 1735 → 1795 pairs). `verify-round` 0 failures, `check-round-scope` 0 out-of-scope and 0 waived — first round needing no waivers. No-image plants: 0. Full entry and traps 26/27 in `docs/database-log.md`.
+**Applied to production, both verified by query, not by output:** migration
+`20260815230948` (Ana ran the push; `upsert_trefle_plant` is service_role only,
+`search_path` pinned, anon probe 401), and the trap-26 repair — the 100
+fabricated style stamps re-judged, fingerprint `style_checked_at =
+ai_drafted_at AND style_tags = '{}'` at 0, `catalog-state.md` regenerated.
 
-**The round was run to test the pipeline, and it found a three-week-old silent bug.** `curate-plants` had never written a style tag (unreachable guard against a `NOT NULL DEFAULT '{}'` column), and the belief that it did was used to stamp 100 rows of rounds 9/10 as style-judged while empty. Fixed for new rounds; the 100 old rows are untouched.
+**Next steps, in order. The first four are one session, and they gate round 12:**
 
-**Next steps, in order:**
+1. **Consolidate the species resolver** — spec is artifact (c) of the schema
+   review. First because seeding before it repeats round 11's 12 lost synonym
+   groups, and a duplicate species is the one failure a later pass cannot undo.
+2. **Land the pre-merge mechanical check** — artifact (b), a 7-shape table with
+   today's violation counts. Needs one decision from Ana at the start: vitest
+   file or CI script (the review recorded a genuine dissent and refused to
+   settle it). Second because 3 and 4 decay without it.
+3. **The CLAUDE.md trap-closure rule** — artifact (a), verbatim; ship it in the
+   same change as test citations on traps 3, 24 and 26, or its own exemplars
+   fail it.
+4. **`cross-check-native-to`'s stamp discipline** — the F2 sibling left
+   deliberately unfixed: it stamps `no_data`, and `apply-native-to-fixes.ts`
+   is in no runbook step. Not blind-copied from F2 because its trigger and
+   verdict set differ; reason it through.
+5. **Then the cheap hygiene**, any order: `REQUIRED_DRAFTED_FIELDS` + prose
+   fields while violations are 0; one shared `STAMP_SUFFIXES`; migration-drift
+   content check; `restore-catalog` diff excluding trigger-derived columns.
+   Everything else is the review's explicit "can wait" list.
 
-1. **Ana wants a full multi-agent pipeline audit, in a fresh session** (this one's context was too large). She asked the right question — "each session adds scripts and something new always breaks". The numbers that frame it: **72 scripts, 6 test files.** The audit's questions, each of which would have caught a real past failure: does every field that should be written have proof it was written; does every stamp column have exactly one writer; **is every "is this missing?" predicate reachable given that column's DB default** (this one finds trap 26 mechanically, in seconds); which of the 72 scripts are dead, duplicated or spent one-time repairs; which of the 27 traps could be a test instead of a paragraph.
-2. **Do this first, it is ten minutes and it is still open:** `curate-styles` is `perRound: false` in `round-status.ts`, so `verify-round` never checks style tags when a round closes — the exact hole trap 26 fell through. **My fix to `curate-plants` has never actually executed** (every one of the 720 rows now carries `style_checked_at`, so the path cannot fire until the next seed). Types and 208 tests pass; that is not the same as working, per standing rule 7. Making the round-close check cover style means it does not matter whether the fix is right — a silent no-op fails the round instead of hiding for three weeks.
-3. **Four decisions waiting on Ana**, all in the round-11 log entry: the 100 style-less stamped rows of rounds 9/10 (frozen rounds — needs `--all --why`); `Hydrangea anomala` vs `H. petiolaris` both in catalog (Trefle holds both accepted, so nothing was deleted, but a beginner sees two near-identical climbing hydrangeas); `Cenolophium denudatum`'s region correction (thin evidence, drops Northern Europe from a plant called Baltic parsley); 5 rows held for want of a usable photograph.
-4. **Backlog additions this session** (Notion): editorial pass over rounds 1–6 (418 plants never examined, ~$10–20 and one session), and the `modern` style tag under-reporting on herbaceous perennials (a re-tag, not a round).
+**Waiting on Ana, unchanged from round 11:** the two climbing hydrangeas, the
+`Cenolophium` region correction (also one of the two round-11 rows stamped
+with a correction still pending — the F2 fix prevents new ones, it did not
+repair those), the 5 photo holds, the rounds 1–6 editorial pass, the `modern`
+re-tag.
 
-**Known friction, will recur next round:** standing rule 1 says take the pre-seed backup in the shared checkout (so it survives `git worktree remove`), but `resolveBaselineDir` only scans `process.cwd()/backups`, so obeying the rule makes `run-round` refuse to start. Copy the snapshot into the worktree; there is no `--baseline` passthrough on `run-round`.
+**Standing, new:** the next audit is scheduled, not suspicion-triggered —
+round 12's close or 2026-09-14, whichever first, early if a PR adds a stamp
+column, adds a script, or touches `upsert_trefle_plant`. It should come back
+**shorter** than this one; if it does not, the diagnosis was wrong and gets
+redone rather than the fixes repeated. Start it in a fresh session.
 
-**Open questions:** whether to merge this branch as-is or fold the audit's fixes in first.
+**Open questions:** only the vitest-vs-CI-script choice in step 2.
