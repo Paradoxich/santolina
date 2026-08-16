@@ -39,35 +39,36 @@ supabase start -x studio,realtime,storage-api,imgproxy,edge-runtime,inbucket,vec
 
 ## 2026-08-16 — Rule 14 gets a scan; the audit reports are records only
 
-**In flight: PR [#166](https://github.com/Paradoxich/santolina/pull/166), branch
-`session/2026-08-16-doc-structure`, worktree
-`../santolina-worktrees/doc-structure`, 3 commits, CI green, LEFT FOR REVIEW at
-Ana's call.** Nothing depends on it and round 12 is unaffected either way. It
-changes CI, three shared docs and both session skills, which is why it is worth
-a read before it lands. Session entry in `docs/database-log.md`; Notion Session
-Log updated.
+**PR [#166](https://github.com/Paradoxich/santolina/pull/166) is MERGED** as
+`60dbece`; branch and worktree are gone. All seven checks re-run green on merged
+main, and the three main-only CI jobs run for the first time with `docs:claims`
+in the `check` job. Session entry in `docs/database-log.md`; Notion Session Log
+updated. **Nothing from this session is in flight.**
 
-**Read the PR body first if you are reviewing** — it carries the reasoning,
-including two things that were deliberately NOT done and why.
+**What is now live on main.** `pnpm docs:claims` makes standing rule 14
+executable and extends it past `database-log.md`. `invariants:check` gains shape
+13 (`HAND_ROLLED_PAGINATION`) and shape 14 (`OPEN_FINDINGS`, each entry carrying
+a witness that matches WHILE its defect is present, so it fails the day someone
+fixes it). **`pnpm backlog` now replaces most of what this file used to
+restate — run it before trusting any count below.**
 
-**What it adds, once merged** (none of these commands exist on main yet):
-`pnpm docs:claims` makes standing rule 14 executable and extends it past
-`database-log.md`; `invariants:check` gains shape 13 (`HAND_ROLLED_PAGINATION`)
-and shape 14 (`OPEN_FINDINGS`, each entry carrying a witness that matches WHILE
-its defect is present, so it fails the day someone fixes it); `pnpm backlog`
-prints the computed backlog. After merging, `pnpm backlog` replaces most of what
-this file used to restate.
+**The two dated audit reports are records only now.** Every finding in both was
+re-verified against the code; the still-open ones are ratchet entries. Do not
+read either report to find out what is left.
 
-**One item wants attention on its own merits, separately from the PR.**
+**One routed finding wants attention on its own merits, and waiting has a cost.**
 `purge-demo-users` discards a Storage deletion error and then deletes the user,
 cascading away the `diary_entries` rows holding `photo_urls` — the only pointer
 to those objects. It reports `photosRemoved: 0` with an empty failures list,
 which is indistinguishable from a clean purge. User data, private
 `diary-photos` bucket, running in production on Vercel Cron, and the only
 finding in either audit whose lost state cannot be reconstructed. Recorded as
-`OPEN_FINDINGS['demo-purge-swallows-storage-failure']` on the branch. Not fixed
-there because whether a storage failure should also BLOCK the account deletion
-is a real decision, and today's best-effort behaviour is deliberate.
+`OPEN_FINDINGS['demo-purge-swallows-storage-failure']`. Not fixed because
+whether a storage failure should also BLOCK the account deletion is a real
+decision, and today's best-effort behaviour is deliberate — it is blocked on
+that answer, not on implementation time. Every expired demo account until then
+is another chance to orphan photos silently, so it should not sit behind a long
+round by accident.
 
 **Next steps, in order. The order is unchanged from the previous entry — round
 12 was not run this session and nothing below was consumed.**
@@ -123,7 +124,7 @@ is a real decision, and today's best-effort behaviour is deliberate.
    files an empty record. And 21 of 30 traps are unpinned, with the reasons per
    trap; trap 1 is the cheapest and highest-consequence.
 
-**Waiting on Ana:** merge or close #166. The two climbing hydrangeas, the
+**Waiting on Ana:** the two climbing hydrangeas, the
 `Cenolophium` region correction, the 5 photo holds, the rounds 1-6 editorial
 pass, the `modern` re-tag, and whether an empty `common_issues` /
 `environment_benefits` is legitimate (21 and 4 drafted rows) — that last one
