@@ -54,12 +54,36 @@ ai_drafted_at AND style_tags = '{}'` at 0, `catalog-state.md` regenerated.
    review. First because seeding before it repeats round 11's 12 lost synonym
    groups, and a duplicate species is the one failure a later pass cannot undo.
 2. **Land the pre-merge mechanical check** — artifact (b), a 7-shape table with
-   today's violation counts. Needs one decision from Ana at the start: vitest
-   file or CI script (the review recorded a genuine dissent and refused to
-   settle it). Second because 3 and 4 decay without it.
-3. **The CLAUDE.md trap-closure rule** — artifact (a), verbatim; ship it in the
-   same change as test citations on traps 3, 24 and 26, or its own exemplars
-   fail it.
+   today's violation counts. **Decided 2026-08-16: CI script**
+   (`scripts/check-pipeline-invariants.ts`, `pnpm invariants:check`, wired
+   after `docs:links`), on the `tokens:check` / `runbook:check` / `docs:links`
+   precedent — remedy-carrying error messages, and a ratchet that can print
+   "25 of 28 traps unpinned" on a green run instead of passing silently.
+   Boundary, so this does not become two homes: checks that CALL code stay in
+   vitest (`round-rehearsal.test.ts` already owns runbook/registry drift, do
+   not duplicate); checks that READ files as text go in the script. Second
+   because 3 and 4 decay without it.
+3. **The CLAUDE.md trap-closure rule, and the documentation-claim rules with
+   it** — artifact (a) verbatim, shipped in the same change as test citations
+   on traps 3, 24 and 26, or its own exemplars fail it. Queued alongside it
+   (2026-08-16), because every wrong claim this session was a hand-written
+   sentence and every existing doc guard checks form, not truth:
+   - **Every remediation carries a verification predicate, not just a
+     command** — the shape today's repair used ("fixed when
+     `style_checked_at = ai_drafted_at AND style_tags = '{}'` returns 0").
+     Remediations are the dangerous class: never falsified until the day
+     someone follows them, and trusted because they are in the traps file.
+     Trap 26's was one session from being run as written.
+   - **A comment that authorises a write cites the query proving its
+     premise** — `backfill-guard-stamps.ts`'s false header was the warrant
+     for stamping 100 rows.
+   - **Move "write the command, not the claim; the test is tense, not topic"
+     out of this file's header into `database-log`'s standing rules**, where
+     the violations actually happen. Where a status line already prints its
+     verifying query, delete the prose answer rather than keeping both.
+   - **Codify strike-and-annotate** (used here) as the correction form:
+     dated annotation, never overwrite, so the corrections accumulate into
+     evidence about which claim shapes rot.
 4. **`cross-check-native-to`'s stamp discipline** — the F2 sibling left
    deliberately unfixed: it stamps `no_data`, and `apply-native-to-fixes.ts`
    is in no runbook step. Not blind-copied from F2 because its trigger and
@@ -81,4 +105,4 @@ column, adds a script, or touches `upsert_trefle_plant`. It should come back
 **shorter** than this one; if it does not, the diagnosis was wrong and gets
 redone rather than the fixes repeated. Start it in a fresh session.
 
-**Open questions:** only the vitest-vs-CI-script choice in step 2.
+**Open questions:** none. The vitest-vs-CI-script choice is settled in step 2.
