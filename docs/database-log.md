@@ -55,7 +55,15 @@ The numbers **in this file are different and must stay written down**: a dated s
 
 13. **Corrections are struck and annotated, never overwritten.** When an entry turns out to be wrong, leave the wrong claim visible, strike it (`~~like this~~`), and add a dated annotation saying what is true and how it was checked — the form traps 16 and 24 already use. Overwriting is cheaper and destroys the only evidence about which claim shapes rot: trap 16's premise was false for a month, and its visible correction is now the reason nobody re-proposes that migration. A silently fixed entry reads exactly like an entry that was always right.
 
-14. **Write the command, not the claim; the test is tense, not topic.** Moved here 2026-08-16 from `.claude/handoff.md`'s header, because the violations happen in this file. A state claim is true when typed and rots from then on: "CI is waiting on secrets" was wrong within a day, survived three sessions, and reached Ana a fourth time. "PR #128 merged as `06ab97a`" is a record and stays true. Generated numbers live in [`catalog-state.md`](catalog-state.md) — link, never retype. **Where a status line already prints its verifying query, delete the prose answer rather than keeping both**: two homes for one fact is how the wrong one survives.
+14. **Write the command, not the claim; the test is tense, not topic.** A state claim is true when typed and rots from then on: "CI is waiting on secrets" was wrong within a day, survived three sessions, and reached Ana a fourth time. "PR #128 merged as `06ab97a`" is a record and stays true. Generated numbers live in [`catalog-state.md`](catalog-state.md) — link, never retype. **Where a status line already prints its verifying query, delete the prose answer rather than keeping both**: two homes for one fact is how the wrong one survives.
+
+    **This rule governs every doc in the repo, and is not scoped to this file** (corrected 2026-08-16). It used to say it had been moved here "because the violations happen in this file", which was the rule committing the mistake it warns about — a claim about where claims rot, asserted once and never checked. **`pnpm docs:claims` is the enforcement half**, added because the prose version demonstrably did not work: the trap section's own counts were found stale by the 2026-08-14 schema review, half-corrected by hand, and were stale again two days later, while trap 24 was missing from the family table for over a fortnight and nothing noticed.
+
+    What the scan holds, and what it does not. It checks **derivable** claims — a count the repo can compute, restated in a form that can only mean a total, plus the trap family table as a strict partition of the trap entries. It also checks every **named thing a doc points at**: a cited `scripts/<name>.ts` resolves to that exact path, a `pnpm <script>` written in command position is a real script, a cited trap number has an entry (in code comments too), and an env block matches `.env.example`. Those four shipped green — they guard the renames and the archival pass that are already queued, since rule 14 tells people to write commands and a renamed script turns every citation into a silently wrong instruction.
+
+    It deliberately does not read a bare "three scripts cite X" as a claim about a population: a subset count is ordinary prose, and the version that guessed produced nine false positives against two real findings. **Cited migration versions are deliberately not checked** — eleven do not exist as files and every one is legitimate, because trap 13's reconciliation table below is precisely a list of local versions that were wrong and got renamed. It cannot check an **asserted negative** ("nothing writes X") at all — that class closes only by becoming a ratchet entry in `check-pipeline-invariants.ts`, which fails when the negative stops holding. **Reasoning does not rot and stays prose.**
+
+    The session entries below are exempt and the scan stops at the `## Sessions` heading, which is the tense half of this rule made structural: a dated entry records an event.
 
 **Rule 9 is enforced, not encouraged.** `.husky/check-db-log.sh` runs on every commit and blocks it if a round directory is committed without an entry naming that round, if a migration is committed without touching this file, or if this file still contains the `TODO —` placeholders the script writes. Git cannot see what you ran against Supabase — only what you commit — so the hook checks the artifacts database work leaves behind, and the honest reading of a green hook is "you recorded something", not "you recorded enough". `--no-verify` exists and is occasionally right (a revert, a docs fixup). It is not the normal path, and whatever you skip is inherited by whoever comes next.
 
@@ -65,14 +73,16 @@ The numbers **in this file are different and must stay written down**: a dated s
 
 **Numbers are permanent IDs, never renumbered and never reused.** They are cited from code (`wcvp-lookup.ts`, `migration-drift.ts`, `image-probe.ts`) and from `curation.md`, so the order below is by shape, not by number. A new trap takes the next free number and files under whichever family it belongs to.
 
-Twenty-nine traps are really four shapes. The entries are the worked examples that make a shape recognisable in the wild — someone who knows the four rules spots the next instance before it costs anything, which is more than someone who has read all twenty-four descriptions once. **Each family's rule is stated once, above its entries. Read that first.**
+Every trap below is really one of four shapes. The entries are the worked examples that make a shape recognisable in the wild — someone who knows the four rules spots the next instance before it costs anything, which is more than someone who has read every description once. **Each family's rule is stated once, above its entries. Read that first.**
 
-| family | what it is                                                        | entries                                  |
-| ------ | ----------------------------------------------------------------- | ---------------------------------------- |
-| **A**  | a failure or narrower answer comes back shaped like a real result | 1, 1b, 10, 11, 15, 18, 19, 20, 23        |
-| **B**  | the record disagrees with what actually happened                  | 2, 4, 12, 13, 14, 16, 17, 25, 26, 28, 29 |
-| **C**  | one fact with two homes, and only one got updated                 | 3, 5, 22                                 |
-| **D**  | facts about the outside world you cannot design away              | 6, 7, 8, 9, 21, 27                       |
+The table below is the only index by shape, and `pnpm docs:claims` holds it to the entries: a trap with no family row fails, and so does a family row naming a trap that does not exist. It carried neither count above for that reason — a number restated in prose is a second home for a fact the headings already own.
+
+| family | what it is                                                        | entries                                      |
+| ------ | ----------------------------------------------------------------- | -------------------------------------------- |
+| **A**  | a failure or narrower answer comes back shaped like a real result | 1, 1b, 10, 11, 15, 18, 19, 20, 23            |
+| **B**  | the record disagrees with what actually happened                  | 2, 4, 12, 13, 14, 16, 17, 24, 25, 26, 28, 29 |
+| **C**  | one fact with two homes, and only one got updated                 | 3, 5, 22                                     |
+| **D**  | facts about the outside world you cannot design away              | 6, 7, 8, 9, 21, 27                           |
 
 A is the one that keeps recurring, and it is subtle every single time.
 
@@ -227,7 +237,7 @@ The real fix was code-only: an added-pairing finding now carries its row's `crea
 
 #### 25. The replayed schema was not the production schema: table grants lived outside the repo — FIXED 2026-08-13, expect the shape
 
-**No migration has ever granted a table privilege.** Production's `anon` / `authenticated` / `service_role` hold full DML on every public table because the platform's default privileges said so when the project was created in July 2026 — and current Supabase images ship a harder baseline where API roles get no SELECT / INSERT / UPDATE / DELETE at all. So the first local replay produced a database where all 35 migrations "succeeded", RLS and policies looked perfect, and PostgREST answered `permission denied for table plants` (found by the cross-check smoke test against the local stack, not by any schema diff — nothing in the repo could have shown it, which is the point).
+**No migration has ever granted a table privilege.** Production's `anon` / `authenticated` / `service_role` hold full DML on every public table because the platform's default privileges said so when the project was created in July 2026 — and current Supabase images ship a harder baseline where API roles get no SELECT / INSERT / UPDATE / DELETE at all. So the first local replay produced a database where every migration "succeeded", RLS and policies looked perfect, and PostgREST answered `permission denied for table plants` (found by the cross-check smoke test against the local stack, not by any schema diff — nothing in the repo could have shown it, which is the point).
 
 The fresh instance is not hypothetical: it is the disaster-recovery path. The `db-backups` dump restores INTO a newly created project by replaying this directory first, and until 2026-08-13 the result was broken in a way no test had ever run far enough to see. Migration `20260813120000` codifies the grants — verified identical to prod's live grants before pushing, so a no-op there, load-bearing everywhere else. **The shape to expect:** anything the platform or dashboard did for you that a migration never recorded is missing on the day you replay from scratch, and it is missing silently.
 
@@ -538,6 +548,39 @@ is unchanged.
 ## Sessions
 
 <!-- Newest first. Append with: scripts/log-db-session.ts --round <label> -->
+
+### 2026-08-16 — Standing rule 14 gets a scan, and the backlog gets one home (not a round)
+
+**Branch** `session/2026-08-16-doc-structure`. No migration, no catalog write, no
+database read. Structural pass on docs, skills and where work-remaining lives.
+
+**Changed** — standing rule 14 now governs every doc, not this file, and has
+`pnpm docs:claims` behind it: a derivable count restated in a totalising form
+must equal what the repo computes, the trap family table must be a strict
+partition of the trap entries, and the handoff may not be older than the newest
+session entry here. Added `invariants:check` shape 13 (`HAND_ROLLED_PAGINATION`)
+and shape 14 (`OPEN_FINDINGS`, each entry carrying a witness that matches while
+its defect is present, so it fails the day someone fixes it). Added
+`pnpm backlog`. `session-start` runs commands before prose and carries a
+doc-authority table; `session-end` routes work-remaining by kind.
+
+**Found, in this file** — three stale claims. "Twenty-nine traps" against 30
+entries; "all 35 migrations" in trap 25 against 38; and trap 24 listed in no
+family row, invisible to the only index this file has by shape. The first had
+already been found stale by the 2026-08-14 schema review (`:153`),
+hand-corrected, and was wrong again two days later. All three fixed.
+
+**Not done** — the two dated audit reports stay. Each now carries a
+finding-by-finding status table, but four items (`cross-check-plants`' sun audit,
+`restore-catalog`'s diff, the `curate-editorial` withdrawal fix,
+`purge-demo-users`' storage record) are unverified against today's code or are
+design calls. Route those, then they can be deleted.
+
+**Verified** — typecheck, 288 tests, `docs:links`, `docs:claims`,
+`invariants:check`, `runbook:check`, `tokens:check` all green. Every check in
+both new files was mutation-tested in both directions after the first version of
+`docs:claims` shipped a check that could not fail (trap 19 — `String.replace`
+with a string pattern substitutes only the first occurrence).
 
 ### 2026-08-16 — The nine round steps wired to write provenance (not a round)
 

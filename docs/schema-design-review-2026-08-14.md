@@ -26,6 +26,40 @@
 > Its §405 self-correction and §154 pass-through warning still apply to
 > everything they name. For current state see `docs/database-log.md` and
 > `docs/write-provenance.md`.
+>
+> **Where §3's sequencing stands, checked 2026-08-16.** Check the ratchet before
+> acting on anything below: a ratchet entry fails the day its defect is fixed,
+> and this page never will.
+>
+> - **"Must be true before the next data round", items 1-10: done.** The grant is
+>   closed by migration `20260815230948`, the style stamps repaired, the resolver
+>   consolidated, artifacts (a), (b) and (c) shipped, `REQUIRED_DRAFTED_FIELDS`
+>   extended, and item 10's shared suffix constant is `scripts/stamp-columns.ts`.
+> - **Item 11** (migration-drift content check) needs `applied_migrations()` to
+>   return `statements`, so it is a deferred SCHEMA change and belongs on standing
+>   rule 11's list, not here.
+> - **Item 12 is done.** `restore-catalog` has a `TRIGGER_OWNED` map and compares
+>   through `canonicalRow`, which is used in the change FILTER and not only in the
+>   report — so §443's "`--apply` can never converge" is closed with it.
+> - **The "can wait" code defects are routed** (2026-08-16, each re-verified
+>   against the code): `purge-demo-users`' swallowed Storage failure and
+>   `curate-editorial`'s missing withdrawal are now `OPEN_FINDINGS` entries with
+>   witnesses, as is the §441 `cross-check-plants` sun audit. The
+>   **`curate-styles` withdrawal counter is deliberately NOT a witness** — the
+>   remedy is "count and print withdrawn approvals", so the defect is the absence
+>   of a number in a summary, and a regex asserting an absence stays true forever
+>   whether or not anyone acts. It is a reporting improvement, and it belongs in
+>   the Notion **Build Backlog** with the rest of the design column.
+> - **The rest of "can wait" is design, not defect** — generated row types, a
+>   generated data contract, the replay job, the `garden_use_tags` bucket map, the
+>   `writePlant` RPC collapse, `NOT NULL` on `scientific_name`, the unordered-pair
+>   index. Code cannot compute whether the product still wants these, so they
+>   belong in the Notion **Build Backlog** or on rule 11's list, and moving them
+>   there is Ana's call rather than a session's.
+>
+> Nothing in this document is now the only home of an open item. It is kept as
+> the record of what was found and what was decided from it; for what is left,
+> run `pnpm backlog`.
 
 ---
 

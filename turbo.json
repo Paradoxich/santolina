@@ -36,7 +36,15 @@
       "cache": false,
       "outputs": []
     },
+    "docs:claims": {
+      "cache": false,
+      "outputs": []
+    },
     "invariants:check": {
+      "cache": false,
+      "outputs": []
+    },
+    "backlog": {
       "cache": false,
       "outputs": []
     },

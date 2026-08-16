@@ -97,9 +97,27 @@ So before writing, ask what actually belongs here. Two things do:
 Everything else has a better home, and putting it here is what makes the file
 grow: durable pipeline/data reasoning → `docs/database-log.md`; product and
 structural decisions → `docs/architecture.md`; tokens and visual rules →
-`DESIGN_SYSTEM.md`; backlog → the Notion **Build Backlog**; what changed and when
-→ `git log`. **A decision one file owns belongs in that file's comments, not in a
-doc** — if you find yourself paraphrasing a code comment, stop and link to it.
+`DESIGN_SYSTEM.md`; what changed and when → `git log`. **A decision one file owns
+belongs in that file's comments, not in a doc** — if you find yourself
+paraphrasing a code comment, stop and link to it.
+
+**Work remaining is routed by kind, and most of it is not a handoff line.**
+Writing a mechanical item here instead of into a ratchet is how the backlog
+became unreadable: a doc cannot tell "nothing left" from "nobody updated it".
+
+- **Mechanical** (a defect, an unwired script, an unpinned trap) → a ratchet in
+  `apps/web/scripts/check-pipeline-invariants.ts`. If no shape covers it, add an
+  `OPEN_FINDINGS` entry with a witness regex that matches while the defect is
+  present. It then fails the day someone fixes it, which is what stops the list
+  from outliving its truth.
+- **A deferred schema change** → standing rule 11's list in `docs/database-log.md`.
+- **A product decision** → the Notion **Build Backlog**.
+- **Only what is genuinely in flight right now** stays here.
+
+Then run `cd apps/web && pnpm backlog` and check the handoff you just wrote
+against it. A next step that is already an entry in a ratchet does not need
+restating; a next step that is mechanical and appears in neither is in the wrong
+place.
 
 Fold any still-open next step from the entry you are replacing into your own, so
 nothing is dropped. If the previous entry holds durable reasoning that never made
