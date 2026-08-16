@@ -34,9 +34,10 @@ supabase start -x studio,realtime,storage-api,imgproxy,edge-runtime,inbucket,vec
 
 ## 2026-08-16 — The round-12 guardrails
 
-**In flight:** branch `session/2026-08-16-round-12-guardrails`, 5 commits, not
-pushed. Session entry in `docs/database-log.md`. The four gating steps and most
-of step 5 are done; the branch is what needs merging.
+**In flight:** PR [#162](https://github.com/Paradoxich/santolina/pull/162),
+branch `session/2026-08-16-round-12-guardrails`, 7 commits, CI green (the two
+main-only jobs skip on PRs by design). Session entry in `docs/database-log.md`.
+The four gating steps and most of step 5 are done; the PR is what needs merging.
 
 ```bash
 git log --oneline main..session/2026-08-16-round-12-guardrails

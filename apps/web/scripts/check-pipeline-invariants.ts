@@ -39,6 +39,14 @@
  * longer describes a violation is itself a FAILURE — delete it. That is what
  * stops the lists from growing quietly.
  *
+ * WIRING, WHICH BIT ONCE ALREADY. CI runs these checks from the REPO ROOT, so a
+ * new one needs three edits, not one: the script in `apps/web/package.json`, a
+ * passthrough in the root `package.json`, and a `turbo.json` task with
+ * `cache: false`. This file's own first CI run failed with "Command
+ * invariants:check not found" because only the first was done and it had been
+ * verified by running it from `apps/web`. A green local run is not evidence
+ * about CI, which is the same class of mistake this file exists to catch.
+ *
  * WHAT A GREEN RUN DOES NOT MEAN. Nothing here proves a stamp is written at the
  * right moment, that a trap's test asserts the right thing, or that a script
  * does what its runbook step claims. These are shape checks on text. The
