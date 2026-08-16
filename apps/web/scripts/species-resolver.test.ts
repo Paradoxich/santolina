@@ -1,5 +1,11 @@
 /**
- * The species resolver, pinned at the seams the seven forks had between them.
+ * Traps 7 and 27, pinned: the species resolver, at the seams the seven forks
+ * had between them.
+ *
+ * Trap 7 — Trefle name search silently resolves to a sibling species, so seed
+ * by verified id or by an exact synonym-aware genus+species match, and log the
+ * drift. Trap 27 — a Latin epithet agrees in gender with its genus, so one
+ * species is spelled two ways and exact matching misses the other spelling.
  *
  * The failure this guards is not a missed match. A lost synonym group resolves
  * a candidate to a new Trefle id for a species the catalog already holds under

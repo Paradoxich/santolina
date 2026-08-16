@@ -478,6 +478,15 @@ ahead of the data. Every pick carries a confidence and a one-line reason, and
 low confidence is a review queue, not a rejection. **None of this is editorial
 sign-off** ([the curation layer](architecture.md#curation-layer)).
 
+**The review queue is worked in a browser, not in markdown.**
+`review-image-picks.ts` writes `reports/image-picks.html`, because reviewing a
+photo means looking at it and remote `<img>` tags do not render in a markdown
+viewer. Verdicts sit in localStorage so one queue can be worked across several
+sittings, and it writes nothing to the database: `apply-image-confirmations.ts`
+and `apply-image-reverts.ts` are the separate, deliberate steps that act on the
+exported list. Named here because until 2026-08-16 the only pointers to it were
+comments inside those two scripts.
+
 <a id="wikimedia-attribution"></a>
 
 ## Wikimedia heroes, and the attribution they oblige
