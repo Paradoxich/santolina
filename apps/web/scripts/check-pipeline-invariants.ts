@@ -58,6 +58,9 @@ import { execFileSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { basename, join } from 'node:path'
 import { REPO_ROOT } from './token-source'
+// Imported rather than restated: the suffix list that decides "can this column
+// be compared to an instant" has one home, in the module that queries it.
+import { isWindowQueryable } from './run-provenance'
 
 // ---------------------------------------------------------------------------
 // Escape hatches. Each entry: subject → why it is allowed, today.
@@ -723,6 +726,56 @@ function checkWriteProvenance(): number {
           remedy: `Fix the spelling, or add it to NON_STAMP_WRITES in ${basename(__filename)} if it is a deliberate value write.`,
         })
       }
+    }
+
+    // Shape 12. A CLEARING WRITE MUST NOT TAKE THE DEFAULT WITNESS.
+    //
+    // `defaultEvidence` gives every window-queryable write-set member a stamp
+    // witness: count the rows whose stamp lands inside the run's window. That is
+    // right for a column the run SETS and exactly wrong for one it CLEARS. A
+    // nulled row holds NULL and matches no window, so a run that correctly
+    // cleared 20 stamps observes 0 against a claim of 20 and records itself
+    // CONTRADICTED — a correct run filing a report that says it was caught
+    // lying. A clearing write is invisible to its own column by construction,
+    // and no query run afterwards can tell "this run nulled it" from "it was
+    // never set".
+    //
+    // Loud rather than silent, so it is not trap 1's shape. But a log nobody
+    // trusts is a log nobody reads, and three of the nine round steps clear a
+    // stamp as a cross-field cascade — this is a road already travelled three
+    // times, not a hypothetical.
+    //
+    // WHAT THIS ASKS FOR is an explicit `evidence:`, not a particular witness.
+    // Checking for a witness naming the column would tie the scan to how the
+    // literal is written — cross-check-native-region and pick-plant-images both
+    // build theirs through a helper — and a detector that depends on the shape
+    // of a literal claims coverage it does not have, which is the mistake shape
+    // 8 was rewritten to avoid. Once evidence is explicit, beginRun already
+    // throws for an unwitnessed member, so the author cannot quietly do nothing.
+    const declaredMembers = [
+      ...src.matchAll(/writeSet:\s*\[([^\]]*)\]/g),
+    ].flatMap((m) =>
+      [...(m[1] ?? '').matchAll(/'([a-z_]+)'/g)].map((x) => x[1]!)
+    )
+    const clearsOwnMember = declaredMembers.filter(
+      (member) =>
+        isWindowQueryable(member) &&
+        new RegExp(`${member}\\s*[:=]\\s*null\\b`).test(src)
+    )
+    // `evidence:` OR the shorthand `evidence,` — cross-check-native-region
+    // computes both fields together and spreads them in, and a check that only
+    // knew the colon form would have called it a violation while it was doing
+    // exactly the right thing.
+    const passesEvidence = /\bevidence\s*[:,]/.test(src)
+    if (clearsOwnMember.length && !passesEvidence) {
+      fail({
+        shape: 'clearing write left on the default witness',
+        subject: `${file} → ${[...new Set(clearsOwnMember)].join(', ')}`,
+        detail:
+          'Sets a declared write-set member to null and passes no evidence, so the default gives that column a stamp witness. A cleared row matches no window, so the run would observe 0 against its own claim and record itself contradicted.',
+        remedy:
+          "Pass an explicit evidence array. A cleared stamp cannot witness itself: use { kind: 'row-touched' } on the table's own mutation timestamp, or { kind: 'none', reason } to record that the write is not observable at finalisation.",
+      })
     }
 
     // Shape 10. withRunRecord is the canonical pattern, and this scan is why.

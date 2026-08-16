@@ -91,6 +91,77 @@ is meaningless is not.** A write-set member with no witness throws at `beginRun`
 not at finalisation, because it is a programming error and must not present itself
 later as an unlucky read.
 
+### When a stamp may witness itself, which is narrower than it looks
+
+Both rules below came out of wiring the nine round steps on 2026-08-16, not out
+of designing the contract. Each turns a correct run into a `contradicted` record
+— the loud failure rather than the silent one, but a log nobody trusts is a log
+nobody reads.
+
+**A cleared stamp cannot witness itself.** `finish()` counts rows whose stamp
+lands inside the run's window. A run that NULLs the column leaves rows matching
+no window, so a correct clear of 20 rows observes 0 against a claim of 20. Three
+of the nine round steps clear a stamp as a cross-field cascade — a corrected
+region invalidates the prose describing it, a new hero invalidates the editorial
+verdict resting on it — so this is a road already travelled three times. And no
+query run afterwards can tell "this run nulled it" from "it was never set", which
+is the same lossiness [the stamp has by design](#why-the-stamp-is-current-certification-and-not-an-audit-trail).
+The witness is `row-touched`, or `none` with a reason.
+
+`invariants:check` shape 12 holds this: a script that sets a declared write-set
+member to null and passes no `evidence` fails. It asks for an explicit evidence
+array rather than a particular witness, because checking for a witness naming the
+column would tie the scan to how the literal is written — two callers build
+theirs through a helper — and a detector that depends on the shape of a literal
+claims coverage it does not have. Once evidence is explicit, `beginRun` already
+throws for an unwitnessed member.
+
+**A confirming witness must cover every row the run counts.** Verification
+compares each witness against the run's whole `row_count`, so a column written on
+only SOME counted rows undercounts by construction. `curate-editorial` is the
+worked example: every judged row gets `editorial_checked_at`, but each of the
+three criterion stamps is written only where that criterion passed, and the
+description only where the copy was weak AND a blind second call approved the
+replacement. One confirming witness; bounding witnesses for the rest.
+
+This one is **not** scannable — whether a column is written on every row is a
+question about control flow, the same limit shape 10 is worded around. It is a
+rule for the author, which is why it is written here rather than enforced.
+
+## What a recipe is when there is no model in it
+
+Three of the nine steps call no model: two derive from WCVP, one from Trefle's
+response shape. Their recipe is a DESCRIPTION of the rule rather than content
+identity, and the difference matters. An AI recipe hash is computed from the
+assembled prompt, so it cannot disagree with what was sent; a description can
+drift from the code it describes if one is edited and the other is not.
+
+Not worth closing by hashing the function source. The record carries
+`started_at`, the code is in git, so "which version of the rule ran" is
+answerable from the date. What the hash still buys is the part the date cannot
+answer: the committed tables that change an answer without the rule changing —
+`MANUAL_EXCLUSIONS`, `MANUAL_OVERRIDES`, the region vocabularies. Those go in
+`ingredients`, and a cohort judged before an entry was added is genuinely not the
+same cohort as one judged after.
+
+## A generate-then-apply pair is one recipe across two invocations
+
+Three scripts split into a pass that decides and a pass that writes. The halves
+sit on opposite sides of the provenance boundary: generate calls the model and
+writes no catalog value, apply writes every value and calls no model. A record on
+apply alone answers "what produced this value?" with "a file".
+
+So generate stamps its derivation recipe into the plan it writes, and apply reads
+it back and records it — model included, because the model that produced the
+value is the honest answer to what a run of apply wrote. The plan's date and
+derivation hash also go in the run's `scope`, which is the readable field: a hash
+folded into `recipe_hash` cannot be read back out, and an operator asking "which
+plan was this?" needs an answer they can see.
+
+`--apply` is a **separate step name**, not a flag on the same one. It has a
+different write-set, a different direction (it clears what the generate pass
+stamped), and no model of its own.
+
 ## Rounds and runs are different axes, on purpose
 
 Round provenance is **membership**. Run provenance is **mutation**. Collapsing
@@ -223,10 +294,12 @@ not evidence against the claim. A claim _larger_ than its evidence is.
 every green run. Shapes 8 to 11:
 
 - a script that mutates the catalog opens a run;
-- every write-set member names a real column and carries an evidence witness;
+- every write-set member names a real column (or a recorded table) and carries an
+  evidence witness;
 - a script that opens a run uses `withRunRecord` unless it is recorded as owning
   its own terminal paths;
-- a row count is never hand-authored.
+- a row count is never hand-authored;
+- a clearing write does not take the default witness (shape 12).
 
 **The third one is worded carefully on purpose.** A source scan can see that a
 file contains a finalisation call. It cannot prove that finalisation happens on
