@@ -65,14 +65,14 @@ The numbers **in this file are different and must stay written down**: a dated s
 
 **Numbers are permanent IDs, never renumbered and never reused.** They are cited from code (`wcvp-lookup.ts`, `migration-drift.ts`, `image-probe.ts`) and from `curation.md`, so the order below is by shape, not by number. A new trap takes the next free number and files under whichever family it belongs to.
 
-Twenty-seven traps are really four shapes. The entries are the worked examples that make a shape recognisable in the wild — someone who knows the four rules spots the next instance before it costs anything, which is more than someone who has read all twenty-four descriptions once. **Each family's rule is stated once, above its entries. Read that first.**
+Twenty-eight traps are really four shapes. The entries are the worked examples that make a shape recognisable in the wild — someone who knows the four rules spots the next instance before it costs anything, which is more than someone who has read all twenty-four descriptions once. **Each family's rule is stated once, above its entries. Read that first.**
 
-| family | what it is                                                        | entries                           |
-| ------ | ----------------------------------------------------------------- | --------------------------------- |
-| **A**  | a failure or narrower answer comes back shaped like a real result | 1, 1b, 10, 11, 15, 18, 19, 20, 23 |
-| **B**  | the record disagrees with what actually happened                  | 2, 4, 12, 13, 14, 16, 17, 25, 26  |
-| **C**  | one fact with two homes, and only one got updated                 | 3, 5, 22                          |
-| **D**  | facts about the outside world you cannot design away              | 6, 7, 8, 9, 21, 27                |
+| family | what it is                                                        | entries                              |
+| ------ | ----------------------------------------------------------------- | ------------------------------------ |
+| **A**  | a failure or narrower answer comes back shaped like a real result | 1, 1b, 10, 11, 15, 18, 19, 20, 23    |
+| **B**  | the record disagrees with what actually happened                  | 2, 4, 12, 13, 14, 16, 17, 25, 26, 28 |
+| **C**  | one fact with two homes, and only one got updated                 | 3, 5, 22                             |
+| **D**  | facts about the outside world you cannot design away              | 6, 7, 8, 9, 21, 27                   |
 
 A is the one that keeps recurring, and it is subtle every single time.
 
@@ -283,6 +283,47 @@ will not select them — the stamp is the damage.
 
 **Applied 2026-08-15**, recorded in that date's session entry: the 100 rows were re-judged with `curate-styles --round 9` then `--round 10`. **Re-checked against production 2026-08-16** — the fingerprint returns 0 catalog-wide, read paginated, so the repair holds and the struck remediation above is closed. Checked again rather than restated: the claim was one session old and the point of rule 12 is that a remediation is only ever proved by running its predicate.
 
+#### 28. A stamp can only witness a write that SET it, on every row counted — ADDED 2026-08-16 (wiring the nine round steps)
+
+Run provenance verifies a claim by counting rows whose stamp lands inside the
+run's window. `defaultEvidence` gives every window-queryable write-set member
+that witness automatically, and there are two ways it is the wrong one — both
+of which make a **correct run file a record saying it was caught lying**.
+
+**A cleared stamp cannot witness itself.** A run that NULLs the column leaves
+rows matching no window, so a correct clear of 20 rows observes 0 against a
+claim of 20 and records `contradicted`. Three round steps clear a stamp as a
+cross-field cascade: a corrected region invalidates the prose describing it, a
+new hero invalidates the editorial verdict resting on it. And no query run
+afterwards can separate "this run nulled it" from "it was never set" — the same
+lossiness the stamp has by design, arriving from the other direction.
+
+**A conditionally-set stamp cannot witness the whole run.** Verification
+compares each witness against the run's TOTAL row count, so a column written on
+only some counted rows undercounts by construction. `curate-editorial` writes
+`editorial_checked_at` on every judged row but each criterion stamp only where
+that criterion passed — one confirming witness, bounding witnesses for the rest.
+
+**Why this is worth a number even though it is loud.** It is not trap 1's
+silent shape; it fails visibly. But the failure blames the run rather than the
+wiring, and a log whose records say `contradicted` when nothing is wrong is a
+log nobody reads — which ends in the same place as a check that quietly stopped
+working.
+
+**Half pinned by `check-pipeline-invariants.ts` shape 12** (2026-08-16): a
+script that sets a declared write-set member to null and passes no `evidence`
+fails. It demands an explicit evidence array rather than a particular witness —
+checking for a witness naming the column would tie the scan to how the literal
+is written, and two callers build theirs through a helper. **The conditional
+half is not scannable** — whether a column is written on every row is a
+control-flow question — so it is stated in
+[write provenance](write-provenance.md) and enforced by nothing.
+
+**Shape 12 was verified by breaking it.** The evidence array was removed from
+`regenerate-native-region`, the scan named that file and column, and it was
+restored. Its first version missed the shorthand `evidence,` property form and
+would have passed a real violation; rereading it had not caught that.
+
 #### 24. A guard stamp records that the check RAN, not that its finding was acted on — ADDED 2026-07-30
 
 A report-only `cross-check-native-region` run stamps `native_region_checked_at` on every row it decided, including the rows it decided were **wrong**. Nothing else revisits them: `--new-only` selects on the stamp, so a disagreement found and left unapplied is stamped out of every later sweep. Six rows sat in exactly that state, `Crocus speciosus` among them — tagged `Caucasus` alone while WCVP gave it Bulgaria, Iran, Krym, the Caucasus and Türkiye, so the Explore native filter hid it from the Balkan users it is native to.
@@ -433,6 +474,38 @@ is unchanged.
 ## Sessions
 
 <!-- Newest first. Append with: scripts/log-db-session.ts --round <label> -->
+
+### 2026-08-16 — The nine round steps wired to write provenance (not a round)
+
+**Branch** `session/2026-08-16-provenance-nine`. No migration, no catalog write.
+
+**Changed** — all nine round steps now open a run (`cross-check-plants`,
+`cross-check-native-to` +`--apply`, `cross-check-native-region`,
+`regenerate-native-region --apply`, `curate-combinations`,
+`curate-seasonal-care`, `recover-image-categories`, `pick-plant-images` +`--verify`, `curate-editorial`). `RUNS_WITHOUT_PROVENANCE`'s round-step block
+is empty, 25 → 16. Added `planRowIsStale` and `invariants:check` shape 12;
+widened the stamp-column and stamp-writer regexes.
+
+**Database** — read-only probe of every witness the nine depend on, queried the
+way `countByWitness` queries it. `plants.updated_at` **720**,
+`botanical_checked_at` **604**, `native_checked_at` **720**,
+`native_region_checked_at` **692**, `image_checked_at` **720**,
+`image_verified_at` **74**, `editorial_checked_at` **216**,
+`editorial_image_at` **285**, `plant_combinations.created_at` **1795**.
+`seasonal_care`, `native_region` and `image_candidates` each errored with an
+**empty message and no code** — the measured basis for their bounding witness.
+
+**Found** — two witness rules the contract had not met, both now trap 28. And
+the scan had never seen the three editorial criterion stamps from either
+direction: they end `_at` without one of the four vocabulary suffixes, and
+`curate-editorial` writes them by assignment rather than as object keys. Both
+regexes widened; blast radius measured first, and it was exactly those three.
+
+**Verified** — `invariants:check` green, typecheck clean, 279 tests pass. Shape
+12 verified by breaking it (trap 28).
+
+**Not done** — no round-12 step was run, so `apps/web/runs/` is still empty. The
+16 out-of-round passes are unwired; `backfill-guard-stamps` matters most.
 
 ### 2026-08-16 — The round-12 guardrails: one resolver, one invariants check (not a round)
 
