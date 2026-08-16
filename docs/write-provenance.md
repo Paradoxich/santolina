@@ -49,10 +49,42 @@ So they are separate fields with separate jobs:
 
 A witness is a `stamp` (a timestamp column on `plants`, window-queried), a
 `row-touched` (the table's own mutation timestamp — `plants.updated_at`,
-`plant_combinations.created_at` — which bounds a claim rather than confirming it,
-since it sees any write to the row), or `none` with a stated reason. Each names
-what it `covers`, because a write-set member is _what was mutated_ and that is not
+`plant_combinations.created_at`), or `none` with a stated reason. Each names what
+it `covers`, because a write-set member is _what was mutated_ and that is not
 always a column: `curate-combinations` mutates a table.
+
+### Witness strength, and why the result is not a boolean
+
+A witness carries a strength, and `verification.substantiation` reports what the
+evidence actually supports rather than a yes/no:
+
+| Strength         | Witness       | Can confirm? | Can contradict? |
+| ---------------- | ------------- | ------------ | --------------- |
+| **confirming**   | `stamp`       | yes          | yes             |
+| **bounding**     | `row-touched` | no           | no              |
+| **unobservable** | `none`        | no           | no              |
+
+`substantiation` is then one of `confirmed`, `bounded`, `unverified` or
+`contradicted`.
+
+**A bounding witness can do neither, and that is not pedantry.** `updated_at`
+establishes that rows were touched in the interval; it cannot attribute those
+touches to this invocation. If a run claims 20 rows while another process touches
+50 unrelated ones in the same window, `observed >= claimed` holds and means
+nothing. An earlier version reported that as agreement, which in a log explicitly
+described as non-authoritative would have invited a future reader to read
+"the database confirmed this run" out of "some rows were modified around then".
+
+Nor can a bounding witness contradict: it reports rows, not writes, so seeing
+fewer than claimed is normal.
+
+**Row counts are distinct row ids, which removes the ambiguity at its source.**
+`run.wrote(rowId)` records a set. A run that writes the same row twice counts it
+once, because that is all any witness can ever observe — a timestamp column holds
+one value per row however many times it was set. Counting calls instead would have
+made `row_count` incomparable with its own evidence and produced a false
+"claim larger than evidence" on any double write, this time from a _confirming_
+witness.
 
 **"I cannot verify this" is an acceptable answer. "I verified this" when the query
 is meaningless is not.** A write-set member with no witness throws at `beginRun`,

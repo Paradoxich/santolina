@@ -82,11 +82,22 @@ export interface RunRecord {
    * interrupted run's honest count is what it actually got through.
    */
   row_count: number
-  /** Finalisation-time comparison of the claim against the evidence. */
+  /**
+   * How much the database substantiated this run's claim at finalisation.
+   *
+   *   confirmed    — a confirming witness supports the claim.
+   *   bounded      — only a bounding witness was available: consistent with the
+   *                  claim, but it cannot attribute the writes to this run.
+   *   unverified   — nothing observable, or every observation failed.
+   *   contradicted — a confirming witness disagrees. Only a confirming witness
+   *                  can produce this.
+   *
+   * Replaced an earlier `{ checked, agrees }` pair, which reported a bounding
+   * witness as agreement and so overstated what the evidence said.
+   */
   verification: {
-    checked: boolean
-    agrees: boolean
-    /** Per column in the write-set: rows whose stamp lands inside the window. */
+    substantiation: 'confirmed' | 'bounded' | 'unverified' | 'contradicted'
+    /** Keyed by what each witness COVERS. */
     observed: Record<string, number>
     notes: string[]
   }
@@ -252,6 +263,32 @@ export function isWindowQueryable(column: string): boolean {
   return WINDOW_QUERYABLE_SUFFIXES.some((suffix) => column.endsWith(suffix))
 }
 
+/**
+ * How much a witness can establish. The distinction is the whole point: a
+ * `verification` result that reads `agrees: true` carries semantic weight in a
+ * log that is deliberately non-authoritative, and a future reader must not take
+ * "some rows were modified around then" for "the database confirmed this run".
+ *
+ *   confirming   — the timestamp IS produced by the operation, so it can
+ *                  establish the claim (subject to the overlap caveat below).
+ *   bounding     — establishes only that rows were touched in the interval. It
+ *                  cannot attribute those touches to THIS invocation, so it can
+ *                  never confirm and can never contradict.
+ *   unobservable — declared unverifiable, with a reason.
+ */
+export type WitnessStrength = 'confirming' | 'bounding' | 'unobservable'
+
+export function strengthOf(witness: Witness): WitnessStrength {
+  switch (witness.kind) {
+    case 'stamp':
+      return 'confirming'
+    case 'row-touched':
+      return 'bounding'
+    case 'none':
+      return 'unobservable'
+  }
+}
+
 export type Witness =
   /** A timestamp column on `plants`: count rows whose value lands in the window. */
   | { kind: 'stamp'; covers: string; column: string }
@@ -321,6 +358,19 @@ export interface RunHandle {
   runId: string
   startedAt: string
   /**
+   * Record a row this invocation wrote, BY ID, as it goes.
+   *
+   * Distinct ids, not call count. A run that writes the same row twice counts it
+   * once — which is what every witness can observe, since a timestamp column
+   * holds one value per row however many times it was set. Counting calls made
+   * row_count incomparable with its own evidence and would have produced a false
+   * "claim larger than evidence" on any double write.
+   *
+   * For a table whose row is not a single id (a combination is a pair), pass a
+   * composite key: what matters is that it is stable and distinct.
+   */
+  wrote: (rowId: string) => void
+  /**
    * Record a failure that is not a thrown exception — "every row errored", "the
    * decision file was stale". Lets a script use withRunRecord (which owns the
    * control flow) instead of calling finish by hand for a soft failure.
@@ -328,8 +378,6 @@ export interface RunHandle {
   markFailed: (reason: string) => void
   /** The soft failure recorded by markFailed, if any. Read by withRunRecord. */
   softFailure: () => string | null
-  /** Count a row this invocation actually wrote. Call it as you go. */
-  countWritten: (n?: number) => void
   /** Terminal path: verify the claim against the evidence, then record it. */
   finish: (
     outcome: RunOutcome,
@@ -439,75 +487,94 @@ export function beginRun(opts: BeginRunOptions): RunHandle {
   // randomness is what makes it an identity.
   const runId = `${step}-${startedAt.replace(/[:.]/g, '').slice(0, 15)}-${randomBytes(4).toString('hex')}`
 
-  let written = 0
+  const writtenRows = new Set<string>()
   let settled = false
   let softFailureReason: string | null = null
 
   const finish = async (
     outcome: RunOutcome,
-    extra: { error?: string; rowCount?: number } = {}
+    extra: { error?: string } = {}
   ): Promise<RunRecord> => {
     const finishedAt = now()
-    const rowCount = extra.rowCount ?? written
+    // Never passed in: the count is what the run observed itself writing.
+    const rowCount = writtenRows.size
     const observed: Record<string, number> = {}
     const notes: string[] = []
-    let checked = true
-    let agrees = true
+    let anyConfirming = false
+    let anyBounding = false
+    let contradicted = false
+    let anyFailed = false
 
     for (const witness of evidence) {
+      const strength = strengthOf(witness)
       if (witness.kind === 'none') {
         notes.push(
           `${witness.covers} is not observable at finalisation: ${witness.reason}`
         )
         continue
       }
+      let count: number
       try {
-        observed[witness.covers] = await countRows(
-          witness,
-          startedAt,
-          finishedAt
-        )
+        count = await countRows(witness, startedAt, finishedAt)
       } catch (err) {
-        checked = false
+        anyFailed = true
         notes.push(
           `could not observe ${witness.covers}: ${(err as Error).message}`
         )
+        continue
+      }
+      observed[witness.covers] = count
+
+      if (strength === 'confirming') {
+        anyConfirming = true
+        // A confirming witness CAN contradict. It cannot contradict on being
+        // larger than the claim: overlapping invocations are a normal operating
+        // condition here, so extra movement in the window is not evidence
+        // against this run.
+        if (count < rowCount) {
+          contradicted = true
+          notes.push(
+            `${witness.covers}: claimed ${rowCount} row(s) and only ${count} carry a ` +
+              `stamp inside the window — the claim is larger than its evidence`
+          )
+        }
+        if (rowCount === 0 && count > 0) {
+          contradicted = true
+          notes.push(
+            `${witness.covers}: claimed 0 rows but ${count} stamp(s) moved inside the window`
+          )
+        }
+      } else {
+        anyBounding = true
+        // A bounding witness can neither confirm nor contradict: updated_at sees
+        // ANY write to the row, including another invocation's, and sees one row
+        // however many times this run wrote it.
+        notes.push(
+          `${witness.covers} is bounded, not confirmed: ${count} row(s) in ` +
+            `${witness.kind === 'row-touched' ? witness.table : 'the table'} were ` +
+            `touched in the window, which cannot be attributed to this run`
+        )
       }
     }
 
-    // Nothing observable means nothing was verified. Say so rather than letting
-    // an empty comparison read as agreement.
-    if (!Object.keys(observed).length) {
-      checked = false
+    const substantiation: RunRecord['verification']['substantiation'] =
+      contradicted
+        ? 'contradicted'
+        : anyConfirming
+          ? 'confirmed'
+          : anyBounding
+            ? 'bounded'
+            : 'unverified'
+
+    if (substantiation === 'unverified') {
       notes.push(
-        'no observable witness in this run, so the row count is recorded unverified'
+        anyFailed
+          ? 'every observation failed, so the row count is recorded unverified'
+          : 'no observable witness, so the row count is recorded unverified'
       )
     }
-
-    if (checked) {
-      const maxObserved = Math.max(0, ...Object.values(observed))
-      // The claim is about THIS invocation's work. A column can legitimately
-      // show more than row_count when another invocation touched it inside the
-      // same window — overlapping runs are possible — so a disagreement is
-      // recorded and read, never thrown.
-      if (maxObserved < rowCount) {
-        agrees = false
-        notes.push(
-          `claimed ${rowCount} row(s) but no declared column shows more than ` +
-            `${maxObserved} stamped inside the window — the claim is larger than its evidence`
-        )
-      }
-      if (rowCount === 0 && maxObserved > 0) {
-        agrees = false
-        notes.push(
-          `claimed 0 rows but ${maxObserved} stamp(s) moved inside the window`
-        )
-      }
-      if (outcome === 'completed' && rowCount === 0) {
-        notes.push(
-          'completed with nothing to do — vacuous, not evidence of work'
-        )
-      }
+    if (outcome === 'completed' && rowCount === 0) {
+      notes.push('completed with nothing to do — vacuous, not evidence of work')
     }
 
     const record: RunRecord = {
@@ -522,18 +589,19 @@ export function beginRun(opts: BeginRunOptions): RunHandle {
       write_set: [...writeSet].sort(),
       evidence,
       row_count: rowCount,
-      verification: { checked, agrees, observed, notes },
+      verification: { substantiation, observed, notes },
       ...(extra.error ? { error: extra.error } : {}),
     }
 
     settled = true
     const path = append(record)
     log(
-      `\nrun ${runId} — ${outcome}, ${rowCount} row(s), recipe ${hash}` +
-        (checked && !agrees ? '  ⚠ claim disagrees with evidence' : '') +
+      `\nrun ${runId} — ${outcome}, ${rowCount} row(s), recipe ${hash}, ` +
+        `evidence ${substantiation}` +
         `\n  recorded in ${path.replace(`${REPO_ROOT}/`, '')}`
     )
-    if (checked && !agrees) for (const n of notes) log(`  ⚠ ${n}`)
+    if (substantiation === 'contradicted')
+      for (const n of notes) log(`  ⚠ ${n}`)
     return record
   }
 
@@ -558,8 +626,8 @@ export function beginRun(opts: BeginRunOptions): RunHandle {
       softFailureReason ??= reason
     },
     softFailure: () => softFailureReason,
-    countWritten: (n = 1) => {
-      written += n
+    wrote: (rowId: string) => {
+      writtenRows.add(rowId)
     },
     finish,
   }

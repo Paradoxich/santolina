@@ -524,7 +524,7 @@ async function main() {
 
         const patch = buildPatch(plant, response)
         await patchPlant(plant.id, patch)
-        run.countWritten()
+        run.wrote(plant.id)
 
         const fieldsWritten = Object.keys(patch).filter(
           (k) => k !== 'ai_drafted_at'

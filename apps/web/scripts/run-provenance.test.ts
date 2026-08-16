@@ -48,6 +48,11 @@ const harness = (observed: Record<string, number> = {}) => {
 
 const RECIPE = { model: 'claude-sonnet-4-5', template: 'draft the fields' }
 
+/** Record n distinct rows. row_count is distinct ids, never a call count. */
+const wrote = (run: { wrote: (id: string) => void }, n: number) => {
+  for (let i = 0; i < n; i++) run.wrote(`row-${i}`)
+}
+
 describe('the recipe hash', () => {
   it('is stable across key order, because the input is canonicalised', () => {
     const a = recipeHash({
@@ -109,13 +114,13 @@ describe('every invocation produces a record', () => {
         ...h.opts,
       },
       async (run) => {
-        run.countWritten(25)
+        wrote(run, 25)
       }
     )
     expect(h.written).toHaveLength(1)
     expect(h.written[0]!.outcome).toBe('completed')
     expect(h.written[0]!.row_count).toBe(25)
-    expect(h.written[0]!.verification.agrees).toBe(true)
+    expect(h.written[0]!.verification.substantiation).toBe('confirmed')
   })
 
   it('records a FAILED run and re-throws, so the exit code is unchanged', async () => {
@@ -129,7 +134,7 @@ describe('every invocation produces a record', () => {
           ...h.opts,
         },
         async (run) => {
-          run.countWritten(4)
+          wrote(run, 4)
           throw new Error('API 429 at row 400')
         }
       )
@@ -150,13 +155,13 @@ describe('every invocation produces a record', () => {
       recipe: RECIPE,
       ...h.opts,
     })
-    run.countWritten(279)
+    wrote(run, 279)
     await run.finish('interrupted', { error: 'received SIGINT' })
 
     const rec = h.written[0]!
     expect(rec.outcome).toBe('interrupted')
     expect(rec.row_count).toBe(279)
-    expect(rec.verification.agrees).toBe(true)
+    expect(rec.verification.substantiation).toBe('confirmed')
   })
 
   it('gives two invocations in the SAME millisecond different ids', async () => {
@@ -193,7 +198,7 @@ describe('every invocation produces a record', () => {
       recipe: RECIPE,
       ...h1.opts,
     })
-    first.countWritten(279)
+    wrote(first, 279)
     await first.finish('interrupted')
 
     const h2 = harness({ native_checked_at: 215 })
@@ -203,7 +208,7 @@ describe('every invocation produces a record', () => {
       recipe: RECIPE,
       ...h2.opts,
     })
-    second.countWritten(215)
+    for (let i = 0; i < 215; i++) second.wrote(`resumed-${i}`)
     await second.finish('completed')
 
     expect(h1.written[0]!.run_id).not.toBe(h2.written[0]!.run_id)
@@ -220,9 +225,9 @@ describe('a record never claims more than its evidence', () => {
       recipe: RECIPE,
       ...h.opts,
     })
-    run.countWritten(25)
+    wrote(run, 25)
     const rec = await run.finish('completed')
-    expect(rec.verification.agrees).toBe(false)
+    expect(rec.verification.substantiation).toBe('contradicted')
     expect(rec.verification.notes.join(' ')).toContain(
       'larger than its evidence'
     )
@@ -237,7 +242,7 @@ describe('a record never claims more than its evidence', () => {
       ...h.opts,
     })
     const rec = await run.finish('completed')
-    expect(rec.verification.agrees).toBe(false)
+    expect(rec.verification.substantiation).toBe('contradicted')
     expect(rec.verification.notes.join(' ')).toContain('claimed 0 rows')
   })
 
@@ -252,9 +257,9 @@ describe('a record never claims more than its evidence', () => {
       recipe: RECIPE,
       ...h.opts,
     })
-    run.countWritten(25)
+    wrote(run, 25)
     const rec = await run.finish('completed')
-    expect(rec.verification.agrees).toBe(true)
+    expect(rec.verification.substantiation).toBe('confirmed')
   })
 
   it('records that verification could not run, rather than claiming it agreed', async () => {
@@ -274,9 +279,9 @@ describe('a record never claims more than its evidence', () => {
       log: () => {},
       trapSignals: false,
     })
-    run.countWritten(2)
+    wrote(run, 2)
     const rec = await run.finish('completed')
-    expect(rec.verification.checked).toBe(false)
+    expect(rec.verification.substantiation).toBe('unverified')
     expect(rec.verification.notes.join(' ')).toContain('could not observe')
   })
 })
@@ -351,10 +356,9 @@ describe('declared mutation is not the same thing as verification evidence', () 
       log: () => {},
       trapSignals: false,
     })
-    run.countWritten(25)
+    wrote(run, 25)
     const rec = await run.finish('completed')
-    expect(rec.verification.checked).toBe(true)
-    expect(rec.verification.agrees).toBe(true)
+    expect(rec.verification.substantiation).toBe('bounded')
     // Keyed by what it covers — the thing claimed — not by what was queried.
     expect(rec.verification.observed['seasonal_care']).toBe(25)
     expect(rec.evidence[0]).toMatchObject({ column: 'updated_at' })
@@ -383,10 +387,13 @@ describe('declared mutation is not the same thing as verification evidence', () 
       log: () => {},
       trapSignals: false,
     })
-    run.countWritten(60)
+    wrote(run, 60)
     const rec = await run.finish('completed')
-    expect(rec.verification.agrees).toBe(true)
+    // BOUNDED, not confirmed: created_at says 60 rows appeared in the window and
+    // cannot say this invocation put them there.
+    expect(rec.verification.substantiation).toBe('bounded')
     expect(rec.evidence[0]).toMatchObject({ table: 'plant_combinations' })
+    expect(rec.verification.notes.join(' ')).toContain('cannot be attributed')
   })
 
   it('records "unverified" rather than "agreed" when nothing is observable', async () => {
@@ -407,9 +414,9 @@ describe('declared mutation is not the same thing as verification evidence', () 
       log: () => {},
       trapSignals: false,
     })
-    run.countWritten(4)
+    wrote(run, 4)
     const rec = await run.finish('completed')
-    expect(rec.verification.checked).toBe(false)
+    expect(rec.verification.substantiation).toBe('unverified')
     expect(rec.verification.notes.join(' ')).toContain('recorded unverified')
   })
 
@@ -422,5 +429,63 @@ describe('declared mutation is not the same thing as verification evidence', () 
     // stamp-columns.ts, where the question is the column's role, not its type.
     expect(isWindowQueryable('ai_drafted_at')).toBe(true)
     expect(isWindowQueryable('seasonal_care')).toBe(false)
+  })
+})
+
+describe('a bounding witness can neither confirm nor contradict', () => {
+  const bounded = (observed: number) => {
+    const written: RunRecord[] = []
+    const run = beginRun({
+      step: 'curate-seasonal-care',
+      writeSet: ['seasonal_care'],
+      evidence: [
+        {
+          kind: 'row-touched',
+          covers: 'seasonal_care',
+          table: 'plants',
+          column: 'updated_at',
+        },
+      ],
+      recipe: RECIPE,
+      now: () => '2026-08-16T10:00:00.000Z',
+      countRows: async () => observed,
+      append: (r) => {
+        written.push(r)
+        return '/runs/2026-08.jsonl'
+      },
+      log: () => {},
+      trapSignals: false,
+    })
+    return { run, written }
+  }
+
+  it('does not report agreement when unrelated rows moved in the window', async () => {
+    // The claim is 20. Another process touched 50 unrelated rows in the same
+    // window. observed >= claimed, and the old code called that agreement — but
+    // updated_at cannot attribute a single one of those touches to this run.
+    const { run } = bounded(50)
+    wrote(run, 20)
+    const rec = await run.finish('completed')
+    expect(rec.verification.substantiation).toBe('bounded')
+    expect(rec.verification.substantiation).not.toBe('confirmed')
+  })
+
+  it('does not contradict when it observes fewer rows than claimed', async () => {
+    // A bounding witness legitimately sees fewer: it reports rows, not writes.
+    const { run } = bounded(3)
+    wrote(run, 20)
+    const rec = await run.finish('completed')
+    expect(rec.verification.substantiation).toBe('bounded')
+  })
+
+  it('counts a row written twice once, so the count stays comparable', async () => {
+    const { run } = bounded(1)
+    run.wrote('plant-1')
+    run.wrote('plant-1')
+    const rec = await run.finish('completed')
+    // Two writes, one row. Counting calls would have claimed 2 against evidence
+    // that can only ever be 1, and a confirming witness would have called that a
+    // contradiction.
+    expect(rec.row_count).toBe(1)
   })
 })
