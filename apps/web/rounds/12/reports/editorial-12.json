@@ -1,0 +1,636 @@
+{
+  "findings": [
+    {
+      "id": "ee44d0e2-dced-44ad-b862-7270995f395a",
+      "common_name": "Aconite-leaf buttercup",
+      "scientific_name": "Ranunculus aconitifolius",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": true,
+        "before": "A graceful moisture-loving perennial with deeply divided, glossy green leaves resembling those of aconite. Bears masses of pure white, buttercup-like flowers on tall branching stems in late spring and early summer. Particularly attractive near water features or in damp borders.",
+        "after": "A moisture-loving perennial with deeply divided, glossy green leaves resembling those of aconite. Bears masses of pure white, buttercup-like flowers on tall branching stems in late spring and early summer. Thrives in damp borders and beside water features.",
+        "blind_verdict": "ok",
+        "blind_reason": ""
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "629ea9e8-3cd7-4804-bd09-9f4d338a623a",
+      "common_name": "Blue lobelia",
+      "scientific_name": "Lobelia siphilitica",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": true,
+        "before": "Blue lobelia is a North American native wildflower with tall spikes of brilliant blue flowers in late summer. It thrives in moist soil and naturalizes well along streams, pond edges, and in rain gardens. A magnet for butterflies and hummingbirds.",
+        "after": "Blue lobelia is a North American native wildflower with tall spikes of brilliant blue flowers in late summer. It thrives in moist soil and naturalizes well along streams, pond edges, and in rain gardens. The tubular flowers attract butterflies and hummingbirds.",
+        "blind_verdict": "ok",
+        "blind_reason": "The description is clear, concrete, and consistent with the data. It leads with visual impact (tall spikes of brilliant blue flowers), specifies timing (late summer), states habitat needs (moist soil) and appropriate locations (streams, pond edges, rain gardens), and ends with pollinator attraction. The tone is warm but factual, avoiding marketing language and exclamation marks. All claims align with the structured data."
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "1d01b130-893e-4426-8fdf-0a561c0373e5",
+      "common_name": "Bulley's primrose",
+      "scientific_name": "Primula bulleyana",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": false
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "86a7add5-db11-4893-99db-165e60d4e213",
+      "common_name": "Cinnamon fern",
+      "scientific_name": "Osmundastrum cinnamomeum",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": true,
+        "before": "A large, statuesque fern with distinctive cinnamon-colored fertile fronds that emerge in spring before the green sterile fronds unfold. The sterile fronds form a graceful, vase-shaped clump that can reach impressive sizes in moist conditions. Excellent for adding bold texture and vertical interest to shady gardens.",
+        "after": "A large, statuesque fern with distinctive cinnamon-colored fertile fronds that emerge in spring before the green sterile fronds unfold. The sterile fronds form a graceful, vase-shaped clump that can reach impressive sizes in moist conditions. In shade gardens it provides bold texture and vertical structure.",
+        "blind_verdict": "ok",
+        "blind_reason": ""
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "ffb504de-60ac-44f5-81c0-89f52c5d65ce",
+      "common_name": "Common bistort",
+      "scientific_name": "Persicaria bistorta",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": false
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "5364d059-9284-4a89-8ab5-75c2723bf9f6",
+      "common_name": "Common monkey flower",
+      "scientific_name": "Erythranthe guttata",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": true,
+        "before": "A cheerful wildflower with bright yellow tubular flowers spotted with red or orange markings. Forms spreading clumps along stream banks and wet areas, blooming prolifically through summer. Easy to grow in consistently moist conditions.",
+        "after": "A spreading wildflower with bright yellow tubular flowers spotted with red or orange markings. Forms clumps along stream banks and wet areas, blooming prolifically from late spring through summer. Requires consistently moist soil to thrive.",
+        "blind_verdict": "ok",
+        "blind_reason": "The description follows Santolina's voice guidelines: it's concrete and specific, leads with visual appearance (spreading wildflower, bright yellow tubular flowers with spotted markings), states blooming season clearly, and ends with the practical requirement of consistently moist soil. The tone is warm but factual, avoiding marketing language and twee expressions. The content matches the structured data for bloom color, months, and habitat preferences."
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "1ea42691-b0f7-4443-b850-f7c1142428b9",
+      "common_name": "Creeping-jenny",
+      "scientific_name": "Lysimachia nummularia",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": true,
+        "before": "A vigorous, mat-forming groundcover with round, coin-like bright green leaves and cheerful yellow cup-shaped flowers. It spreads quickly along the ground by rooting stems, making it excellent for filling gaps and softening edges. Can be invasive in ideal conditions, so best used where its spreading habit is welcome.",
+        "after": "A vigorous, mat-forming groundcover with round, coin-like bright green leaves and yellow cup-shaped flowers in summer. It spreads quickly along the ground by rooting stems, making it useful for filling gaps and softening edges. Can be invasive in ideal conditions, so best used where its spreading habit is welcome.",
+        "blind_verdict": "ok",
+        "blind_reason": ""
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "32da611c-d5e9-4fe3-939c-1d470f7a8600",
+      "common_name": "Cuckooflower",
+      "scientific_name": "Cardamine pratensis",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": true,
+        "before": "A charming wildflower with delicate pale pink or lilac flowers that appear in spring. The leaves are divided and fresh green, forming low clumps that spread gently in damp meadows and beside streams. A lovely choice for naturalizing in wilder parts of the garden.",
+        "after": "A wildflower with delicate pale pink or lilac flowers that appear in spring. The leaves are divided and fresh green, forming low clumps that spread gently in damp meadows and beside streams. Suits naturalizing in wilder parts of the garden where the soil stays moist.",
+        "blind_verdict": "ok",
+        "blind_reason": "The description meets all standards. It leads with what the reader sees (delicate pale pink or lilac flowers, divided fresh green leaves), specifies when they appear (spring), describes the habit (low clumps that spread gently), and ends with practical placement advice (damp meadows, beside streams, moist soil). The tone is plain and concrete without marketing language or twee expressions. All details align with the structured data."
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "8566324a-fee1-4c83-a461-3db097af7e6e",
+      "common_name": "Devil's-bit scabious",
+      "scientific_name": "Succisa pratensis",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": true,
+        "before": "A charming wildflower with rounded, pincushion-like flowers in deep blue-purple held on wiry stems above neat basal leaves. The blooms are magnets for bees and butterflies throughout late summer and autumn. An easy-going native plant perfect for meadows and naturalistic plantings.",
+        "after": "A charming wildflower with rounded, pincushion-like flowers in deep blue-purple held on wiry stems above neat basal leaves. The blooms attract bees and butterflies throughout late summer and autumn. An easy-going native plant for meadows and naturalistic plantings.",
+        "blind_verdict": "ok",
+        "blind_reason": ""
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "d5c1645c-b4e2-48c4-8e35-f8fe7a69f190",
+      "common_name": "Featherleaf rodgersia",
+      "scientific_name": "Rodgersia pinnata",
+      "image": {
+        "verdict": "open",
+        "reason": "image pass: medium confidence, and it SURVIVED the targeted re-check (pick-plant-images --verify) — the species could not be confirmed from this photo. Needs a new candidate image, not another check."
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": false
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": false,
+      "blockers": [
+        "image: image pass: medium confidence, and it SURVIVED the targeted re-check (pick-plant-images --verify) — the species could not be confirmed from this photo. Needs a new candidate image, not another check."
+      ]
+    },
+    {
+      "id": "0cc72331-41f1-414a-b6fc-704c7db13340",
+      "common_name": "Globeflower",
+      "scientific_name": "Trollius europaeus",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": false
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "a2def605-135d-42cc-8d5e-cefc5206b224",
+      "common_name": "Grassleaf sweet flag",
+      "scientific_name": "Acorus gramineus",
+      "image": {
+        "verdict": "open",
+        "reason": "image pass: medium confidence, and it SURVIVED the targeted re-check (pick-plant-images --verify) — the species could not be confirmed from this photo. Needs a new candidate image, not another check."
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": true,
+        "before": "A compact, grass-like perennial with narrow, arching green leaves that form neat tufts. Originally from wetland areas, it adapts well to garden conditions and is often grown in containers or at pond margins. Its tidy habit and glossy foliage make it a reliable choice for year-round greenery.",
+        "after": "A compact, grass-like perennial with narrow, arching green leaves that form neat tufts. Originally from wetland areas, it adapts well to garden conditions and is often grown in containers or at pond margins. The glossy foliage stays green through winter, providing reliable year-round texture.",
+        "blind_verdict": "ok",
+        "blind_reason": ""
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": false,
+      "blockers": [
+        "image: image pass: medium confidence, and it SURVIVED the targeted re-check (pick-plant-images --verify) — the species could not be confirmed from this photo. Needs a new candidate image, not another check."
+      ]
+    },
+    {
+      "id": "eb6756d6-af2a-437a-9622-c5c18b2cadd5",
+      "common_name": "Hemp-agrimony",
+      "scientific_name": "Eupatorium cannabinum",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": true,
+        "before": "A tall, robust wildflower with fluffy clusters of pink-purple flowers that attract masses of butterflies and bees. The leaves are distinctive, divided into finger-like segments that give it a hemp-like appearance. Excellent for naturalising in damp meadows or at the back of borders.",
+        "after": "A tall, robust wildflower with fluffy clusters of pink-purple flowers in mid to late summer. The leaves are distinctive, divided into finger-like segments that give it a hemp-like appearance. Excellent for naturalising in damp meadows or at the back of borders, where it attracts butterflies and bees.",
+        "blind_verdict": "ok",
+        "blind_reason": "The description meets all requirements. It leads with visual appearance and habit, specifies bloom timing and color matching the data, describes the distinctive foliage that explains the common name, and ends with practical growing context and wildlife value. The tone is warm but factual, avoiding marketing language and exclamation marks. All details are consistent with the structured data."
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "5fe775cd-d05f-4f00-b77d-12fceab09dd1",
+      "common_name": "Himalayan cowslip",
+      "scientific_name": "Primula florindae",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": false
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "bb2ce84a-d10b-4c25-ad82-1e1a20a32e63",
+      "common_name": "Japanese burnet",
+      "scientific_name": "Sanguisorba obtusa",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": true,
+        "before": "A clump-forming perennial with elegant bottlebrush-like flower spikes held above neat mounds of fern-like foliage. The fluffy pink blooms create a soft, airy effect in late summer borders. Easy to grow and long-lived in most garden conditions.",
+        "after": "A clump-forming perennial with elegant bottlebrush-like flower spikes held above neat mounds of fern-like foliage. The fluffy pink blooms create a soft, airy effect in late summer borders. Tolerates most soils and requires little maintenance once established.",
+        "blind_verdict": "ok",
+        "blind_reason": ""
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "499da527-6501-4d0b-8459-9a622951f41c",
+      "common_name": "Japanese iris",
+      "scientific_name": "Iris ensata",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": true,
+        "before": "Japanese iris produces spectacular large flat flowers in early summer, with elegant falls and standards in rich purples, blues, pinks, and whites. The narrow upright foliage forms attractive clumps and the blooms are excellent for cutting. These water-loving irises thrive in moist to boggy conditions where other garden plants struggle.",
+        "after": "Japanese iris produces large flat flowers in early summer, with wide falls and upright standards in rich purples, blues, pinks, and whites. The narrow upright foliage forms attractive clumps and the blooms are excellent for cutting. These water-loving irises thrive in moist to boggy conditions where other garden plants struggle.",
+        "blind_verdict": "ok",
+        "blind_reason": "The description is clear, concrete, and follows the voice guidelines. It leads with visible features (large flat flowers, specific petal structure, colors), includes timing (early summer), describes foliage habit, mentions practical use (cutting), and ends with growing conditions (moist to boggy). The tone is warm but factual, avoiding marketing language. All details match the structured data."
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "e99c75eb-5f7e-4585-b86a-c2c64b06a90a",
+      "common_name": "Japanese meadowsweet",
+      "scientific_name": "Filipendula purpurea",
+      "image": {
+        "verdict": "fail",
+        "reason": "no image at all (upstream has none)"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": true,
+        "before": "A tall, elegant perennial producing feathery plumes of pink to magenta flowers above deeply divided green foliage. Creates a soft, romantic effect in moist borders and looks particularly striking near water features. The fluffy flower clusters emerge in summer and are loved by pollinators.",
+        "after": "A tall perennial with feathery plumes of pink to magenta flowers above deeply divided green foliage. The fluffy flower clusters emerge in summer and attract pollinators. Thrives in moist soil and suits planting near water features or in consistently damp borders.",
+        "blind_verdict": "ok",
+        "blind_reason": ""
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": false,
+      "blockers": ["image: no image at all (upstream has none)"]
+    },
+    {
+      "id": "1de29674-4ba1-44f8-a681-50d13dc67bf6",
+      "common_name": "Marsh marigold",
+      "scientific_name": "Caltha palustris",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": true,
+        "before": "A cheerful spring-flowering plant that loves wet conditions, producing bright golden-yellow buttercup-like flowers above glossy dark green leaves. Perfect for pond edges, bog gardens, or any consistently moist spot where many plants struggle. Dies back completely in summer after flowering.",
+        "after": "A cheerful spring-flowering plant that loves wet conditions, producing bright golden-yellow buttercup-like flowers above glossy dark green leaves. Thrives at pond edges, in bog gardens, or any consistently moist spot where many plants struggle. Dies back completely in summer after flowering.",
+        "blind_verdict": "ok",
+        "blind_reason": ""
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "e23afd33-8365-4958-994c-ed518f48eb3a",
+      "common_name": "Przewalski's leopardplant",
+      "scientific_name": "Ligularia przewalskii",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": true,
+        "before": "A striking perennial with tall, dark purple-black stems that carry bright yellow daisy-like flowers. The deeply cut, jagged leaves create a bold architectural effect. Particularly effective planted near water or in moist borders where its dramatic form stands out.",
+        "after": "A tall perennial with dark purple-black stems carrying bright yellow daisy-like flowers in mid to late summer. The deeply cut, jagged leaves create bold architectural texture. Thrives in moist soil and works well beside ponds or in damp borders.",
+        "blind_verdict": "ok",
+        "blind_reason": "The description follows the guidelines: it is plain and concrete, leads with what the reader sees (stems, flowers, leaves), provides specific visual details (dark purple-black stems, bright yellow daisy-like flowers, deeply cut jagged leaves), includes timing (mid to late summer) and care information (moist soil), and avoids marketing language or twee enthusiasm. It is consistent with the plant data provided."
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "49e775f6-75aa-48a6-b980-3a4967b6c1e5",
+      "common_name": "Rabbitear iris",
+      "scientific_name": "Iris laevigata",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": true,
+        "before": "A graceful water-loving iris with smooth, sword-shaped leaves and elegant purple-blue flowers held above the foliage. Perfect for waterside planting and bog gardens, thriving with its roots in shallow water or very wet soil. Dies back completely in winter and regrows fresh each spring.",
+        "after": "A graceful water-loving iris with smooth, sword-shaped leaves and elegant purple-blue flowers held above the foliage in late spring and early summer. Thrives with its roots in shallow water or very wet soil, making it well suited to pond margins and bog gardens. Dies back completely in winter and regrows fresh each spring.",
+        "blind_verdict": "ok",
+        "blind_reason": "The description is clear, specific, and consistent with the plant data. It leads with visual details (smooth sword-shaped leaves, elegant purple-blue flowers), specifies timing (late spring and early summer), gives practical growing information (shallow water or very wet soil, pond margins and bog gardens), and notes the seasonal behaviour (dies back in winter). The tone is warm but factual, avoiding marketing language while remaining accessible to beginners."
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "e798d2bc-94a2-40df-a99c-98f6b2becdfb",
+      "common_name": "Scarlet lobelia",
+      "scientific_name": "Lobelia cardinalis",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": false
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "b48c91ba-9c30-4c01-afcc-d6271da45372",
+      "common_name": "Siberian iris",
+      "scientific_name": "Iris sibirica",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": false
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "3c3efa73-7c8c-4f6a-b990-37299d7a9faf",
+      "common_name": "Soft rush",
+      "scientific_name": "Juncus effusus",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "The phrase 'adds texture to pond edges and wet areas' is vague gardening marketing language rather than a concrete visual description.",
+        "rewritten": false
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "The modern style tag is appropriate for the architectural, vertical form, and the space types correctly reflect ground and mixed planting options for a marginal plant."
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "7d1245f0-003d-4595-bb01-15e60d3f1654",
+      "common_name": "Star astilbe",
+      "scientific_name": "Astilbe simplicifolia",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": true,
+        "before": "A delicate perennial with glossy, fern-like foliage and airy plumes of tiny flowers held on slender stems. Smaller and more refined than most astilbes, it forms neat clumps ideal for shady borders and woodland gardens. The flowers attract pollinators and the foliage provides attractive groundcover through summer.",
+        "after": "A compact perennial with glossy, fern-like foliage and slender stems carrying plumes of tiny pink or white flowers from June to August. Smaller and more refined than most astilbes, it forms neat clumps 20 to 40 cm tall, ideal for shady borders and woodland gardens where the foliage provides attractive groundcover through summer.",
+        "blind_verdict": "ok",
+        "blind_reason": ""
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "463db6ac-2f8a-4254-964d-800d43ffb5d5",
+      "common_name": "Tufted sedge",
+      "scientific_name": "Carex elata",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": false
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "fa005a7d-fc06-465a-8e16-32f1700041bf",
+      "common_name": "Water avens",
+      "scientific_name": "Geum rivale",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": true,
+        "before": "Water avens is a charming wildflower with nodding, bell-shaped blooms in soft peachy-pink tones held above clumps of fresh green foliage. It naturally grows in damp meadows and along stream edges, bringing a relaxed, naturalistic feel to wetter spots in the garden. The flowers are followed by fluffy seedheads that add late-season interest.",
+        "after": "Water avens produces nodding, bell-shaped flowers in soft peachy-pink tones from late spring to midsummer, held above clumps of fresh green foliage. It naturally grows in damp meadows and along stream edges, thriving in wetter spots in the garden. The flowers are followed by fluffy seedheads that add late-season interest.",
+        "blind_verdict": "ok",
+        "blind_reason": ""
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "9e9c691b-4037-4179-bd53-793ff5e9db68",
+      "common_name": "Water forget-me-not",
+      "scientific_name": "Myosotis scorpioides",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "The description is concrete, specific about flower appearance and timing, leads with visual characteristics, and uses appropriate calm language without marketing register or banned punctuation.",
+        "rewritten": false
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "The wildflower style tag is appropriate for a water-loving native that naturalizes readily, and the space tags correctly reflect that this plant grows in ground gardens and mixed settings suitable for moisture-loving plants."
+      },
+      "approved": true,
+      "blockers": []
+    },
+    {
+      "id": "daed4d26-440a-48f6-b1e3-136e089903fa",
+      "common_name": "Willow gentian",
+      "scientific_name": "Gentiana asclepiadea",
+      "image": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "description": {
+        "verdict": "pass",
+        "reason": "cleared previously",
+        "rewritten": false
+      },
+      "tags": {
+        "verdict": "pass",
+        "reason": "cleared previously"
+      },
+      "approved": true,
+      "blockers": []
+    }
+  ]
+}

@@ -1,0 +1,178 @@
+{
+  "label": "12",
+  "started_at": "2026-08-16T15:23:52.591Z",
+  "finished_at": "2026-08-16T15:24:55.244Z",
+  "seeded_count": 28,
+  "seeded_ids": [
+    "7d1245f0-003d-4595-bb01-15e60d3f1654",
+    "e99c75eb-5f7e-4585-b86a-c2c64b06a90a",
+    "d5c1645c-b4e2-48c4-8e35-f8fe7a69f190",
+    "e23afd33-8365-4958-994c-ed518f48eb3a",
+    "ffb504de-60ac-44f5-81c0-89f52c5d65ce",
+    "bb2ce84a-d10b-4c25-ad82-1e1a20a32e63",
+    "8566324a-fee1-4c83-a461-3db097af7e6e",
+    "e798d2bc-94a2-40df-a99c-98f6b2becdfb",
+    "629ea9e8-3cd7-4804-bd09-9f4d338a623a",
+    "0cc72331-41f1-414a-b6fc-704c7db13340",
+    "ee44d0e2-dced-44ad-b862-7270995f395a",
+    "fa005a7d-fc06-465a-8e16-32f1700041bf",
+    "daed4d26-440a-48f6-b1e3-136e089903fa",
+    "32da611c-d5e9-4fe3-939c-1d470f7a8600",
+    "5364d059-9284-4a89-8ab5-75c2723bf9f6",
+    "1de29674-4ba1-44f8-a681-50d13dc67bf6",
+    "9e9c691b-4037-4179-bd53-793ff5e9db68",
+    "1ea42691-b0f7-4443-b850-f7c1142428b9",
+    "a2def605-135d-42cc-8d5e-cefc5206b224",
+    "499da527-6501-4d0b-8459-9a622951f41c",
+    "b48c91ba-9c30-4c01-afcc-d6271da45372",
+    "49e775f6-75aa-48a6-b980-3a4967b6c1e5",
+    "5fe775cd-d05f-4f00-b77d-12fceab09dd1",
+    "1d01b130-893e-4426-8fdf-0a561c0373e5",
+    "86a7add5-db11-4893-99db-165e60d4e213",
+    "463db6ac-2f8a-4254-964d-800d43ffb5d5",
+    "3c3efa73-7c8c-4f6a-b990-37299d7a9faf",
+    "eb6756d6-af2a-437a-9622-c5c18b2cadd5"
+  ],
+  "seeded": [
+    {
+      "id": "7d1245f0-003d-4595-bb01-15e60d3f1654",
+      "source_species_id": 147888,
+      "common_name": "Astilbe simplicifolia"
+    },
+    {
+      "id": "e99c75eb-5f7e-4585-b86a-c2c64b06a90a",
+      "source_species_id": 336446,
+      "common_name": "Filipendula purpurea"
+    },
+    {
+      "id": "d5c1645c-b4e2-48c4-8e35-f8fe7a69f190",
+      "source_species_id": 263326,
+      "common_name": "Rodgersia pinnata"
+    },
+    {
+      "id": "e23afd33-8365-4958-994c-ed518f48eb3a",
+      "source_species_id": 21030,
+      "common_name": "Przewalski's leopardplant"
+    },
+    {
+      "id": "ffb504de-60ac-44f5-81c0-89f52c5d65ce",
+      "source_species_id": 129337,
+      "common_name": "Adder-wort"
+    },
+    {
+      "id": "bb2ce84a-d10b-4c25-ad82-1e1a20a32e63",
+      "source_species_id": 436292,
+      "common_name": "Sanguisorba obtusa"
+    },
+    {
+      "id": "8566324a-fee1-4c83-a461-3db097af7e6e",
+      "source_species_id": 132800,
+      "common_name": "Premorse"
+    },
+    {
+      "id": "e798d2bc-94a2-40df-a99c-98f6b2becdfb",
+      "source_species_id": 216405,
+      "common_name": "Scarlet lobelia"
+    },
+    {
+      "id": "629ea9e8-3cd7-4804-bd09-9f4d338a623a",
+      "source_species_id": 216641,
+      "common_name": "Blue lobelia"
+    },
+    {
+      "id": "0cc72331-41f1-414a-b6fc-704c7db13340",
+      "source_species_id": 119277,
+      "common_name": "Globeflower"
+    },
+    {
+      "id": "ee44d0e2-dced-44ad-b862-7270995f395a",
+      "source_species_id": 121257,
+      "common_name": "Aconite-leaf buttercup"
+    },
+    {
+      "id": "fa005a7d-fc06-465a-8e16-32f1700041bf",
+      "source_species_id": 264682,
+      "common_name": "Water avens"
+    },
+    {
+      "id": "daed4d26-440a-48f6-b1e3-136e089903fa",
+      "source_species_id": 187602,
+      "common_name": "Willow gentian"
+    },
+    {
+      "id": "32da611c-d5e9-4fe3-939c-1d470f7a8600",
+      "source_species_id": 157132,
+      "common_name": "Meadow cress"
+    },
+    {
+      "id": "5364d059-9284-4a89-8ab5-75c2723bf9f6",
+      "source_species_id": 361116,
+      "common_name": "Erythranthe guttata"
+    },
+    {
+      "id": "1de29674-4ba1-44f8-a681-50d13dc67bf6",
+      "source_species_id": 156000,
+      "common_name": "Cowflock"
+    },
+    {
+      "id": "9e9c691b-4037-4179-bd53-793ff5e9db68",
+      "source_species_id": 98749,
+      "common_name": "Forget-me-not"
+    },
+    {
+      "id": "1ea42691-b0f7-4443-b850-f7c1142428b9",
+      "source_species_id": 116316,
+      "common_name": "Creeping-jenny"
+    },
+    {
+      "id": "a2def605-135d-42cc-8d5e-cefc5206b224",
+      "source_species_id": 95179,
+      "common_name": "Grassleaf sweet flag"
+    },
+    {
+      "id": "499da527-6501-4d0b-8459-9a622951f41c",
+      "source_species_id": 210233,
+      "common_name": "Japanese iris"
+    },
+    {
+      "id": "b48c91ba-9c30-4c01-afcc-d6271da45372",
+      "source_species_id": 210382,
+      "common_name": "Siberian iris"
+    },
+    {
+      "id": "49e775f6-75aa-48a6-b980-3a4967b6c1e5",
+      "source_species_id": 210293,
+      "common_name": "Japanese iris"
+    },
+    {
+      "id": "5fe775cd-d05f-4f00-b77d-12fceab09dd1",
+      "source_species_id": 290313,
+      "common_name": "Himalayan cowslip"
+    },
+    {
+      "id": "1d01b130-893e-4426-8fdf-0a561c0373e5",
+      "source_species_id": 290290,
+      "common_name": "Primula bulleyana"
+    },
+    {
+      "id": "86a7add5-db11-4893-99db-165e60d4e213",
+      "source_species_id": 292663,
+      "common_name": "Cinnamon fern"
+    },
+    {
+      "id": "463db6ac-2f8a-4254-964d-800d43ffb5d5",
+      "source_species_id": 93676,
+      "common_name": "Tufted sedge"
+    },
+    {
+      "id": "3c3efa73-7c8c-4f6a-b990-37299d7a9faf",
+      "source_species_id": 208738,
+      "common_name": "Soft rush"
+    },
+    {
+      "id": "eb6756d6-af2a-437a-9622-c5c18b2cadd5",
+      "source_species_id": 10019,
+      "common_name": "Hemp-agrimony"
+    }
+  ]
+}

@@ -1,0 +1,107 @@
+{
+  "ran_at": "2026-08-16T15:42:19.763Z",
+  "model": "claude-sonnet-4-5",
+  "checked": 28,
+  "clean": 21,
+  "flagged": [
+    {
+      "id": "0cc72331-41f1-414a-b6fc-704c7db13340",
+      "common_name": "Globeflower",
+      "scientific_name": "Trollius europaeus",
+      "flags": [
+        {
+          "field": "sun_requirements",
+          "severity": "minor",
+          "stored": ["full_sun", "partial_sun"],
+          "checked": ["partial_sun", "shade"],
+          "detail": "partial overlap"
+        }
+      ]
+    },
+    {
+      "id": "1de29674-4ba1-44f8-a681-50d13dc67bf6",
+      "common_name": "Marsh marigold",
+      "scientific_name": "Caltha palustris",
+      "flags": [
+        {
+          "field": "sun_requirements",
+          "severity": "minor",
+          "stored": ["full_sun", "partial_sun", "shade"],
+          "checked": ["full_sun", "partial_sun"],
+          "detail": "partial overlap"
+        }
+      ]
+    },
+    {
+      "id": "3c3efa73-7c8c-4f6a-b990-37299d7a9faf",
+      "common_name": "Soft rush",
+      "scientific_name": "Juncus effusus",
+      "flags": [
+        {
+          "field": "plant_type",
+          "severity": "disagree",
+          "stored": "grass",
+          "checked": "perennial",
+          "detail": "classification mismatch"
+        }
+      ]
+    },
+    {
+      "id": "463db6ac-2f8a-4254-964d-800d43ffb5d5",
+      "common_name": "Tufted sedge",
+      "scientific_name": "Carex elata",
+      "flags": [
+        {
+          "field": "plant_type",
+          "severity": "disagree",
+          "stored": "grass",
+          "checked": "perennial",
+          "detail": "classification mismatch"
+        }
+      ]
+    },
+    {
+      "id": "5fe775cd-d05f-4f00-b77d-12fceab09dd1",
+      "common_name": "Himalayan cowslip",
+      "scientific_name": "Primula florindae",
+      "flags": [
+        {
+          "field": "sun_requirements",
+          "severity": "minor",
+          "stored": ["full_sun", "partial_sun", "shade"],
+          "checked": ["partial_sun", "shade"],
+          "detail": "partial overlap"
+        }
+      ]
+    },
+    {
+      "id": "a2def605-135d-42cc-8d5e-cefc5206b224",
+      "common_name": "Grassleaf sweet flag",
+      "scientific_name": "Acorus gramineus",
+      "flags": [
+        {
+          "field": "bloom_months",
+          "severity": "minor",
+          "stored": [],
+          "checked": [5, 6, 7],
+          "detail": "one side reports no bloom"
+        }
+      ]
+    },
+    {
+      "id": "fa005a7d-fc06-465a-8e16-32f1700041bf",
+      "common_name": "Water avens",
+      "scientific_name": "Geum rivale",
+      "flags": [
+        {
+          "field": "sun_requirements",
+          "severity": "minor",
+          "stored": ["full_sun", "partial_sun", "shade"],
+          "checked": ["partial_sun", "shade"],
+          "detail": "partial overlap"
+        }
+      ]
+    }
+  ],
+  "failures": []
+}

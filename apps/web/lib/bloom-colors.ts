@@ -125,6 +125,7 @@ export const RAW_TO_BUCKET: Record<string, string> = {
   'pale purple': 'purple',
   'purple-tinged': 'purple',
   'reddish-purple': 'purple', // round 9, Sempervivum montanum
+  'blue-purple': 'purple', // round 12, Succisa pratensis — compound rule above
   // lavender
   lavender: 'lavender',
   'lavender-blue': 'lavender',

@@ -65,6 +65,148 @@ The numbers **in this file are different and must stay written down**: a dated s
 
     The session entries below are exempt and the scan stops at the `## Sessions` heading, which is the tense half of this rule made structural: a dated entry records an event.
 
+### 2026-08-16 — Round 12
+
+**Branch** `session/2026-08-16-round-12`. Seeded 28 plant(s) on 2026-08-16.
+
+Catalog now **748 species / 1864 combinations** (231 with `is_curated = true`).
+
+Pipeline steps for this round:
+
+```
+✓ curate-plants                  28/28   ai_drafted_at, style_checked_at, greenery_checked_at all NOT NULL
+✓ curate-combinations            28/28   appears in plant_combinations
+✓ regenerate-native-region       28/28   native_region non-empty (hybrids excluded)
+✓ cross-check-plants             28/28   botanical_checked_at NOT NULL
+✓ cross-check-native-to          28/28   native_checked_at NOT NULL
+✓ cross-check-native-region      28/28   native_region_checked_at NOT NULL
+✓ curate-seasonal-care           28/28   seasonal_care NOT NULL
+⚠ pick-plant-images              27/28   image_checked_at NOT NULL
+✓ pick-plant-images --verify       2/2   image_verified_at NOT NULL (medium-confidence heroes only)
+✓ curate-editorial               28/28   editorial_checked_at NOT NULL
+```
+
+⚠️ **1 step did not complete:** `pick-plant-images`, 27/28. The gap is
+_Filipendula purpurea_, whose Trefle record carries no usable candidate image
+at all — "no image at all" went 0 → 1, undoing the invariant round 11
+established. It is a plant that needs a photograph, not a pass that needs
+re-running, so `feed-wikimedia-candidates` is the remedy and it is not run here
+(see "Deliberately not done").
+
+**The round in one paragraph.** The first round chosen against a measured gap
+rather than a proposed theme. Four candidates were gap-tested on round 9's
+rule; three died — small-space/container 49 of 58 already held (84%), dry shade
+19 of 26 (73%), late season 16 of 26 (62%) and overlapping the twice-killed
+winter block. Damp ground survived at 21 of 63 (33%) and was taken. 720 → 748
+species, 1795 → 1864 pairs, 25 of 28 approved.
+
+**What bit us**
+
+- **The leading hypothesis was wrong, and only the species test caught it.**
+  Small-space looked like the obvious gap from two aggregate signals: 47 rows
+  under 20cm against 194 over 200cm, and `terrace_balcony` at 26%. Both are
+  real numbers and both are the wrong measurement — the archetypal compact
+  palette (Aubrieta, Armeria, Phlox subulata, Iberis, Erigeron karvinskianus,
+  Sempervivum, Festuca glauca, Convolvulus cneorum) was already in almost
+  entirely. **A histogram tells you about band boundaries; only naming the
+  species tells you about absence.**
+- **An exact-name probe is not a dedupe, and it nearly seeded two duplicates.**
+  The gap probes matched `scientific_name` literally and reported 28 absentees.
+  Re-checked through `fetchCatalogIndex().holds()`, which consults
+  `SYNONYM_GENERA`, two were already held under another genus — _Persicaria
+  amplexicaulis_ (round 11 seeded it) and _Struthiopteris spicant_ (held as
+  _Blechnum_). Seeded blind those are duplicate species, the one failure no
+  later pass can undo. The resolver's premise, demonstrated on live data.
+- **`pick-plant-images` reported seven bare UUIDs and the word "errored".**
+  A transient upstream timeout and a permanently dead candidate URL both arrive
+  as `result.type === 'errored'` and need opposite responses — a re-run versus
+  a new photograph. The reason had to be read back out of the Batch API by hand
+  before the rows could be retried safely; all seven were the retryable kind
+  and all seven cleared later (five on the second attempt, two on the third,
+  every one `high`). **Fixed in this round's PR** — `describeBatchFailure` now
+  prints the error type, message and `request_id` at both collection sites and
+  resolves the plant's name from the batch manifest. Pinned by four cases in
+  `pick-plant-images.test.ts` using the payload the API actually returned for
+  _Persicaria bistorta_; three of the four fail against the pre-fix line,
+  verified by reverting it.
+- **The editorial pass caught a defect two guards had passed over, and the
+  ruling that settles it was already written.** `plant_type_label` read
+  "Ornamental grass" for _Juncus effusus_, a rush. `cross-check-plants` had
+  flagged the SIBLING field `plant_type` on the same row, and that flag was
+  correctly dismissed — [plant_type is a functional
+  label](architecture.md#plant-type-label), Ana's July 10 2026 ruling, says the
+  field is "how you buy, place, and care for it — not a botanical growth-form
+  classification", and that "the descriptive `plant_type_label` may carry the
+  nuance". Eleven non-Poaceae rows depend on `grass` to reach the Explore grass
+  shelf. **Two adjacent fields, one a convention and one a claim: the flag next
+  door was a false positive and dismissing it nearly closed the real one.**
+  That the ruling existed and was found only after the fact is the lesson —
+  the round-4 sweep had already rejected 8 of 10 flags of exactly this class.
+  Fixed by `fix-round12-tags.ts`.
+- **Trap 6 landed at its worst rate yet and produced an INTRA-round collision.**
+  6 of 28 (21%) had no English name, against round 8's 18%. Trefle returned
+  "Japanese iris" for both _Iris ensata_ and _Iris laevigata_, so the batch
+  collided with itself — rounds 8 and 11 only ever collided with existing rows.
+  _ensata_ keeps the name; _laevigata_ became "Rabbitear iris" rather than
+  "Japanese water iris", because a name differing by one adjective is a search
+  problem and "water iris" would collide the day anyone seeds _I. pseudacorus_.
+- **Trap 5 fired again, as it has every seed:** `blue-purple`, unmapped. Filed
+  under purple by the compound rule already documented in `bloom-colors.ts`
+  (last word wins the bucket, the first modifies) — the mirror of
+  `purple-blue`.
+- **Round 11's backup friction recurred exactly as it predicted.** Standing
+  rule 1 wants the snapshot in the shared checkout; `resolveBaselineDir` scans
+  `process.cwd()/backups` only, so it was taken in the shared checkout and
+  copied into the worktree by hand. `run-round` still has no `--baseline`
+  passthrough, so round 13 hits this too.
+
+**What the round confirmed, first time observed**
+
+- **Run provenance wrote its first records.** `apps/web/runs/2026-08.jsonl` was
+  empty before this round. Strengths came out as predicted: `bounded` on the
+  value-column pass, `corroborated` on every stamp pass, and **nothing recorded
+  `confirmed`**, which is trap 29 holding by construction.
+- **Trap 24's second site behaved as designed.** `cross-check-native-region`
+  left its 4 disagreements UNSTAMPED, they failed round close, and they stayed
+  in the queue until settled. `cross-check-native-to` returned `gross=0
+contradicts=0`, so the feared case — a row a person reads and KEEPS, which
+  nothing in TypeScript can record — did not arise. The `--review-keep` writer
+  (audit F5) stays can-wait rather than becoming a blocker.
+- **Trap 26's fix works on a fresh batch, not only on a repair.**
+  `curate-plants` wrote `style_tags` and `style_checked_at` on all 28.
+
+**Deliberately not done**
+
+- **_Filipendula purpurea_ has no image.** `feed-wikimedia-candidates` is the
+  remedy and it CLEARS a stamp, so `invariants:check` shape 12 refuses it until
+  it carries run provenance — it is one of the 16 unwired passes. Wiring it is
+  the queued work; doing it inside a round would have been the wrong order.
+- **Two medium-confidence heroes survived `--verify` and stay held** —
+  _Rodgersia pinnata_ and _Acorus gramineus_, both "species unsure": a palmate
+  leaf with no flower, and a nursery tag visible in the frame.
+- **Three EARLIER rounds' rows carry the same label defect as _Juncus_** —
+  _Carex comans_ and _Carex testacea_ read "ornamental grass", _Luzula
+  sylvatica_ reads "Evergreen perennial grass". Out of round 12's scope, and
+  `check-round-scope` would have flagged writing them. A separate scoped pass.
+- **50 of 748 rows still show a Latin binomial as their common name** — 6.7% of
+  the catalog, inherited from earlier rounds; round 12's own six are fixed.
+  Product-visible, and a Build Backlog row rather than round work.
+- **The two invasive cuts are Ana's to reverse.** _Lythrum salicaria_ and
+  _Iris pseudacorus_ are genuine absentees cut on round 11's _Lonicera
+  japonica_ precedent: native to the Balkans, regulated invasives across much
+  of North America. She confirmed both cuts this session; reversing them is a
+  reading decision, and the reasoning is in `seed-round12.ts`'s header.
+- **_Aruncus aethusifolius_ is absent from Trefle entirely** and was dropped
+  rather than worked around, on round 11's _Ficus pumila_ precedent.
+- **A latent resolver issue, not hit this round.** Trefle answers page 2 with
+  `404 expected :page in 1..1` when a query has only one page. `resolve` only
+  reaches page 2 when page 1 has results but no exact match, which did not
+  happen here — but when it does, a legitimate "no more results" throws and is
+  recorded as a FAILURE rather than a `miss`. Not fixed: it did not break this
+  round, and the fix wants its own change with a test.
+
+---
+
 **Rule 9 is enforced, not encouraged.** `.husky/check-db-log.sh` runs on every commit and blocks it if a round directory is committed without an entry naming that round, if a migration is committed without touching this file, or if this file still contains the `TODO —` placeholders the script writes. Git cannot see what you ran against Supabase — only what you commit — so the hook checks the artifacts database work leaves behind, and the honest reading of a green hook is "you recorded something", not "you recorded enough". `--no-verify` exists and is occasionally right (a revert, a docs fixup). It is not the normal path, and whatever you skip is inherited by whoever comes next.
 
 ---

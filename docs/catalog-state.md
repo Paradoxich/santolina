@@ -23,8 +23,8 @@ date is the freshness record.
 
 | | |
 | --- | ---: |
-| species | 720 |
-| companion pairs | 1795 |
+| species | 748 |
+| companion pairs | 1864 |
 
 ## Pipeline coverage
 
@@ -33,30 +33,30 @@ One row per step that stamps a column, from the `STEP_DEFS` registry in
 
 | step | column | judged | share |
 | --- | --- | ---: | ---: |
-| `cross-check-plants` | `botanical_checked_at` | 604 / 720 | 83.9% |
-| `cross-check-native-to` | `native_checked_at` | 720 / 720 | 100.0% |
-| `cross-check-native-region` | `native_region_checked_at` | 692 / 720 | 96.1% |
-| `curate-styles` | `style_checked_at` | 720 / 720 | 100.0% |
-| `curate-greenery` | `greenery_checked_at` | 720 / 720 | 100.0% |
-| `pick-plant-images` | `image_checked_at` | 720 / 720 | 100.0% |
-| `pick-plant-images --verify` | `image_verified_at` | 74 / 720 | 10.3% |
-| `curate-editorial` | `editorial_checked_at` | 216 / 720 | 30.0% |
+| `cross-check-plants` | `botanical_checked_at` | 632 / 748 | 84.5% |
+| `cross-check-native-to` | `native_checked_at` | 748 / 748 | 100.0% |
+| `cross-check-native-region` | `native_region_checked_at` | 720 / 748 | 96.3% |
+| `curate-styles` | `style_checked_at` | 748 / 748 | 100.0% |
+| `curate-greenery` | `greenery_checked_at` | 748 / 748 | 100.0% |
+| `pick-plant-images` | `image_checked_at` | 747 / 748 | 99.9% |
+| `pick-plant-images --verify` | `image_verified_at` | 79 / 748 | 10.6% |
+| `curate-editorial` | `editorial_checked_at` | 244 / 748 | 32.6% |
 
 ## Field coverage
 
 | field | state | count |
 | --- | --- | ---: |
-| `ai_drafted_at` | drafted | 720 |
-| `is_curated` | editorially reviewed | 206 |
-| `style_tags` | style-neutral (stamped, `[]` — a valid judgment) | 48 |
+| `ai_drafted_at` | drafted | 748 |
+| `is_curated` | editorially reviewed | 231 |
+| `style_tags` | style-neutral (stamped, `[]` — a valid judgment) | 50 |
 | `style_tags` | never judged (`style_checked_at` NULL — a gap) | 0 |
 | `seasonal_care` | null | 0 |
 | `native_region` | empty | 3 |
-| `is_greenery` | true | 110 |
+| `is_greenery` | true | 114 |
 | `hardiness_rating` | drafted | 595 |
 | `hardiness_verified` | human-verified | 267 |
-| images | no image at all | 0 |
-| images | have an editorial pick (`image_url_curated`) | 720 |
+| images | no image at all | 1 |
+| images | have an editorial pick (`image_url_curated`) | 747 |
 
 ## Style tag distribution
 
@@ -66,9 +66,9 @@ warns above that bar on every full run.
 
 | tag | plants | share |
 | --- | ---: | ---: |
-| cottage | 354 | 49.2% |
-| mediterranean | 195 | 27.1% |
-| classic | 119 | 16.5% |
-| wildflower | 117 | 16.3% |
-| modern | 112 | 15.6% |
-| lush | 108 | 15.0% |
+| cottage | 364 | 48.7% |
+| mediterranean | 195 | 26.1% |
+| wildflower | 131 | 17.5% |
+| classic | 120 | 16.0% |
+| lush | 118 | 15.8% |
+| modern | 115 | 15.4% |
