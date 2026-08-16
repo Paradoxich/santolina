@@ -32,6 +32,73 @@ supabase start -x studio,realtime,storage-api,imgproxy,edge-runtime,inbucket,vec
 
 ---
 
+## 2026-08-16 — Write provenance (second session this date)
+
+**In flight:** PR [#163](https://github.com/Paradoxich/santolina/pull/163),
+branch `session/2026-08-16-run-provenance`, 3 commits, CI green, worktree
+`../santolina-run-provenance` still in place. Contract:
+`docs/write-provenance.md`. The earlier round-12 guardrails session is below and
+its PR #162 is merged.
+
+```bash
+gh pr view 163
+pnpm invariants:check      # prints `steps without provenance 25`
+```
+
+**ROUND 12 IS GATED ON THIS, and the gate moved.** The resolver unblocked the
+seeding half (entry below); this adds the other half. Nine round steps still
+write to the catalog with no run record, so a round run today would produce
+values whose production context is unrecoverable — the exact debt the work
+exists to stop accruing. `RUNS_WITHOUT_PROVENANCE` names all 25 scripts with
+what each writes; the nine round steps are the first block in that list.
+
+**Next steps, in order:**
+
+1. **Merge #163, then wire the nine round steps.** Start a FRESH session and read
+   `docs/write-provenance.md` first, then `curate-plants.ts` as the worked
+   example. The abstraction is settled — this is implementation, not design.
+   Follow the order the contract implies: `withRunRecord` → `writeSet` → recipe
+   → evidence → `wrote(rowId)` → outcome.
+2. **Expect three of the nine to need a non-default evidence witness**, because
+   they do not write a timestamp column: `curate-seasonal-care` (`seasonal_care`),
+   `regenerate-native-region` (`native_region`), `recover-image-categories`
+   (`image_candidates`), and `curate-combinations` writes a different table
+   entirely. `beginRun` throws on an unwitnessed write-set member, so this
+   surfaces immediately rather than as a silent verification failure.
+3. **Two of the nine have a per-invocation recipe**, not a constant:
+   `pick-plant-images` runs two modes on `VISION_MODEL`, and `curate-editorial`
+   computes `max_tokens`. Wire the modes as separate runs.
+4. **`regenerate-native-region` wants the plan-freshness check in the same
+   change** — the plan already carries `generatedAt` and nothing compares it
+   against the rows' `updated_at`, so a reviewed plan can be applied to state
+   that moved underneath it. `restore-catalog` has the comparison to copy.
+5. **Then round 12.** The useful information from step 1 is whether the
+   abstraction fits all nine real shapes; if one of them needs a fifth witness
+   kind or a different outcome, that is worth knowing before the round, not
+   during it.
+
+**The ratchet at 25 is not noise.** It is the statement that the migration is
+incomplete, printed on every green run. Deleting entries is the work.
+
+**Waiting on Ana, unchanged:** the two climbing hydrangeas, the `Cenolophium`
+region correction, the 5 photo holds, the rounds 1-6 editorial pass, the `modern`
+re-tag, and whether an empty `common_issues` / `environment_benefits` is
+legitimate (21 and 4 drafted rows).
+
+**What this session learned, worth carrying:** the infrastructure survived seven
+attempts to make it lie — duplicate run identity, interrupted execution vanishing
+from history, invalid evidence degrading silently, a mutation that is not a
+column, a witness that cannot attribute a write, a row written twice, and a
+detector claiming broader coverage than it had. Every one was found by building
+the check and running it, not by reasoning about it. Three came from a review
+that only had the design document; four came from the code disagreeing with me.
+That ratio is the argument for writing the mechanism before the prose.
+
+**Open questions:** none on the design. It is settled; do not reopen it before
+the nine are wired.
+
+---
+
 ## 2026-08-16 — The round-12 guardrails
 
 **In flight: nothing.** PR
