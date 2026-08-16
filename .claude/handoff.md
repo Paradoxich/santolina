@@ -37,110 +37,86 @@ supabase start -x studio,realtime,storage-api,imgproxy,edge-runtime,inbucket,vec
 
 ---
 
-## 2026-08-16 — The demo purge stops losing photos quietly
+## 2026-08-16 — Round 12 ran, and closed 28/28
 
-**PR [#167](https://github.com/Paradoxich/santolina/pull/167) is MERGED** as
-`f872ad5`; branch and worktree are gone. CI green on the PR, all seven checks
-re-run green on merged main. **Nothing from this session is in flight.**
+**PR [#168](https://github.com/Paradoxich/santolina/pull/168) is MERGED** as
+`88b3815`; branch and worktree are gone, CI green before the merge.
+**Nothing from this session is in flight.** The round's own story — the gap
+test, what bit us, what is deliberately left — is the `2026-08-16 — Round 12`
+entry in `docs/database-log.md` and is not repeated here.
 
-`OPEN_FINDINGS['demo-purge-swallows-storage-failure']` is CLOSED, 5 findings → 4. The decision it was blocked on, and the reason it is not a code comment: a
-storage failure does **not** block the account deletion. Storage and Postgres
-cannot be deleted atomically, so aborting on an external failure does not
-prevent loss — it converts one recoverable orphan into an unbounded queue of
-demo accounts that never expire behind a single bad object. The best-effort
-policy was right; the silence was the defect. Mechanism is in
-`lib/purge-demo-users.ts` and the new bullet in
-[private diary photos](../docs/architecture.md#diary-photos-private).
+**The catalog is at 748 species / 1864 pairs** and every current number is in
+[`catalog-state.md`](../docs/catalog-state.md), generated.
 
-**A claim in that finding was overstated, and it changes what is still owed.**
-It called this the only case whose lost state cannot be reconstructed. Orphans
-are enumerable: upload paths are `{gardenId}/…` and `gardens` is a live table,
-so any object whose first path segment has no live garden is an orphan — from
-ANY source, including the four request-path callers that still shrug at a
-storage error. A service-role reconciliation sweep would find every one already
-sitting in the bucket. **Not built deliberately**: it deletes user photos on the
-basis of a computed diff, so it wants its own session, a dry run, and Ana's
-sign-off rather than a slip into a fix commit. It is a **Build Backlog row**,
-not a ratchet entry — nothing is defective today, so no witness would match.
+**Next steps, in order. 1 through 4 are carried forward unconsumed from the
+previous entry; round 12 consumed only its own step.**
 
-**Next steps, in order. Round 12 was not run this session; 1 through 5 are
-carried forward unconsumed from the previous entry.**
+1. **The out-of-round 16 — now 18, and the two additions are mine.**
+   `fix-round12-names.ts` and `fix-round12-tags.ts` went onto
+   `RUNS_WITHOUT_PROVENANCE` as one-off passes, matching how rounds 8 and 11's
+   name passes are recorded. That list is the queue.
+   `backfill-guard-stamps` still matters most: its state-derived half was
+   deleted after it fabricated 100 stamps. `apply-native-to-fixes`,
+   `apply-image-reverts` and `feed-wikimedia-candidates` all CLEAR a stamp, so
+   shape 12 refuses them until they pass evidence — which is the guard working.
+   **Round 12 corrected a claim worth carrying:** shape 12 refuses to WIRE such
+   a script without evidence; it never prevented running one. That
+   misreading is why `Filipendula purpurea` nearly shipped with a placeholder.
+2. **Then per-column exclusivity, which is what earns `confirming` back.**
+   The order is still forced and trap 29 still has the reasoning: five of the
+   seven witnessed columns have more than one writing step
+   (`native_checked_at` three, `image_verified_at` four), so the key has to be
+   the COLUMN across every writer — and most of those writers are in step 1.
+   **Do not DESIGN it early either.** The census it must be designed against is
+   the complete one, and step 1 changes that census.
+   Round 12 supplied the first real evidence that the mechanism behaves:
+   `apps/web/runs/2026-08.jsonl` is no longer empty, strengths came out
+   `bounded` and `corroborated` exactly as predicted, and nothing recorded
+   `confirmed`.
+3. **Then the three hygiene items**, any order. The migration-drift content
+   check needs `applied_migrations()` to return `statements`, so it needs a
+   migration and Ana's push (rule 11); 31 of 34 versions already match byte for
+   byte. The graveyard pass moves the three in `SCRIPTS_PENDING_ARCHIVE` to
+   `archive/` with README rows, and `repair-combinations.ts` needs a
+   `database-log` line in the same change. And 21 of 30 traps are unpinned —
+   trap 1 is still the cheapest and highest-consequence.
+4. **Round 13 has no theme and needs a gap test before it has one.** Round 12's
+   probes killed small-space (84% held), dry shade (73%) and left late-season
+   surviving but thin at 62%. Those numbers are in `seed-round12.ts`'s header
+   and are the starting point, not a result to reuse — the catalog moved.
+   **Two frictions will recur and neither is fixed:** `run-round` still has no
+   `--baseline` passthrough, so the rule-1 backup must be taken in the shared
+   checkout and copied into the worktree by hand; and `cross-check-plants` will
+   flag `plant_type` on every sedge and rush seeded, the round-4 false-positive
+   class, left naive on purpose.
 
-1. **Run round 12.** Nothing in the pipeline is waiting on more infrastructure.
-   Two behaviours nobody has watched yet, both intended, both worth reading the
-   tail for. A `gross`/`contradicts` row whose rewrite nobody has written stays
-   unstamped and **fails round close** — the run names those rows. And a row a
-   person reads and KEEPS needs `native_to_reviewed_at`, which nothing in
-   TypeScript writes: if round 12 produces a keep-this-phrase decision, the
-   `--review-keep` writer (audit F5) stops being can-wait and becomes the
-   blocker. Recorded in `STAMPS_WITHOUT_WRITERS`.
-2. **Read the first run records before trusting them.** `apps/web/runs/` is
-   still EMPTY — no step has been run, so every witness is verified as a query
-   and none as a record. Expect `bounded` on the value-column passes and
-   **`corroborated`** on the stamp passes. **`confirmed` is unreachable by
-   construction** (trap 29) — if you ever see one, something asserted
-   exclusivity that was never established. Treat a `contradicted` on the first
-   round as a bug in the wiring before a bug in the data.
-3. **Then the out-of-round 16**, same mechanism, no new design.
-   `backfill-guard-stamps` is the one whose provenance matters most: its
-   state-derived half was deleted after it fabricated 100 stamps.
-   `apply-native-to-fixes`, `apply-image-reverts` and `feed-wikimedia-candidates`
-   all CLEAR a stamp, so shape 12 refuses them until they pass evidence — which
-   is the guard working, not an obstacle.
-4. **Then per-column exclusivity, which is what earns `confirming` back.** The
-   order is forced, and trap 29 has the reasoning: a per-STEP lock does not
-   restore causality, because five of the seven witnessed columns have more than
-   one writing step (`native_checked_at` three, `image_verified_at` four). The
-   key has to be the COLUMN, over every step that writes it — and six of those
-   writers are in step 3 above, so a lock added first would fail to bind them
-   while licensing `confirmed`. Mechanism notes: `pg_advisory_lock` needs a
-   session and PostgREST pools connections, so it cannot hold one across a run;
-   `SUPABASE_DB_URL` is the session pooler (5432) and would work with a direct
-   client, but `pick-plant-images` collects a Batch API job that can run for
-   hours, so the lock has to survive that or be re-verified at finalisation
-   before `confirmed` is recorded. No dependency was added for this yet,
-   deliberately.
+**Waiting on Ana:** the two climbing hydrangeas, the `Cenolophium` region
+correction, the rounds 1-6 editorial pass, the `modern` re-tag, and whether an
+empty `common_issues` / `environment_benefits` is legitimate (21 and 4 drafted
+rows) — that last one decides whether they join `REQUIRED_DRAFTED_FIELDS`.
+Round 12 added two photo holds to the pile (`Rodgersia pinnata` and
+`Acorus gramineus`, both "species unsure"), and they need a photograph rather
+than a decision. Build Backlog rows still owed: the `curate-styles` withdrawal
+counter, the orphaned-photo reconciliation sweep, and **50 of 748 rows still
+showing a Latin binomial where a garden name belongs** (round 12's own six are
+fixed; the rest predate it).
 
-   **Do not DESIGN it early either, not just implement it late.** The census it
-   has to be designed against is the complete one, and step 3 changes that census
-   — six of the writers are not on run provenance yet, and wiring them is what
-   reveals which columns actually need a shared key. A lock abstraction built
-   around today's partial set would look finished and establish the wrong
-   property, which is the failure this whole sequence exists to avoid.
+**Standing:** the next audit is round 13's close or 2026-09-14, whichever
+first, early if a PR adds a stamp column, adds a script, or touches
+`upsert_trefle_plant`. It should come back **shorter**. Fresh session.
 
-5. **Then the three still-open hygiene items**, any order. The migration-drift
-   content check needs `applied_migrations()` to return `statements`, so it needs
-   a migration and Ana's push (rule 11); design is in the review's section 6 and
-   31 of 34 versions already match byte for byte. The graveyard pass moves the
-   three in `SCRIPTS_PENDING_ARCHIVE` to `archive/` with README rows, and
-   `repair-combinations.ts` needs a `database-log` line in the same change or it
-   files an empty record. And 21 of 30 traps are unpinned, with the reasons per
-   trap; trap 1 is the cheapest and highest-consequence.
-
-**Waiting on Ana:** the two climbing hydrangeas, the
-`Cenolophium` region correction, the 5 photo holds, the rounds 1-6 editorial
-pass, the `modern` re-tag, and whether an empty `common_issues` /
-`environment_benefits` is legitimate (21 and 4 drafted rows) — that last one
-decides whether they join `REQUIRED_DRAFTED_FIELDS`. Plus a Build Backlog row
-for the `curate-styles` withdrawal counter, which #166 classified as design
-rather than a witness: its remedy is "count and print withdrawn approvals", so
-the defect is the absence of a number in a summary, and a regex asserting an
-absence stays true forever whether or not anyone acts. Plus a second Build
-Backlog row for the orphaned-photo reconciliation sweep described above.
-
-**Standing:** the next audit is round 12's close or 2026-09-14, whichever first,
-early if a PR adds a stamp column, adds a script, or touches
-`upsert_trefle_plant`. It should come back **shorter**; if it does not, the
-diagnosis was wrong and gets redone rather than the fixes repeated. Fresh session.
-
-**What this session adds to the same lesson.** Breaking the new check on purpose
-is now habit, and it paid twice. The new test was mutated before being believed
-(restoring the swallow reds 3 of them). And the fix's own first draft counted
-removed objects from `remove()`'s `data` array — until the vendored types showed
-its documented example returning `data: []` for a delete that SUCCEEDED
-(`@supabase/storage-js` 2.110.2). That would have replaced a wrong number with a
-differently wrong number that looked measured. **A count is only as good as the
-contract underneath it**; read the contract in `node_modules`, which is the
-version actually running, rather than the vendor's website.
+**What this session adds to the same lesson.** Twice, a tool answered a
+narrower question than the one being asked and the answer was promoted.
+`pick-plant-images` printed "errored" for seven rows, which covers both a
+transient timeout and a dead URL — opposite responses — and the reason had to
+be read out of the Batch API by hand. Then the Wikimedia feeder reported "no
+usable P18 photo" and that was read as "no photo exists" while Commons held ten
+files. Both are trap family A from the REPORTING side rather than the fetching
+side, and both were invisible until someone went and asked the source directly.
+**The third instance is the one worth pinning: a witness that matches the shape
+instead of the defect cannot expire.**
+`OPEN_FINDINGS['round11-names-unpaginated']` keyed on
+`.select('scientific_name, common_name')`, a string the fixed version still
+contains, so it had to be closed by hand rather than failing on its own.
 
 **Open questions:** none.
