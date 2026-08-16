@@ -42,6 +42,7 @@ import { getAnthropicClient, CURATION_MODEL } from '../lib/anthropic-client'
 import type { DbPlant, PlantType } from '../lib/plants-db'
 import { fetchAllRows } from '../lib/paginate'
 import { readRoundManifest } from './round-manifest'
+import { withRunRecord } from './run-provenance'
 
 // ---------------------------------------------------------------------------
 // Config
@@ -49,6 +50,10 @@ import { readRoundManifest } from './round-manifest'
 
 // 2s between Claude calls — same pacing as curate-plants.ts
 const INTER_PLANT_DELAY_MS = 2000
+
+// Part of the recipe, not an implementation detail: a decoding parameter change
+// is a recipe change, so it is read from one place and hashed from that place.
+const MAX_TOKENS = 512
 
 const PLANT_TYPES: PlantType[] = [
   'annual',
@@ -169,6 +174,27 @@ async function stampChecked(id: string): Promise<void> {
 // Claude call — blind: species identity only, no stored values
 // ---------------------------------------------------------------------------
 
+const SYSTEM_PROMPT =
+  'You are a botanical fact-checker. Respond with ONLY valid JSON, no markdown, no code fences, no preamble, no explanation.'
+
+/**
+ * A row used ONLY to render the template for the recipe hash — never sent.
+ *
+ * FULLY POPULATED, which is the opposite of curate-plants' empty probe and for
+ * the same reason. The rule is "render the MAXIMAL template, so every optional
+ * instruction is present and a change to any of them moves the hash". There,
+ * `buildPrompt` branches on what is MISSING, so an empty row takes every branch.
+ * Here it branches on what is PRESENT — the scientific name and family lines are
+ * omitted when absent — so an empty row would render the minimal template and
+ * hide two of the three identity lines from the recipe.
+ */
+const RECIPE_PROBE_ROW = {
+  id: 'recipe-probe',
+  common_name: 'probe',
+  scientific_name: 'Probe probe',
+  family: 'Probeaceae',
+} as DbPlant
+
 function buildPrompt(plant: DbPlant): string {
   const identity = [
     `common name: ${plant.common_name}`,
@@ -196,9 +222,8 @@ async function getCheckFromClaude(plant: DbPlant): Promise<CrossCheckResponse> {
   const client = getAnthropicClient()
   const message = await client.messages.create({
     model: CURATION_MODEL,
-    max_tokens: 512,
-    system:
-      'You are a botanical fact-checker. Respond with ONLY valid JSON, no markdown, no code fences, no preamble, no explanation.',
+    max_tokens: MAX_TOKENS,
+    system: SYSTEM_PROMPT,
     messages: [{ role: 'user', content: buildPrompt(plant) }],
   })
 
@@ -410,54 +435,100 @@ async function main() {
   })
 
   const plants = (limit ? data.slice(0, limit) : data) as unknown as DbPlant[]
-  if (!plants.length) {
-    console.log('No AI-drafted plants found — nothing to check.')
-    process.exit(0)
-  }
 
-  console.log(`\nCross-checking ${plants.length} plant(s)...\n`)
-
-  const reports: PlantReport[] = []
-  const failures: Array<{ name: string; error: string }> = []
-  let clean = 0
-
-  for (const [i, plant] of plants.entries()) {
-    const label = plant.scientific_name ?? plant.common_name
-    const prefix = `[${pad(i + 1)}/${pad(plants.length)}]`
-
-    try {
-      process.stdout.write(`${prefix} ${label} … `)
-      const check = await getCheckFromClaude(plant)
-      const flags = comparePlant(plant, check)
-
-      if (flags.length) {
-        reports.push({
-          id: plant.id,
-          common_name: plant.common_name,
-          scientific_name: plant.scientific_name,
-          flags,
-        })
-        const summary = flags
-          .map((f) => `${f.severity === 'disagree' ? '✗' : '~'} ${f.field}`)
-          .join(', ')
-        console.log(`⚠  ${summary}`)
-      } else {
-        clean++
-        console.log('✓')
+  // withRunRecord owns the terminal paths: finalisation on return, on throw and
+  // on markFailed, so the record does not depend on this file's control flow
+  // staying correct. The "nothing to check" case is INSIDE the body on purpose —
+  // it is a real invocation whose honest row_count is 0, and the earlier
+  // process.exit(0) there would have skipped finalisation entirely.
+  const outcome = await withRunRecord(
+    {
+      step: 'cross-check-plants',
+      // Flags-only by contract: the ONLY column this guard writes is its own
+      // operational stamp. It is window-queryable, so the default evidence —
+      // botanical_checked_at witnessing itself — is the right witness.
+      writeSet: ['botanical_checked_at'],
+      scope: describeScope(scope, roundIds),
+      recipe: {
+        model: CURATION_MODEL,
+        // Both halves of the assembled prompt. The system prompt is constant
+        // across rows and shapes the output, so it is recipe, not plumbing.
+        template: [SYSTEM_PROMPT, buildPrompt(RECIPE_PROBE_ROW)],
+        // The two vocabularies the template interpolates. They are already
+        // inside the rendered template above; naming them here means a future
+        // reader sees WHICH constants the cohort depended on without diffing
+        // the prompt.
+        ingredients: { plant_types: PLANT_TYPES, sun_values: SUN_VALUES },
+        decoding: { max_tokens: MAX_TOKENS },
+      },
+    },
+    async (run) => {
+      if (!plants.length) {
+        console.log('No AI-drafted plants found — nothing to check.')
+        return null
       }
 
-      // Stamp only after a successful check (flagged or clean — both mean the
-      // guard ran on this row). A row that threw stays unstamped, so --new-only
-      // picks it up on the next run.
-      await stampChecked(plant.id)
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err)
-      console.log(`✗  ${message}`)
-      failures.push({ name: label, error: message })
-    }
+      console.log(`\nCross-checking ${plants.length} plant(s)...\n`)
 
-    if (i < plants.length - 1) await sleep(INTER_PLANT_DELAY_MS)
-  }
+      const reports: PlantReport[] = []
+      const failures: Array<{ name: string; error: string }> = []
+      let clean = 0
+      let stamped = 0
+
+      for (const [i, plant] of plants.entries()) {
+        const label = plant.scientific_name ?? plant.common_name
+        const prefix = `[${pad(i + 1)}/${pad(plants.length)}]`
+
+        try {
+          process.stdout.write(`${prefix} ${label} … `)
+          const check = await getCheckFromClaude(plant)
+          const flags = comparePlant(plant, check)
+
+          if (flags.length) {
+            reports.push({
+              id: plant.id,
+              common_name: plant.common_name,
+              scientific_name: plant.scientific_name,
+              flags,
+            })
+            const summary = flags
+              .map((f) => `${f.severity === 'disagree' ? '✗' : '~'} ${f.field}`)
+              .join(', ')
+            console.log(`⚠  ${summary}`)
+          } else {
+            clean++
+            console.log('✓')
+          }
+
+          // Stamp only after a successful check (flagged or clean — both mean the
+          // guard ran on this row). A row that threw stays unstamped, so --new-only
+          // picks it up on the next run.
+          await stampChecked(plant.id)
+          // Counted only after the write returned, so an interrupted run's count
+          // is what it actually got through rather than what it attempted.
+          run.wrote(plant.id)
+          stamped++
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err)
+          console.log(`✗  ${message}`)
+          failures.push({ name: label, error: message })
+        }
+
+        if (i < plants.length - 1) await sleep(INTER_PLANT_DELAY_MS)
+      }
+
+      // A pass where every row errored is a failure even though nothing threw.
+      if (failures.length && !stamped) {
+        run.markFailed(`all ${failures.length} row(s) failed`)
+      }
+      return { reports, failures, clean }
+    }
+  )
+
+  // Nothing to check: the run recorded a vacuous invocation and there is no
+  // report to write.
+  if (!outcome) return
+  const { reports, failures, clean } = outcome
 
   // Terminal report — disagreements first
   const disagreements = reports.filter((r) =>

@@ -140,9 +140,6 @@ export const SCRIPTS_PENDING_ARCHIVE: Record<string, string> = {
  */
 export const RUNS_WITHOUT_PROVENANCE: Record<string, string> = {
   // --- round steps. These are what round 12 waits on. ---
-  'cross-check-plants.ts': 'Round step 5. Stamps botanical_checked_at per row.',
-  'cross-check-native-to.ts':
-    'Round step 5a. Stamps native_checked_at on settled rows only (shouldStamp).',
   'cross-check-native-region.ts':
     'Round step 5b. Stamps native_region_checked_at via rowsToStamp and CLEARS native_checked_at as a cascade, so its write-set holds two columns with opposite senses.',
   'regenerate-native-region.ts':
@@ -795,6 +792,10 @@ export const RAW_BEGIN_RUN_ALLOWED: Record<string, string> = {}
 const NON_STAMP_WRITES = new Set([
   'is_curated',
   'native_region',
+  // The user-facing range phrase. Hand-owned, voice-passed copy: no guard drafts
+  // it, and the only writer is an --apply pass working from a committed decision
+  // file (cross-check-native-to, apply-native-to-fixes).
+  'native_to',
   'seasonal_care',
   'image_url_curated',
   'image_attribution',
