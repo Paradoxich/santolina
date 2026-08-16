@@ -32,35 +32,40 @@ supabase start -x studio,realtime,storage-api,imgproxy,edge-runtime,inbucket,vec
 
 ---
 
-## 2026-08-16 — The nine wired; round 12 is no longer gated
+## 2026-08-16 — Rule 14 gets a scan; the audit reports are records only
 
-**#164 is MERGED** as `1c7ee9d`, branch and worktree gone, main CI green
-including both main-only jobs. Session entry in `docs/database-log.md`; the
-contract additions are in `docs/write-provenance.md`.
+**In flight: PR [#166](https://github.com/Paradoxich/santolina/pull/166), branch
+`session/2026-08-16-doc-structure`, worktree
+`../santolina-worktrees/doc-structure`, 3 commits, CI green, LEFT FOR REVIEW at
+Ana's call.** Nothing depends on it and round 12 is unaffected either way. It
+changes CI, three shared docs and both session skills, which is why it is worth
+a read before it lands. Session entry in `docs/database-log.md`; Notion Session
+Log updated.
 
-**In flight:** PR [#165](https://github.com/Paradoxich/santolina/pull/165),
-branch `session/2026-08-16-doc-audit`, worktree `../santolina-doc-audit` — a
-docs-only pass for claims that went stale as the code moved. No database, no
-code. Merge it, then delete both.
+**Read the PR body first if you are reviewing** — it carries the reasoning,
+including two things that were deliberately NOT done and why.
 
-**Review round on #164 found one blocker, now fixed.** `confirmed` was reachable
-by coincidence: two overlapping runs of one step each saw the other's stamps and
-both passed `count >= rowCount`. It is now unreachable without established
-exclusivity, which nothing can declare — trap 29, and step 4 below is the way
-back. The same review caught `cross-check-native-to`'s generate pass never
-calling `markFailed`, so an all-rows-errored run recorded `completed`. Both
-pinned.
+**What it adds, once merged** (none of these commands exist on main yet):
+`pnpm docs:claims` makes standing rule 14 executable and extends it past
+`database-log.md`; `invariants:check` gains shape 13 (`HAND_ROLLED_PAGINATION`)
+and shape 14 (`OPEN_FINDINGS`, each entry carrying a witness that matches WHILE
+its defect is present, so it fails the day someone fixes it); `pnpm backlog`
+prints the computed backlog. After merging, `pnpm backlog` replaces most of what
+this file used to restate.
 
-```bash
-pnpm invariants:check      # prints its own backlog, including the 16 below
-```
+**One item wants attention on its own merits, separately from the PR.**
+`purge-demo-users` discards a Storage deletion error and then deletes the user,
+cascading away the `diary_entries` rows holding `photo_urls` — the only pointer
+to those objects. It reports `photosRemoved: 0` with an empty failures list,
+which is indistinguishable from a clean purge. User data, private
+`diary-photos` bucket, running in production on Vercel Cron, and the only
+finding in either audit whose lost state cannot be reconstructed. Recorded as
+`OPEN_FINDINGS['demo-purge-swallows-storage-failure']` on the branch. Not fixed
+there because whether a storage failure should also BLOCK the account deletion
+is a real decision, and today's best-effort behaviour is deliberate.
 
-**ROUND 12'S GATE IS OPEN.** Every step the runbook runs opens a run:
-`RUNS_WITHOUT_PROVENANCE`'s round-step block is empty and the count went 25 → 16.
-What remains is out-of-round passes and three archive candidates; none of them
-runs during a round, so none of them blocks one.
-
-**Next steps, in order:**
+**Next steps, in order. The order is unchanged from the previous entry — round
+12 was not run this session and nothing below was consumed.**
 
 1. **Run round 12.** Nothing in the pipeline is waiting on more infrastructure.
    Two behaviours nobody has watched yet, both intended, both worth reading the
@@ -71,14 +76,12 @@ runs during a round, so none of them blocks one.
    `--review-keep` writer (audit F5) stops being can-wait and becomes the
    blocker. Recorded in `STAMPS_WITHOUT_WRITERS`.
 2. **Read the first run records before trusting them.** `apps/web/runs/` is
-   still EMPTY — no step was run this session, so every witness is verified as a
-   query and none as a record. The probe in the database-log entry is evidence
-   that the queries work; it is not evidence that a real pass files a sensible
-   record. Expect `bounded` on the value-column passes and **`corroborated`** on
-   the stamp passes. **`confirmed` is unreachable by construction** (trap 29) —
-   if you ever see one, something asserted exclusivity that was never
-   established. Treat a `contradicted` on the first round as a bug in the wiring
-   before a bug in the data.
+   still EMPTY — no step has been run, so every witness is verified as a query
+   and none as a record. Expect `bounded` on the value-column passes and
+   **`corroborated`** on the stamp passes. **`confirmed` is unreachable by
+   construction** (trap 29) — if you ever see one, something asserted
+   exclusivity that was never established. Treat a `contradicted` on the first
+   round as a bug in the wiring before a bug in the data.
 3. **Then the out-of-round 16**, same mechanism, no new design.
    `backfill-guard-stamps` is the one whose provenance matters most: its
    state-derived half was deleted after it fabricated 100 stamps.
@@ -91,13 +94,13 @@ runs during a round, so none of them blocks one.
    one writing step (`native_checked_at` three, `image_verified_at` four). The
    key has to be the COLUMN, over every step that writes it — and six of those
    writers are in step 3 above, so a lock added first would fail to bind them
-   while licensing `confirmed`. Mechanism notes for whoever does it:
-   `pg_advisory_lock` needs a session and PostgREST pools connections, so it
-   cannot hold one across a run; `SUPABASE_DB_URL` is the session pooler (5432)
-   and would work with a direct client, but `pick-plant-images` collects a Batch
-   API job that can run for hours, so the lock has to survive that or be
-   re-verified at finalisation before `confirmed` is recorded. No dependency was
-   added for this yet, deliberately.
+   while licensing `confirmed`. Mechanism notes: `pg_advisory_lock` needs a
+   session and PostgREST pools connections, so it cannot hold one across a run;
+   `SUPABASE_DB_URL` is the session pooler (5432) and would work with a direct
+   client, but `pick-plant-images` collects a Batch API job that can run for
+   hours, so the lock has to survive that or be re-verified at finalisation
+   before `confirmed` is recorded. No dependency was added for this yet,
+   deliberately.
 
    **Do not DESIGN it early either, not just implement it late.** The census it
    has to be designed against is the complete one, and step 3 changes that census
@@ -113,29 +116,30 @@ runs during a round, so none of them blocks one.
    three in `SCRIPTS_PENDING_ARCHIVE` to `archive/` with README rows, and
    `repair-combinations.ts` needs a `database-log` line in the same change or it
    files an empty record. And 21 of 30 traps are unpinned, with the reasons per
-   trap; trap 1 is the cheapest and highest-consequence. (The denominator moved
-   with traps 28 and 29 — both pinned on arrival, so the numerator did not.)
+   trap; trap 1 is the cheapest and highest-consequence.
 
-**Waiting on Ana:** the two climbing hydrangeas, the `Cenolophium` region
-correction, the 5 photo holds, the rounds 1-6 editorial pass, the `modern`
-re-tag, and whether an empty `common_issues` / `environment_benefits` is
-legitimate (21 and 4 drafted rows) — that last one decides whether they join
-`REQUIRED_DRAFTED_FIELDS`.
+**Waiting on Ana:** merge or close #166. The two climbing hydrangeas, the
+`Cenolophium` region correction, the 5 photo holds, the rounds 1-6 editorial
+pass, the `modern` re-tag, and whether an empty `common_issues` /
+`environment_benefits` is legitimate (21 and 4 drafted rows) — that last one
+decides whether they join `REQUIRED_DRAFTED_FIELDS`. Plus a Build Backlog row
+for the `curate-styles` withdrawal counter, which #166 classified as design
+rather than a witness: its remedy is "count and print withdrawn approvals", so
+the defect is the absence of a number in a summary, and a regex asserting an
+absence stays true forever whether or not anyone acts.
 
 **Standing:** the next audit is round 12's close or 2026-09-14, whichever first,
 early if a PR adds a stamp column, adds a script, or touches
 `upsert_trefle_plant`. It should come back **shorter**; if it does not, the
 diagnosis was wrong and gets redone rather than the fixes repeated. Fresh session.
 
-**What this session adds to the same lesson.** The design was called settled and
-was still wrong in three places, all of which only appeared once code had to run:
-a cleared stamp cannot witness itself, a confirming witness must cover every row
-the run counts, and the scan had never once looked at the three editorial
-criterion stamps. The last is the sharpest — it had been reporting green about
-columns it could not see, from both directions at once. And shape 12's first
-version was itself literal-shape dependent, the exact mistake its own comment
-warns about; that was found by making the scan fail on purpose, not by rereading
-it. **A scan nobody has watched fail is trap 19's shape.** Break it once before
-you believe it.
+**What this session adds to the same lesson.** The rule against unchecked claims
+was itself an unchecked claim, and the sentence it failed on had already been
+found stale by an audit, hand-corrected, and gone stale again two days later. The
+scan written to fix that shipped a check that could not fail — `String.replace`
+with a string pattern substitutes only the first occurrence — and it was found by
+mutating the docs, not by rereading the code. **Break a new check on purpose
+before you believe it**, which is the same conclusion as the last three sessions
+and is now cheap to act on.
 
 **Open questions:** none.
