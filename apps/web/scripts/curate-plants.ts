@@ -29,6 +29,7 @@ import type { DbPlant, PlantType, SeasonalRhythm } from '../lib/plants-db'
 import { STYLE_TAG_PROMPT, type StyleTag } from '../lib/style-tags'
 import { GREENERY_PROMPT } from '../lib/greenery'
 import { requireScope, scopeIds, describeScope } from './scope'
+import { beginRun } from './run-provenance'
 
 // ---------------------------------------------------------------------------
 // Config
@@ -117,6 +118,22 @@ type PlantPatch = Omit<CurationResponse, 'hardiness_confidence'> & {
 // ---------------------------------------------------------------------------
 // Prompt builder
 // ---------------------------------------------------------------------------
+
+/**
+ * A row with nothing filled in, used ONLY to render the template for the recipe
+ * hash — never sent to the model.
+ *
+ * Empty rather than realistic on purpose. `buildPrompt` branches on which fields
+ * are MISSING, so an empty row takes every branch and renders the maximal
+ * template: every optional instruction is present, and a change to any of them
+ * moves the hash. A realistic probe row would hash only the branches it happened
+ * to take, leaving the rest of the recipe invisible.
+ */
+const RECIPE_PROBE_ROW = {
+  id: 'recipe-probe',
+  common_name: 'probe',
+  scientific_name: 'Probe probe',
+} as DbPlant
 
 function buildPrompt(plant: DbPlant): string {
   // plant_type gates hardiness: determine whether to ask for hardiness at all
@@ -452,8 +469,29 @@ async function main() {
   )
   const plants = await fetchUncuratedPlants(ids, newOnly)
 
+  // The run record opens here, before the first write, and is finalised on every
+  // terminal path below — including "nothing to do", which is a real invocation
+  // whose honest row_count is 0. See run-provenance.ts.
+  const run = beginRun({
+    step: 'curate-plants',
+    // Declared, not inferred: this pass writes the drafting stamp AND both
+    // verdict stamps named after other scripts, which is exactly why the
+    // column cannot identify the writer.
+    writeSet: ['ai_drafted_at', 'style_checked_at', 'greenery_checked_at'],
+    scope: describeScope(scope, ids),
+    recipe: {
+      model: CURATION_MODEL,
+      // The template as assembled, with a representative row substituted out:
+      // per-row subject is excluded from the recipe by construction.
+      template: buildPrompt(RECIPE_PROBE_ROW),
+      ingredients: { style_tags: STYLE_TAG_PROMPT, greenery: GREENERY_PROMPT },
+      decoding: { max_tokens: 2048 },
+    },
+  })
+
   if (!plants.length) {
     console.log('No uncurated plants found — nothing to do.')
+    await run.finish('completed')
     process.exit(0)
   }
 
@@ -480,6 +518,7 @@ async function main() {
 
       const patch = buildPatch(plant, response)
       await patchPlant(plant.id, patch)
+      run.countWritten()
 
       const fieldsWritten = Object.keys(patch).filter(
         (k) => k !== 'ai_drafted_at'
@@ -503,6 +542,12 @@ async function main() {
 
     if (i < plants.length - 1) await sleep(INTER_PLANT_DELAY_MS)
   }
+
+  // The run is finalised BEFORE the summary and before any exit: an
+  // invocation that wrote 12 of 25 rows and then failed records 12, never 25.
+  await run.finish(failures.length && !succeeded ? 'failed' : 'completed', {
+    ...(failures.length ? { error: `${failures.length} row(s) failed` } : {}),
+  })
 
   // Summary
   console.log('\n─────────────────────────────────────────────────────────────')
