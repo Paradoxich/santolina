@@ -29,6 +29,7 @@ import type { DbPlant, PlantType, SeasonalRhythm } from '../lib/plants-db'
 import { STYLE_TAG_PROMPT, type StyleTag } from '../lib/style-tags'
 import { GREENERY_PROMPT } from '../lib/greenery'
 import { requireScope, scopeIds, describeScope } from './scope'
+import { withRunRecord } from './run-provenance'
 
 // ---------------------------------------------------------------------------
 // Config
@@ -117,6 +118,22 @@ type PlantPatch = Omit<CurationResponse, 'hardiness_confidence'> & {
 // ---------------------------------------------------------------------------
 // Prompt builder
 // ---------------------------------------------------------------------------
+
+/**
+ * A row with nothing filled in, used ONLY to render the template for the recipe
+ * hash — never sent to the model.
+ *
+ * Empty rather than realistic on purpose. `buildPrompt` branches on which fields
+ * are MISSING, so an empty row takes every branch and renders the maximal
+ * template: every optional instruction is present, and a change to any of them
+ * moves the hash. A realistic probe row would hash only the branches it happened
+ * to take, leaving the rest of the recipe invisible.
+ */
+const RECIPE_PROBE_ROW = {
+  id: 'recipe-probe',
+  common_name: 'probe',
+  scientific_name: 'Probe probe',
+} as DbPlant
 
 function buildPrompt(plant: DbPlant): string {
   // plant_type gates hardiness: determine whether to ask for hardiness at all
@@ -452,57 +469,94 @@ async function main() {
   )
   const plants = await fetchUncuratedPlants(ids, newOnly)
 
-  if (!plants.length) {
-    console.log('No uncurated plants found — nothing to do.')
-    process.exit(0)
+  // withRunRecord owns the terminal paths, which is the canonical shape: the
+  // guarantee that finalisation happens on every path is then structural rather
+  // than something this file has to get right. Even "nothing to do" is recorded —
+  // a real invocation whose honest row_count is 0. See run-provenance.ts.
+  const runOptions = {
+    step: 'curate-plants',
+    // Declared, not inferred: this pass writes the drafting stamp AND both
+    // verdict stamps named after other scripts, which is exactly why the
+    // column cannot identify the writer.
+    writeSet: ['ai_drafted_at', 'style_checked_at', 'greenery_checked_at'],
+    scope: describeScope(scope, ids),
+    recipe: {
+      model: CURATION_MODEL,
+      // The template as assembled, with a representative row substituted out:
+      // per-row subject is excluded from the recipe by construction.
+      template: buildPrompt(RECIPE_PROBE_ROW),
+      ingredients: { style_tags: STYLE_TAG_PROMPT, greenery: GREENERY_PROMPT },
+      decoding: { max_tokens: 2048 },
+    },
   }
 
-  console.log(`\nRunning AI curation pass on ${plants.length} plant(s)...\n`)
-
-  const failures: Array<{ name: string; error: string }> = []
-  const lowConfidenceHardiness: string[] = []
-  const nullPlantType: string[] = []
-  let succeeded = 0
-
-  for (const [i, plant] of plants.entries()) {
-    const label = plant.scientific_name ?? plant.common_name
-    const prefix = `[${pad(i + 1)}/${pad(plants.length)}]`
-
-    try {
-      process.stdout.write(`${prefix} ${label} … `)
-      const { response, lowConfidence } = await getCurationFromClaude(plant)
-
-      if (lowConfidence) lowConfidenceHardiness.push(label)
-
-      // Flag plants where plant_type came back null
-      const effectiveType = plant.plant_type ?? response.plant_type
-      if (!effectiveType) nullPlantType.push(label)
-
-      const patch = buildPatch(plant, response)
-      await patchPlant(plant.id, patch)
-
-      const fieldsWritten = Object.keys(patch).filter(
-        (k) => k !== 'ai_drafted_at'
-      )
-      const warnings = [
-        lowConfidence ? '⚠ low-confidence hardiness' : '',
-        !effectiveType ? '⚠ no plant_type' : '',
-      ]
-        .filter(Boolean)
-        .join('  ')
-
-      console.log(
-        `✓  (${fieldsWritten.join(', ')})${warnings ? `  ${warnings}` : ''}`
-      )
-      succeeded++
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err)
-      console.log(`✗  ${message}`)
-      failures.push({ name: label, error: message })
+  const outcome = await withRunRecord(runOptions, async (run) => {
+    if (!plants.length) {
+      console.log('No uncurated plants found — nothing to do.')
+      return {
+        failures: [] as Array<{ name: string; error: string }>,
+        succeeded: 0,
+        lowConfidenceHardiness: [] as string[],
+        nullPlantType: [] as string[],
+      }
     }
 
-    if (i < plants.length - 1) await sleep(INTER_PLANT_DELAY_MS)
-  }
+    console.log(`\nRunning AI curation pass on ${plants.length} plant(s)...\n`)
+
+    const failures: Array<{ name: string; error: string }> = []
+    const lowConfidenceHardiness: string[] = []
+    const nullPlantType: string[] = []
+    let succeeded = 0
+
+    for (const [i, plant] of plants.entries()) {
+      const label = plant.scientific_name ?? plant.common_name
+      const prefix = `[${pad(i + 1)}/${pad(plants.length)}]`
+
+      try {
+        process.stdout.write(`${prefix} ${label} … `)
+        const { response, lowConfidence } = await getCurationFromClaude(plant)
+
+        if (lowConfidence) lowConfidenceHardiness.push(label)
+
+        // Flag plants where plant_type came back null
+        const effectiveType = plant.plant_type ?? response.plant_type
+        if (!effectiveType) nullPlantType.push(label)
+
+        const patch = buildPatch(plant, response)
+        await patchPlant(plant.id, patch)
+        run.wrote(plant.id)
+
+        const fieldsWritten = Object.keys(patch).filter(
+          (k) => k !== 'ai_drafted_at'
+        )
+        const warnings = [
+          lowConfidence ? '⚠ low-confidence hardiness' : '',
+          !effectiveType ? '⚠ no plant_type' : '',
+        ]
+          .filter(Boolean)
+          .join('  ')
+
+        console.log(
+          `✓  (${fieldsWritten.join(', ')})${warnings ? `  ${warnings}` : ''}`
+        )
+        succeeded++
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err)
+        console.log(`✗  ${message}`)
+        failures.push({ name: label, error: message })
+      }
+
+      if (i < plants.length - 1) await sleep(INTER_PLANT_DELAY_MS)
+    }
+
+    // A pass where every row errored is a failure even though nothing threw.
+    if (failures.length && !succeeded) {
+      run.markFailed(`all ${failures.length} row(s) failed`)
+    }
+    return { failures, succeeded, lowConfidenceHardiness, nullPlantType }
+  })
+
+  const { failures, succeeded, lowConfidenceHardiness, nullPlantType } = outcome
 
   // Summary
   console.log('\n─────────────────────────────────────────────────────────────')

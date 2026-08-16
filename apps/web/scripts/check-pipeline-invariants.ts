@@ -126,6 +126,66 @@ export const SCRIPTS_PENDING_ARCHIVE: Record<string, string> = {
 }
 
 /**
+ * Shapes 8-11. Stamp-writing scripts not yet participating in write provenance.
+ *
+ * Every one of these writes a stamp with no run record, so the value it produces
+ * has no recoverable production context — no model, no recipe, no outcome. The
+ * mechanism landed 2026-08-16 wired into curate-plants; the rest is mechanical,
+ * about five lines each, and this list is what stops it being forgotten.
+ *
+ * DELETING AN ENTRY IS THE WORK. Round 12 should not run until this is empty:
+ * the point of the infrastructure is to stop accumulating provenance debt, and a
+ * round that runs half-wired creates exactly the historical boundary it exists
+ * to prevent.
+ */
+export const RUNS_WITHOUT_PROVENANCE: Record<string, string> = {
+  // --- round steps. These are what round 12 waits on. ---
+  'cross-check-plants.ts': 'Round step 5. Stamps botanical_checked_at per row.',
+  'cross-check-native-to.ts':
+    'Round step 5a. Stamps native_checked_at on settled rows only (shouldStamp).',
+  'cross-check-native-region.ts':
+    'Round step 5b. Stamps native_region_checked_at via rowsToStamp and CLEARS native_checked_at as a cascade, so its write-set holds two columns with opposite senses.',
+  'regenerate-native-region.ts':
+    'Round step 4a. Writes native_region from a reviewed plan. Wire the plan freshness check in the same change: the plan carries generatedAt and nothing compares it against the rows updated_at.',
+  'curate-combinations.ts': 'Round step 3. Writes plant_combinations rows.',
+  'curate-seasonal-care.ts': 'Round step 7. Writes seasonal_care.',
+  'recover-image-categories.ts': 'Round step 6. Writes image_candidates.',
+  'pick-plant-images.ts':
+    'Round steps 7a and 7a2 — two modes, different write-sets, and VISION_MODEL rather than CURATION_MODEL. Wire the modes as separate runs.',
+  'curate-editorial.ts':
+    'Round step 7b. Writes editorial_checked_at, is_curated and three criterion stamps; max_tokens is computed per invocation, so its decoding parameters are not a constant.',
+
+  // --- outside the round cadence ---
+  'curate-styles.ts': 'Repair pass. Stamps style_checked_at.',
+  'curate-greenery.ts': 'Repair pass. Stamps greenery_checked_at.',
+  'draft-hardiness.ts':
+    'Parked feature. max_tokens is 16, which makes it a materially different recipe from the same model at 2048 — a good first test of whether the hash separates cohorts usefully.',
+  'apply-native-to-fixes.ts':
+    'Applies committed decisions and NULLS native_checked_at. A clearing write is still a write.',
+  'apply-seasonal-care-fixes.ts': 'Same generate-then-apply shape.',
+  'apply-image-confirmations.ts':
+    'Writes image_verified_at from a review file.',
+  'apply-image-reverts.ts': 'Clears a curated hero and its stamps.',
+  'set-plant-hero.ts':
+    'Manual hero override. Writes image_url_curated and stamps.',
+  'feed-wikimedia-candidates.ts':
+    'Appends candidates and CLEARS image_checked_at so the pass re-picks.',
+  'backfill-guard-stamps.ts':
+    'Report-derived stamping. Its state-derived half was deleted 2026-08-14 after it fabricated 100 stamps, so this is the script whose provenance matters most and has none.',
+  'fix-round8-names.ts':
+    'One-off name pass, kept as the apply-script template.',
+  'fix-round11-names.ts': 'One-off name pass.',
+  'fix-oversized-heroes.ts':
+    'One-off image repair. Found by this scan rather than by the list, which is the scan doing its job.',
+
+  // --- archive candidates: these leave scripts/ rather than get wired ---
+  'apply-sun-widening.ts':
+    'Neutralized by a trigger; queued for archive (artifact c/1).',
+  'backfill-legacy-editorial.ts': 'Wrong-shape example; queued for archive.',
+  'repair-combinations.ts': 'One-off repair; queued for archive.',
+}
+
+/**
  * Shape 1. Places a not-null column is compared to null, allowed on inspection.
  * A comparison against an AI RESPONSE field is not the trap-26 shape: the
  * response is parsed JSON where the key really can be absent.
@@ -561,6 +621,187 @@ function checkNoForkedSynonymTables(): void {
 }
 
 // ---------------------------------------------------------------------------
+// Shapes 8-11. Write provenance
+//
+// A stamp says a value is certified. It does not say what produced it, and
+// round membership cannot answer that either — repair passes write to rows
+// seeded rounds earlier. run-provenance.ts records the invocation; these shapes
+// are what stop it becoming another good pattern living in one file.
+// ---------------------------------------------------------------------------
+function checkWriteProvenance(): number {
+  const stamps = new Set(stampColumns())
+  const participating: string[] = []
+
+  for (const file of SOURCE_TS) {
+    const name = basename(file)
+    if (name === 'run-provenance.ts') continue
+
+    // A LIBRARY IS NOT AN INVOCATION. lib/plants-write.ts and lib/demo-garden.ts
+    // perform writes, but a run belongs to the process that called them, so
+    // flagging the library would demand a record from something with no
+    // lifecycle. Provenance is per invocation, and invocations live in scripts/.
+    if (!file.startsWith('apps/web/scripts/')) continue
+
+    // A SEEDER ALREADY HAS ITS WRITE RECORD, and it is a better one: the round
+    // manifest names every row the invocation inserted, by id. Seed values come
+    // from Trefle rather than from a recipe, so there is no model or prompt to
+    // record — membership provenance IS mutation provenance for an insert.
+    if (name.startsWith('seed-')) continue
+
+    // The trigger contract test writes and rolls back inside one transaction, so
+    // it certifies nothing and leaves no value behind to explain.
+    if (name === 'test-editorial-trigger.ts') continue
+
+    const src = stripComments(read(file))
+
+    // WHAT COUNTS AS NEEDING PROVENANCE: any invocation that MUTATES the
+    // catalog. Not "contains a stamp column key" — the first version of this
+    // check looked for that and missed curate-editorial, which assigns the stamp
+    // onto a patch object, and curate-seasonal-care, which uses a shorthand
+    // property. A detector that depends on how the patch literal is written
+    // claims coverage it does not have, which is the exact shape this file
+    // exists to catch. The unit of provenance is the invocation, so the question
+    // is whether the script writes to the catalog at all.
+    const touchesCatalog =
+      /\.from\(\s*'(?:plants|plant_combinations)'\s*\)/.test(src) ||
+      /from '\.\.\/lib\/plants-(?:db|write)'/.test(src)
+    // A write delegated to the shared helper is still this invocation's write.
+    // apply-image-reverts.ts, apply-image-confirmations.ts and set-plant-hero.ts
+    // all call writePlant and contain no .update() of their own — a rule that
+    // only looked for the query builder called all three clean.
+    const delegatesWrite =
+      /\b(?:writePlant|upsertPlant|patchPlant)\s*\(/.test(src) ||
+      /from '\.\.\/lib\/plants-write'/.test(src)
+    const mutates =
+      /\.(?:update|upsert|insert|delete)\s*\(/.test(src) || delegatesWrite
+    if (!touchesCatalog || !mutates) continue
+
+    const opensRun = /\bbeginRun\s*\(|\bwithRunRecord\s*\(/.test(src)
+
+    // Shape 8. Every stamp-writing step opens a run.
+    if (!opensRun) {
+      if (RUNS_WITHOUT_PROVENANCE[name]) {
+        participating.push(name)
+        continue
+      }
+      fail({
+        shape: 'stamp write with no run record',
+        subject: file,
+        detail:
+          'Writes a stamp column but never calls beginRun/withRunRecord, so the value it produces has no recoverable model, recipe or outcome.',
+        remedy:
+          'Open a run before the first write with a declared writeSet and a recipe, count each verified write, and finalise on every terminal path. curate-plants.ts is the worked example. Or record it in RUNS_WITHOUT_PROVENANCE with the reason.',
+      })
+      continue
+    }
+
+    // Shape 9. A declared write-set names real stamp columns, not guesses.
+    for (const m of src.matchAll(/writeSet:\s*\[([^\]]*)\]/g)) {
+      const declared = [...(m[1] ?? '').matchAll(/'([a-z_]+)'/g)].map(
+        (x) => x[1]!
+      )
+      if (!declared.length) {
+        fail({
+          shape: 'empty declared write-set',
+          subject: file,
+          detail: 'writeSet is empty, so the record claims to produce nothing.',
+          remedy: 'Declare the columns this invocation may write.',
+        })
+      }
+      for (const column of declared) {
+        // is_curated is a real declared write that is not a stamp; allow the
+        // known non-stamp value columns the pipeline writes deliberately.
+        if (stamps.has(column) || NON_STAMP_WRITES.has(column)) continue
+        fail({
+          shape: 'declared write-set names an unknown column',
+          subject: `${file} → ${column}`,
+          detail:
+            'No migration declares this stamp column, and it is not one of the recorded non-stamp writes.',
+          remedy: `Fix the spelling, or add it to NON_STAMP_WRITES in ${basename(__filename)} if it is a deliberate value write.`,
+        })
+      }
+    }
+
+    // Shape 10. withRunRecord is the canonical pattern, and this scan is why.
+    //
+    // WHAT THIS PROVES, EXACTLY: that a file opening a run with raw beginRun
+    // contains an explicit finalisation call. It does NOT prove finalisation on
+    // every control-flow path — that needs real analysis, and a scan claiming
+    // otherwise would be the repository asserting a guarantee it cannot make.
+    //
+    // So the guarantee is moved into the code instead of the checker:
+    // withRunRecord owns the terminal paths structurally. Raw beginRun is for a
+    // script that genuinely needs to own them, and needs a recorded reason.
+    if (/\bbeginRun\s*\(/.test(src)) {
+      if (!RAW_BEGIN_RUN_ALLOWED[name]) {
+        fail({
+          shape: 'raw beginRun instead of withRunRecord',
+          subject: file,
+          detail:
+            "Opens a run with beginRun. A scan can only see that a finish call exists somewhere in the file, not that it runs on every path, so this shape puts the guarantee in the author's hands.",
+          remedy: `Wrap the body in withRunRecord, which finalises on return, on throw, and on run.markFailed(). If this script must own its terminal paths (resume logic, its own signal handling), record it in RAW_BEGIN_RUN_ALLOWED in ${basename(__filename)} with the reason.`,
+        })
+      } else if (!/\.finish\s*\(/.test(src)) {
+        fail({
+          shape: 'run opened with no finalisation call',
+          subject: file,
+          detail:
+            'Calls beginRun and contains no finish call at all, so the invocation leaves stamps and no record — the gap the log exists to close.',
+          remedy: 'Call run.finish(outcome), or use withRunRecord.',
+        })
+      }
+    }
+  }
+
+  // Shape 11. row_count is observed, never authored.
+  for (const file of SOURCE_TS) {
+    if (basename(file) === 'run-provenance.ts') continue
+    const src = stripComments(read(file))
+    if (/row_count\s*:/.test(src)) {
+      fail({
+        shape: 'hand-authored row count',
+        subject: file,
+        detail:
+          'Sets row_count directly. The count must come from what the run verified it wrote, not from a number someone typed.',
+        remedy:
+          'Call run.countWritten() at the write site and let the run record derive the count.',
+      })
+    }
+  }
+
+  for (const key of Object.keys(RAW_BEGIN_RUN_ALLOWED)) {
+    const file = `apps/web/scripts/${key}`
+    if (
+      !SOURCE_TS.includes(file) ||
+      !/\bbeginRun\s*\(/.test(stripComments(read(file)))
+    ) {
+      staleHatches.push({ list: 'RAW_BEGIN_RUN_ALLOWED', key })
+    }
+  }
+
+  for (const key of Object.keys(RUNS_WITHOUT_PROVENANCE)) {
+    if (!participating.includes(key)) {
+      staleHatches.push({ list: 'RUNS_WITHOUT_PROVENANCE', key })
+    }
+  }
+
+  return participating.length
+}
+
+/** Scripts allowed to own their own terminal paths instead of using withRunRecord. */
+export const RAW_BEGIN_RUN_ALLOWED: Record<string, string> = {}
+
+/** Declared write-set entries that are real writes but not stamp columns. */
+const NON_STAMP_WRITES = new Set([
+  'is_curated',
+  'native_region',
+  'seasonal_care',
+  'image_url_curated',
+  'image_attribution',
+  'image_candidates',
+])
+
+// ---------------------------------------------------------------------------
 // Run
 // ---------------------------------------------------------------------------
 
@@ -570,6 +811,7 @@ checkStampSelectors()
 const traps = checkTrapsPinned()
 const pendingArchive = checkScriptReachability()
 checkNoForkedSynonymTables()
+const unwiredProvenance = checkWriteProvenance()
 // Shape 7, runbook / registry drift, is round-rehearsal.test.ts. It imports
 // RUNBOOK and the step registry, so it is a test, not a scan. Do not add it here.
 
@@ -611,6 +853,11 @@ row(
   'scripts pending archive',
   String(pendingArchive),
   'SCRIPTS_PENDING_ARCHIVE'
+)
+row(
+  'steps without provenance',
+  String(unwiredProvenance),
+  'RUNS_WITHOUT_PROVENANCE'
 )
 console.log(
   '  Runbook and registry drift is checked by round-rehearsal.test.ts, not here.\n'
