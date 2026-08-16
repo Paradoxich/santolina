@@ -954,6 +954,8 @@ async function generate(
   const results: Result[] = []
   /** Rows judged but deliberately left unstamped, named in the tail. */
   const withheld: string[] = []
+  /** Rows that threw — distinct from withheld, which is a verdict, not a fault. */
+  let errored = 0
 
   await withRunRecord(
     {
@@ -1037,11 +1039,22 @@ async function generate(
             withheld.push(plant.common_name)
           }
         } catch (err) {
+          errored++
           console.error(
             `[${pad(i + 1)}/${plants.length}] ERROR ${plant.common_name}: ${(err as Error).message}`
           )
         }
         if (i < plants.length - 1) await sleep(INTER_PLANT_DELAY_MS)
+      }
+
+      // A pass where every row errored is a failure even though nothing threw.
+      // WITHHELD ROWS ARE NOT ERRORS and must not count here: a gross verdict
+      // nobody has rewritten is this guard working, and a run that judged 40
+      // rows and withheld all 40 did its job. The test is that no row was
+      // JUDGED, not that no row was stamped — otherwise a legitimately
+      // all-withheld round would file itself as failed.
+      if (errored && !results.length) {
+        run.markFailed(`all ${errored} row(s) errored`)
       }
     }
   )

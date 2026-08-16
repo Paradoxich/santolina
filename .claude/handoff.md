@@ -39,6 +39,14 @@ branch `session/2026-08-16-provenance-nine`, worktree
 `../santolina-provenance-nine`. Merge it, then delete both. Session entry in
 `docs/database-log.md`; the contract additions are in `docs/write-provenance.md`.
 
+**Review round on #164 found one blocker, now fixed.** `confirmed` was reachable
+by coincidence: two overlapping runs of one step each saw the other's stamps and
+both passed `count >= rowCount`. It is now unreachable without established
+exclusivity, which nothing can declare — trap 29, and step 4 below is the way
+back. The same review caught `cross-check-native-to`'s generate pass never
+calling `markFailed`, so an all-rows-errored run recorded `completed`. Both
+pinned.
+
 ```bash
 pnpm invariants:check      # prints its own backlog, including the 16 below
 ```
@@ -62,16 +70,31 @@ runs during a round, so none of them blocks one.
    still EMPTY — no step was run this session, so every witness is verified as a
    query and none as a record. The probe in the database-log entry is evidence
    that the queries work; it is not evidence that a real pass files a sensible
-   record. Expect `bounded` on the value-column passes and `confirmed` on the
-   stamp passes, and treat a `contradicted` on the first round as a bug in the
-   wiring before a bug in the data.
+   record. Expect `bounded` on the value-column passes and **`corroborated`** on
+   the stamp passes. **`confirmed` is unreachable by construction** (trap 29) —
+   if you ever see one, something asserted exclusivity that was never
+   established. Treat a `contradicted` on the first round as a bug in the wiring
+   before a bug in the data.
 3. **Then the out-of-round 16**, same mechanism, no new design.
    `backfill-guard-stamps` is the one whose provenance matters most: its
    state-derived half was deleted after it fabricated 100 stamps.
    `apply-native-to-fixes`, `apply-image-reverts` and `feed-wikimedia-candidates`
    all CLEAR a stamp, so shape 12 refuses them until they pass evidence — which
    is the guard working, not an obstacle.
-4. **Then the three still-open hygiene items**, any order. The migration-drift
+4. **Then per-column exclusivity, which is what earns `confirming` back.** The
+   order is forced, and trap 29 has the reasoning: a per-STEP lock does not
+   restore causality, because five of the seven witnessed columns have more than
+   one writing step (`native_checked_at` three, `image_verified_at` four). The
+   key has to be the COLUMN, over every step that writes it — and six of those
+   writers are in step 3 above, so a lock added first would fail to bind them
+   while licensing `confirmed`. Mechanism notes for whoever does it:
+   `pg_advisory_lock` needs a session and PostgREST pools connections, so it
+   cannot hold one across a run; `SUPABASE_DB_URL` is the session pooler (5432)
+   and would work with a direct client, but `pick-plant-images` collects a Batch
+   API job that can run for hours, so the lock has to survive that or be
+   re-verified at finalisation before `confirmed` is recorded. No dependency was
+   added for this yet, deliberately.
+5. **Then the three still-open hygiene items**, any order. The migration-drift
    content check needs `applied_migrations()` to return `statements`, so it needs
    a migration and Ana's push (rule 11); design is in the review's section 6 and
    31 of 34 versions already match byte for byte. The graveyard pass moves the

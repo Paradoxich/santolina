@@ -58,14 +58,46 @@ always a column: `curate-combinations` mutates a table.
 A witness carries a strength, and `verification.substantiation` reports what the
 evidence actually supports rather than a yes/no:
 
-| Strength         | Witness       | Can confirm? | Can contradict? |
-| ---------------- | ------------- | ------------ | --------------- |
-| **confirming**   | `stamp`       | yes          | yes             |
-| **bounding**     | `row-touched` | no           | no              |
-| **unobservable** | `none`        | no           | no              |
+| Strength          | Witness                          | Can confirm? | Can contradict? |
+| ----------------- | -------------------------------- | ------------ | --------------- |
+| **confirming**    | `stamp`, exclusivity ESTABLISHED | yes          | yes             |
+| **corroborating** | `stamp`, no exclusivity          | no           | yes             |
+| **bounding**      | `row-touched`                    | no           | no              |
+| **unobservable**  | `none`                           | no           | no              |
 
-`substantiation` is then one of `confirmed`, `bounded`, `unverified` or
-`contradicted`.
+`substantiation` is then one of `confirmed`, `corroborated`, `bounded`,
+`unverified` or `contradicted`.
+
+### A timestamp window is coincidence, not authorship
+
+**Nothing in this pipeline can produce `confirmed` today, and that is correct.**
+A stamp witness asks `stamp ∈ [started_at, finished_at]`. Two invocations of one
+step running from two worktrees against the one production database overlap: A
+stamps rows 1-20, B stamps 21-40, and both queries see 40. Under the old rule —
+`count >= rowCount` — both recorded `confirmed` for work neither did.
+
+The run id fixed **identity**. It cannot fix **attribution**: it is not written
+next to the mutation, and per-row provenance state is a non-goal, so nothing
+observable ties a run to an individual stamp.
+
+So exclusivity is a **prerequisite that must be established**, never assumed.
+`Exclusivity` has one variant today, `{ kind: 'none', reason }`, which means a
+caller cannot assert its way to `confirmed` — only a mechanism can earn it back.
+
+**Why a per-step lock is not that mechanism yet.** Five of the seven witnessed
+columns have more than one writing step (`native_checked_at` three,
+`image_verified_at` four), so exclusivity has to be per-COLUMN across every
+writer. And six of those writers are among the passes still without run
+provenance, so a lock today would not bind them — it would fail to lock while
+licensing `confirmed`, which is worse than no lock. The order is: wire the
+remaining writers, then lock per column, then `confirming` becomes reachable.
+
+**Corroborating keeps contradiction, and the asymmetry is deliberate.** A
+concurrent clearer can drive the count below the claim, so the direction is not
+airtight either. The costs differ: a false `contradicted` is a loud flag that
+sends a person to look, a false `confirmed` is a silent lie in a record someone
+will later cite as evidence. Do not "fix" the inconsistency by restoring
+confirmation.
 
 **A bounding witness can do neither, and that is not pedantry.** `updated_at`
 establishes that rows were touched in the interval; it cannot attribute those
@@ -260,9 +292,14 @@ own id: it may have had a different recipe, and one id spanning both halves woul
 be a lie.
 
 **Honest limit:** a process that dies without running its handler — `SIGKILL`,
-power loss — leaves stamps and no record. Those are detectable afterwards as
-stamps falling inside no recorded window, which is the log-versus-evidence check
-run in the other direction.
+power loss — leaves stamps and no record. An earlier version of this sentence
+said those are detectable afterwards as stamps falling inside no recorded
+window. **That was too strong, for the same reason confirmation was**: windows
+overlap, so an orphaned stamp can land inside another run's recorded window and
+be indistinguishable from that run's own work. The check is reliable only for
+orphans landing in no window at all, which is a subset of them — and the same
+per-column exclusivity that would earn `confirming` back is what would make it
+complete.
 
 ## Verification happens at finalisation, because the evidence decays
 

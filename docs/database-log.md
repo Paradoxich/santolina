@@ -65,14 +65,14 @@ The numbers **in this file are different and must stay written down**: a dated s
 
 **Numbers are permanent IDs, never renumbered and never reused.** They are cited from code (`wcvp-lookup.ts`, `migration-drift.ts`, `image-probe.ts`) and from `curation.md`, so the order below is by shape, not by number. A new trap takes the next free number and files under whichever family it belongs to.
 
-Twenty-eight traps are really four shapes. The entries are the worked examples that make a shape recognisable in the wild — someone who knows the four rules spots the next instance before it costs anything, which is more than someone who has read all twenty-four descriptions once. **Each family's rule is stated once, above its entries. Read that first.**
+Twenty-nine traps are really four shapes. The entries are the worked examples that make a shape recognisable in the wild — someone who knows the four rules spots the next instance before it costs anything, which is more than someone who has read all twenty-four descriptions once. **Each family's rule is stated once, above its entries. Read that first.**
 
-| family | what it is                                                        | entries                              |
-| ------ | ----------------------------------------------------------------- | ------------------------------------ |
-| **A**  | a failure or narrower answer comes back shaped like a real result | 1, 1b, 10, 11, 15, 18, 19, 20, 23    |
-| **B**  | the record disagrees with what actually happened                  | 2, 4, 12, 13, 14, 16, 17, 25, 26, 28 |
-| **C**  | one fact with two homes, and only one got updated                 | 3, 5, 22                             |
-| **D**  | facts about the outside world you cannot design away              | 6, 7, 8, 9, 21, 27                   |
+| family | what it is                                                        | entries                                  |
+| ------ | ----------------------------------------------------------------- | ---------------------------------------- |
+| **A**  | a failure or narrower answer comes back shaped like a real result | 1, 1b, 10, 11, 15, 18, 19, 20, 23        |
+| **B**  | the record disagrees with what actually happened                  | 2, 4, 12, 13, 14, 16, 17, 25, 26, 28, 29 |
+| **C**  | one fact with two homes, and only one got updated                 | 3, 5, 22                                 |
+| **D**  | facts about the outside world you cannot design away              | 6, 7, 8, 9, 21, 27                       |
 
 A is the one that keeps recurring, and it is subtle every single time.
 
@@ -340,6 +340,54 @@ real write-set and real numbers rather than an invented one.
 restored. Its first version missed the shorthand `evidence,` property form and
 would have passed a real violation; rereading it had not caught that.
 
+#### 29. A timestamp window is coincidence, not authorship — ADDED 2026-08-16 (review of PR #164)
+
+A stamp witness asks `stamp ∈ [started_at, finished_at]` and the verification
+passed the claim whenever `count >= rowCount`. That is a question about
+coincidence. Run A and run B both execute `cross-check-plants` from two
+worktrees against the one production database; A stamps rows 1-20, B stamps
+21-40, the windows overlap. Each queries the column, each sees 40, each
+satisfies `count >= rowCount`, and **both record `confirmed` for work neither
+of them did**.
+
+**The random run id fixed identity and cannot fix attribution.** It is not
+written next to the mutation, and per-row provenance state is a documented
+non-goal, so nothing observable ties a run to an individual stamp.
+
+**The tell was already in the code, used in one direction only.** The comment
+excused extra movement in the window as "not evidence against this run" —
+correctly — while the same extra movement was still counted as evidence FOR it.
+Overlap breaks confirmation and contradiction alike; only one half had been
+noticed.
+
+**A per-step lock would not have fixed it, which is why the fix is not a lock
+yet.** Five of the seven witnessed columns have more than one writing STEP —
+`native_checked_at` three, `image_verified_at` four — so exclusivity has to be
+per-COLUMN across every writer. And six of those writers are among the 16
+passes not yet on run provenance, so a lock added today would not bind them: it
+would fail to lock while licensing `confirmed`. **Wire the writers first, then
+the lock means something.**
+
+**The fix is to stop claiming it.** A stamp is `corroborating` unless
+exclusivity has been ESTABLISHED, and `Exclusivity` has exactly one variant —
+`{ kind: 'none', reason }` — so a caller cannot assert its way to `confirmed`.
+A corroborating witness can still CONTRADICT. That asymmetry is deliberate: a
+concurrent clearer could produce a false contradiction, but a false alarm sends
+a person to look, while a false `confirmed` is a silent lie in a record someone
+will later cite as evidence.
+
+**It also made one claim in the module too strong.** Orphaned stamps from a
+SIGKILL were described as detectable because they fall inside no recorded
+window. With overlap they can land inside another run's window and be
+indistinguishable from its work, so orphan detection is only reliable for the
+subset landing in no window at all. Corrected in place.
+
+**Pinned by `apps/web/scripts/run-provenance.test.ts`** (2026-08-16), which
+constructs the two overlapping runs and asserts neither reads as `confirmed`,
+that the record says why, that contradiction survives, and that asserting
+exclusivity without a mechanism does not buy confirmation back. Verified by
+breaking it: forcing `strengthOf` back to always-confirming fails eight cases.
+
 #### 24. A guard stamp records that the check RAN, not that its finding was acted on — ADDED 2026-07-30
 
 A report-only `cross-check-native-region` run stamps `native_region_checked_at` on every row it decided, including the rows it decided were **wrong**. Nothing else revisits them: `--new-only` selects on the stamp, so a disagreement found and left unapplied is stamped out of every later sweep. Six rows sat in exactly that state, `Crocus speciosus` among them — tagged `Caucasus` alone while WCVP gave it Bulgaria, Iran, Krym, the Caucasus and Türkiye, so the Explore native filter hid it from the Balkan users it is native to.
@@ -511,16 +559,20 @@ way `countByWitness` queries it. `plants.updated_at` **720**,
 `seasonal_care`, `native_region` and `image_candidates` each errored with an
 **empty message and no code** — the measured basis for their bounding witness.
 
-**Found** — two witness rules the contract had not met, both now trap 28, and
-one of them was already LIVE in `curate-plants`, the worked example merged the
-day before. The scan had also never seen the three editorial criterion stamps
-from either direction: they end `_at` without one of the four vocabulary
-suffixes, and `curate-editorial` writes them by assignment rather than as object
-keys. Both regexes widened; blast radius measured first, exactly those three.
+**Found** — three witness defects. Two are trap 28, and one of those was already
+LIVE in `curate-plants`, the worked example merged the day before. The third,
+found in review, is trap 29: a timestamp window is coincidence, not authorship,
+so two overlapping runs of one step both recorded `confirmed` for work neither
+did. `confirmed` now requires established exclusivity and **nothing can produce
+it**; a stamp without exclusivity is `corroborating` — no confirmation, but
+contradiction survives. The scan had also never seen the three editorial
+criterion stamps from either direction: wrong suffix for one regex, assignment
+rather than object key for the other. Both widened; blast radius measured first,
+exactly those three.
 
-**Verified** — `invariants:check` green, typecheck clean, 284 tests pass. Shape
-12 verified by breaking it; trap 28 pinned by `run-provenance.test.ts`, which
-asserts the defect as well as the fix.
+**Verified** — `invariants:check` green, typecheck clean, 288 tests pass. Shape
+12 and traps 28 and 29 each verified by breaking them; forcing `strengthOf` back
+to always-confirming fails eight cases.
 
 **Not done** — no round-12 step was run, so `apps/web/runs/` is still empty. The
 16 out-of-round passes are unwired; `backfill-guard-stamps` matters most.

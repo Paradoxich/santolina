@@ -19,6 +19,14 @@
  * is guarding nothing. The conditional cases use curate-plants' real write-set,
  * because that is where the live instance was — merged, reviewed and cited as
  * the pattern, a day before writing this found it.
+ *
+ * TRAP 29, in the block after it: a timestamp window is coincidence, not
+ * authorship. Two overlapping invocations of one stamp-writing step each query a
+ * window holding BOTH sets of stamps, so the old `count >= rowCount` test let
+ * both record `confirmed` for work neither did. `confirmed` now requires
+ * established exclusivity, which nothing can declare yet — so the assertions
+ * below are that the pipeline's own steps record `corroborated`, and that
+ * asserting exclusivity without a mechanism does not buy it back.
  */
 import { describe, expect, it, vi } from 'vitest'
 
@@ -28,6 +36,7 @@ import {
   isWindowQueryable,
   recipeHash,
   withRunRecord,
+  type Exclusivity,
   type RunRecord,
   type Witness,
 } from './run-provenance'
@@ -131,7 +140,7 @@ describe('every invocation produces a record', () => {
     expect(h.written).toHaveLength(1)
     expect(h.written[0]!.outcome).toBe('completed')
     expect(h.written[0]!.row_count).toBe(25)
-    expect(h.written[0]!.verification.substantiation).toBe('confirmed')
+    expect(h.written[0]!.verification.substantiation).toBe('corroborated')
   })
 
   it('records a FAILED run and re-throws, so the exit code is unchanged', async () => {
@@ -172,7 +181,7 @@ describe('every invocation produces a record', () => {
     const rec = h.written[0]!
     expect(rec.outcome).toBe('interrupted')
     expect(rec.row_count).toBe(279)
-    expect(rec.verification.substantiation).toBe('confirmed')
+    expect(rec.verification.substantiation).toBe('corroborated')
   })
 
   it('gives two invocations in the SAME millisecond different ids', async () => {
@@ -270,7 +279,7 @@ describe('a record never claims more than its evidence', () => {
     })
     wrote(run, 25)
     const rec = await run.finish('completed')
-    expect(rec.verification.substantiation).toBe('confirmed')
+    expect(rec.verification.substantiation).toBe('corroborated')
   })
 
   it('records that verification could not run, rather than claiming it agreed', async () => {
@@ -568,7 +577,7 @@ describe('trap 28: a stamp witnesses only a write that set it', () => {
     })
     wrote(run, 20)
     const rec = await run.finish('completed')
-    expect(rec.verification.substantiation).toBe('confirmed')
+    expect(rec.verification.substantiation).toBe('corroborated')
   })
 
   /**
@@ -628,6 +637,78 @@ describe('trap 28: a stamp witnesses only a write that set it', () => {
     )
     wrote(run, 25)
     const rec = await run.finish('completed')
-    expect(rec.verification.substantiation).toBe('confirmed')
+    expect(rec.verification.substantiation).toBe('corroborated')
+  })
+})
+
+/**
+ * TRAP 29: a timestamp window is coincidence, not authorship. Two invocations of
+ * one stamp-writing step overlap — the normal operating model here, parallel
+ * worktrees against one production database with no lock — and each queries a
+ * window containing BOTH sets of stamps.
+ */
+describe('trap 29: overlapping runs cannot confirm each other apart', () => {
+  /** A and B each stamp 20 rows; both windows see all 40. */
+  const overlapping = (observed: number, exclusivity?: Exclusivity) => {
+    const h = harness({ botanical_checked_at: observed })
+    const run = beginRun({
+      step: 'cross-check-plants',
+      writeSet: ['botanical_checked_at'],
+      recipe: RECIPE,
+      ...(exclusivity ? { exclusivity } : {}),
+      ...h.opts,
+    })
+    return { run, written: h.written }
+  }
+
+  it('neither overlapping run claims the other run stamps as confirmation', async () => {
+    // THE DEFECT. Before this, `count >= rowCount` was the whole test, so run A
+    // claiming 20 against a window holding A's 20 and B's 20 satisfied it and
+    // recorded `confirmed`. Both runs could do it. Neither produced the 40.
+    const a = overlapping(40)
+    wrote(a.run, 20)
+    const recA = await a.run.finish('completed')
+
+    const b = overlapping(40)
+    wrote(b.run, 20)
+    const recB = await b.run.finish('completed')
+
+    expect(recA.verification.substantiation).toBe('corroborated')
+    expect(recB.verification.substantiation).toBe('corroborated')
+    expect(recA.verification.substantiation).not.toBe('confirmed')
+  })
+
+  it('records WHY it could not confirm, so the record is readable without this file', async () => {
+    const { run } = overlapping(40)
+    wrote(run, 20)
+    const rec = await run.finish('completed')
+    expect(rec.verification.exclusivity.kind).toBe('none')
+    expect(rec.verification.notes.join(' ')).toMatch(
+      /corroborating, not confirming/
+    )
+  })
+
+  it('still contradicts a claim larger than its evidence', async () => {
+    // The half worth keeping without exclusivity. A concurrent CLEARER could in
+    // principle drive this too, but a false alarm sends a person to look, while
+    // a false `confirmed` is a silent lie in a record someone will cite.
+    const { run } = overlapping(15)
+    wrote(run, 20)
+    const rec = await run.finish('completed')
+    expect(rec.verification.substantiation).toBe('contradicted')
+  })
+
+  it('confirmation is reachable only by ESTABLISHING exclusivity, never by asserting it', async () => {
+    // Nothing in the pipeline can produce this today — there is no lock, and
+    // `Exclusivity` has one variant. The case exists so that whoever adds the
+    // lock has the assertion waiting, and so that the downgrade cannot be
+    // quietly undone by widening the default.
+    const { run } = overlapping(20, {
+      kind: 'none',
+      reason: 'a reason string is not a mechanism',
+    })
+    wrote(run, 20)
+    const rec = await run.finish('completed')
+    expect(rec.verification.substantiation).toBe('corroborated')
   })
 })
