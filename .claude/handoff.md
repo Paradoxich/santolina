@@ -12,11 +12,9 @@ order. Everything else is a command below or a pointer above.
 | What changed and when                | `git log`                |
 | What to build next                   | Notion **Build Backlog** |
 
-**Write the command, not the claim.** A state claim is true when typed and rots
-from then on: "CI is waiting on secrets" was wrong within a day and survived three
-sessions, then reached Ana a fourth time. "PR #128 merged as `06ab97a`" is a
-record and stays true. **The test is tense, not topic.** Catalog numbers are
-generated into `docs/catalog-state.md` — link, never retype.
+**Write the command, not the claim; the test is tense, not topic.** Moved
+2026-08-16 to `docs/database-log.md` standing rule 14, where the violations
+happen. It governs this file too — every line below is a record or a command.
 
 **If two sessions run at once, the last to finish rewrites this file.** Nothing is
 lost: the durable half of a session belongs in the docs above before it belongs
