@@ -82,8 +82,13 @@ Full UI-building guidance — tokens, typography, styling patterns, component re
   /server           ← server actions and API route handlers
   /scripts          ← data scripts (seed, curate, cross-check, combinations) — run via tsx, see [the round runbook](docs/curation.md#round-runbook)
   /rounds           ← per-round provenance, committed (manifests, reports, catalog archives)
+  /runs             ← per-invocation write provenance, committed (one .jsonl per month)
   /reference        ← committed lookup caches the guards read
 ```
+
+`/rounds` and `/runs` answer different questions and are not interchangeable:
+rounds record **membership** (where a plant entered the catalog), runs record
+**mutation** (what produced the value in a row). See [write provenance](docs/write-provenance.md).
 
 No `/store` yet — the app holds no global client state (see Code conventions). A `/store` directory arrives only if Zustand is adopted. `/reports` may appear at runtime for cross-check output; it is gitignored, not source.
 
@@ -109,7 +114,7 @@ Seven tables. All IDs are UUIDs. Row-level security required on all user-owned t
 
 `supabase/migrations/` is the schema. Never store passwords — Supabase auth handles that.
 
-**If you are working on the plant catalog — seeding, curation, the guards, a round — read [`docs/curation.md`](docs/curation.md) first**, then [`docs/database-log.md`](docs/database-log.md) for the traps. That is the whole pipeline in one place; `docs/architecture.md` covers everything else.
+**If you are working on the plant catalog — seeding, curation, the guards, a round — read [`docs/curation.md`](docs/curation.md) first**, then [`docs/database-log.md`](docs/database-log.md) for the traps, and [`docs/write-provenance.md`](docs/write-provenance.md) if you are touching anything that WRITES. Those three are the pipeline; `docs/architecture.md` covers everything else.
 
 ---
 
@@ -196,6 +201,8 @@ Everything else is deferred. Do not build edible growing or multiple gardens in 
 **If you are the third script working around the same thing, say so instead of doing it again.** Three scripts dodging a pagination cap means the transport is wrong for those jobs, not that pagination is hard. Matching the surrounding code is the default failure mode here: local consistency is easier than asking whether the shape is right.
 
 **A trap is not closed until a test pins it.** Fixing the code closes the incident; the trap stays open until something executable names it. Pinned means four things: the test asserts the defect's own witness (the stamp, the scope, the plan, not a downstream symptom), it fails or fails to compile against the pre-fix code, its header names the trap number and the incident, and the trap's entry in `docs/database-log.md` cites the test file. Traps 3, 24 and 26 (2026-08-14) are the pattern: each fix first exported a callable seam, `assertPlanScope`, `rowsToStamp`, `buildPatch`, because a trap you cannot call is a trap you cannot pin. If the shape has no callable seam in it, write a source scan instead — those live in `apps/web/scripts/check-pipeline-invariants.ts`, and `check-doc-links.ts` is the model for what a good one's output looks like. Prose in the trap entry is a description, not a closure. The enforcement half is that script's `TRAPS_NOT_PINNED` ratchet, which prints what is left on every green run.
+
+**A script that writes to the catalog opens a run.** Since 2026-08-16 every step the runbook runs records what produced the values it wrote — `withRunRecord`, a declared `writeSet`, a recipe, and an evidence witness per member. `curate-plants.ts` is the worked example and [write provenance](docs/write-provenance.md) is the contract; `invariants:check` shapes 8 to 12 refuse a mutating script that skips it. Two rules a new caller gets wrong first: a stamp the run CLEARS cannot witness itself, and a stamp written on only SOME of the counted rows cannot confirm the run (trap 28). Nothing can record `confirmed` today, deliberately (trap 29).
 
 **Before adding a file to `apps/web/scripts/`, answer both in its header: which runbook step runs this, and what ends it?** A script with no step and no end condition is a one-off: write it, run it, and land it in `scripts/archive/` with its README row in the same PR, not later. If the honest answer is "it is like `<existing script>` but for this round", you are forking it; extract the shared part instead (`catalog-identity.ts` and `species-resolver.ts` are what that looks like). Nothing in `scripts/` may be reachable only from someone's memory; `check-pipeline-invariants.ts` enforces the reachability half.
 

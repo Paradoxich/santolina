@@ -8,7 +8,7 @@ provenance — round, step, stamp, scope, before/after snapshot, archive — and
 data provenance. This is the missing primitive, and it is deliberately small: no
 new row state, no lifecycle field, no table.
 
-## Six layers, and what each one answers
+## Seven layers, and what each one answers
 
 | Layer                   | Answers                                                                      | Lives in                                       |
 | ----------------------- | ---------------------------------------------------------------------------- | ---------------------------------------------- |
