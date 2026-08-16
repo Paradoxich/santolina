@@ -34,14 +34,14 @@ supabase start -x studio,realtime,storage-api,imgproxy,edge-runtime,inbucket,vec
 
 ## 2026-08-16 — The round-12 guardrails
 
-**In flight:** PR [#162](https://github.com/Paradoxich/santolina/pull/162),
-branch `session/2026-08-16-round-12-guardrails`, 7 commits, CI green (the two
-main-only jobs skip on PRs by design). Session entry in `docs/database-log.md`.
-The four gating steps and most of step 5 are done; the PR is what needs merging.
+**In flight: nothing.** PR
+[#162](https://github.com/Paradoxich/santolina/pull/162) merged as `70b4d26`,
+branch and worktree gone, all three CI jobs green on main including the two
+main-only ones. Session entry in `docs/database-log.md`. The four gating steps
+and most of step 5 are done.
 
 ```bash
-git log --oneline main..session/2026-08-16-round-12-guardrails
-cd apps/web && pnpm invariants:check    # the new one, prints its own backlog
+pnpm invariants:check                   # the new one, from the ROOT; prints its own backlog
 ```
 
 **Round 12 is unblocked.** The gate was the resolver, and it exists:
