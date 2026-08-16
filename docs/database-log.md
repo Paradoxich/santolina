@@ -434,6 +434,47 @@ is unchanged.
 
 <!-- Newest first. Append with: scripts/log-db-session.ts --round <label> -->
 
+### 2026-08-16 — The round-12 guardrails: one resolver, one invariants check (not a round)
+
+**Branch** `session/2026-08-16-round-12-guardrails`. No migration, no catalog write.
+
+**Changed** — seven forked resolvers replaced by `scripts/species-resolver.ts`
+(45 synonym components over 105 genus names; round 11's table held 34);
+`pnpm invariants:check` added to CI; the trap-closure rule and standing rules 12
+to 14; `shouldStamp` at `cross-check-native-to`; `scripts/stamp-columns.ts`.
+
+**Database** — read-only, three queries, each replacing a claim with a result:
+
+- Trap 26's fingerprint `style_checked_at = ai_drafted_at AND style_tags = '{}'`
+  returned **0** catalog-wide, paginated. Re-checked rather than restated (rule
+  12); recorded in the trap.
+- Prose coverage on the 720 drafted rows, before extending
+  `REQUIRED_DRAFTED_FIELDS`: six fields at 0 null/empty, but `common_issues`
+  **21** and `environment_benefits` **4**.
+- `restore-catalog`'s old and new diff on both phases of round 11's snapshot:
+  **100 and 100**.
+
+**Trefle** — one smoke run, 6 detail calls at 1600ms. `synonyms[]` arrives
+populated; 2 of round 11's 3 hand-resolved misses now resolve without a hand id.
+Recorded in trap 27.
+
+**Found** — traps 13 and 14 were already pinned by `migration-drift.test.ts`, so
+the ratchet starts at 21 of 28 unpinned, not the review's 25. Unioning the stamp
+suffixes as proposed would have broken round close: with the exclusion removed,
+`verify-round --round 11` FAILs on `native_to_reviewed_at`.
+`review-image-picks.ts` was reachable from nothing but two sibling scripts'
+comments, and is now named in `curation.md`.
+
+**Not done** — the migration-drift content check: it needs
+`applied_migrations()` to return `statements`, so it needs a migration and a
+push. `common_issues` and `environment_benefits` left out of
+`REQUIRED_DRAFTED_FIELDS` pending Ana's call on whether empty is legitimate.
+
+**Verified** — 252 tests, `tsc`, `invariants:check`, `docs:links`,
+`runbook:check`, `tokens:check`, `verify-round --round 11` at 0 failures. The
+new check was verified to FAIL as well as pass: two injected violations caught
+with file, line, rule and remedy, exit 1 (trap 19).
+
 ### 2026-08-15 — The trap-26 repair, and the upsert lockdown (not a round)
 
 **Branch** `session/2026-08-14-pipeline-audit`, same session past midnight.
