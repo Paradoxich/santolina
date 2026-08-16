@@ -139,11 +139,9 @@ export const SCRIPTS_PENDING_ARCHIVE: Record<string, string> = {
  * to prevent.
  */
 export const RUNS_WITHOUT_PROVENANCE: Record<string, string> = {
-  // --- round steps. These are what round 12 waits on. ---
-  'pick-plant-images.ts':
-    'Round steps 7a and 7a2 — two modes, different write-sets, and VISION_MODEL rather than CURATION_MODEL. Wire the modes as separate runs.',
-  'curate-editorial.ts':
-    'Round step 7b. Writes editorial_checked_at, is_curated and three criterion stamps; max_tokens is computed per invocation, so its decoding parameters are not a constant.',
+  // --- round steps: EMPTY as of 2026-08-16, and the gate round 12 waited on.
+  //     Every step the runbook runs now opens a run. Do not add one back here
+  //     without saying why a round step may write without a record. ---
 
   // --- outside the round cadence ---
   'curate-styles.ts': 'Repair pass. Stamps style_checked_at.',
@@ -346,7 +344,7 @@ function stampColumns(): string[] {
   for (const file of MIGRATIONS) {
     const sql = read(file).toLowerCase()
     for (const m of sql.matchAll(
-      /add column\s+(?:if not exists\s+)?([a-z_]+_(?:checked|verified|reviewed|drafted)_at)\b/g
+      /add column\s+(?:if not exists\s+)?([a-z_]+_(?:checked|verified|reviewed|drafted)_at|editorial_[a-z]+_at)\b/g
     )) {
       if (m[1]) found.add(m[1])
     }
@@ -359,12 +357,21 @@ function checkStampWriters(): void {
   const withoutWriter: string[] = []
 
   for (const stamp of stamps) {
-    // A WRITE is the column as an object key whose value is a timestamp or an
-    // explicit null (clearing a stamp is a write). `x: row.x` is a read-through
-    // into a report row, which is what native_to_reviewed_at has and why it
-    // looked written for months.
+    // A WRITE is the column set to a timestamp or an explicit null (clearing a
+    // stamp is a write). What is NOT a write is a read-through — `x: row.x`
+    // copying a value into a report row, which is what native_to_reviewed_at
+    // has and why it looked written for months. So the VALUE side is what
+    // decides, and the assignment operator is not: `patch.editorial_image_at =
+    // now` is as much a write as `{ editorial_image_at: now }`.
+    //
+    // Both halves of this were widened on 2026-08-16, and the three editorial
+    // criterion stamps needed both. They are declared by migration
+    // 20260729112046, they end `_at` without one of the four vocabulary
+    // suffixes, AND curate-editorial builds them onto a patch object by
+    // assignment — so the scan had never seen them from either direction, and
+    // reported a clean run for a column it was not looking at.
     const writeRe = new RegExp(
-      `${stamp}\\s*:\\s*(?:new Date\\(|null\\b|[\\w.]*(?:nowIso|timestamp|stampedAt|isoNow)\\b)`,
+      `${stamp}\\s*[:=]\\s*(?:new Date\\(|null\\b|[\\w.]*(?:now|nowIso|timestamp|stampedAt|isoNow)\\b)`,
       'i'
     )
     const writers = SOURCE_TS.filter((f) =>
@@ -803,6 +810,13 @@ const NON_COLUMN_WRITE_SETS = new Set(['plant_combinations'])
 /** Declared write-set entries that are real writes but not stamp columns. */
 const NON_STAMP_WRITES = new Set([
   'is_curated',
+  // The vision pass's verdict and its prose. Written together by the pick and
+  // rewritten by --verify, which is why neither can be inferred from a stamp.
+  'image_pick_confidence',
+  'image_pick_reason',
+  // Rewritten by the editorial pass, and only after a blind second call
+  // approved the replacement.
+  'description',
   'native_region',
   // The user-facing range phrase. Hand-owned, voice-passed copy: no guard drafts
   // it, and the only writer is an --apply pass working from a committed decision
