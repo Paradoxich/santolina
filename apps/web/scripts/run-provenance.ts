@@ -73,8 +73,10 @@ export interface RunRecord {
   scope: string | null
   model: string | null
   recipe_hash: string
-  /** Columns this invocation declared it may produce. */
+  /** Columns this invocation declared it may MUTATE. An assertion. */
   write_set: string[]
+  /** How that mutation was observed at finalisation. See Witness. */
+  evidence: Witness[]
   /**
    * Rows this invocation VERIFIED it affected. Never the intended scope: an
    * interrupted run's honest count is what it actually got through.
@@ -197,6 +199,94 @@ export function readRunRecords(month: string): RunRecord[] {
 }
 
 // ---------------------------------------------------------------------------
+// Evidence: how a mutation can be OBSERVED, which is not the same question as
+// what the invocation is allowed to change.
+//
+// The first version of this module had one list doing both jobs, and it broke on
+// the second script it would have touched. `finish()` verified every write-set
+// member with `gte(column, startedAt).lte(column, finishedAt)`, which is only
+// meaningful for a timestamp column — but the contract allowed the write-set to
+// name value columns (`seasonal_care`, `native_region`, `image_candidates`), and
+// `curate-combinations` does not write to `plants` at all.
+//
+// Measured, rather than assumed: that query against `seasonal_care` returns
+// `count = null` with an EMPTY error message. So verification would not have
+// cried wolf — it would have quietly degraded to `checked: false` with a note
+// reading like a transient database failure, on every non-stamp script, forever.
+// A check that stops working and looks like bad luck is the worst of the three
+// possible failure modes, and it is the same shape as trap 1.
+//
+// So the two are separate:
+//
+//   writeSet  — DECLARED MUTATION. What this invocation is allowed to change.
+//               An assertion, reviewable in the record, never inferred.
+//   evidence  — VERIFICATION WITNESS. How that mutation can be independently
+//               observed at finalisation, which differs by column and by table.
+//
+// For a stamp-producing pass the two nearly coincide, which is why the default
+// derives stamp witnesses from the write-set and most callers pass no evidence at
+// all. For everything else the caller must say how its write is observable — or
+// say that it is not, and why. "I cannot verify this" is an acceptable answer;
+// "I verified this" when the query is meaningless is not.
+// ---------------------------------------------------------------------------
+
+/**
+ * Column suffixes that are timestamps, and therefore window-queryable.
+ *
+ * NOT `stamp-columns.ts`'s vocabulary, deliberately, and the difference is the
+ * same lesson that file already carries: two consumers can ask different
+ * questions of one word. There, "is this a stamp?" is about a column's ROLE —
+ * widening it to include `_drafted_at` would make `check-round-scope` treat
+ * `ai_drafted_at` as bookkeeping and let an out-of-scope drafting write pass.
+ * Here the question is about a column's TYPE: can I compare it to an instant.
+ * `ai_drafted_at` answers yes to the second and no to the first.
+ */
+const WINDOW_QUERYABLE_SUFFIXES = [
+  '_checked_at',
+  '_verified_at',
+  '_reviewed_at',
+  '_drafted_at',
+] as const
+
+export function isWindowQueryable(column: string): boolean {
+  return WINDOW_QUERYABLE_SUFFIXES.some((suffix) => column.endsWith(suffix))
+}
+
+export type Witness =
+  /** A timestamp column on `plants`: count rows whose value lands in the window. */
+  | { kind: 'stamp'; covers: string; column: string }
+  /**
+   * The row's own mutation timestamp. `plants.updated_at` is trigger-maintained;
+   * `plant_combinations` rows carry `created_at` and are inserted, never updated.
+   * Weaker than a stamp — it sees ANY write to the row, including another
+   * invocation's — so it bounds the claim rather than confirming it.
+   */
+  | {
+      kind: 'row-touched'
+      covers: string
+      table: 'plants' | 'plant_combinations'
+      column: string
+    }
+  /** Declared unobservable at finalisation, with the reason recorded. */
+  | { kind: 'none'; covers: string; reason: string }
+
+/**
+ * The default: every window-queryable member of the write-set witnesses itself.
+ *
+ * `covers` names the write-set member; `column` names what is actually queried.
+ * They coincide for a stamp and diverge everywhere else — `curate-combinations`
+ * declares it mutates `plant_combinations` (a TABLE, not a column) and is
+ * witnessed by that table's `created_at`. A write-set member is "what was
+ * mutated", which is not always a column, and conflating the two is what this
+ * field exists to prevent.
+ */
+export function defaultEvidence(writeSet: string[]): Witness[] {
+  return writeSet
+    .filter(isWindowQueryable)
+    .map((column) => ({ kind: 'stamp' as const, covers: column, column }))
+}
+
+// ---------------------------------------------------------------------------
 // The invocation handle
 // ---------------------------------------------------------------------------
 
@@ -204,15 +294,23 @@ export interface BeginRunOptions {
   /** The step name, matching round-status.ts's STEP_DEFS where one exists. */
   step: string
   /**
-   * Columns this invocation may produce. Declared, never inferred from the
-   * column name, because column-to-writer is many-to-many.
+   * Columns this invocation may MUTATE. Declared, never inferred from the column
+   * name, because column-to-writer is many-to-many.
    */
   writeSet: string[]
+  /**
+   * How the mutation can be observed. Omit it and every window-queryable member
+   * of the write-set witnesses itself, which is right for a stamp-producing
+   * pass. A write-set member that is NOT window-queryable must appear here, or
+   * beginRun throws — a value column cannot be verified by comparing it to an
+   * instant, and pretending otherwise is how verification dies quietly.
+   */
+  evidence?: Witness[]
   recipe: Recipe
   scope?: string | null
   /** Injected in tests. */
   now?: () => string
-  countRows?: (column: string, from: string, to: string) => Promise<number>
+  countRows?: (witness: Witness, from: string, to: string) => Promise<number>
   append?: (record: RunRecord) => string
   log?: (line: string) => void
   /** Install SIGINT/SIGTERM handlers. Off in tests. */
@@ -222,6 +320,14 @@ export interface BeginRunOptions {
 export interface RunHandle {
   runId: string
   startedAt: string
+  /**
+   * Record a failure that is not a thrown exception — "every row errored", "the
+   * decision file was stale". Lets a script use withRunRecord (which owns the
+   * control flow) instead of calling finish by hand for a soft failure.
+   */
+  markFailed: (reason: string) => void
+  /** The soft failure recorded by markFailed, if any. Read by withRunRecord. */
+  softFailure: () => string | null
   /** Count a row this invocation actually wrote. Call it as you go. */
   countWritten: (n?: number) => void
   /** Terminal path: verify the claim against the evidence, then record it. */
@@ -238,19 +344,25 @@ const nowIso = () => new Date().toISOString()
  * a claimed write is the stamp itself; `updated_at` is a third, and has the same
  * in-place-overwrite shelf life.
  */
-async function countStampedInWindow(
-  column: string,
+async function countByWitness(
+  witness: Witness,
   from: string,
   to: string
 ): Promise<number> {
+  if (witness.kind === 'none') return 0
+  const table = witness.kind === 'stamp' ? 'plants' : witness.table
   const db = getSupabaseAdmin()
   const { count, error } = await db
-    .from('plants')
+    .from(table)
     .select('id', { count: 'exact', head: true })
-    .gte(column, from)
-    .lte(column, to)
-  if (error)
-    throw new Error(`Provenance count failed for ${column}: ${error.message}`)
+    .gte(witness.column, from)
+    .lte(witness.column, to)
+  if (error) {
+    throw new Error(
+      `Provenance count failed for ${table}.${witness.column}: ` +
+        `${error.message || `${error.code ?? 'no message'} — is that column a timestamp?`}`
+    )
+  }
   return count ?? 0
 }
 
@@ -281,7 +393,7 @@ export function beginRun(opts: BeginRunOptions): RunHandle {
     recipe,
     scope = null,
     now = nowIso,
-    countRows = countStampedInWindow,
+    countRows = countByWitness,
     append = appendRunRecord,
     log = console.log,
     trapSignals = true,
@@ -291,6 +403,24 @@ export function beginRun(opts: BeginRunOptions): RunHandle {
     throw new Error(
       `beginRun("${step}") declared an empty write-set. A step that writes no ` +
         `stamp does not need a run record; a step that does must say which.`
+    )
+  }
+
+  const evidence = opts.evidence ?? defaultEvidence(writeSet)
+
+  // Fail HERE, not at finalisation. A write-set member with no witness is a
+  // programming error, and the whole point of the fix is that it must not present
+  // itself later as an unlucky database read.
+  const unwitnessed = writeSet.filter(
+    (member) => !evidence.some((w) => w.covers === member)
+  )
+  if (unwitnessed.length) {
+    throw new Error(
+      `beginRun("${step}") declares ${unwitnessed.join(', ')} in its write-set ` +
+        `with no evidence witness. A value column cannot be verified by comparing ` +
+        `it to an instant. Pass evidence: either a { kind: 'row-touched' } witness ` +
+        `naming the table's own mutation timestamp, or { kind: 'none', reason } to ` +
+        `record that this write is not observable at finalisation and why.`
     )
   }
 
@@ -311,6 +441,7 @@ export function beginRun(opts: BeginRunOptions): RunHandle {
 
   let written = 0
   let settled = false
+  let softFailureReason: string | null = null
 
   const finish = async (
     outcome: RunOutcome,
@@ -323,13 +454,34 @@ export function beginRun(opts: BeginRunOptions): RunHandle {
     let checked = true
     let agrees = true
 
-    for (const column of writeSet) {
+    for (const witness of evidence) {
+      if (witness.kind === 'none') {
+        notes.push(
+          `${witness.covers} is not observable at finalisation: ${witness.reason}`
+        )
+        continue
+      }
       try {
-        observed[column] = await countRows(column, startedAt, finishedAt)
+        observed[witness.covers] = await countRows(
+          witness,
+          startedAt,
+          finishedAt
+        )
       } catch (err) {
         checked = false
-        notes.push(`could not observe ${column}: ${(err as Error).message}`)
+        notes.push(
+          `could not observe ${witness.covers}: ${(err as Error).message}`
+        )
       }
+    }
+
+    // Nothing observable means nothing was verified. Say so rather than letting
+    // an empty comparison read as agreement.
+    if (!Object.keys(observed).length) {
+      checked = false
+      notes.push(
+        'no observable witness in this run, so the row count is recorded unverified'
+      )
     }
 
     if (checked) {
@@ -368,6 +520,7 @@ export function beginRun(opts: BeginRunOptions): RunHandle {
       model: recipe.model ?? null,
       recipe_hash: hash,
       write_set: [...writeSet].sort(),
+      evidence,
       row_count: rowCount,
       verification: { checked, agrees, observed, notes },
       ...(extra.error ? { error: extra.error } : {}),
@@ -401,6 +554,10 @@ export function beginRun(opts: BeginRunOptions): RunHandle {
   return {
     runId,
     startedAt,
+    markFailed: (reason: string) => {
+      softFailureReason ??= reason
+    },
+    softFailure: () => softFailureReason,
     countWritten: (n = 1) => {
       written += n
     },
@@ -409,11 +566,22 @@ export function beginRun(opts: BeginRunOptions): RunHandle {
 }
 
 /**
- * Wrap a step's body so every terminal path records exactly once.
+ * THE CANONICAL PATTERN. Wrap a step's body so every terminal path records
+ * exactly once, without the script keeping track.
  *
- * Success records `completed`; a throw records `failed` with the message and
- * re-throws, so the caller's exit code is unchanged. The signal handlers inside
- * `beginRun` cover the interrupted path.
+ * Prefer this over calling `beginRun` and `finish` by hand. The reason is not
+ * tidiness: a source scan can prove that a file which opens a run also contains
+ * a `finish` call somewhere, and it CANNOT prove that finalisation happens on
+ * every control-flow path. This wrapper makes that guarantee structurally, so the
+ * guarantee stops depending on each script's author getting the bookkeeping
+ * right. Raw `beginRun` is for a script that genuinely needs to own the terminal
+ * paths — resume logic, its own signal handling — and that choice should be
+ * visible in the diff.
+ *
+ * Outcomes: the body returning records `completed`; the body throwing records
+ * `failed` and re-throws, so the caller's exit code is unchanged; and
+ * `run.markFailed(reason)` records `failed` without an exception, which is the
+ * shape of "the pass ran and every row errored".
  */
 export async function withRunRecord<T>(
   opts: BeginRunOptions,
@@ -422,7 +590,10 @@ export async function withRunRecord<T>(
   const run = beginRun(opts)
   try {
     const result = await body(run)
-    await run.finish('completed')
+    const soft = run.softFailure()
+    await run.finish(soft ? 'failed' : 'completed', {
+      ...(soft ? { error: soft } : {}),
+    })
     return result
   } catch (err) {
     await run.finish('failed', { error: (err as Error).message })

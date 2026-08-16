@@ -13,9 +13,12 @@ import { describe, expect, it, vi } from 'vitest'
 
 import {
   beginRun,
+  defaultEvidence,
+  isWindowQueryable,
   recipeHash,
   withRunRecord,
   type RunRecord,
+  type Witness,
 } from './run-provenance'
 
 /** A harness with no filesystem, no database and no signal handlers. */
@@ -31,7 +34,8 @@ const harness = (observed: Record<string, number> = {}) => {
     written,
     opts: {
       now: () => times[Math.min(tick++, times.length - 1)]!,
-      countRows: async (column: string) => observed[column] ?? 0,
+      countRows: async (witness: Witness) =>
+        observed['column' in witness ? witness.column : witness.covers] ?? 0,
       append: (r: RunRecord) => {
         written.push(r)
         return `/runs/2026-08.jsonl`
@@ -303,5 +307,120 @@ describe('the write-set is declared, never inferred', () => {
       'greenery_checked_at',
       'style_checked_at',
     ])
+  })
+})
+
+describe('declared mutation is not the same thing as verification evidence', () => {
+  it('refuses a value column with no witness, at beginRun rather than at finish', () => {
+    // The bug this replaced: seasonal_care in the write-set was "verified" by
+    // comparing a jsonb column to an instant, which returns count=null with an
+    // empty error message — verification that quietly stops working and reads
+    // like bad luck. Failing here makes it a programming error instead.
+    expect(() =>
+      beginRun({
+        step: 'curate-seasonal-care',
+        writeSet: ['seasonal_care'],
+        recipe: RECIPE,
+        trapSignals: false,
+      })
+    ).toThrow('no evidence witness')
+  })
+
+  it('accepts a value column witnessed by the row-touched timestamp', async () => {
+    const observed: Record<string, number> = { updated_at: 25 }
+    const written: RunRecord[] = []
+    const run = beginRun({
+      step: 'curate-seasonal-care',
+      writeSet: ['seasonal_care'],
+      evidence: [
+        {
+          kind: 'row-touched',
+          covers: 'seasonal_care',
+          table: 'plants',
+          column: 'updated_at',
+        },
+      ],
+      recipe: RECIPE,
+      now: () => '2026-08-16T10:00:00.000Z',
+      countRows: async (w: Witness) =>
+        observed['column' in w ? w.column : w.covers] ?? 0,
+      append: (r) => {
+        written.push(r)
+        return '/runs/2026-08.jsonl'
+      },
+      log: () => {},
+      trapSignals: false,
+    })
+    run.countWritten(25)
+    const rec = await run.finish('completed')
+    expect(rec.verification.checked).toBe(true)
+    expect(rec.verification.agrees).toBe(true)
+    // Keyed by what it covers — the thing claimed — not by what was queried.
+    expect(rec.verification.observed['seasonal_care']).toBe(25)
+    expect(rec.evidence[0]).toMatchObject({ column: 'updated_at' })
+  })
+
+  it('witnesses a different table, for a step that never touches plants', async () => {
+    // curate-combinations writes plant_combinations, whose rows carry created_at
+    // and are inserted rather than updated.
+    const observed: Record<string, number> = { created_at: 60 }
+    const run = beginRun({
+      step: 'curate-combinations',
+      writeSet: ['plant_combinations'],
+      evidence: [
+        {
+          kind: 'row-touched',
+          covers: 'plant_combinations',
+          table: 'plant_combinations',
+          column: 'created_at',
+        },
+      ],
+      recipe: RECIPE,
+      now: () => '2026-08-16T10:00:00.000Z',
+      countRows: async (w: Witness) =>
+        observed['column' in w ? w.column : w.covers] ?? 0,
+      append: () => '/runs/2026-08.jsonl',
+      log: () => {},
+      trapSignals: false,
+    })
+    run.countWritten(60)
+    const rec = await run.finish('completed')
+    expect(rec.verification.agrees).toBe(true)
+    expect(rec.evidence[0]).toMatchObject({ table: 'plant_combinations' })
+  })
+
+  it('records "unverified" rather than "agreed" when nothing is observable', async () => {
+    const run = beginRun({
+      step: 'apply-something',
+      writeSet: ['native_region'],
+      evidence: [
+        {
+          kind: 'none',
+          covers: 'native_region',
+          reason: 'text[], no own timestamp',
+        },
+      ],
+      recipe: RECIPE,
+      now: () => '2026-08-16T10:00:00.000Z',
+      countRows: async () => 0,
+      append: () => '/runs/2026-08.jsonl',
+      log: () => {},
+      trapSignals: false,
+    })
+    run.countWritten(4)
+    const rec = await run.finish('completed')
+    expect(rec.verification.checked).toBe(false)
+    expect(rec.verification.notes.join(' ')).toContain('recorded unverified')
+  })
+
+  it('derives stamp witnesses from the write-set, so a stamp pass declares nothing extra', () => {
+    expect(defaultEvidence(['ai_drafted_at', 'style_checked_at'])).toEqual([
+      { kind: 'stamp', covers: 'ai_drafted_at', column: 'ai_drafted_at' },
+      { kind: 'stamp', covers: 'style_checked_at', column: 'style_checked_at' },
+    ])
+    // ai_drafted_at is window-queryable here and deliberately NOT a "stamp" in
+    // stamp-columns.ts, where the question is the column's role, not its type.
+    expect(isWindowQueryable('ai_drafted_at')).toBe(true)
+    expect(isWindowQueryable('seasonal_care')).toBe(false)
   })
 })

@@ -722,19 +722,34 @@ function checkWriteProvenance(): number {
       }
     }
 
-    // Shape 10. A run that opens must finalise. This catches the file that
-    // opens a run and never records one; it CANNOT prove finalisation on every
-    // path, which would need real control-flow analysis. withRunRecord is the
-    // shape that makes the guarantee structurally, and is worth preferring.
-    if (/\bbeginRun\s*\(/.test(src) && !/\.finish\s*\(/.test(src)) {
-      fail({
-        shape: 'run opened but never finalised',
-        subject: file,
-        detail:
-          'Calls beginRun and never calls finish, so the invocation leaves stamps and no record — the exact gap the log exists to close.',
-        remedy:
-          'Call run.finish(outcome) on every terminal path, or wrap the body in withRunRecord, which does it for you.',
-      })
+    // Shape 10. withRunRecord is the canonical pattern, and this scan is why.
+    //
+    // WHAT THIS PROVES, EXACTLY: that a file opening a run with raw beginRun
+    // contains an explicit finalisation call. It does NOT prove finalisation on
+    // every control-flow path — that needs real analysis, and a scan claiming
+    // otherwise would be the repository asserting a guarantee it cannot make.
+    //
+    // So the guarantee is moved into the code instead of the checker:
+    // withRunRecord owns the terminal paths structurally. Raw beginRun is for a
+    // script that genuinely needs to own them, and needs a recorded reason.
+    if (/\bbeginRun\s*\(/.test(src)) {
+      if (!RAW_BEGIN_RUN_ALLOWED[name]) {
+        fail({
+          shape: 'raw beginRun instead of withRunRecord',
+          subject: file,
+          detail:
+            "Opens a run with beginRun. A scan can only see that a finish call exists somewhere in the file, not that it runs on every path, so this shape puts the guarantee in the author's hands.",
+          remedy: `Wrap the body in withRunRecord, which finalises on return, on throw, and on run.markFailed(). If this script must own its terminal paths (resume logic, its own signal handling), record it in RAW_BEGIN_RUN_ALLOWED in ${basename(__filename)} with the reason.`,
+        })
+      } else if (!/\.finish\s*\(/.test(src)) {
+        fail({
+          shape: 'run opened with no finalisation call',
+          subject: file,
+          detail:
+            'Calls beginRun and contains no finish call at all, so the invocation leaves stamps and no record — the gap the log exists to close.',
+          remedy: 'Call run.finish(outcome), or use withRunRecord.',
+        })
+      }
     }
   }
 
@@ -754,6 +769,16 @@ function checkWriteProvenance(): number {
     }
   }
 
+  for (const key of Object.keys(RAW_BEGIN_RUN_ALLOWED)) {
+    const file = `apps/web/scripts/${key}`
+    if (
+      !SOURCE_TS.includes(file) ||
+      !/\bbeginRun\s*\(/.test(stripComments(read(file)))
+    ) {
+      staleHatches.push({ list: 'RAW_BEGIN_RUN_ALLOWED', key })
+    }
+  }
+
   for (const key of Object.keys(RUNS_WITHOUT_PROVENANCE)) {
     if (!participating.includes(key)) {
       staleHatches.push({ list: 'RUNS_WITHOUT_PROVENANCE', key })
@@ -762,6 +787,9 @@ function checkWriteProvenance(): number {
 
   return participating.length
 }
+
+/** Scripts allowed to own their own terminal paths instead of using withRunRecord. */
+export const RAW_BEGIN_RUN_ALLOWED: Record<string, string> = {}
 
 /** Declared write-set entries that are real writes but not stamp columns. */
 const NON_STAMP_WRITES = new Set([

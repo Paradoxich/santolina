@@ -29,7 +29,7 @@ import type { DbPlant, PlantType, SeasonalRhythm } from '../lib/plants-db'
 import { STYLE_TAG_PROMPT, type StyleTag } from '../lib/style-tags'
 import { GREENERY_PROMPT } from '../lib/greenery'
 import { requireScope, scopeIds, describeScope } from './scope'
-import { beginRun } from './run-provenance'
+import { withRunRecord } from './run-provenance'
 
 // ---------------------------------------------------------------------------
 // Config
@@ -469,10 +469,11 @@ async function main() {
   )
   const plants = await fetchUncuratedPlants(ids, newOnly)
 
-  // The run record opens here, before the first write, and is finalised on every
-  // terminal path below — including "nothing to do", which is a real invocation
-  // whose honest row_count is 0. See run-provenance.ts.
-  const run = beginRun({
+  // withRunRecord owns the terminal paths, which is the canonical shape: the
+  // guarantee that finalisation happens on every path is then structural rather
+  // than something this file has to get right. Even "nothing to do" is recorded —
+  // a real invocation whose honest row_count is 0. See run-provenance.ts.
+  const runOptions = {
     step: 'curate-plants',
     // Declared, not inferred: this pass writes the drafting stamp AND both
     // verdict stamps named after other scripts, which is exactly why the
@@ -487,67 +488,75 @@ async function main() {
       ingredients: { style_tags: STYLE_TAG_PROMPT, greenery: GREENERY_PROMPT },
       decoding: { max_tokens: 2048 },
     },
-  })
-
-  if (!plants.length) {
-    console.log('No uncurated plants found — nothing to do.')
-    await run.finish('completed')
-    process.exit(0)
   }
 
-  console.log(`\nRunning AI curation pass on ${plants.length} plant(s)...\n`)
-
-  const failures: Array<{ name: string; error: string }> = []
-  const lowConfidenceHardiness: string[] = []
-  const nullPlantType: string[] = []
-  let succeeded = 0
-
-  for (const [i, plant] of plants.entries()) {
-    const label = plant.scientific_name ?? plant.common_name
-    const prefix = `[${pad(i + 1)}/${pad(plants.length)}]`
-
-    try {
-      process.stdout.write(`${prefix} ${label} … `)
-      const { response, lowConfidence } = await getCurationFromClaude(plant)
-
-      if (lowConfidence) lowConfidenceHardiness.push(label)
-
-      // Flag plants where plant_type came back null
-      const effectiveType = plant.plant_type ?? response.plant_type
-      if (!effectiveType) nullPlantType.push(label)
-
-      const patch = buildPatch(plant, response)
-      await patchPlant(plant.id, patch)
-      run.countWritten()
-
-      const fieldsWritten = Object.keys(patch).filter(
-        (k) => k !== 'ai_drafted_at'
-      )
-      const warnings = [
-        lowConfidence ? '⚠ low-confidence hardiness' : '',
-        !effectiveType ? '⚠ no plant_type' : '',
-      ]
-        .filter(Boolean)
-        .join('  ')
-
-      console.log(
-        `✓  (${fieldsWritten.join(', ')})${warnings ? `  ${warnings}` : ''}`
-      )
-      succeeded++
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err)
-      console.log(`✗  ${message}`)
-      failures.push({ name: label, error: message })
+  const outcome = await withRunRecord(runOptions, async (run) => {
+    if (!plants.length) {
+      console.log('No uncurated plants found — nothing to do.')
+      return {
+        failures: [] as Array<{ name: string; error: string }>,
+        succeeded: 0,
+        lowConfidenceHardiness: [] as string[],
+        nullPlantType: [] as string[],
+      }
     }
 
-    if (i < plants.length - 1) await sleep(INTER_PLANT_DELAY_MS)
-  }
+    console.log(`\nRunning AI curation pass on ${plants.length} plant(s)...\n`)
 
-  // The run is finalised BEFORE the summary and before any exit: an
-  // invocation that wrote 12 of 25 rows and then failed records 12, never 25.
-  await run.finish(failures.length && !succeeded ? 'failed' : 'completed', {
-    ...(failures.length ? { error: `${failures.length} row(s) failed` } : {}),
+    const failures: Array<{ name: string; error: string }> = []
+    const lowConfidenceHardiness: string[] = []
+    const nullPlantType: string[] = []
+    let succeeded = 0
+
+    for (const [i, plant] of plants.entries()) {
+      const label = plant.scientific_name ?? plant.common_name
+      const prefix = `[${pad(i + 1)}/${pad(plants.length)}]`
+
+      try {
+        process.stdout.write(`${prefix} ${label} … `)
+        const { response, lowConfidence } = await getCurationFromClaude(plant)
+
+        if (lowConfidence) lowConfidenceHardiness.push(label)
+
+        // Flag plants where plant_type came back null
+        const effectiveType = plant.plant_type ?? response.plant_type
+        if (!effectiveType) nullPlantType.push(label)
+
+        const patch = buildPatch(plant, response)
+        await patchPlant(plant.id, patch)
+        run.countWritten()
+
+        const fieldsWritten = Object.keys(patch).filter(
+          (k) => k !== 'ai_drafted_at'
+        )
+        const warnings = [
+          lowConfidence ? '⚠ low-confidence hardiness' : '',
+          !effectiveType ? '⚠ no plant_type' : '',
+        ]
+          .filter(Boolean)
+          .join('  ')
+
+        console.log(
+          `✓  (${fieldsWritten.join(', ')})${warnings ? `  ${warnings}` : ''}`
+        )
+        succeeded++
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err)
+        console.log(`✗  ${message}`)
+        failures.push({ name: label, error: message })
+      }
+
+      if (i < plants.length - 1) await sleep(INTER_PLANT_DELAY_MS)
+    }
+
+    // A pass where every row errored is a failure even though nothing threw.
+    if (failures.length && !succeeded) {
+      run.markFailed(`all ${failures.length} row(s) failed`)
+    }
+    return { failures, succeeded, lowConfidenceHardiness, nullPlantType }
   })
+
+  const { failures, succeeded, lowConfidenceHardiness, nullPlantType } = outcome
 
   // Summary
   console.log('\n─────────────────────────────────────────────────────────────')

@@ -16,13 +16,48 @@ new row state, no lifecycle field, no table.
 | **Run**                 | What operation ran, when, with what recipe, against what declared write-set? | `apps/web/runs/<YYYY-MM>.jsonl`                |
 | **Stamp**               | Which of this row's outputs are currently certified?                         | `plants.*_checked_at` / `_verified_at` columns |
 | **Recipe**              | Which exact production recipe was used?                                      | `recipe_hash` in the run record                |
-| **Verification**        | Does the runner's claim agree with the database evidence?                    | `verification` in the run record               |
+| **Evidence**            | How could this invocation's mutation be observed?                            | `evidence` in the run record                   |
+| **Verification**        | Does the runner's claim agree with that evidence?                            | `verification` in the run record               |
 | **Supersession policy** | Which recipes or runs do we no longer consider current?                      | a committed file, when first needed            |
 
 Only the last is human-maintained. Staleness is **not** a layer: it is a query
 over the others, which is why there is no `stale_at` column and should never be
 one. A `stale` flag would turn a derived conclusion into mutable state and add
 another thing the pipeline has to keep correct.
+
+## Declared mutation is not verification evidence
+
+The two were one list in the first draft, and it broke on the second script it
+would have touched. `finish()` verified every write-set member by comparing that
+column to the run's window, which is only meaningful for a timestamp — but the
+write-set legitimately names value columns (`seasonal_care`, `native_region`,
+`image_candidates`), and `curate-combinations` writes a different table entirely.
+
+Measured rather than assumed: that query against `seasonal_care` returns
+`count = null` with an **empty** error message. So verification would not have
+cried wolf. It would have degraded to `checked: false` with a note reading like a
+transient database failure, on every non-stamp script, permanently — a check that
+stops working and looks like bad luck, which is the same shape as trap 1.
+
+So they are separate fields with separate jobs:
+
+- **`write_set`** — what this invocation is allowed to mutate. An assertion,
+  reviewable in the record, never inferred.
+- **`evidence`** — how that mutation can be independently observed at
+  finalisation. A witness per write-set member, because the answer differs by
+  column and by table.
+
+A witness is a `stamp` (a timestamp column on `plants`, window-queried), a
+`row-touched` (the table's own mutation timestamp — `plants.updated_at`,
+`plant_combinations.created_at` — which bounds a claim rather than confirming it,
+since it sees any write to the row), or `none` with a stated reason. Each names
+what it `covers`, because a write-set member is _what was mutated_ and that is not
+always a column: `curate-combinations` mutates a table.
+
+**"I cannot verify this" is an acceptable answer. "I verified this" when the query
+is meaningless is not.** A write-set member with no witness throws at `beginRun`,
+not at finalisation, because it is a programming error and must not present itself
+later as an unlucky read.
 
 ## Rounds and runs are different axes, on purpose
 
@@ -150,12 +185,30 @@ not evidence against the claim. A claim _larger_ than its evidence is.
 - No human-maintained prompt version.
 - No inference of the writing step from the column name.
 
-## Enforcement
+## Enforcement, and what it does not prove
 
 `pnpm invariants:check` holds the participation half, and prints what is left on
-every green run. Shapes 8 to 11: a script that mutates the catalog opens a run; a
-declared write-set names real columns; a run that opens is finalised; a row count
-is never hand-authored.
+every green run. Shapes 8 to 11:
+
+- a script that mutates the catalog opens a run;
+- every write-set member names a real column and carries an evidence witness;
+- a script that opens a run uses `withRunRecord` unless it is recorded as owning
+  its own terminal paths;
+- a row count is never hand-authored.
+
+**The third one is worded carefully on purpose.** A source scan can see that a
+file contains a finalisation call. It cannot prove that finalisation happens on
+every control-flow path — that needs real analysis. So the guarantee is not in the
+checker: `withRunRecord` makes it structural by owning the terminal paths, and the
+scan's job is only to keep scripts on that pattern. An earlier draft of this
+document said "a run that opens is finalised", which claimed something neither the
+scan nor the language could deliver.
+
+Raw `beginRun` stays available for a script that genuinely needs to own its
+terminal paths — resume logic, its own signal handling — and needs a recorded
+reason in `RAW_BEGIN_RUN_ALLOWED`. `curate-plants` was written with raw
+`beginRun` first and converted; the recipe hash is identical across that change,
+which is the right answer, since control flow is not part of the recipe.
 
 This is the part that decides whether the pattern generalises. Three good
 abstractions were invented here in response to individual failures — the
