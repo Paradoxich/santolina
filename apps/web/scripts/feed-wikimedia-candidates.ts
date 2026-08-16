@@ -2,8 +2,9 @@
  * Feed Wikimedia Commons photos into image_candidates so the vision pass can
  * consider them.
  *
- * For each plant in the input list, this resolves the species' Wikidata P18
- * image (see lib/wikimedia.ts), appends it to plants.image_candidates tagged
+ * For each plant in the input list, this resolves the species' best Commons
+ * photo (see lib/wikimedia.ts: the designated Wikidata P18 image, falling back
+ * to a guarded Commons search), appends it to plants.image_candidates tagged
  * source='wikimedia' with its CC attribution, and clears image_checked_at so
  * scripts/pick-plant-images.ts re-picks that plant across the combined
  * Trefle + Wikimedia pool. The shortlist always keeps a Wikimedia candidate
@@ -33,7 +34,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { getSupabaseAdmin } from '../lib/supabase-admin'
 import { fetchAllRows } from '../lib/paginate'
-import { fetchP18Candidate } from '../lib/wikimedia'
+import { fetchSpeciesCandidate } from '../lib/wikimedia'
 import { isCommercialSafeLicense } from '../lib/image-attribution'
 import type { ImageCandidate } from '../lib/image-shortlist'
 
@@ -142,13 +143,20 @@ async function main() {
       continue
     }
 
-    const candidate = await fetchP18Candidate(plant.scientific_name)
-    if (!candidate) {
-      console.log(`${label} — no usable Wikidata P18 photo`)
+    // P18 first, then a guarded Commons search. A species with no DESIGNATED
+    // photo very often still has photographs — round 12's Filipendula purpurea
+    // had ten — and reporting the narrower answer as the broader one is what
+    // sent that plant to production with a placeholder. See fetchSpeciesCandidate.
+    const found = await fetchSpeciesCandidate(plant.scientific_name)
+    if (!found) {
+      console.log(
+        `${label} — no usable photo (no P18, no matching Commons file)`
+      )
       noP18++
       await sleep(INTER_PLANT_DELAY_MS)
       continue
     }
+    const { candidate, via } = found
 
     // Never ingest a photo we can't legally use in a commercial product —
     // GFDL-only, NC, ND. The credit would be a lie and the use a risk.
@@ -192,8 +200,11 @@ async function main() {
       }
     }
 
+    // `via` is printed, not swallowed: a P18 hit is somebody's considered pick
+    // for the taxon, a search hit is ours filtered by isStraightSpeciesFile.
+    // The reviewer should be able to tell which one they are looking at.
     console.log(
-      `${label} — ${apply ? 'added' : 'would add'} ${candidate.width}x${candidate.height} (${candidate.attribution.license ?? 'license?'})`
+      `${label} — ${apply ? 'added' : 'would add'} ${candidate.width}x${candidate.height} (${candidate.attribution.license ?? 'license?'}, via ${via})`
     )
     added++
     await sleep(INTER_PLANT_DELAY_MS)
@@ -201,7 +212,7 @@ async function main() {
 
   console.log(
     `\n${apply ? 'Done' : 'Dry run'}: ${added} Wikimedia candidate(s) ${apply ? 'added' : 'to add'}, ` +
-      `${noP18} with no P18 photo, ${badLicense} with an unusable licence, ${noSciName} with no scientific name, ${unmatched.length} unmatched.`
+      `${noP18} with no usable photo, ${badLicense} with an unusable licence, ${noSciName} with no scientific name, ${unmatched.length} unmatched.`
   )
   if (unmatched.length) {
     console.log('\nUnmatched / skipped:')

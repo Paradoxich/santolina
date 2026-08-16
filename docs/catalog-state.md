@@ -38,7 +38,7 @@ One row per step that stamps a column, from the `STEP_DEFS` registry in
 | `cross-check-native-region` | `native_region_checked_at` | 720 / 748 | 96.3% |
 | `curate-styles` | `style_checked_at` | 748 / 748 | 100.0% |
 | `curate-greenery` | `greenery_checked_at` | 748 / 748 | 100.0% |
-| `pick-plant-images` | `image_checked_at` | 747 / 748 | 99.9% |
+| `pick-plant-images` | `image_checked_at` | 748 / 748 | 100.0% |
 | `pick-plant-images --verify` | `image_verified_at` | 79 / 748 | 10.6% |
 | `curate-editorial` | `editorial_checked_at` | 244 / 748 | 32.6% |
 
@@ -47,7 +47,7 @@ One row per step that stamps a column, from the `STEP_DEFS` registry in
 | field | state | count |
 | --- | --- | ---: |
 | `ai_drafted_at` | drafted | 748 |
-| `is_curated` | editorially reviewed | 231 |
+| `is_curated` | editorially reviewed | 232 |
 | `style_tags` | style-neutral (stamped, `[]` — a valid judgment) | 50 |
 | `style_tags` | never judged (`style_checked_at` NULL — a gap) | 0 |
 | `seasonal_care` | null | 0 |
@@ -55,8 +55,8 @@ One row per step that stamps a column, from the `STEP_DEFS` registry in
 | `is_greenery` | true | 114 |
 | `hardiness_rating` | drafted | 595 |
 | `hardiness_verified` | human-verified | 267 |
-| images | no image at all | 1 |
-| images | have an editorial pick (`image_url_curated`) | 747 |
+| images | no image at all | 0 |
+| images | have an editorial pick (`image_url_curated`) | 748 |
 
 ## Style tag distribution
 

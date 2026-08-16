@@ -57,6 +57,7 @@
  */
 
 import { getSupabaseAdmin } from '../lib/supabase-admin'
+import { fetchAllRows } from '../lib/paginate'
 
 interface Fix {
   scientific_name: string
@@ -167,13 +168,22 @@ async function main() {
   // Collision pre-check: every target string, against the whole catalog.
   // A name pass can create the collision it exists to remove (trap 6), so a
   // colliding target is refused rather than written.
-  const { data: allNames, error: nameErr } = await db
-    .from('plants')
-    .select('scientific_name, common_name')
-  if (nameErr) throw new Error(`collision pre-check: ${nameErr.message}`)
+  // Paginated, not a bare .select(): the pre-check must see the WHOLE catalog
+  // or the refusal it exists to raise stops firing exactly when the catalog is
+  // big enough to make a collision likely (standing rule 5, 1000-row cap).
+  const allNames = await fetchAllRows<{
+    scientific_name: string
+    common_name: string
+  }>((from, to) =>
+    db
+      .from('plants')
+      .select('scientific_name, common_name')
+      .order('id')
+      .range(from, to)
+  )
 
   const heldBy = new Map<string, string[]>()
-  for (const row of allNames ?? []) {
+  for (const row of allNames) {
     if (!row.common_name) continue
     const key = row.common_name.toLowerCase()
     heldBy.set(key, [...(heldBy.get(key) ?? []), row.scientific_name])

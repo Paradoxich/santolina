@@ -86,12 +86,10 @@ Pipeline steps for this round:
 ✓ curate-editorial               28/28   editorial_checked_at NOT NULL
 ```
 
-⚠️ **1 step did not complete:** `pick-plant-images`, 27/28. The gap is
-_Filipendula purpurea_, whose Trefle record carries no usable candidate image
-at all — "no image at all" went 0 → 1, undoing the invariant round 11
-established. It is a plant that needs a photograph, not a pass that needs
-re-running, so `feed-wikimedia-candidates` is the remedy and it is not run here
-(see "Deliberately not done").
+**All ten steps complete at 28/28**, `check-round-scope` 0 out-of-scope with 3
+waived by name, 26 of 28 approved. `pick-plant-images` sat at 27/28 for most of
+the session, and closing that last row produced the most useful finding here —
+see "a missing designation is not a missing photograph".
 
 **The round in one paragraph.** The first round chosen against a measured gap
 rather than a proposed theme. Four candidates were gap-tested on round 9's
@@ -150,10 +148,50 @@ species, 1795 → 1864 pairs, 25 of 28 approved.
   _ensata_ keeps the name; _laevigata_ became "Rabbitear iris" rather than
   "Japanese water iris", because a name differing by one adjective is a search
   problem and "water iris" would collide the day anyone seeds _I. pseudacorus_.
+  12 corrections applied by `scripts/fix-round12-names.ts`.
+- **I copied a known open finding into a new script, and the ratchet caught
+  it.** `fix-round12-names.ts` was patterned on `fix-round11-names.ts`, whose
+  collision pre-check reads the catalog with a bare `.select()` — recorded
+  since the 2026-08-14 audit as `OPEN_FINDINGS['round11-names-unpaginated']`,
+  latent because the catalog is under the 1000-row cap. Copying the file
+  copied the defect, into the one safety feature that stops a name pass
+  creating the collision it exists to remove. **Both are now routed through
+  `fetchAllRows`** and the finding is closed, 4 → 3. Worth knowing for the next
+  person who closes one: **that finding's witness could not have noticed the
+  fix.** It matched `.select('scientific_name, common_name')`, a string both
+  the broken and the fixed version contain, so the entry had to be removed by
+  hand rather than failing on its own the way the ratchet intends. A witness
+  that matches the shape rather than the defect cannot expire.
 - **Trap 5 fired again, as it has every seed:** `blue-purple`, unmapped. Filed
   under purple by the compound rule already documented in `bloom-colors.ts`
   (last word wins the bucket, the first modifies) — the mirror of
   `purple-blue`.
+- **A missing designation is not a missing photograph — and I reported the
+  narrower answer as the broader one.** _Filipendula purpurea_ finished the
+  pipeline with a placeholder, and the round was nearly closed on two false
+  statements. First: `feed-wikimedia-candidates` was described as blocked by
+  `invariants:check` shape 12. It is not — shape 12 refuses to let that script
+  be WIRED to run provenance without evidence, and never prevented running it.
+  Second, and the real one: the feeder resolves only Wikidata's **designated**
+  P18 image, this species has none, and it printed "no usable Wikidata P18
+  photo". Read as "no photo exists" that is simply false — **Commons held ten
+  files**, one of them a 3072×2304 CC BY 3.0 photograph of the straight
+  species. Trap family A, from the reporting side rather than the fetching
+  side: the tool answered the question it was asked and the answer was read as
+  a bigger one.
+  **Fixed, not filed** (Ana's call, and her reasoning is the durable half: a
+  defect a round PRODUCED is that round's to close, not a future session's).
+  `fetchSpeciesCandidate` now falls back to a guarded Commons search, the hero
+  came through the normal vision pass at `high` confidence, and the round
+  closed 28/28. The guard is where the risk lives — searching that binomial
+  also returns the hybrid _F. × purpurea_, four files of the cultivar 'Alba'
+  and _var. auriculata_, all of which contain the binomial — so
+  `isStraightSpeciesFile` rejects hybrid markers, quoted cultivars and
+  infraspecific ranks, and `rankSpeciesFileTitles` puts the bare binomial
+  first. Pinned by `lib/wikimedia.test.ts` using those ten real search results
+  as fixtures. **Known limit, carried:** an unquoted cultivar
+  ("_F. purpurea_ Elegans") passes, because there is no cultivar registry to
+  test against; ranking means it only ever wins when nothing better exists.
 - **Round 11's backup friction recurred exactly as it predicted.** Standing
   rule 1 wants the snapshot in the shared checkout; `resolveBaselineDir` scans
   `process.cwd()/backups` only, so it was taken in the shared checkout and
@@ -177,20 +215,26 @@ contradicts=0`, so the feared case — a row a person reads and KEEPS, which
 
 **Deliberately not done**
 
-- **_Filipendula purpurea_ has no image.** `feed-wikimedia-candidates` is the
-  remedy and it CLEARS a stamp, so `invariants:check` shape 12 refuses it until
-  it carries run provenance — it is one of the 16 unwired passes. Wiring it is
-  the queued work; doing it inside a round would have been the wrong order.
 - **Two medium-confidence heroes survived `--verify` and stay held** —
   _Rodgersia pinnata_ and _Acorus gramineus_, both "species unsure": a palmate
-  leaf with no flower, and a nursery tag visible in the frame.
-- **Three EARLIER rounds' rows carry the same label defect as _Juncus_** —
-  _Carex comans_ and _Carex testacea_ read "ornamental grass", _Luzula
-  sylvatica_ reads "Evergreen perennial grass". Out of round 12's scope, and
-  `check-round-scope` would have flagged writing them. A separate scoped pass.
+  leaf with no flower, and a nursery tag visible in the frame. These are
+  recorded verdicts and the only two holds left; they need a photograph, not a
+  pass.
 - **50 of 748 rows still show a Latin binomial as their common name** — 6.7% of
   the catalog, inherited from earlier rounds; round 12's own six are fixed.
-  Product-visible, and a Build Backlog row rather than round work.
+  Genuinely not this round's work, so it is a Build Backlog row.
+- **`cross-check-plants` will flag every sedge and rush forever.** It is blind
+  by design, so it re-derives `plant_type` from the species name and objects
+  that a Carex is not a grass — the round-4 false-positive class, where 8 of 10
+  flags were rejected for this reason. Two more this round. Left alone rather
+  than taught the convention, because a guard carrying exceptions is harder to
+  trust than one that is naive and noisy; recorded here so the next round does
+  not re-litigate it. **The cost is not the dismissing** — it is that a flag you
+  are trained to wave away sat directly beside the real defect, which is exactly
+  what nearly happened above.
+- **The Commons fallback's unquoted-cultivar limit**, described in the finding
+  above and in `isStraightSpeciesFile`'s header. Closing it needs a cultivar
+  registry this project does not have.
 - **The two invasive cuts are Ana's to reverse.** _Lythrum salicaria_ and
   _Iris pseudacorus_ are genuine absentees cut on round 11's _Lonicera
   japonica_ precedent: native to the Balkans, regulated invasives across much

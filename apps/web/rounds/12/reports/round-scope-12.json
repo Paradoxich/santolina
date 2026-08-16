@@ -8,8 +8,42 @@
   "plants_after": 748,
   "counts": {
     "fail": 0,
-    "allowed": 0,
+    "allowed": 3,
     "warn": 0
   },
-  "findings": []
+  "findings": [
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: plant_type_label",
+      "plant": "Longwood tussock",
+      "id": "416a041f-5e6d-4974-b160-4aa736ffc1f0",
+      "detail": "Longwood tussock — plant_type_label rewritten though the round never seeded it",
+      "column": "plant_type_label",
+      "before": "Ornamental grass",
+      "after": "Ornamental sedge",
+      "why": "Carex comans, seeded before round 12, read 'Ornamental grass'. A sedge, not a grass. Corrected to 'Ornamental sedge' by scripts/fix-round12-tags.ts, matching Carex buchananii, elata and muskingumensis which already read that way. plant_type stays `grass` deliberately — that field is the Explore filter bucket and is horticultural by the July 10 2026 ruling (docs/architecture.md#plant-type-label); only the reader-facing label changed."
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: plant_type_label",
+      "plant": "Orange New Zealand sedge",
+      "id": "c560a927-fd0a-4256-947d-3719b22acf0e",
+      "detail": "Orange New Zealand sedge — plant_type_label rewritten though the round never seeded it",
+      "column": "plant_type_label",
+      "before": "Evergreen ornamental grass",
+      "after": "Evergreen ornamental sedge",
+      "why": "Carex testacea, seeded before round 12, read 'Evergreen ornamental grass'. Corrected to 'Evergreen ornamental sedge' — its own evergreen wording kept, only the noun changed. Same reasoning as Carex comans."
+    },
+    {
+      "level": "ALLOWED",
+      "check": "out-of-scope write: plant_type_label",
+      "plant": "Great wood-rush",
+      "id": "cfe40aa5-23f4-4e1c-8322-9d2702f52114",
+      "detail": "Great wood-rush — plant_type_label rewritten though the round never seeded it",
+      "column": "plant_type_label",
+      "before": "Evergreen perennial grass",
+      "after": "Evergreen perennial wood-rush",
+      "why": "Luzula sylvatica, seeded before round 12, read 'Evergreen perennial grass'. Luzula is a wood-rush (Juncaceae). Corrected to 'Evergreen perennial wood-rush'. Its sibling Luzula nivea already reads 'Evergreen perennial rush' and was NOT touched: it is is_curated = true, and a curated row is not re-worded by a mechanical pass even to make two labels match."
+    }
+  ]
 }

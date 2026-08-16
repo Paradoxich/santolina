@@ -5424,6 +5424,14 @@
     "image_pick_reason": "Bright, sharply focused mass of magenta Michaelmas daisy blooms filling the frame with a clean, uncluttered garden background."
   },
   {
+    "id": "e99c75eb-5f7e-4585-b86a-c2c64b06a90a",
+    "common_name": "Japanese meadowsweet",
+    "image_url": null,
+    "image_url_curated": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Filipendula_purpurea.JPG/1920px-Filipendula_purpurea.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "image_pick_confidence": "high",
+    "image_pick_reason": "Sharp, vivid pink flower plumes fill much of the frame against a natural green garden background, clearly showcasing the plant's blooms."
+  },
+  {
     "id": "e9e8b5f4-76bb-44d5-9d6b-c12dd35401e0",
     "common_name": "Japanese holly",
     "image_url": "https://bs.plantnet.org/image/o/229f0c6e9dd83e6b044c2fa5340c4d879560c641",

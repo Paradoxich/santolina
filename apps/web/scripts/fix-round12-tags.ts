@@ -38,12 +38,26 @@
  *      Same class as the ignore rules in `lib/bloom-colors.ts` for
  *      underside-only and plain-green-plus-a-detail values.
  *
- * WHAT THIS FOUND AND DELIBERATELY LEAVES ALONE. Three rows from EARLIER
- * rounds carry the same label defect — Carex comans and Carex testacea say
- * "ornamental grass", Luzula sylvatica says "Evergreen perennial grass". They
- * are out of this round's scope and `check-round-scope` would flag writing
- * them. Recorded in `docs/database-log.md` instead; fixing them is a separate,
- * scoped pass.
+ * THREE OLDER ROWS CARRY THE SAME DEFECT AND ARE FIXED HERE TOO (Ana, this
+ * session). Carex comans and Carex testacea read "ornamental grass", Luzula
+ * sylvatica reads "Evergreen perennial grass" — found by the same query that
+ * caught the Juncus row, and wrong for the same reason. They belong to earlier
+ * rounds, so `check-round-scope` reports them as out-of-scope writes for round
+ * 12; that is correct and they are waived BY NAME in `rounds/12/scope-allow.json`
+ * rather than hidden. The check's own header says it: "an editorial fix to an
+ * older row during a round is a real thing to do... the answer to a legitimate
+ * one is to write down why rather than to stop running the check."
+ *
+ * The alternative was a Build Backlog row, and it was rejected for the reason
+ * standing rule 14 gives — a mechanical item parked in a document is invisible
+ * the day it stops being true, and nothing was watching these three: not
+ * `invariants:check` (it scans source, not data), not `verify-round` (it only
+ * reads the round's own rows).
+ *
+ * NOT TOUCHED: Luzula nivea already reads "Evergreen perennial rush" and is
+ * `is_curated = true` — frozen, and correct enough. Its wording differs from
+ * the "wood-rush" used below; a curated row is not re-worded by a mechanical
+ * pass.
  *
  * SAFETY — the same discipline as fix-round12-names.ts:
  *   - Every entry carries the value it EXPECTS to find; a drifted row is
@@ -81,6 +95,28 @@ const FIXES: Fix[] = [
     from: '["blue","yellow"]',
     to: '["blue"]',
     why: 'blue with a yellow eye; the eye is a detail, not a bloom colour',
+  },
+  // --- earlier rounds' rows, same defect. Waived by name in scope-allow.json.
+  {
+    scientific_name: 'Carex comans',
+    column: 'plant_type_label',
+    from: '"Ornamental grass"',
+    to: '"Ornamental sedge"',
+    why: 'a sedge; matches Carex buchananii, elata and muskingumensis',
+  },
+  {
+    scientific_name: 'Carex testacea',
+    column: 'plant_type_label',
+    from: '"Evergreen ornamental grass"',
+    to: '"Evergreen ornamental sedge"',
+    why: 'a sedge; keeps its own evergreen wording, changes only the noun',
+  },
+  {
+    scientific_name: 'Luzula sylvatica',
+    column: 'plant_type_label',
+    from: '"Evergreen perennial grass"',
+    to: '"Evergreen perennial wood-rush"',
+    why: 'Luzula is a wood-rush (Juncaceae), not a grass',
   },
 ]
 

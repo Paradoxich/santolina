@@ -1,7 +1,7 @@
 # Plant hero image picks — review
 
-747 plant(s) checked: 583 replaced an existing photo, 61 given a hero for the first time, 103 confirmed the existing photo was already the best, 0 with no usable photo.
-Confidence: high 675, medium 71, low 1.
+748 plant(s) checked: 583 replaced an existing photo, 62 given a hero for the first time, 103 confirmed the existing photo was already the best, 0 with no usable photo.
+Confidence: high 676, medium 71, low 1.
 
 Lowest confidence first — that is the queue. A "kept" row means the pass
 confirmed the existing photo rather than changing it, which is a real
@@ -553,7 +553,7 @@ Shows the full mature shrub covered in characteristic magenta flower spikes in a
 
 <img src="https://bs.plantnet.org/image/o/bc7bfd03127f7f5a3c2b8abc2c8de9a358fc1b1a" width="280">
 
-## high (675)
+## high (676)
 
 ### Jerusalem pine — changed
 
@@ -5172,6 +5172,12 @@ verify: Clusters of tubular orange-yellow flowers with hairy calyces on a vine w
 Bright, sharply focused mass of magenta Michaelmas daisy blooms filling the frame with a clean, uncluttered garden background.
 
 <img src="https://bs.plantnet.org/image/o/7fe64f86b78b0b41f02baeebb7b2d87d16e20cae" width="280">
+
+### Japanese meadowsweet — changed
+
+Sharp, vivid pink flower plumes fill much of the frame against a natural green garden background, clearly showcasing the plant's blooms.
+
+<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Filipendula_purpurea.JPG/1920px-Filipendula_purpurea.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original" width="280">
 
 ### Japanese holly — changed
 

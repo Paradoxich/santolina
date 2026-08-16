@@ -373,8 +373,8 @@
       "common_name": "Japanese meadowsweet",
       "scientific_name": "Filipendula purpurea",
       "image": {
-        "verdict": "fail",
-        "reason": "no image at all (upstream has none)"
+        "verdict": "pass",
+        "reason": "image pass: high confidence"
       },
       "description": {
         "verdict": "pass",
@@ -389,8 +389,8 @@
         "verdict": "pass",
         "reason": "cleared previously"
       },
-      "approved": false,
-      "blockers": ["image: no image at all (upstream has none)"]
+      "approved": true,
+      "blockers": []
     },
     {
       "id": "1de29674-4ba1-44f8-a681-50d13dc67bf6",
@@ -514,12 +514,12 @@
       },
       "description": {
         "verdict": "pass",
-        "reason": "The phrase 'adds texture to pond edges and wet areas' is vague gardening marketing language rather than a concrete visual description.",
+        "reason": "cleared previously",
         "rewritten": false
       },
       "tags": {
         "verdict": "pass",
-        "reason": "The modern style tag is appropriate for the architectural, vertical form, and the space types correctly reflect ground and mixed planting options for a marginal plant."
+        "reason": "cleared previously"
       },
       "approved": true,
       "blockers": []
@@ -602,12 +602,12 @@
       },
       "description": {
         "verdict": "pass",
-        "reason": "The description is concrete, specific about flower appearance and timing, leads with visual characteristics, and uses appropriate calm language without marketing register or banned punctuation.",
+        "reason": "cleared previously",
         "rewritten": false
       },
       "tags": {
         "verdict": "pass",
-        "reason": "The wildflower style tag is appropriate for a water-loving native that naturalizes readily, and the space tags correctly reflect that this plant grows in ground gardens and mixed settings suitable for moisture-loving plants."
+        "reason": "cleared previously"
       },
       "approved": true,
       "blockers": []

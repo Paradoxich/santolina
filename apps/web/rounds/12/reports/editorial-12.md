@@ -1,6 +1,6 @@
 # Editorial pass
 
-Judged **28** plant(s). Approved **25**, held back **3**.
+Judged **28** plant(s). Approved **26**, held back **2**.
 
 Descriptions rewritten: **17**.
 
@@ -13,10 +13,6 @@ Descriptions rewritten: **17**.
 ### Grassleaf sweet flag (Acorus gramineus)
 
 - image: image pass: medium confidence, and it SURVIVED the targeted re-check (pick-plant-images --verify) — the species could not be confirmed from this photo. Needs a new candidate image, not another check.
-
-### Japanese meadowsweet (Filipendula purpurea)
-
-- image: no image at all (upstream has none)
 
 ## Rewritten descriptions
 
