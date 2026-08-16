@@ -241,15 +241,12 @@ export interface OpenFinding {
 }
 
 export const OPEN_FINDINGS: Record<string, OpenFinding> = {
-  'demo-purge-swallows-storage-failure': {
-    what: 'purge-demo-users drops a Storage deletion error and then deletes the user, which cascades away the diary_entries rows holding photo_urls — the only pointer to those objects. The run reports photosRemoved: 0 with an empty failures list, indistinguishable from a clean purge. USER DATA, in the private diary-photos bucket, and the only finding in either audit where the lost state cannot be reconstructed afterwards.',
-    source:
-      'Schema design review 2026-08-14, section 6b — which is its SINGLE-ANALYST, not-skeptic-checked list, so the review is not the evidence. Confirmed 2026-08-16 by reading lib/purge-demo-users.ts: the error is discarded, and deleteUser cascades the rows holding the paths. Runs in production on Vercel Cron.',
-    file: 'apps/web/lib/purge-demo-users.ts',
-    witness: /if \(!storageError\) result\.photosRemoved \+= paths\.length/,
-    remedy:
-      'Record the failure before the pointer goes: put the paths and the error on the result, and log them, so an orphan is recoverable. NOT a one-line fix — whether a storage failure should also block the account deletion is a real decision, and the current best-effort behaviour is deliberate (one bad object must not stall the purge). Making that decision is the work; swallowing it silently is the defect.',
-  },
+  // 'demo-purge-swallows-storage-failure' CLOSED 2026-08-16. The decision it
+  // was blocked on was made — a storage failure does NOT block the account
+  // deletion — and the silence was fixed instead: paths and error land on
+  // PurgeResult.orphanedPhotos while the rows still exist, and both callers
+  // print them. Pinned by lib/purge-demo-users.test.ts, which asserts the
+  // record, the ordering against deleteUser, and that the account still goes.
   'editorial-approval-never-withdrawn': {
     what: 'curate-editorial has no path that withdraws an approval. `if (approved) patch.is_curated = true` is its only is_curated write and the criterion stamps are set only on pass, so re-judging an approved row to hold prints "hold" while the database still records approval and keeps the old stamps. The trigger cannot cover it: it clears only when the criterion FIELD changes, and a hold changes no field.',
     source:
