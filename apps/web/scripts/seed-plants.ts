@@ -3,31 +3,36 @@
  * the Supabase plants table.
  *
  * Usage (from apps/web) — --round is REQUIRED, see the check in main():
+ *   pnpm seed -- --round 9 --dry-run     # resolve and print the plan, no writes
  *   pnpm seed -- --round 9
  *
  * The npm script in package.json runs:
  *   tsx --env-file=.env.local scripts/seed-plants.ts
  *
  * You can seed by Trefle numeric ID or by scientific/common name:
- *   - IDs are fetched directly via the species detail endpoint.
- *   - Names are searched first; the top result's ID is used.
+ *   - IDs are fetched directly via the species detail endpoint. A numeric entry
+ *     is an id someone verified by hand, and it is the escape hatch for every
+ *     species the matchers cannot reach.
+ *   - Names go through ./species-resolver.ts, which requires an identical
+ *     species epithet before it will accept a genus synonym, then checks
+ *     Trefle's own synonyms[] list. An entry that resolves to nothing is
+ *     SKIPPED, never seeded from the top search hit.
  *
- * Species already in the catalog are SKIPPED by default (matched on
- * scientific name or resolved Trefle ID), so routine runs only touch new
+ * Species already in the catalog are SKIPPED by default (matched on scientific
+ * name — synonym-aware — or resolved Trefle ID), so routine runs only touch new
  * entries. Pass --include-existing to re-upsert known species; the upsert
  * is fill-only, so a re-run can fill gaps but never overwrites stored data.
  *
- * CAUTION: verify each new plant after seeding — Trefle name search can
- * silently resolve to a sibling species (diff requested vs stored
- * scientific_name; seed by numeric Trefle ID or add manually when it does).
+ * Still verify each new plant after seeding: the resolver refuses siblings, but
+ * a gender-variant epithet (Alyssum saxatile → Aurinia saxatilis) is invisible
+ * to it, and those resolve to null rather than to the wrong plant.
  *
  * Edit SEED_LIST below with the plants you want to import.
  */
 
-import { fetchAndMapSpecies, searchSpeciesByName } from '../lib/trefle'
+import { fetchAndMapSpecies } from '../lib/trefle'
 import { upsertPlant } from '../lib/plants-db'
-import { getSupabaseAdmin } from '../lib/supabase-admin'
-import { fetchCatalogIdentity } from './catalog-identity'
+import { fetchCatalogIndex, resolve } from './species-resolver'
 import { writeRoundManifest, type SeededPlant } from './round-manifest'
 
 // ---------------------------------------------------------------------------
@@ -302,38 +307,11 @@ function sleep(ms: number): Promise<void> {
 // only touches new entries — no wasted Trefle calls, no rate-limit failures
 // on long lists. Pass --include-existing to re-upsert known species (the
 // upsert is fill-only, so re-runs can fill gaps but never overwrite).
-interface ExistingCatalog {
-  ids: Set<number>
-  names: Set<string>
-}
-
-async function fetchExistingCatalog(): Promise<ExistingCatalog> {
-  const rows = await fetchCatalogIdentity()
-
-  const ids = new Set<number>()
-  const names = new Set<string>()
-  for (const row of rows) {
-    if (row.source_species_id !== null) ids.add(row.source_species_id)
-    if (row.scientific_name) names.add(row.scientific_name.toLowerCase())
-  }
-  return { ids, names }
-}
-
-async function resolveId(entry: number | string): Promise<number> {
-  if (typeof entry === 'number') return entry
-  const results = await searchSpeciesByName(entry)
-  if (!results.length) {
-    throw new Error(`No Trefle results found for name: "${entry}"`)
-  }
-  const match = results[0]
-  if (!match) {
-    throw new Error(`No Trefle results found for name: "${entry}"`)
-  }
-  console.log(
-    `  Resolved "${entry}" → source_species_id ${match.id} (${match.common_name})`
-  )
-  return match.id
-}
+//
+// Resolution and the dedupe read both come from ./species-resolver.ts. This
+// script used to carry its own `resolveId`, which returned the top search hit
+// with a null check but NO identity check — the exact sibling drift all seven
+// round seeders were written to prevent, on the path `pnpm seed` runs.
 
 function pad(n: number, width = 3): string {
   return String(n).padStart(width, ' ')
@@ -351,6 +329,7 @@ async function main() {
 
   const args = process.argv.slice(2)
   const includeExisting = args.includes('--include-existing')
+  const dryRun = args.includes('--dry-run')
   const roundIdx = args.indexOf('--round')
   const roundLabel = roundIdx >= 0 ? args[roundIdx + 1] : undefined
 
@@ -374,17 +353,18 @@ async function main() {
   const startedAt = new Date().toISOString()
   const seeded: SeededPlant[] = []
 
-  const existing = includeExisting
-    ? { ids: new Set<number>(), names: new Set<string>() }
-    : await fetchExistingCatalog()
+  const existing = includeExisting ? null : await fetchCatalogIndex()
 
-  if (!includeExisting) {
+  if (existing) {
     console.log(
       `\nCatalog has ${existing.names.size} species — already-seeded entries will be skipped (--include-existing to override).`
     )
   }
 
-  console.log(`\nSeeding ${SEED_LIST.length} plant(s) from Trefle...\n`)
+  console.log(
+    `\nSeeding ${SEED_LIST.length} plant(s) from Trefle...` +
+      (dryRun ? ' DRY RUN — no writes, no manifest.\n' : '\n')
+  )
 
   const failures: Array<{ entry: number | string; error: string }> = []
   let succeeded = 0
@@ -393,10 +373,12 @@ async function main() {
   for (const [i, entry] of SEED_LIST.entries()) {
     const prefix = `[${pad(i + 1)}/${pad(SEED_LIST.length)}]`
 
-    // Skip known species before spending any Trefle calls
+    // Skip known species before spending any Trefle calls. The string side is
+    // synonym-aware, so a candidate the catalog holds under the other genus
+    // costs nothing (Persicaria amplexicaulis against a held Bistorta).
     if (
-      (typeof entry === 'number' && existing.ids.has(entry)) ||
-      (typeof entry === 'string' && existing.names.has(entry.toLowerCase()))
+      (typeof entry === 'number' && existing?.ids.has(entry)) ||
+      (typeof entry === 'string' && existing?.holds(entry))
     ) {
       console.log(`${prefix} — already in catalog, skipped: ${entry}`)
       skipped++
@@ -405,20 +387,44 @@ async function main() {
 
     try {
       console.log(`${prefix} Processing: ${entry}`)
-      const perenualId = await resolveId(entry)
+      const resolved = await resolve(entry, {
+        paceMs: INTER_SPECIES_DELAY_MS,
+        log: (line) => console.log(`${prefix}${line}`),
+      })
+
+      // No verified identity, no seed. The old code took results[0] here, which
+      // is how a request for one species silently became its sibling.
+      if (!resolved) {
+        console.log(`${prefix} — no exact Trefle match, skipped: ${entry}`)
+        skipped++
+        await sleep(INTER_SPECIES_DELAY_MS)
+        continue
+      }
 
       // A name entry can resolve to a species we already hold under a
       // synonym (e.g. Persicaria → Bistorta) — catch that after resolution.
-      if (existing.ids.has(perenualId)) {
+      if (
+        existing?.ids.has(resolved.id) ||
+        existing?.holds(resolved.scientific_name)
+      ) {
         console.log(
-          `${prefix} — resolved to source_species_id ${perenualId}, already in catalog, skipped`
+          `${prefix} — resolved to ${resolved.scientific_name} (#${resolved.id}), already in catalog, skipped`
         )
         skipped++
         await sleep(INTER_SPECIES_DELAY_MS)
         continue
       }
 
-      const mapped = await fetchAndMapSpecies(perenualId)
+      if (dryRun) {
+        console.log(
+          `${prefix} would seed ${resolved.scientific_name} (#${resolved.id}, matched by ${resolved.matchedBy})`
+        )
+        succeeded++
+        await sleep(INTER_SPECIES_DELAY_MS)
+        continue
+      }
+
+      const mapped = await fetchAndMapSpecies(resolved.id)
       const saved = await upsertPlant(mapped)
       console.log(
         `${prefix} ✓ Upserted "${saved.common_name}" (id=${saved.id})`
@@ -441,12 +447,14 @@ async function main() {
   // Summary
   console.log('\n─────────────────────────────────────────')
   console.log(
-    `Seeding complete: ${succeeded} succeeded, ${skipped} skipped (already in catalog), ${failures.length} failed`
+    `Seeding ${dryRun ? 'plan' : 'complete'}: ${succeeded} ${dryRun ? 'would be seeded' : 'succeeded'}, ${skipped} skipped, ${failures.length} failed`
   )
 
   // Round manifest — the explicit record of what this run seeded, so the
   // rest of the pipeline (and future us) never has to infer the batch.
-  if (seeded.length) {
+  if (dryRun) {
+    console.log('\nDry run — no manifest written.')
+  } else if (seeded.length) {
     const path = writeRoundManifest({ label: roundLabel, startedAt, seeded })
     console.log(`\nWrote round manifest: ${path}`)
   } else {
