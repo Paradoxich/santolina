@@ -241,6 +241,33 @@ export interface OpenFinding {
 }
 
 export const OPEN_FINDINGS: Record<string, OpenFinding> = {
+  'demo-purge-swallows-storage-failure': {
+    what: 'purge-demo-users drops a Storage deletion error and then deletes the user, which cascades away the diary_entries rows holding photo_urls — the only pointer to those objects. The run reports photosRemoved: 0 with an empty failures list, indistinguishable from a clean purge. USER DATA, in the private diary-photos bucket, and the only finding in either audit where the lost state cannot be reconstructed afterwards.',
+    source:
+      'Schema design review 2026-08-14, section 6b — which is its SINGLE-ANALYST, not-skeptic-checked list, so the review is not the evidence. Confirmed 2026-08-16 by reading lib/purge-demo-users.ts: the error is discarded, and deleteUser cascades the rows holding the paths. Runs in production on Vercel Cron.',
+    file: 'apps/web/lib/purge-demo-users.ts',
+    witness: /if \(!storageError\) result\.photosRemoved \+= paths\.length/,
+    remedy:
+      'Record the failure before the pointer goes: put the paths and the error on the result, and log them, so an orphan is recoverable. NOT a one-line fix — whether a storage failure should also block the account deletion is a real decision, and the current best-effort behaviour is deliberate (one bad object must not stall the purge). Making that decision is the work; swallowing it silently is the defect.',
+  },
+  'editorial-approval-never-withdrawn': {
+    what: 'curate-editorial has no path that withdraws an approval. `if (approved) patch.is_curated = true` is its only is_curated write and the criterion stamps are set only on pass, so re-judging an approved row to hold prints "hold" while the database still records approval and keeps the old stamps. The trigger cannot cover it: it clears only when the criterion FIELD changes, and a hold changes no field.',
+    source:
+      'Schema design review 2026-08-14, section 6b — its single-analyst list, so the review is not the evidence. Confirmed 2026-08-16 by reading curate-editorial.ts: the write has moved since, its shape has not, and grep shows it is still the only is_curated write in the file. The review also records (section 6a) that the resulting state is undetectable by query, being indistinguishable from a genuine approval.',
+    file: 'apps/web/scripts/curate-editorial.ts',
+    witness: /if \(approved\) patch\.is_curated = true/,
+    remedy:
+      'The two one-line fixes the review names: write `patch.is_curated = approved` unconditionally, and null the stamp for each non-pass criterion. This closes forward only — because the state is query-undetectable, no sweep can find the rows it has already produced.',
+  },
+  'sun-audit-targets-a-derived-column': {
+    what: 'cross-check-plants raises `disagree` flags on sun_requirements, a BEFORE-trigger-derived mirror of sun_thrives/sun_tolerates (migration 20260709220000). Nothing can act on them: a write to that column is recomputed away, and the only consumer that ever tried is apply-sun-widening, which is non-convergent for exactly that reason and is queued for archive.',
+    source:
+      'Pipeline audit 2026-08-14 section 4 and schema design review section 6b, both unverified passes. Confirmed 2026-08-16 by reading cross-check-plants.ts against migration 20260709220000, which is where the derive trigger is declared.',
+    file: 'apps/web/scripts/cross-check-plants.ts',
+    witness: /field: 'sun_requirements',\s*\n\s*severity: 'disagree'/,
+    remedy:
+      "Either retarget the comparison at sun_thrives/sun_tolerates, the columns a person can actually change, or downgrade it to `minor` and let it be a read-only signal. The witness clears on either, because both stop the pass calling a derived column's value a disagreement.",
+  },
   'combo-fields-unchecked': {
     what: 'verify-round checkCombos selects only the two plant ids, so a plant_combinations row with a null combination_type, strength or notes passes round close while the companion card has nothing to render.',
     source:

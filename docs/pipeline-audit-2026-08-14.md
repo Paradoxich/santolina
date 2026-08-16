@@ -41,12 +41,13 @@ Scope: 66 scripts, 28 recorded traps, 61 existing test invariants, worktree `san
 > | §5 `round-status` stamp suffixes          | Fixed by `scripts/stamp-columns.ts`                          |
 > | §5 `backfill-legacy-editorial`            | Open → `SCRIPTS_PENDING_ARCHIVE`                             |
 > | §5 `hardiness_verified`                   | Parked with hardiness; classified in `stamp-columns.ts`      |
-> | §4 `cross-check-plants` sun audit         | **Not routed.** A design call, never verified. Still here.   |
+> | §4 `cross-check-plants` sun audit         | Open → `OPEN_FINDINGS['sun-audit-targets-a-derived-column']` |
 >
-> This page is kept rather than deleted because of that last row and its
-> equivalents in the companion review: the reports cannot go until every
-> still-open item has a home that fails when it stops being true, and a handful
-> are design questions no witness can express.
+> **Every finding in this document is now either fixed or carried by a ratchet
+> entry that fails the day its defect is fixed** (routed 2026-08-16, each
+> re-verified against the code rather than against a header). Nothing here needs
+> to be read to know what is left — `pnpm backlog` prints it. The page is kept
+> only as the record of what was found and why the fixes took the shape they did.
 
 ---
 

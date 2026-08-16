@@ -38,12 +38,18 @@
 > - **Item 11** (migration-drift content check) needs `applied_migrations()` to
 >   return `statements`, so it is a deferred SCHEMA change and belongs on standing
 >   rule 11's list, not here.
-> - **Item 12** (`restore-catalog`'s diff excluding trigger-derived columns) and
->   the "can wait" code items — the `curate-editorial` withdrawal fix, the
->   `curate-styles` withdrawal counter, `purge-demo-users`' storage-failure record
->   — are **not routed**. Each is a real code defect that a witness could express;
->   none has been re-verified against today's code, and recording an unverified
->   finding as tracked is the failure this whole mechanism exists to prevent.
+> - **Item 12 is done.** `restore-catalog` has a `TRIGGER_OWNED` map and compares
+>   through `canonicalRow`, which is used in the change FILTER and not only in the
+>   report — so §443's "`--apply` can never converge" is closed with it.
+> - **The "can wait" code defects are routed** (2026-08-16, each re-verified
+>   against the code): `purge-demo-users`' swallowed Storage failure and
+>   `curate-editorial`'s missing withdrawal are now `OPEN_FINDINGS` entries with
+>   witnesses, as is the §441 `cross-check-plants` sun audit. The
+>   **`curate-styles` withdrawal counter is deliberately NOT a witness** — the
+>   remedy is "count and print withdrawn approvals", so the defect is the absence
+>   of a number in a summary, and a regex asserting an absence stays true forever
+>   whether or not anyone acts. It is a reporting improvement, and it belongs in
+>   the Notion **Build Backlog** with the rest of the design column.
 > - **The rest of "can wait" is design, not defect** — generated row types, a
 >   generated data contract, the replay job, the `garden_use_tags` bucket map, the
 >   `writePlant` RPC collapse, `NOT NULL` on `scientific_name`, the unordered-pair
@@ -51,7 +57,9 @@
 >   belong in the Notion **Build Backlog** or on rule 11's list, and moving them
 >   there is Ana's call rather than a session's.
 >
-> That unrouted middle row is why this page is still here.
+> Nothing in this document is now the only home of an open item. It is kept as
+> the record of what was found and what was decided from it; for what is left,
+> run `pnpm backlog`.
 
 ---
 
