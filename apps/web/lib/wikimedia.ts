@@ -123,3 +123,115 @@ export async function fetchP18Candidate(
   if (!fileTitle) return null
   return fetchCommonsCandidate(fileTitle)
 }
+
+/**
+ * Does this Commons file title depict the STRAIGHT SPECIES asked for?
+ *
+ * The search fallback below is the only place this codebase takes a photo it
+ * was not handed by name, so this is where wrong-taxon risk lives. Searching
+ * Commons for `Filipendula purpurea` returns, among ten hits: the hybrid
+ * `Filipendula × purpurea`, three files of the white cultivar
+ * `F. purpurea 'Alba'`, and `F. purpurea var. auriculata`. Every one of those
+ * is a DIFFERENT plant to a careful reader, and all of them contain the
+ * binomial, so a substring test is not enough.
+ *
+ * Rejected: a hybrid marker, a quoted cultivar epithet, and any infraspecific
+ * rank. Accepted: the binomial with surrounding words, since a good photo is
+ * often titled "(Filipendula purpurea close-up in Nikkō, Japan)".
+ *
+ * KNOWN LIMIT, carried deliberately: a cultivar written WITHOUT quotes
+ * ("Filipendula purpurea Elegans 1zz.jpg") passes. There is no cultivar
+ * registry here to test against, and the damage is bounded — a cultivar of the
+ * right species is a far smaller error than a different species, and the vision
+ * pass still judges the photograph afterwards. `rankSpeciesFileTitles` below
+ * puts the clean binomial first so this case only ever wins when nothing
+ * better exists.
+ */
+export function isStraightSpeciesFile(
+  fileTitle: string,
+  scientificName: string
+): boolean {
+  const title = fileTitle
+    .replace(/^File:/i, '')
+    .replace(/\.[a-z0-9]+$/i, '')
+    .toLowerCase()
+  const [genus, epithet] = scientificName.toLowerCase().split(/\s+/)
+  if (!genus || !epithet) return false
+
+  // A different taxon that still contains the binomial.
+  if (/(?:×|&times;|\s+x\s+)/.test(title)) return false
+  if (/['"‘’“”]/.test(title)) return false
+  if (/\b(?:var|subsp|ssp|cv|f)\.\s/.test(title)) return false
+
+  return new RegExp(`\\b${genus}\\s+${epithet}\\b`).test(title)
+}
+
+/** Cleanest match first: the bare binomial beats the binomial in a sentence. */
+export function rankSpeciesFileTitles(
+  titles: string[],
+  scientificName: string
+): string[] {
+  const bare = scientificName.toLowerCase()
+  return [...titles].sort((a, b) => {
+    const norm = (t: string) =>
+      t
+        .replace(/^File:/i, '')
+        .replace(/\.[a-z0-9]+$/i, '')
+        .toLowerCase()
+        .trim()
+    return (norm(a) === bare ? 0 : 1) - (norm(b) === bare ? 0 : 1)
+  })
+}
+
+/** Commons full-text search, file namespace only. Titles keep their prefix. */
+export async function searchCommonsFileTitles(
+  scientificName: string,
+  limit = 10
+): Promise<string[]> {
+  const url =
+    'https://commons.wikimedia.org/w/api.php?action=query&format=json&list=search' +
+    `&srnamespace=6&srlimit=${limit}&srsearch=${encodeURIComponent(scientificName)}`
+  const r = await fetch(url, { headers: { 'User-Agent': UA } })
+  if (!r.ok) return []
+  const j = (await r.json()) as {
+    query?: { search?: { title?: string }[] }
+  }
+  return (j.query?.search ?? [])
+    .map((s) => s.title ?? '')
+    .filter((t): t is string => Boolean(t))
+}
+
+/**
+ * A species' best Commons photo: the designated one, or the best search hit.
+ *
+ * WHY THE FALLBACK EXISTS. Wikidata's P18 is a hand-curated "the image" per
+ * taxon and most species have none — round 12's `Filipendula purpurea` did
+ * not, so `fetchP18Candidate` returned null and the feeder reported "no usable
+ * Wikidata P18 photo". Read as "no photo exists" that is simply false: Commons
+ * held ten files, one of them a 3072x2304 CC BY 3.0 photograph of the straight
+ * species. **A missing designation is not a missing photograph**, and letting
+ * the narrower answer stand for the broader one is the shape this project
+ * keeps paying for (trap family A in `docs/database-log.md`).
+ *
+ * The `via` field is returned rather than logged away because the two routes
+ * carry different confidence: P18 is somebody's considered pick for the taxon,
+ * a search hit is this function's guess filtered by `isStraightSpeciesFile`.
+ */
+export async function fetchSpeciesCandidate(
+  scientificName: string
+): Promise<{ candidate: WikimediaCandidate; via: 'p18' | 'search' } | null> {
+  const p18 = await fetchP18Candidate(scientificName)
+  if (p18) return { candidate: p18, via: 'p18' }
+
+  const titles = rankSpeciesFileTitles(
+    (await searchCommonsFileTitles(scientificName)).filter((t) =>
+      isStraightSpeciesFile(t, scientificName)
+    ),
+    scientificName
+  )
+  for (const title of titles) {
+    const candidate = await fetchCommonsCandidate(title.replace(/^File:/i, ''))
+    if (candidate) return { candidate, via: 'search' }
+  }
+  return null
+}

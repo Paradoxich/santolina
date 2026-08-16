@@ -111,6 +111,33 @@ const POLL_INTERVAL_MS = 30_000
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 const pad = (n: number, w = 3) => String(n).padStart(w, ' ')
 
+/**
+ * Why a batch entry did not succeed, in one line.
+ *
+ * `result.type` alone is "errored" for a permanently unreachable candidate URL
+ * and for a transient upstream timeout alike, and those need OPPOSITE
+ * responses: one is a plant that needs a new photograph, the other is a plain
+ * re-run. Round 12 printed seven bare UUIDs and the reason had to be read back
+ * out of the Batch API by hand before the rows could be re-run safely — every
+ * one turned out to be the retryable kind, which the log had no way to say.
+ *
+ * This is the same rule the `stop_reason` branch below already follows: name
+ * the cause rather than the category. `canceled` and `expired` carry no detail
+ * and say enough on their own. The `request_id` is included because it is the
+ * handle Anthropic support asks for, and it is what made the round-12
+ * diagnosis possible at all.
+ */
+export function describeBatchFailure(
+  result: Anthropic.Messages.Batches.MessageBatchIndividualResponse['result']
+): string {
+  if (result.type !== 'errored') return result.type
+  const { error, request_id: requestId } = result.error
+  return (
+    `errored — ${error.type}: ${error.message}` +
+    (requestId ? ` (request ${requestId})` : '')
+  )
+}
+
 interface PlantRow {
   id: string
   common_name: string
@@ -900,7 +927,7 @@ async function collectVerifyResultsInner(
     }
 
     if (entry.result.type !== 'succeeded') {
-      console.log(`  ${m.commonName} — ${entry.result.type}`)
+      console.log(`  ${m.commonName} — ${describeBatchFailure(entry.result)}`)
       stats.errored++
       continue
     }
@@ -1456,7 +1483,10 @@ async function collectResultsInner(
     const plantId = entry.custom_id
 
     if (entry.result.type !== 'succeeded') {
-      console.log(`  ${plantId} — ${entry.result.type}`)
+      // The manifest is the only place the name lives at this point, and a
+      // bare UUID is unreadable in a 28-row summary.
+      const named = manifest.plants[plantId]?.commonName ?? plantId
+      console.log(`  ${named} — ${describeBatchFailure(entry.result)}`)
       stats.errored++
       continue
     }

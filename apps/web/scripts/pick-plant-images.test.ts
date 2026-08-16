@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { mapVerdict } from './pick-plant-images'
+import { describeBatchFailure, mapVerdict } from './pick-plant-images'
 
 /**
  * The promotion rule is the whole argument that --verify is a second question
@@ -57,5 +57,67 @@ describe('mapVerdict', () => {
     expect(all.every((v) => ['high', 'medium', 'low'].includes(v))).toBe(true)
     // And the strict bar holds: nothing without a confirmed species is high.
     expect(all.filter((v) => v === 'high')).toHaveLength(2)
+  })
+})
+
+/**
+ * Round 12 printed seven bare UUIDs followed by the word "errored", and the
+ * only way to learn whether those rows were retryable was to query the Batch
+ * API by hand. A transient timeout and a permanently dead candidate URL both
+ * arrive as `type: 'errored'`, and they need opposite responses — so the
+ * category is not the message.
+ *
+ * The payload in the first case is copied verbatim from what the API returned
+ * for round 12's `Persicaria bistorta` request. These assertions fail against
+ * the pre-fix line, which printed `result.type` and nothing else.
+ */
+describe('describeBatchFailure', () => {
+  const timedOut = {
+    type: 'errored',
+    error: {
+      type: 'error',
+      request_id: 'workerreq_017u8eYAU8yEuhfZ8D2d7HR1',
+      error: {
+        type: 'invalid_request_error',
+        message:
+          'The request timed out while trying to download the file. Please try again later.',
+      },
+    },
+  } as const
+
+  it('names the reason, not just the category', () => {
+    const line = describeBatchFailure(timedOut)
+    expect(line).toContain('invalid_request_error')
+    expect(line).toContain('timed out while trying to download the file')
+    // The bare category alone is exactly the round-12 defect.
+    expect(line).not.toBe('errored')
+  })
+
+  it('carries the request id, which is the handle support asks for', () => {
+    expect(describeBatchFailure(timedOut)).toContain(
+      'workerreq_017u8eYAU8yEuhfZ8D2d7HR1'
+    )
+  })
+
+  it('separates a retryable timeout from a dead candidate URL', () => {
+    const notFound = {
+      type: 'errored',
+      error: {
+        type: 'error',
+        request_id: null,
+        error: { type: 'not_found_error', message: 'image not found' },
+      },
+    } as const
+    // Same `result.type` on both, different text — which is the whole point.
+    expect(timedOut.type).toBe(notFound.type)
+    expect(describeBatchFailure(timedOut)).not.toBe(
+      describeBatchFailure(notFound)
+    )
+    expect(describeBatchFailure(notFound)).toContain('not_found_error')
+  })
+
+  it('leaves canceled and expired alone — they carry no detail to add', () => {
+    expect(describeBatchFailure({ type: 'canceled' })).toBe('canceled')
+    expect(describeBatchFailure({ type: 'expired' })).toBe('expired')
   })
 })

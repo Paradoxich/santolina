@@ -1,0 +1,22 @@
+{
+  "note": "Round 12 made three deliberate writes outside its own manifest, all the same defect and all found by the investigation the round itself triggered. The editorial pass held Juncus effusus because plant_type_label read 'Ornamental grass' about a rush; the query that confirmed it also showed three EARLIER rounds' rows saying the same wrong thing. They are waived by name rather than by column, because a column waiver on plant_type_label would silently permit any future label write outside a round, and the whole point of naming them is that someone can read what was changed and why. The alternative considered and rejected was leaving them for a later session as a Build Backlog row: standing rule 14's reasoning applies, since nothing watches these rows — invariants:check scans source rather than data, and verify-round only reads a round's own rows — so a parked mechanical item would have been invisible the day it stopped being true.",
+  "allow": [
+    {
+      "plant": "Longwood tussock",
+      "column": "plant_type_label",
+      "why": "Carex comans, seeded before round 12, read 'Ornamental grass'. A sedge, not a grass. Corrected to 'Ornamental sedge' by scripts/fix-round12-tags.ts, matching Carex buchananii, elata and muskingumensis which already read that way. plant_type stays `grass` deliberately — that field is the Explore filter bucket and is horticultural by the July 10 2026 ruling (docs/architecture.md#plant-type-label); only the reader-facing label changed."
+    },
+    {
+      "plant": "Orange New Zealand sedge",
+      "column": "plant_type_label",
+      "why": "Carex testacea, seeded before round 12, read 'Evergreen ornamental grass'. Corrected to 'Evergreen ornamental sedge' — its own evergreen wording kept, only the noun changed. Same reasoning as Carex comans."
+    },
+    {
+      "plant": "Great wood-rush",
+      "column": "plant_type_label",
+      "why": "Luzula sylvatica, seeded before round 12, read 'Evergreen perennial grass'. Luzula is a wood-rush (Juncaceae). Corrected to 'Evergreen perennial wood-rush'. Its sibling Luzula nivea already reads 'Evergreen perennial rush' and was NOT touched: it is is_curated = true, and a curated row is not re-worded by a mechanical pass even to make two labels match."
+    }
+  ],
+  "cleared_at": "2026-08-16T23:29:18Z",
+  "cleared_why": "Round 12 is finished: 10/10 pipeline steps at 28/28, verify-round --round 12 at 0 failures, and the catalog archive re-captured after the last write (the Filipendula purpurea hero, which came from the Commons-search fallback added this session). Closed now for the reason round 10's entry gives: the window is baseline-to-now, so leaving it open makes every later catalog-wide pass read as this round spilling out of its batch, which is how round 8 accumulated 287 false failures. The three out-of-round label corrections that predate this edge are waived BY NAME above rather than swallowed by the edge, so the record still says who changed what and why."
+}

@@ -166,6 +166,10 @@ export const RUNS_WITHOUT_PROVENANCE: Record<string, string> = {
   'fix-round8-names.ts':
     'One-off name pass, kept as the apply-script template.',
   'fix-round11-names.ts': 'One-off name pass.',
+  'fix-round12-names.ts':
+    'One-off name pass, round 12. Same category as rounds 8 and 11 above.',
+  'fix-round12-tags.ts':
+    'One-off tag pass, round 12: the two editorial `tags:` blockers plus three older rows with the same label defect.',
   'fix-oversized-heroes.ts':
     'One-off image repair. Found by this scan rather than by the list, which is the scan doing its job.',
 
@@ -273,15 +277,6 @@ export const OPEN_FINDINGS: Record<string, OpenFinding> = {
     witness: /\.select\('plant_id_a, plant_id_b'\)/,
     remedy:
       'Add combination_type, strength and notes to ComboRow and its select, and FAIL on a null in any of them.',
-  },
-  'round11-names-unpaginated': {
-    what: "fix-round11-names' collision pre-check reads the catalog with a bare .select(), so it silently caps at 1000 rows (standing rule 5). It works at today's size and stops working the round the catalog passes 1000 — at which point the refusal it exists to raise stops firing and the pass writes the collision it was added to prevent.",
-    source:
-      'Pipeline audit 2026-08-14, section 5 (pass-through, confirmed 2026-08-16 against scripts/fix-round11-names.ts:189 — no .range, no fetchAllRows in the file).',
-    file: 'apps/web/scripts/fix-round11-names.ts',
-    witness: /\.select\('scientific_name, common_name'\)/,
-    remedy:
-      'Route it through fetchAllRows from lib/paginate.ts, ordered by id. Latent, not live: the catalog is under the cap today, which is why it is recorded rather than fixed in a docs pass.',
   },
 }
 
