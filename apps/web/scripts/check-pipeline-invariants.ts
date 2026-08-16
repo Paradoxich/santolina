@@ -140,10 +140,6 @@ export const SCRIPTS_PENDING_ARCHIVE: Record<string, string> = {
  */
 export const RUNS_WITHOUT_PROVENANCE: Record<string, string> = {
   // --- round steps. These are what round 12 waits on. ---
-  'cross-check-native-region.ts':
-    'Round step 5b. Stamps native_region_checked_at via rowsToStamp and CLEARS native_checked_at as a cascade, so its write-set holds two columns with opposite senses.',
-  'regenerate-native-region.ts':
-    'Round step 4a. Writes native_region from a reviewed plan. Wire the plan freshness check in the same change: the plan carries generatedAt and nothing compares it against the rows updated_at.',
   'curate-combinations.ts': 'Round step 3. Writes plant_combinations rows.',
   'curate-seasonal-care.ts': 'Round step 7. Writes seasonal_care.',
   'recover-image-categories.ts': 'Round step 6. Writes image_candidates.',

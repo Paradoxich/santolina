@@ -58,6 +58,7 @@ import {
   scopeGuard,
 } from './scope'
 import { L2_NAMES, L2_VOCAB, L2_SET } from '../lib/wgsrpd-regions'
+import { recipeHash, withRunRecord } from './run-provenance'
 
 // ---------------------------------------------------------------------------
 // Paths
@@ -248,6 +249,40 @@ Native-range phrase: "${nativeTo}"
 Respond with ONLY a JSON array of region strings, no prose, no code fences.`
 }
 
+const DERIVE_MAX_TOKENS = 300
+
+/**
+ * The recipe that PRODUCES the tags, recorded into the plan so the run that
+ * writes them can carry it.
+ *
+ * This script is a generate-then-apply pair, and the two halves sit on opposite
+ * sides of the provenance boundary: generate calls the model and writes no
+ * catalog value, apply writes every catalog value and calls no model. A run
+ * record on apply alone would answer "what produced this native_region?" with
+ * "a file", which is true and useless.
+ *
+ * So generate stamps its own derivation recipe into the plan, and apply reads it
+ * back and records it as the recipe for the values it writes. The model in the
+ * apply record is then the model that actually produced them.
+ */
+function derivationRecipe() {
+  return {
+    model: CURATION_MODEL,
+    // Rendered against a probe phrase: the vocabulary and every standing note
+    // are inside the template, so a change to any of them moves the hash.
+    template: deriveFromNativeToPrompt('probe range'),
+    // Trefle is the primary source and the model is only the fallback, so the
+    // tables that override BOTH belong in the recipe: a plan built before an
+    // override was added is a different cohort from one built after.
+    ingredients: {
+      l2_names: L2_NAMES,
+      manual_overrides: MANUAL_OVERRIDES,
+      no_wild_range: NO_WILD_RANGE.source,
+    },
+    decoding: { max_tokens: DERIVE_MAX_TOKENS },
+  }
+}
+
 async function deriveFromNativeTo(
   nativeTo: string,
   cache: Record<string, string[]>
@@ -256,7 +291,7 @@ async function deriveFromNativeTo(
   const client = getAnthropicClient()
   const msg = await client.messages.create({
     model: CURATION_MODEL,
-    max_tokens: 300,
+    max_tokens: DERIVE_MAX_TOKENS,
     messages: [{ role: 'user', content: deriveFromNativeToPrompt(nativeTo) }],
   })
   const text = msg.content
@@ -446,10 +481,23 @@ async function generate(
   // scope + generatedAt a stale --all sweep is indistinguishable from the
   // current round's plan — the shape that rewrote 20 settled rows in round 8.
   // --apply refuses any plan whose scope does not match its own command line.
+  //
+  // `derivation` carries the recipe across the generate/apply boundary, so the
+  // run that writes these tags can record what produced them rather than
+  // recording the file it read.
+  const derivation = derivationRecipe()
   writeFileSync(
     PLAN_JSON,
     JSON.stringify(
-      { scope, generatedAt: new Date().toISOString(), plan },
+      {
+        scope,
+        generatedAt: new Date().toISOString(),
+        derivation: {
+          model: derivation.model,
+          recipe_hash: recipeHash(derivation),
+        },
+        plan,
+      },
       null,
       2
     )
@@ -572,6 +620,36 @@ export function assertPlanScope(planScope: unknown, cliScope: Scope): void {
     )
 }
 
+/**
+ * Has this row moved since the plan was built?
+ *
+ * assertPlanScope proves the plan was GENERATED for this command line. It cannot
+ * prove the catalog still holds what the plan was built from, and those are
+ * different failures: a plan is reviewed by a person and applied later, and in
+ * between a hand correction can land on one of its rows. MANUAL_OVERRIDES exists
+ * because exactly that kept being clobbered — the corrections were re-derived
+ * away, one plant at a time, until they were moved into code.
+ *
+ * Compared per row rather than as a global generatedAt-versus-updated_at test.
+ * The global form gets both answers wrong at once: it refuses a whole plan
+ * because of a row it does not touch, and it passes a plan whose single drifted
+ * row is the one that matters. It also cannot tell a real edit from a trigger
+ * bumping updated_at on an idempotent re-upsert.
+ *
+ * Compared on the TAGS, not on a timestamp, for the same reason the stamp is the
+ * only honest witness of a defaulted column: the question is whether the value
+ * this plan was built from is still there, and only the value answers it.
+ */
+export function planRowIsStale(
+  currentTags: string[] | null,
+  plannedOldTags: string[]
+): boolean {
+  return (
+    uniqSorted(currentTags ?? []).join(',') !==
+    uniqSorted(plannedOldTags).join(',')
+  )
+}
+
 async function apply(cliScope: Scope): Promise<void> {
   if (!existsSync(PLAN_JSON)) {
     throw new Error(
@@ -581,10 +659,12 @@ async function apply(cliScope: Scope): Promise<void> {
   const {
     scope: planScope,
     generatedAt,
+    derivation,
     plan,
   } = JSON.parse(readFileSync(PLAN_JSON, 'utf8')) as {
     scope?: unknown
     generatedAt?: string | null
+    derivation?: { model?: string | null; recipe_hash?: string }
     plan: PlanEntry[]
   }
   assertPlanScope(planScope, cliScope)
@@ -610,30 +690,129 @@ async function apply(cliScope: Scope): Promise<void> {
   const supabase = getSupabaseAdmin()
   console.log(describeScope(cliScope, ids))
   console.log(`Applying native_region for ${plan.length} plants…`)
-  let changed = 0
-  for (let i = 0; i < plan.length; i++) {
-    const e = plan[i]!
-    guard(e.id, e.common_name)
-    const before = [...e.old_tags].sort().join(',')
-    const after = [...e.new_tags].sort().join(',')
-    // Inverse obligation from migration 20260728193815: a WCVP validation is a
-    // statement about a specific set of tags, so rewriting them invalidates it.
-    // Only rows whose tags actually change are un-stamped — nulling every row
-    // an --all run touches would wipe the coverage the WCVP tail is building
-    // for no reason.
-    const patch =
-      before === after
-        ? { native_region: e.new_tags }
-        : { native_region: e.new_tags, native_region_checked_at: null }
-    const { error } = await supabase.from('plants').update(patch).eq('id', e.id)
-    if (error)
-      throw new Error(`update failed for ${e.common_name}: ${error.message}`)
-    if (before !== after) changed++
-    if ((i + 1) % 50 === 0) console.log(`  ${i + 1}/${plan.length}`)
-  }
-  console.log(`\n=== APPLY COMPLETE ===`)
-  console.log(
-    `rows written: ${plan.length} | rows whose tags changed: ${changed}`
+
+  await withRunRecord(
+    {
+      step: 'regenerate-native-region --apply',
+      writeSet: ['native_region', 'native_region_checked_at'],
+      // The plan's identity travels in `scope`, which is the record's readable
+      // field. The recipe hash below folds the derivation in, but a hash cannot
+      // be read back — an operator asking "which plan was this?" needs the date
+      // and the derivation in front of them.
+      scope:
+        `${describeScope(cliScope, ids)} · plan ${generatedAt ?? 'undated'}` +
+        ` · derivation ${derivation?.recipe_hash ?? 'unrecorded'}`,
+      recipe: {
+        // The model that PRODUCED these tags, carried across from generate. This
+        // pass calls no model itself; recording null here would answer "what
+        // produced this value?" with "a file".
+        model: derivation?.model ?? null,
+        template:
+          'apply: plan entry new_tags → native_region; native_region_checked_at := null where the tags changed',
+        ingredients: {
+          derivation_recipe:
+            derivation?.recipe_hash ??
+            'plan predates the 2026-08-16 derivation stamp',
+        },
+      },
+      // NEITHER member can witness itself.
+      //
+      // native_region is an array of region names, not an instant.
+      //
+      // native_region_checked_at is CLEARED, and only on the subset whose tags
+      // moved. Its own column cannot see a clearing write at all: a nulled row
+      // matches no window, so the default stamp witness would observe 0 against
+      // a claim of N and record a correct run as CONTRADICTED.
+      evidence: [
+        {
+          kind: 'row-touched',
+          covers: 'native_region',
+          table: 'plants',
+          column: 'updated_at',
+        },
+        {
+          kind: 'row-touched',
+          covers: 'native_region_checked_at',
+          table: 'plants',
+          column: 'updated_at',
+        },
+      ],
+    },
+    async (run) => {
+      let changed = 0
+      /** Rows whose tags moved between the plan and now — see the check below. */
+      const stale: string[] = []
+
+      for (let i = 0; i < plan.length; i++) {
+        const e = plan[i]!
+        guard(e.id, e.common_name)
+        const before = [...e.old_tags].sort().join(',')
+        const after = [...e.new_tags].sort().join(',')
+
+        // Plan freshness, per row — see planRowIsStale. The re-read sits ON the
+        // write, in the same loop iteration, for the reason guardStampTarget
+        // gives in cross-check-plants: a check that runs near the write instead
+        // of on it stops being a check the first time someone reorders the loop.
+        const { data, error: readError } = await supabase
+          .from('plants')
+          .select('native_region')
+          .eq('id', e.id)
+          .single()
+        if (readError)
+          throw new Error(
+            `Re-read failed for ${e.common_name}: ${readError.message}`
+          )
+        if (
+          planRowIsStale(data?.native_region as string[] | null, e.old_tags)
+        ) {
+          console.log(
+            `  ⚠ ${e.common_name} — native_region changed since the plan, skipped`
+          )
+          stale.push(e.common_name)
+          continue
+        }
+
+        // Inverse obligation from migration 20260728193815: a WCVP validation is a
+        // statement about a specific set of tags, so rewriting them invalidates it.
+        // Only rows whose tags actually change are un-stamped — nulling every row
+        // an --all run touches would wipe the coverage the WCVP tail is building
+        // for no reason.
+        const patch =
+          before === after
+            ? { native_region: e.new_tags }
+            : { native_region: e.new_tags, native_region_checked_at: null }
+        const { error } = await supabase
+          .from('plants')
+          .update(patch)
+          .eq('id', e.id)
+        if (error)
+          throw new Error(
+            `update failed for ${e.common_name}: ${error.message}`
+          )
+        run.wrote(e.id)
+        if (before !== after) changed++
+        if ((i + 1) % 50 === 0) console.log(`  ${i + 1}/${plan.length}`)
+      }
+
+      console.log(`\n=== APPLY COMPLETE ===`)
+      console.log(
+        `rows written: ${plan.length - stale.length} | ` +
+          `rows whose tags changed: ${changed} | ` +
+          `skipped as stale: ${stale.length}`
+      )
+      if (stale.length) {
+        console.log(
+          `\n⚠ ${stale.length} row(s) moved since the plan was generated and were ` +
+            `left alone:\n  ${stale.join('\n  ')}\n` +
+            `  Regenerate the plan to pick up their current state.`
+        )
+      }
+      if (plan.length && stale.length === plan.length) {
+        run.markFailed(
+          `every one of the ${plan.length} planned row(s) had drifted; the plan is stale`
+        )
+      }
+    }
   )
 }
 
