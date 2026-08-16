@@ -8,6 +8,17 @@
  * actually been killed there. If an interrupted invocation left no record, the
  * resumable steps would punch a hole in provenance every time someone hit
  * Ctrl-C, which is precisely where intent cannot reconstruct the answer later.
+ *
+ * TRAP 28, both halves, in the last describe block: a stamp can only witness a
+ * write that SET it, on every row counted. A cleared stamp matches no window and
+ * a conditionally-set one covers a subset, so in both cases the default witness
+ * makes a CORRECT run record `contradicted` — the mechanism accusing itself.
+ * The witness asserted is `verification.substantiation`, the field that carries
+ * the accusation, and the DEFECT is asserted alongside the fix: a clearing run
+ * left on the default must keep failing that way, or `invariants:check` shape 12
+ * is guarding nothing. The conditional cases use curate-plants' real write-set,
+ * because that is where the live instance was — merged, reviewed and cited as
+ * the pattern, a day before writing this found it.
  */
 import { describe, expect, it, vi } from 'vitest'
 
@@ -487,5 +498,136 @@ describe('a bounding witness can neither confirm nor contradict', () => {
     // that can only ever be 1, and a confirming witness would have called that a
     // contradiction.
     expect(rec.row_count).toBe(1)
+  })
+})
+
+/**
+ * TRAP 28, both halves: a stamp can only witness a write that SET it, on every
+ * row counted. The failure mode is a CORRECT run recording `contradicted` —
+ * the mechanism accusing itself — so the assertions below are on
+ * `substantiation`, which is the field that carries the accusation.
+ */
+describe('trap 28: a stamp witnesses only a write that set it', () => {
+  const withEvidence = (
+    writeSet: string[],
+    observed: Record<string, number>,
+    evidence?: Witness[]
+  ) => {
+    const h = harness(observed)
+    const run = beginRun({
+      step: 'cross-check-native-to --apply',
+      writeSet,
+      ...(evidence ? { evidence } : {}),
+      recipe: RECIPE,
+      ...h.opts,
+    })
+    return { run, written: h.written }
+  }
+
+  it('the DEFAULT witness accuses a correct clearing run of lying', async () => {
+    // THE TRAP. --apply nulls native_checked_at on 20 rows and does it
+    // correctly. Left on the default, the column witnesses itself: a nulled row
+    // matches no window, so the count is 0 against a claim of 20.
+    //
+    // This asserts the DEFECT, not the fix — it is what shape 12 exists to stop
+    // anyone writing, and it must keep failing this way for the guard to be
+    // worth having.
+    const { run } = withEvidence(['native_checked_at'], {
+      native_checked_at: 0,
+    })
+    wrote(run, 20)
+    const rec = await run.finish('completed')
+    expect(rec.verification.substantiation).toBe('contradicted')
+    expect(rec.verification.notes.join(' ')).toMatch(
+      /claim is larger than its evidence/
+    )
+  })
+
+  it('a bounding witness records the same clearing run honestly', async () => {
+    // The fix: updated_at establishes rows moved without attributing the moves
+    // to this run, which is all the evidence supports and is not an accusation.
+    const { run } = withEvidence(['native_checked_at'], { updated_at: 20 }, [
+      {
+        kind: 'row-touched',
+        covers: 'native_checked_at',
+        table: 'plants',
+        column: 'updated_at',
+      },
+    ])
+    wrote(run, 20)
+    const rec = await run.finish('completed')
+    expect(rec.verification.substantiation).toBe('bounded')
+  })
+
+  it('the default IS right for a stamp the run sets, so the fix is not "never default"', async () => {
+    // Stated as its own case because the cheap over-correction — make every
+    // witness bounding — would throw away the only evidence that can confirm
+    // anything, and every record in the log would read `bounded` forever.
+    const { run } = withEvidence(['native_checked_at'], {
+      native_checked_at: 20,
+    })
+    wrote(run, 20)
+    const rec = await run.finish('completed')
+    expect(rec.verification.substantiation).toBe('confirmed')
+  })
+
+  /**
+   * The second half, on the invocation that actually had it: curate-plants,
+   * which was called correct for a day. Its write-set is real and so are the
+   * numbers — `ai_drafted_at` is written on every row, while `style_checked_at`
+   * and `greenery_checked_at` are guarded by their own stamp in buildPatch, so
+   * a run over a mix of already-judged and never-judged rows moves them on a
+   * SUBSET.
+   *
+   * Not scannable: whether a column is written on every row is a control-flow
+   * question, the same limit shape 10 is worded around. This is the only place
+   * the rule is executable.
+   */
+  const CURATE_PLANTS_WRITE_SET = [
+    'ai_drafted_at',
+    'style_checked_at',
+    'greenery_checked_at',
+  ]
+
+  it('a CONDITIONALLY set stamp undercounts the run, and that reads as a lie too', async () => {
+    // 25 rows drafted; 10 of them already carried a style verdict, so only 15
+    // style stamps moved. Left on the default, all three are confirming and the
+    // run accuses itself.
+    const { run } = withEvidence(
+      CURATE_PLANTS_WRITE_SET,
+      { ai_drafted_at: 25, style_checked_at: 15, greenery_checked_at: 15 },
+      defaultEvidence(CURATE_PLANTS_WRITE_SET)
+    )
+    wrote(run, 25)
+    const rec = await run.finish('completed')
+    expect(rec.verification.substantiation).toBe('contradicted')
+    expect(rec.verification.observed.style_checked_at).toBe(15)
+  })
+
+  it('the same run records `confirmed` once the conditional stamps only bound it', async () => {
+    // The fix now in curate-plants: the unconditional stamp confirms, the two
+    // guarded ones bound. Same run, same numbers, no accusation.
+    const { run } = withEvidence(
+      CURATE_PLANTS_WRITE_SET,
+      { ai_drafted_at: 25, updated_at: 25 },
+      [
+        { kind: 'stamp', covers: 'ai_drafted_at', column: 'ai_drafted_at' },
+        {
+          kind: 'row-touched',
+          covers: 'style_checked_at',
+          table: 'plants',
+          column: 'updated_at',
+        },
+        {
+          kind: 'row-touched',
+          covers: 'greenery_checked_at',
+          table: 'plants',
+          column: 'updated_at',
+        },
+      ]
+    )
+    wrote(run, 25)
+    const rec = await run.finish('completed')
+    expect(rec.verification.substantiation).toBe('confirmed')
   })
 })

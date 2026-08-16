@@ -304,6 +304,15 @@ only some counted rows undercounts by construction. `curate-editorial` writes
 `editorial_checked_at` on every judged row but each criterion stamp only where
 that criterion passed — one confirming witness, bounding witnesses for the rest.
 
+**It was already live in the worked example, and writing the test is what found
+it.** `curate-plants` shipped 2026-08-16 declaring
+`ai_drafted_at, style_checked_at, greenery_checked_at` on the default witness,
+and it was reviewed, merged, and cited as the pattern every other step copies.
+Only `ai_drafted_at` is written on every row; the other two are guarded by their
+own stamp in `buildPatch`. A correct run over 25 rows, 10 already style-judged,
+observes 15 and records `contradicted`. Nothing had run yet, so the first record
+the mechanism ever filed would have been an accusation against itself.
+
 **Why this is worth a number even though it is loud.** It is not trap 1's
 silent shape; it fails visibly. But the failure blames the run rather than the
 wiring, and a log whose records say `contradicted` when nothing is wrong is a
@@ -316,8 +325,15 @@ fails. It demands an explicit evidence array rather than a particular witness �
 checking for a witness naming the column would tie the scan to how the literal
 is written, and two callers build theirs through a helper. **The conditional
 half is not scannable** — whether a column is written on every row is a
-control-flow question — so it is stated in
-[write provenance](write-provenance.md) and enforced by nothing.
+control-flow question, the same limit shape 10 is worded around — so it is
+stated in [write provenance](write-provenance.md).
+
+**Both halves pinned by `apps/web/scripts/run-provenance.test.ts`**
+(2026-08-16). It asserts the defect's own witness, `verification.substantiation`
+— the field that carries the accusation — and it asserts the DEFECT as well as
+the fix: a clearing run left on the default must keep recording `contradicted`,
+or shape 12 is guarding nothing. The conditional cases use `curate-plants`'
+real write-set and real numbers rather than an invented one.
 
 **Shape 12 was verified by breaking it.** The evidence array was removed from
 `regenerate-native-region`, the scan named that file and column, and it was
@@ -495,14 +511,16 @@ way `countByWitness` queries it. `plants.updated_at` **720**,
 `seasonal_care`, `native_region` and `image_candidates` each errored with an
 **empty message and no code** — the measured basis for their bounding witness.
 
-**Found** — two witness rules the contract had not met, both now trap 28. And
-the scan had never seen the three editorial criterion stamps from either
-direction: they end `_at` without one of the four vocabulary suffixes, and
-`curate-editorial` writes them by assignment rather than as object keys. Both
-regexes widened; blast radius measured first, and it was exactly those three.
+**Found** — two witness rules the contract had not met, both now trap 28, and
+one of them was already LIVE in `curate-plants`, the worked example merged the
+day before. The scan had also never seen the three editorial criterion stamps
+from either direction: they end `_at` without one of the four vocabulary
+suffixes, and `curate-editorial` writes them by assignment rather than as object
+keys. Both regexes widened; blast radius measured first, exactly those three.
 
-**Verified** — `invariants:check` green, typecheck clean, 279 tests pass. Shape
-12 verified by breaking it (trap 28).
+**Verified** — `invariants:check` green, typecheck clean, 284 tests pass. Shape
+12 verified by breaking it; trap 28 pinned by `run-provenance.test.ts`, which
+asserts the defect as well as the fix.
 
 **Not done** — no round-12 step was run, so `apps/web/runs/` is still empty. The
 16 out-of-round passes are unwired; `backfill-guard-stamps` matters most.
