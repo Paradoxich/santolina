@@ -2,6 +2,29 @@
 
 Scope: 66 scripts, 28 recorded traps, 61 existing test invariants, worktree `santolina-pipeline-audit` at main.
 
+> **A DATED SNAPSHOT, NOT CURRENT STATE. Read this before believing any sentence
+> below.** Everything here is written in the present tense as of 2026-08-14 and
+> several of its central findings have since been fixed. It is kept unedited
+> because it is the record of what was true then and what was decided from it —
+> correcting findings in place would destroy the reasoning the fixes came from.
+>
+> Known-stale, verified 2026-08-16:
+>
+> - **"not one of the 28 traps has ever become a test"** (§1). Nine of thirty are
+>   pinned now, and `invariants:check` prints the remaining count on every green
+>   run.
+> - **`seed-plants.ts` taking `results[0]` unverified, and having no `--dry-run`**
+>   (§85). Both closed: every seeder resolves through `species-resolver.ts`, and
+>   `README.md` shows `--round` and `--dry-run`.
+> - **`docs/architecture.md:141` "claims behaviour it does not have"** (§85). That
+>   paragraph was rewritten; it now describes the resolver.
+> - **The archive candidates and line numbers** in §3 rows 3+ were already flagged
+>   as pass-through and unverified by this document's own §101 and §154.
+>
+> For current state: `docs/database-log.md` (traps and sessions),
+> `docs/write-provenance.md` (what a writing script must do), and
+> `pnpm invariants:check`, which prints its own backlog rather than asserting one.
+
 ---
 
 ## 1. Verdict

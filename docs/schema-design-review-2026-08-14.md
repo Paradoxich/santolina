@@ -2,6 +2,31 @@
 
 **Date:** 2026-08-14 · **Base:** worktree `santolina-pipeline-audit`, branch `session/2026-08-14-pipeline-audit` (HEAD `a5bc9b2`) · **Live DB:** project `alanccjebmoyrcogvzcw`, read-only · **Companion:** `docs/pipeline-audit-2026-08-14.md`
 
+> **A DATED SNAPSHOT, NOT CURRENT STATE. Read this before believing any sentence
+> below** — including the verdict, which is the part most likely to be quoted.
+> Kept unedited because it is the record of what was true on 2026-08-14 and what
+> was decided from it.
+>
+> Known-stale, verified 2026-08-16:
+>
+> - **The verdict's central claim — stamp columns "written by 25 scripts with no
+>   shared writer, no shared vocabulary and no mechanical check" — is false on all
+>   three counts now.** `run-provenance.ts` is the shared writer path,
+>   `stamp-columns.ts` is the shared vocabulary, `check-pipeline-invariants.ts` is
+>   the mechanical check.
+> - **The security defect in the verdict is closed.** `upsert_trefle_plant` was
+>   locked down by migration `20260815230948`, and main's migration-drift job is
+>   green, so it is applied to production rather than merely committed (trap 14).
+> - **"today nothing reads [Trefle's] `synonyms[]`"** (§251). `species-resolver.ts`
+>   reads it as a second matcher.
+> - **Stamp coverage counts** (§336) and **suite size** (§408) are 2026-08-14
+>   readings. Live catalog numbers belong in `docs/catalog-state.md`, which is
+>   generated; the suite is larger now.
+>
+> Its §405 self-correction and §154 pass-through warning still apply to
+> everything they name. For current state see `docs/database-log.md` and
+> `docs/write-provenance.md`.
+
 ---
 
 ## 1. Verdict

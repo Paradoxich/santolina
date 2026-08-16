@@ -34,10 +34,14 @@ supabase start -x studio,realtime,storage-api,imgproxy,edge-runtime,inbucket,vec
 
 ## 2026-08-16 — The nine wired; round 12 is no longer gated
 
-**In flight:** PR [#164](https://github.com/Paradoxich/santolina/pull/164),
-branch `session/2026-08-16-provenance-nine`, worktree
-`../santolina-provenance-nine`. Merge it, then delete both. Session entry in
-`docs/database-log.md`; the contract additions are in `docs/write-provenance.md`.
+**#164 is MERGED** as `1c7ee9d`, branch and worktree gone, main CI green
+including both main-only jobs. Session entry in `docs/database-log.md`; the
+contract additions are in `docs/write-provenance.md`.
+
+**In flight:** PR [#165](https://github.com/Paradoxich/santolina/pull/165),
+branch `session/2026-08-16-doc-audit`, worktree `../santolina-doc-audit` — a
+docs-only pass for claims that went stale as the code moved. No database, no
+code. Merge it, then delete both.
 
 **Review round on #164 found one blocker, now fixed.** `confirmed` was reachable
 by coincidence: two overlapping runs of one step each saw the other's stamps and
