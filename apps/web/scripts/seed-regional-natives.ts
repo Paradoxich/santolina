@@ -23,10 +23,15 @@
  * modern-geography phrase, same as every other seed.
  */
 
-import { searchSpeciesByName, fetchAndMapSpecies } from '../lib/trefle'
+import { fetchAndMapSpecies } from '../lib/trefle'
 import { upsertPlant } from '../lib/plants-db'
+import {
+  fetchCatalogIndex,
+  normSci,
+  resolve,
+  type Resolved,
+} from './species-resolver'
 import { getSupabaseAdmin } from '../lib/supabase-admin'
-import { fetchCatalogIdentity } from './catalog-identity'
 
 type Region = 'mediterranean' | 'balkans' | 'croatia'
 const M: Region = 'mediterranean'
@@ -186,104 +191,12 @@ const CANDIDATES: Candidate[] = [
 // Scientific-name matching (synonym-aware exact match)
 // ---------------------------------------------------------------------------
 
-// Genus pairs Trefle/POWO treat as interchangeable. Matching requires the
-// species epithet to be identical AND the genus to be equal or a known
-// synonym — epithet-only matching would wrongly accept unrelated species that
-// merely share a common epithet (e.g. "officinalis").
-const SYNONYM_GENERA: string[][] = [
-  ['lychnis', 'silene'],
-  ['nectaroscordum', 'allium'],
-  ['hylotelephium', 'sedum'],
-  ['anthemis', 'cota'],
-  ['coronilla', 'hippocrepis'],
-  ['aurinia', 'alyssum'],
-  ['stachys', 'betonica'],
-  ['asplenium', 'phyllitis', 'scolopendrium'],
-  ['bistorta', 'persicaria'],
-  ['berberis', 'mahonia'],
-  ['eriocapitella', 'anemone'],
-]
-
-function genusSynonyms(genus: string): Set<string> {
-  const set = new Set<string>([genus])
-  for (const group of SYNONYM_GENERA) {
-    if (group.includes(genus)) for (const g of group) set.add(g)
-  }
-  return set
-}
-
-// → [genus, species] lowercased, hybrid marker and author stripped.
-function normSci(s: string): [string, string] {
-  const parts = s
-    .toLowerCase()
-    .replace(/×/g, '')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .split(' ')
-    .filter(Boolean)
-  return [parts[0] ?? '', parts[1] ?? '']
-}
-
-function sciMatches(target: string, candidate: string): boolean {
-  const [tg, ts] = normSci(target)
-  const [cg, cs] = normSci(candidate)
-  if (!ts || ts !== cs) return false
-  return genusSynonyms(tg).has(cg)
-}
-
 // ---------------------------------------------------------------------------
-// Resolve a name to a verified Trefle ID (exact match, no sibling drift)
+// Name matching, resolution and the dedupe read all live in
+// ./species-resolver.ts. This file used to carry its own copy of the synonym
+// table, which is how twelve synonym groups were lost between rounds — see that
+// file's header.
 // ---------------------------------------------------------------------------
-
-interface Resolved {
-  id: number
-  scientific_name: string
-  topName: string | null // top search hit, for drift logging
-  topId: number | null
-}
-
-async function resolve(name: string): Promise<Resolved | null> {
-  let top: { scientific_name: string; id: number } | null = null
-  for (let page = 1; page <= 2; page++) {
-    const results = await searchSpeciesByName(name, page)
-    if (!results.length) break
-    if (page === 1 && results[0]) {
-      top = { scientific_name: results[0].scientific_name, id: results[0].id }
-    }
-    const exact = results.find((r) => sciMatches(name, r.scientific_name))
-    if (exact) {
-      return {
-        id: exact.id,
-        scientific_name: exact.scientific_name,
-        topName: top?.scientific_name ?? null,
-        topId: top?.id ?? null,
-      }
-    }
-    if (results.length < 20) break // no more pages
-  }
-  return null
-}
-
-// ---------------------------------------------------------------------------
-// Existing catalog (dedupe)
-// ---------------------------------------------------------------------------
-
-interface Catalog {
-  ids: Set<number>
-  names: Set<string> // normalised "genus species"
-}
-
-async function fetchCatalog(): Promise<Catalog> {
-  const rows = await fetchCatalogIdentity()
-
-  const ids = new Set<number>()
-  const names = new Set<string>()
-  for (const row of rows) {
-    if (row.source_species_id !== null) ids.add(row.source_species_id)
-    if (row.scientific_name) names.add(normSci(row.scientific_name).join(' '))
-  }
-  return { ids, names }
-}
 
 // ---------------------------------------------------------------------------
 // Main
@@ -295,7 +208,7 @@ const pad = (n: number, w = 3) => String(n).padStart(w, ' ')
 
 async function main() {
   const dryRun = process.argv.slice(2).includes('--dry-run')
-  const catalog = await fetchCatalog()
+  const catalog = await fetchCatalogIndex()
   console.log(
     `\nCatalog has ${catalog.names.size} species. ${CANDIDATES.length} candidates.` +
       (dryRun ? ' DRY RUN — no writes.\n' : '\n')
@@ -316,8 +229,7 @@ async function main() {
     const prefix = `[${pad(i + 1)}/${pad(CANDIDATES.length)}]`
 
     // Cheap skip before spending Trefle calls: exact/synonym name already held.
-    const candNorm = normSci(cand.name).join(' ')
-    if (catalog.names.has(candNorm)) {
+    if (catalog.holds(cand.name)) {
       skipped.push({ name: cand.name, reason: 'name already in catalog' })
       console.log(`${prefix} skip  ${cand.name} — already in catalog`)
       continue

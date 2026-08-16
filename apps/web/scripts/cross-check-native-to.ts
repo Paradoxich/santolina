@@ -42,9 +42,12 @@
  *
  * Default run writes a ranked report and never EDITS catalog data — it only
  * stamps the operational native_checked_at column (docs/curation.md#botanical-cross-check, migration
- * 20260716120000) per row. `--apply` patches ONLY rows the check rated "gross"
- * that carry a suggested replacement phrase — the same generate-then-apply
- * safety split as scripts/archive/regenerate-native-to.ts.
+ * 20260716120000), and since 2026-08-16 only on rows this run SETTLED: a
+ * `gross` or `contradicts` verdict whose rewrite is still pending is left
+ * unstamped so it cannot be read as checked (trap 24, see shouldStamp).
+ * `--apply` patches ONLY rows the check rated "gross" that carry a suggested
+ * replacement phrase — the same generate-then-apply safety split as
+ * scripts/archive/regenerate-native-to.ts.
  *
  * `contradicts` rows are deliberately NOT applied. A wrong continent is a
  * factual error any reader would call a bug; a contradicted range is a rewrite
@@ -154,6 +157,59 @@ let activeGuard: ((id: string) => void) | null = null
 function guardStampTarget(id: string): string {
   activeGuard?.(id)
   return id
+}
+
+/**
+ * Whether this row's judgment settled it, and may therefore be stamped.
+ *
+ * `native_checked_at` is FAIL-level evidence in `round-status.ts:241-247` that
+ * this step ran AND settled the row, and `--new-only` selects on it. So a stamp
+ * on an unsettled row hides that row from every later sweep and certifies the
+ * round anyway — trap 24, which fired twice at the sibling guard before it was
+ * fixed there. This run used to stamp on ANY verdict.
+ *
+ * NOT a copy of `rowsToStamp` in cross-check-native-region.ts, and the review
+ * that asked for this said so: the two guards share no verdict vocabulary, and
+ * this one differs in three ways that all point the other direction.
+ *
+ *   · `no_data` IS stamped here, where native-region refuses it. There, no-data
+ *     means GBIF returned nothing, so nothing was learned. Here it means the
+ *     model found no continents on one side of the comparison, which for a
+ *     cultigen is the settled answer — and the cultigen that DOES carry a
+ *     phrase is routed to `contradicts` before the no_data branch is reached
+ *     (`reconcileVerdict`, the `validated-as-no-wild-range` case). Refusing
+ *     no_data would leave every cultigen permanently failing a FAIL-level step.
+ *     A failed FETCH is not this verdict: it throws, and the caller's catch
+ *     leaves the row unstamped for the next run.
+ *   · There is no `--apply` to key on. This guard never writes the phrase —
+ *     `native_to` is hand-owned, voice-passed copy — so a correction lands
+ *     later, from a committed decision file, through apply-native-to-fixes.ts.
+ *     "Stamp it when the write happened" is not available inside this run, so
+ *     the rule is stated the other way round: withhold until the row is
+ *     settled, and let a later run stamp it. That is also why the stamp can be
+ *     honest without adding a runbook step for the apply script.
+ *   · A person may settle a row WITHOUT a correction, by reading the phrase
+ *     against the evidence and keeping it. `native_to_reviewed_at` is that
+ *     decision, and a trigger clears it on any `native_to` edit, so it cannot
+ *     outlive the phrase it was about. A reviewed-and-kept row is settled, and
+ *     is stamped even on `gross` or `contradicts`.
+ *
+ * What stays open, and is now load-bearing: nothing in TypeScript writes
+ * `native_to_reviewed_at` — the 2026-07-30 review was backfilled by migration
+ * `20260813110500`. Until the `--review-keep` writer exists, a NEW row a person
+ * reads and keeps has no way to record that, so it keeps failing round close
+ * until the phrase is rewritten instead.
+ */
+export function shouldStamp(
+  row: Pick<Result, 'verdict' | 'native_to_reviewed_at'>
+): boolean {
+  switch (row.verdict) {
+    case 'gross':
+    case 'contradicts':
+      return row.native_to_reviewed_at !== null
+    default:
+      return true
+  }
 }
 
 async function stampChecked(id: string): Promise<void> {
@@ -786,6 +842,8 @@ async function generate(
   const wcvpCache = loadCache()
   console.log(`Cross-checking native_to for ${plants.length} plants...\n`)
   const results: Result[] = []
+  /** Rows judged but deliberately left unstamped, named in the tail. */
+  const withheld: string[] = []
 
   for (let i = 0; i < plants.length; i++) {
     const plant = plants[i]!
@@ -825,9 +883,19 @@ async function generate(
         `[${pad(i + 1)}/${plants.length}] ${tag.padEnd(8)} ${plant.common_name} — "${plant.native_to}"`
       )
 
-      // Stamp only after a successful check (any verdict). A row that threw
-      // stays unstamped so --new-only retries it next run.
-      await stampChecked(plant.id)
+      // Stamp only a row this run SETTLED — see shouldStamp. A row that threw
+      // stays unstamped so --new-only retries it next run, and so does a
+      // gross/contradicts row whose correction nobody has written yet.
+      if (
+        shouldStamp({
+          verdict,
+          native_to_reviewed_at: plant.native_to_reviewed_at,
+        })
+      ) {
+        await stampChecked(plant.id)
+      } else {
+        withheld.push(plant.common_name)
+      }
     } catch (err) {
       console.error(
         `[${pad(i + 1)}/${plants.length}] ERROR ${plant.common_name}: ${(err as Error).message}`
@@ -837,6 +905,20 @@ async function generate(
   }
 
   writeReport(results)
+
+  // Said out loud, because the consequence is a round that will not close: an
+  // unstamped row keeps failing round-status until its correction is written
+  // (apply-native-to-fixes.ts, from a committed decision file) or a person
+  // records that they read the phrase and kept it. That is the intended
+  // behaviour — the alternative is the stamp certifying a pending correction.
+  if (withheld.length) {
+    console.log(
+      `\n⚠ ${withheld.length} row(s) judged gross/contradicts and NOT stamped, ` +
+        `because the correction is still pending:\n  ${withheld.join('\n  ')}\n` +
+        `  They stay in the --new-only queue and will fail round close until ` +
+        `settled.`
+    )
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -869,7 +951,11 @@ async function main() {
     )
 }
 
-main().catch((err) => {
-  console.error(err)
-  process.exit(1)
-})
+// Guarded so the test file can import shouldStamp without running the sweep —
+// same pattern as cross-check-native-region.ts and pick-plant-images.ts.
+if (require.main === module) {
+  main().catch((err) => {
+    console.error(err)
+    process.exit(1)
+  })
+}

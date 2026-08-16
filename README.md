@@ -116,6 +116,9 @@ cd apps/web
 # 1. Seed botanical facts from Trefle (skips already-cataloged species).
 #    --round is REQUIRED: it records the batch in rounds/<label>/manifest.json,
 #    which is what every step below scopes by.
+#    Run --dry-run first: it resolves and prints the plan without writing, and
+#    resolution is where a name binds to the wrong species if it is going to.
+./node_modules/.bin/tsx --env-file=.env.local scripts/seed-plants.ts --round <label> --dry-run
 ./node_modules/.bin/tsx --env-file=.env.local scripts/seed-plants.ts --round <label>
 
 # 2. AI curation pass — fills gaps Trefle can't (care, style tags, seasonal rhythm)

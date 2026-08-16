@@ -66,6 +66,12 @@ interface PlantRow {
   hardiness_rating: string | null
   image_url: string | null
   image_url_curated: string | null
+  maintenance_notes: string | null
+  best_placement: string | null
+  water_needs: string | null
+  water_needs_summary: string | null
+  light_needs: string | null
+  soil_needs: string | null
 }
 
 interface ComboRow {
@@ -96,7 +102,30 @@ const REQUIRED_DRAFTED_FIELDS: Array<keyof PlantRow> = [
   'description',
   'care_level',
   'seasonal_rhythm',
+  // Added 2026-08-16 (audit F4). Each was verified at ZERO null/empty across
+  // all 720 drafted rows before being listed, so none of them can fail a
+  // closed round retroactively — that check is the whole reason to add them
+  // now rather than after the next seed.
+  'maintenance_notes',
+  'best_placement',
+  'water_needs',
+  'water_needs_summary',
+  'light_needs',
+  'soil_needs',
 ]
+
+// DELIBERATELY NOT IN THE LIST ABOVE, measured 2026-08-16 rather than assumed:
+//
+//   · common_issues (null on 21 drafted rows) and environment_benefits (null on
+//     4) are nullable prose where "nothing to say" is a plausible answer — a
+//     plant with no notable pests, a plant that feeds nothing. Listing them
+//     would fail 25 rows across closed rounds on a judgement nobody has made.
+//     Decide whether empty is legitimate for those two fields FIRST; the
+//     verifier is the wrong place to settle it.
+//   · garden_use_tags is NOT NULL DEFAULT '{}', so an empty array is a real
+//     verdict that looks exactly like the default, and the only honest witness
+//     is the stamp — the same reasoning already written above for style_tags,
+//     and the shape of trap 26.
 
 // Garden hybrids (Cistus × purpureus, Calamagrostis × acutiflora, …) have no
 // wild native range; an empty native_region is correct for them. Trefle
@@ -129,7 +158,9 @@ async function fetchAllPlants(): Promise<PlantRow[]> {
     'id, common_name, scientific_name, ai_drafted_at, native_region, ' +
     'bloom_color, foliage_color, plant_type, plant_type_label, space_types, ' +
     'description, care_level, seasonal_rhythm, seasonal_care, sun_thrives, ' +
-    'sun_tolerates, hardiness_rating, image_url, image_url_curated'
+    'sun_tolerates, hardiness_rating, image_url, image_url_curated, ' +
+    'maintenance_notes, best_placement, water_needs, ' +
+    'water_needs_summary, light_needs, soil_needs'
   return fetchAllRows<PlantRow>((from, to) =>
     db.from('plants').select(columns).order('id').range(from, to)
   )

@@ -38,6 +38,7 @@
 
 import { getSupabaseAdmin } from './../lib/supabase-admin'
 import { fetchAllRows } from './../lib/paginate'
+import { NOT_A_STEP_STAMP, isStampColumn } from './stamp-columns'
 
 export interface StepStatus {
   /** Step name, matching the runbook order (docs/curation.md#round-runbook). */
@@ -490,12 +491,16 @@ export async function unregisteredStampColumns(): Promise<string[]> {
       // criterion passed; holding a round open until nothing is ever held back
       // would make a strict pass unable to finish.
       //
-      // `_verified_at` as well as `_checked_at`: image_verified_at (migration
-      // 20260729083058) is a bookkeeping stamp in every sense that matters, and
-      // a suffix check looking only for the older name would have sailed past
-      // it — which is the precise failure this function exists to prevent,
-      // repeating itself one naming convention later.
-      .filter((c) => c.endsWith('_checked_at') || c.endsWith('_verified_at'))
+      // The suffix vocabulary lives in ./stamp-columns.ts since 2026-08-16,
+      // shared with check-round-scope.ts — which held a DIFFERENT two of the
+      // three suffixes. One fact in two homes, each updated by a different
+      // migration, and the gap is how native_to_reviewed_at drained unnoticed.
+      //
+      // A stamp that is deliberately NO step's (a human verdict recorded inside
+      // a step) is named with its reason in NOT_A_STEP_STAMP, not excluded by
+      // silence — same discipline as the criterion-stamp paragraph above.
+      .filter(isStampColumn)
+      .filter((c) => !NOT_A_STEP_STAMP[c])
       .filter((c) => !registered.has(c))
       .sort()
   )

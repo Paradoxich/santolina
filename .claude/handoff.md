@@ -12,11 +12,9 @@ order. Everything else is a command below or a pointer above.
 | What changed and when                | `git log`                |
 | What to build next                   | Notion **Build Backlog** |
 
-**Write the command, not the claim.** A state claim is true when typed and rots
-from then on: "CI is waiting on secrets" was wrong within a day and survived three
-sessions, then reached Ana a fourth time. "PR #128 merged as `06ab97a`" is a
-record and stays true. **The test is tense, not topic.** Catalog numbers are
-generated into `docs/catalog-state.md` — link, never retype.
+**Write the command, not the claim; the test is tense, not topic.** Moved
+2026-08-16 to `docs/database-log.md` standing rule 14, where the violations
+happen. It governs this file too — every line below is a record or a command.
 
 **If two sessions run at once, the last to finish rewrites this file.** Nothing is
 lost: the durable half of a session belongs in the docs above before it belongs
@@ -34,75 +32,70 @@ supabase start -x studio,realtime,storage-api,imgproxy,edge-runtime,inbucket,vec
 
 ---
 
-## 2026-08-15/16 — The pipeline audit, its fixes, and the schema design review
+## 2026-08-16 — The round-12 guardrails
 
-**In flight: nothing.** PR [#161](https://github.com/Paradoxich/santolina/pull/161)
-merged as `a651cb4`, branch and worktree gone, CI green on main. Round 11's
-branch merged earlier as #160. Reports: `docs/pipeline-audit-2026-08-14.md`,
-`docs/schema-design-review-2026-08-14.md`; the two session entries in
-`docs/database-log.md`.
+**In flight:** PR [#162](https://github.com/Paradoxich/santolina/pull/162),
+branch `session/2026-08-16-round-12-guardrails`, 7 commits, CI green (the two
+main-only jobs skip on PRs by design). Session entry in `docs/database-log.md`.
+The four gating steps and most of step 5 are done; the PR is what needs merging.
 
-**Applied to production, both verified by query, not by output:** migration
-`20260815230948` (Ana ran the push; `upsert_trefle_plant` is service_role only,
-`search_path` pinned, anon probe 401), and the trap-26 repair — the 100
-fabricated style stamps re-judged, fingerprint `style_checked_at =
-ai_drafted_at AND style_tags = '{}'` at 0, `catalog-state.md` regenerated.
+```bash
+git log --oneline main..session/2026-08-16-round-12-guardrails
+cd apps/web && pnpm invariants:check    # the new one, prints its own backlog
+```
 
-**Next steps, in order. The first four are one session, and they gate round 12:**
+**Round 12 is unblocked.** The gate was the resolver, and it exists:
+`apps/web/scripts/species-resolver.ts`, one append-only table of 45 synonym
+components over 105 genus names (round 11's held 34). No `seed-*.ts` may declare
+its own — `pnpm invariants:check` fails if one does.
 
-1. **Consolidate the species resolver** — spec is artifact (c) of the schema
-   review. First because seeding before it repeats round 11's 12 lost synonym
-   groups, and a duplicate species is the one failure a later pass cannot undo.
-2. **Land the pre-merge mechanical check** — artifact (b), a 7-shape table with
-   today's violation counts. **Decided 2026-08-16: CI script**
-   (`scripts/check-pipeline-invariants.ts`, `pnpm invariants:check`, wired
-   after `docs:links`), on the `tokens:check` / `runbook:check` / `docs:links`
-   precedent — remedy-carrying error messages, and a ratchet that can print
-   "25 of 28 traps unpinned" on a green run instead of passing silently.
-   Boundary, so this does not become two homes: checks that CALL code stay in
-   vitest (`round-rehearsal.test.ts` already owns runbook/registry drift, do
-   not duplicate); checks that READ files as text go in the script. Second
-   because 3 and 4 decay without it.
-3. **The CLAUDE.md trap-closure rule, and the documentation-claim rules with
-   it** — artifact (a) verbatim, shipped in the same change as test citations
-   on traps 3, 24 and 26, or its own exemplars fail it. Queued alongside it
-   (2026-08-16), because every wrong claim this session was a hand-written
-   sentence and every existing doc guard checks form, not truth:
-   - **Every remediation carries a verification predicate, not just a
-     command** — the shape today's repair used ("fixed when
-     `style_checked_at = ai_drafted_at AND style_tags = '{}'` returns 0").
-     Remediations are the dangerous class: never falsified until the day
-     someone follows them, and trusted because they are in the traps file.
-     Trap 26's was one session from being run as written.
-   - **A comment that authorises a write cites the query proving its
-     premise** — `backfill-guard-stamps.ts`'s false header was the warrant
-     for stamping 100 rows.
-   - **Move "write the command, not the claim; the test is tense, not topic"
-     out of this file's header into `database-log`'s standing rules**, where
-     the violations actually happen. Where a status line already prints its
-     verifying query, delete the prose answer rather than keeping both.
-   - **Codify strike-and-annotate** (used here) as the correction form:
-     dated annotation, never overwrite, so the corrections accumulate into
-     evidence about which claim shapes rot.
-4. **`cross-check-native-to`'s stamp discipline** — the F2 sibling left
-   deliberately unfixed: it stamps `no_data`, and `apply-native-to-fixes.ts`
-   is in no runbook step. Not blind-copied from F2 because its trigger and
-   verdict set differ; reason it through.
-5. **Then the cheap hygiene**, any order: `REQUIRED_DRAFTED_FIELDS` + prose
-   fields while violations are 0; one shared `STAMP_SUFFIXES`; migration-drift
-   content check; `restore-catalog` diff excluding trigger-derived columns.
-   Everything else is the review's explicit "can wait" list.
+**Next steps, in order:**
 
-**Waiting on Ana, unchanged from round 11:** the two climbing hydrangeas, the
-`Cenolophium` region correction (also one of the two round-11 rows stamped
-with a correction still pending — the F2 fix prevents new ones, it did not
-repair those), the 5 photo holds, the rounds 1–6 editorial pass, the `modern`
-re-tag.
+1. **Merge this branch, then run round 12.** Nothing in the pipeline is
+   half-changed, but `cross-check-native-to` behaves differently now and round
+   12 is the first run that will show it: a `gross`/`contradicts` row whose
+   rewrite nobody has written stays unstamped and **fails round close**. That is
+   intended. The run names those rows in its tail.
+2. **Watch for the one gap that behaviour opens.** A row a person reads and
+   KEEPS needs `native_to_reviewed_at`, and nothing in TypeScript writes it. If
+   round 12 produces a keep-this-phrase decision, the `--review-keep` writer
+   (audit F5) stops being can-wait and becomes the blocker. It is recorded in
+   `STAMPS_WITHOUT_WRITERS` with that reasoning.
+3. **The migration-drift content check** — the one step-5 item left. It needs
+   `applied_migrations()` to return `statements`, so it needs a migration and
+   Ana's push (rule 11), which is why it was not folded in here. Design is in
+   the review's section 6; 31 of 34 versions already match byte for byte, so it
+   is green on day one.
+4. **The graveyard pass** (artifact c/1) whenever convenient:
+   `wikimedia-image-proof.ts`, `repair-combinations.ts`,
+   `backfill-legacy-editorial.ts` to `archive/` with README rows —
+   `repair-combinations.ts` needs a `database-log` line in the same change,
+   since archiving it otherwise files an empty record. They are the three in
+   `SCRIPTS_PENDING_ARCHIVE`; deleting each entry is how you know you finished.
+5. **Pin the next trap.** 21 of 28 are unpinned and the count prints on every
+   green run. Trap 1 is the cheapest (a fake fetch that 429s, assert the error
+   propagates) and the reasons in `TRAPS_NOT_PINNED` say what each one needs.
 
-**Standing, new:** the next audit is scheduled, not suspicion-triggered —
-round 12's close or 2026-09-14, whichever first, early if a PR adds a stamp
-column, adds a script, or touches `upsert_trefle_plant`. It should come back
-**shorter** than this one; if it does not, the diagnosis was wrong and gets
-redone rather than the fixes repeated. Start it in a fresh session.
+**Waiting on Ana, unchanged:** the two climbing hydrangeas, the `Cenolophium`
+region correction (one of the two round-11 rows stamped with a correction still
+pending — the F2 fix prevents new ones, it did not repair those), the 5 photo
+holds, the rounds 1-6 editorial pass, the `modern` re-tag. New, small: whether
+an empty `common_issues` / `environment_benefits` is legitimate (21 and 4
+drafted rows). That answer decides whether they join
+`REQUIRED_DRAFTED_FIELDS`; the verifier is the wrong place to settle it.
 
-**Open questions:** none. The vitest-vs-CI-script choice is settled in step 2.
+**Standing:** the next audit is round 12's close or 2026-09-14, whichever first,
+early if a PR adds a stamp column, adds a script, or touches
+`upsert_trefle_plant`. It should come back **shorter**; if it does not, the
+diagnosis was wrong and gets redone rather than the fixes repeated. Start it in
+a fresh session.
+
+**What this session learned about audits, worth carrying into the next one:**
+the mechanism disagreed with the review three times — traps 13 and 14 were
+already pinned (so the ratchet starts at 21 of 28, not 25), unioning the stamp
+suffixes as proposed would have broken round close, and the `restore-catalog`
+diff the review wanted fixed was not actually inflated (100 versus 100, measured
+both phases). A review is a hypothesis. Build the check, run it, and believe the
+check.
+
+**Open questions:** none.

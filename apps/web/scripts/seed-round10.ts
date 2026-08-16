@@ -54,9 +54,14 @@
  * AI field are left null on seed — curate-plants.ts fills them next.
  */
 
-import { searchSpeciesByName, fetchAndMapSpecies } from '../lib/trefle'
+import { fetchAndMapSpecies } from '../lib/trefle'
 import { upsertPlant } from '../lib/plants-db'
-import { fetchCatalogIdentity } from './catalog-identity'
+import {
+  fetchCatalogIndex,
+  normSci,
+  resolve,
+  type Resolved,
+} from './species-resolver'
 import { writeRoundManifest, type SeededPlant } from './round-manifest'
 
 const ROUND_LABEL = '10'
@@ -156,128 +161,12 @@ const CANDIDATES: Array<number | string> = [
   'Origanum majorana', // marjoram — soft grey-green, low mound
 ]
 
-// Scientific-name matching (synonym-aware exact match) — mirrors
-// seed-round7.ts / seed-round8.ts / seed-round9.ts. Matching requires the
-// species epithet to be identical AND the genus equal or a known synonym, so
-// an entry never binds to an unrelated species that merely shares an epithet.
-//
-// Carried forward from round 9 (harmless if unused this round) plus nothing
-// new — this round's list did not surface a fresh synonym trap during
-// resolution, but the guard costs nothing to keep.
 // ---------------------------------------------------------------------------
-const SYNONYM_GENERA: string[][] = [
-  ['aster', 'symphyotrichum', 'eurybia'],
-  ['erysimum', 'cheiranthus'],
-  ['leucojum', 'acis'],
-  ['schizostylis', 'hesperantha'],
-  ['chrysanthemum', 'dendranthema'],
-  ['cimicifuga', 'actaea'],
-  ['chionodoxa', 'scilla', 'othocallis'],
-  ['abelia', 'linnaea'],
-  ['sempervivum', 'jovibarba'],
-  ['cornus', 'swida'],
-  ['chasmanthium', 'uniola'],
-  ['anemone', 'anemonoides', 'eriocapitella'],
-  ['blechnum', 'struthiopteris'],
-  ['scilla', 'othocallis'],
-  ['ipheion', 'tristagma'],
-  ['lamium', 'lamiastrum'],
-  ['sedum', 'petrosedum', 'hylotelephium', 'phedimus'],
-  ['aloe', 'aloiampelos'],
-  ['berberis', 'mahonia'],
-  ['maianthemum', 'smilacina'],
-  ['polygonatum', 'disporum'],
-  ['alkekengi', 'physalis'],
-  ['calibrachoa', 'petunia'], // Calibrachoa was long sunk into Petunia
-]
-
-function genusSynonyms(genus: string): Set<string> {
-  const set = new Set<string>([genus])
-  for (const group of SYNONYM_GENERA) {
-    if (group.includes(genus)) for (const g of group) set.add(g)
-  }
-  return set
-}
-
-// → [genus, species] lowercased, hybrid marker and author stripped.
-function normSci(s: string): [string, string] {
-  const parts = s
-    .toLowerCase()
-    .replace(/×/g, '')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .split(' ')
-    .filter(Boolean)
-  return [parts[0] ?? '', parts[1] ?? '']
-}
-
-function sciMatches(target: string, candidate: string): boolean {
-  const [tg, ts] = normSci(target)
-  const [cg, cs] = normSci(candidate)
-  if (!ts || ts !== cs) return false
-  return genusSynonyms(tg).has(cg)
-}
-
+// Name matching, resolution and the dedupe read all live in
+// ./species-resolver.ts. This file used to carry its own copy of the synonym
+// table, which is how twelve synonym groups were lost between rounds — see that
+// file's header.
 // ---------------------------------------------------------------------------
-// Resolve a name to a verified Trefle id (exact match, no sibling drift).
-// Numeric entries are taken as verified Trefle ids directly.
-// ---------------------------------------------------------------------------
-interface Resolved {
-  id: number
-  scientific_name: string
-  topName: string | null // top search hit, for drift logging
-  topId: number | null
-}
-
-async function resolve(entry: number | string): Promise<Resolved | null> {
-  if (typeof entry === 'number') {
-    return {
-      id: entry,
-      scientific_name: `id:${entry}`,
-      topName: null,
-      topId: null,
-    }
-  }
-  let top: { scientific_name: string; id: number } | null = null
-  for (let page = 1; page <= 2; page++) {
-    const results = await searchSpeciesByName(entry, page)
-    if (!results.length) break
-    if (page === 1 && results[0]) {
-      top = { scientific_name: results[0].scientific_name, id: results[0].id }
-    }
-    const exact = results.find((r) => sciMatches(entry, r.scientific_name))
-    if (exact) {
-      return {
-        id: exact.id,
-        scientific_name: exact.scientific_name,
-        topName: top?.scientific_name ?? null,
-        topId: top?.id ?? null,
-      }
-    }
-    if (results.length < 20) break // no more pages
-  }
-  return null
-}
-
-// ---------------------------------------------------------------------------
-// Existing catalog (dedupe). Paginated — a bare .select() caps at 1000 rows.
-// ---------------------------------------------------------------------------
-interface Catalog {
-  ids: Set<number>
-  names: Set<string> // normalised "genus species"
-}
-
-async function fetchCatalog(): Promise<Catalog> {
-  const rows = await fetchCatalogIdentity()
-
-  const ids = new Set<number>()
-  const names = new Set<string>()
-  for (const row of rows) {
-    if (row.source_species_id !== null) ids.add(row.source_species_id)
-    if (row.scientific_name) names.add(normSci(row.scientific_name).join(' '))
-  }
-  return { ids, names }
-}
 
 // ---------------------------------------------------------------------------
 // Main
@@ -290,7 +179,7 @@ const label = (e: number | string) => (typeof e === 'number' ? `id ${e}` : e)
 async function main() {
   const dryRun = process.argv.slice(2).includes('--dry-run')
   const startedAt = new Date().toISOString()
-  const catalog = await fetchCatalog()
+  const catalog = await fetchCatalogIndex()
   console.log(
     `\nCatalog has ${catalog.names.size} species. ${CANDIDATES.length} candidates.` +
       (dryRun ? ' DRY RUN — no writes.\n' : '\n')
@@ -308,8 +197,7 @@ async function main() {
 
     // Cheap skip before spending Trefle calls: exact/synonym name already held.
     if (typeof cand === 'string') {
-      const candNorm = normSci(cand).join(' ')
-      if (catalog.names.has(candNorm)) {
+      if (catalog.holds(cand)) {
         skipped.push({ entry: cand, reason: 'name already in catalog' })
         console.log(`${prefix} skip  ${cand} — already in catalog`)
         continue

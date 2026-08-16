@@ -138,7 +138,7 @@ flips `is_curated` — it is not the editorial pass.
 
 **Output:** terminal report grouped disagreements-first, plus a timestamped JSON report in `apps/web/reports/` (gitignored) recording every flag with stored vs checked values — the artifact for Ana's spot-check sweep and the source of record for any bulk correction. `--limit N` for testing.
 
-**Checked-at stamp — guard scoping (July 2026, migration `20260716120000`).** The guard stamps `plants.botanical_checked_at` on each row the moment it finishes checking it (flagged or clean — the stamp records that the check _ran_, not its verdict). This is operational metadata, not catalog content, so the flags-only rule holds — it never touches a botanical or editorial field. The stamp makes `--new-only` state-based (`WHERE botanical_checked_at IS NULL`): exact (no UTC-midnight batch split), and resumable — a killed run leaves the rest unstamped for the next pass, replacing the earlier newest-calendar-day heuristic. It's a timestamp, not a boolean, so a prompt revision can re-scope by date (`... OR botanical_checked_at < '<date>'`). **Cascade rule:** any script that _mutates_ a checked field must null the matching stamp so the guard re-checks — e.g. `scripts/archive/regenerate-native-to.ts` nulls `native_checked_at` in the same write that rewrites `native_to`. The sibling `native_to` guard (`cross-check-native-to.ts`) carries its own `native_checked_at` stamp on the identical model; `check-bloom-colors.ts` has none by design (a free local validator with no Claude call, it always runs over the whole catalog).
+**Checked-at stamp — guard scoping (July 2026, migration `20260716120000`).** The guard stamps `plants.botanical_checked_at` on each row the moment it finishes checking it (flagged or clean — the stamp records that the check _ran_, not its verdict). This is operational metadata, not catalog content, so the flags-only rule holds — it never touches a botanical or editorial field. The stamp makes `--new-only` state-based (`WHERE botanical_checked_at IS NULL`): exact (no UTC-midnight batch split), and resumable — a killed run leaves the rest unstamped for the next pass, replacing the earlier newest-calendar-day heuristic. It's a timestamp, not a boolean, so a prompt revision can re-scope by date (`... OR botanical_checked_at < '<date>'`). **Cascade rule:** any script that _mutates_ a checked field must null the matching stamp so the guard re-checks — e.g. `scripts/archive/regenerate-native-to.ts` nulls `native_checked_at` in the same write that rewrites `native_to`. The sibling `native_to` guard (`cross-check-native-to.ts`) carries its own `native_checked_at` stamp, but **since 2026-08-16 not on the identical model**: there the stamp means the row was SETTLED, not that the check ran, so a `gross` or `contradicts` verdict whose rewrite is still pending is left unstamped and stays in the queue (`shouldStamp`, trap 24). The two guards' rules differ in three places and deliberately share no code — the reasoning is in that function's header. `check-bloom-colors.ts` has none by design (a free local validator with no Claude call, it always runs over the whole catalog).
 
 <a id="sun-model"></a>
 
@@ -477,6 +477,15 @@ which prefers the curated pick and falls back, so the code was safe to ship
 ahead of the data. Every pick carries a confidence and a one-line reason, and
 low confidence is a review queue, not a rejection. **None of this is editorial
 sign-off** ([the curation layer](architecture.md#curation-layer)).
+
+**The review queue is worked in a browser, not in markdown.**
+`review-image-picks.ts` writes `reports/image-picks.html`, because reviewing a
+photo means looking at it and remote `<img>` tags do not render in a markdown
+viewer. Verdicts sit in localStorage so one queue can be worked across several
+sittings, and it writes nothing to the database: `apply-image-confirmations.ts`
+and `apply-image-reverts.ts` are the separate, deliberate steps that act on the
+exported list. Named here because until 2026-08-16 the only pointers to it were
+comments inside those two scripts.
 
 <a id="wikimedia-attribution"></a>
 

@@ -51,6 +51,12 @@ The numbers **in this file are different and must stay written down**: a dated s
 
     The queue this rule used to hold was **cleared 2026-08-13**: the `plant_combinations` timestamp needed no migration (trap 16, corrected — the column already existed) and the reviewed-and-kept stamp landed as migration `20260813110500`. Details in that date's session entry. A newly deferred schema change goes back on a list HERE, not only where the blocked work is described — a deferral recorded only at the blocked site is invisible at the moment the block lifts (trap 17).
 
+12. **Every remediation carries a verification predicate, not just a command.** A trap that says "run `curate-styles --round 9`" tells you what to type; it does not tell you how to know it worked. Write both: the command, and the query whose result changes when the repair lands — the shape the 2026-08-15 repair used, "fixed when `style_checked_at = ai_drafted_at AND style_tags = '{}'` returns 0". Remediations are the most dangerous claims in this file. They are never falsified until the day someone follows one, they are trusted because they are in the traps file, and trap 26's was one session away from being run as written.
+
+13. **Corrections are struck and annotated, never overwritten.** When an entry turns out to be wrong, leave the wrong claim visible, strike it (`~~like this~~`), and add a dated annotation saying what is true and how it was checked — the form traps 16 and 24 already use. Overwriting is cheaper and destroys the only evidence about which claim shapes rot: trap 16's premise was false for a month, and its visible correction is now the reason nobody re-proposes that migration. A silently fixed entry reads exactly like an entry that was always right.
+
+14. **Write the command, not the claim; the test is tense, not topic.** Moved here 2026-08-16 from `.claude/handoff.md`'s header, because the violations happen in this file. A state claim is true when typed and rots from then on: "CI is waiting on secrets" was wrong within a day, survived three sessions, and reached Ana a fourth time. "PR #128 merged as `06ab97a`" is a record and stays true. Generated numbers live in [`catalog-state.md`](catalog-state.md) — link, never retype. **Where a status line already prints its verifying query, delete the prose answer rather than keeping both**: two homes for one fact is how the wrong one survives.
+
 **Rule 9 is enforced, not encouraged.** `.husky/check-db-log.sh` runs on every commit and blocks it if a round directory is committed without an entry naming that round, if a migration is committed without touching this file, or if this file still contains the `TODO —` placeholders the script writes. Git cannot see what you ran against Supabase — only what you commit — so the hook checks the artifacts database work leaves behind, and the honest reading of a green hook is "you recorded something", not "you recorded enough". `--no-verify` exists and is occasionally right (a revert, a docs fixup). It is not the normal path, and whatever you skip is inherited by whoever comes next.
 
 ---
@@ -273,6 +279,10 @@ will not select them — the stamp is the damage.
 > gets its own entry when it runs. A wrong remediation in a trap entry is
 > itself a trap: this one sat one session away from being executed as written.
 
+**Pinned by `apps/web/scripts/curate-plants.test.ts`** (2026-08-14, `eeb5678`), which calls `buildPatch` against a row in exactly the state the DB default leaves it — `style_tags: []`, `is_greenery: false` — and asserts on the STAMP, never on tag counts. It fails against the pre-fix `plant.style_tags == null` guard. Citation added 2026-08-16.
+
+**Applied 2026-08-15**, recorded in that date's session entry: the 100 rows were re-judged with `curate-styles --round 9` then `--round 10`. **Re-checked against production 2026-08-16** — the fingerprint returns 0 catalog-wide, read paginated, so the repair holds and the struck remediation above is closed. Checked again rather than restated: the claim was one session old and the point of rule 12 is that a remediation is only ever proved by running its predicate.
+
 #### 24. A guard stamp records that the check RAN, not that its finding was acted on — ADDED 2026-07-30
 
 A report-only `cross-check-native-region` run stamps `native_region_checked_at` on every row it decided, including the rows it decided were **wrong**. Nothing else revisits them: `--new-only` selects on the stamp, so a disagreement found and left unapplied is stamped out of every later sweep. Six rows sat in exactly that state, `Crocus speciosus` among them — tagged `Caucasus` alone while WCVP gave it Bulgaria, Iran, Krym, the Caucasus and Türkiye, so the Explore native filter hid it from the Balkan users it is native to.
@@ -295,6 +305,31 @@ It surfaced only because the `native_to` queue ranked a phrase against those tag
 > code stamped while their correction was pending are a data question; round
 > 11's two are recorded in its entry.
 
+> **Second site closed 2026-08-16, and NOT by copying the first.**
+> `cross-check-native-to` now decides through an exported `shouldStamp(row)`,
+> pinned in `cross-check-native-to.test.ts`. Three things made a blind copy
+> wrong, and the test asserts each: `no_data` IS stamped here (it means the
+> model found no continents on one side, which for a cultigen is the settled
+> answer, and a cultigen carrying a phrase is routed to `contradicts` first —
+> refusing it would leave every cultigen failing a FAIL-level step); there is no
+> `--apply` to key on, because this guard never writes the phrase, so the rule
+> is "withhold until settled" rather than "stamp when written"; and a row a
+> person read and kept is settled with no correction at all, which
+> `native_to_reviewed_at` records and a trigger clears on any phrase edit.
+>
+> **Consequence, intended:** a `gross`/`contradicts` row whose rewrite nobody
+> has written stays unstamped, stays in the `--new-only` queue, and FAILS round
+> close until it is settled. The run names those rows in its tail. This is also
+> why `apply-native-to-fixes.ts` needed no runbook step: the stamp is honest
+> without one.
+>
+> **What this leaves load-bearing:** nothing in TypeScript writes
+> `native_to_reviewed_at` — the 2026-07-30 review was backfilled by migration
+> `20260813110500`. So a NEW row a person reads and keeps has no way to record
+> that, and will fail round close until the phrase is rewritten instead. The
+> `--review-keep` writer (audit F5, filed as can-wait) is now the thing that
+> closes it.
+
 ---
 
 ### C. One fact with two homes, and only one of them got updated
@@ -306,6 +341,8 @@ This is the root cause the July 28 2026 audit landed on, and it is why trap numb
 #### 3. Full-catalog regeneration outlived its migration — FIXED (round 8)
 
 `regenerate-native-region.ts` began as a one-time migration and kept full-catalog scope long after, so every round re-derived all ~600 plants. It is why the Trefle rate limit in trap 1 was reachable at all, and it **silently rewrites settled data** — round 8's run changed 20 pre-existing plants alongside its own 101. The `MANUAL_OVERRIDES` table exists because hand-corrections were being clobbered by re-generation; it patches the symptom one plant at a time. **The script now refuses to run without `--round <label>` or `--all`.**
+
+**Pinned by `apps/web/scripts/regenerate-native-region.test.ts`** (2026-08-14, `464c248`), which calls `assertPlanScope` and asserts on the plan — the scope itself, not a row count downstream of it. Citation added 2026-08-16: the test existed for two days with nothing here pointing at it, which is the gap CLAUDE.md's trap-closure rule now names as its fourth requirement.
 
 #### 5. Unmapped colour values vanish from the filter — recurring, guarded
 
@@ -335,7 +372,9 @@ Worst case is a **collision with a species already held**: round 8 received _Cer
 
 Trefle's name search silently resolves to sibling species. Seed by verified Trefle ID or exact synonym-aware genus+species match, and log any drift.
 
-**Shade and woodland batches need their synonym groups written before the dry run** — those genera have been widely segregated (Anemone→Anemonoides, Blechnum→Struthiopteris, Scilla→Othocallis, Ipheion→Tristagma, Sedum→Petrosedum, Meconopsis→Papaver).
+**Shade and woodland batches need their synonym groups written before the dry run** — those genera have been widely segregated (Anemone→Anemonoides, Blechnum→Struthiopteris, Scilla→Othocallis, Ipheion→Tristagma, Sedum→Petrosedum, Meconopsis→Papaver). ~~Write them into the round seeder's own `SYNONYM_GENERA`~~ — **corrected 2026-08-16:** there is one table now, in `species-resolver.ts`, and it is append-only. Hand-carrying between round files is what lost twelve groups by round 11.
+
+**Pinned by `apps/web/scripts/species-resolver.test.ts`** (2026-08-16). It asserts the witness — what `resolve` returns and what it refuses to return: a sibling in the same genus is rejected, a moved genus with an identical epithet is accepted, and the top search hit is never returned unverified even when it is the only candidate. `check-pipeline-invariants.ts` holds the other half, that no seeder may declare its own table.
 
 #### 8. `reports/` is gitignored, so a fresh worktree has a cold cache
 
@@ -374,6 +413,19 @@ no data" about data that exists.
 reported cleanly and carried on; the only signal was a species quietly absent
 from a result set. Read the miss list.
 
+**Partly closed on the seeding side 2026-08-16, and pinned by
+`apps/web/scripts/species-resolver.test.ts`.** The resolver now reads Trefle's
+own `synonyms[]` as a second matcher, which is the only mechanism that can match
+across a changed epithet. Smoke-tested live against this trap's three
+hand-resolved cases: `Selinum wallichianum` and `Schizophragma hydrangeoides`
+now resolve without a hand-verified id; `Rhodochiton atrosanguineus` still does
+not, because Trefle's only synonym for it is `Rhodochiton volubile`. **So the
+escape hatch stays** — the resolver prints `top hit rejected: <name> (#<id>)`,
+and that line is the workflow: verify the id by hand, then seed it as a number.
+The test asserts both halves, the match and the deliberate limit, so nobody
+closes the gap by relaxing the epithet rule. The WCVP-lookup side of this trap
+is unchanged.
+
 #### 21. `auth.admin.listUsers` 500s when `per_page` exceeds the user count — ADDED 2026-07-30
 
 `{"code":500,"error_code":"unexpected_failure","msg":"Database error finding users"}`. Reproduced against the REST endpoint with 5 users: `per_page=5` returns 200, `per_page=6` returns 500. Not the JS SDK — curl does it too. **The endpoint fails precisely when the user table is small**, so no fixed page size is safe as the count moves. Read `auth.users` through a `security definer` function instead (`expired_demo_users()`, migration `20260729164307`).
@@ -381,6 +433,47 @@ from a result set. Read the miss list.
 ## Sessions
 
 <!-- Newest first. Append with: scripts/log-db-session.ts --round <label> -->
+
+### 2026-08-16 — The round-12 guardrails: one resolver, one invariants check (not a round)
+
+**Branch** `session/2026-08-16-round-12-guardrails`. No migration, no catalog write.
+
+**Changed** — seven forked resolvers replaced by `scripts/species-resolver.ts`
+(45 synonym components over 105 genus names; round 11's table held 34);
+`pnpm invariants:check` added to CI; the trap-closure rule and standing rules 12
+to 14; `shouldStamp` at `cross-check-native-to`; `scripts/stamp-columns.ts`.
+
+**Database** — read-only, three queries, each replacing a claim with a result:
+
+- Trap 26's fingerprint `style_checked_at = ai_drafted_at AND style_tags = '{}'`
+  returned **0** catalog-wide, paginated. Re-checked rather than restated (rule
+  12); recorded in the trap.
+- Prose coverage on the 720 drafted rows, before extending
+  `REQUIRED_DRAFTED_FIELDS`: six fields at 0 null/empty, but `common_issues`
+  **21** and `environment_benefits` **4**.
+- `restore-catalog`'s old and new diff on both phases of round 11's snapshot:
+  **100 and 100**.
+
+**Trefle** — one smoke run, 6 detail calls at 1600ms. `synonyms[]` arrives
+populated; 2 of round 11's 3 hand-resolved misses now resolve without a hand id.
+Recorded in trap 27.
+
+**Found** — traps 13 and 14 were already pinned by `migration-drift.test.ts`, so
+the ratchet starts at 21 of 28 unpinned, not the review's 25. Unioning the stamp
+suffixes as proposed would have broken round close: with the exclusion removed,
+`verify-round --round 11` FAILs on `native_to_reviewed_at`.
+`review-image-picks.ts` was reachable from nothing but two sibling scripts'
+comments, and is now named in `curation.md`.
+
+**Not done** — the migration-drift content check: it needs
+`applied_migrations()` to return `statements`, so it needs a migration and a
+push. `common_issues` and `environment_benefits` left out of
+`REQUIRED_DRAFTED_FIELDS` pending Ana's call on whether empty is legitimate.
+
+**Verified** — 252 tests, `tsc`, `invariants:check`, `docs:links`,
+`runbook:check`, `tokens:check`, `verify-round --round 11` at 0 failures. The
+new check was verified to FAIL as well as pass: two injected violations caught
+with file, line, rule and remedy, exit 1 (trap 19).
 
 ### 2026-08-15 — The trap-26 repair, and the upsert lockdown (not a round)
 

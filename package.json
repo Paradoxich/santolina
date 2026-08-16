@@ -13,6 +13,7 @@
     "tokens:check": "turbo run tokens:check",
     "runbook:check": "turbo run runbook:check",
     "docs:links": "turbo run docs:links",
+    "invariants:check": "turbo run invariants:check",
     "tokens:usage": "turbo run tokens:usage"
   },
   "devDependencies": {

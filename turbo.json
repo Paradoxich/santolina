@@ -36,6 +36,10 @@
       "cache": false,
       "outputs": []
     },
+    "invariants:check": {
+      "cache": false,
+      "outputs": []
+    },
     "tokens:usage": {
       "cache": false,
       "outputs": []
