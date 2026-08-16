@@ -446,6 +446,225 @@ function checkTrapFamilies(): void {
 }
 
 // ---------------------------------------------------------------------------
+// Checks D-G. Named things a doc points at, which either exist or do not
+//
+// These are the current-state claims with a witness that cannot be argued with:
+// a path, a package.json key, a trap heading, a set of env keys. All four shipped
+// green — no violation existed on 2026-08-16 — so none of them is here to fix
+// something. They are here because each guards a rename or a move that is
+// already scheduled: the graveyard pass moves three scripts to archive/, and
+// rule 14 tells people to write commands, which makes a renamed script a
+// silently wrong instruction in every doc that cites it.
+//
+// REJECTED, so nobody re-proposes it: checking cited MIGRATION VERSIONS. Eleven
+// cited versions do not exist as files, and every one is legitimate — trap 13's
+// reconciliation table is deliberately a list of local versions that were WRONG
+// and got renamed (`20260729120000`→`20260729101133`), and the rest are
+// migration-drift.test.ts fixtures. Eleven false positives against zero findings
+// is the same trade the bare `N <plural>` count check failed.
+// ---------------------------------------------------------------------------
+
+/** Every fenced block and inline code span in a markdown file, as text. */
+function codeSpans(text: string): string[] {
+  const out: string[] = []
+  let inFence = false
+  for (const line of text.split('\n')) {
+    if (/^\s*```/.test(line)) {
+      inFence = !inFence
+      continue
+    }
+    if (inFence) {
+      out.push(line)
+      continue
+    }
+    for (const m of line.matchAll(/`([^`]+)`/g)) out.push(m[1]!)
+  }
+  return out
+}
+
+/**
+ * Check D. A `scripts/<name>.ts` a doc points at exists at that exact path.
+ *
+ * Exact, so `scripts/foo.ts` fails once foo moves to `scripts/archive/foo.ts`.
+ * That strictness is the point: the archival pass is queued in
+ * SCRIPTS_PENDING_ARCHIVE, and the docs citing those three are what goes stale
+ * the day it runs.
+ */
+function checkScriptPaths(relPath: string, lines: string[]): void {
+  lines.forEach((line, i) => {
+    for (const m of line.matchAll(
+      /\b(?:apps\/web\/)?(scripts\/(?:archive\/)?[a-z0-9-]+\.ts)\b/g
+    )) {
+      const rel = `apps/web/${m[1]!}`
+      if (ALL.includes(rel)) continue
+      fail({
+        where: `${relPath}:${i + 1}`,
+        detail: `points at \`${m[0]}\`, which is not a tracked file.`,
+        remedy:
+          'Correct the path. If the script was archived, cite `scripts/archive/<name>.ts` — the old path is now wrong, not merely shorter.',
+      })
+    }
+  })
+}
+
+/** pnpm's own subcommands, which are not scripts in any package.json. */
+const PNPM_BUILTINS = new Set([
+  'install',
+  'add',
+  'remove',
+  'update',
+  'run',
+  'exec',
+  'dlx',
+  'why',
+  'init',
+  'store',
+  'prune',
+  'audit',
+  'rebuild',
+  'import',
+  'link',
+  'unlink',
+  'outdated',
+  'list',
+  'ls',
+  'config',
+  'dedupe',
+  'fetch',
+  'create',
+  'publish',
+  'setup',
+  'env',
+  'patch',
+  'deploy',
+  'licenses',
+])
+
+function definedScripts(): Set<string> {
+  const names = new Set<string>()
+  for (const pkg of ALL.filter((f) => f.endsWith('package.json'))) {
+    if (pkg.includes('node_modules/')) continue
+    try {
+      const scripts = JSON.parse(read(pkg)).scripts ?? {}
+      for (const key of Object.keys(scripts)) names.add(key)
+    } catch {
+      // A package.json that does not parse is someone else's failure.
+    }
+  }
+  return names
+}
+
+/**
+ * Check E. A `pnpm <script>` a doc tells you to run exists.
+ *
+ * TWO CONDITIONS, because one was not enough. It must be inside a code span or
+ * fence — prose says "Turborepo + pnpm workspaces" and "pnpm with workspaces",
+ * which a bare pattern reads as commands that do not exist. AND it must be in
+ * command position: at the start, or after a shell operator. Formatting alone
+ * still let through `# pnpm workspace config`, a comment annotating
+ * `pnpm-workspace.yaml` in README's directory tree — inside a fence, and not an
+ * instruction. A thing you are told to run starts a command.
+ */
+function checkCommands(
+  relPath: string,
+  text: string,
+  scripts: Set<string>
+): void {
+  for (const span of codeSpans(text)) {
+    for (const m of span.matchAll(
+      /(?:^|[;&|]\s*|\$\s+)pnpm\s+(?:(?:--filter|-F|-r|-w|--dir|-C)\s+\S+\s+)*([a-z][\w:-]*)/gm
+    )) {
+      const name = m[1]!
+      if (PNPM_BUILTINS.has(name) || scripts.has(name)) continue
+      fail({
+        where: relPath,
+        detail: `\`pnpm ${name}\` is not a script in any package.json, and not a pnpm subcommand.`,
+        remedy:
+          'Correct the name, or add the script. Rule 14 asks for the command rather than the claim, which only helps while the command is real.',
+      })
+    }
+  }
+}
+
+/**
+ * Check F. A cited trap number has an entry.
+ *
+ * Trap numbers are permanent IDs cited from prose AND from code comments, so a
+ * citation that resolves to nothing is a reader sent to a heading that is not
+ * there. Numbers are bounded to two digits so that "traps 3 and 26 (2026-08-14)"
+ * cannot swallow the year.
+ */
+function checkTrapCitations(relPath: string, lines: string[]): void {
+  const defined = new Set(trapNumbers())
+  lines.forEach((line, i) => {
+    for (const m of line.matchAll(
+      /\btraps?\s+(\d{1,2}b?(?:\s*,\s*\d{1,2}b?)*(?:\s+and\s+\d{1,2}b?)?)/gi
+    )) {
+      for (const cited of m[1]!.split(/\s*,\s*|\s+and\s+/)) {
+        const trap = cited.trim().toLowerCase()
+        if (!trap || defined.has(trap)) continue
+        fail({
+          where: `${relPath}:${i + 1}`,
+          detail: `cites trap ${trap}, which has no \`#### ${trap}.\` entry in ${LOG}.`,
+          remedy:
+            'Trap numbers are permanent IDs, never renumbered and never reused. Either the number is a typo, or the entry it names was removed rather than struck and annotated (standing rule 13).',
+        })
+      }
+    }
+  })
+}
+
+/**
+ * Check G. An env-var block in a doc matches `.env.example`.
+ *
+ * A second copy of an inventory, which is trap family C exactly. A fence counts
+ * as one when it holds at least three `KEY=` lines and at least one of them is a
+ * real key, so an ordinary shell fence with `FOO=bar` in it cannot trigger this.
+ */
+const ENV_EXAMPLE = 'apps/web/.env.example'
+
+function checkEnvInventory(relPath: string, text: string): void {
+  if (!ALL.includes(ENV_EXAMPLE)) return
+  const real = new Set(
+    [...read(ENV_EXAMPLE).matchAll(/^([A-Z][A-Z0-9_]*)=/gm)].map((m) => m[1]!)
+  )
+  if (real.size === 0) return
+
+  let inFence = false
+  let fence: string[] = []
+  const fences: string[][] = []
+  for (const line of text.split('\n')) {
+    if (/^\s*```/.test(line)) {
+      if (inFence) fences.push(fence)
+      inFence = !inFence
+      fence = []
+      continue
+    }
+    if (inFence) fence.push(line)
+  }
+
+  for (const block of fences) {
+    const keys = block
+      .map((l) => l.match(/^([A-Z][A-Z0-9_]*)=/)?.[1])
+      .filter((k): k is string => Boolean(k))
+    if (keys.length < 3 || !keys.some((k) => real.has(k))) continue
+
+    const missing = [...real].filter((k) => !keys.includes(k))
+    const extra = keys.filter((k) => !real.has(k))
+    if (!missing.length && !extra.length) continue
+    fail({
+      where: relPath,
+      detail:
+        `its environment block disagrees with ${ENV_EXAMPLE}` +
+        (missing.length ? ` — missing ${missing.join(', ')}` : '') +
+        (extra.length ? ` — has ${extra.join(', ')}, which is not there` : '') +
+        '.',
+      remedy: `${ENV_EXAMPLE} is the one home for this list. Match it, or delete the block and link to the file.`,
+    })
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Check C. The handoff is at least as new as the log
 //
 // Both are written at session end, so the log holding a session the handoff has
@@ -504,13 +723,39 @@ const livingDocs = ALL.filter(
     !f.includes('node_modules/')
 )
 
+const scripts = definedScripts()
+
 for (const relPath of livingDocs) {
-  const lines = read(relPath).split('\n')
+  const text = read(relPath)
+  const lines = text.split('\n')
   // database-log.md's session entries are event records by the file's own rule.
   const sessions =
     relPath === LOG ? lines.findIndex((l) => /^## Sessions/.test(l)) : -1
   const until = sessions === -1 ? lines.length : sessions
+
+  // COUNTS stop at the Sessions heading; a dated entry records an event.
   checkCounts(relPath, lines.slice(0, until))
+
+  // The rest do NOT stop there, and the difference is the tense test doing its
+  // job. "Round 8 took the catalog 494 → 595" stays true forever, but a session
+  // entry pointing at `scripts/foo.ts` is pointing at a file that either exists
+  // now or does not — a reference is not a claim about a moment.
+  checkScriptPaths(relPath, lines)
+  checkTrapCitations(relPath, lines)
+  checkCommands(relPath, text, scripts)
+  checkEnvInventory(relPath, text)
+}
+
+// Trap numbers are cited from code as well as from prose — database-log.md's own
+// header says so — and a comment pointing at a heading that is not there is the
+// same broken reference wherever it lives.
+for (const relPath of ALL.filter(
+  (f) =>
+    f.startsWith('apps/web/') &&
+    f.endsWith('.ts') &&
+    !f.includes('node_modules/')
+)) {
+  checkTrapCitations(relPath, read(relPath).split('\n'))
 }
 
 checkTrapFamilies()
@@ -539,6 +784,9 @@ console.log(
   `    ${'traps unpinned'.padEnd(12)}${String(unpinnedTrapCount()).padStart(5)}   (invariants:check owns the backlog)`
 )
 console.log(
-  '  Asserted negatives ("nothing writes X") are not checkable here — they\n' +
+  '  and every cited script path, pnpm command, trap number and env key resolves.'
+)
+console.log(
+  '\n  Asserted negatives ("nothing writes X") are not checkable here — they\n' +
     '  close by becoming a ratchet entry in check-pipeline-invariants.ts.\n'
 )
