@@ -94,6 +94,14 @@ runs during a round, so none of them blocks one.
    API job that can run for hours, so the lock has to survive that or be
    re-verified at finalisation before `confirmed` is recorded. No dependency was
    added for this yet, deliberately.
+
+   **Do not DESIGN it early either, not just implement it late.** The census it
+   has to be designed against is the complete one, and step 3 changes that census
+   — six of the writers are not on run provenance yet, and wiring them is what
+   reveals which columns actually need a shared key. A lock abstraction built
+   around today's partial set would look finished and establish the wrong
+   property, which is the failure this whole sequence exists to avoid.
+
 5. **Then the three still-open hygiene items**, any order. The migration-drift
    content check needs `applied_migrations()` to return `statements`, so it needs
    a migration and Ana's push (rule 11); design is in the review's section 6 and
