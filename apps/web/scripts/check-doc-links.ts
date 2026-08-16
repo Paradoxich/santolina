@@ -36,7 +36,19 @@ import { REPO_ROOT } from './token-source'
 // edited to use the new anchors: an applied migration is history, and an
 // archived round report is the record of one run's findings. The appendix in
 // architecture.md maps their §N citations onto anchors.
-const FROZEN = [/^supabase\/migrations\//, /^apps\/web\/rounds\/\d+\//]
+//
+// A dated audit or review report is the same category — one run's findings,
+// filed under the date it ran, never revised afterwards. Its §N are
+// self-references to its own sections, which cannot drift because the
+// document does not change. The pattern requires the date in the filename so
+// that a living doc can never match it by accident; prose in database-log or
+// architecture.md stays subject to the rule, which is where it earns its
+// keep. Added 2026-08-16 with the first two such reports.
+const FROZEN = [
+  /^supabase\/migrations\//,
+  /^apps\/web\/rounds\/\d+\//,
+  /^docs\/(pipeline-audit|schema-design-review)-\d{4}-\d{2}-\d{2}\.md$/,
+]
 
 // The appendix is the one place a §N may legitimately appear in living prose,
 // because listing them is its entire job.

@@ -290,7 +290,8 @@ It surfaced only because the `native_to` queue ranked a phrase against those tag
 > The rule itself ("seen" is not "settled") stays load-bearing:
 > `cross-check-native-to` still stamps every judged verdict including
 > `no_data`, and its apply path (`apply-native-to-fixes.ts`) is in no runbook
-> step — follow-up in `docs/pipeline-audit-2026-08-14.md` §5. Rows the old
+> step — follow-up under "Unverified pass-through findings" in
+> `docs/pipeline-audit-2026-08-14.md`. Rows the old
 > code stamped while their correction was pending are a data question; round
 > 11's two are recorded in its entry.
 
