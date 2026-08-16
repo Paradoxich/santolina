@@ -35,6 +35,13 @@ jobs:
       # files, so like the two above it belongs on pull_request, which is
       # where a reference breaks.
       - run: pnpm docs:links
+      # Standing rule 14, made executable: a derivable number restated in prose
+      # must equal what the repo computes, and the trap family table must be a
+      # partition of the trap entries. Same category again — tracked text only.
+      # It exists because the rule was itself an unchecked claim: the trap prose
+      # was found stale by the 2026-08-14 review, half-fixed by hand, and was
+      # stale again two days later.
+      - run: pnpm docs:claims
       # The pipeline's mechanical invariants — a stamp with no writer, a stamp
       # that outruns its finding, a guard that can never fire, a trap with no
       # test, a script nothing references, a seeder forking the synonym table.

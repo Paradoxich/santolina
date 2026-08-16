@@ -21,7 +21,9 @@
     "runbook": "tsx scripts/generate-runbook-doc.ts",
     "runbook:check": "tsx scripts/generate-runbook-doc.ts && git diff --exit-code ../../docs/round-runbook.md",
     "docs:links": "tsx scripts/check-doc-links.ts",
+    "docs:claims": "tsx scripts/check-doc-claims.ts",
     "invariants:check": "tsx scripts/check-pipeline-invariants.ts",
+    "backlog": "tsx scripts/backlog.ts",
     "trigger:contract": "tsx --env-file=.env.local scripts/test-editorial-trigger.ts"
   },
   "dependencies": {

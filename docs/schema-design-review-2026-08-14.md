@@ -26,6 +26,32 @@
 > Its §405 self-correction and §154 pass-through warning still apply to
 > everything they name. For current state see `docs/database-log.md` and
 > `docs/write-provenance.md`.
+>
+> **Where §3's sequencing stands, checked 2026-08-16.** Check the ratchet before
+> acting on anything below: a ratchet entry fails the day its defect is fixed,
+> and this page never will.
+>
+> - **"Must be true before the next data round", items 1-10: done.** The grant is
+>   closed by migration `20260815230948`, the style stamps repaired, the resolver
+>   consolidated, artifacts (a), (b) and (c) shipped, `REQUIRED_DRAFTED_FIELDS`
+>   extended, and item 10's shared suffix constant is `scripts/stamp-columns.ts`.
+> - **Item 11** (migration-drift content check) needs `applied_migrations()` to
+>   return `statements`, so it is a deferred SCHEMA change and belongs on standing
+>   rule 11's list, not here.
+> - **Item 12** (`restore-catalog`'s diff excluding trigger-derived columns) and
+>   the "can wait" code items — the `curate-editorial` withdrawal fix, the
+>   `curate-styles` withdrawal counter, `purge-demo-users`' storage-failure record
+>   — are **not routed**. Each is a real code defect that a witness could express;
+>   none has been re-verified against today's code, and recording an unverified
+>   finding as tracked is the failure this whole mechanism exists to prevent.
+> - **The rest of "can wait" is design, not defect** — generated row types, a
+>   generated data contract, the replay job, the `garden_use_tags` bucket map, the
+>   `writePlant` RPC collapse, `NOT NULL` on `scientific_name`, the unordered-pair
+>   index. Code cannot compute whether the product still wants these, so they
+>   belong in the Notion **Build Backlog** or on rule 11's list, and moving them
+>   there is Ana's call rather than a session's.
+>
+> That unrouted middle row is why this page is still here.
 
 ---
 

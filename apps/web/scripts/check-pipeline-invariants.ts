@@ -183,6 +183,84 @@ export const RUNS_WITHOUT_PROVENANCE: Record<string, string> = {
  */
 export const NULL_COMPARISONS_ALLOWED: Record<string, string> = {}
 
+/** Shape 13. Files that page a table without lib/paginate.ts (standing rule 5). */
+export const HAND_ROLLED_PAGINATION: Record<string, string> = {
+  'backup-catalog.ts':
+    'Third copy of the page loop. Its own pageSize, its own from/to arithmetic. Correct today — it does paginate — so this is duplication, not a cap bug. Named by the 2026-08-14 audit section 4.',
+  'restore-catalog.ts':
+    'Fourth copy, same shape as backup-catalog. The pair is the reason this check exists rather than a note in a report: CLAUDE.md already says that the third script working around a thing means the transport is wrong, not that the problem is hard.',
+}
+
+/**
+ * A confirmed defect that no shape above detects, kept honest by a witness.
+ *
+ * WHY THIS EXISTS. Ratchets only hold work that some check can already see. A
+ * one-off defect — `checkCombos` reading two columns where it needs five — is
+ * not a shape, so before this list its only home was a dated audit report, and a
+ * report cannot tell you whether its findings are still true. That is failure
+ * (b) from the other direction: a session reads a 2026-08-14 document and treats
+ * a fixed finding as open, or an open one as fixed, with nothing to check
+ * against.
+ *
+ * THE WITNESS IS THE WHOLE MECHANISM. Every entry names a regex that MATCHES
+ * WHILE THE DEFECT IS PRESENT. So:
+ *
+ *   · the witness still matches  → the finding is genuinely open, and the count
+ *     prints on every green run
+ *   · the witness stops matching → the code was fixed, and THIS CHECK FAILS
+ *     telling you to delete the entry
+ *
+ * That is the same contract as every list above, and it is what makes "is the
+ * backlog stale?" answerable: an entry cannot survive its own fix, so an empty
+ * list means empty and never means forgotten. Prose could not do that, which is
+ * why the audit reports could not be deleted while they were the only home.
+ *
+ * WHAT DOES NOT BELONG HERE, so this does not become a second backlog:
+ *
+ *   · a DEFERRED SCHEMA CHANGE → standing rule 11's list in database-log.md,
+ *     which already says a deferral recorded only at the blocked site is
+ *     invisible when the block lifts (trap 17)
+ *   · a DESIGN PROPOSAL or a feature → the Notion Build Backlog. Code cannot
+ *     compute whether the product still wants a thing, and a witness for
+ *     "we never built X" is just an absence that stays true forever
+ *
+ * A finding here is a defect in code that exists, that someone confirmed, and
+ * that a regex can see.
+ */
+export interface OpenFinding {
+  /** One line: what is wrong. */
+  what: string
+  /** Where it was confirmed, so the reasoning is recoverable after the report goes. */
+  source: string
+  /** Repo-relative file the witness reads. */
+  file: string
+  /** Matches while the defect is present. */
+  witness: RegExp
+  /** What closing it looks like. */
+  remedy: string
+}
+
+export const OPEN_FINDINGS: Record<string, OpenFinding> = {
+  'combo-fields-unchecked': {
+    what: 'verify-round checkCombos selects only the two plant ids, so a plant_combinations row with a null combination_type, strength or notes passes round close while the companion card has nothing to render.',
+    source:
+      'Pipeline audit 2026-08-14, section 5 (pass-through, confirmed 2026-08-16 against scripts/verify-round.ts:77 and :169).',
+    file: 'apps/web/scripts/verify-round.ts',
+    witness: /\.select\('plant_id_a, plant_id_b'\)/,
+    remedy:
+      'Add combination_type, strength and notes to ComboRow and its select, and FAIL on a null in any of them.',
+  },
+  'round11-names-unpaginated': {
+    what: "fix-round11-names' collision pre-check reads the catalog with a bare .select(), so it silently caps at 1000 rows (standing rule 5). It works at today's size and stops working the round the catalog passes 1000 — at which point the refusal it exists to raise stops firing and the pass writes the collision it was added to prevent.",
+    source:
+      'Pipeline audit 2026-08-14, section 5 (pass-through, confirmed 2026-08-16 against scripts/fix-round11-names.ts:189 — no .range, no fetchAllRows in the file).',
+    file: 'apps/web/scripts/fix-round11-names.ts',
+    witness: /\.select\('scientific_name, common_name'\)/,
+    remedy:
+      'Route it through fetchAllRows from lib/paginate.ts, ordered by id. Latent, not live: the catalog is under the cap today, which is why it is recorded rather than fixed in a docs pass.',
+  },
+}
+
 // ---------------------------------------------------------------------------
 // Plumbing
 // ---------------------------------------------------------------------------
@@ -882,6 +960,82 @@ const NON_STAMP_WRITES = new Set([
 ])
 
 // ---------------------------------------------------------------------------
+// Shape 13. Pagination hand-rolled instead of lib/paginate.ts
+//
+// Standing rule 5 exists because a bare read caps at 1000 rows in silence, and
+// `fetchAllRows` is the one home for the loop. THE SIGNAL IS NOT `.range(`:
+// nearly forty call sites use it, and almost all are the callback FetchAllRows
+// takes, which is the correct pattern. Flagging those would have been thirty-odd
+// false positives — a check that starts full of escape hatches teaches people to
+// add more. The discriminator is a file that pages a table and never mentions
+// `fetchAllRows` at all, which as of 2026-08-16 is exactly the two the audit
+// named and nothing else.
+// ---------------------------------------------------------------------------
+function checkPagination(): number {
+  const excused: string[] = []
+
+  for (const file of SOURCE_TS) {
+    const name = basename(file)
+    if (file.endsWith('lib/paginate.ts')) continue
+    const src = stripComments(read(file))
+    if (!/\.range\s*\(/.test(src)) continue
+    if (/\bfetchAllRows\b/.test(src)) continue
+
+    if (HAND_ROLLED_PAGINATION[name]) {
+      excused.push(name)
+      continue
+    }
+    fail({
+      shape: 'pagination hand-rolled (standing rule 5)',
+      subject: file,
+      detail:
+        'Pages a table with its own .range() arithmetic and never calls fetchAllRows, so the cap-dodging loop lib/paginate.ts exists to be has been written again.',
+      remedy: `Call fetchAllRows from lib/paginate.ts, ordered by id. If this read genuinely cannot use it, record it in HAND_ROLLED_PAGINATION in ${basename(__filename)} with the reason.`,
+    })
+  }
+
+  for (const key of Object.keys(HAND_ROLLED_PAGINATION)) {
+    if (!excused.includes(key)) {
+      staleHatches.push({ list: 'HAND_ROLLED_PAGINATION', key })
+    }
+  }
+  return excused.length
+}
+
+// ---------------------------------------------------------------------------
+// Shape 14. A recorded open finding must still be true
+//
+// The inverse of every check above: these fail when the defect is GONE. A
+// finding that outlives its fix is how a dated report turns into a list nobody
+// trusts, and an untrustworthy list is indistinguishable from an empty one.
+// ---------------------------------------------------------------------------
+function checkOpenFindings(): number {
+  let open = 0
+  for (const [id, finding] of Object.entries(OPEN_FINDINGS)) {
+    if (!ALL.includes(finding.file)) {
+      fail({
+        shape: 'open finding points at a file that is gone',
+        subject: id,
+        detail: `Its witness reads ${finding.file}, which is not tracked.`,
+        remedy: `If the file was archived or deleted, the finding went with it — delete the entry from OPEN_FINDINGS in ${basename(__filename)}.`,
+      })
+      continue
+    }
+    if (finding.witness.test(read(finding.file))) {
+      open++
+      continue
+    }
+    fail({
+      shape: 'open finding no longer reproduces',
+      subject: id,
+      detail: `Its witness (${finding.witness}) no longer matches ${finding.file}, so the defect it records has been fixed.`,
+      remedy: `Delete the entry from OPEN_FINDINGS in ${basename(__filename)}. The list only shrinks — an entry that outlives its fix is what makes a backlog stop being believed.`,
+    })
+  }
+  return open
+}
+
+// ---------------------------------------------------------------------------
 // Run
 // ---------------------------------------------------------------------------
 
@@ -892,6 +1046,8 @@ const traps = checkTrapsPinned()
 const pendingArchive = checkScriptReachability()
 checkNoForkedSynonymTables()
 const unwiredProvenance = checkWriteProvenance()
+const handRolledPaging = checkPagination()
+const openFindings = checkOpenFindings()
 // Shape 7, runbook / registry drift, is round-rehearsal.test.ts. It imports
 // RUNBOOK and the step registry, so it is a test, not a scan. Do not add it here.
 
@@ -939,6 +1095,8 @@ row(
   String(unwiredProvenance),
   'RUNS_WITHOUT_PROVENANCE'
 )
+row('hand-rolled paging', String(handRolledPaging), 'HAND_ROLLED_PAGINATION')
+row('open findings', String(openFindings), 'OPEN_FINDINGS')
 console.log(
   '  Runbook and registry drift is checked by round-rehearsal.test.ts, not here.\n'
 )

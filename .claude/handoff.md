@@ -4,17 +4,22 @@
 belong here — what is in flight, and what to do next with the reasoning for its
 order. Everything else is a command below or a pointer above.
 
-| Looking for                          | Read                     |
-| ------------------------------------ | ------------------------ |
-| Catalog, pipeline, migrations, traps | `docs/database-log.md`   |
-| Product and structural decisions     | `docs/architecture.md`   |
-| Tokens, colour, visual rules         | `DESIGN_SYSTEM.md`       |
-| What changed and when                | `git log`                |
-| What to build next                   | Notion **Build Backlog** |
+| Looking for                          | Read                       |
+| ------------------------------------ | -------------------------- |
+| What is left, mechanically           | `pnpm backlog`             |
+| Catalog, pipeline, migrations, traps | `docs/database-log.md`     |
+| Product and structural decisions     | `docs/architecture.md`     |
+| Tokens, colour, visual rules         | `DESIGN_SYSTEM.md`         |
+| What changed and when                | `git log`                  |
+| What to build next                   | Notion **Build Backlog**   |
+| A dated audit or review              | history, not current state |
 
-**Write the command, not the claim; the test is tense, not topic.** Moved
-2026-08-16 to `docs/database-log.md` standing rule 14, where the violations
-happen. It governs this file too — every line below is a record or a command.
+**Write the command, not the claim; the test is tense, not topic.**
+`docs/database-log.md` standing rule 14, which governs every doc in the repo and
+is enforced by `pnpm docs:claims`. It governs this file hardest: a dated heading
+makes it look like a record, and it is not one — it describes what is in flight
+right now, so every number in it is a state claim. Every line below is a record
+or a command.
 
 **If two sessions run at once, the last to finish rewrites this file.** Nothing is
 lost: the durable half of a session belongs in the docs above before it belongs

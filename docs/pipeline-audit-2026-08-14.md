@@ -24,6 +24,29 @@ Scope: 66 scripts, 28 recorded traps, 61 existing test invariants, worktree `san
 > For current state: `docs/database-log.md` (traps and sessions),
 > `docs/write-provenance.md` (what a writing script must do), and
 > `pnpm invariants:check`, which prints its own backlog rather than asserting one.
+>
+> **Where this document's findings live now, checked 2026-08-16.** Do not read a
+> finding below and act on it; check the ratchet first, because a ratchet entry
+> fails the day its defect is fixed and this page never will.
+>
+> | Finding                                   | Status                                                       |
+> | ----------------------------------------- | ------------------------------------------------------------ |
+> | F1 (a, b, c), F2, F3, F4, F7, F8          | Fixed. Verified against the code, not taken from a header.   |
+> | F5 `native_to_reviewed_at` writer         | Open → `STAMPS_WITHOUT_WRITERS`                              |
+> | F6 `apply-sun-widening` archive           | Open → `RUNS_WITHOUT_PROVENANCE`, as an archive candidate    |
+> | §3 traps-as-tests, rows 3-17              | Open → `TRAPS_NOT_PINNED`, with what a test would need       |
+> | §4 `backup-catalog` / `restore-catalog`   | Open → `HAND_ROLLED_PAGINATION` (shape 13, added 2026-08-16) |
+> | §5 `fix-round11-names` unpaginated select | Open → `OPEN_FINDINGS['round11-names-unpaginated']`          |
+> | §5 `verify-round` `checkCombos`           | Open → `OPEN_FINDINGS['combo-fields-unchecked']`             |
+> | §5 `round-status` stamp suffixes          | Fixed by `scripts/stamp-columns.ts`                          |
+> | §5 `backfill-legacy-editorial`            | Open → `SCRIPTS_PENDING_ARCHIVE`                             |
+> | §5 `hardiness_verified`                   | Parked with hardiness; classified in `stamp-columns.ts`      |
+> | §4 `cross-check-plants` sun audit         | **Not routed.** A design call, never verified. Still here.   |
+>
+> This page is kept rather than deleted because of that last row and its
+> equivalents in the companion review: the reports cannot go until every
+> still-open item has a home that fails when it stops being true, and a handful
+> are design questions no witness can express.
 
 ---
 

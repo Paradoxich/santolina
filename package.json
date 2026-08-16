@@ -13,7 +13,9 @@
     "tokens:check": "turbo run tokens:check",
     "runbook:check": "turbo run runbook:check",
     "docs:links": "turbo run docs:links",
+    "docs:claims": "turbo run docs:claims",
     "invariants:check": "turbo run invariants:check",
+    "backlog": "turbo run backlog",
     "tokens:usage": "turbo run tokens:usage"
   },
   "devDependencies": {
