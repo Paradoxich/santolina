@@ -61,10 +61,32 @@ async function main() {
     }
   }
 
+  // Printed after the per-account lines, not folded into them: these paths
+  // are the only remaining record of the objects, since the rows that held
+  // them are already gone.
+  for (const orphan of result.orphanedPhotos) {
+    console.error(
+      `\n  ORPHANED PHOTOS for ${orphan.id} — ${orphan.message}\n` +
+        orphan.paths.map((path) => `    ${path}`).join('\n')
+    )
+  }
+
   console.log(
     `\nDone. ${result.deleted}/${result.expired.length} account(s) deleted, ` +
       `${result.photosRemoved} photo(s) removed.`
   )
+
+  if (result.orphanedPhotos.length > 0) {
+    const objects = result.orphanedPhotos.reduce(
+      (total, orphan) => total + orphan.paths.length,
+      0
+    )
+    console.error(
+      `${objects} photo object(s) across ${result.orphanedPhotos.length} ` +
+        `account(s) were NOT removed and are now unreferenced. The paths ` +
+        `above are the only copy — the rows holding them are deleted.`
+    )
+  }
 }
 
 main().catch((error) => {

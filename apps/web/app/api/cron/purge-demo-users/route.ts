@@ -23,12 +23,25 @@ export async function GET(request: NextRequest) {
 
   const result = await purgeExpiredDemoUsers({ apply: true })
 
+  // Vercel Cron discards the response body, so for a scheduled run this log
+  // is the only surviving record of objects left in the private bucket after
+  // the rows pointing at them were cascaded away. One line per account,
+  // greppable, with the paths a cleanup would need.
+  for (const orphan of result.orphanedPhotos) {
+    console.error(
+      `[purge-demo-users] ORPHANED PHOTOS user=${orphan.id} ` +
+        `count=${orphan.paths.length} error=${orphan.message} ` +
+        `paths=${JSON.stringify(orphan.paths)}`
+    )
+  }
+
   return NextResponse.json({
     cutoff: result.cutoff,
     maxAgeDays: result.maxAgeDays,
     found: result.expired.length,
     deleted: result.deleted,
     photosRemoved: result.photosRemoved,
+    orphanedPhotos: result.orphanedPhotos,
     failures: result.failures,
   })
 }

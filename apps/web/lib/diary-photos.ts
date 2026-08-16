@@ -61,16 +61,59 @@ export async function signDiaryPhotoUrls(
 }
 
 /**
+ * The paths a removal will ask Storage to delete: normalized (pre-cutover
+ * rows store full URLs), deduplicated, order preserved. Split out from
+ * removeDiaryPhotos so the normalization has one home and can be asserted
+ * without a Storage client.
+ */
+export function planPhotoRemoval(storedLists: (string[] | null)[]): string[] {
+  return [
+    ...new Set(storedLists.flatMap((list) => list ?? []).map(toDiaryPhotoPath)),
+  ]
+}
+
+/** What a removal attempt is able to tell its caller afterwards. */
+export interface PhotoRemovalOutcome {
+  /** Normalized paths handed to Storage. */
+  requested: string[]
+  /**
+   * Paths whose delete request FAILED. The objects are presumed to still
+   * exist while the rows pointing at them may be about to disappear, so a
+   * caller that is deleting those rows has to record these or lose them.
+   */
+  orphaned: string[]
+  /** Storage's message, when the request failed. */
+  error?: string
+}
+
+/**
  * Best-effort removal of the given entries' photo objects. Callers invoke
- * this after the owning rows are already deleted, so a storage failure is
- * swallowed (an orphaned object in a private bucket costs storage, not
- * privacy) rather than failing a delete that already happened.
+ * this after (or immediately before) the owning rows are deleted, so a
+ * storage failure is never thrown — failing a delete that already happened
+ * helps nobody.
+ *
+ * It is returned instead. Swallowing was the defect: a caller that is about
+ * to destroy the only pointers to these objects needs to know which ones did
+ * not go, and `void` could not tell it.
+ *
+ * WHY THERE IS NO "removed" LIST. `remove()` resolves with `data:
+ * FileObject[]`, but its own documented example returns `[]` for a delete
+ * that succeeded (@supabase/storage-js 2.110.2, StorageFileApi.remove), so
+ * the array cannot be read as a per-path receipt. Request-level `error` is
+ * the only signal this API gives that is safe to act on, and an empty
+ * `orphaned` therefore means "Storage accepted the request", not "every
+ * object is verified gone". Verifying the stronger claim would take a
+ * per-path `info()` round trip, which no caller has needed.
  */
 export async function removeDiaryPhotos(
   db: SupabaseClient,
-  storedLists: string[][]
-): Promise<void> {
-  const paths = [...new Set(storedLists.flat().map(toDiaryPhotoPath))]
-  if (paths.length === 0) return
-  await db.storage.from(DIARY_PHOTOS_BUCKET).remove(paths)
+  storedLists: (string[] | null)[]
+): Promise<PhotoRemovalOutcome> {
+  const requested = planPhotoRemoval(storedLists)
+  if (requested.length === 0) return { requested, orphaned: [] }
+
+  const { error } = await db.storage.from(DIARY_PHOTOS_BUCKET).remove(requested)
+
+  if (error) return { requested, orphaned: requested, error: error.message }
+  return { requested, orphaned: [] }
 }
