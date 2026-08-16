@@ -398,9 +398,11 @@ from a result set. Read the miss list.
 - F-0 lockdown migration `20260815230948_lock_down_upsert_trefle_plant`
   written and replayed on the local stack: `proacl` is postgres+service_role
   only, `search_path` pinned, body proven working in a rolled-back insert,
-  anon probe now 401/42501 (was 25006, i.e. reached the INSERT). **Prod apply
-  blocked by the session's permission gate — handed to Ana as one command.**
-  Until it runs, prod still has the PUBLIC grant.
+  anon probe now 401/42501 (was 25006, i.e. reached the INSERT). The
+  session's permission gate blocked the prod apply from the agent; **Ana ran
+  the push herself 2026-08-16**, verified on prod: ACL postgres+service_role
+  only, search_path pinned, ledger row present, anon probe 401/42501,
+  `migrations:check` 38/38 OK.
 
 **Verified** — fingerprint query on prod (read-only), catalog-state diff,
 local psql ACL check + rolled-back function call.
