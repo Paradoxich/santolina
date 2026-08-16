@@ -305,6 +305,31 @@ It surfaced only because the `native_to` queue ranked a phrase against those tag
 > code stamped while their correction was pending are a data question; round
 > 11's two are recorded in its entry.
 
+> **Second site closed 2026-08-16, and NOT by copying the first.**
+> `cross-check-native-to` now decides through an exported `shouldStamp(row)`,
+> pinned in `cross-check-native-to.test.ts`. Three things made a blind copy
+> wrong, and the test asserts each: `no_data` IS stamped here (it means the
+> model found no continents on one side, which for a cultigen is the settled
+> answer, and a cultigen carrying a phrase is routed to `contradicts` first —
+> refusing it would leave every cultigen failing a FAIL-level step); there is no
+> `--apply` to key on, because this guard never writes the phrase, so the rule
+> is "withhold until settled" rather than "stamp when written"; and a row a
+> person read and kept is settled with no correction at all, which
+> `native_to_reviewed_at` records and a trigger clears on any phrase edit.
+>
+> **Consequence, intended:** a `gross`/`contradicts` row whose rewrite nobody
+> has written stays unstamped, stays in the `--new-only` queue, and FAILS round
+> close until it is settled. The run names those rows in its tail. This is also
+> why `apply-native-to-fixes.ts` needed no runbook step: the stamp is honest
+> without one.
+>
+> **What this leaves load-bearing:** nothing in TypeScript writes
+> `native_to_reviewed_at` — the 2026-07-30 review was backfilled by migration
+> `20260813110500`. So a NEW row a person reads and keeps has no way to record
+> that, and will fail round close until the phrase is rewritten instead. The
+> `--review-keep` writer (audit F5, filed as can-wait) is now the thing that
+> closes it.
+
 ---
 
 ### C. One fact with two homes, and only one of them got updated

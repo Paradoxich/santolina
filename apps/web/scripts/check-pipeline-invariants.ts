@@ -59,15 +59,13 @@ import { REPO_ROOT } from './token-source'
 /** Shape 2. Stamp columns that exist in the schema with no TypeScript writer. */
 export const STAMPS_WITHOUT_WRITERS: Record<string, string> = {
   native_to_reviewed_at:
-    'Written only by migration 20260813110500 backfilling 151 reviewed-and-kept rows from reference/native-to-review-2026-07-30.json. cross-check-native-to.ts reads it to keep those rows out of the gap queue, and apply-native-to-fixes.ts is in no runbook step (handoff step 4). Delete this entry when a runbook-reachable script writes the stamp.',
+    'Written only by migration 20260813110500, backfilling 151 reviewed-and-kept rows from reference/native-to-review-2026-07-30.json. NOW LOAD-BEARING: since 2026-08-16 shouldStamp() in cross-check-native-to.ts treats this column as the record that a person read a phrase and kept it, which is the only way a gross/contradicts row settles without a rewrite. With no writer, a NEW kept row cannot be recorded and will fail round close until the phrase is rewritten instead. The --review-keep writer (audit F5) is what deletes this entry.',
 }
 
 /** Shape 3. `stampChecked` callers with no finding-aware selector (trap 24). */
 export const REPORT_ONLY_STAMPS: Record<string, string> = {
   'cross-check-plants.ts':
     'Stamps botanical_checked_at per row as the pass walks the catalog, so the stamp records that the check ran, not that a disagreement was acted on. Report-only by design today: it never edits catalog data. Fix is the rowsToStamp shape from cross-check-native-region.ts.',
-  'cross-check-native-to.ts':
-    'Same shape, plus it stamps on a no_data verdict. Deliberately left for handoff step 4 rather than blind-copying the native-region fix: its trigger and verdict set differ.',
 }
 
 /**
@@ -355,12 +353,19 @@ function checkStampSelectors(): void {
   for (const file of callers) {
     const name = basename(file)
     const src = stripComments(read(file))
-    // The selector seam: an exported function whose parameters mention the
-    // findings. Exported because a trap you cannot call is a trap you cannot pin.
+    // The selector seam: an exported decision function, because a trap you
+    // cannot call is a trap you cannot pin. TWO shapes are accepted, and the
+    // difference is not cosmetic — it follows from whether the guard writes its
+    // own corrections. cross-check-native-region applies them in the same run,
+    // so its decision is a batch selector keyed on the run flags
+    // (`rowsToStamp(findings, apply, allowEmpty)`). cross-check-native-to never
+    // writes the phrase, so there is no flag to key on and its decision is a
+    // per-row predicate (`shouldStamp(row)`). Requiring one name would have
+    // forced the second guard into a shape its verdict set does not have.
     const hasSelector =
-      /export function \w*(?:rowsToStamp|ToStamp|stampTargets)\w*\s*\(/.test(
+      /export function \w*(?:rowsToStamp|ToStamp|stampTargets|shouldStamp)\w*\s*\(/.test(
         src
-      ) && /findings/.test(src)
+      ) && /\b(?:findings|verdict)\b/.test(src)
 
     if (hasSelector) continue
     if (REPORT_ONLY_STAMPS[name]) {
