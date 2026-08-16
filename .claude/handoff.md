@@ -108,8 +108,9 @@ runs during a round, so none of them blocks one.
    31 of 34 versions already match byte for byte. The graveyard pass moves the
    three in `SCRIPTS_PENDING_ARCHIVE` to `archive/` with README rows, and
    `repair-combinations.ts` needs a `database-log` line in the same change or it
-   files an empty record. And 21 of 28 traps are unpinned, with the reasons per
-   trap; trap 1 is the cheapest and highest-consequence.
+   files an empty record. And 21 of 30 traps are unpinned, with the reasons per
+   trap; trap 1 is the cheapest and highest-consequence. (The denominator moved
+   with traps 28 and 29 — both pinned on arrival, so the numerator did not.)
 
 **Waiting on Ana:** the two climbing hydrangeas, the `Cenolophium` region
 correction, the 5 photo holds, the rounds 1-6 editorial pass, the `modern`
