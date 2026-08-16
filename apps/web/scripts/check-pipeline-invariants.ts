@@ -140,9 +140,6 @@ export const SCRIPTS_PENDING_ARCHIVE: Record<string, string> = {
  */
 export const RUNS_WITHOUT_PROVENANCE: Record<string, string> = {
   // --- round steps. These are what round 12 waits on. ---
-  'curate-combinations.ts': 'Round step 3. Writes plant_combinations rows.',
-  'curate-seasonal-care.ts': 'Round step 7. Writes seasonal_care.',
-  'recover-image-categories.ts': 'Round step 6. Writes image_candidates.',
   'pick-plant-images.ts':
     'Round steps 7a and 7a2 — two modes, different write-sets, and VISION_MODEL rather than CURATION_MODEL. Wire the modes as separate runs.',
   'curate-editorial.ts':
@@ -703,8 +700,14 @@ function checkWriteProvenance(): number {
       }
       for (const column of declared) {
         // is_curated is a real declared write that is not a stamp; allow the
-        // known non-stamp value columns the pipeline writes deliberately.
-        if (stamps.has(column) || NON_STAMP_WRITES.has(column)) continue
+        // known non-stamp value columns the pipeline writes deliberately, and
+        // the tables a write-set may name instead of a column.
+        if (
+          stamps.has(column) ||
+          NON_STAMP_WRITES.has(column) ||
+          NON_COLUMN_WRITE_SETS.has(column)
+        )
+          continue
         fail({
           shape: 'declared write-set names an unknown column',
           subject: `${file} → ${column}`,
@@ -783,6 +786,19 @@ function checkWriteProvenance(): number {
 
 /** Scripts allowed to own their own terminal paths instead of using withRunRecord. */
 export const RAW_BEGIN_RUN_ALLOWED: Record<string, string> = {}
+
+/**
+ * Write-set entries that name a TABLE rather than a column.
+ *
+ * Kept apart from NON_STAMP_WRITES rather than folded into it, for the reason
+ * run-provenance.ts gives at the `covers` field: a write-set member is "what was
+ * mutated", and that is not always a column. curate-combinations inserts rows
+ * into plant_combinations — there is no column to name, and no per-column
+ * witness either, so it is witnessed by that table's own created_at. A checker
+ * that accepted a table name out of the column list would be re-conflating the
+ * two things the evidence split exists to keep separate.
+ */
+const NON_COLUMN_WRITE_SETS = new Set(['plant_combinations'])
 
 /** Declared write-set entries that are real writes but not stamp columns. */
 const NON_STAMP_WRITES = new Set([
