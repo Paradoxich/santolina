@@ -71,7 +71,7 @@ const SEASONAL_KEYS: Array<keyof SeasonalRhythm> = [
 // Claude response type
 // ---------------------------------------------------------------------------
 
-interface CurationResponse {
+export interface CurationResponse {
   plant_type?: PlantType | null
   plant_type_label?: string | null
   description?: string | null
@@ -278,7 +278,10 @@ async function getCurationFromClaude(
 // Patch builder — only write fields that were missing; enforce annual rule
 // ---------------------------------------------------------------------------
 
-function buildPatch(plant: DbPlant, response: CurationResponse): PlantPatch {
+export function buildPatch(
+  plant: DbPlant,
+  response: CurationResponse
+): PlantPatch {
   const patch: PlantPatch = { ai_drafted_at: new Date().toISOString() }
 
   // Determine effective plant_type (response may provide it if it was missing)
@@ -536,7 +539,11 @@ Review queue SQL:
 `)
 }
 
-main().catch((err) => {
-  console.error('Unexpected error:', err)
-  process.exit(1)
-})
+// Guarded so the test file can import buildPatch without running the pass —
+// same pattern as pick-plant-images.ts.
+if (require.main === module) {
+  main().catch((err) => {
+    console.error('Unexpected error:', err)
+    process.exit(1)
+  })
+}

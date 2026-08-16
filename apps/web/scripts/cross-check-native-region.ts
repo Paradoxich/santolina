@@ -47,13 +47,15 @@
  * region invalidates the prose's last check and the prose guard must see the
  * row again. See applyCorrections().
  *
- * REPORT-ONLY RUNS DO WRITE ONE THING: plants.native_region_checked_at, on
- * every row that reached a decided verdict. That is operational metadata, not
- * catalog content, so the flags-only rule (docs/curation.md#botanical-cross-check) still holds — the same
- * precedent migration 20260716120000 set for the other guard stamps, and
- * check-round-scope already demotes *_checked_at writes to a WARN. Without it
- * there is no per-row record of what Kew's checklist has actually seen, which
- * is how this pass shipped in the first place.
+ * REPORT-ONLY RUNS DO WRITE ONE THING: plants.native_region_checked_at — but
+ * only on rows the run SETTLED (match/reviewed). Until 2026-08-14 they also
+ * stamped disagreements, so round close certified corrections that were still
+ * pending and later --new-only sweeps skipped them (trap 24; fired in rounds
+ * 8 and 11). rowsToStamp() is now the single decision. Stamping stays
+ * operational metadata, not catalog content, so the flags-only rule
+ * (docs/curation.md#botanical-cross-check) still holds — the same precedent
+ * migration 20260716120000 set for the other guard stamps, and
+ * check-round-scope already demotes *_checked_at writes to a WARN.
  */
 
 import { mkdirSync, writeFileSync, readFileSync, existsSync } from 'node:fs'
@@ -133,7 +135,7 @@ interface PlantRow {
   native_region: string[] | null
 }
 
-interface Finding {
+export interface Finding {
   id: string
   common_name: string
   scientific_name: string
@@ -369,10 +371,11 @@ function writeReport(findings: Finding[]): void {
   writeFileSync(MD_OUT, lines.join('\n'))
 }
 
+/** Returns the ids it SKIPPED as stale, so the stamp pass can exclude them. */
 async function applyCorrections(
   findings: Finding[],
   allowEmpty: boolean
-): Promise<void> {
+): Promise<Set<string>> {
   const db = getSupabaseAdmin()
   // Emptying a row is a different act from editing one: it removes the plant
   // from the native filter entirely, and it is the shape a bad fetch would take
@@ -391,11 +394,11 @@ async function applyCorrections(
     )
   if (!targets.length) {
     console.log('\nNothing to apply.')
-    return
+    return new Set()
   }
   console.log(`\nApplying ${targets.length} correction(s)...`)
   let applied = 0
-  let skipped = 0
+  const staleSkipped = new Set<string>()
   for (const f of targets) {
     // Guarded: re-read and confirm the row still holds the value the report was
     // built from. A row edited since then is stale and is left alone.
@@ -409,7 +412,7 @@ async function applyCorrections(
     const current = uniqSorted((data?.native_region as string[]) ?? [])
     if (current.join('|') !== f.stored.join('|')) {
       console.log(`  ⚠ ${f.common_name} — changed since the report, skipped`)
-      skipped++
+      staleSkipped.add(f.id)
       continue
     }
     // Nulling native_checked_at is the cascade rule reaching across fields: a
@@ -432,27 +435,57 @@ async function applyCorrections(
     console.log(`   -> ${f.wcvp_native.join(', ') || '(empty)'}`)
     applied++
   }
-  console.log(`\n${applied} applied, ${skipped} skipped as stale.`)
+  console.log(`\n${applied} applied, ${staleSkipped.size} skipped as stale.`)
+  return staleSkipped
 }
 
 /**
- * Record which rows this run actually validated, in
- * plants.native_region_checked_at (migration 20260728193815).
+ * Which rows this run may honestly stamp as checked. The stamp is what
+ * round-status.ts accepts as FAIL-level proof the step ran AND settled the
+ * row, so it must never outrun the write (trap 24: a report-only run stamped
+ * its disagreements, round close certified them, and the pending corrections
+ * were invisible to every later --new-only sweep — it fired in round 8 and
+ * again in round 11).
  *
- * Stamps every row that reached a decided verdict, not only the rows it
- * corrected — same discipline as cross-check-plants.ts. A stamp that only
- * marked corrections could never narrow a later --new-only sweep, because the
- * agreeing rows would look forever unchecked.
+ *   · 'match' / 'reviewed' — always: nothing was pending.
+ *   · 'disagrees' — only when --apply actually wrote the correction.
+ *   · 'no-native-range' — only when --apply --allow-empty wrote the clear
+ *     (applyCorrections withholds it otherwise).
+ *   · 'no-data' — never: GBIF returned nothing, so we learned nothing. A
+ *     failed fetch must not leave a permanent record of a check that did not
+ *     happen.
  *
- * Deliberately NOT stamped:
- *   · verdict 'no-data' — GBIF returned nothing, so we learned nothing. This
- *     is the same distinction the header refuses to blur: a failed fetch must
- *     not leave a permanent record of a check that did not happen.
- *   · rows skipped for a missing scientific_name — they never reached GBIF.
+ * Rows applyCorrections skipped as stale are subtracted by the caller — their
+ * correction was withheld, so their stamp is too.
  */
-async function stampChecked(findings: Finding[]): Promise<number> {
+export function rowsToStamp(
+  findings: Pick<Finding, 'id' | 'verdict'>[],
+  apply: boolean,
+  allowEmpty: boolean
+): string[] {
+  return findings
+    .filter((f) => {
+      switch (f.verdict) {
+        case 'no-data':
+          return false
+        case 'disagrees':
+          return apply
+        case 'no-native-range':
+          return apply && allowEmpty
+        default:
+          return true
+      }
+    })
+    .map((f) => f.id)
+}
+
+/**
+ * Record which rows this run actually validated AND settled, in
+ * plants.native_region_checked_at (migration 20260728193815). The id list
+ * comes from rowsToStamp above.
+ */
+async function stampChecked(ids: string[]): Promise<number> {
   const db = getSupabaseAdmin()
-  const ids = findings.filter((f) => f.verdict !== 'no-data').map((f) => f.id)
   if (!ids.length) return 0
 
   const now = new Date().toISOString()
@@ -526,25 +559,34 @@ async function main() {
   writeReport(findings)
   console.log(`\nReport → ${MD_OUT}`)
 
-  if (opts.apply) await applyCorrections(findings, opts.allowEmpty)
+  const staleSkipped = opts.apply
+    ? await applyCorrections(findings, opts.allowEmpty)
+    : new Set<string>()
 
-  const stamped = await stampChecked(findings)
-  const noData = counts['no-data'] ?? 0
+  const stampIds = rowsToStamp(findings, opts.apply, opts.allowEmpty).filter(
+    (id) => !staleSkipped.has(id)
+  )
+  const stamped = await stampChecked(stampIds)
+  const unstamped = findings.length - stamped
   console.log(
     `\nStamped native_region_checked_at on ${stamped} row(s)` +
-      (noData ? `; ${noData} left NULL (GBIF returned no data).` : '.')
+      (unstamped ? `; ${unstamped} left NULL (unsettled or no data).` : '.')
   )
 
   const pending = findings.filter((f) => f.verdict === 'disagrees').length
   if (!opts.apply && pending)
     console.log(
-      `\n⚠ ${pending} row(s) are stamped as checked but their corrections are ` +
-        `still pending.\n  Re-run with --apply, or a later --new-only sweep ` +
-        `will skip them and the disagreement is lost.`
+      `\n⚠ ${pending} disagreement(s) left UNSTAMPED — a later --new-only ` +
+        `sweep will re-find them.\n  Re-run with --apply to write the ` +
+        `corrections and settle them.`
     )
 }
 
-main().catch((err) => {
-  console.error(err)
-  process.exit(1)
-})
+// Guarded so the test file can import rowsToStamp without running the sweep
+// — same pattern as pick-plant-images.ts.
+if (require.main === module) {
+  main().catch((err) => {
+    console.error(err)
+    process.exit(1)
+  })
+}

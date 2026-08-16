@@ -204,10 +204,19 @@ interface StepDef {
  */
 export const STEP_DEFS: StepDef[] = [
   {
+    // Since 2026-07-29 the drafting call also answers the style and greenery
+    // questions, so the evidence covers all three stamps — the obligation
+    // moved into this step, and its proof moves with it. Checking only
+    // ai_drafted_at is how trap 26 (docs/database-log.md) hid for three
+    // weeks: the style leg silently no-oped while the rounds closed green,
+    // because the step whose stamp would have caught it (curate-styles) is a
+    // perRound: false repair pass that round close never looks at.
     step: 'curate-plants',
-    evidence: 'ai_drafted_at NOT NULL',
+    evidence:
+      'ai_drafted_at, style_checked_at, greenery_checked_at all NOT NULL',
     level: 'FAIL',
-    ran: (p) => Boolean(p.ai_drafted_at),
+    ran: (p) =>
+      Boolean(p.ai_drafted_at && p.style_checked_at && p.greenery_checked_at),
   },
   {
     step: 'curate-combinations',
@@ -280,6 +289,8 @@ export const STEP_DEFS: StepDef[] = [
     // this over a fresh batch re-asks a question already answered correctly.
     // It remains the repair pass for rows drafted under the loose
     // pre-July-28 prompt — the ones that put cottage on 89.6% of the catalog.
+    // Round close still owes this stamp: since 2026-08-14 (trap 26) it is
+    // part of curate-plants' evidence above.
     step: 'curate-styles',
     evidence: 'style_checked_at NOT NULL',
     level: 'FAIL',
@@ -296,7 +307,8 @@ export const STEP_DEFS: StepDef[] = [
     // way into the Explore Green colour bucket (lib/plant-colors.ts — plain
     // green foliage deliberately never maps) and defaults to false, so an
     // unjudged plant is silently missing from a live filter. curate-plants
-    // now carries that, and the stamp is what proves it.
+    // now carries that, and the stamp is what proves it — and since
+    // 2026-08-14 round close checks it, as part of curate-plants' evidence.
     step: 'curate-greenery',
     evidence: 'greenery_checked_at NOT NULL',
     level: 'FAIL',

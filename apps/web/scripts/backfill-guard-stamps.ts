@@ -2,18 +2,13 @@
  * Backfill guard stamps from evidence — stamping ONLY rows something actually
  * proves were checked, and stamping them with the date the check really ran.
  *
- * TWO KINDS OF EVIDENCE, in two sections below.
+ * ONE KIND OF EVIDENCE: REPORT-DERIVED (`botanical_checked_at`,
+ * `native_checked_at`) — an archived cross-check report is the witness.
+ * A second, state-derived section (`style_checked_at`) lived here July 30 to
+ * August 14 2026 and is deleted; see the tombstone above main().
  *
- *   1. REPORT-DERIVED (`botanical_checked_at`, `native_checked_at`) — an
- *      archived cross-check report is the witness. Original purpose of this
- *      script, July 28 2026.
- *   2. STATE-DERIVED (`style_checked_at`) — no report exists or ever did,
- *      because the pass that made the judgment was never the pass that owned
- *      the column. Added July 30 2026; see backfillStyleStamps().
- *
- * The discipline is the same in both: name the witness, make the write assert
- * what it expects to find, and leave a row NULL rather than stamp it on an
- * assumption.
+ * The discipline: name the witness, make the write assert what it expects to
+ * find, and leave a row NULL rather than stamp it on an assumption.
  *
  * WHY THIS IS NOT "STAMP EVERYTHING". The stamp columns arrived in migration
  * 20260716120000, on July 16. Every cross-check before that date physically
@@ -62,7 +57,6 @@ import { join } from 'node:path'
 
 import { fetchAllRows } from '../lib/paginate'
 import { getSupabaseAdmin } from '../lib/supabase-admin'
-import { readRoundManifest } from './round-manifest'
 
 const REPORTS_DIR = join(process.cwd(), 'reports')
 
@@ -118,10 +112,9 @@ interface PlantRow {
   created_at: string
   botanical_checked_at: string | null
   native_checked_at: string | null
-  // Read for the state-derived section below.
-  style_tags: string[] | null
+  // Read for the still-null summary only. No section here writes it: the one
+  // that did (backfillStyleStamps) is deleted, see the note above main().
   style_checked_at: string | null
-  ai_drafted_at: string | null
 }
 
 /**
@@ -172,147 +165,15 @@ function selectRows(
   }
 }
 
-// ---------------------------------------------------------------------------
-// State-derived evidence
-// ---------------------------------------------------------------------------
-
-/** The rounds whose plants curate-plants style-tagged without a stamp. */
-const STYLE_BACKFILL_ROUNDS = ['9', '10']
-
-/**
- * Backfill `style_checked_at` for rows whose style judgment was made by
- * curate-plants rather than by curate-styles.
- *
- * WHY THERE IS NO REPORT TO POINT AT. `curate-styles` owns this column in
- * round-status's STEP_DEFS, and on 2026-07-29 it correctly left the round
- * cadence — it is a repair pass for older data, and `curate-plants` already
- * does the job for a new seed from the same definitions in lib/style-tags.ts.
- * What nobody moved was the stamp. So rounds 9 and 10 wrote 100 rows of
- * perfectly good `style_tags` that read as never judged, and
- * docs/catalog-state.md reported style coverage sliding 50 rows a round.
- * curate-plants now stamps as it writes; this is the one-time repair behind it.
- *
- * ⚠ THE PARAGRAPH ABOVE IS FALSE, AND THIS SCRIPT ALREADY ACTED ON IT (found
- * 2026-08-14, round 11). curate-plants never wrote a style tag at all: its
- * guard read `style_tags == null` against a NOT NULL DEFAULT '{}' column, so
- * the branch was unreachable. Rounds 9 and 10 did not write "100 rows of
- * perfectly good style_tags" — all 100 are EMPTY, and this backfill stamped
- * every one of them as style-judged. They are now invisible to
- * `curate-styles --new-only`, which selects on `style_checked_at IS NULL`.
- *
- * The witness described below is the flaw worth reading twice: the manifest
- * proves the row belongs to the round, which was never in doubt. Nothing here
- * checked that `style_tags` was non-empty — the one fact the stamp asserts. A
- * proof of the wrong proposition is not a weaker proof; it is not a proof.
- *
- * DO NOT re-run the style section to "repair" rounds 9/10 — the stamp is the
- * damage. They need a real `curate-styles` pass scoped by `--round`, not
- * `--new-only`, or the stamp must be cleared first.
- *
- * THE WITNESS IS THE ROUND MANIFEST, which makes this per-row proof rather than
- * an inference. A row is stamped only if all three hold:
- *
- *   · its id is in round 9's or round 10's manifest — the explicit record of
- *     what that seed inserted, so "curate-plants tagged this row" is not being
- *     guessed from a date
- *   · `style_tags` is non-null, i.e. there is a judgment to record ([] counts:
- *     style-neutral is a real answer)
- *   · `ai_drafted_at` is non-null, because that IS the date the judgment was
- *     made and there is nothing else honest to stamp
- *
- * Each row is stamped with its OWN `ai_drafted_at`, not with today. Same rule
- * as the report-derived section: the stamp records when the check happened, not
- * when somebody noticed it had not been recorded.
- *
- * AN UNSTAMPED ROW OUTSIDE BOTH MANIFESTS IS LEFT NULL AND REPORTED. That is
- * the case this cannot vouch for, and stamping it would permanently hide a
- * genuinely un-judged plant from the step that exists to find it.
+/*
+ * backfillStyleStamps lived here until 2026-08-14. It filtered on
+ * `style_tags === null` against a NOT NULL DEFAULT '{}' column — an
+ * unreachable predicate — so its only live condition was ai_drafted_at, and
+ * it stamped 100 empty rounds-9/10 rows as style-judged (trap 26,
+ * docs/database-log.md). The stamp was the damage; deleting the function is
+ * the fix. The repair for those rows is a real pass:
+ * `curate-styles --round 9` then `--round 10`, without `--new-only`.
  */
-async function backfillStyleStamps(
-  rows: PlantRow[],
-  apply: boolean
-): Promise<number> {
-  console.log('style_checked_at  [state-derived]')
-  console.log(
-    `   witness: rounds ${STYLE_BACKFILL_ROUNDS.join(' + ')} manifests; ` +
-      'stamped with each row’s own ai_drafted_at'
-  )
-
-  const claimed = new Set<string>()
-  for (const label of STYLE_BACKFILL_ROUNDS) {
-    const manifest = readRoundManifest(label)
-    // A missing manifest means the witness is gone, so nothing here can be
-    // vouched for. Throw rather than silently stamp fewer rows — the whole
-    // point of this pass is that it only writes what a manifest claims.
-    if (!manifest)
-      throw new Error(
-        `No manifest for round ${label} (apps/web/rounds/${label}/manifest.json). ` +
-          'That file is the only per-row evidence this backfill has; without it ' +
-          'nothing should be stamped.'
-      )
-    for (const id of manifest.seeded_ids) claimed.add(id)
-  }
-
-  const unstamped = rows.filter((r) => r.style_checked_at === null)
-  const inScope = unstamped.filter((r) => claimed.has(r.id))
-  const orphans = unstamped.filter((r) => !claimed.has(r.id))
-
-  // Both are real states, and neither is stampable. A row with no style_tags
-  // was never judged; a row with no ai_drafted_at gives us no date to claim.
-  const noJudgment = inScope.filter((r) => r.style_tags === null)
-  const noDate = inScope.filter(
-    (r) => r.style_tags !== null && r.ai_drafted_at === null
-  )
-  const writable = inScope.filter(
-    (r) => r.style_tags !== null && r.ai_drafted_at !== null
-  )
-
-  console.log(
-    `   ${unstamped.length} unstamped row(s): ${inScope.length} in scope, ` +
-      `${orphans.length} outside both manifests`
-  )
-  if (noJudgment.length)
-    console.log(
-      `   ${noJudgment.length} skipped — style_tags is null (never judged)`
-    )
-  if (noDate.length)
-    console.log(
-      `   ${noDate.length} skipped — no ai_drafted_at, so no honest date to stamp`
-    )
-  if (orphans.length) {
-    console.log(
-      `   ✗ LEFT NULL, not vouched for by any manifest — a future ` +
-        `curate-styles run should pick these up:`
-    )
-    for (const r of orphans.slice(0, 20))
-      console.log(
-        `       ${r.common_name} (seeded ${r.created_at.slice(0, 10)})`
-      )
-    if (orphans.length > 20)
-      console.log(`       … and ${orphans.length - 20} more`)
-  }
-
-  if (!writable.length || !apply) {
-    console.log('')
-    return writable.length
-  }
-
-  // Per-row, because each stamp is that row's own ai_drafted_at. 100 small
-  // updates, which is cheaper than the alternative of one shared timestamp
-  // that would be a fact about none of them.
-  const db = getSupabaseAdmin()
-  for (const r of writable) {
-    const { error } = await db
-      .from('plants')
-      .update({ style_checked_at: r.ai_drafted_at })
-      .eq('id', r.id)
-      .is('style_checked_at', null)
-    if (error)
-      throw new Error(`Write failed for ${r.common_name}: ${error.message}`)
-  }
-  console.log(`   ✓ stamped ${writable.length} row(s)\n`)
-  return writable.length
-}
 
 async function main() {
   const apply = process.argv.includes('--apply')
@@ -323,7 +184,7 @@ async function main() {
       .from('plants')
       .select(
         'id, common_name, created_at, botanical_checked_at, native_checked_at, ' +
-          'style_tags, style_checked_at, ai_drafted_at'
+          'style_checked_at'
       )
       .order('id')
       .range(from, to)
@@ -382,8 +243,6 @@ async function main() {
     }
     console.log(`   ✓ stamped ${unstamped.length} row(s)\n`)
   }
-
-  totalWould += await backfillStyleStamps(rows, apply)
 
   console.log(
     apply

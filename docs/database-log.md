@@ -103,7 +103,14 @@ Trefle does not reliably separate where a plant is _from_ from where it now _gro
 
 Two WCVP quirks: it occasionally **omits the establishment marker**, so one unmarked Level 3 row invents a whole Level 2 region (`Galium verum` read as native to Australia off one Tasmania row); and a reviewed decision outranks it (`Rosmarinus officinalis` has Western Asia deliberately cut), which is why `MANUAL_OVERRIDES` lives in `lib/native-region-overrides.ts` and is read by generator and checker alike.
 
-**Status:** the catalog has been through WCVP (2026-07-30). Remaining unstamped rows are the no-data set, not a backlog — `select count(*) from plants where native_region_checked_at is null`.
+**Status:** the catalog has been through WCVP (2026-07-30). ~~Remaining unstamped rows are the no-data set, not a backlog~~ — `select count(*) from plants where native_region_checked_at is null`.
+
+> **Corrected 2026-08-14 (pipeline audit):** the struck claim was false twice
+> over by the time it was caught. Round 11 stamped two disagreements it never
+> applied (trap 24 fired again), so stamped rows were hiding a backlog; and
+> since the F2 fix a report-only run deliberately leaves `disagrees` /
+> `no-native-range` rows unstamped, so an unstamped row can now BE the backlog
+> — that is the design, not a gap.
 
 **Calibration worth keeping:** a 60-plant sample scored 56 clean / 1 wrong and was read as ~2%; the real rate over 475 rows was **11%**. The sample was drawn from the wrong population — unstamped-only means the oldest, least-curated end. **Sample the population you are about to act on, not the table.**
 
@@ -255,9 +262,16 @@ learned this once and added `greenery_checked_at` for the `false` default, and
 `style_tags` needed the same and did not get it. And before deleting a step
 because another one covers it, run the count that proves the cover.
 
-**Still open:** rounds 9 and 10's 100 rows. Repairing them reaches into frozen
-rounds, so it needs `--all --why` and its own entry, and `--new-only` will not
-select them — the stamp is the damage.
+**Still open:** rounds 9 and 10's 100 rows. ~~Repairing them reaches into
+frozen rounds, so it needs `--all --why` and its own entry~~, and `--new-only`
+will not select them — the stamp is the damage.
+
+> **Corrected 2026-08-14 (pipeline audit):** the struck half was wrong. Those
+> rows ARE rounds 9 and 10's own rows, so `curate-styles --round 9` then
+> `--round 10` (two runs — scope.ts permits one scope flag per run) reaches
+> them with a plain round scope, no `--all --why` needed. The repair still
+> gets its own entry when it runs. A wrong remediation in a trap entry is
+> itself a trap: this one sat one session away from being executed as written.
 
 #### 24. A guard stamp records that the check RAN, not that its finding was acted on — ADDED 2026-07-30
 
@@ -266,6 +280,20 @@ A report-only `cross-check-native-region` run stamps `native_region_checked_at` 
 It surfaced only because the `native_to` queue ranked a phrase against those tags and the phrase turned out to be **right**. The script prints `⚠ N row(s) are stamped as checked but their corrections are still pending` and that warning is the whole defence — it is printed once, at the end of a long run, and a stamped row looks identical to a clean one afterwards.
 
 **Read the tail of a report-only run before you close the terminal, and re-run with `--apply` in the same session.** The general shape: when a stamp means "seen", never let it be read as "settled". Verifying is the cheap half — `--ids <uuid>` re-checks one row against the cache for free.
+
+> **Fixed in code 2026-08-14 (pipeline audit F2, `4d9dadd`):** the paragraphs
+> above describe behavior that ended that day. A report-only run no longer
+> stamps disagreements at all — `rowsToStamp()` in
+> `cross-check-native-region.ts` withholds the stamp from any row whose
+> correction was not written, pinned in `cross-check-native-region.test.ts`;
+> the quoted `⚠ N row(s) are stamped as checked…` warning no longer exists.
+> The rule itself ("seen" is not "settled") stays load-bearing:
+> `cross-check-native-to` still stamps every judged verdict including
+> `no_data`, and its apply path (`apply-native-to-fixes.ts`) is in no runbook
+> step — follow-up under "Unverified pass-through findings" in
+> `docs/pipeline-audit-2026-08-14.md`. Rows the old
+> code stamped while their correction was pending are a data question; round
+> 11's two are recorded in its entry.
 
 ---
 
@@ -353,6 +381,59 @@ from a result set. Read the miss list.
 ## Sessions
 
 <!-- Newest first. Append with: scripts/log-db-session.ts --round <label> -->
+
+### 2026-08-15 — The trap-26 repair, and the upsert lockdown (not a round)
+
+**Branch** `session/2026-08-14-pipeline-audit`, same session past midnight.
+
+**Database**
+
+- `curate-styles --round 9` then `--round 10` (no `--new-only`): the 100
+  rows the deleted backfill had stamped as style-judged-while-empty were
+  re-judged blind — 86 tagged, 14 genuinely style-neutral. The fingerprint
+  `style_checked_at = ai_drafted_at AND style_tags = '{}'` went **100 → 0**;
+  never-judged is 0. Trap 26's "still open" rows are closed. Backups first:
+  catalog `2026-08-15T21-15-12` (shared checkout), db `2026-08-15T21-10-42`
+  (local + private bucket). `docs/catalog-state.md` regenerated: style-neutral
+  48, never judged 0 — the first honest style row since round 9.
+- F-0 lockdown migration `20260815230948_lock_down_upsert_trefle_plant`
+  written and replayed on the local stack: `proacl` is postgres+service_role
+  only, `search_path` pinned, body proven working in a rolled-back insert,
+  anon probe now 401/42501 (was 25006, i.e. reached the INSERT). The
+  session's permission gate blocked the prod apply from the agent; **Ana ran
+  the push herself 2026-08-16**, verified on prod: ACL postgres+service_role
+  only, search_path pinned, ledger row present, anon probe 401/42501,
+  `migrations:check` 38/38 OK.
+
+**Verified** — fingerprint query on prod (read-only), catalog-state diff,
+local psql ACL check + rolled-back function call.
+
+### 2026-08-14 — The pipeline audit, and the witness fixes (not a round)
+
+**Branch** `session/2026-08-14-pipeline-audit`. Findings, refuted claims and
+the traps-as-tests ranking: `docs/pipeline-audit-2026-08-14.md`. Fixes were
+re-verified by fresh skeptics; 5 of 6 resolved, F1c gated on the repair below.
+
+**Database:** nothing written. Code-only.
+
+**Changed** (one commit each, details in the messages)
+
+- Round close proves style+greenery stamps (`ead1b5c`); the
+  `style_tags === null` dead-predicate family is gone, incl. the
+  `backfillStyleStamps` writer of the 100 false stamps (`35029ff`);
+  `cross-check-native-region` stamps only rows it settled (`4d9dadd`);
+  `regenerate-native-region --apply` refuses a plan its scope did not
+  generate (`464c248`, follow-up `6dd1f65`).
+- **Traps 3, 24 and 26 are now tests** (`eeb5678` + the F2/F3 test files) —
+  the first traps in this file to become executable.
+- Struck and annotated in place above: trap 26's `--all --why` remediation,
+  section A's "no-data set" status, trap 24's present-tense stamping.
+
+**Not done, in order:** (1) the 100-stamp repair — `curate-styles --round 9`
+then `--round 10`, then regenerate `docs/catalog-state.md`, then merge; that
+order because the doc no longer matches the generator (merge first fails
+`catalog:state:check`) and a pre-repair regen prints the fabricated cohort as
+verdicts. (2) The report's follow-up cluster: F4–F9 and traps-as-tests rows 4+.
 
 ### 2026-08-14 — Round 11
 

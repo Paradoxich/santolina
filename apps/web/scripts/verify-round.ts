@@ -11,8 +11,10 @@
  *     · no duplicate common_name (two species sharing a display name are
  *       indistinguishable in search — the round-8 trap)
  *     · required curation fields non-null on drafted rows
- *     · style_tags judged — NULL fails, `[]` passes (a plant may legitimately
- *       read as no particular style; only "never judged" is a gap)
+ *     · style_tags judged — proven by the stamp, not the value: the
+ *       curate-plants step's round-status evidence requires style_checked_at
+ *       (a `style_tags === null` check lived here until 2026-08-14 and could
+ *       never fire — the column is NOT NULL DEFAULT '{}', trap 26)
  *     · sun_thrives non-empty and disjoint from sun_tolerates
  *     · every plant has ≥1 combination; no self/duplicate/reversed-duplicate
  *       pairs; nobody over the 5-companion cap
@@ -54,7 +56,6 @@ interface PlantRow {
   foliage_color: string | null
   plant_type: string | null
   plant_type_label: string | null
-  style_tags: string[] | null
   space_types: string[] | null
   description: string | null
   care_level: string | null
@@ -83,8 +84,11 @@ interface Finding {
 // placement. bloom_months/bloom_color stay out — legitimately null on
 // foliage/evergreen plants.
 //
-// style_tags is NOT in this list, because for it empty and missing are
-// different answers — see checkStyleTags below.
+// style_tags is NOT in this list, and gets no value check here at all: `[]`
+// is a real verdict (33 plants are deliberately style-neutral) and NULL is
+// impossible (NOT NULL DEFAULT '{}'), so the only honest witness is the
+// style_checked_at stamp — enforced at round close by the curate-plants
+// step's evidence in round-status.ts.
 const REQUIRED_DRAFTED_FIELDS: Array<keyof PlantRow> = [
   'plant_type',
   'plant_type_label',
@@ -123,7 +127,7 @@ async function fetchAllPlants(): Promise<PlantRow[]> {
   const db = getSupabaseAdmin()
   const columns =
     'id, common_name, scientific_name, ai_drafted_at, native_region, ' +
-    'bloom_color, foliage_color, plant_type, plant_type_label, style_tags, space_types, ' +
+    'bloom_color, foliage_color, plant_type, plant_type_label, space_types, ' +
     'description, care_level, seasonal_rhythm, seasonal_care, sun_thrives, ' +
     'sun_tolerates, hardiness_rating, image_url, image_url_curated'
   return fetchAllRows<PlantRow>((from, to) =>
@@ -162,18 +166,6 @@ function checkPlants(plants: PlantRow[]): Finding[] {
             detail: `${p.common_name} — drafted but ${field} is empty`,
           })
         }
-      }
-      // style_tags: `[]` is a real judgment ("this plant reads as no particular
-      // style"), NULL means nobody has judged it. The July 28 re-tag pass made
-      // that distinction load-bearing — 33 plants are deliberately neutral —
-      // and curate-plants already treats only NULL as missing. Checking this
-      // with isEmpty() would fail all 33 for being correct.
-      if (p.style_tags === null) {
-        findings.push({
-          level: 'FAIL',
-          check: 'required field: style_tags',
-          detail: `${p.common_name} — drafted but style_tags was never judged (run curate-styles)`,
-        })
       }
     }
 
