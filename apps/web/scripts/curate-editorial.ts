@@ -87,6 +87,7 @@ import {
   type CriterionVerdict,
   type Finding,
 } from './editorial-report'
+import { withRunRecord, type Witness } from './run-provenance'
 
 // ---------------------------------------------------------------------------
 // Config
@@ -232,9 +233,79 @@ const JSON_SYSTEM =
   'You are a careful editor for a gardening product. Respond with ONLY valid ' +
   'JSON, no markdown, no code fences, no preamble, no explanation.'
 
-/** Pass 1 — read the row, judge copy and tags, propose a rewrite if needed. */
-async function reviewPlant(p: PlantRow) {
-  const prompt = `Judge this plant entry against the editorial bar. Be strict: this decides whether the row is marked as reviewed.
+// Two passes, two budgets. The review pass has to fit a full rewrite; the blind
+// judge only returns a verdict and a sentence. Both are constant across rows,
+// so both are recipe — and `decoding` carries the pair rather than a single
+// number, because this invocation genuinely has two.
+const REVIEW_MAX_TOKENS = 900
+const JUDGE_MAX_TOKENS = 400
+
+/** Rendered for the recipe hash only. Never sent. */
+const RECIPE_PROBE_ROW = {
+  id: 'recipe-probe',
+  common_name: 'probe',
+  scientific_name: 'Probe probe',
+  plant_type_label: 'perennial',
+  description: 'probe description',
+  style_tags: ['cottage'],
+  space_types: ['border'],
+  bloom_months: [6],
+  bloom_color: ['white'],
+  foliage_color: 'green',
+  is_greenery: false,
+  height_min_cm: 40,
+  height_max_cm: 100,
+} as PlantRow
+
+/**
+ * A CONFIRMING WITNESS MUST COVER EVERY ROW THE RUN COUNTS, and here only one
+ * column does.
+ *
+ * `finish()` compares each witness's count against the run's TOTAL row count and
+ * calls the claim contradicted when the evidence is smaller. That is the right
+ * rule, and it means a column written on only SOME of the counted rows cannot be
+ * a confirming witness — it would undercount by construction and report a
+ * correct run as contradicted.
+ *
+ * This pass is the case that makes the distinction concrete. Every row it
+ * reaches a verdict on gets `editorial_checked_at`, approved or not; that is the
+ * whole point of the stamp (migration 20260728220852), and it is the one column
+ * whose count equals the claim. The three criterion stamps are written only
+ * where that criterion PASSED — a row held on its image gets two of the three,
+ * which is exactly what makes the next run re-judge only what is still open. And
+ * `description` is rewritten only when the copy was weak and the blind judge
+ * approved the replacement, which is a minority of rows by design.
+ *
+ * So: one confirming witness, and bounding witnesses for the rest. The run is
+ * substantiated by the stamp that means "this row was judged", which is the
+ * claim the row count is actually making.
+ */
+const EDITORIAL_WITNESSES: Witness[] = [
+  {
+    kind: 'stamp',
+    covers: 'editorial_checked_at',
+    column: 'editorial_checked_at',
+  },
+  ...(
+    [
+      'editorial_image_at',
+      'editorial_description_at',
+      'editorial_tags_at',
+      'description',
+      'is_curated',
+    ] as const
+  ).map(
+    (covers): Witness => ({
+      kind: 'row-touched',
+      covers,
+      table: 'plants',
+      column: 'updated_at',
+    })
+  ),
+]
+
+function reviewPrompt(p: PlantRow): string {
+  return `Judge this plant entry against the editorial bar. Be strict: this decides whether the row is marked as reviewed.
 
 PLANT DATA
 ${JSON.stringify(
@@ -281,8 +352,15 @@ Answer three things:
 
 Respond with ONLY valid JSON:
 {"description_verdict": "ok"|"weak", "description_reason": string, "rewrite": string|null, "tags_verdict": "ok"|"flag", "tags_reason": string}`
+}
 
-  const parsed = await callClaude(JSON_SYSTEM, prompt, 900)
+/** Pass 1 — read the row, judge copy and tags, propose a rewrite if needed. */
+async function reviewPlant(p: PlantRow) {
+  const parsed = await callClaude(
+    JSON_SYSTEM,
+    reviewPrompt(p),
+    REVIEW_MAX_TOKENS
+  )
 
   const dv = parsed.description_verdict
   const tv = parsed.tags_verdict
@@ -310,8 +388,8 @@ Respond with ONLY valid JSON:
  * NOT pass 1's reasoning. If it knew the text was a rewrite it would be
  * grading its own homework, and the approval would mean nothing.
  */
-async function judgeRewrite(p: PlantRow, candidate: string) {
-  const prompt = `Here is a plant description from a gardening product. Judge whether it is fit to publish.
+function judgePrompt(p: PlantRow, candidate: string): string {
+  return `Here is a plant description from a gardening product. Judge whether it is fit to publish.
 
 PLANT
 ${JSON.stringify(
@@ -343,8 +421,19 @@ report that costs a good description its approval. Quote the exact words you
 object to, so the reason can be checked against the text.
 
 Respond with ONLY valid JSON: {"verdict": "ok"|"weak", "reason": string}`
+}
 
-  const parsed = await callClaude(JSON_SYSTEM, prompt, 400)
+/**
+ * Pass 2 — blind judgment of a candidate rewrite. See judgePrompt: it sees the
+ * plant's identity and the candidate text, never the old description and never
+ * pass 1's reasoning.
+ */
+async function judgeRewrite(p: PlantRow, candidate: string) {
+  const parsed = await callClaude(
+    JSON_SYSTEM,
+    judgePrompt(p, candidate),
+    JUDGE_MAX_TOKENS
+  )
   const v = parsed.verdict
   if (v !== 'ok' && v !== 'weak')
     throw new Error(`blind verdict was ${JSON.stringify(v)}`)
@@ -441,178 +530,239 @@ async function main() {
   const findings: Finding[] = []
   const failed: string[] = []
 
-  for (const [i, p] of selected.entries()) {
-    const tag = `[${i + 1}/${selected.length}] ${p.common_name}`
-    try {
-      // ONLY judge what is actually open. Each criterion carries its own
-      // stamp (migration 20260729112046), so a row whose photo changed has
-      // exactly one open criterion — and that one is decided mechanically,
-      // for free, from the confidence the vision pass already persisted.
-      //
-      // This is the whole point of splitting the verdict. Under the single
-      // flag, removing one style tag from Rowan re-opened the description and
-      // the pass rewrote copy nobody had asked it to touch.
-      const needImage = !p.editorial_image_at
-      const needDescription = !p.editorial_description_at
-      const needTags = !p.editorial_tags_at
+  await withRunRecord(
+    {
+      step: 'curate-editorial',
+      writeSet: [
+        'editorial_checked_at',
+        'editorial_image_at',
+        'editorial_description_at',
+        'editorial_tags_at',
+        'description',
+        'is_curated',
+      ],
+      evidence: EDITORIAL_WITNESSES,
+      scope: `${describeScope(SCOPE, ids)}${NEW_ONLY ? ' (--new-only)' : ''}${
+        DRY_RUN ? ' (--dry-run)' : ''
+      }`,
+      recipe: {
+        model: CURATION_MODEL,
+        // Both calls, and the system prompt they share. The blind judge is not
+        // an implementation detail of the reviewer: it decides whether a rewrite
+        // is written at all, so a change to it changes what lands in the column.
+        template: [
+          JSON_SYSTEM,
+          reviewPrompt(RECIPE_PROBE_ROW),
+          judgePrompt(RECIPE_PROBE_ROW, 'probe candidate description'),
+        ],
+        // The bar itself, stated once in lib/editorial-standard.ts and shared
+        // with nothing else. Re-tune any of it and every verdict in the cohort
+        // was made against a different standard.
+        ingredients: {
+          image_confidence_required: IMAGE_CONFIDENCE_REQUIRED,
+          banned_punctuation: BANNED_PUNCTUATION,
+          description_chars: [DESCRIPTION_MIN_CHARS, DESCRIPTION_MAX_CHARS],
+        },
+        // Two budgets in one invocation, so `decoding` carries the pair.
+        decoding: {
+          review_max_tokens: REVIEW_MAX_TOKENS,
+          judge_max_tokens: JUDGE_MAX_TOKENS,
+        },
+      },
+    },
+    async (run) => {
+      for (const [i, p] of selected.entries()) {
+        const tag = `[${i + 1}/${selected.length}] ${p.common_name}`
+        try {
+          // ONLY judge what is actually open. Each criterion carries its own
+          // stamp (migration 20260729112046), so a row whose photo changed has
+          // exactly one open criterion — and that one is decided mechanically,
+          // for free, from the confidence the vision pass already persisted.
+          //
+          // This is the whole point of splitting the verdict. Under the single
+          // flag, removing one style tag from Rowan re-opened the description and
+          // the pass rewrote copy nobody had asked it to touch.
+          const needImage = !p.editorial_image_at
+          const needDescription = !p.editorial_description_at
+          const needTags = !p.editorial_tags_at
 
-      if (!needImage && !needDescription && !needTags) {
-        console.log(`  ${tag}: already clear on all three criteria, skipping`)
-        // Record the clearance rather than `continue`-ing. A skip emits no
-        // finding, so mergeFindings has nothing to overwrite the row's
-        // PREVIOUS finding with and carries the old verdict forward intact —
-        // which means a row held in one run and cleared in the next still
-        // reads as held in the report, quoting text the database no longer
-        // has. Round 10 hit exactly that: Cyclamen persicum was cleared by an
-        // --ids run, and the next --round run reported it held against its
-        // pre-rewrite description, over a database that said is_curated.
-        //
-        // This is the mirror of the bug mergeFindings exists to fix. Merging
-        // stops a partial re-run DESTROYING findings; the same merge preserves
-        // a stale one unless a cleared row states its clearance out loud.
-        const cleared = { verdict: 'pass', reason: CLEARED_PREVIOUSLY } as const
-        findings.push({
-          id: p.id,
-          common_name: p.common_name,
-          scientific_name: p.scientific_name,
-          image: cleared,
-          description: { ...cleared, rewritten: false },
-          tags: cleared,
-          approved: true,
-          blockers: [],
-        })
-        continue
-      }
-
-      const image = needImage
-        ? judgeImage(p)
-        : ({ verdict: 'pass', reason: CLEARED_PREVIOUSLY } as const)
-
-      // The model is called only when a criterion it decides is open. A row
-      // needing just the image costs nothing at all.
-      const review =
-        needDescription || needTags
-          ? await reviewPlant(p)
-          : {
-              descriptionVerdict: 'ok' as const,
-              descriptionReason: CLEARED_PREVIOUSLY,
-              tagsVerdict: 'ok' as const,
-              tagsReason: CLEARED_PREVIOUSLY,
-              rewrite: null,
-            }
-
-      const description: Finding['description'] = {
-        verdict: 'pass',
-        reason: review.descriptionReason,
-        rewritten: false,
-      }
-
-      if (!needDescription) {
-        // Cleared previously and unchanged since — the trigger would have
-        // re-opened it otherwise.
-      } else if (review.descriptionVerdict === 'ok') {
-        // Even an approved description has to clear the mechanical rules.
-        const fault = mechanicalCopyFault(p.description ?? '')
-        if (fault) {
-          description.verdict = 'fail'
-          description.reason = fault
-        }
-      } else if (!review.rewrite) {
-        description.verdict = 'fail'
-        description.reason = `${review.descriptionReason} (no rewrite offered)`
-      } else {
-        const fault = mechanicalCopyFault(review.rewrite)
-        if (fault) {
-          description.verdict = 'fail'
-          description.reason = `rewrite rejected: ${fault}`
-        } else {
-          const blind = await judgeRewrite(p, review.rewrite)
-          description.blind_verdict = blind.verdict
-          description.blind_reason = blind.reason
-          if (blind.verdict === 'ok') {
-            description.verdict = 'pass'
-            description.rewritten = true
-            description.before = p.description
-            description.after = review.rewrite
-          } else {
-            // Keep the original text and hold the row. A rewrite the blind
-            // judge would not publish is not an improvement we can assert.
+          if (!needImage && !needDescription && !needTags) {
+            console.log(
+              `  ${tag}: already clear on all three criteria, skipping`
+            )
+            // Record the clearance rather than `continue`-ing. A skip emits no
+            // finding, so mergeFindings has nothing to overwrite the row's
+            // PREVIOUS finding with and carries the old verdict forward intact —
+            // which means a row held in one run and cleared in the next still
+            // reads as held in the report, quoting text the database no longer
+            // has. Round 10 hit exactly that: Cyclamen persicum was cleared by an
+            // --ids run, and the next --round run reported it held against its
+            // pre-rewrite description, over a database that said is_curated.
             //
-            // The rejected candidate is still recorded. Without it the report
-            // asserts "the rewrite was bad" with nothing to check it against,
-            // and a blind judge inventing a fault (it claimed em dashes that
-            // the mechanical check had already proven absent) reads exactly
-            // like a real rejection.
-            description.verdict = 'fail'
-            description.reason = `weak, and the rewrite did not clear the blind judgment: ${blind.reason}`
-            description.before = p.description
-            description.after = review.rewrite
+            // This is the mirror of the bug mergeFindings exists to fix. Merging
+            // stops a partial re-run DESTROYING findings; the same merge preserves
+            // a stale one unless a cleared row states its clearance out loud.
+            const cleared = {
+              verdict: 'pass',
+              reason: CLEARED_PREVIOUSLY,
+            } as const
+            findings.push({
+              id: p.id,
+              common_name: p.common_name,
+              scientific_name: p.scientific_name,
+              image: cleared,
+              description: { ...cleared, rewritten: false },
+              tags: cleared,
+              approved: true,
+              blockers: [],
+            })
+            continue
           }
+
+          const image = needImage
+            ? judgeImage(p)
+            : ({ verdict: 'pass', reason: CLEARED_PREVIOUSLY } as const)
+
+          // The model is called only when a criterion it decides is open. A row
+          // needing just the image costs nothing at all.
+          const review =
+            needDescription || needTags
+              ? await reviewPlant(p)
+              : {
+                  descriptionVerdict: 'ok' as const,
+                  descriptionReason: CLEARED_PREVIOUSLY,
+                  tagsVerdict: 'ok' as const,
+                  tagsReason: CLEARED_PREVIOUSLY,
+                  rewrite: null,
+                }
+
+          const description: Finding['description'] = {
+            verdict: 'pass',
+            reason: review.descriptionReason,
+            rewritten: false,
+          }
+
+          if (!needDescription) {
+            // Cleared previously and unchanged since — the trigger would have
+            // re-opened it otherwise.
+          } else if (review.descriptionVerdict === 'ok') {
+            // Even an approved description has to clear the mechanical rules.
+            const fault = mechanicalCopyFault(p.description ?? '')
+            if (fault) {
+              description.verdict = 'fail'
+              description.reason = fault
+            }
+          } else if (!review.rewrite) {
+            description.verdict = 'fail'
+            description.reason = `${review.descriptionReason} (no rewrite offered)`
+          } else {
+            const fault = mechanicalCopyFault(review.rewrite)
+            if (fault) {
+              description.verdict = 'fail'
+              description.reason = `rewrite rejected: ${fault}`
+            } else {
+              const blind = await judgeRewrite(p, review.rewrite)
+              description.blind_verdict = blind.verdict
+              description.blind_reason = blind.reason
+              if (blind.verdict === 'ok') {
+                description.verdict = 'pass'
+                description.rewritten = true
+                description.before = p.description
+                description.after = review.rewrite
+              } else {
+                // Keep the original text and hold the row. A rewrite the blind
+                // judge would not publish is not an improvement we can assert.
+                //
+                // The rejected candidate is still recorded. Without it the report
+                // asserts "the rewrite was bad" with nothing to check it against,
+                // and a blind judge inventing a fault (it claimed em dashes that
+                // the mechanical check had already proven absent) reads exactly
+                // like a real rejection.
+                description.verdict = 'fail'
+                description.reason = `weak, and the rewrite did not clear the blind judgment: ${blind.reason}`
+                description.before = p.description
+                description.after = review.rewrite
+              }
+            }
+          }
+
+          const tags = {
+            verdict: (review.tagsVerdict === 'ok'
+              ? 'pass'
+              : 'fail') as CriterionVerdict,
+            reason: needTags ? review.tagsReason : CLEARED_PREVIOUSLY,
+          }
+
+          const blockers: string[] = []
+          if (image.verdict !== 'pass') blockers.push(`image: ${image.reason}`)
+          if (description.verdict !== 'pass')
+            blockers.push(`description: ${description.reason}`)
+          if (tags.verdict !== 'pass') blockers.push(`tags: ${tags.reason}`)
+
+          const approved = blockers.length === 0
+
+          findings.push({
+            id: p.id,
+            common_name: p.common_name,
+            scientific_name: p.scientific_name,
+            image,
+            description,
+            tags,
+            approved,
+            blockers,
+          })
+
+          console.log(
+            `  ${tag}: ${approved ? 'APPROVE' : 'hold'}${
+              description.rewritten ? ' (description rewritten)' : ''
+            }${approved ? '' : ` — ${blockers.join('; ')}`}`
+          )
+
+          if (!DRY_RUN) {
+            const now = new Date().toISOString()
+            const patch: Record<string, unknown> = {
+              editorial_checked_at: now,
+            }
+            if (description.rewritten) patch.description = description.after
+
+            // Each criterion that PASSED gets its stamp. A criterion that failed
+            // is left NULL, which is what makes the next run re-judge exactly it
+            // and nothing else.
+            //
+            // These are written in the same statement as the description rewrite
+            // on purpose: the trigger skips a criterion whose stamp this UPDATE
+            // changes, so the rewrite cannot invalidate the approval it is part of.
+            if (image.verdict === 'pass') patch.editorial_image_at = now
+            if (description.verdict === 'pass')
+              patch.editorial_description_at = now
+            if (tags.verdict === 'pass') patch.editorial_tags_at = now
+            if (approved) patch.is_curated = true
+
+            const { error } = await db
+              .from('plants')
+              .update(patch)
+              .eq('id', p.id)
+            if (error) throw new Error(`DB write failed: ${error.message}`)
+            // Every row that reached a verdict is one written row, held or
+            // approved — the same population editorial_checked_at covers.
+            run.wrote(p.id)
+          }
+        } catch (err) {
+          // Fail loud, never fall back to a default verdict: a fabricated
+          // "approve" is exactly the failure mode is_curated exists to prevent.
+          failed.push(`${p.common_name} — ${(err as Error).message}`)
+          console.error(`  ${tag}: FAILED — ${(err as Error).message}`)
         }
+        if (i < selected.length - 1) await sleep(INTER_PLANT_DELAY_MS)
       }
 
-      const tags = {
-        verdict: (review.tagsVerdict === 'ok'
-          ? 'pass'
-          : 'fail') as CriterionVerdict,
-        reason: needTags ? review.tagsReason : CLEARED_PREVIOUSLY,
+      // Every row errored is a failure even though nothing threw. A row HELD is
+      // not a failure — holding is the pass working, and the tail says so.
+      if (failed.length && !findings.length) {
+        run.markFailed(`all ${failed.length} row(s) failed`)
       }
-
-      const blockers: string[] = []
-      if (image.verdict !== 'pass') blockers.push(`image: ${image.reason}`)
-      if (description.verdict !== 'pass')
-        blockers.push(`description: ${description.reason}`)
-      if (tags.verdict !== 'pass') blockers.push(`tags: ${tags.reason}`)
-
-      const approved = blockers.length === 0
-
-      findings.push({
-        id: p.id,
-        common_name: p.common_name,
-        scientific_name: p.scientific_name,
-        image,
-        description,
-        tags,
-        approved,
-        blockers,
-      })
-
-      console.log(
-        `  ${tag}: ${approved ? 'APPROVE' : 'hold'}${
-          description.rewritten ? ' (description rewritten)' : ''
-        }${approved ? '' : ` — ${blockers.join('; ')}`}`
-      )
-
-      if (!DRY_RUN) {
-        const now = new Date().toISOString()
-        const patch: Record<string, unknown> = {
-          editorial_checked_at: now,
-        }
-        if (description.rewritten) patch.description = description.after
-
-        // Each criterion that PASSED gets its stamp. A criterion that failed
-        // is left NULL, which is what makes the next run re-judge exactly it
-        // and nothing else.
-        //
-        // These are written in the same statement as the description rewrite
-        // on purpose: the trigger skips a criterion whose stamp this UPDATE
-        // changes, so the rewrite cannot invalidate the approval it is part of.
-        if (image.verdict === 'pass') patch.editorial_image_at = now
-        if (description.verdict === 'pass') patch.editorial_description_at = now
-        if (tags.verdict === 'pass') patch.editorial_tags_at = now
-        if (approved) patch.is_curated = true
-
-        const { error } = await db.from('plants').update(patch).eq('id', p.id)
-        if (error) throw new Error(`DB write failed: ${error.message}`)
-      }
-    } catch (err) {
-      // Fail loud, never fall back to a default verdict: a fabricated
-      // "approve" is exactly the failure mode is_curated exists to prevent.
-      failed.push(`${p.common_name} — ${(err as Error).message}`)
-      console.error(`  ${tag}: FAILED — ${(err as Error).message}`)
     }
-    if (i < selected.length - 1) await sleep(INTER_PLANT_DELAY_MS)
-  }
+  )
 
   const label = SCOPE.kind === 'round' ? SCOPE.label : SCOPE.kind
   if (findings.length) writeReport(findings, label)

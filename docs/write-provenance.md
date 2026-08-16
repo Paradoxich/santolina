@@ -58,14 +58,46 @@ always a column: `curate-combinations` mutates a table.
 A witness carries a strength, and `verification.substantiation` reports what the
 evidence actually supports rather than a yes/no:
 
-| Strength         | Witness       | Can confirm? | Can contradict? |
-| ---------------- | ------------- | ------------ | --------------- |
-| **confirming**   | `stamp`       | yes          | yes             |
-| **bounding**     | `row-touched` | no           | no              |
-| **unobservable** | `none`        | no           | no              |
+| Strength          | Witness                          | Can confirm? | Can contradict? |
+| ----------------- | -------------------------------- | ------------ | --------------- |
+| **confirming**    | `stamp`, exclusivity ESTABLISHED | yes          | yes             |
+| **corroborating** | `stamp`, no exclusivity          | no           | yes             |
+| **bounding**      | `row-touched`                    | no           | no              |
+| **unobservable**  | `none`                           | no           | no              |
 
-`substantiation` is then one of `confirmed`, `bounded`, `unverified` or
-`contradicted`.
+`substantiation` is then one of `confirmed`, `corroborated`, `bounded`,
+`unverified` or `contradicted`.
+
+### A timestamp window is coincidence, not authorship
+
+**Nothing in this pipeline can produce `confirmed` today, and that is correct.**
+A stamp witness asks `stamp ∈ [started_at, finished_at]`. Two invocations of one
+step running from two worktrees against the one production database overlap: A
+stamps rows 1-20, B stamps 21-40, and both queries see 40. Under the old rule —
+`count >= rowCount` — both recorded `confirmed` for work neither did.
+
+The run id fixed **identity**. It cannot fix **attribution**: it is not written
+next to the mutation, and per-row provenance state is a non-goal, so nothing
+observable ties a run to an individual stamp.
+
+So exclusivity is a **prerequisite that must be established**, never assumed.
+`Exclusivity` has one variant today, `{ kind: 'none', reason }`, which means a
+caller cannot assert its way to `confirmed` — only a mechanism can earn it back.
+
+**Why a per-step lock is not that mechanism yet.** Five of the seven witnessed
+columns have more than one writing step (`native_checked_at` three,
+`image_verified_at` four), so exclusivity has to be per-COLUMN across every
+writer. And six of those writers are among the passes still without run
+provenance, so a lock today would not bind them — it would fail to lock while
+licensing `confirmed`, which is worse than no lock. The order is: wire the
+remaining writers, then lock per column, then `confirming` becomes reachable.
+
+**Corroborating keeps contradiction, and the asymmetry is deliberate.** A
+concurrent clearer can drive the count below the claim, so the direction is not
+airtight either. The costs differ: a false `contradicted` is a loud flag that
+sends a person to look, a false `confirmed` is a silent lie in a record someone
+will later cite as evidence. Do not "fix" the inconsistency by restoring
+confirmation.
 
 **A bounding witness can do neither, and that is not pedantry.** `updated_at`
 establishes that rows were touched in the interval; it cannot attribute those
@@ -90,6 +122,77 @@ witness.
 is meaningless is not.** A write-set member with no witness throws at `beginRun`,
 not at finalisation, because it is a programming error and must not present itself
 later as an unlucky read.
+
+### When a stamp may witness itself, which is narrower than it looks
+
+Both rules below came out of wiring the nine round steps on 2026-08-16, not out
+of designing the contract. Each turns a correct run into a `contradicted` record
+— the loud failure rather than the silent one, but a log nobody trusts is a log
+nobody reads.
+
+**A cleared stamp cannot witness itself.** `finish()` counts rows whose stamp
+lands inside the run's window. A run that NULLs the column leaves rows matching
+no window, so a correct clear of 20 rows observes 0 against a claim of 20. Three
+of the nine round steps clear a stamp as a cross-field cascade — a corrected
+region invalidates the prose describing it, a new hero invalidates the editorial
+verdict resting on it — so this is a road already travelled three times. And no
+query run afterwards can tell "this run nulled it" from "it was never set", which
+is the same lossiness [the stamp has by design](#why-the-stamp-is-current-certification-and-not-an-audit-trail).
+The witness is `row-touched`, or `none` with a reason.
+
+`invariants:check` shape 12 holds this: a script that sets a declared write-set
+member to null and passes no `evidence` fails. It asks for an explicit evidence
+array rather than a particular witness, because checking for a witness naming the
+column would tie the scan to how the literal is written — two callers build
+theirs through a helper — and a detector that depends on the shape of a literal
+claims coverage it does not have. Once evidence is explicit, `beginRun` already
+throws for an unwitnessed member.
+
+**A confirming witness must cover every row the run counts.** Verification
+compares each witness against the run's whole `row_count`, so a column written on
+only SOME counted rows undercounts by construction. `curate-editorial` is the
+worked example: every judged row gets `editorial_checked_at`, but each of the
+three criterion stamps is written only where that criterion passed, and the
+description only where the copy was weak AND a blind second call approved the
+replacement. One confirming witness; bounding witnesses for the rest.
+
+This one is **not** scannable — whether a column is written on every row is a
+question about control flow, the same limit shape 10 is worded around. It is a
+rule for the author, which is why it is written here rather than enforced.
+
+## What a recipe is when there is no model in it
+
+Three of the nine steps call no model: two derive from WCVP, one from Trefle's
+response shape. Their recipe is a DESCRIPTION of the rule rather than content
+identity, and the difference matters. An AI recipe hash is computed from the
+assembled prompt, so it cannot disagree with what was sent; a description can
+drift from the code it describes if one is edited and the other is not.
+
+Not worth closing by hashing the function source. The record carries
+`started_at`, the code is in git, so "which version of the rule ran" is
+answerable from the date. What the hash still buys is the part the date cannot
+answer: the committed tables that change an answer without the rule changing —
+`MANUAL_EXCLUSIONS`, `MANUAL_OVERRIDES`, the region vocabularies. Those go in
+`ingredients`, and a cohort judged before an entry was added is genuinely not the
+same cohort as one judged after.
+
+## A generate-then-apply pair is one recipe across two invocations
+
+Three scripts split into a pass that decides and a pass that writes. The halves
+sit on opposite sides of the provenance boundary: generate calls the model and
+writes no catalog value, apply writes every value and calls no model. A record on
+apply alone answers "what produced this value?" with "a file".
+
+So generate stamps its derivation recipe into the plan it writes, and apply reads
+it back and records it — model included, because the model that produced the
+value is the honest answer to what a run of apply wrote. The plan's date and
+derivation hash also go in the run's `scope`, which is the readable field: a hash
+folded into `recipe_hash` cannot be read back out, and an operator asking "which
+plan was this?" needs an answer they can see.
+
+`--apply` is a **separate step name**, not a flag on the same one. It has a
+different write-set, a different direction (it clears what the generate pass
+stamped), and no model of its own.
 
 ## Rounds and runs are different axes, on purpose
 
@@ -189,9 +292,14 @@ own id: it may have had a different recipe, and one id spanning both halves woul
 be a lie.
 
 **Honest limit:** a process that dies without running its handler — `SIGKILL`,
-power loss — leaves stamps and no record. Those are detectable afterwards as
-stamps falling inside no recorded window, which is the log-versus-evidence check
-run in the other direction.
+power loss — leaves stamps and no record. An earlier version of this sentence
+said those are detectable afterwards as stamps falling inside no recorded
+window. **That was too strong, for the same reason confirmation was**: windows
+overlap, so an orphaned stamp can land inside another run's recorded window and
+be indistinguishable from that run's own work. The check is reliable only for
+orphans landing in no window at all, which is a subset of them — and the same
+per-column exclusivity that would earn `confirming` back is what would make it
+complete.
 
 ## Verification happens at finalisation, because the evidence decays
 
@@ -223,10 +331,12 @@ not evidence against the claim. A claim _larger_ than its evidence is.
 every green run. Shapes 8 to 11:
 
 - a script that mutates the catalog opens a run;
-- every write-set member names a real column and carries an evidence witness;
+- every write-set member names a real column (or a recorded table) and carries an
+  evidence witness;
 - a script that opens a run uses `withRunRecord` unless it is recorded as owning
   its own terminal paths;
-- a row count is never hand-authored.
+- a row count is never hand-authored;
+- a clearing write does not take the default witness (shape 12).
 
 **The third one is worded carefully on purpose.** A source scan can see that a
 file contains a finalisation call. It cannot prove that finalisation happens on

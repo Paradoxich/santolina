@@ -39,10 +39,30 @@ import {
   describeScope,
   requireReasonForAll,
 } from './scope'
+import { withRunRecord } from './run-provenance'
 
 // Trefle asks for a gentle crawl; matches seed-round7.ts.
 const INTER_SPECIES_DELAY_MS = 1600
 const MAX_ATTEMPTS = 3
+
+/**
+ * The recipe for a pass with no model in it, and the honest limit on it.
+ *
+ * For an AI pass the recipe hash is content identity: it is computed FROM the
+ * assembled prompt, so it cannot disagree with what was sent. Here there is no
+ * prompt — the derivation is `extractCandidates` plus Trefle's response shape —
+ * so the template below is a DESCRIPTION, and a description can drift from the
+ * code it describes. Editing the extraction rule without editing this string
+ * would leave two cohorts sharing one hash.
+ *
+ * That is a smaller gap than it looks, and it is not worth closing by hashing
+ * the function source: the record carries `started_at`, the code is in git, so
+ * "which version of the rule ran" is answerable from the date. What the hash
+ * still buys is the part the date cannot answer — the knobs below, which change
+ * the output without changing the code.
+ */
+const EXTRACTION_RULE =
+  'trefle species.images category map → flat ImageCandidate[]; first-seen url wins across categories; empty category key labelled "unknown"'
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 const pad = (n: number, w = 3) => String(n).padStart(w, ' ')
@@ -128,81 +148,118 @@ async function main() {
   plants.sort((a, b) => a.common_name.localeCompare(b.common_name))
   if (limit) plants = plants.slice(0, limit)
 
-  if (plants.length === 0) {
-    console.log(
-      refresh
-        ? 'No plants with a source_species_id.'
-        : 'Nothing to do — every plant already has image_candidates. Use --refresh to re-fetch.'
-    )
-    return
-  }
-
-  console.log(
-    `Recovering image categories for ${plants.length} plant(s)${refresh ? ' (refresh)' : ''}.\n`
-  )
-
   let recovered = 0
   let empty = 0
   let failed = 0
   const failures: string[] = []
 
-  for (const [i, plant] of plants.entries()) {
-    const label = `${pad(i + 1)}/${plants.length} ${plant.common_name}`
-
-    let candidates: ImageCandidate[] | null = null
-    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-      try {
-        const detail = await getSpeciesBySlug(plant.source_species_id!)
-        candidates = extractCandidates(
-          detail.images as Parameters<typeof extractCandidates>[0]
-        )
-        break
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err)
-        if (attempt === MAX_ATTEMPTS) {
-          console.log(
-            `${label} — FAILED after ${MAX_ATTEMPTS} attempts: ${msg}`
-          )
-          failures.push(`${plant.common_name}: ${msg}`)
-          failed++
-        } else {
-          // Exponential backoff; Trefle 429s under a fast crawl.
-          await sleep(INTER_SPECIES_DELAY_MS * attempt * 2)
-        }
-      }
-    }
-
-    if (candidates) {
-      const { error } = await supabase
-        .from('plants')
-        .update({ image_candidates: candidates })
-        .eq('id', plant.id)
-
-      if (error) {
-        console.log(`${label} — DB write failed: ${error.message}`)
-        failures.push(`${plant.common_name}: ${error.message}`)
-        failed++
-      } else {
-        const byCategory = candidates.reduce<Record<string, number>>(
-          (acc, c) => {
-            acc[c.category] = (acc[c.category] ?? 0) + 1
-            return acc
-          },
-          {}
-        )
-        const summary = Object.entries(byCategory)
-          .map(([c, n]) => `${c} ${n}`)
-          .join(', ')
+  await withRunRecord(
+    {
+      step: 'recover-image-categories',
+      // One value column. This pass deliberately never touches image_url or
+      // image_urls, so a Trefle re-seed and this pass cannot fight each other.
+      writeSet: ['image_candidates'],
+      scope: `${describeScope(scope, scopeIdList)}${refresh ? ' (--refresh)' : ''}`,
+      recipe: {
+        model: null,
+        template: EXTRACTION_RULE,
+        ingredients: { max_attempts: MAX_ATTEMPTS },
+      },
+      // image_candidates is jsonb, not an instant. updated_at bounds the claim
+      // without attributing the writes to this run.
+      evidence: [
+        {
+          kind: 'row-touched',
+          covers: 'image_candidates',
+          table: 'plants',
+          column: 'updated_at',
+        },
+      ],
+    },
+    async (run) => {
+      if (plants.length === 0) {
         console.log(
-          `${label} — ${candidates.length} candidate(s)${summary ? ` (${summary})` : ''}`
+          refresh
+            ? 'No plants with a source_species_id.'
+            : 'Nothing to do — every plant already has image_candidates. Use --refresh to re-fetch.'
         )
-        if (candidates.length === 0) empty++
-        else recovered++
+        return
+      }
+
+      console.log(
+        `Recovering image categories for ${plants.length} plant(s)${refresh ? ' (refresh)' : ''}.\n`
+      )
+
+      for (const [i, plant] of plants.entries()) {
+        const label = `${pad(i + 1)}/${plants.length} ${plant.common_name}`
+
+        let candidates: ImageCandidate[] | null = null
+        for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+          try {
+            const detail = await getSpeciesBySlug(plant.source_species_id!)
+            candidates = extractCandidates(
+              detail.images as Parameters<typeof extractCandidates>[0]
+            )
+            break
+          } catch (err) {
+            const msg = err instanceof Error ? err.message : String(err)
+            if (attempt === MAX_ATTEMPTS) {
+              console.log(
+                `${label} — FAILED after ${MAX_ATTEMPTS} attempts: ${msg}`
+              )
+              failures.push(`${plant.common_name}: ${msg}`)
+              failed++
+            } else {
+              // Exponential backoff; Trefle 429s under a fast crawl.
+              await sleep(INTER_SPECIES_DELAY_MS * attempt * 2)
+            }
+          }
+        }
+
+        if (candidates) {
+          const { error } = await supabase
+            .from('plants')
+            .update({ image_candidates: candidates })
+            .eq('id', plant.id)
+
+          if (error) {
+            console.log(`${label} — DB write failed: ${error.message}`)
+            failures.push(`${plant.common_name}: ${error.message}`)
+            failed++
+          } else {
+            const byCategory = candidates.reduce<Record<string, number>>(
+              (acc, c) => {
+                acc[c.category] = (acc[c.category] ?? 0) + 1
+                return acc
+              },
+              {}
+            )
+            const summary = Object.entries(byCategory)
+              .map(([c, n]) => `${c} ${n}`)
+              .join(', ')
+            console.log(
+              `${label} — ${candidates.length} candidate(s)${summary ? ` (${summary})` : ''}`
+            )
+            // An EMPTY candidate list is still a write: the row stops being
+            // eligible, and "Trefle has no images for this species" is the answer
+            // the column now carries. Counting only `recovered` would put the run's
+            // claim below what it actually changed.
+            run.wrote(plant.id)
+            if (candidates.length === 0) empty++
+            else recovered++
+          }
+        }
+
+        if (i < plants.length - 1) await sleep(INTER_SPECIES_DELAY_MS)
+      }
+
+      if (failed && !recovered && !empty) {
+        run.markFailed(`all ${failed} row(s) failed`)
       }
     }
+  )
 
-    if (i < plants.length - 1) await sleep(INTER_SPECIES_DELAY_MS)
-  }
+  if (plants.length === 0) return
 
   console.log(
     `\nDone. ${recovered} recovered, ${empty} with no images upstream, ${failed} failed.`

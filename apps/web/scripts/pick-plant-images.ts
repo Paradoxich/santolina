@@ -99,6 +99,7 @@ import {
   scopeGuard,
   requireReasonForAll,
 } from './scope'
+import { withRunRecord, type Witness } from './run-provenance'
 
 // Below this a photo cannot fill an Explore card without visible softening.
 const MIN_LONG_EDGE = 500
@@ -328,6 +329,43 @@ async function measure(
   return { kept: ranked, rejected, unresolved, capped }
 }
 
+/**
+ * Rendered for the recipe hash only — never sent, and no image is ever fetched
+ * for it.
+ *
+ * Bloom months are POPULATED, because the template branches on having them and
+ * the populated branch is the one carrying interpolated content. Two probe
+ * images rather than one, so the numbered per-image line renders more than once
+ * and a change to its shape moves the hash. The incumbent flag is set on one of
+ * them for the same reason: it is an optional tag, and an all-false probe would
+ * hide "CURRENTLY IN USE" from the recipe entirely.
+ */
+const RECIPE_PROBE_PLANT: PlantRow = {
+  id: 'recipe-probe',
+  common_name: 'probe',
+  scientific_name: 'Probe probe',
+  bloom_months: [6],
+  image_url: null,
+  image_candidates: null,
+}
+
+const RECIPE_PROBE_IMAGES: Measured[] = [
+  {
+    url: 'https://example.invalid/a',
+    category: 'flower',
+    width: 1200,
+    height: 900,
+    isIncumbent: true,
+  },
+  {
+    url: 'https://example.invalid/b',
+    category: 'habit',
+    width: 1000,
+    height: 800,
+    isIncumbent: false,
+  },
+]
+
 function buildPrompt(plant: PlantRow, images: Measured[]): string {
   const name = plant.scientific_name
     ? `${plant.common_name} (${plant.scientific_name})`
@@ -426,9 +464,9 @@ function buildRequest(
       // stop_reason "max_tokens", which reads as a parse failure rather than
       // the truncation it is. Thinking is worth keeping for a visual
       // judgement call, so bound it with effort rather than by starving it.
-      max_tokens: 4096,
+      max_tokens: PICK_MAX_TOKENS,
       output_config: {
-        effort: 'medium',
+        effort: PICK_EFFORT,
         format: {
           type: 'json_schema',
           schema: buildSchema(usable.length) as unknown as Record<
@@ -534,6 +572,18 @@ export function mapVerdict(a: VerifyAnswer): 'high' | 'medium' | 'low' {
   if (a.species_match === 'unsure') return 'medium'
   return 'high'
 }
+
+/**
+ * mapVerdict's rule, stated for the recipe hash. Carries the same limit as
+ * recover-image-categories' EXTRACTION_RULE: it is a description of code rather
+ * than content identity, so it can drift from mapVerdict if one is edited
+ * without the other. Recorded anyway, because the verdict is COMPUTED rather
+ * than asked for, and a reader given only the prompt would not know that.
+ */
+const VERDICT_MAPPING_RULE =
+  'species_match=no OR hero_quality=poor → low; species_match=unsure → medium; else high'
+
+const VERIFY_MAX_TOKENS = 4096
 
 function buildVerifyPrompt(plant: VerifyRow): string {
   const name = plant.scientific_name
@@ -678,7 +728,7 @@ async function runVerify(
       params: {
         model: VISION_MODEL,
         // Same reasoning as the pick pass: thinking shares this budget.
-        max_tokens: 4096,
+        max_tokens: VERIFY_MAX_TOKENS,
         output_config: {
           effort: 'medium',
           format: {
@@ -745,10 +795,83 @@ async function runVerify(
 }
 
 /** Poll a verify batch and write each verdict back. */
+/** The verify probe. Same construction as the pick probe above. */
+const RECIPE_PROBE_VERIFY_ROW: VerifyRow = {
+  id: 'recipe-probe',
+  common_name: 'probe',
+  scientific_name: 'Probe probe',
+  bloom_months: [6],
+  image_url_curated: 'https://example.invalid/a',
+  image_pick_confidence: 'high',
+  image_pick_reason: 'probe',
+  image_attribution: null,
+}
+
 async function collectVerifyResults(
   anthropic: Anthropic,
   supabase: ReturnType<typeof getSupabaseAdmin>,
   manifest: VerifyManifest
+) {
+  return withRunRecord(
+    {
+      // A DIFFERENT STEP, not a flag on the same one. --verify asks an absolute
+      // question about one image where the pick asked a comparative one about
+      // several, and its answers land on a different set of columns.
+      step: 'pick-plant-images --verify',
+      writeSet: [
+        'image_pick_confidence',
+        'image_pick_reason',
+        'image_verified_at',
+        'editorial_checked_at',
+      ],
+      evidence: [
+        // SET here — the same column the pick pass CLEARS. That inversion is
+        // why a witness cannot be derived from a column name, only declared.
+        {
+          kind: 'stamp',
+          covers: 'image_verified_at',
+          column: 'image_verified_at',
+        },
+        {
+          kind: 'row-touched',
+          covers: 'image_pick_confidence',
+          table: 'plants',
+          column: 'updated_at',
+        },
+        {
+          kind: 'row-touched',
+          covers: 'image_pick_reason',
+          table: 'plants',
+          column: 'updated_at',
+        },
+        // Cleared, and only on rows whose confidence actually moved.
+        {
+          kind: 'row-touched',
+          covers: 'editorial_checked_at',
+          table: 'plants',
+          column: 'updated_at',
+        },
+      ],
+      scope: `batch ${manifest.batchId} (submitted ${manifest.createdAt})`,
+      recipe: {
+        model: manifest.model,
+        template: buildVerifyPrompt(RECIPE_PROBE_VERIFY_ROW),
+        // The verdict is COMPUTED from the model's two independent answers, not
+        // asked for, so the mapping is part of the recipe: re-tune it and the
+        // same answers produce different confidences.
+        ingredients: { verdict_mapping: VERDICT_MAPPING_RULE },
+        decoding: { max_tokens: VERIFY_MAX_TOKENS },
+      },
+    },
+    (run) => collectVerifyResultsInner(anthropic, supabase, manifest, run)
+  )
+}
+
+async function collectVerifyResultsInner(
+  anthropic: Anthropic,
+  supabase: ReturnType<typeof getSupabaseAdmin>,
+  manifest: VerifyManifest,
+  run: { wrote: (id: string) => void; markFailed: (reason: string) => void }
 ) {
   for (;;) {
     const batch = await anthropic.messages.batches.retrieve(manifest.batchId)
@@ -823,6 +946,7 @@ async function collectVerifyResults(
       stats.errored++
       continue
     }
+    run.wrote(plantId)
 
     stats[confidence]++
     console.log(
@@ -851,6 +975,9 @@ async function collectVerifyResults(
       '\nThe low rows need a NEW candidate image (Wikimedia or a manual hero), ' +
         'not another re-check. They are in the report below.'
     )
+  }
+  if (stats.errored && !(stats.high + stats.medium + stats.low)) {
+    run.markFailed(`all ${stats.errored} batch entr(ies) failed`)
   }
   writeVerifyReport(records)
   // Errored rows keep image_verified_at NULL, so a plain re-run retries them.
@@ -1202,11 +1329,106 @@ async function main() {
   await collectResults(anthropic, supabase, manifest)
 }
 
+const PICK_MAX_TOKENS = 4096
+const PICK_EFFORT = 'medium'
+
+/**
+ * The two modes are two RUNS, and the run is opened where the writes happen.
+ *
+ * Both modes submit a batch in one process and write the results in another —
+ * `--resume <batch-id>` reattaches days later. The submitting half writes
+ * nothing, so the invocation that owns the provenance is the collecting half,
+ * whichever entry point reached it. A resumed collect is a separate run with its
+ * own id, which is exactly right: it is a separate invocation, and the record
+ * says so rather than pretending one run spanned both halves.
+ *
+ * WHY NOT ONE RUN WITH A UNION WRITE-SET. The two modes disagree about the same
+ * column in opposite directions. `image_verified_at` is CLEARED by the pick (the
+ * old verification was about a photo that is no longer the hero) and SET by
+ * verify. A single write-set could name it once and would then have to pick one
+ * witness for two opposite acts — which is the concrete version of why the
+ * column can never identify its writer.
+ */
+function pickWitnesses(): Witness[] {
+  const bounded = (covers: string): Witness => ({
+    kind: 'row-touched',
+    covers,
+    table: 'plants',
+    column: 'updated_at',
+  })
+  return [
+    // The one column this pass SETS, so the one that can confirm the claim.
+    {
+      kind: 'stamp',
+      covers: 'image_checked_at',
+      column: 'image_checked_at',
+    },
+    // Values: a url, a credit, a verdict and its prose. None is an instant.
+    bounded('image_url_curated'),
+    bounded('image_attribution'),
+    bounded('image_pick_confidence'),
+    bounded('image_pick_reason'),
+    // CLEARED as the inverse obligation from migration 20260728220852 — a new
+    // hero invalidates the editorial verdict and the verification that were
+    // about the old one. A cleared column holds NULL and matches no window, so
+    // neither can witness itself here.
+    bounded('editorial_checked_at'),
+    bounded('image_verified_at'),
+  ]
+}
+
 /** Poll a batch to completion, then write each pick back to its plant. */
 async function collectResults(
   anthropic: Anthropic,
   supabase: ReturnType<typeof getSupabaseAdmin>,
   manifest: Manifest
+) {
+  return withRunRecord(
+    {
+      step: 'pick-plant-images',
+      writeSet: [
+        'image_url_curated',
+        'image_attribution',
+        'image_pick_confidence',
+        'image_pick_reason',
+        'image_checked_at',
+        'editorial_checked_at',
+        'image_verified_at',
+      ],
+      evidence: pickWitnesses(),
+      // The batch id, because it is the only thing that ties a resumed collect
+      // back to the submission that produced its answers.
+      scope: `batch ${manifest.batchId} (submitted ${manifest.createdAt})${
+        manifest.scopeIds ? `, ${manifest.scopeIds.length} id(s)` : ', --all'
+      }`,
+      recipe: {
+        // VISION_MODEL, not CURATION_MODEL. Recorded from the MANIFEST rather
+        // than from the constant: a --resume days later must report the model
+        // the batch actually ran on, not whatever the constant says today.
+        model: manifest.model,
+        template: buildPrompt(RECIPE_PROBE_PLANT, RECIPE_PROBE_IMAGES),
+        // The shortlist cap shapes what the model ever gets to see, so a run
+        // that showed 6 candidates is not the same recipe as one that showed 12.
+        ingredients: {
+          max_for_vision: MAX_FOR_VISION,
+          min_long_edge: MIN_LONG_EDGE,
+          schema: buildSchema(RECIPE_PROBE_IMAGES.length),
+        },
+        // Effort is a decoding parameter here in the way temperature is
+        // elsewhere: it bounds the thinking budget, and at 1024 tokens a sixth
+        // of the catalog spent the whole budget thinking and returned no JSON.
+        decoding: { max_tokens: PICK_MAX_TOKENS, effort: PICK_EFFORT },
+      },
+    },
+    (run) => collectResultsInner(anthropic, supabase, manifest, run)
+  )
+}
+
+async function collectResultsInner(
+  anthropic: Anthropic,
+  supabase: ReturnType<typeof getSupabaseAdmin>,
+  manifest: Manifest,
+  run: { wrote: (id: string) => void; markFailed: (reason: string) => void }
 ) {
   const batchId = manifest.batchId
   for (;;) {
@@ -1317,6 +1539,9 @@ async function collectResults(
           image_checked_at: new Date().toISOString(),
         })
         .eq('id', plantId)
+      // A "no usable photo" row is written and stamped like any other, so it
+      // counts. It is the outcome the stamp exists to make resumable.
+      run.wrote(plantId)
       console.log(`  ${plant.common_name} — no usable photo: ${pick.reason}`)
       stats.none++
       review.push(`${plant.common_name}: no usable photo`)
@@ -1366,6 +1591,7 @@ async function collectResults(
       stats.errored++
       continue
     }
+    run.wrote(plantId)
 
     stats[pick.confidence]++
     const changed = chosen.url !== plant.image_url
@@ -1383,6 +1609,11 @@ async function collectResults(
   if (review.length) {
     console.log(`\n${review.length} pick(s) want a human look:`)
     for (const r of review) console.log(`  - ${r}`)
+  }
+  // A batch where every entry errored is a failure even though nothing threw.
+  const written = stats.high + stats.medium + stats.low + stats.none
+  if (stats.errored && !written) {
+    run.markFailed(`all ${stats.errored} batch entr(ies) failed`)
   }
   await writeReviewReport(supabase)
   // Errored rows stay unstamped, so a plain re-run retries exactly those.

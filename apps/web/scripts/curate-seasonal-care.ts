@@ -50,6 +50,7 @@ import {
 import { fetchAllRows } from '../lib/paginate'
 import { getAnthropicClient, CURATION_MODEL } from '../lib/anthropic-client'
 import type { DbPlant, SeasonalCare, SeasonalRhythm } from '../lib/plants-db'
+import { withRunRecord } from './run-provenance'
 
 // ---------------------------------------------------------------------------
 // Config
@@ -231,6 +232,42 @@ Respond with ONLY the JSON object, no markdown, no code fences, no preamble.`
 // Claude call
 // ---------------------------------------------------------------------------
 
+const MAX_TOKENS = 1024
+
+const SYSTEM_PROMPT =
+  'You are a horticultural copy assistant. Respond with ONLY valid JSON, no markdown, no code fences, no preamble, no explanation.'
+
+/**
+ * The template rendered for the recipe hash, in both forms it can take. Never
+ * sent.
+ *
+ * The retry form matters. A row that fails validation is re-asked with a
+ * strictReminder block appended, and the reminder's WORDING is part of how the
+ * second answer is produced — a rewrite of that block changes the recipe for
+ * every row that needed a retry, while the first-attempt template holds still.
+ * Rendering only the happy path would leave that invisible to the hash.
+ *
+ * The reminder's CONTENT is per-row (it lists that row's violations), so the
+ * probe passes a fixed stand-in: what is hashed is the framing, not the
+ * violations.
+ */
+function recipeTemplates(): string[] {
+  const probe = {
+    id: 'recipe-probe',
+    common_name: 'probe',
+    scientific_name: 'Probe probe',
+    plant_type: 'perennial',
+    bloom_months: [6],
+    maintenance_notes: 'probe notes',
+    seasonal_rhythm: null,
+  } as unknown as DbPlant
+  return [
+    SYSTEM_PROMPT,
+    buildPrompt(probe),
+    buildPrompt(probe, 'probe violation'),
+  ]
+}
+
 async function getSeasonalCareFromClaude(
   plant: DbPlant,
   strictReminder?: string
@@ -240,9 +277,8 @@ async function getSeasonalCareFromClaude(
 
   const message = await client.messages.create({
     model: CURATION_MODEL,
-    max_tokens: 1024,
-    system:
-      'You are a horticultural copy assistant. Respond with ONLY valid JSON, no markdown, no code fences, no preamble, no explanation.',
+    max_tokens: MAX_TOKENS,
+    system: SYSTEM_PROMPT,
     messages: [{ role: 'user', content: prompt }],
   })
 
@@ -641,79 +677,132 @@ async function main() {
       )
   }
 
-  if (!plants.length) {
-    console.log('No eligible plants found — nothing to do.')
-    process.exit(0)
-  }
-
-  if (flags.sample) {
-    // --ids already selected the exact plants; otherwise curate the spread.
-    if (!flags.ids) plants = pickSample(plants, flags.sampleSize)
-    console.log(
-      `\nSAMPLE mode: generating for ${plants.length} plant(s), no DB writes.\n`
-    )
-  } else {
-    if (flags.limit != null) plants = plants.slice(0, flags.limit)
-    console.log(`\nFull run: generating for ${plants.length} plant(s).\n`)
-  }
-
   const failures: Array<{ name: string; error: string }> = []
   const flagged: Array<{ name: string; violations: Violation[] }> = []
   const allNull: string[] = []
   const sampleRows: Array<Record<string, unknown>> = []
   let succeeded = 0
 
-  for (const [i, plant] of plants.entries()) {
-    const label = plant.scientific_name ?? plant.common_name
-    const prefix = `[${pad(i + 1)}/${pad(plants.length)}]`
-
-    try {
-      process.stdout.write(`${prefix} ${label} … `)
-      const { care, raw, violations } = await generateForPlant(plant)
+  await withRunRecord(
+    {
+      step: 'curate-seasonal-care',
+      // One value column, and no stamp anywhere in this pass — the fill guard is
+      // `seasonal_care IS NULL`, so the value is its own eligibility state.
+      writeSet: ['seasonal_care'],
+      scope: `${describeScope(SCOPE, SCOPE_IDS)}${flags.sample ? ' (--sample, no writes)' : ''}`,
+      recipe: {
+        model: CURATION_MODEL,
+        template: recipeTemplates(),
+        // The three standards the prompt interpolates. The stage-to-month map is
+        // the one that would move an answer without the prompt changing a word:
+        // re-cut the seasons and every line lands in a different stage.
+        ingredients: {
+          seasonal_keys: SEASONAL_KEYS,
+          stage_months: STAGE_MONTHS,
+          line_limits: { max_words: MAX_WORDS, max_chars: MAX_CHARS },
+        },
+        decoding: { max_tokens: MAX_TOKENS },
+      },
+      // seasonal_care is jsonb, not an instant, so it cannot be window-queried.
+      // updated_at bounds the claim: it shows rows moved in the window without
+      // attributing the movement to this run.
+      evidence: [
+        {
+          kind: 'row-touched',
+          covers: 'seasonal_care',
+          table: 'plants',
+          column: 'updated_at',
+        },
+      ],
+    },
+    async (run) => {
+      if (!plants.length) {
+        console.log('No eligible plants found — nothing to do.')
+        return
+      }
 
       if (flags.sample) {
-        sampleRows.push({
-          id: plant.id,
-          common_name: plant.common_name,
-          scientific_name: plant.scientific_name,
-          plant_type: plant.plant_type,
-          bloom_months: plant.bloom_months,
-          // Both distillation sources shown, so every output line is traceable
-          // (seasonal_rhythm feeds the timing that maintenance_notes alone omits).
-          maintenance_notes: plant.maintenance_notes,
-          seasonal_rhythm: plant.seasonal_rhythm,
-          seasonal_care: raw,
-          validation: {
-            ok: violations.length === 0,
-            violations,
-          },
-        })
-      }
-
-      if (!care) {
-        flagged.push({ name: label, violations })
+        // --ids already selected the exact plants; otherwise curate the spread.
+        if (!flags.ids) plants = pickSample(plants, flags.sampleSize)
         console.log(
-          `⚠ flagged (${violations.map((v) => `${v.stage}: ${v.reason}`).join('; ')})`
+          `\nSAMPLE mode: generating for ${plants.length} plant(s), no DB writes.\n`
         )
       } else {
-        const lines = countLines(care)
-        if (lines === 0) allNull.push(label)
-        if (!flags.sample) await patchSeasonalCare(plant.id, care)
-        console.log(
-          `✓  ${lines} line(s)${lines === 0 ? ' (all null)' : ''}${
-            flags.sample ? ' [not written]' : ''
-          }`
-        )
-        succeeded++
+        if (flags.limit != null) plants = plants.slice(0, flags.limit)
+        console.log(`\nFull run: generating for ${plants.length} plant(s).\n`)
       }
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err)
-      console.log(`✗  ${message}`)
-      failures.push({ name: label, error: message })
-    }
 
-    if (i < plants.length - 1) await sleep(INTER_PLANT_DELAY_MS)
-  }
+      for (const [i, plant] of plants.entries()) {
+        const label = plant.scientific_name ?? plant.common_name
+        const prefix = `[${pad(i + 1)}/${pad(plants.length)}]`
+
+        try {
+          process.stdout.write(`${prefix} ${label} … `)
+          const { care, raw, violations } = await generateForPlant(plant)
+
+          if (flags.sample) {
+            sampleRows.push({
+              id: plant.id,
+              common_name: plant.common_name,
+              scientific_name: plant.scientific_name,
+              plant_type: plant.plant_type,
+              bloom_months: plant.bloom_months,
+              // Both distillation sources shown, so every output line is traceable
+              // (seasonal_rhythm feeds the timing that maintenance_notes alone omits).
+              maintenance_notes: plant.maintenance_notes,
+              seasonal_rhythm: plant.seasonal_rhythm,
+              seasonal_care: raw,
+              validation: {
+                ok: violations.length === 0,
+                violations,
+              },
+            })
+          }
+
+          if (!care) {
+            flagged.push({ name: label, violations })
+            console.log(
+              `⚠ flagged (${violations.map((v) => `${v.stage}: ${v.reason}`).join('; ')})`
+            )
+          } else {
+            const lines = countLines(care)
+            if (lines === 0) allNull.push(label)
+            if (!flags.sample) {
+              await patchSeasonalCare(plant.id, care)
+              // Only a written row counts. A sample run generates the same text and
+              // writes nothing, so its honest row_count is 0 — and an all-null
+              // result IS a written value (the row is no longer eligible), so it
+              // counts like any other.
+              run.wrote(plant.id)
+            }
+            console.log(
+              `✓  ${lines} line(s)${lines === 0 ? ' (all null)' : ''}${
+                flags.sample ? ' [not written]' : ''
+              }`
+            )
+            succeeded++
+          }
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err)
+          console.log(`✗  ${message}`)
+          failures.push({ name: label, error: message })
+        }
+
+        if (i < plants.length - 1) await sleep(INTER_PLANT_DELAY_MS)
+      }
+
+      // Every row errored is a failure even though nothing threw. Flagged rows
+      // are NOT a failure: refusing to write copy that failed validation is the
+      // pass working, and they are already named in the tail below.
+      if (failures.length && !succeeded) {
+        run.markFailed(`all ${failures.length} row(s) errored`)
+      }
+    }
+  )
+
+  // Nothing eligible: the run recorded a vacuous invocation and there is no
+  // summary to print.
+  if (!plants.length) return
 
   // Summary
   console.log('\n─────────────────────────────────────────────────────────────')

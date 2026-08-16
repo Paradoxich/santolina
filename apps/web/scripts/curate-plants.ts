@@ -29,7 +29,7 @@ import type { DbPlant, PlantType, SeasonalRhythm } from '../lib/plants-db'
 import { STYLE_TAG_PROMPT, type StyleTag } from '../lib/style-tags'
 import { GREENERY_PROMPT } from '../lib/greenery'
 import { requireScope, scopeIds, describeScope } from './scope'
-import { withRunRecord } from './run-provenance'
+import { withRunRecord, type Witness } from './run-provenance'
 
 // ---------------------------------------------------------------------------
 // Config
@@ -479,6 +479,36 @@ async function main() {
     // verdict stamps named after other scripts, which is exactly why the
     // column cannot identify the writer.
     writeSet: ['ai_drafted_at', 'style_checked_at', 'greenery_checked_at'],
+    // TRAP 28, and this file is where it was found — by writing the test, a day
+    // after this run was called correct.
+    //
+    // Only `ai_drafted_at` is written on every row this pass touches. The other
+    // two are guarded by their own stamp (`if (!plant.style_checked_at)` in
+    // buildPatch), so a run over a mix of already-judged and never-judged rows
+    // moves them on a SUBSET. The default made all three confirming witnesses,
+    // and finalisation compares each one against the run's TOTAL — so a
+    // perfectly correct run claiming 25 rows, 10 of them already style-stamped,
+    // would observe 15 and record itself `contradicted`.
+    //
+    // A conditionally-written stamp cannot confirm the whole run. It bounds it.
+    //
+    // Annotated because `runOptions` is a named const rather than an inline
+    // argument, so there is no contextual type to narrow `kind` against.
+    evidence: [
+      { kind: 'stamp', covers: 'ai_drafted_at', column: 'ai_drafted_at' },
+      {
+        kind: 'row-touched',
+        covers: 'style_checked_at',
+        table: 'plants',
+        column: 'updated_at',
+      },
+      {
+        kind: 'row-touched',
+        covers: 'greenery_checked_at',
+        table: 'plants',
+        column: 'updated_at',
+      },
+    ] as Witness[],
     scope: describeScope(scope, ids),
     recipe: {
       model: CURATION_MODEL,

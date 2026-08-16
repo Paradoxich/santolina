@@ -66,6 +66,7 @@ import { L2_NAMES } from '../lib/wgsrpd-regions'
 import { fetchAllRows } from '../lib/paginate'
 import { getSupabaseAdmin } from '../lib/supabase-admin'
 import { requireScope, scopeIds, describeScope } from './scope'
+import { withRunRecord, type Witness } from './run-provenance'
 // The lookup, its guards and its committed cache live in scripts/wcvp-lookup.ts
 // so that this guard and cross-check-native-to share one answer instead of
 // asking GBIF the same question twice per round. See that file's header.
@@ -500,6 +501,58 @@ async function stampChecked(ids: string[]): Promise<number> {
   return ids.length
 }
 
+/**
+ * What this invocation may mutate, which genuinely depends on the flags.
+ *
+ * Without --apply this is a report-and-stamp pass and touches one column. With
+ * it, the same run also rewrites the region tags and NULLS native_checked_at as
+ * the cross-field cascade. Declaring the union regardless would assert on every
+ * dry run that the pass could have rewritten the catalog, and the write-set is
+ * an assertion a reviewer reads — so it says what THIS invocation could do.
+ *
+ * The two extra members both need an explicit witness, for different reasons:
+ *
+ *   native_region       is an array of prose names. Not window-queryable at all,
+ *                       so comparing it to an instant is meaningless.
+ *   native_checked_at   is CLEARED here, not set. Its own column is the one
+ *                       witness that cannot see this write: a nulled row matches
+ *                       no window, so the default stamp witness would observe 0
+ *                       against a claim of N and record a correct run as
+ *                       CONTRADICTED. A clearing write is invisible to its own
+ *                       column by construction.
+ *
+ * updated_at bounds both — it establishes rows moved in the window without
+ * attributing the movement to this run, which is all the evidence supports.
+ */
+function writeSetFor(apply: boolean): {
+  writeSet: string[]
+  evidence: Witness[]
+} {
+  const bounded = (covers: string): Witness => ({
+    kind: 'row-touched',
+    covers,
+    table: 'plants',
+    column: 'updated_at',
+  })
+  // Set, not cleared, so it witnesses itself in the window.
+  const stamp: Witness = {
+    kind: 'stamp',
+    covers: 'native_region_checked_at',
+    column: 'native_region_checked_at',
+  }
+  if (!apply) {
+    return { writeSet: ['native_region_checked_at'], evidence: [stamp] }
+  }
+  return {
+    writeSet: [
+      'native_region_checked_at',
+      'native_region',
+      'native_checked_at',
+    ],
+    evidence: [stamp, bounded('native_region'), bounded('native_checked_at')],
+  }
+}
+
 async function main() {
   const opts = parseArgs()
 
@@ -521,65 +574,103 @@ async function main() {
 
   const cache = loadCache()
   const findings: Finding[] = []
-  for (const plant of plants) {
-    if (!plant.scientific_name) {
-      console.log(`  skip ${plant.common_name} — no scientific_name`)
-      continue
+
+  const { writeSet, evidence } = writeSetFor(opts.apply)
+  await withRunRecord(
+    {
+      step: opts.apply
+        ? 'cross-check-native-region --apply'
+        : 'cross-check-native-region',
+      writeSet,
+      evidence,
+      scope: `${describeScope(scope, ids)}${opts.allowEmpty ? ' (--allow-empty)' : ''}`,
+      recipe: {
+        // No model. This pass derives its answer from WCVP rows through a fixed
+        // rollup rule, so the recipe is that rule plus the tables that arbitrate
+        // it — not a prompt.
+        model: null,
+        template:
+          'WCVP native rows → WGSRPD Level 3 → Level 2 rollup; establishment marker decides native vs introduced; verdict = match | disagrees | no-native-range | no-data | reviewed',
+        // Every committed table that can change an answer without the rule
+        // changing. MANUAL_EXCLUSIONS is the one that matters most: it overrides
+        // the data source itself, so a cohort judged before an entry was added is
+        // a different cohort from one judged after.
+        ingredients: {
+          l2_names: L2_NAMES,
+          wcvp_name_aliases: WCVP_NAME_ALIASES,
+          manual_exclusions: MANUAL_EXCLUSIONS,
+          manual_overrides: MANUAL_OVERRIDES,
+        },
+      },
+    },
+    async (run) => {
+      for (const plant of plants) {
+        if (!plant.scientific_name) {
+          console.log(`  skip ${plant.common_name} — no scientific_name`)
+          continue
+        }
+        const species = await lookupSpecies(plant.scientific_name, cache)
+        findings.push(compare(plant, species, l3ToL2))
+      }
+
+      const counts = findings.reduce<Record<string, number>>((acc, f) => {
+        acc[f.verdict] = (acc[f.verdict] ?? 0) + 1
+        return acc
+      }, {})
+      console.log(
+        `\nmatch ${counts.match ?? 0} · disagrees ${counts.disagrees ?? 0} · ` +
+          `no-native-range ${counts['no-native-range'] ?? 0} · no-data ${counts['no-data'] ?? 0}`
+      )
+      for (const f of findings) {
+        if (f.verdict === 'match') continue
+        console.log(
+          `\n${f.verdict.toUpperCase()} — ${f.common_name} (${f.scientific_name})`
+        )
+        console.log(`  stored: ${f.stored.join(', ') || '(empty)'}`)
+        console.log(`  WCVP  : ${f.wcvp_native.join(', ') || '(none)'}`)
+        if (f.extra_are_introduced.length)
+          console.log(
+            `  WCVP calls these INTRODUCED: ${f.extra_are_introduced.join(', ')}`
+          )
+        if (f.excluded)
+          console.log(
+            `  excluded ${f.excluded.regions.join(', ')} — ${f.excluded.why}`
+          )
+        if (f.note) console.log(`  note: ${f.note}`)
+      }
+
+      writeReport(findings)
+      console.log(`\nReport → ${MD_OUT}`)
+
+      const staleSkipped = opts.apply
+        ? await applyCorrections(findings, opts.allowEmpty)
+        : new Set<string>()
+
+      const stampIds = rowsToStamp(
+        findings,
+        opts.apply,
+        opts.allowEmpty
+      ).filter((id) => !staleSkipped.has(id))
+      const stamped = await stampChecked(stampIds)
+      // Counted after stampChecked returned. A row this run corrected AND
+      // stamped is one written row, not two — run.wrote() is a set of ids, which
+      // is what the stamp witness can observe however many columns moved.
+      for (const id of stampIds) run.wrote(id)
+      const unstamped = findings.length - stamped
+      console.log(
+        `\nStamped native_region_checked_at on ${stamped} row(s)` +
+          (unstamped ? `; ${unstamped} left NULL (unsettled or no data).` : '.')
+      )
+
+      const pending = findings.filter((f) => f.verdict === 'disagrees').length
+      if (!opts.apply && pending)
+        console.log(
+          `\n⚠ ${pending} disagreement(s) left UNSTAMPED — a later --new-only ` +
+            `sweep will re-find them.\n  Re-run with --apply to write the ` +
+            `corrections and settle them.`
+        )
     }
-    const species = await lookupSpecies(plant.scientific_name, cache)
-    findings.push(compare(plant, species, l3ToL2))
-  }
-
-  const counts = findings.reduce<Record<string, number>>((acc, f) => {
-    acc[f.verdict] = (acc[f.verdict] ?? 0) + 1
-    return acc
-  }, {})
-  console.log(
-    `\nmatch ${counts.match ?? 0} · disagrees ${counts.disagrees ?? 0} · ` +
-      `no-native-range ${counts['no-native-range'] ?? 0} · no-data ${counts['no-data'] ?? 0}`
   )
-  for (const f of findings) {
-    if (f.verdict === 'match') continue
-    console.log(
-      `\n${f.verdict.toUpperCase()} — ${f.common_name} (${f.scientific_name})`
-    )
-    console.log(`  stored: ${f.stored.join(', ') || '(empty)'}`)
-    console.log(`  WCVP  : ${f.wcvp_native.join(', ') || '(none)'}`)
-    if (f.extra_are_introduced.length)
-      console.log(
-        `  WCVP calls these INTRODUCED: ${f.extra_are_introduced.join(', ')}`
-      )
-    if (f.excluded)
-      console.log(
-        `  excluded ${f.excluded.regions.join(', ')} — ${f.excluded.why}`
-      )
-    if (f.note) console.log(`  note: ${f.note}`)
-  }
-
-  writeReport(findings)
-  console.log(`\nReport → ${MD_OUT}`)
-
-  const staleSkipped = opts.apply
-    ? await applyCorrections(findings, opts.allowEmpty)
-    : new Set<string>()
-
-  const stampIds = rowsToStamp(findings, opts.apply, opts.allowEmpty).filter(
-    (id) => !staleSkipped.has(id)
-  )
-  const stamped = await stampChecked(stampIds)
-  const unstamped = findings.length - stamped
-  console.log(
-    `\nStamped native_region_checked_at on ${stamped} row(s)` +
-      (unstamped ? `; ${unstamped} left NULL (unsettled or no data).` : '.')
-  )
-
-  const pending = findings.filter((f) => f.verdict === 'disagrees').length
-  if (!opts.apply && pending)
-    console.log(
-      `\n⚠ ${pending} disagreement(s) left UNSTAMPED — a later --new-only ` +
-        `sweep will re-find them.\n  Re-run with --apply to write the ` +
-        `corrections and settle them.`
-    )
 }
 
 // Guarded so the test file can import rowsToStamp without running the sweep

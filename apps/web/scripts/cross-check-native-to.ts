@@ -90,6 +90,7 @@ import { getAnthropicClient, CURATION_MODEL } from '../lib/anthropic-client'
 import { fetchAllRows } from '../lib/paginate'
 import { L2_SET, L2_VOCAB } from '../lib/wgsrpd-regions'
 import { readRoundManifest } from './round-manifest'
+import { withRunRecord } from './run-provenance'
 // One guarded, cached GBIF/WCVP lookup, shared with cross-check-native-region.
 import {
   loadCache,
@@ -105,6 +106,12 @@ import {
 
 // 2s between Claude calls — same pacing as curate-plants.ts / cross-check-plants.ts
 const INTER_PLANT_DELAY_MS = 2000
+
+// A decoding parameter is part of the recipe, so it is read from one place.
+const MAX_TOKENS = 512
+
+const SYSTEM_PROMPT =
+  'You are a botanical geography fact-checker. Respond with ONLY valid JSON, no markdown, no code fences, no preamble.'
 
 const REPORTS_DIR = join(process.cwd(), 'reports')
 const JSON_OUT = join(REPORTS_DIR, 'native-to-crosscheck.json')
@@ -461,6 +468,53 @@ function parseJudgment(raw: string): Judgment {
   }
 }
 
+/**
+ * The template rendered across EVERY branch it can take, for the recipe hash.
+ * Never sent to the model.
+ *
+ * One render is not enough here, and that is the difference from curate-plants.
+ * There, `buildPrompt` branches on what is MISSING, so a single empty row takes
+ * every branch at once and the maximal template falls out of one call. Here the
+ * branches are mutually exclusive ALTERNATIVES — the WCVP line has an
+ * evidence-present and an evidence-absent form, and the tags line has three
+ * tiers — so no single row can render them all, and hashing whichever one a
+ * probe happened to take would leave the other five invisible to the hash.
+ *
+ * `template` accepts an array precisely so a recipe can be more than one string,
+ * and this costs nothing at runtime: the array is hashed and discarded, never
+ * written to the record, which stores only the resulting hash.
+ *
+ * The probe carries a raw snapshot and a full identity so the optional lines
+ * that are simply present-or-absent are present in every render.
+ */
+function recipeTemplates(): string[] {
+  const probe = {
+    id: 'recipe-probe',
+    common_name: 'probe',
+    scientific_name: 'Probe probe',
+    family: 'Probeaceae',
+    native_to: 'probe range',
+    native_region: ['Probeland'],
+  } as unknown as PlantRow
+  const gbifStates = [
+    { tier: 'wcvp-native', regions: ['Probeland'] },
+    { tier: 'no-match', regions: [] },
+  ]
+  // Every tier regionSignal() can return. Named here rather than derived, so a
+  // new tier that nobody adds to this list shows up as an unrendered branch
+  // rather than silently leaving the hash unchanged.
+  const regionStates = [
+    { tier: 'wcvp-validated', regions: ['Probeland'] },
+    { tier: 'validated-as-no-wild-range', regions: [] },
+    { tier: 'not-yet-validated-against-wcvp', regions: [] },
+  ]
+  const rendered: string[] = [SYSTEM_PROMPT]
+  for (const gbif of gbifStates)
+    for (const region of regionStates)
+      rendered.push(buildPrompt(probe, gbif, region, 'probe raw distribution'))
+  return rendered
+}
+
 async function judge(
   plant: PlantRow,
   gbif: { tier: string; regions: string[] },
@@ -470,9 +524,8 @@ async function judge(
   const client = getAnthropicClient()
   const message = await client.messages.create({
     model: CURATION_MODEL,
-    max_tokens: 512,
-    system:
-      'You are a botanical geography fact-checker. Respond with ONLY valid JSON, no markdown, no code fences, no preamble.',
+    max_tokens: MAX_TOKENS,
+    system: SYSTEM_PROMPT,
     messages: [
       { role: 'user', content: buildPrompt(plant, gbif, region, raw) },
     ],
@@ -743,6 +796,14 @@ function writeReport(results: Result[]): void {
 // Apply — patch ONLY gross rows that carry a suggested phrase
 // ---------------------------------------------------------------------------
 
+/**
+ * A SECOND, SEPARATE RUN, not a mode of the first.
+ *
+ * --apply shares nothing with the generate pass that matters to provenance: it
+ * calls no model, its inputs are a committed report rather than a prompt, and it
+ * writes different columns in the opposite direction. One run id spanning both
+ * would attribute a phrase rewrite to a recipe that never produced it.
+ */
 async function apply(): Promise<void> {
   if (!existsSync(JSON_OUT)) {
     throw new Error(
@@ -753,29 +814,78 @@ async function apply(): Promise<void> {
   const fixes = results.filter(
     (r) => r.verdict === 'gross' && r.suggested_phrase
   )
-  if (!fixes.length) {
-    console.log('No gross rows with a suggested phrase to apply.')
-    return
-  }
-  const db = getSupabaseAdmin()
-  console.log(`Applying ${fixes.length} gross-error fixes...\n`)
-  let ok = 0
-  for (const r of fixes) {
-    // Patching native_to changes what was checked, so null the stamp too (the
-    // cascade rule) — a later --new-only run re-verifies the replacement phrase.
-    const { error } = await db
-      .from('plants')
-      .update({ native_to: r.suggested_phrase, native_checked_at: null })
-      .eq('id', r.id)
-    if (error) console.error(`FAILED ${r.common_name}: ${error.message}`)
-    else {
-      ok++
-      console.log(
-        `  ${r.common_name}: "${r.stored_phrase}" -> "${r.suggested_phrase}"`
-      )
+
+  await withRunRecord(
+    {
+      step: 'cross-check-native-to --apply',
+      writeSet: ['native_to', 'native_checked_at'],
+      scope: `gross rows with a suggested phrase in ${JSON_OUT.split('/').slice(-2).join('/')}`,
+      recipe: {
+        // No model: this pass applies a decision that was already made. The
+        // recipe is the SELECTION RULE, which is the only thing that varies
+        // between invocations and the thing a future reader needs in order to
+        // know which rows a run could have touched.
+        model: null,
+        template:
+          'apply: verdict === "gross" && suggested_phrase → native_to; native_checked_at := null (cascade)',
+      },
+      // NEITHER column can witness itself here, and the reasons differ.
+      //
+      // native_checked_at is CLEARED. The default witness would count rows whose
+      // stamp lands inside the run window — a cleared row holds NULL and matches
+      // nothing, so a run that correctly nulled 20 stamps would observe 0 and
+      // record itself CONTRADICTED. A clearing write is invisible to its own
+      // column by construction, and no query run afterwards can tell "this run
+      // nulled it" from "it was never set".
+      //
+      // native_to is prose, not an instant, so it is not window-queryable at all.
+      //
+      // updated_at bounds both: it establishes that rows were touched in the
+      // window without attributing the touch to this run, which is exactly as
+      // much as the evidence supports.
+      evidence: [
+        {
+          kind: 'row-touched',
+          covers: 'native_to',
+          table: 'plants',
+          column: 'updated_at',
+        },
+        {
+          kind: 'row-touched',
+          covers: 'native_checked_at',
+          table: 'plants',
+          column: 'updated_at',
+        },
+      ],
+    },
+    async (run) => {
+      if (!fixes.length) {
+        console.log('No gross rows with a suggested phrase to apply.')
+        return
+      }
+      const db = getSupabaseAdmin()
+      console.log(`Applying ${fixes.length} gross-error fixes...\n`)
+      let ok = 0
+      for (const r of fixes) {
+        // Patching native_to changes what was checked, so null the stamp too (the
+        // cascade rule) — a later --new-only run re-verifies the replacement phrase.
+        const { error } = await db
+          .from('plants')
+          .update({ native_to: r.suggested_phrase, native_checked_at: null })
+          .eq('id', r.id)
+        if (error) console.error(`FAILED ${r.common_name}: ${error.message}`)
+        else {
+          ok++
+          run.wrote(r.id)
+          console.log(
+            `  ${r.common_name}: "${r.stored_phrase}" -> "${r.suggested_phrase}"`
+          )
+        }
+      }
+      console.log(`\nApplied ${ok}/${fixes.length}.`)
+      if (!ok) run.markFailed(`all ${fixes.length} row(s) failed to apply`)
     }
-  }
-  console.log(`\nApplied ${ok}/${fixes.length}.`)
+  )
 }
 
 // ---------------------------------------------------------------------------
@@ -844,65 +954,110 @@ async function generate(
   const results: Result[] = []
   /** Rows judged but deliberately left unstamped, named in the tail. */
   const withheld: string[] = []
+  /** Rows that threw — distinct from withheld, which is a verdict, not a fault. */
+  let errored = 0
 
-  for (let i = 0; i < plants.length; i++) {
-    const plant = plants[i]!
-    try {
-      const gbif = plant.scientific_name
-        ? await wcvpNativeSignal(plant.scientific_name, wcvpCache)
-        : { tier: 'row has no scientific_name', regions: [] }
+  await withRunRecord(
+    {
+      step: 'cross-check-native-to',
+      // This pass never writes the phrase — native_to is hand-owned, voice-passed
+      // copy, corrected later through --apply. Its only write is the stamp, and
+      // the stamp is SET here, so the default witness (the column observing
+      // itself inside the run window) is the correct one.
+      writeSet: ['native_checked_at'],
+      scope: describeScope(scope, roundIds),
+      recipe: {
+        model: CURATION_MODEL,
+        template: recipeTemplates(),
+        // The two vocabularies the prompt interpolates. L2_VOCAB is the reason
+        // this field exists: in July the region vocabulary was replaced wholesale
+        // while the template held still, and a hash blind to that would have kept
+        // one cohort identity across two genuinely different recipes.
+        ingredients: { continents: CONTINENTS, l2_vocab: L2_VOCAB },
+        decoding: { max_tokens: MAX_TOKENS },
+      },
+    },
+    async (run) => {
+      for (let i = 0; i < plants.length; i++) {
+        const plant = plants[i]!
+        try {
+          const gbif = plant.scientific_name
+            ? await wcvpNativeSignal(plant.scientific_name, wcvpCache)
+            : { tier: 'row has no scientific_name', regions: [] }
 
-      const region = regionSignal(plant)
+          const region = regionSignal(plant)
 
-      const j = await judge(plant, gbif, region, rawByID.get(plant.id) ?? null)
-      const claimedExtra = claimedNotInTags(j, region)
-      const verdict = reconcileVerdict(j, region)
-      results.push({
-        id: plant.id,
-        common_name: plant.common_name,
-        scientific_name: plant.scientific_name,
-        stored_phrase: plant.native_to,
-        gbif_tier: gbif.tier,
-        gbif_regions: gbif.regions,
-        region_tier: region.tier,
-        region_tags: region.regions,
-        claimed_not_in_tags: claimedExtra,
-        native_to_reviewed_at: plant.native_to_reviewed_at,
-        ...j,
-        verdict,
-      })
-      const tag =
-        verdict === 'gross'
-          ? 'GROSS'
-          : verdict === 'contradicts'
-            ? 'CONFLICT'
-            : verdict === 'no_data'
-              ? 'no_data'
-              : verdict
-      console.log(
-        `[${pad(i + 1)}/${plants.length}] ${tag.padEnd(8)} ${plant.common_name} — "${plant.native_to}"`
-      )
+          const j = await judge(
+            plant,
+            gbif,
+            region,
+            rawByID.get(plant.id) ?? null
+          )
+          const claimedExtra = claimedNotInTags(j, region)
+          const verdict = reconcileVerdict(j, region)
+          results.push({
+            id: plant.id,
+            common_name: plant.common_name,
+            scientific_name: plant.scientific_name,
+            stored_phrase: plant.native_to,
+            gbif_tier: gbif.tier,
+            gbif_regions: gbif.regions,
+            region_tier: region.tier,
+            region_tags: region.regions,
+            claimed_not_in_tags: claimedExtra,
+            native_to_reviewed_at: plant.native_to_reviewed_at,
+            ...j,
+            verdict,
+          })
+          const tag =
+            verdict === 'gross'
+              ? 'GROSS'
+              : verdict === 'contradicts'
+                ? 'CONFLICT'
+                : verdict === 'no_data'
+                  ? 'no_data'
+                  : verdict
+          console.log(
+            `[${pad(i + 1)}/${plants.length}] ${tag.padEnd(8)} ${plant.common_name} — "${plant.native_to}"`
+          )
 
-      // Stamp only a row this run SETTLED — see shouldStamp. A row that threw
-      // stays unstamped so --new-only retries it next run, and so does a
-      // gross/contradicts row whose correction nobody has written yet.
-      if (
-        shouldStamp({
-          verdict,
-          native_to_reviewed_at: plant.native_to_reviewed_at,
-        })
-      ) {
-        await stampChecked(plant.id)
-      } else {
-        withheld.push(plant.common_name)
+          // Stamp only a row this run SETTLED — see shouldStamp. A row that threw
+          // stays unstamped so --new-only retries it next run, and so does a
+          // gross/contradicts row whose correction nobody has written yet.
+          if (
+            shouldStamp({
+              verdict,
+              native_to_reviewed_at: plant.native_to_reviewed_at,
+            })
+          ) {
+            await stampChecked(plant.id)
+            // Only a STAMPED row is a write. A withheld row was judged, which
+            // costs a model call but leaves the catalog untouched, and counting
+            // it would put the claim above what the stamp can ever show.
+            run.wrote(plant.id)
+          } else {
+            withheld.push(plant.common_name)
+          }
+        } catch (err) {
+          errored++
+          console.error(
+            `[${pad(i + 1)}/${plants.length}] ERROR ${plant.common_name}: ${(err as Error).message}`
+          )
+        }
+        if (i < plants.length - 1) await sleep(INTER_PLANT_DELAY_MS)
       }
-    } catch (err) {
-      console.error(
-        `[${pad(i + 1)}/${plants.length}] ERROR ${plant.common_name}: ${(err as Error).message}`
-      )
+
+      // A pass where every row errored is a failure even though nothing threw.
+      // WITHHELD ROWS ARE NOT ERRORS and must not count here: a gross verdict
+      // nobody has rewritten is this guard working, and a run that judged 40
+      // rows and withheld all 40 did its job. The test is that no row was
+      // JUDGED, not that no row was stamped — otherwise a legitimately
+      // all-withheld round would file itself as failed.
+      if (errored && !results.length) {
+        run.markFailed(`all ${errored} row(s) errored`)
+      }
     }
-    if (i < plants.length - 1) await sleep(INTER_PLANT_DELAY_MS)
-  }
+  )
 
   writeReport(results)
 

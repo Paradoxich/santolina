@@ -85,20 +85,31 @@ export interface RunRecord {
   /**
    * How much the database substantiated this run's claim at finalisation.
    *
-   *   confirmed    — a confirming witness supports the claim.
-   *   bounded      — only a bounding witness was available: consistent with the
-   *                  claim, but it cannot attribute the writes to this run.
+   *   confirmed    — a confirming witness supports the claim. Requires
+   *                  established exclusivity, so nothing produces this today.
+   *   corroborated — a stamp moved consistently with the claim, but other
+   *                  writers of that column could have been running. Consistent
+   *                  with the claim; not attributable to this run.
+   *   bounded      — only a bounding witness was available.
    *   unverified   — nothing observable, or every observation failed.
-   *   contradicted — a confirming witness disagrees. Only a confirming witness
-   *                  can produce this.
+   *   contradicted — a stamp disagrees with the claim. A corroborating witness
+   *                  can produce this too; see WitnessStrength for why the
+   *                  direction is deliberately asymmetric.
    *
    * Replaced an earlier `{ checked, agrees }` pair, which reported a bounding
    * witness as agreement and so overstated what the evidence said.
    */
   verification: {
-    substantiation: 'confirmed' | 'bounded' | 'unverified' | 'contradicted'
+    substantiation:
+      | 'confirmed'
+      | 'corroborated'
+      | 'bounded'
+      | 'unverified'
+      | 'contradicted'
     /** Keyed by what each witness COVERS. */
     observed: Record<string, number>
+    /** How this run established it was the only writer. Recorded, not assumed. */
+    exclusivity: Exclusivity
     notes: string[]
   }
   /** Present only when outcome is 'failed'. */
@@ -264,24 +275,79 @@ export function isWindowQueryable(column: string): boolean {
 }
 
 /**
- * How much a witness can establish. The distinction is the whole point: a
- * `verification` result that reads `agrees: true` carries semantic weight in a
- * log that is deliberately non-authoritative, and a future reader must not take
- * "some rows were modified around then" for "the database confirmed this run".
+ * A TIMESTAMP WINDOW CANNOT ESTABLISH CAUSALITY, and this is where that is
+ * finally taken seriously rather than filed as a caveat.
  *
- *   confirming   — the timestamp IS produced by the operation, so it can
- *                  establish the claim (subject to the overlap caveat below).
- *   bounding     — establishes only that rows were touched in the interval. It
- *                  cannot attribute those touches to THIS invocation, so it can
- *                  never confirm and can never contradict.
- *   unobservable — declared unverifiable, with a reason.
+ * A stamp witness asks `stamp ∈ [started_at, finished_at]`. That is a question
+ * about coincidence, not authorship. Two invocations of `cross-check-plants`
+ * running in two worktrees against the one production database — the normal
+ * operating model here, no global lock — overlap in time: A stamps rows 1-20, B
+ * stamps 21-40, and at finalisation BOTH query the window, both see 40, both
+ * satisfy `count >= rowCount`, and both record `confirmed`. Neither produced the
+ * evidence it is citing.
+ *
+ * The random run id fixed IDENTITY. It cannot fix ATTRIBUTION, because nothing
+ * writes it next to the mutation — and per-row provenance state is a documented
+ * non-goal, so nothing will.
+ *
+ * The earlier code knew about overlap and used it in one direction only: extra
+ * movement in the window was excused as "not evidence against this run", while
+ * the same extra movement was still counted as evidence FOR it. That asymmetry
+ * is the bug. Overlap breaks confirmation and contradiction alike.
+ *
+ *   confirming    — can confirm and contradict. Requires that no other writer of
+ *                   this column could have run inside the window; see
+ *                   `Exclusivity`. Nothing can declare this yet, deliberately.
+ *   corroborating — a stamp with no established exclusivity: the honest default.
+ *                   It cannot CONFIRM, because a concurrent writer of the same
+ *                   column inflates the count. It can still CONTRADICT, and that
+ *                   asymmetry is deliberate rather than sloppy — see below.
+ *   bounding      — `updated_at`: sees any write to the row by anyone. Neither.
+ *   unobservable  — declared unverifiable, with a reason.
+ *
+ * WHY CORROBORATING KEEPS CONTRADICTION WHEN IT IS NOT STRICTLY SOUND EITHER.
+ * A concurrent CLEARER of the same column can drive the count below the claim
+ * and produce a false contradiction, so the direction is not airtight. The costs
+ * are not symmetric: a false `confirmed` is a silent lie in a record someone
+ * will later cite as evidence, while a false `contradicted` is a loud flag that
+ * sends a person to look. Keeping the loud half is worth a rare false alarm;
+ * keeping the quiet half is not worth a rare silent lie. That asymmetry is
+ * stated here so nobody later "fixes" the inconsistency by restoring
+ * confirmation.
  */
-export type WitnessStrength = 'confirming' | 'bounding' | 'unobservable'
+export type WitnessStrength =
+  | 'confirming'
+  | 'corroborating'
+  | 'bounding'
+  | 'unobservable'
 
-export function strengthOf(witness: Witness): WitnessStrength {
+/**
+ * How a run established that it was the only writer of a column in its window.
+ *
+ * There is exactly one honest value today, and that is the point: exclusivity is
+ * a PREREQUISITE that must be established, not an assumption the log is allowed
+ * to make. A future `{ kind: 'locked' }` earns `confirming` back.
+ *
+ * WHY NO LOCK YET, recorded so the next session does not re-derive it. A
+ * per-step lock does not restore causality: five of the seven columns currently
+ * witnessed have MORE THAN ONE writing step (`native_checked_at` has three,
+ * `image_verified_at` four), so exclusivity has to be per-COLUMN, over every
+ * step that writes it. And a lock cannot bind a script that does not take it —
+ * six of those writers are among the 16 passes not yet on run provenance. A lock
+ * added today would not lock, and would license `confirmed` while doing it.
+ * Wire the remaining writers first; then the lock means something.
+ */
+export type Exclusivity = { kind: 'none'; reason: string }
+
+export function strengthOf(
+  witness: Witness,
+  exclusivity: Exclusivity
+): WitnessStrength {
   switch (witness.kind) {
     case 'stamp':
-      return 'confirming'
+      // The prerequisite decides the strength. A stamp is only as good as the
+      // guarantee that nothing else wrote the column while this run ran.
+      return exclusivity.kind === 'none' ? 'corroborating' : 'confirming'
     case 'row-touched':
       return 'bounding'
     case 'none':
@@ -343,6 +409,17 @@ export interface BeginRunOptions {
    * instant, and pretending otherwise is how verification dies quietly.
    */
   evidence?: Witness[]
+  /**
+   * How this run established it was the only writer of its stamp columns. Omit
+   * it and the run records that exclusivity was not established, which downgrades
+   * every stamp witness from confirming to corroborating.
+   *
+   * Deliberately opt-IN. The default is the truth about how this pipeline runs —
+   * parallel worktrees, one production database, no lock — and a claim of
+   * exclusivity has to be earned by a mechanism rather than assumed by whoever
+   * wrote the caller.
+   */
+  exclusivity?: Exclusivity
   recipe: Recipe
   scope?: string | null
   /** Injected in tests. */
@@ -430,9 +507,14 @@ async function countByWitness(
  * the work happened" ambiguity this exists to remove.
  *
  * Honest limit: a process that dies without running its handler — SIGKILL,
- * power loss — leaves stamps and no record. Those are detectable afterwards as
- * stamps that fall inside no recorded window, which is the log-versus-evidence
- * check run in the other direction.
+ * power loss — leaves stamps and no record. An earlier version of this note said
+ * those are detectable afterwards as stamps falling inside no recorded window.
+ * THAT WAS TOO STRONG, and it was too strong for the same reason confirmation
+ * was: windows overlap. An orphaned stamp can land inside some other run's
+ * recorded window and be indistinguishable from that run's own work. Orphan
+ * detection is therefore only reliable for a stamp landing in no window at all,
+ * which is a subset of the orphans — and the same exclusivity that would earn
+ * `confirming` back is what would make the check complete.
  */
 export function beginRun(opts: BeginRunOptions): RunHandle {
   const {
@@ -440,6 +522,11 @@ export function beginRun(opts: BeginRunOptions): RunHandle {
     writeSet,
     recipe,
     scope = null,
+    exclusivity = {
+      kind: 'none',
+      reason:
+        'no lock: parallel worktrees share one production database and nothing serialises steps',
+    },
     now = nowIso,
     countRows = countByWitness,
     append = appendRunRecord,
@@ -501,12 +588,13 @@ export function beginRun(opts: BeginRunOptions): RunHandle {
     const observed: Record<string, number> = {}
     const notes: string[] = []
     let anyConfirming = false
+    let anyCorroborating = false
     let anyBounding = false
     let contradicted = false
     let anyFailed = false
 
     for (const witness of evidence) {
-      const strength = strengthOf(witness)
+      const strength = strengthOf(witness, exclusivity)
       if (witness.kind === 'none') {
         notes.push(
           `${witness.covers} is not observable at finalisation: ${witness.reason}`
@@ -525,12 +613,21 @@ export function beginRun(opts: BeginRunOptions): RunHandle {
       }
       observed[witness.covers] = count
 
-      if (strength === 'confirming') {
-        anyConfirming = true
-        // A confirming witness CAN contradict. It cannot contradict on being
-        // larger than the claim: overlapping invocations are a normal operating
-        // condition here, so extra movement in the window is not evidence
-        // against this run.
+      if (strength === 'confirming' || strength === 'corroborating') {
+        if (strength === 'confirming') anyConfirming = true
+        else {
+          anyCorroborating = true
+          notes.push(
+            `${witness.covers} is corroborating, not confirming: ${exclusivity.reason}, ` +
+              `so another writer of this column could have moved rows inside the window`
+          )
+        }
+        // A stamp can contradict in one direction only. Extra movement is not
+        // evidence against this run — overlapping invocations are normal here.
+        // A claim LARGER than its evidence is, and that is the direction worth
+        // keeping even without exclusivity: see WitnessStrength on why the
+        // asymmetry between a silent false confirm and a loud false alarm is
+        // deliberate.
         if (count < rowCount) {
           contradicted = true
           notes.push(
@@ -562,9 +659,11 @@ export function beginRun(opts: BeginRunOptions): RunHandle {
         ? 'contradicted'
         : anyConfirming
           ? 'confirmed'
-          : anyBounding
-            ? 'bounded'
-            : 'unverified'
+          : anyCorroborating
+            ? 'corroborated'
+            : anyBounding
+              ? 'bounded'
+              : 'unverified'
 
     if (substantiation === 'unverified') {
       notes.push(
@@ -589,7 +688,7 @@ export function beginRun(opts: BeginRunOptions): RunHandle {
       write_set: [...writeSet].sort(),
       evidence,
       row_count: rowCount,
-      verification: { substantiation, observed, notes },
+      verification: { substantiation, observed, exclusivity, notes },
       ...(extra.error ? { error: extra.error } : {}),
     }
 

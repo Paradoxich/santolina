@@ -26,6 +26,7 @@ import { getSupabaseAdmin } from '../lib/supabase-admin'
 import { getAnthropicClient, CURATION_MODEL } from '../lib/anthropic-client'
 import { fetchAllRows } from '../lib/paginate'
 import { requireScope, scopeIds, describeScope } from './scope'
+import { withRunRecord } from './run-provenance'
 
 // ---------------------------------------------------------------------------
 // Config
@@ -33,6 +34,12 @@ import { requireScope, scopeIds, describeScope } from './scope'
 
 // 2s between Claude calls — same pacing as curate-plants.ts
 const INTER_PLANT_DELAY_MS = 2000
+
+// A decoding parameter is part of the recipe, so it is read from one place.
+const MAX_TOKENS = 1500
+
+const SYSTEM_PROMPT =
+  'You are a garden design assistant. Respond with ONLY valid JSON, no markdown, no code fences, no preamble, no explanation.'
 
 // UI cap — WorksWellWithSection shows at most 5 companions
 const MAX_COMPANIONS_PER_PLANT = 5
@@ -158,6 +165,37 @@ Rules:
 // Claude call
 // ---------------------------------------------------------------------------
 
+/**
+ * The template rendered for the recipe hash. Never sent.
+ *
+ * FULLY POPULATED, because describePlant() drops every field it does not have —
+ * an empty probe would render a prompt with almost no shape to it and hide most
+ * of the template from the hash.
+ *
+ * The candidate roster and the per-plant slot count are excluded: they are the
+ * subject this recipe is applied TO, and they change on every row. The CAP is
+ * recipe (it is a constant that shapes every prompt), so the probe renders with
+ * MAX_COMPANIONS_PER_PLANT rather than with a row's remaining slots.
+ */
+function recipeTemplate(): string {
+  const probe: CatalogPlant = {
+    id: 'recipe-probe',
+    common_name: 'probe',
+    scientific_name: 'Probe probe',
+    plant_type: 'perennial',
+    style_tags: ['cottage'],
+    sun_requirements: ['full_sun'],
+    bloom_months: [6],
+    bloom_color: ['white'],
+    height_max_cm: 100,
+  }
+  return buildPrompt(
+    probe,
+    [{ ...probe, id: 'recipe-probe-candidate' }],
+    MAX_COMPANIONS_PER_PLANT
+  )
+}
+
 async function getSuggestionsFromClaude(
   plant: CatalogPlant,
   candidates: CatalogPlant[],
@@ -166,9 +204,8 @@ async function getSuggestionsFromClaude(
   const client = getAnthropicClient()
   const message = await client.messages.create({
     model: CURATION_MODEL,
-    max_tokens: 1500,
-    system:
-      'You are a garden design assistant. Respond with ONLY valid JSON, no markdown, no code fences, no preamble, no explanation.',
+    max_tokens: MAX_TOKENS,
+    system: SYSTEM_PROMPT,
     messages: [
       { role: 'user', content: buildPrompt(plant, candidates, maxSuggestions) },
     ],
@@ -294,93 +331,145 @@ async function main() {
   let inserted = 0
   let skippedAtCap = 0
 
-  for (const [i, plant] of toProcess.entries()) {
-    const label = plant.scientific_name ?? plant.common_name
-    const prefix = `[${pad(i + 1)}/${pad(toProcess.length)}]`
-    const currentCount = companionCount.get(plant.id) ?? 0
-    const slots = MAX_COMPANIONS_PER_PLANT - currentCount
+  await withRunRecord(
+    {
+      step: 'curate-combinations',
+      // The write-set member is a TABLE, not a column — this pass writes no
+      // column on `plants` at all. That is the case the evidence split was
+      // built for: what was mutated is not always a column.
+      writeSet: ['plant_combinations'],
+      scope: `${describeScope(scope, ids)}${dryRun ? ' (--dry-run)' : ''}`,
+      recipe: {
+        model: CURATION_MODEL,
+        template: [SYSTEM_PROMPT, recipeTemplate()],
+        // The cap shapes every prompt and the arithmetic behind every skip, so
+        // a run at 5 is a different cohort from a run at 8.
+        ingredients: {
+          max_companions_per_plant: MAX_COMPANIONS_PER_PLANT,
+          combination_types: COMBINATION_TYPES,
+          strengths: STRENGTHS,
+        },
+        decoding: { max_tokens: MAX_TOKENS },
+      },
+      // plant_combinations rows are INSERTED and never updated, so created_at is
+      // the table's own mutation timestamp. It is still only a bounding witness:
+      // it sees any insert in the window, including another session's, so it can
+      // neither confirm this run's claim nor contradict it.
+      evidence: [
+        {
+          kind: 'row-touched',
+          covers: 'plant_combinations',
+          table: 'plant_combinations',
+          column: 'created_at',
+        },
+      ],
+    },
+    async (run) => {
+      for (const [i, plant] of toProcess.entries()) {
+        const label = plant.scientific_name ?? plant.common_name
+        const prefix = `[${pad(i + 1)}/${pad(toProcess.length)}]`
+        const currentCount = companionCount.get(plant.id) ?? 0
+        const slots = MAX_COMPANIONS_PER_PLANT - currentCount
 
-    if (slots <= 0) {
-      console.log(
-        `${prefix} ${label} — already at cap (${currentCount}), skipped`
-      )
-      skippedAtCap++
-      continue
-    }
-
-    // Candidates: everything except self, plants at cap, and already-paired plants
-    const candidates = plants.filter(
-      (c) =>
-        c.id !== plant.id &&
-        (companionCount.get(c.id) ?? 0) < MAX_COMPANIONS_PER_PLANT &&
-        !existingPairs.has(pairKey(plant.id, c.id))
-    )
-    if (!candidates.length) {
-      console.log(`${prefix} ${label} — no available candidates, skipped`)
-      continue
-    }
-
-    try {
-      process.stdout.write(`${prefix} ${label} … `)
-      const suggestions = await getSuggestionsFromClaude(
-        plant,
-        candidates,
-        slots
-      )
-
-      const candidateIds = new Set(candidates.map((c) => c.id))
-      const rows: ComboRow[] = []
-      let invalidIds = 0
-
-      for (const s of suggestions) {
-        if (rows.length >= slots) break
-        if (!s.plant_id || !candidateIds.has(s.plant_id)) {
-          invalidIds++
+        if (slots <= 0) {
+          console.log(
+            `${prefix} ${label} — already at cap (${currentCount}), skipped`
+          )
+          skippedAtCap++
           continue
         }
-        const key = pairKey(plant.id, s.plant_id)
-        if (existingPairs.has(key)) continue
-        if ((companionCount.get(s.plant_id) ?? 0) >= MAX_COMPANIONS_PER_PLANT)
-          continue
 
-        rows.push({
-          plant_id_a: plant.id,
-          plant_id_b: s.plant_id,
-          combination_type: coerceCombinationType(s.combination_type),
-          strength: coerceStrength(s.strength),
-          notes: s.notes?.trim() || null,
-        })
-        existingPairs.add(key)
-        companionCount.set(plant.id, (companionCount.get(plant.id) ?? 0) + 1)
-        companionCount.set(
-          s.plant_id,
-          (companionCount.get(s.plant_id) ?? 0) + 1
+        // Candidates: everything except self, plants at cap, and already-paired plants
+        const candidates = plants.filter(
+          (c) =>
+            c.id !== plant.id &&
+            (companionCount.get(c.id) ?? 0) < MAX_COMPANIONS_PER_PLANT &&
+            !existingPairs.has(pairKey(plant.id, c.id))
         )
+        if (!candidates.length) {
+          console.log(`${prefix} ${label} — no available candidates, skipped`)
+          continue
+        }
+
+        try {
+          process.stdout.write(`${prefix} ${label} … `)
+          const suggestions = await getSuggestionsFromClaude(
+            plant,
+            candidates,
+            slots
+          )
+
+          const candidateIds = new Set(candidates.map((c) => c.id))
+          const rows: ComboRow[] = []
+          let invalidIds = 0
+
+          for (const s of suggestions) {
+            if (rows.length >= slots) break
+            if (!s.plant_id || !candidateIds.has(s.plant_id)) {
+              invalidIds++
+              continue
+            }
+            const key = pairKey(plant.id, s.plant_id)
+            if (existingPairs.has(key)) continue
+            if (
+              (companionCount.get(s.plant_id) ?? 0) >= MAX_COMPANIONS_PER_PLANT
+            )
+              continue
+
+            rows.push({
+              plant_id_a: plant.id,
+              plant_id_b: s.plant_id,
+              combination_type: coerceCombinationType(s.combination_type),
+              strength: coerceStrength(s.strength),
+              notes: s.notes?.trim() || null,
+            })
+            existingPairs.add(key)
+            companionCount.set(
+              plant.id,
+              (companionCount.get(plant.id) ?? 0) + 1
+            )
+            companionCount.set(
+              s.plant_id,
+              (companionCount.get(s.plant_id) ?? 0) + 1
+            )
+          }
+
+          invalidIdCount.total += invalidIds
+
+          if (rows.length && !dryRun) {
+            const { error } = await db.from('plant_combinations').insert(rows)
+            if (error) throw new Error(`Insert failed: ${error.message}`)
+            // A combination's row identity is the PAIR, so the composite key is what
+            // gets counted — the same canonical key the dedupe set uses, so a pair
+            // written once cannot be counted twice from the other direction.
+            for (const r of rows) run.wrote(pairKey(r.plant_id_a, r.plant_id_b))
+          }
+          inserted += rows.length
+
+          const names = rows
+            .map(
+              (r) => plantById.get(r.plant_id_b)?.common_name ?? r.plant_id_b
+            )
+            .join(', ')
+          console.log(
+            `✓  +${rows.length}${names ? ` (${names})` : ''}` +
+              (invalidIds ? `  ⚠ ${invalidIds} invalid id(s) dropped` : '')
+          )
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err)
+          console.log(`✗  ${message}`)
+          failures.push({ name: label, error: message })
+        }
+
+        if (i < toProcess.length - 1) await sleep(INTER_PLANT_DELAY_MS)
       }
 
-      invalidIdCount.total += invalidIds
-
-      if (rows.length && !dryRun) {
-        const { error } = await db.from('plant_combinations').insert(rows)
-        if (error) throw new Error(`Insert failed: ${error.message}`)
+      // A pass where every plant errored is a failure even though nothing threw.
+      if (failures.length && !inserted) {
+        run.markFailed(`all ${failures.length} plant(s) failed`)
       }
-      inserted += rows.length
-
-      const names = rows
-        .map((r) => plantById.get(r.plant_id_b)?.common_name ?? r.plant_id_b)
-        .join(', ')
-      console.log(
-        `✓  +${rows.length}${names ? ` (${names})` : ''}` +
-          (invalidIds ? `  ⚠ ${invalidIds} invalid id(s) dropped` : '')
-      )
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err)
-      console.log(`✗  ${message}`)
-      failures.push({ name: label, error: message })
     }
-
-    if (i < toProcess.length - 1) await sleep(INTER_PLANT_DELAY_MS)
-  }
+  )
 
   // Summary
   console.log('\n─────────────────────────────────────────────────────────────')

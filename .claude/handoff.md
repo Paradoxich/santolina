@@ -32,62 +32,85 @@ supabase start -x studio,realtime,storage-api,imgproxy,edge-runtime,inbucket,vec
 
 ---
 
-## 2026-08-16 — Round-12 guardrails, then write provenance
+## 2026-08-16 — The nine wired; round 12 is no longer gated
 
-**In flight: nothing.** Both merged and verified: PR
-[#162](https://github.com/Paradoxich/santolina/pull/162) as `70b4d26`,
-[#163](https://github.com/Paradoxich/santolina/pull/163) as `3059bf4`. Branches
-and worktrees gone; all three CI jobs green on main including the two main-only
-ones. Session entries in `docs/database-log.md`; contracts in
-`docs/write-provenance.md` and the traps this date.
+**In flight:** PR [#164](https://github.com/Paradoxich/santolina/pull/164),
+branch `session/2026-08-16-provenance-nine`, worktree
+`../santolina-provenance-nine`. Merge it, then delete both. Session entry in
+`docs/database-log.md`; the contract additions are in `docs/write-provenance.md`.
+
+**Review round on #164 found one blocker, now fixed.** `confirmed` was reachable
+by coincidence: two overlapping runs of one step each saw the other's stamps and
+both passed `count >= rowCount`. It is now unreachable without established
+exclusivity, which nothing can declare — trap 29, and step 4 below is the way
+back. The same review caught `cross-check-native-to`'s generate pass never
+calling `markFailed`, so an all-rows-errored run recorded `completed`. Both
+pinned.
 
 ```bash
-pnpm invariants:check      # prints its own backlog, including the 25 below
+pnpm invariants:check      # prints its own backlog, including the 16 below
 ```
 
-**ROUND 12 IS GATED, and the gate is now provenance, not seeding.** The resolver
-closed the seeding half — one append-only synonym table, 45 components over 105
-genus names, and `invariants:check` fails if any `seed-*.ts` declares its own.
-What remains: nine round steps still write to the catalog with **no run record**,
-so a round run today produces values whose production context is unrecoverable,
-which is the debt the work exists to stop accruing.
+**ROUND 12'S GATE IS OPEN.** Every step the runbook runs opens a run:
+`RUNS_WITHOUT_PROVENANCE`'s round-step block is empty and the count went 25 → 16.
+What remains is out-of-round passes and three archive candidates; none of them
+runs during a round, so none of them blocks one.
 
 **Next steps, in order:**
 
-1. **Wire the nine round steps. FRESH SESSION.** Read `docs/write-provenance.md`
-   first, then `curate-plants.ts` as the worked example. The abstraction is
-   settled — implementation, not design. Follow the order the contract implies:
-   `withRunRecord` → `writeSet` → recipe → evidence → `wrote(rowId)` → outcome.
-   `RUNS_WITHOUT_PROVENANCE` names all 25 scripts with what each writes; the nine
-   round steps are its first block, and deleting entries is the work.
-2. **Four of the nine need a non-default evidence witness**, because they do not
-   write a timestamp column: `curate-seasonal-care` (`seasonal_care`),
-   `regenerate-native-region` (`native_region`), `recover-image-categories`
-   (`image_candidates`), and `curate-combinations` writes a different table
-   entirely. `beginRun` throws on an unwitnessed member, so this surfaces at once
-   rather than as a silent verification failure.
-3. **Two have a per-invocation recipe**, not a constant: `pick-plant-images` runs
-   two modes on `VISION_MODEL`, and `curate-editorial` computes `max_tokens`.
-   Wire the modes as separate runs.
-4. **`regenerate-native-region` wants the plan-freshness check in the same
-   change** — its plan carries `generatedAt` and nothing compares it against the
-   rows' `updated_at`, so a reviewed plan can be applied to state that moved
-   underneath it. `restore-catalog` has the comparison to copy.
-5. **Then round 12**, watching two things this pipeline has not done before. A
-   `gross`/`contradicts` row whose rewrite nobody has written now stays unstamped
-   and **fails round close** — intended, and the run names those rows in its
-   tail. And a row a person reads and KEEPS needs `native_to_reviewed_at`, which
-   nothing in TypeScript writes: if round 12 produces a keep-this-phrase
-   decision, the `--review-keep` writer (audit F5) stops being can-wait and
-   becomes the blocker. Recorded in `STAMPS_WITHOUT_WRITERS`.
-6. **Then the three still-open hygiene items**, any order. The migration-drift
+1. **Run round 12.** Nothing in the pipeline is waiting on more infrastructure.
+   Two behaviours nobody has watched yet, both intended, both worth reading the
+   tail for. A `gross`/`contradicts` row whose rewrite nobody has written stays
+   unstamped and **fails round close** — the run names those rows. And a row a
+   person reads and KEEPS needs `native_to_reviewed_at`, which nothing in
+   TypeScript writes: if round 12 produces a keep-this-phrase decision, the
+   `--review-keep` writer (audit F5) stops being can-wait and becomes the
+   blocker. Recorded in `STAMPS_WITHOUT_WRITERS`.
+2. **Read the first run records before trusting them.** `apps/web/runs/` is
+   still EMPTY — no step was run this session, so every witness is verified as a
+   query and none as a record. The probe in the database-log entry is evidence
+   that the queries work; it is not evidence that a real pass files a sensible
+   record. Expect `bounded` on the value-column passes and **`corroborated`** on
+   the stamp passes. **`confirmed` is unreachable by construction** (trap 29) —
+   if you ever see one, something asserted exclusivity that was never
+   established. Treat a `contradicted` on the first round as a bug in the wiring
+   before a bug in the data.
+3. **Then the out-of-round 16**, same mechanism, no new design.
+   `backfill-guard-stamps` is the one whose provenance matters most: its
+   state-derived half was deleted after it fabricated 100 stamps.
+   `apply-native-to-fixes`, `apply-image-reverts` and `feed-wikimedia-candidates`
+   all CLEAR a stamp, so shape 12 refuses them until they pass evidence — which
+   is the guard working, not an obstacle.
+4. **Then per-column exclusivity, which is what earns `confirming` back.** The
+   order is forced, and trap 29 has the reasoning: a per-STEP lock does not
+   restore causality, because five of the seven witnessed columns have more than
+   one writing step (`native_checked_at` three, `image_verified_at` four). The
+   key has to be the COLUMN, over every step that writes it — and six of those
+   writers are in step 3 above, so a lock added first would fail to bind them
+   while licensing `confirmed`. Mechanism notes for whoever does it:
+   `pg_advisory_lock` needs a session and PostgREST pools connections, so it
+   cannot hold one across a run; `SUPABASE_DB_URL` is the session pooler (5432)
+   and would work with a direct client, but `pick-plant-images` collects a Batch
+   API job that can run for hours, so the lock has to survive that or be
+   re-verified at finalisation before `confirmed` is recorded. No dependency was
+   added for this yet, deliberately.
+
+   **Do not DESIGN it early either, not just implement it late.** The census it
+   has to be designed against is the complete one, and step 3 changes that census
+   — six of the writers are not on run provenance yet, and wiring them is what
+   reveals which columns actually need a shared key. A lock abstraction built
+   around today's partial set would look finished and establish the wrong
+   property, which is the failure this whole sequence exists to avoid.
+
+5. **Then the three still-open hygiene items**, any order. The migration-drift
    content check needs `applied_migrations()` to return `statements`, so it needs
    a migration and Ana's push (rule 11); design is in the review's section 6 and
    31 of 34 versions already match byte for byte. The graveyard pass moves the
    three in `SCRIPTS_PENDING_ARCHIVE` to `archive/` with README rows, and
    `repair-combinations.ts` needs a `database-log` line in the same change or it
-   files an empty record. And 21 of 28 traps are unpinned, with the reasons per
-   trap; trap 1 is the cheapest and highest-consequence.
+   files an empty record. And 21 of 30 traps are unpinned, with the reasons per
+   trap; trap 1 is the cheapest and highest-consequence. (The denominator moved
+   with traps 28 and 29 — both pinned on arrival, so the numerator did not.)
 
 **Waiting on Ana:** the two climbing hydrangeas, the `Cenolophium` region
 correction, the 5 photo holds, the rounds 1-6 editorial pass, the `modern`
@@ -100,16 +123,15 @@ early if a PR adds a stamp column, adds a script, or touches
 `upsert_trefle_plant`. It should come back **shorter**; if it does not, the
 diagnosis was wrong and gets redone rather than the fixes repeated. Fresh session.
 
-**What both sessions learned, and it is the same lesson twice.** The mechanism
-disagreed with the document that asked for it three times (traps 13 and 14 were
-already pinned; unioning the stamp suffixes would have broken round close; the
-`restore-catalog` diff was never inflated), and the provenance work survived
-seven attempts to make it lie (duplicate run identity, interrupted execution
-vanishing, invalid evidence degrading silently, a mutation that is not a column,
-a witness that cannot attribute a write, a row written twice, a detector claiming
-coverage it lacked). Almost none of that came from thinking harder about the
-design — it came from building the check and running it. A review is a
-hypothesis; the check is the experiment.
+**What this session adds to the same lesson.** The design was called settled and
+was still wrong in three places, all of which only appeared once code had to run:
+a cleared stamp cannot witness itself, a confirming witness must cover every row
+the run counts, and the scan had never once looked at the three editorial
+criterion stamps. The last is the sharpest — it had been reporting green about
+columns it could not see, from both directions at once. And shape 12's first
+version was itself literal-shape dependent, the exact mistake its own comment
+warns about; that was found by making the scan fail on purpose, not by rereading
+it. **A scan nobody has watched fail is trap 19's shape.** Break it once before
+you believe it.
 
-**Open questions:** none. The provenance design is settled; do not reopen it
-before the nine are wired.
+**Open questions:** none.

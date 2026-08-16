@@ -58,6 +58,9 @@ import { execFileSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { basename, join } from 'node:path'
 import { REPO_ROOT } from './token-source'
+// Imported rather than restated: the suffix list that decides "can this column
+// be compared to an instant" has one home, in the module that queries it.
+import { isWindowQueryable } from './run-provenance'
 
 // ---------------------------------------------------------------------------
 // Escape hatches. Each entry: subject → why it is allowed, today.
@@ -139,21 +142,9 @@ export const SCRIPTS_PENDING_ARCHIVE: Record<string, string> = {
  * to prevent.
  */
 export const RUNS_WITHOUT_PROVENANCE: Record<string, string> = {
-  // --- round steps. These are what round 12 waits on. ---
-  'cross-check-plants.ts': 'Round step 5. Stamps botanical_checked_at per row.',
-  'cross-check-native-to.ts':
-    'Round step 5a. Stamps native_checked_at on settled rows only (shouldStamp).',
-  'cross-check-native-region.ts':
-    'Round step 5b. Stamps native_region_checked_at via rowsToStamp and CLEARS native_checked_at as a cascade, so its write-set holds two columns with opposite senses.',
-  'regenerate-native-region.ts':
-    'Round step 4a. Writes native_region from a reviewed plan. Wire the plan freshness check in the same change: the plan carries generatedAt and nothing compares it against the rows updated_at.',
-  'curate-combinations.ts': 'Round step 3. Writes plant_combinations rows.',
-  'curate-seasonal-care.ts': 'Round step 7. Writes seasonal_care.',
-  'recover-image-categories.ts': 'Round step 6. Writes image_candidates.',
-  'pick-plant-images.ts':
-    'Round steps 7a and 7a2 — two modes, different write-sets, and VISION_MODEL rather than CURATION_MODEL. Wire the modes as separate runs.',
-  'curate-editorial.ts':
-    'Round step 7b. Writes editorial_checked_at, is_curated and three criterion stamps; max_tokens is computed per invocation, so its decoding parameters are not a constant.',
+  // --- round steps: EMPTY as of 2026-08-16, and the gate round 12 waited on.
+  //     Every step the runbook runs now opens a run. Do not add one back here
+  //     without saying why a round step may write without a record. ---
 
   // --- outside the round cadence ---
   'curate-styles.ts': 'Repair pass. Stamps style_checked_at.',
@@ -356,7 +347,7 @@ function stampColumns(): string[] {
   for (const file of MIGRATIONS) {
     const sql = read(file).toLowerCase()
     for (const m of sql.matchAll(
-      /add column\s+(?:if not exists\s+)?([a-z_]+_(?:checked|verified|reviewed|drafted)_at)\b/g
+      /add column\s+(?:if not exists\s+)?([a-z_]+_(?:checked|verified|reviewed|drafted)_at|editorial_[a-z]+_at)\b/g
     )) {
       if (m[1]) found.add(m[1])
     }
@@ -369,12 +360,21 @@ function checkStampWriters(): void {
   const withoutWriter: string[] = []
 
   for (const stamp of stamps) {
-    // A WRITE is the column as an object key whose value is a timestamp or an
-    // explicit null (clearing a stamp is a write). `x: row.x` is a read-through
-    // into a report row, which is what native_to_reviewed_at has and why it
-    // looked written for months.
+    // A WRITE is the column set to a timestamp or an explicit null (clearing a
+    // stamp is a write). What is NOT a write is a read-through — `x: row.x`
+    // copying a value into a report row, which is what native_to_reviewed_at
+    // has and why it looked written for months. So the VALUE side is what
+    // decides, and the assignment operator is not: `patch.editorial_image_at =
+    // now` is as much a write as `{ editorial_image_at: now }`.
+    //
+    // Both halves of this were widened on 2026-08-16, and the three editorial
+    // criterion stamps needed both. They are declared by migration
+    // 20260729112046, they end `_at` without one of the four vocabulary
+    // suffixes, AND curate-editorial builds them onto a patch object by
+    // assignment — so the scan had never seen them from either direction, and
+    // reported a clean run for a column it was not looking at.
     const writeRe = new RegExp(
-      `${stamp}\\s*:\\s*(?:new Date\\(|null\\b|[\\w.]*(?:nowIso|timestamp|stampedAt|isoNow)\\b)`,
+      `${stamp}\\s*[:=]\\s*(?:new Date\\(|null\\b|[\\w.]*(?:now|nowIso|timestamp|stampedAt|isoNow)\\b)`,
       'i'
     )
     const writers = SOURCE_TS.filter((f) =>
@@ -710,8 +710,14 @@ function checkWriteProvenance(): number {
       }
       for (const column of declared) {
         // is_curated is a real declared write that is not a stamp; allow the
-        // known non-stamp value columns the pipeline writes deliberately.
-        if (stamps.has(column) || NON_STAMP_WRITES.has(column)) continue
+        // known non-stamp value columns the pipeline writes deliberately, and
+        // the tables a write-set may name instead of a column.
+        if (
+          stamps.has(column) ||
+          NON_STAMP_WRITES.has(column) ||
+          NON_COLUMN_WRITE_SETS.has(column)
+        )
+          continue
         fail({
           shape: 'declared write-set names an unknown column',
           subject: `${file} → ${column}`,
@@ -720,6 +726,56 @@ function checkWriteProvenance(): number {
           remedy: `Fix the spelling, or add it to NON_STAMP_WRITES in ${basename(__filename)} if it is a deliberate value write.`,
         })
       }
+    }
+
+    // Shape 12. A CLEARING WRITE MUST NOT TAKE THE DEFAULT WITNESS.
+    //
+    // `defaultEvidence` gives every window-queryable write-set member a stamp
+    // witness: count the rows whose stamp lands inside the run's window. That is
+    // right for a column the run SETS and exactly wrong for one it CLEARS. A
+    // nulled row holds NULL and matches no window, so a run that correctly
+    // cleared 20 stamps observes 0 against a claim of 20 and records itself
+    // CONTRADICTED — a correct run filing a report that says it was caught
+    // lying. A clearing write is invisible to its own column by construction,
+    // and no query run afterwards can tell "this run nulled it" from "it was
+    // never set".
+    //
+    // Loud rather than silent, so it is not trap 1's shape. But a log nobody
+    // trusts is a log nobody reads, and three of the nine round steps clear a
+    // stamp as a cross-field cascade — this is a road already travelled three
+    // times, not a hypothetical.
+    //
+    // WHAT THIS ASKS FOR is an explicit `evidence:`, not a particular witness.
+    // Checking for a witness naming the column would tie the scan to how the
+    // literal is written — cross-check-native-region and pick-plant-images both
+    // build theirs through a helper — and a detector that depends on the shape
+    // of a literal claims coverage it does not have, which is the mistake shape
+    // 8 was rewritten to avoid. Once evidence is explicit, beginRun already
+    // throws for an unwitnessed member, so the author cannot quietly do nothing.
+    const declaredMembers = [
+      ...src.matchAll(/writeSet:\s*\[([^\]]*)\]/g),
+    ].flatMap((m) =>
+      [...(m[1] ?? '').matchAll(/'([a-z_]+)'/g)].map((x) => x[1]!)
+    )
+    const clearsOwnMember = declaredMembers.filter(
+      (member) =>
+        isWindowQueryable(member) &&
+        new RegExp(`${member}\\s*[:=]\\s*null\\b`).test(src)
+    )
+    // `evidence:` OR the shorthand `evidence,` — cross-check-native-region
+    // computes both fields together and spreads them in, and a check that only
+    // knew the colon form would have called it a violation while it was doing
+    // exactly the right thing.
+    const passesEvidence = /\bevidence\s*[:,]/.test(src)
+    if (clearsOwnMember.length && !passesEvidence) {
+      fail({
+        shape: 'clearing write left on the default witness',
+        subject: `${file} → ${[...new Set(clearsOwnMember)].join(', ')}`,
+        detail:
+          'Sets a declared write-set member to null and passes no evidence, so the default gives that column a stamp witness. A cleared row matches no window, so the run would observe 0 against its own claim and record itself contradicted.',
+        remedy:
+          "Pass an explicit evidence array. A cleared stamp cannot witness itself: use { kind: 'row-touched' } on the table's own mutation timestamp, or { kind: 'none', reason } to record that the write is not observable at finalisation.",
+      })
     }
 
     // Shape 10. withRunRecord is the canonical pattern, and this scan is why.
@@ -791,10 +847,34 @@ function checkWriteProvenance(): number {
 /** Scripts allowed to own their own terminal paths instead of using withRunRecord. */
 export const RAW_BEGIN_RUN_ALLOWED: Record<string, string> = {}
 
+/**
+ * Write-set entries that name a TABLE rather than a column.
+ *
+ * Kept apart from NON_STAMP_WRITES rather than folded into it, for the reason
+ * run-provenance.ts gives at the `covers` field: a write-set member is "what was
+ * mutated", and that is not always a column. curate-combinations inserts rows
+ * into plant_combinations — there is no column to name, and no per-column
+ * witness either, so it is witnessed by that table's own created_at. A checker
+ * that accepted a table name out of the column list would be re-conflating the
+ * two things the evidence split exists to keep separate.
+ */
+const NON_COLUMN_WRITE_SETS = new Set(['plant_combinations'])
+
 /** Declared write-set entries that are real writes but not stamp columns. */
 const NON_STAMP_WRITES = new Set([
   'is_curated',
+  // The vision pass's verdict and its prose. Written together by the pick and
+  // rewritten by --verify, which is why neither can be inferred from a stamp.
+  'image_pick_confidence',
+  'image_pick_reason',
+  // Rewritten by the editorial pass, and only after a blind second call
+  // approved the replacement.
+  'description',
   'native_region',
+  // The user-facing range phrase. Hand-owned, voice-passed copy: no guard drafts
+  // it, and the only writer is an --apply pass working from a committed decision
+  // file (cross-check-native-to, apply-native-to-fixes).
+  'native_to',
   'seasonal_care',
   'image_url_curated',
   'image_attribution',
