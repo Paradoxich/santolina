@@ -175,6 +175,15 @@ export const RUNS_WITHOUT_PROVENANCE: Record<string, string> = {
 }
 
 /**
+ * Shape 18. A flag a script parses without documenting it in its own header.
+ *
+ * EMPTY, and it should stay that way: an entry here says an option exists that
+ * nobody can find, on purpose. The only honest reason is a flag that is
+ * genuinely internal — one a wrapper passes and a person never types.
+ */
+export const FLAGS_NOT_DOCUMENTED: Record<string, string> = {}
+
+/**
  * Shape 1. Places a not-null column is compared to null, allowed on inspection.
  * A comparison against an AI RESPONSE field is not the trap-26 shape: the
  * response is parsed JSON where the key really can be absent.
@@ -1068,6 +1077,78 @@ const NON_STAMP_WRITES = new Set([
 ])
 
 // ---------------------------------------------------------------------------
+// Shape 18. A flag a script parses but does not document
+//
+// THE CLASS EVERY OTHER SHAPE HERE MISSES: a defect in code the session just
+// wrote. The rest of this file catches shapes that accumulated over rounds —
+// an unwired stamp, a copied page loop, a stale hatch. This one catches the
+// author of a new flag forgetting the two lines that make it reachable, in the
+// same pass that adds it.
+//
+// AN UNDOCUMENTED FLAG IS AN UNREACHABLE FEATURE. The header is the only place
+// anyone learns a script takes one: there is no --help anywhere in scripts/,
+// and the runbook renders usage from these headers. `--catalog-only` on
+// archive-round has been parsed and undocumented since it was written, which
+// means the fast path it exists to offer has never been offered to anybody.
+// That is the same failure as CLAUDE.md's "nothing may be reachable only from
+// someone's memory", one level down: not the script, its options.
+//
+// WHAT COUNTS AS PARSING, and why the check is narrow. A quoted `--flag` on a
+// line that also touches `argv` or `args` is read as parsed. That deliberately
+// excludes a flag in an `args: [...]` literal, which is a flag being PASSED to
+// a child command (runbook.ts renders four of those and parses none of them),
+// and it misses a parse split across lines. A first version that under-reports
+// is worth more than one that starts life with a list of excuses: a check full
+// of escape hatches teaches people to add another.
+// ---------------------------------------------------------------------------
+function parsedFlags(body: string): Set<string> {
+  const flags = new Set<string>()
+  for (const line of body.split('\n')) {
+    // `args: ['--apply']` is a flag handed to a child process, not parsed here.
+    if (/\bargs\s*:/.test(line)) continue
+    if (!/\bargv\b|\bargs\b/.test(line)) continue
+    for (const m of line.matchAll(/['"](--[a-z][a-z0-9-]*)['"]/g))
+      flags.add(m[1]!)
+  }
+  return flags
+}
+
+function checkFlagsDocumented(): number {
+  const excused: string[] = []
+
+  for (const file of SOURCE_TS.filter((f) => f.includes('/scripts/'))) {
+    const name = basename(file)
+    if (name === basename(__filename)) continue
+    const src = read(file)
+    const end = src.indexOf('*/')
+    const header =
+      src.trimStart().startsWith('/**') && end !== -1 ? src.slice(0, end) : ''
+    const undocumented = [...parsedFlags(src.slice(end + 2))].filter(
+      (flag) => !header.includes(flag)
+    )
+    if (!undocumented.length) continue
+
+    if (FLAGS_NOT_DOCUMENTED[name]) {
+      excused.push(name)
+      continue
+    }
+    fail({
+      shape: 'flag parsed but not documented',
+      subject: file,
+      detail: `Parses ${undocumented.join(', ')} and its header never names ${undocumented.length > 1 ? 'them' : 'it'}, so the only way to find the option is to read the argv handling.`,
+      remedy: `Add it to the Usage block in the file's own header. If it is deliberately private, record it in FLAGS_NOT_DOCUMENTED in ${basename(__filename)} with the reason.`,
+    })
+  }
+
+  for (const key of Object.keys(FLAGS_NOT_DOCUMENTED)) {
+    if (!excused.includes(key)) {
+      staleHatches.push({ list: 'FLAGS_NOT_DOCUMENTED', key })
+    }
+  }
+  return excused.length
+}
+
+// ---------------------------------------------------------------------------
 // Shape 13. Pagination hand-rolled instead of lib/paginate.ts
 //
 // Standing rule 5 exists because a bare read caps at 1000 rows in silence, and
@@ -1428,6 +1509,7 @@ const traps = checkTrapsPinned()
 const pendingArchive = checkScriptReachability()
 checkNoForkedSynonymTables()
 const unwiredProvenance = checkWriteProvenance()
+const undocumentedFlags = checkFlagsDocumented()
 const handRolledPaging = checkPagination()
 const handRolledMutation = checkReviewedMutation()
 const openFindings = checkOpenFindings()
@@ -1480,6 +1562,7 @@ row(
   String(unwiredProvenance),
   'RUNS_WITHOUT_PROVENANCE'
 )
+row('undocumented flags', String(undocumentedFlags), 'FLAGS_NOT_DOCUMENTED')
 row('hand-rolled paging', String(handRolledPaging), 'HAND_ROLLED_PAGINATION')
 row(
   'hand-rolled mutation',

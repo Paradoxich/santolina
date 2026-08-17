@@ -69,6 +69,12 @@
  *     --verify --round 8 --limit 3 --dry-run
  *   # Real run:
  *   ./node_modules/.bin/tsx --env-file=.env.local scripts/pick-plant-images.ts --verify --round 8
+ *   ./node_modules/.bin/tsx --env-file=.env.local scripts/pick-plant-images.ts --verify --reverify
+ *   ./node_modules/.bin/tsx --env-file=.env.local scripts/pick-plant-images.ts --report-only
+ *
+ * `--reverify` re-runs verification over rows already stamped, instead of only
+ * the unverified ones. `--report-only` rebuilds the review file from current
+ * state and calls no model, so it costs nothing.
  */
 
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'

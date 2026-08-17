@@ -25,6 +25,10 @@
  *   ./node_modules/.bin/tsx --env-file=.env.local scripts/cross-check-native-region.ts --all --limit 3
  *   ./node_modules/.bin/tsx --env-file=.env.local scripts/cross-check-native-region.ts --ids <uuid> --apply
  *
+ * `--allow-empty` lets --apply CLEAR a region rather than skipping the row, for
+ * a plant with no wild native range. Off by default: an empty result is far
+ * more often a lookup that failed than a plant that has nowhere to be from.
+ *
  * Report-only by default (writes reports/native-region-crosscheck.{json,md}).
  * `--apply` writes only rows where WCVP disagrees, and is guarded the same way
  * as apply-sun-widening.ts: each write asserts the value it expects to find, so

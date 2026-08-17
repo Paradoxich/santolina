@@ -28,6 +28,10 @@
  * Read-only, no AI calls — cheap enough to run after every round.
  *
  *   ./node_modules/.bin/tsx --env-file=.env.local scripts/verify-round.ts
+ *   ./node_modules/.bin/tsx --env-file=.env.local scripts/verify-round.ts --round 12
+ *
+ * `--round <label>` scopes the checks to one round's rows. Without it the
+ * checks run against the whole catalog.
  */
 
 import { IGNORED_BLOOM_COLORS, RAW_TO_BUCKET } from '../lib/bloom-colors'

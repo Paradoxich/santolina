@@ -16,6 +16,11 @@
  *   ./node_modules/.bin/tsx --env-file=.env.local scripts/cross-check-seasonal-care.ts
  *   # Check a pre-run sample artifact instead of the DB:
  *   ./node_modules/.bin/tsx --env-file=.env.local scripts/cross-check-seasonal-care.ts --from-report reports/seasonal-care-sample-<stamp>.json
+ *   ./node_modules/.bin/tsx --env-file=.env.local scripts/cross-check-seasonal-care.ts --names "lady's mantle,Hosta sieboldiana"
+ *
+ * `--names` takes a comma-separated list of common or scientific names and
+ * re-checks just those, which is how you close the gap on rows that errored in
+ * a prior full run without paying for the whole pass again.
  *
  * Flags:
  *   --from-report F  Read seasonal_care from a sample artifact (JSON) rather

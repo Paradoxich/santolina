@@ -22,6 +22,10 @@
  * quinquefolia). The check that would have caught it existed two rounds later
  * and could not reach backwards; now it can.
  *
+ * THE FLAG IT PARSES, on its callers' behalf: `--apply`. Dry run is the
+ * default, so each calling script's own Usage block reads the same as it did
+ * when the script parsed argv itself.
+ *
  * WHAT IT DOES NOT DO. It does not flip `is_curated`. A name correction is
  * mechanical, not Ana's editorial voice pass (docs/architecture.md#curation-layer),
  * and `onCurated: 'skip'` means a finalised row's name is frozen rather than
