@@ -41,6 +41,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { getSupabaseAdmin } from '../lib/supabase-admin'
 import type { SeasonalCare, SeasonalRhythm } from '../lib/plants-db'
+import { withRunRecord, type Witness } from './run-provenance'
 
 const SEASONAL_KEYS: Array<keyof SeasonalRhythm> = [
   'early_spring',
@@ -178,121 +179,166 @@ async function main() {
   const skipped: string[] = []
   const warnings: string[] = []
 
-  for (const [plantId, ds] of byPlant) {
-    // Fetch the current row once (this is the guard baseline).
-    const { data, error } = await db
-      .from('plants')
-      .select('seasonal_care')
-      .eq('id', plantId)
-      .single()
-    if (error || !data) {
-      skipped.push(
-        `${ds[0]!.plant}: fetch failed (${error?.message ?? 'no row'})`
-      )
-      continue
-    }
-    const original = (data.seasonal_care ?? {}) as Record<string, string | null>
-    const working: Record<string, string | null> = { ...original }
-    const pending: string[] = [] // ✓ lines for this plant, printed after write
-    let plantApplied = 0
+  const runOptions = {
+    step: 'apply-seasonal-care-fixes',
+    // One column, rewritten whole: the patch is normalised to the full
+    // six-key shape before it is written, so a partial decision cannot leave a
+    // half-populated object behind.
+    writeSet: ['seasonal_care'],
+    // A jsonb value column, and this pass writes no stamp — notably it does NOT
+    // clear seasonal_care_checked_at, so the cross-check's certification
+    // survives a hand edit it never saw. That is worth naming rather than
+    // inheriting: it is the opposite choice from apply-native-to-fixes next
+    // door, which nulls its guard stamp for exactly this reason.
+    evidence: [
+      {
+        kind: 'row-touched',
+        covers: 'seasonal_care',
+        table: 'plants',
+        column: 'updated_at',
+      },
+    ] as Witness[],
+    scope: `${decisions.length} hand-authored decision(s) from ${file}`,
+    // Hand-authored copy: the decision file is the recipe.
+    recipe: {
+      model: 'human',
+      template: readFileSync(
+        file.startsWith('/') ? file : join(__dirname, '..', file),
+        'utf8'
+      ),
+      ingredients: {},
+      decoding: {},
+    },
+  }
 
-    for (const d of ds) {
-      const label = `row ${d.rowNum} (${d.plant})`
-      if (!STAGE_SET.has(d.current_stage)) {
-        skipped.push(`${label}: bad current_stage "${d.current_stage}"`)
-        continue
-      }
-      // Guard: the stored line must still match what the CSV was built from.
-      const stored = (original[d.current_stage] ?? '').trim()
-      if (stored !== d.line) {
+  const applyAll = async (wrote: (id: string) => void) => {
+    for (const [plantId, ds] of byPlant) {
+      // Fetch the current row once (this is the guard baseline).
+      const { data, error } = await db
+        .from('plants')
+        .select('seasonal_care')
+        .eq('id', plantId)
+        .single()
+      if (error || !data) {
         skipped.push(
-          `${label}: STALE — DB line "${stored}" != CSV line "${d.line}"`
+          `${ds[0]!.plant}: fetch failed (${error?.message ?? 'no row'})`
         )
         continue
       }
-      if (d.decision === 'null') {
-        working[d.current_stage] = null
-        pending.push(`✓ ${label}: ${d.current_stage} → null`)
-        plantApplied++
-      } else if (d.decision === 'edit') {
-        if (!d.value) {
-          skipped.push(`${label}: edit with empty value`)
+      const original = (data.seasonal_care ?? {}) as Record<
+        string,
+        string | null
+      >
+      const working: Record<string, string | null> = { ...original }
+      const pending: string[] = [] // ✓ lines for this plant, printed after write
+      let plantApplied = 0
+
+      for (const d of ds) {
+        const label = `row ${d.rowNum} (${d.plant})`
+        if (!STAGE_SET.has(d.current_stage)) {
+          skipped.push(`${label}: bad current_stage "${d.current_stage}"`)
           continue
         }
-        for (const w of copyWarnings(d.value))
-          warnings.push(`${label}: ${w} — "${d.value}"`)
-        working[d.current_stage] = d.value
-        pending.push(`✓ ${label}: ${d.current_stage} text → "${d.value}"`)
-        plantApplied++
-      } else if (d.decision === 'move') {
-        const target = d.value
-        if (!STAGE_SET.has(target)) {
-          skipped.push(`${label}: move to invalid stage "${target}"`)
-          continue
-        }
-        if (target === d.current_stage) {
-          skipped.push(`${label}: move to same stage — no-op`)
-          continue
-        }
-        if ((working[target] ?? null) !== null) {
+        // Guard: the stored line must still match what the CSV was built from.
+        const stored = (original[d.current_stage] ?? '').trim()
+        if (stored !== d.line) {
           skipped.push(
-            `${label}: target ${target} already occupied ("${working[target]}") — not clobbered`
+            `${label}: STALE — DB line "${stored}" != CSV line "${d.line}"`
           )
           continue
         }
-        working[target] = d.line
-        working[d.current_stage] = null
-        pending.push(`✓ ${label}: ${d.current_stage} → ${target}`)
-        plantApplied++
-      } else if (d.decision === 'replace') {
-        const sep = d.value.indexOf('|')
-        if (sep < 0) {
-          skipped.push(`${label}: replace value must be "stage|new text"`)
-          continue
+        if (d.decision === 'null') {
+          working[d.current_stage] = null
+          pending.push(`✓ ${label}: ${d.current_stage} → null`)
+          plantApplied++
+        } else if (d.decision === 'edit') {
+          if (!d.value) {
+            skipped.push(`${label}: edit with empty value`)
+            continue
+          }
+          for (const w of copyWarnings(d.value))
+            warnings.push(`${label}: ${w} — "${d.value}"`)
+          working[d.current_stage] = d.value
+          pending.push(`✓ ${label}: ${d.current_stage} text → "${d.value}"`)
+          plantApplied++
+        } else if (d.decision === 'move') {
+          const target = d.value
+          if (!STAGE_SET.has(target)) {
+            skipped.push(`${label}: move to invalid stage "${target}"`)
+            continue
+          }
+          if (target === d.current_stage) {
+            skipped.push(`${label}: move to same stage — no-op`)
+            continue
+          }
+          if ((working[target] ?? null) !== null) {
+            skipped.push(
+              `${label}: target ${target} already occupied ("${working[target]}") — not clobbered`
+            )
+            continue
+          }
+          working[target] = d.line
+          working[d.current_stage] = null
+          pending.push(`✓ ${label}: ${d.current_stage} → ${target}`)
+          plantApplied++
+        } else if (d.decision === 'replace') {
+          const sep = d.value.indexOf('|')
+          if (sep < 0) {
+            skipped.push(`${label}: replace value must be "stage|new text"`)
+            continue
+          }
+          const target = d.value.slice(0, sep).trim()
+          const newText = d.value.slice(sep + 1).trim()
+          if (!STAGE_SET.has(target)) {
+            skipped.push(`${label}: replace to invalid stage "${target}"`)
+            continue
+          }
+          if (!newText) {
+            skipped.push(`${label}: replace with empty text`)
+            continue
+          }
+          for (const w of copyWarnings(newText))
+            warnings.push(`${label}: ${w} — "${newText}"`)
+          const overwritten = working[target]
+          working[target] = newText
+          if (target !== d.current_stage) working[d.current_stage] = null
+          pending.push(
+            `✓ ${label}: ${d.current_stage} → ${target} (reworded)${
+              overwritten ? ` [replaced: "${overwritten}"]` : ''
+            }`
+          )
+          plantApplied++
+        } else {
+          skipped.push(`${label}: unknown decision "${d.decision}"`)
         }
-        const target = d.value.slice(0, sep).trim()
-        const newText = d.value.slice(sep + 1).trim()
-        if (!STAGE_SET.has(target)) {
-          skipped.push(`${label}: replace to invalid stage "${target}"`)
-          continue
-        }
-        if (!newText) {
-          skipped.push(`${label}: replace with empty text`)
-          continue
-        }
-        for (const w of copyWarnings(newText))
-          warnings.push(`${label}: ${w} — "${newText}"`)
-        const overwritten = working[target]
-        working[target] = newText
-        if (target !== d.current_stage) working[d.current_stage] = null
-        pending.push(
-          `✓ ${label}: ${d.current_stage} → ${target} (reworded)${
-            overwritten ? ` [replaced: "${overwritten}"]` : ''
-          }`
-        )
-        plantApplied++
-      } else {
-        skipped.push(`${label}: unknown decision "${d.decision}"`)
       }
-    }
 
-    if (!plantApplied) continue
+      if (!plantApplied) continue
 
-    if (!dryRun) {
-      // Normalize to the full six-key shape.
-      const patch = {} as SeasonalCare
-      for (const k of SEASONAL_KEYS) patch[k] = working[k] ?? null
-      const { error: upErr } = await db
-        .from('plants')
-        .update({ seasonal_care: patch })
-        .eq('id', plantId)
-      if (upErr) {
-        skipped.push(`${ds[0]!.plant}: write failed (${upErr.message})`)
-        continue
+      if (!dryRun) {
+        // Normalize to the full six-key shape.
+        const patch = {} as SeasonalCare
+        for (const k of SEASONAL_KEYS) patch[k] = working[k] ?? null
+        const { error: upErr } = await db
+          .from('plants')
+          .update({ seasonal_care: patch })
+          .eq('id', plantId)
+        if (upErr) {
+          skipped.push(`${ds[0]!.plant}: write failed (${upErr.message})`)
+          continue
+        }
+        wrote(plantId)
       }
+      for (const line of pending) console.log(line)
+      applied += plantApplied
     }
-    for (const line of pending) console.log(line)
-    applied += plantApplied
+  }
+
+  // A dry run opens NO run: it validates the decisions and writes nothing.
+  if (dryRun) {
+    await applyAll(() => {})
+  } else {
+    await withRunRecord(runOptions, (run) => applyAll((id) => run.wrote(id)))
   }
 
   console.log('\n─────────────────────────────────────────────────────────────')

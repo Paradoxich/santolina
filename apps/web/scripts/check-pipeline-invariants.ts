@@ -150,21 +150,13 @@ export const SCRIPTS_PENDING_ARCHIVE: Record<string, string> = {
  * to prevent.
  */
 export const RUNS_WITHOUT_PROVENANCE: Record<string, string> = {
-  // --- round steps: EMPTY as of 2026-08-16, and the gate round 12 waited on.
-  //     Every step the runbook runs now opens a run. Do not add one back here
-  //     without saying why a round step may write without a record. ---
-
-  // --- outside the round cadence ---
-  'apply-native-to-fixes.ts':
-    'Applies committed decisions and NULLS native_checked_at. A clearing write is still a write.',
-  'apply-seasonal-care-fixes.ts': 'Same generate-then-apply shape.',
-  'feed-wikimedia-candidates.ts':
-    'Appends candidates and CLEARS image_checked_at so the pass re-picks.',
-  'backfill-guard-stamps.ts':
-    'Report-derived stamping. Its state-derived half was deleted 2026-08-14 after it fabricated 100 stamps, so this is the script whose provenance matters most and has none.',
-
-  // --- archive candidates: EMPTY as of 2026-08-17. All three left scripts/
-  //     for scripts/archive/, which is the other way an entry here closes. ---
+  // EMPTY as of 2026-08-17, and it took three sessions to get here. Every
+  // script in scripts/ that writes a stamp now opens a run record.
+  //
+  // AN ENTRY HERE IS A WRITE WHOSE VALUE HAS NO RECOVERABLE MODEL, RECIPE OR
+  // OUTCOME. Adding one back needs a reason why that is acceptable, and the
+  // honest answer has never yet been anything but "not done yet". The three
+  // routes out are the three that were used: wire it, archive it, or delete it.
 }
 
 /**
