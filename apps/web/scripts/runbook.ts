@@ -12,16 +12,22 @@
  * you are about to write the order of the round into a document, don't; link to
  * the generated page instead.
  *
- * TEN STEPS PLUS SIX BOOK-ENDS, and the distinction is worth keeping straight
- * because both numbers are true and they get confused. The `alwaysRun` entries
- * are book-ends: free, and run whether or not the round has work. The other ten
- * do the work. "Thirteen steps became ten" on 2026-07-29 refers to the ten.
+ * WORK STEPS AND BOOK-ENDS ARE DIFFERENT THINGS, and the distinction is worth
+ * keeping straight because it gets confused. The `alwaysRun` entries are
+ * book-ends: free, and run whether or not the round has work. The rest do the
+ * work, and cost money. "Thirteen steps became ten" on 2026-07-29 refers to
+ * the work steps. Count either from the array; a number written here is a
+ * second home for a fact the array already holds, and it was wrong within one
+ * round of being written.
  *
- * Book-ends went from four to six in round 9, and both additions are the same
- * lesson: a step that costs nothing and produces what a later step needs must
- * be IN here, not in somebody's memory. The native-region plan and
- * recover-image-categories were each a prerequisite the runner did not know
- * about, and each one broke a round that looked like it was running fine.
+ * Book-ends went from four to six in round 9, and to seven with
+ * feed-wikimedia-candidates. Every addition is the same lesson: a step that
+ * costs nothing and produces what a later step needs must be IN here, not in
+ * somebody's memory. The native-region plan and recover-image-categories were
+ * each a prerequisite the runner did not know about, and each one broke a
+ * round that looked like it was running fine; the Wikimedia feed was reachable
+ * only from a hand-written list, so a plant Trefle had no photo for went to
+ * production with a placeholder and nothing said so.
  */
 
 export interface Step {
@@ -155,6 +161,35 @@ export const RUNBOOK: Step[] = [
     runbook: '6',
     script: 'recover-image-categories.ts',
     alwaysRun: true,
+  },
+  {
+    // The other half of the vision pass's input, and the reason it sits HERE:
+    // step 6 has just put Trefle's candidates in, and step 7a is about to be
+    // billed for judging them. Widening the pool in between means a plant
+    // Trefle covered badly is judged against Wikimedia in the SAME call,
+    // rather than being re-armed and paid for a second time afterwards.
+    //
+    // Round 13 is the case: 3 of its 33 plants had no usable Trefle image, and
+    // this script found all three via Wikidata P18 under safe licences, two of
+    // which became heroes. It fired only from a hand-written "needs a new
+    // photo" list, so "Trefle gave us nothing" never triggered it — the
+    // placeholder was the only thing that said so, and only to whoever
+    // happened to look at the page.
+    //
+    // Free (Wikimedia only, no model) and idempotent: the gate selects rows
+    // with an empty shortlist AND no Wikimedia candidate yet, so a second run
+    // in the same round writes nothing. That gate is what makes alwaysRun safe
+    // here — the step CLEARS image_checked_at, so an ungated re-run would
+    // re-arm the same rows and re-bill 7a every round.
+    step: 'feed-wikimedia-candidates',
+    runbook: '6a',
+    script: 'feed-wikimedia-candidates.ts',
+    args: ['--apply'],
+    alwaysRun: true,
+    onFail:
+      'The candidate pool was not widened, so 7a would judge only what Trefle ' +
+      'gave us. Re-run it BEFORE the vision pass rather than after — a pick ' +
+      'made now and re-made later is billed twice.',
   },
   {
     step: 'curate-seasonal-care',

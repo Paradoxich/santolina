@@ -275,6 +275,50 @@ describe('prerequisites are steps, not folklore', () => {
     expect(recover).toBeLessThan(pick)
   })
 
+  it('widens the candidate pool before the vision pass is billed', () => {
+    // The same shape as the bug above, one step along, and it cost round 13
+    // three plants: feed-wikimedia-candidates is the ONLY source of a photo
+    // for a species Trefle has none for, and it was in no runbook — reachable
+    // only from a hand-written "needs a new photo" list, so "Trefle gave us
+    // nothing" never triggered it.
+    //
+    // ORDER IS THE ASSERTION, not mere presence. Run after the pick it still
+    // works, and is billed twice: the pass judges Trefle's candidates, the
+    // feed then clears image_checked_at, and the pass pays to judge the row
+    // again. Between 6 and 7a, one call sees both pools.
+    const recover = RUNBOOK.findIndex(
+      (s) => s.script === 'recover-image-categories.ts'
+    )
+    const feed = RUNBOOK.findIndex(
+      (s) => s.script === 'feed-wikimedia-candidates.ts'
+    )
+    const pick = RUNBOOK.findIndex((s) => s.script === 'pick-plant-images.ts')
+
+    expect(
+      feed,
+      'feed-wikimedia-candidates is in no runbook, so a plant Trefle has no photo for reaches production with a placeholder and nothing says so'
+    ).toBeGreaterThanOrEqual(0)
+    expect(
+      recover,
+      'the Wikimedia feed must run after Trefle candidates are in, or it cannot tell which plants have nothing'
+    ).toBeLessThan(feed)
+    expect(
+      feed,
+      'the vision pass would be billed once for Trefle and again for the widened pool'
+    ).toBeLessThan(pick)
+  })
+
+  it('runs the Wikimedia feed with --apply, not as a dry run', () => {
+    // It is dry-run-by-default house discipline, so the runbook has to ask for
+    // the write explicitly. Without the flag the step succeeds, prints what it
+    // would have added, writes nothing, and 7a judges the un-widened pool — a
+    // green round carrying the exact defect the step was added to prevent.
+    const feed = RUNBOOK.find(
+      (s) => s.script === 'feed-wikimedia-candidates.ts'
+    )!
+    expect(feed?.args ?? []).toContain('--apply')
+  })
+
   it('signs off last', () => {
     // curate-editorial judges the output of every step above it, so it can
     // only be last. If something is appended after it, that work is never

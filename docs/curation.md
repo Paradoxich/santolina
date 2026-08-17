@@ -550,6 +550,29 @@ always reaches the vision call no matter how many sharp Trefle snapshots a plant
 has. On the 56 review-flagged plants, 8 Wikimedia photos won, each a clear
 upgrade.
 
+**It runs in the round now, between the Trefle candidate fetch and the vision
+pass** ([the round runbook](round-runbook.md)), and the placement is the design:
+widening the pool before the pick means one paid call sees both sources, where
+feeding afterwards clears the stamp and buys the same judgement twice. Until
+2026-08-18 it fired only from a hand-written "needs a new photo" list, so
+"Trefle gave us nothing" never triggered it — round 13 had 3 such plants, and
+the only thing that said so was the placeholder on the page.
+
+**Its gate is what makes it safe to run every round**, because the step CLEARS
+`image_checked_at` and a book-end runs on every invocation: it selects a plant
+only when `shortlist()` — the vision pass's own selector, asked rather than
+reimplemented — returns nothing AND the plant carries no Wikimedia candidate
+yet, so a second run selects nothing. Pinned in
+`scripts/feed-wikimedia-candidates.test.ts`.
+
+**It shrinks the placeholder class rather than ending it**, for two reasons
+worth knowing before trusting it. P18 is Wikidata's designated _identification_
+image, not a garden hero — round 13's `Malus spectabilis` got a trunk and canopy
+with a person in shot, correctly rejected — and nothing takes a second look at
+wider Commons when P18 is poor. And the gate is free and deterministic by
+choice, so a plant whose candidates are all too small passes it and is rejected
+later at probe time.
+
 **Attribution is the real product work, not the fetching.** CC-BY and CC-BY-SA
 oblige a visible credit, so `plants.image_attribution` is written whenever a
 credited photo wins and cleared when a Trefle photo wins or a revert lands. It

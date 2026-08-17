@@ -45,7 +45,7 @@ editorial verdicts are recorded, not resolved.
 | 7a2 | `pick-plant-images --verify` | `scripts/pick-plant-images.ts --round <label> --verify` |
 | 7b | `curate-editorial` | `scripts/curate-editorial.ts --round <label>` |
 
-## The 6 book-ends
+## The 7 book-ends
 
 These run whether or not the round has work, because they are free and
 skipping one on a bad guess is not.
@@ -55,11 +55,14 @@ skipping one on a bad guess is not.
 | 0 | `backup` | `scripts/backup-catalog.ts --round <label>` |
 | 4 | `regenerate-native-region (plan)` | `scripts/regenerate-native-region.ts --round <label>` |
 | 6 | `recover-image-categories` | `scripts/recover-image-categories.ts --round <label>` |
+| 6a | `feed-wikimedia-candidates` | `scripts/feed-wikimedia-candidates.ts --round <label> --apply` |
 | 8 | `verify` | `scripts/verify-round.ts --round <label>` |
 | 8a | `scope-check` | `scripts/check-round-scope.ts --round <label>` |
 | 8b | `archive` | `scripts/archive-round.ts --round <label>` |
 
 **If `backup` fails.** No backup, no round. Everything below is reversible only because this ran.
+
+**If `feed-wikimedia-candidates` fails.** The candidate pool was not widened, so 7a would judge only what Trefle gave us. Re-run it BEFORE the vision pass rather than after — a pick made now and re-made later is billed twice.
 
 **If `verify` fails.** The round is NOT done. verify-round checks catalog-wide invariants the per-step counts cannot see; read its output rather than re-running.
 

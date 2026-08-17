@@ -2,9 +2,15 @@
  * Feed Wikimedia Commons photos into image_candidates so the vision pass can
  * consider them.
  *
- * For each plant in the input list, this resolves the species' best Commons
- * photo (see lib/wikimedia.ts: the designated Wikidata P18 image, falling back
- * to a guarded Commons search), appends it to plants.image_candidates tagged
+ * RUNBOOK STEP 6a, between `recover-image-categories` (6) and
+ * `pick-plant-images` (7a), and the order is the whole design: Trefle's
+ * candidates are already in by 6, so this widens the pool BEFORE the vision
+ * pass is billed, and the pick judges Trefle and Wikimedia together in one
+ * call rather than being re-armed and paid for twice.
+ *
+ * For each plant in scope, this resolves the species' best Commons photo (see
+ * lib/wikimedia.ts: the designated Wikidata P18 image, falling back to a
+ * guarded Commons search), appends it to plants.image_candidates tagged
  * source='wikimedia' with its CC attribution, and clears image_checked_at so
  * scripts/pick-plant-images.ts re-picks that plant across the combined
  * Trefle + Wikimedia pool. The shortlist always keeps a Wikimedia candidate
@@ -13,21 +19,50 @@
  * It does NOT choose or write image_url_curated — it only widens the candidate
  * pool. The pick is the pass's job, and the human review is the review page's.
  *
- * INPUT is a list of plant common_names, one per line, '#' comments ignored —
- * defaults to reports/image-needs-photo.txt (the review's "needs a new photo"
- * set). Scoping by an explicit list keeps it off plants a human already
- * confirmed, which a blanket confidence query could not.
+ * TWO WAYS TO SAY WHICH PLANTS, and they answer different questions.
+ *
+ *   · A SCOPE FLAG (--round / --ids / --all) selects the plants that have
+ *     nothing usable to judge — see needsWikimediaCandidate below. This is the
+ *     pipeline path, and the gate is what makes it safe to run every round:
+ *     it never touches a plant Trefle already covered, and it skips a plant
+ *     that already carries a Wikimedia candidate, so a second run in the same
+ *     round selects nothing, writes nothing, and re-arms nothing.
+ *
+ *     WITHOUT THAT GATE THIS STEP RE-BILLS THE VISION PASS. Clearing
+ *     image_checked_at is what re-arms a row for pick-plant-images; a step
+ *     that cleared it unconditionally every round would pay to re-judge the
+ *     same plants forever, which is the shape this pipeline keeps finding.
+ *
+ *   · --file <path> takes an explicit list of common_names, one per line,
+ *     '#' comments ignored, defaulting to reports/image-needs-photo.txt (the
+ *     review's "needs a new photo" set). That is the human path: it re-feeds
+ *     plants a REVIEWER rejected, which the gate above cannot see, and it is
+ *     deliberately ungated so a re-feed after a URL-format change still works.
+ *
+ * WHAT THE GATE DOES NOT CATCH, and it matters because this step shrinks the
+ * placeholder class rather than eliminating it:
+ *
+ *   · A plant whose shortlist is non-empty but whose candidates are all too
+ *     small survives the gate and is rejected later, at probe time in
+ *     pick-plant-images. Measuring here would mean fetching every candidate
+ *     twice; the gate is deliberately the free, deterministic half.
+ *   · P18 is Wikidata's designated IDENTIFICATION image, not a garden hero.
+ *     Round 13's Malus spectabilis got a trunk-and-canopy shot with a person
+ *     in it, and the vision pass correctly rejected it. Nothing takes a second
+ *     look at wider Commons when P18 is poor.
  *
  * DRY RUN BY DEFAULT (house discipline): resolves and reports, writes nothing.
  * Pass --apply to write the candidates and clear image_checked_at.
  *
  * Usage (from apps/web):
- *   ./node_modules/.bin/tsx --env-file=.env.local scripts/feed-wikimedia-candidates.ts
- *   ./node_modules/.bin/tsx --env-file=.env.local scripts/feed-wikimedia-candidates.ts --apply
+ *   ./node_modules/.bin/tsx --env-file=.env.local scripts/feed-wikimedia-candidates.ts --round 13
+ *   ./node_modules/.bin/tsx --env-file=.env.local scripts/feed-wikimedia-candidates.ts --round 13 --apply
+ *   ./node_modules/.bin/tsx --env-file=.env.local scripts/feed-wikimedia-candidates.ts --ids <a,b,c>
+ *   ./node_modules/.bin/tsx --env-file=.env.local scripts/feed-wikimedia-candidates.ts --all --why "<reason>"
  *   ./node_modules/.bin/tsx --env-file=.env.local scripts/feed-wikimedia-candidates.ts --file path/to/names.txt
  *
- * Then re-pick the widened plants:
- *   ./node_modules/.bin/tsx --env-file=.env.local scripts/pick-plant-images.ts
+ * Then re-pick the widened plants (the runbook does this at 7a):
+ *   ./node_modules/.bin/tsx --env-file=.env.local scripts/pick-plant-images.ts --round 13
  */
 
 import { readFileSync } from 'node:fs'
@@ -36,11 +71,20 @@ import { getSupabaseAdmin } from '../lib/supabase-admin'
 import { fetchAllRows } from '../lib/paginate'
 import { fetchSpeciesCandidate } from '../lib/wikimedia'
 import { isCommercialSafeLicense } from '../lib/image-attribution'
-import type { ImageCandidate } from '../lib/image-shortlist'
+import { shortlist, type ImageCandidate } from '../lib/image-shortlist'
+import {
+  parseScope,
+  scopeIds,
+  applyScope,
+  describeScope,
+  requireReasonForAll,
+} from './scope'
 import { withRunRecord, type Witness } from './run-provenance'
 
 const DEFAULT_FILE = join(process.cwd(), 'reports', 'image-needs-photo.txt')
 const INTER_PLANT_DELAY_MS = 500
+const PLANT_COLUMNS =
+  'id, common_name, scientific_name, image_url, image_candidates'
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 const pad = (n: number, w = 2) => String(n).padStart(w, ' ')
 
@@ -68,56 +112,140 @@ export function parseNameList(text: string): string[] {
   return names
 }
 
-interface PlantRow {
+export interface PlantRow {
   id: string
   common_name: string
   scientific_name: string | null
+  image_url: string | null
   image_candidates: ImageCandidate[] | null
 }
 
-async function main() {
-  const apply = process.argv.slice(2).includes('--apply')
-  const file = parseFlag('--file') ?? DEFAULT_FILE
+/**
+ * THE GATE — has this plant got nothing for the vision pass to look at?
+ *
+ * Exported and pure so it can be called in a test: a gate that can only be
+ * observed by running a round against the live catalog is a gate nothing pins.
+ *
+ * Two conditions, and the second is what makes the step idempotent:
+ *
+ *   1. `shortlist` — the same function pick-plant-images uses to decide what
+ *      it will pay to look at — returns nothing. Asking the pass's own
+ *      selector is the point: a plant with ten candidates filed under
+ *      categories the shortlist never takes has exactly as little to judge as
+ *      a plant with none, and a predicate written here from scratch would
+ *      drift from the one that decides.
+ *   2. It carries no Wikimedia candidate already. A plant this step has
+ *      widened has been widened; selecting it again would clear
+ *      image_checked_at a second time and re-bill its vision pick.
+ */
+export function needsWikimediaCandidate(row: {
+  image_url: string | null
+  image_candidates: ImageCandidate[] | null
+}): boolean {
+  const candidates = row.image_candidates ?? []
+  if (candidates.some((c) => c.source === 'wikimedia')) return false
+  return shortlist(candidates, row.image_url).length === 0
+}
 
-  let names: string[]
-  try {
-    names = parseNameList(readFileSync(file, 'utf8'))
-  } catch {
-    console.error(`Couldn't read ${file}.`)
-    process.exit(1)
-  }
-  if (names.length === 0) {
-    console.log('No plant names in the input file.')
-    return
-  }
-
-  const supabase = getSupabaseAdmin()
-
-  // Resolve names to rows by exact common_name. Ambiguous or missing names are
-  // reported and skipped rather than guessed — a wrong match would feed the
-  // wrong species' photo.
-  const allRows = await fetchAllRows<PlantRow>((from, to) =>
-    supabase
-      .from('plants')
-      .select('id, common_name, scientific_name, image_candidates')
-      .order('id')
-      .range(from, to)
-  )
+/** Resolve an explicit name list to rows, reporting what it could not match. */
+function resolveNames(
+  names: string[],
+  allRows: PlantRow[]
+): { targets: PlantRow[]; unmatched: string[] } {
   const byName = new Map<string, PlantRow[]>()
   for (const r of allRows) {
     if (!byName.has(r.common_name)) byName.set(r.common_name, [])
     byName.get(r.common_name)!.push(r)
   }
 
+  const targets: PlantRow[] = []
+  const unmatched: string[] = []
+  for (const name of names) {
+    const matches = byName.get(name)
+    // Ambiguous or missing names are reported and skipped rather than guessed
+    // — a wrong match would feed the wrong species' photo.
+    if (!matches || matches.length === 0) {
+      console.log(`${name} — no catalog plant with this name`)
+      unmatched.push(name)
+      continue
+    }
+    if (matches.length > 1) {
+      console.log(
+        `${name} — ambiguous (${matches.length} plants share this name), skipping`
+      )
+      unmatched.push(`${name} (ambiguous)`)
+      continue
+    }
+    targets.push(matches[0]!)
+  }
+  return { targets, unmatched }
+}
+
+async function main() {
+  const apply = process.argv.slice(2).includes('--apply')
+  const scope = parseScope()
+  const supabase = getSupabaseAdmin()
+
+  let targets: PlantRow[]
+  const unmatched: string[] = []
+  let scopeLabel: string
+
+  if (scope) {
+    const scopeIdList = scopeIds(scope)
+    const whyAll = requireReasonForAll(scope)
+    // Never a bare .select() — Supabase caps unpaginated reads at 1000 rows.
+    const inScope = await fetchAllRows<PlantRow>((from, to) =>
+      applyScope(supabase.from('plants').select(PLANT_COLUMNS), scopeIdList)
+        .order('id')
+        .range(from, to)
+    )
+    targets = inScope.filter(needsWikimediaCandidate)
+    scopeLabel =
+      `${describeScope(scope, scopeIdList)} — ` +
+      `${targets.length} of ${inScope.length} with nothing usable to judge`
+    console.log(describeScope(scope, scopeIdList))
+    if (whyAll) console.log(`Whole-catalog run, because: ${whyAll}`)
+    console.log(
+      `${targets.length} of ${inScope.length} plant(s) in scope have nothing ` +
+        `for the vision pass to look at.`
+    )
+  } else {
+    const file = parseFlag('--file') ?? DEFAULT_FILE
+    let names: string[]
+    try {
+      names = parseNameList(readFileSync(file, 'utf8'))
+    } catch {
+      console.error(`Couldn't read ${file}.`)
+      process.exit(1)
+    }
+    if (names.length === 0) {
+      console.log('No plant names in the input file.')
+      return
+    }
+    const allRows = await fetchAllRows<PlantRow>((from, to) =>
+      supabase.from('plants').select(PLANT_COLUMNS).order('id').range(from, to)
+    )
+    const resolved = resolveNames(names, allRows)
+    targets = resolved.targets
+    unmatched.push(...resolved.unmatched)
+    scopeLabel = `${names.length} name(s) from ${file}`
+  }
+
+  if (targets.length === 0) {
+    console.log(
+      `\nNothing to feed${unmatched.length ? ` (${unmatched.length} unmatched)` : ''}.`
+    )
+    return
+  }
+
   console.log(
-    `${apply ? 'APPLYING' : 'DRY RUN —'} Wikimedia feed for ${names.length} plant(s) from ${file}.\n`
+    `\n${apply ? 'APPLYING' : 'DRY RUN —'} Wikimedia feed for ${targets.length} plant(s).\n`
   )
 
   let added = 0
   let noP18 = 0
   let badLicense = 0
   let noSciName = 0
-  const unmatched: string[] = []
 
   const runOptions = {
     step: 'feed-wikimedia-candidates',
@@ -141,7 +269,7 @@ async function main() {
         column: 'updated_at',
       })
     ) as Witness[],
-    scope: `${names.length} name(s) from ${file}`,
+    scope: scopeLabel,
     // No model: the candidate comes from Wikimedia's own P18 or a filtered
     // search, and the licence filter is the judgment. Those two are the recipe.
     recipe: {
@@ -154,24 +282,9 @@ async function main() {
   }
 
   const feedAll = async (wrote: (id: string) => void) => {
-    for (const [i, name] of names.entries()) {
-      const label = `${pad(i + 1)}/${names.length} ${name}`
-      const matches = byName.get(name)
+    for (const [i, plant] of targets.entries()) {
+      const label = `${pad(i + 1)}/${targets.length} ${plant.common_name}`
 
-      if (!matches || matches.length === 0) {
-        console.log(`${label} — no catalog plant with this name`)
-        unmatched.push(name)
-        continue
-      }
-      if (matches.length > 1) {
-        console.log(
-          `${label} — ambiguous (${matches.length} plants share this name), skipping`
-        )
-        unmatched.push(`${name} (ambiguous)`)
-        continue
-      }
-
-      const plant = matches[0]!
       if (!plant.scientific_name) {
         console.log(`${label} — no scientific name, can't resolve Wikidata`)
         noSciName++
@@ -230,7 +343,7 @@ async function main() {
           .eq('id', plant.id)
         if (error) {
           console.log(`${label} — write failed: ${error.message}`)
-          unmatched.push(`${name} (write failed)`)
+          unmatched.push(`${plant.common_name} (write failed)`)
           await sleep(INTER_PLANT_DELAY_MS)
           continue
         }
@@ -272,7 +385,11 @@ async function main() {
   }
 }
 
-main().catch((err) => {
-  console.error(err)
-  process.exit(1)
-})
+// Guarded so the pure exports above can be imported by a test without the
+// feeder running as a side effect of the import.
+if (require.main === module) {
+  main().catch((err) => {
+    console.error(err)
+    process.exit(1)
+  })
+}
