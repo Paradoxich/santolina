@@ -354,7 +354,8 @@ export const allTokens: TokenTier[] = [
           '--sidebar-surface',
           '--avatar-fill',
           '--sidebar-divider',
-          '--login-border'
+          '--login-border',
+          '--condition-tile-surface'
         ),
       },
       {
@@ -368,7 +369,11 @@ export const allTokens: TokenTier[] = [
       },
       {
         title: 'Effects',
-        entries: n('--thumbnail-scrim', '--landing-scrim'),
+        entries: n(
+          '--thumbnail-scrim',
+          '--photo-tile-scrim',
+          '--landing-scrim'
+        ),
       },
     ],
   },
