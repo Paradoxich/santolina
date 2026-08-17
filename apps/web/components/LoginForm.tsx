@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useSearchParams } from 'next/navigation'
+import { FormError } from '@paradoxui/ui'
 import { AuthOptions } from '@/components/AuthOptions'
 import { createSupabaseBrowserClient } from '@/lib/supabase-client'
 
@@ -93,13 +94,17 @@ export function LoginForm() {
         </h1>
       </div>
 
+      {/* The card's single failure slot: one place, whether the failure came
+          back from Supabase in this session or arrived as ?error on the
+          callback. A malformed address is not shown here — it belongs under
+          the field, and AuthOptions renders it there. */}
       {(error || callbackFailed || demoFailed) && (
-        <p className="text-body-small text-critical" role="alert">
+        <FormError align="center">
           {error ??
             (demoFailed
               ? 'The demo garden could not be opened. Sign in to get your own.'
               : 'That sign in link did not work. Request a new one below.')}
-        </p>
+        </FormError>
       )}
 
       <AuthOptions

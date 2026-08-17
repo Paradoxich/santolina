@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Card, CardBody } from '@paradoxui/ui'
+import { Card, CardBody, FormError } from '@paradoxui/ui'
 import { CitySearch } from '@/components/CitySearch'
 import { type GeocodingResult } from '@/lib/open-meteo'
 import { setGardenLocation } from '@/server/garden-actions'
@@ -42,11 +42,9 @@ export function FirstRunLocation() {
           </p>
         </div>
 
-        {error && (
-          <p className="text-body-small text-critical" role="alert">
-            {error}
-          </p>
-        )}
+        {/* Left aligned rather than centred: this card's content is left
+            aligned, and the slot is still request-level. */}
+        {error && <FormError>{error}</FormError>}
 
         <CitySearch
           onSelect={handleSelect}

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Modal } from '@paradoxui/ui'
+import { FormError, Modal } from '@paradoxui/ui'
 import { AuthOptions } from '@/components/AuthOptions'
 import { createSupabaseBrowserClient } from '@/lib/supabase-client'
 
@@ -95,11 +95,9 @@ export function DemoConvertModal({ isOpen, onClose }: DemoConvertModalProps) {
             </h2>
           </div>
 
-          {error && (
-            <p className="text-body-small text-critical" role="alert">
-              {error}
-            </p>
-          )}
+          {/* Same failure slot as /login, same component: this card is the
+              sign-in card in a dialog, so a failure has to look identical. */}
+          {error && <FormError align="center">{error}</FormError>}
 
           <AuthOptions
             onGoogle={keepWithGoogle}
