@@ -2,6 +2,7 @@
 import type { DbPlant } from './plants-db'
 import type { Garden } from '@/types/garden'
 import { monthName } from './format-plant'
+import { STYLE_DISPLAY_NAMES, type StyleTag } from './style-tags'
 
 export type GoodForBullet = {
   text: string
@@ -81,8 +82,14 @@ export function buildGoodForYourGarden(
     (plant.style_tags ?? []).includes(s)
   )
   if (styleMatch) {
+    // Display name, not the raw slug: the expanded vocabulary put proper nouns
+    // in here ("chinese", "japanese") and the slug renders them lowercase.
+    // Latent today — nothing writes gardens.style until onboarding ships, so
+    // this bullet never fires; it goes live with the wizard.
     bullets.push({
-      text: `Fits your ${styleMatch} garden style`,
+      text: `Fits your ${
+        STYLE_DISPLAY_NAMES[styleMatch as StyleTag] ?? styleMatch
+      } garden style`,
       tone: 'positive',
     })
   }
