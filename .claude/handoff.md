@@ -128,10 +128,6 @@ deleted duplicate had been holding.
 (round 12's own six are fixed; the rest predate it). The plant-removal row is no
 longer owed — `scripts/remove-plant.ts` built it.
 
-**Still owed by Ana, and not a decision:** a look at the `/login` error state in
-her own Firefox. Carried from the previous handoff and still not done. Nothing
-depends on it; it is a confirmation, not a gate.
-
 **Standing:** the next audit is round 13's close or 2026-09-14, whichever first,
 early if a PR adds a stamp column, adds a script, or touches
 `upsert_trefle_plant`. It should come back **shorter**. Fresh session.
