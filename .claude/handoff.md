@@ -37,13 +37,24 @@ supabase start -x studio,realtime,storage-api,imgproxy,edge-runtime,inbucket,vec
 
 ---
 
-## 2026-08-17 — Three orphaned items given homes, trap 6 fixed upstream, PRs #185-#187 merged
+## 2026-08-17 — A round's cost is measurable now, PR #189 merged
 
-**Nothing in flight. Nothing uncommitted. Two next steps, both round-scale and
-neither started.** Everything else this session raised is closed or in a ratchet,
-so `pnpm backlog` is the list and this file is not a second copy of it.
+**Nothing in flight. Nothing uncommitted. Two next steps carried forward, plus
+one line added to the first.** `pnpm backlog` is the list of what is left; this
+file is not a second copy of it.
 
-**Main is green on all three CI jobs**, database ones included, at `62be0fd`.
+**A run now records what it was billed, and `pnpm runs:cost` prices it.** The
+meter is in `lib/anthropic-client.ts` because every spending script reaches the
+API through `getAnthropicClient()`; it wraps `messages.create` AND
+`messages.batches.results`, since the image pass never calls `create` and a
+meter that missed it would report a round as costing text money alone. The
+report prints `—` rather than `$0.00` for a run with no `usage`, which is every
+record written before today — read a total as a floor whenever its
+NOT MEASURED line is present. Reasoning is in `docs/write-provenance.md`; the
+price table's source and read-date are in the script's own header.
+
+**Main is green** at `6f1cf9e`; 444 tests, `invariants:check`, `docs:claims`,
+`docs:links` all pass.
 
 ⚠ **Read trap 34 before pushing a migration.** `supabase db push` printed a
 certificate ENOENT and "Finished" in the same output, and it HAD applied — so the
@@ -68,6 +79,11 @@ project ref" and does not say why.
    `cross-check-plants` will flag `plant_type` on every sedge and rush, the
    round-4 false-positive class, left naive on purpose.
 
+   **At close, run `pnpm runs:cost --round 13` and put the figure in the
+   database-log entry.** It will be the first round measured rather than
+   estimated, and it is what turns "roughly $3-6 for 28 plants" into a number
+   the next round can budget against.
+
    ⚠ **`curate-common-names` has never run with `--apply`.** Six rows dry-run
    across two batches, all correct, nothing written. Round 13 is its first real
    use. It is also **not deterministic about which correct name it picks** —
@@ -84,17 +100,18 @@ project ref" and does not say why.
    vision call, and 364 of the 422 clear at `high` for free. ~675 calls, ~$15-30
    unbatched; the Batch API is 50% off with a working precedent in
    `pick-plant-images.ts`, and prompt caching would cut the repeated input —
-   together roughly $4-8, none of it applied yet. ⚠ It rewrites ~60% of the
-   descriptions it judges. **Run ~100 rows from rounds 1-6 and read the rewrites
-   before buying the rest.**
+   together roughly $4-8, none of it applied yet. Those are still estimates: run
+   ~100 rows, then `pnpm runs:cost --step curate-editorial` prices the slice and
+   the rest is arithmetic. ⚠ It rewrites ~60% of the descriptions it judges.
+   **Read those rewrites before buying the rest.**
 
 **Parked decisions.** Dated when FIRST raised, with who owes the answer.
 `invariants:check` shape 15 fails on an undated item and on one older than 14
 days, so this list cannot become a paragraph again.
 
-_Empty._ Everything raised this session was answered the same hour: the
-production migration, and whether the pass should keep renaming a name that
-merely reads fine (yes — the catalog holds sibling species and will hold more).
+_Empty._ Nothing this session needed a ruling: the model prices were quoted from
+the pricing docs rather than decided, and the one judgment call — that the run
+record holds tokens and the reporter holds dollars — follows standing rule 14.
 
 **Standing:** the next audit is round 13's close or 2026-09-14, whichever first,
 early if a PR adds a stamp column, adds a script, or touches
