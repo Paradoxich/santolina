@@ -24,6 +24,7 @@
     "docs:links": "tsx scripts/check-doc-links.ts",
     "docs:claims": "tsx scripts/check-doc-claims.ts",
     "invariants:check": "tsx scripts/check-pipeline-invariants.ts",
+    "ci:check": "tsx scripts/run-ci-checks.ts",
     "backlog": "tsx scripts/backlog.ts",
     "trigger:contract": "tsx --env-file=.env.local scripts/test-editorial-trigger.ts"
   },
