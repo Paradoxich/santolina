@@ -24,7 +24,7 @@ date is the freshness record.
 | | |
 | --- | ---: |
 | species | 747 |
-| companion pairs | 1859 |
+| companion pairs | 1863 |
 
 ## Pipeline coverage
 
@@ -79,7 +79,7 @@ warns above that bar on every full run.
 | cottage | 215 | 28.8% |
 | woodland | 165 | 22.1% |
 | pollinator | 140 | 18.7% |
-| mediterranean | 132 | 17.7% |
+| mediterranean | 131 | 17.5% |
 | herb | 84 | 11.2% |
 | prairie | 73 | 9.8% |
 | winter | 64 | 8.6% |
