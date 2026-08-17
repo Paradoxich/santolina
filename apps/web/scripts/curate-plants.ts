@@ -15,6 +15,15 @@
  * --new-only narrows to rows never drafted; it is a filter within the scope,
  * not a scope of its own.
  *
+ * --only <field> fills ONE field on the rows that lack it and writes nothing
+ * else, for a field added or re-specified after rows were already drafted:
+ *   ... --all --only common_issues
+ * It is the only mode that can reach an `is_curated = true` row, because the
+ * normal selection filters those out. That is safe because `restrictPatch`
+ * narrows the patch to the named column plus the drafting stamp, and the flag
+ * REFUSES any column `invalidate_editorial_verdict` watches — so it cannot
+ * retire an editorial sign-off. See EDITORIAL_TRIGGER_COLUMNS below.
+ *
  * Review queue after running:
  *   SELECT id, common_name, scientific_name, ai_drafted_at
  *   FROM plants

@@ -142,6 +142,7 @@ async function main() {
 
   const stale: string[] = []
   const missing: string[] = []
+  const applied: string[] = []
   const uncurated: string[] = []
   const applicable: Array<{ fix: DescriptionFix; row: PlantRow }> = []
 
@@ -151,11 +152,23 @@ async function main() {
       missing.push(`${fix.scientific_name} — no row with id ${fix.id}`)
       continue
     }
+    const stored = (row.description ?? '').trim()
+    // ALREADY APPLIED IS NOT STALE, and conflating them made this script fail
+    // forever. A decision file is COMMITTED and stays in the tree as the record
+    // of why a sentence reads as it does, so the normal state of the default
+    // file is "already applied" — and the first version reported that as STALE
+    // and exited 1. A script whose default invocation always fails is a script
+    // people stop reading, which is trap 1's shape wearing an exit code.
+    if (stored === fix.description.trim()) {
+      applied.push(fix.scientific_name)
+      continue
+    }
     // STALENESS, the whole safety property: a decision made about older text
-    // must not overwrite a rewrite somebody else has landed since.
-    if ((row.description ?? '').trim() !== fix.expect.trim()) {
+    // must not overwrite a rewrite somebody else has landed since. Checked
+    // AFTER the already-applied case, or the two are indistinguishable.
+    if (stored !== fix.expect.trim()) {
       stale.push(
-        `${fix.scientific_name} — stored description no longer matches \`expect\`; re-read the row and re-author the decision`
+        `${fix.scientific_name} — stored description matches neither \`expect\` nor \`description\`; someone else rewrote it, so re-read the row and re-author the decision`
       )
       continue
     }
@@ -212,7 +225,11 @@ async function main() {
     }
   }
 
-  if (DRY_RUN) {
+  // Nothing to do is a success, and it opens no run: a pass with no applicable
+  // decision produced no value.
+  if (applicable.length === 0) {
+    console.log('Nothing to apply.\n')
+  } else if (DRY_RUN) {
     await apply(() => {})
   } else {
     await withRunRecord(runOptions, async (run) => {
@@ -222,8 +239,9 @@ async function main() {
 
   console.log('─────────────────────────────────────────')
   console.log(
-    `${DRY_RUN ? 'Would apply' : 'Applied'} ${applicable.length}, ${stale.length} stale, ${missing.length} missing.`
+    `${DRY_RUN ? 'Would apply' : 'Applied'} ${applicable.length}, ${applied.length} already applied, ${stale.length} stale, ${missing.length} missing.`
   )
+  if (applied.length) console.log(`  applied earlier: ${applied.join(', ')}`)
   for (const s of stale) console.log(`  STALE   ${s}`)
   for (const m of missing) console.log(`  MISSING ${m}`)
 
