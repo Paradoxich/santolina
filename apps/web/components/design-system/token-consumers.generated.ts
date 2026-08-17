@@ -701,7 +701,6 @@ export const tokenConsumers: Record<string, string[]> = {
   ],
   '--color-text-faint': [
     'apps/web/components/AuthOptions.tsx',
-    'apps/web/components/dashboard/WeatherCard.tsx',
     'apps/web/components/design-system/TokenTable.tsx',
     'apps/web/components/design-system/chapters/colors.tsx',
     'packages/ui/src/components/Input.tsx',
