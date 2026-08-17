@@ -77,6 +77,44 @@ describe('the header rule', () => {
     )
   })
 
+  it('does NOT count a MENTION — the number must claim to be pinned', () => {
+    // The defect this rule replaces, and the reason it is the dangerous
+    // direction: a header explaining its reasoning closed a trap nothing
+    // tested, so an untested trap read as covered and left the backlog.
+    expect(
+      pinnedTraps([header('This is TRAP 4’s shape, one level up.')])
+    ).toEqual(new Set())
+  })
+
+  it('does not let a marker leak across sentences', () => {
+    const src = header(
+      'Pins TRAP 31 — a write that retires a verdict. Trap 4 is the shape it resembles.'
+    )
+    expect(pinnedTraps([src])).toEqual(new Set(['31']))
+  })
+
+  it('does not let a marker leak across a paragraph break', () => {
+    // A heading with no full stop would otherwise join two paragraphs, which
+    // is exactly how a reasoning paragraph would inherit a pin.
+    const src = `/**\n * Pins TRAP 31.\n *\n * WHAT THIS ASSERTS\n *\n * The same shape as trap 4, one level up\n */\nimport x from 'y'\n`
+    expect(pinnedTraps([src])).toEqual(new Set(['31']))
+  })
+
+  it('accepts the phrasings the repo actually uses', () => {
+    expect(pinnedTraps([header('Pins TRAP 32 — a generated file.')])).toEqual(
+      new Set(['32'])
+    )
+    expect(
+      pinnedTraps([header('Trap 24, pinned: a report-only caller.')])
+    ).toEqual(new Set(['24']))
+    expect(
+      pinnedTraps([header('Traps 7 and 27, pinned: the species resolver.')])
+    ).toEqual(new Set(['7', '27']))
+    expect(
+      pinnedTraps([header('Trap 3’s live half, pinned: the plan scope.')])
+    ).toEqual(new Set(['3']))
+  })
+
   it('does NOT count a trap named only inside a case body', () => {
     const src = `${header('Pins nothing in particular.')}
 it('does a thing', () => {

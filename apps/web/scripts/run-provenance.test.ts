@@ -9,7 +9,7 @@
  * resumable steps would punch a hole in provenance every time someone hit
  * Ctrl-C, which is precisely where intent cannot reconstruct the answer later.
  *
- * TRAP 28, both halves, in the last describe block: a stamp can only witness a
+ * TRAP 28 is pinned in both halves, in the last describe block: a stamp can only witness a
  * write that SET it, on every row counted. A cleared stamp matches no window and
  * a conditionally-set one covers a subset, so in both cases the default witness
  * makes a CORRECT run record `contradicted` — the mechanism accusing itself.
@@ -20,7 +20,7 @@
  * because that is where the live instance was — merged, reviewed and cited as
  * the pattern, a day before writing this found it.
  *
- * TRAP 29, in the block after it: a timestamp window is coincidence, not
+ * TRAP 29 is pinned in the block after it: a timestamp window is coincidence, not
  * authorship. Two overlapping invocations of one stamp-writing step each query a
  * window holding BOTH sets of stamps, so the old `count >= rowCount` test let
  * both record `confirmed` for work neither did. `confirmed` requires
