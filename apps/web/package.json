@@ -26,6 +26,7 @@
     "invariants:check": "tsx scripts/check-pipeline-invariants.ts",
     "ci:check": "tsx scripts/run-ci-checks.ts",
     "backlog": "tsx scripts/backlog.ts",
+    "runs:cost": "tsx scripts/report-run-costs.ts",
     "trigger:contract": "tsx --env-file=.env.local scripts/test-editorial-trigger.ts"
   },
   "dependencies": {

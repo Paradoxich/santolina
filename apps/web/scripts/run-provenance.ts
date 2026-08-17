@@ -55,6 +55,11 @@
 import { createHash, randomBytes } from 'node:crypto'
 import { appendFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import {
+  readUsageMeter,
+  usageSince,
+  type UsageMeter,
+} from '../lib/anthropic-client'
 import { getSupabaseAdmin } from '../lib/supabase-admin'
 import { REPO_ROOT } from './token-source'
 
@@ -112,6 +117,31 @@ export interface RunRecord {
     exclusivity: Exclusivity
     notes: string[]
   }
+  /**
+   * Tokens billed between this run's start and its finish, keyed
+   * `${model}:${mode}` — see UsageMeter. Absent when the run made no API call,
+   * which is most of the book-end steps, and absent from every record written
+   * before 2026-08-17.
+   *
+   * WHY IT IS A MEASUREMENT AND NOT A COST. The record holds tokens; dollars
+   * are derived at read time from a price table that belongs to whoever is
+   * reading, because prices change and the run does not. Standing rule 14: the
+   * derivable number does not get a second home.
+   *
+   * WHY IT SITS BESIDE row_count RATHER THAN INSIDE verification. It is not
+   * evidence of anything. The database cannot corroborate a token count — it is
+   * the run's own report of what it was told it spent, and unlike the row count
+   * there is no witness that could disagree. Reading it as verified would be the
+   * same mistake `{ checked, agrees }` made.
+   *
+   * WHY IT IS PROCESS-WIDE AND WINDOWED, not attributed call by call. The meter
+   * lives in the client (lib/anthropic-client.ts) so no call site has to
+   * remember it exists. The cost of that is the same ambiguity every window in
+   * this file has: two runs open concurrently IN ONE PROCESS would each claim
+   * the other's tokens. Nothing does that today — a step is one process, and
+   * parallel work here means parallel worktrees, which are separate meters.
+   */
+  usage?: UsageMeter
   /** Present only when outcome is 'failed'. */
   error?: string
 }
@@ -513,6 +543,10 @@ export interface BeginRunOptions {
   /** Injected in tests. */
   now?: () => string
   countRows?: (witness: Witness, from: string, to: string) => Promise<number>
+  /** Injected in tests. Reads the process-wide token meter. */
+  readUsage?: () => UsageMeter
+  /** Injected in tests. Diffs the meter against a snapshot. */
+  usageDelta?: (before: UsageMeter) => UsageMeter
   append?: (record: RunRecord) => string
   log?: (line: string) => void
   /** Install SIGINT/SIGTERM handlers. Off in tests. */
@@ -628,6 +662,8 @@ export function beginRun(opts: BeginRunOptions): RunHandle {
     locks = supabaseLocks,
     now = nowIso,
     countRows = countByWitness,
+    readUsage = readUsageMeter,
+    usageDelta = usageSince,
     append = appendRunRecord,
     log = console.log,
     trapSignals = true,
@@ -659,6 +695,11 @@ export function beginRun(opts: BeginRunOptions): RunHandle {
   }
 
   const startedAt = now()
+  // Taken with the start instant, so the tokens counted are the ones spent
+  // inside the same window the row evidence is read over. A process that has
+  // already spent tokens before opening this run — a resumed pass reading an
+  // earlier batch, a script that curates then verifies — keeps them out of it.
+  const usageAtStart = readUsage()
   const hash = recipeHash(recipe)
   // The id is the IDENTITY of the provenance event, so it carries a random
   // component and is not derived from the step, the instant and the recipe.
@@ -716,6 +757,10 @@ export function beginRun(opts: BeginRunOptions): RunHandle {
     const finishedAt = now()
     // Never passed in: the count is what the run observed itself writing.
     const rowCount = writtenRows.size
+    // Read on EVERY terminal path, which is the point of reading it here rather
+    // than in withRunRecord: an interrupted or failed run spent real money, and
+    // those are exactly the runs whose cost is otherwise unrecoverable.
+    const spent = usageDelta(usageAtStart)
     const observed: Record<string, number> = {}
     const notes: string[] = []
     let anyConfirming = false
@@ -856,6 +901,7 @@ export function beginRun(opts: BeginRunOptions): RunHandle {
         exclusivity: exclusivityNow,
         notes,
       },
+      ...(Object.keys(spent).length ? { usage: spent } : {}),
       ...(extra.error ? { error: extra.error } : {}),
     }
 
@@ -874,6 +920,14 @@ export function beginRun(opts: BeginRunOptions): RunHandle {
     log(
       `\nrun ${runId} — ${outcome}, ${rowCount} row(s), recipe ${hash}, ` +
         `evidence ${substantiation}` +
+        Object.entries(spent)
+          .map(
+            ([key, t]) =>
+              `\n  ${key} — ${t.calls} call(s), ` +
+              `${t.input_tokens.toLocaleString()} in / ` +
+              `${t.output_tokens.toLocaleString()} out`
+          )
+          .join('') +
         `\n  recorded in ${path.replace(`${REPO_ROOT}/`, '')}`
     )
     if (substantiation === 'contradicted')
