@@ -18,8 +18,11 @@
  *     · sun_thrives non-empty and disjoint from sun_tolerates
  *     · every plant has ≥1 combination; no self/duplicate/reversed-duplicate
  *       pairs; nobody over the 5-companion cap
+ *     · nobody over the same-axis style bar (lib/style-tags.ts) — the catalog
+ *       side of a check curate-styles only ever ran on a run's own output
  *
  *   WARN (exit 0) — known gaps, reported so they stay visible:
+ *     · under-supplied companions — fewer than 4, where 733 of 748 hold 5
  *     · seasonal_care null (per-plant view; a ROUND missing it FAILs via
  *       round-status, because Care Tips v2 is live and reads the field)
  *     · hardiness_rating null (track parked)
@@ -39,6 +42,11 @@ import {
   FOLIAGE_RAW_TO_BUCKET,
   IGNORED_FOLIAGE_COLORS,
 } from '../lib/foliage-colors'
+import {
+  EXCLUSIVE_STYLE_AXES,
+  MAX_TAGS_PER_EXCLUSIVE_AXIS,
+  STYLE_AXES,
+} from '../lib/style-tags'
 import { getSupabaseAdmin } from '../lib/supabase-admin'
 import { fetchAllRows } from '../lib/paginate'
 import { readRoundManifest } from './round-manifest'
@@ -49,6 +57,24 @@ import {
 } from './round-status'
 
 const COMPANION_CAP = 5
+
+/**
+ * Below this, a plant is under-supplied rather than merely hard to pair — WARN,
+ * not FAIL, because the cause is a pass finding few partners, not a bad write.
+ *
+ * WHY 4, AND WHY THIS EXISTS AT ALL. Counted live 2026-08-17: 733 plants hold 5
+ * companions, 13 hold 4, and ONE holds 1 — Aconite-leaf buttercup. There is no
+ * tail between 1 and 4, so the floor separates the outlier from the normal
+ * spread rather than being a number picked to be safe.
+ *
+ * The zero case was already FAIL above, and the cap was already FAIL, so the
+ * gap was only ever this side of the distribution: five is a cap, not a target,
+ * and a row that came back with one satisfied every invariant there was. It was
+ * found by counting during an unrelated question, which is the actual finding —
+ * nothing was watching. `--round` scopes the plants, so this asks the same
+ * question of a round at close and of the whole catalog when run bare.
+ */
+const COMPANION_FLOOR = 4
 
 interface PlantRow {
   id: string
@@ -77,6 +103,7 @@ interface PlantRow {
   light_needs: string | null
   soil_needs: string | null
   common_issues: string | null
+  style_tags: string[] | null
 }
 
 interface ComboRow {
@@ -181,7 +208,7 @@ async function fetchAllPlants(): Promise<PlantRow[]> {
     'description, care_level, seasonal_rhythm, seasonal_care, sun_thrives, ' +
     'sun_tolerates, hardiness_rating, image_url, image_url_curated, ' +
     'maintenance_notes, best_placement, water_needs, ' +
-    'water_needs_summary, light_needs, soil_needs, common_issues'
+    'water_needs_summary, light_needs, soil_needs, common_issues, style_tags'
   return fetchAllRows<PlantRow>((from, to) =>
     db.from('plants').select(columns).order('id').range(from, to)
   )
@@ -227,6 +254,25 @@ function checkPlants(plants: PlantRow[]): Finding[] {
         check: 'native_region',
         detail: `${p.common_name} — empty (run regenerate-native-region)`,
       })
+    }
+
+    // The same-axis bar, read against the catalog rather than against a run's
+    // own output. `curate-styles` already warns about this, but only for the
+    // rows the run in front of it just judged — so when Ana moved the bar 1 → 2
+    // on 2026-08-17 nobody re-read the 748 rows against the new value, and one
+    // row sat over it. A bar with a constant behind it is a FAIL, like the
+    // companion cap: the value is not a judgment call once the constant is set.
+    for (const axis of EXCLUSIVE_STYLE_AXES) {
+      const onAxis = (p.style_tags ?? []).filter((t) =>
+        (STYLE_AXES[axis] as readonly string[]).includes(t)
+      )
+      if (onAxis.length > MAX_TAGS_PER_EXCLUSIVE_AXIS) {
+        findings.push({
+          level: 'FAIL',
+          check: `over the ${axis} style bar`,
+          detail: `${p.common_name} — ${onAxis.length} ${axis} tags (max ${MAX_TAGS_PER_EXCLUSIVE_AXIS}): ${onAxis.join(', ')}`,
+        })
+      }
     }
 
     for (const raw of p.bloom_color ?? []) {
@@ -390,6 +436,12 @@ function checkCombos(plants: PlantRow[], combos: ComboRow[]): Finding[] {
         level: 'FAIL',
         check: 'over companion cap',
         detail: `${p.common_name} — ${n} companions (cap ${COMPANION_CAP})`,
+      })
+    } else if (n < COMPANION_FLOOR) {
+      findings.push({
+        level: 'WARN',
+        check: 'under-supplied companions',
+        detail: `${p.common_name} — ${n} companion${n === 1 ? '' : 's'} (typical is ${COMPANION_FLOOR}-${COMPANION_CAP}; re-run curate-combinations for it)`,
       })
     }
   }
