@@ -599,6 +599,24 @@ mechanism behind most cross-round writes this project has had to trace by hand
 throws instead of running: a pass reporting success having touched nothing is
 how several log entries begin.
 
+**Theme selection is step 0, and it is a measurement.** `pnpm probe:gap`
+(`scripts/probe-gap.ts`) tests a theme's signature palette against the catalog
+and kills it at >=70% already held — round 9's rule, because a low tag count is
+not a gap until you have checked it is not the data. Rounds 9 to 12 ran this by
+hand and recorded only the verdict in a seeder's header, which made the one
+measurement that chooses what a round buys the one part of a round nobody could
+reproduce; round 12's header is why that matters, since its leading hypothesis
+was wrong at 84% held. The probe costs nothing — one paginated catalog read, no
+Trefle or Anthropic calls — and writes to `reports/`, which `archive-round.ts`
+commits into `rounds/<label>/reports/` at close.
+
+It reports a third thing the percentage cannot: whether a style is
+**cultivar-bound**. `gothic` is the emptiest style in the vocabulary and cannot
+be filled by any species-level round, because the dark garden is selections of
+species already held. A style like that is a cultivar-tier schema question
+(standing rule 11's list), not a seed, and the probe says so rather than letting
+a low count imply a round.
+
 **Seeding sits outside the runner** because it is where a round's judgment
 lives — which species, chosen against which measured gap — and it is a different
 script each time. The one rule that never varies is **seed by verified Trefle ID
