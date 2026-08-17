@@ -50,6 +50,7 @@ import {
 import { fetchAllRows } from '../lib/paginate'
 import { getAnthropicClient, CURATION_MODEL } from '../lib/anthropic-client'
 import { STYLE_TAGS, STYLE_TAG_PROMPT, type StyleTag } from '../lib/style-tags'
+import { withRunRecord, type Witness } from './run-provenance'
 
 // ---------------------------------------------------------------------------
 // Config
@@ -114,6 +115,30 @@ function guardWrite(plant: { id: string; common_name: string }): string {
 // ---------------------------------------------------------------------------
 // Prompt
 // ---------------------------------------------------------------------------
+
+/**
+ * An empty row, used ONLY to render the template for the recipe hash.
+ *
+ * The recipe is what was constant across rows: the model, the assembled
+ * template and the tag vocabulary. Substituting a real plant would fold its
+ * subject into the hash and give every row its own cohort, which is the one
+ * thing the hash exists not to do. Same shape as curate-plants' probe row.
+ */
+const RECIPE_PROBE_ROW: PlantRow = {
+  id: 'recipe-probe',
+  common_name: '',
+  scientific_name: null,
+  plant_type: null,
+  plant_type_label: null,
+  description: null,
+  bloom_color: null,
+  bloom_months: null,
+  foliage_color: null,
+  is_greenery: null,
+  native_to: null,
+  style_tags: null,
+  style_checked_at: null,
+}
 
 function buildPrompt(plant: PlantRow): string {
   // Deliberately excludes the current style_tags — a blind re-judgment.
@@ -224,41 +249,84 @@ async function main() {
   let neutral = 0
   const failed: string[] = []
 
-  for (const [i, plant] of selected.entries()) {
-    try {
-      const tags = await judgePlant(plant)
+  const judgeAll = async (wrote: (id: string) => void) => {
+    for (const [i, plant] of selected.entries()) {
+      try {
+        const tags = await judgePlant(plant)
 
-      for (const t of tags) tagCounts.set(t, (tagCounts.get(t) ?? 0) + 1)
-      if (tags.length === 0) neutral++
+        for (const t of tags) tagCounts.set(t, (tagCounts.get(t) ?? 0) + 1)
+        if (tags.length === 0) neutral++
 
-      const before = [...(plant.style_tags ?? [])].sort()
-      const after = [...tags].sort()
-      const changed = JSON.stringify(before) !== JSON.stringify(after)
-      if (!changed) unchanged++
+        const before = [...(plant.style_tags ?? [])].sort()
+        const after = [...tags].sort()
+        const changed = JSON.stringify(before) !== JSON.stringify(after)
+        if (!changed) unchanged++
 
-      console.log(
-        `  [${i + 1}/${selected.length}] ${plant.common_name}: [${tags.join(', ')}]${
-          changed ? ` (was [${before.join(', ')}])` : ''
-        }`
-      )
+        console.log(
+          `  [${i + 1}/${selected.length}] ${plant.common_name}: [${tags.join(', ')}]${
+            changed ? ` (was [${before.join(', ')}])` : ''
+          }`
+        )
 
-      if (!DRY_RUN) {
-        const { error } = await db
-          .from('plants')
-          .update({
-            style_tags: tags,
-            style_checked_at: new Date().toISOString(),
-          })
-          .eq('id', guardWrite(plant))
-        if (error) throw new Error(`DB write failed: ${error.message}`)
+        if (!DRY_RUN) {
+          const { error } = await db
+            .from('plants')
+            .update({
+              style_tags: tags,
+              style_checked_at: new Date().toISOString(),
+            })
+            .eq('id', guardWrite(plant))
+          if (error) throw new Error(`DB write failed: ${error.message}`)
+          wrote(plant.id)
+        }
+      } catch (err) {
+        failed.push(`${plant.common_name} — ${(err as Error).message}`)
+        console.error(
+          `  [${i + 1}/${selected.length}] ${plant.common_name}: FAILED — ${(err as Error).message}`
+        )
       }
-    } catch (err) {
-      failed.push(`${plant.common_name} — ${(err as Error).message}`)
-      console.error(
-        `  [${i + 1}/${selected.length}] ${plant.common_name}: FAILED — ${(err as Error).message}`
-      )
+      if (i < selected.length - 1) await sleep(INTER_PLANT_DELAY_MS)
     }
-    if (i < selected.length - 1) await sleep(INTER_PLANT_DELAY_MS)
+  }
+
+  const runOptions = {
+    step: 'curate-styles',
+    // Both members are written in the SAME statement on every row this pass
+    // writes at all, so neither is the trap-28 shape: there is no branch where
+    // the stamp moves on a subset of the counted rows.
+    writeSet: ['style_tags', 'style_checked_at'],
+    // style_checked_at witnesses itself — the pass SETS it, never clears it.
+    // style_tags is a value column and cannot be compared to an instant, so
+    // beginRun would throw without an explicit witness for it.
+    evidence: [
+      { kind: 'stamp', covers: 'style_checked_at', column: 'style_checked_at' },
+      {
+        kind: 'row-touched',
+        covers: 'style_tags',
+        table: 'plants',
+        column: 'updated_at',
+      },
+    ] as Witness[],
+    scope: describeScope(SCOPE, SCOPE_IDS),
+    recipe: {
+      model: CURATION_MODEL,
+      template: buildPrompt(RECIPE_PROBE_ROW),
+      ingredients: { style_tags: STYLE_TAG_PROMPT },
+      decoding: { max_tokens: 256 },
+    },
+  }
+
+  // A dry run opens NO run, because provenance records what produced a value
+  // and a pass that writes none produced none. Recording one would file an
+  // invocation that no stamp can ever corroborate — a row in the log that
+  // looks like a write and is not, which is the shelf-life problem the module
+  // header warns about, manufactured on purpose.
+  if (DRY_RUN) {
+    await judgeAll(() => {})
+  } else {
+    await withRunRecord(runOptions, async (run) => {
+      await judgeAll((id) => run.wrote(id))
+    })
   }
 
   const judged = selected.length - failed.length

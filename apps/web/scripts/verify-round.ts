@@ -72,6 +72,7 @@ interface PlantRow {
   water_needs_summary: string | null
   light_needs: string | null
   soil_needs: string | null
+  common_issues: string | null
 }
 
 interface ComboRow {
@@ -112,16 +113,32 @@ const REQUIRED_DRAFTED_FIELDS: Array<keyof PlantRow> = [
   'water_needs_summary',
   'light_needs',
   'soil_needs',
+  // Added 2026-08-17, Ana's ruling, and only AFTER the 27 blank rows were
+  // filled: `count(*) filter (where common_issues is null)` = 27 before the
+  // pass and 0 after, so this cannot fail rounds 7, 11 or 12 retroactively.
+  // Adding it first would have — the same reason the six above waited.
+  //
+  // WHY IT BECAME REQUIRED. The blank was a SANCTIONED answer: curate-plants'
+  // prompt said "null if the species genuinely has no notable common issues".
+  // But 460 of the 721 rows that had the field already said "generally pest and
+  // disease free" in prose, so the null branch was a second way to write an
+  // answer the drafter usually wrote out — and a reader cannot tell an easy
+  // plant from an unanswered question. The prompt now forbids null.
+  'common_issues',
 ]
 
-// DELIBERATELY NOT IN THE LIST ABOVE, measured 2026-08-16 rather than assumed:
+// DELIBERATELY NOT IN THE LIST ABOVE:
 //
-//   · common_issues (null on 21 drafted rows) and environment_benefits (null on
-//     4) are nullable prose where "nothing to say" is a plausible answer — a
-//     plant with no notable pests, a plant that feeds nothing. Listing them
-//     would fail 25 rows across closed rounds on a judgement nobody has made.
-//     Decide whether empty is legitimate for those two fields FIRST; the
-//     verifier is the wrong place to settle it.
+//   · environment_benefits stays optional, Ana's ruling 2026-08-17, decided
+//     against the rows rather than in the abstract. Its 4 blanks are three
+//     houseplants (Kalanchoe blossfeldiana, Cyclamen persicum, Schlumbergera
+//     truncata) and a noxious invasive whose common_issues opens "Highly
+//     invasive". A pot on a windowsill contributes nothing to a garden
+//     ecosystem, so requiring the field would buy four fabricated sentences.
+//     THE TWO FIELDS FAIL IN OPPOSITE DIRECTIONS UNDER A GATE, which is why
+//     they split: forcing common_issues pressures the drafter toward "generally
+//     pest and disease free", which is true; forcing this one pressures it
+//     toward inventing an ecological benefit.
 //   · garden_use_tags is NOT NULL DEFAULT '{}', so an empty array is a real
 //     verdict that looks exactly like the default, and the only honest witness
 //     is the stamp — the same reasoning already written above for style_tags,
@@ -160,7 +177,7 @@ async function fetchAllPlants(): Promise<PlantRow[]> {
     'description, care_level, seasonal_rhythm, seasonal_care, sun_thrives, ' +
     'sun_tolerates, hardiness_rating, image_url, image_url_curated, ' +
     'maintenance_notes, best_placement, water_needs, ' +
-    'water_needs_summary, light_needs, soil_needs'
+    'water_needs_summary, light_needs, soil_needs, common_issues'
   return fetchAllRows<PlantRow>((from, to) =>
     db.from('plants').select(columns).order('id').range(from, to)
   )

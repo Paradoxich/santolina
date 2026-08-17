@@ -147,10 +147,6 @@ export const RUNS_WITHOUT_PROVENANCE: Record<string, string> = {
   //     without saying why a round step may write without a record. ---
 
   // --- outside the round cadence ---
-  'curate-styles.ts': 'Repair pass. Stamps style_checked_at.',
-  'curate-greenery.ts': 'Repair pass. Stamps greenery_checked_at.',
-  'draft-hardiness.ts':
-    'Parked feature. max_tokens is 16, which makes it a materially different recipe from the same model at 2048 — a good first test of whether the hash separates cohorts usefully.',
   'apply-native-to-fixes.ts':
     'Applies committed decisions and NULLS native_checked_at. A clearing write is still a write.',
   'apply-seasonal-care-fixes.ts': 'Same generate-then-apply shape.',
@@ -976,6 +972,18 @@ const NON_STAMP_WRITES = new Set([
   'image_url_curated',
   'image_attribution',
   'image_candidates',
+  // The browse axes. Each is re-judged blind by its own repair pass, which
+  // OVERWRITES rather than fills, so the value and its stamp move together in
+  // one statement (curate-styles, curate-greenery).
+  'style_tags',
+  'is_greenery',
+  // Fill-only, never overwritten: curate-greenery writes it on the subset of
+  // rows that had none, which is why it takes a bounding witness and not a
+  // confirming one.
+  'foliage_color',
+  // Editorial-owned state with a hardiness_verified flag rather than a
+  // *_checked_at column beside it, so draft-hardiness writes no stamp at all.
+  'hardiness_rating',
 ])
 
 // ---------------------------------------------------------------------------
@@ -1055,6 +1063,122 @@ function checkOpenFindings(): number {
 }
 
 // ---------------------------------------------------------------------------
+// Shape 15. A decision parked on a person must be dated, owned, and must rot
+//
+// WHAT WENT WRONG. `.claude/handoff.md` carried a paragraph beginning
+// "**Waiting on Ana:**" that was copied WORD FOR WORD through six consecutive
+// handoffs (4006b7e → a5301e2). On 2026-08-17 it was read back to her and
+// three of its six items turned out never to have been hers: the `Cenolophium`
+// region correction is a botanical fact question answerable against WCVP, and
+// the rounds 1-6 editorial pass and the `modern` re-tag both contradict
+// standing rule 6, which records HER OWN 2026-07-28 ruling that an agent owns
+// the editorial pass. A fourth item, two round-12 photo holds, described rows
+// that already had photographs. Nobody re-derived ownership because the
+// paragraph read as settled: it had been there last time.
+//
+// WHY THE PROSE PARAGRAPH IS THE DEFECT, not the deferring. A comma-separated
+// sentence has no items, so nothing can count them, date them, or ask who owes
+// the answer. It is the same failure standing rule 14 names — a claim with no
+// command behind it — applied to work instead of to numbers, and it is exactly
+// what CLAUDE.md means by work remaining living in a document. The list form
+// below is the whole fix: an item that must name its date and its owner is an
+// item somebody has to think about again.
+//
+// THIS CHECK IS DESIGNED TO GO RED WITH NO CODE CHANGE. That is normally a
+// smell and here it is the mechanism. A parked decision has a shelf life; when
+// it expires CI stops the next PR and forces one of two things, both good — get
+// the ruling, or route the item to its real home (the Notion Build Backlog for
+// a product decision, standing rule 11's list for a deferred schema change).
+// Routing removes it from this file, which is why there is deliberately NO
+// escape hatch: a hatch here would be a way to park an item permanently, and
+// permanently parked is the state this exists to prevent.
+//
+// THE THRESHOLD IS A ROUND, NOT A SPRINT. Rounds run every few days, so 14 days
+// is long enough that a genuine deferral survives one and short enough that
+// nothing survives two in silence. Ana's rule, 2026-08-17: raise it in the
+// round that found it, especially the small things, rather than closing the
+// round and leaving maintenance for a future session.
+// ---------------------------------------------------------------------------
+const HANDOFF = '.claude/handoff.md'
+const PARKED_DECISION_MAX_DAYS = 14
+
+/** `- (raised YYYY-MM-DD, Owner) the question` */
+const PARKED_ITEM = /^-\s*\(raised (\d{4}-\d{2}-\d{2}),\s*([^)]+)\)\s*(\S.*)$/
+
+function checkParkedDecisions(): number {
+  if (!ALL.includes(HANDOFF)) return 0
+  const src = read(HANDOFF)
+
+  // The old shape, killed by name. Its whole problem was being unitemizable.
+  const prose = src.match(/^.*\*\*(Waiting on|Blocked on)\b.*$/im)
+  if (prose) {
+    fail({
+      shape: 'parked decisions written as prose',
+      subject: HANDOFF,
+      detail: `"${prose[0].trim().slice(0, 72)}…" is the paragraph form that was copied verbatim through six handoffs, three of whose items were never the named person's to decide.`,
+      remedy:
+        'Rewrite it as a "**Parked decisions.**" list, one `- (raised YYYY-MM-DD, Owner) the question` per line. An item that cannot be phrased as a question somebody owes an answer to is not parked, it is unrouted work.',
+    })
+    return 0
+  }
+
+  const start = src.search(/^\*\*Parked decisions\b/im)
+  if (start === -1) return 0
+
+  const today = new Date()
+  let parked = 0
+
+  // Two things this loop got wrong before it was watched, both of which made
+  // it report ZERO while looking at a real item — the trap-19 shape, a check
+  // that passes because it sees nothing rather than because nothing is wrong.
+  // The lead-in paragraph wraps across lines, so the list does not start at
+  // start + 1; and an item wraps too, so an indented line is a continuation
+  // and not the end of the block.
+  let seenItem = false
+  for (const line of src.slice(start).split('\n').slice(1)) {
+    const trimmed = line.trim()
+    if (trimmed === '') continue
+    if (!trimmed.startsWith('-')) {
+      if (!seenItem) continue // still in the lead-in paragraph
+      if (/^\s/.test(line)) continue // wrapped continuation of an item
+      break // a new paragraph: the block is over
+    }
+    seenItem = true
+
+    const item = PARKED_ITEM.exec(trimmed)
+    if (!item) {
+      fail({
+        shape: 'parked decision is undated or unowned',
+        subject: `${HANDOFF}: ${trimmed.slice(0, 60)}…`,
+        detail:
+          'Every parked item states when it was raised and who owes the answer. Without both, nobody can tell a fresh question from one that has been sitting for a month.',
+        remedy:
+          'Write it as `- (raised YYYY-MM-DD, Owner) the question`, dated when it was FIRST raised — not when this handoff was written, which is how an old item looks new.',
+      })
+      continue
+    }
+
+    const raised = item[1] ?? ''
+    const owner = (item[2] ?? '').trim()
+    const question = item[3] ?? ''
+    const days = Math.floor(
+      (today.getTime() - new Date(`${raised}T00:00:00Z`).getTime()) / 86_400_000
+    )
+    if (days > PARKED_DECISION_MAX_DAYS) {
+      fail({
+        shape: 'parked decision has gone stale',
+        subject: `${HANDOFF}: ${question.slice(0, 60)}…`,
+        detail: `Parked on ${owner} since ${raised}, ${days} days — past the ${PARKED_DECISION_MAX_DAYS}-day limit, so it has now outlived the round that raised it.`,
+        remedy: `Ask ${owner} for the ruling now, or move it to its real home — the Notion Build Backlog for a product decision, standing rule 11's list for a deferred schema change — and delete the line. Re-dating it is not a resolution. First check the item is still ${owner}'s at all: three of the six that motivated this check were not.`,
+      })
+      continue
+    }
+    parked++
+  }
+  return parked
+}
+
+// ---------------------------------------------------------------------------
 // Run
 // ---------------------------------------------------------------------------
 
@@ -1067,6 +1191,7 @@ checkNoForkedSynonymTables()
 const unwiredProvenance = checkWriteProvenance()
 const handRolledPaging = checkPagination()
 const openFindings = checkOpenFindings()
+const parkedDecisions = checkParkedDecisions()
 // Shape 7, runbook / registry drift, is round-rehearsal.test.ts. It imports
 // RUNBOOK and the step registry, so it is a test, not a scan. Do not add it here.
 
@@ -1116,6 +1241,7 @@ row(
 )
 row('hand-rolled paging', String(handRolledPaging), 'HAND_ROLLED_PAGINATION')
 row('open findings', String(openFindings), 'OPEN_FINDINGS')
+row('parked decisions', String(parkedDecisions), HANDOFF)
 console.log(
   '  Runbook and registry drift is checked by round-rehearsal.test.ts, not here.\n'
 )

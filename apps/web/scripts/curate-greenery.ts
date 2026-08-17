@@ -38,6 +38,7 @@
 
 import { getSupabaseAdmin } from '../lib/supabase-admin'
 import { GREENERY_PROMPT } from '../lib/greenery'
+import { withRunRecord, type Witness } from './run-provenance'
 import {
   requireScope,
   scopeIds,
@@ -113,6 +114,28 @@ function guardWrite(plant: { id: string; common_name: string }): string {
 // ---------------------------------------------------------------------------
 // Prompt
 // ---------------------------------------------------------------------------
+
+/**
+ * An empty row, used ONLY to render the template for the recipe hash. Its
+ * `foliage_color: null` also fixes the branch: the probe renders the
+ * ask-for-foliage form, which is the wider of the two prompts. Substituting a
+ * real plant would fold its subject into the hash and give every row its own
+ * cohort, which is the one thing the hash exists not to do.
+ */
+const RECIPE_PROBE_ROW: PlantRow = {
+  id: 'recipe-probe',
+  common_name: '',
+  scientific_name: null,
+  plant_type: null,
+  plant_type_label: null,
+  description: null,
+  bloom_color: null,
+  bloom_months: null,
+  foliage_color: null,
+  style_tags: null,
+  garden_use_tags: null,
+  greenery_checked_at: null,
+}
 
 function buildPrompt(plant: PlantRow): string {
   const askFoliage = plant.foliage_color === null
@@ -237,68 +260,121 @@ async function main() {
   const contradictions: string[] = []
   const failed: string[] = []
 
-  for (const [i, plant] of selected.entries()) {
-    try {
-      const judgment = await judgePlant(plant)
+  const judgeAll = async (wrote: (id: string) => void) => {
+    for (const [i, plant] of selected.entries()) {
+      try {
+        const judgment = await judgePlant(plant)
 
-      // A distinctive-foliage plant is by rule not greenery: its identity is
-      // that colour (Silver/Burgundy/Orange), and it already matches the
-      // colour filter through its foliage bucket. If the model says greenery
-      // anyway, we override to false rather than trust it — but we still write
-      // and stamp, so the row is recorded and --new-only converges.
-      // "Distinctive" means the value MAPS to a bucket: plain greens and
-      // seasonal turns (the ignore set) don't contradict greenery — a
-      // bright-green hedging shrub is exactly what the flag is for.
-      const effectiveFoliage =
-        plant.foliage_color ?? judgment.foliage_color ?? null
-      const distinctive = foliageBucketsForPlant(effectiveFoliage).length > 0
-      const contradicts = judgment.greenery && distinctive
-      if (contradicts) {
-        contradictions.push(
-          `${plant.common_name} — model said greenery=true with foliage "${effectiveFoliage}"; overridden to false`
+        // A distinctive-foliage plant is by rule not greenery: its identity is
+        // that colour (Silver/Burgundy/Orange), and it already matches the
+        // colour filter through its foliage bucket. If the model says greenery
+        // anyway, we override to false rather than trust it — but we still write
+        // and stamp, so the row is recorded and --new-only converges.
+        // "Distinctive" means the value MAPS to a bucket: plain greens and
+        // seasonal turns (the ignore set) don't contradict greenery — a
+        // bright-green hedging shrub is exactly what the flag is for.
+        const effectiveFoliage =
+          plant.foliage_color ?? judgment.foliage_color ?? null
+        const distinctive = foliageBucketsForPlant(effectiveFoliage).length > 0
+        const contradicts = judgment.greenery && distinctive
+        if (contradicts) {
+          contradictions.push(
+            `${plant.common_name} — model said greenery=true with foliage "${effectiveFoliage}"; overridden to false`
+          )
+        }
+        const greenery = contradicts ? false : judgment.greenery
+
+        if (greenery) greeneryCount++
+        const newFoliage = judgment.foliage_color ?? null
+        if (newFoliage) {
+          foliageFilled++
+          if (
+            !FOLIAGE_RAW_TO_BUCKET[newFoliage] &&
+            !IGNORED_FOLIAGE_COLORS.has(newFoliage)
+          ) {
+            const carriers = unmappedValues.get(newFoliage) ?? []
+            carriers.push(plant.common_name)
+            unmappedValues.set(newFoliage, carriers)
+          }
+        }
+
+        console.log(
+          `  [${i + 1}/${selected.length}] ${plant.common_name}: greenery=${greenery}${contradicts ? ' (overridden from true)' : ''}${newFoliage ? `, foliage="${newFoliage}"` : ''}`
+        )
+
+        if (!DRY_RUN) {
+          const patch: Record<string, unknown> = {
+            is_greenery: greenery,
+            greenery_checked_at: new Date().toISOString(),
+          }
+          // Fill-only: never overwrite a populated foliage_color
+          if (plant.foliage_color === null && newFoliage)
+            patch.foliage_color = newFoliage
+          const { error } = await db
+            .from('plants')
+            .update(patch)
+            .eq('id', guardWrite(plant))
+          if (error) throw new Error(`DB write failed: ${error.message}`)
+          wrote(plant.id)
+        }
+      } catch (err) {
+        failed.push(`${plant.common_name} — ${(err as Error).message}`)
+        console.error(
+          `  [${i + 1}/${selected.length}] ${plant.common_name}: FAILED — ${(err as Error).message}`
         )
       }
-      const greenery = contradicts ? false : judgment.greenery
-
-      if (greenery) greeneryCount++
-      const newFoliage = judgment.foliage_color ?? null
-      if (newFoliage) {
-        foliageFilled++
-        if (
-          !FOLIAGE_RAW_TO_BUCKET[newFoliage] &&
-          !IGNORED_FOLIAGE_COLORS.has(newFoliage)
-        ) {
-          const carriers = unmappedValues.get(newFoliage) ?? []
-          carriers.push(plant.common_name)
-          unmappedValues.set(newFoliage, carriers)
-        }
-      }
-
-      console.log(
-        `  [${i + 1}/${selected.length}] ${plant.common_name}: greenery=${greenery}${contradicts ? ' (overridden from true)' : ''}${newFoliage ? `, foliage="${newFoliage}"` : ''}`
-      )
-
-      if (!DRY_RUN) {
-        const patch: Record<string, unknown> = {
-          is_greenery: greenery,
-          greenery_checked_at: new Date().toISOString(),
-        }
-        // Fill-only: never overwrite a populated foliage_color
-        if (plant.foliage_color === null && newFoliage)
-          patch.foliage_color = newFoliage
-        const { error } = await db
-          .from('plants')
-          .update(patch)
-          .eq('id', guardWrite(plant))
-        if (error) throw new Error(`DB write failed: ${error.message}`)
-      }
-    } catch (err) {
-      failed.push(`${plant.common_name} — ${(err as Error).message}`)
-      console.error(
-        `  [${i + 1}/${selected.length}] ${plant.common_name}: FAILED — ${(err as Error).message}`
-      )
+      if (i < selected.length - 1) await sleep(INTER_PLANT_DELAY_MS)
     }
-    if (i < selected.length - 1) await sleep(INTER_PLANT_DELAY_MS)
+  }
+
+  const runOptions = {
+    step: 'curate-greenery',
+    writeSet: ['is_greenery', 'greenery_checked_at', 'foliage_color'],
+    // TRAP 28, and this pass has both halves of it in one patch.
+    //
+    // is_greenery and greenery_checked_at move on EVERY row written, so the
+    // stamp witnesses the whole run. foliage_color does not: it is fill-only
+    // (`if (plant.foliage_color === null && newFoliage)`), so a run over a mix
+    // of blank and populated rows moves it on a SUBSET. Giving it a confirming
+    // witness would make a correct run observe fewer rows than it claimed and
+    // file itself contradicted. row-touched bounds it instead, which is the
+    // honest answer for a conditional write.
+    evidence: [
+      {
+        kind: 'stamp',
+        covers: 'greenery_checked_at',
+        column: 'greenery_checked_at',
+      },
+      {
+        kind: 'row-touched',
+        covers: 'is_greenery',
+        table: 'plants',
+        column: 'updated_at',
+      },
+      {
+        kind: 'row-touched',
+        covers: 'foliage_color',
+        table: 'plants',
+        column: 'updated_at',
+      },
+    ] as Witness[],
+    scope: describeScope(SCOPE, SCOPE_IDS),
+    recipe: {
+      model: CURATION_MODEL,
+      template: buildPrompt(RECIPE_PROBE_ROW),
+      ingredients: { greenery: GREENERY_PROMPT },
+      decoding: { max_tokens: 256 },
+    },
+  }
+
+  // A dry run opens no run: provenance records what produced a value, and a
+  // pass that writes none produced none. Same reasoning as curate-styles.
+  if (DRY_RUN) {
+    await judgeAll(() => {})
+  } else {
+    await withRunRecord(runOptions, async (run) => {
+      await judgeAll((id) => run.wrote(id))
+    })
   }
 
   console.log(

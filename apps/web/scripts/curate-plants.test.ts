@@ -12,7 +12,11 @@
 import { describe, expect, it } from 'vitest'
 
 import type { DbPlant } from '../lib/plants-db'
-import { buildPatch, type CurationResponse } from './curate-plants'
+import {
+  buildPatch,
+  restrictPatch,
+  type CurationResponse,
+} from './curate-plants'
 
 /** A row exactly as the DB default leaves it for the two defaulted columns. */
 const freshRow = (overrides: Partial<DbPlant> = {}): DbPlant =>
@@ -70,5 +74,66 @@ describe('buildPatch: defaulted columns are guarded by their stamp', () => {
     )
     expect(patch).not.toHaveProperty('style_checked_at')
     expect(patch).not.toHaveProperty('greenery_checked_at')
+  })
+})
+
+/**
+ * Field-scoped mode (`--only <field>`), added 2026-08-17 so the 27 rows with a
+ * blank `common_issues` could be filled — 14 of which are `is_curated = true`
+ * and therefore invisible to the drafting pass, whose selection filters them
+ * out.
+ *
+ * WHAT THESE PIN. Reaching signed-off rows means dropping that filter, so the
+ * safety property moves to the patch: no column watched by
+ * `invalidate_editorial_verdict` (migration 20260729101133) may survive
+ * restrictPatch. Asserting it on the PATCH rather than on the prompt is the
+ * point — the prompt asks, the patch is what reaches the database, and a
+ * response that volunteers extra fields must not be able to un-curate a row.
+ */
+describe('restrictPatch — field-scoped mode cannot un-curate a row', () => {
+  const fullPatch = {
+    ai_drafted_at: '2026-08-17T00:00:00Z',
+    common_issues: 'Generally pest and disease free.',
+    description: 'A rewritten description.',
+    style_tags: ['cottage'],
+    style_checked_at: '2026-08-17T00:00:00Z',
+    space_types: ['border'],
+    best_placement: 'Sunny borders.',
+  } as unknown as Parameters<typeof restrictPatch>[0]
+
+  it('keeps only the named field and the drafting stamp', () => {
+    const patch = restrictPatch(fullPatch, 'common_issues')
+    expect(Object.keys(patch).sort()).toEqual([
+      'ai_drafted_at',
+      'common_issues',
+    ])
+  })
+
+  it('drops every editorially-watched column the response volunteered', () => {
+    const patch = restrictPatch(fullPatch, 'common_issues')
+    for (const watched of [
+      'description',
+      'style_tags',
+      'space_types',
+      'image_url_curated',
+      'image_pick_confidence',
+    ]) {
+      expect(patch).not.toHaveProperty(watched)
+    }
+  })
+
+  it('drops an unrelated field even though buildPatch would have written it', () => {
+    const patch = restrictPatch(fullPatch, 'common_issues')
+    expect(patch).not.toHaveProperty('best_placement')
+  })
+
+  it('omits the field entirely when the response had nothing for it, so the caller can fail the row', () => {
+    const patch = restrictPatch(fullPatch, 'environment_benefits')
+    expect(patch).not.toHaveProperty('environment_benefits')
+    expect('environment_benefits' in patch).toBe(false)
+  })
+
+  it('is a no-op without a scope, so a full draft is unaffected', () => {
+    expect(restrictPatch(fullPatch, null)).toBe(fullPatch)
   })
 })
