@@ -41,6 +41,17 @@ export interface Step {
    * while skipping one on a bad guess is not.
    */
   alwaysRun?: boolean
+  /**
+   * This step takes `--baseline <dir>` and must receive the SAME rollback point
+   * the runner validated in its preflight.
+   *
+   * Declared per step rather than forwarded to everything, because a flag
+   * handed to a script that ignores it is worse than not passing it: the run
+   * looks configured and is not. Today only step 8a reads a baseline; the
+   * preflight resolves the same one, so without this the runner could pass its
+   * check against one snapshot and then have 8a silently pick another.
+   */
+  acceptsBaseline?: boolean
   /** Printed when the step fails, above the re-run command. */
   onFail?: string
 }
@@ -172,6 +183,7 @@ export const RUNBOOK: Step[] = [
     runbook: '8a',
     script: 'check-round-scope.ts',
     alwaysRun: true,
+    acceptsBaseline: true,
     onFail:
       'This round wrote outside its own manifest. Since the 2026-07-29 freeze ' +
       'that should be impossible from a pipeline step, so treat it as a real ' +

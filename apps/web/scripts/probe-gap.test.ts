@@ -31,7 +31,7 @@ function themeWhere(size: number, heldCount: number) {
 
 function probeOne(size: number, heldCount: number): ThemeProbeResult {
   const { theme, holds } = themeWhere(size, heldCount)
-  return probeThemes([theme], holds)[0]
+  return probeThemes([theme], holds)[0]!
 }
 
 describe('the round-9 kill rule', () => {
@@ -81,10 +81,10 @@ describe('what the probe reports', () => {
     // gothic reads as the emptiest style in the vocabulary and cannot be filled
     // by any species-level round. The percentage must not be the only signal.
     const candidates = ['Genus a', 'Genus b']
-    const [r] = probeThemes(
+    const r = probeThemes(
       [{ style: 'gothic' as StyleTag, note: 'fixture', candidates }],
       () => false
-    )
+    )[0]!
     expect(r.killed).toBe(false)
     expect(r.cultivarBound).not.toBeNull()
   })
