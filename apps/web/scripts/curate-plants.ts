@@ -37,6 +37,7 @@ import { getAnthropicClient, CURATION_MODEL } from '../lib/anthropic-client'
 import type { DbPlant, PlantType, SeasonalRhythm } from '../lib/plants-db'
 import { STYLE_TAG_PROMPT, type StyleTag } from '../lib/style-tags'
 import { GREENERY_PROMPT } from '../lib/greenery'
+import { COPY_RULES_PROMPT } from '../lib/copy-rules'
 import { requireScope, scopeIds, describeScope } from './scope'
 import { withRunRecord, type Witness } from './run-provenance'
 
@@ -285,6 +286,8 @@ ${STYLE_TAG_PROMPT}
 - environment_benefits: 1 short sentence on ecological value (pollinators, birds, etc.). null if not notably beneficial.
 - seasonal_rhythm: Object with ALL 6 required keys — each a 1-2 sentence description of what is happening with this plant at that time. Keys: ${JSON.stringify(SEASONAL_KEYS)}. Must be consistent with bloom_months if known.
 - native_to: Native geographic range as a short phrase (2-7 words), present-day geography, not a sentence. Lowercase directional words (central, southern, eastern, western, northern) and connectors; capitalize only proper place names (Europe, Asia, North Africa, the Mediterranean, the Balkans, Turkey, China). Use "the Mediterranean" or "the Mediterranean region" with the article. No parenthetical asides and no "particularly/including X". Avoid climate-zone jargon like "temperate Northern Hemisphere" — name the continents plainly instead. E.g. "the western Mediterranean", "central and southern Europe", "Europe and western Asia", "eastern Asia", "Europe, Asia, and North America".
+
+${COPY_RULES_PROMPT}
 
 Only include fields listed under "missing fields" above. Do not include fields already in "Known data".`
 }

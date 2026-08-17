@@ -476,6 +476,39 @@ low-priority pile beside genuine boundary calls. Three editorial rounds over the
 including the per-plant decisions and the two systematic checker biases they
 exposed, are recorded in [`database-log.md`](database-log.md).
 
+<a id="copy-rules"></a>
+
+## The copy rules, and why they only ever covered one field
+
+Three rulings govern the catalog's prose: no em or en dashes, _autumn_ and never
+the US _fall_, and _fertilize_ rather than _feed_ in an instruction. They live in
+`lib/copy-rules.ts` and are checked by `pnpm copy:check --round <label>`, which
+reads every reader-facing prose field and writes nothing.
+
+Until 2026-08-18 all three were enforced inside `curate-seasonal-care`'s own line
+validator, so they were rules about `seasonal_care` and nothing else. Every other
+prose field is written by `curate-plants`, which validated none of it. The
+measurement is the argument: **88 violations across 780 rows, and 6 of them
+introduced by round 13** — this is a live leak, not a legacy one. The same shape
+as trap 36: the rule exists, the enforcement covers one field, and nobody asked
+about the others.
+
+**A vocabulary ruling is not automatically portable, and that is the reusable
+part.** Lifting the fertilize-not-feed rule onto descriptive prose flags about 50
+correct sentences — "berries feed birds in autumn", "Japanese beetles may feed on
+foliage" — because the ruling is about the gardener's ACTION, not about the word.
+So each field is classified `prescriptive` or `descriptive`, and the rule binds
+only the first. `fall` needed the same care in miniature: a bare word match flags
+"as leaves fall", so the season is identified by its company (a preposition in
+front, a season noun behind) and an unaccompanied `fall` is deliberately left
+alone rather than guessed at.
+
+**Prevention and enforcement are separate, on purpose.** `COPY_RULES_PROMPT` is
+in the drafting prompt so the pass asks for correct copy; the guard is what
+fails. The prompt lowers the rate and cannot be relied on — round 13 was drafted
+with no copy rule at all and produced the same "Minimal pruning required — ..."
+sentence five times.
+
 <a id="hero-images"></a>
 
 ## Hero images: a category-recovered shortlist, then an AI vision pick
