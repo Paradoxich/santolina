@@ -201,6 +201,39 @@ describe('the retirement count (trap 31)', () => {
     expect(formatReport(report)).toContain('KEPT their verdict')
   })
 
+  it('does not flag a curated row that was only STAMPED', async () => {
+    // THE FALSE ALARM STEP D FOUND, 2026-08-17. The first catalog-wide run
+    // warned that 26 curated rows had been "written and KEPT their verdict".
+    // All 26 had identical tags before and after: they were stamp-only writes,
+    // and `style_checked_at` is not a column the trigger watches, so keeping the
+    // verdict was correct. The bug was that `curatedBefore` counted `stamped`
+    // rows alongside `written` ones, so a row that could not possibly retire a
+    // verdict was checked for having failed to.
+    //
+    // A warning that cries wolf is trap 31 inverted — wrong in the direction
+    // that teaches people to skip the report.
+    const db = fakeDb([{ id: 'p1', is_curated: true, style_tags: ['cottage'] }])
+    const session = openReviewedMutation({
+      db,
+      table: 'plants',
+      onCurated: 'retire',
+    })
+
+    const report = await session.apply([
+      intent({
+        from: { style_tags: ['cottage'] },
+        to: { style_tags: ['cottage'] }, // unchanged
+        alsoWrite: { style_checked_at: '2026-08-17T00:00:00Z' },
+      }),
+    ])
+
+    expect(report.stamped).toBe(1)
+    expect(report.written).toBe(0)
+    expect(report.verdict_retired).toBe(0)
+    expect(report.verdict_survived).toEqual([])
+    expect(formatReport(report)).not.toContain('KEPT their verdict')
+  })
+
   it('names the retired rows in the printed report', async () => {
     const db = fakeDb([{ id: 'p1', is_curated: true, style_tags: ['cottage'] }])
     const session = openReviewedMutation({

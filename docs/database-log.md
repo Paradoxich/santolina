@@ -833,6 +833,36 @@ is unchanged.
 
 <!-- Newest first. Append with: scripts/log-db-session.ts --round <label> -->
 
+### 2026-08-17 — Step D: the catalog-wide style re-tag (not a round)
+
+**Branch** `session/2026-08-17-style-retag`. Plan step D, unblocked by step C.
+
+**Changed.** `curate-styles --all` over all 748 rows against the 20-tag
+vocabulary. Rule-1 backup taken first (`backups/2026-08-17T14-04-16-083Z`).
+
+**Database.** 748 judged, 0 failures. 647 rows changed tags, 101 were
+stamp-only, 31 came back style-neutral. **202 editorial verdicts retired**, which
+is the trigger working and is why D runs before D2. `cottage` 48.5% → 28.7%;
+`modern` 115 → 61, which is correct rather than a regression — `prairie` (73) is
+defined to take the grasses-and-late-perennials look away from it.
+
+**Found — the survival warning cried wolf, and it was our bug.** The run warned
+that 26 curated rows were "written and KEPT their verdict". All 26 had identical
+tags before and after, checked against the backup: they were stamp-only writes,
+and `style_checked_at` is not a watched column, so keeping the verdict was
+correct. `reviewed-mutation.ts` was adding `stamped` rows to the survival check
+alongside `written` ones. Fixed, with a regression case that fails against the
+pre-fix source. **A warning that cries wolf is trap 31 inverted** — wrong in the
+direction that teaches people to skip the report.
+
+**Not done — needs Ana.** 74 of 748 carry two tags on one axis (65 aesthetic, 9
+place), against 3/50 and 0/50 in the PR #171 pilot. Concentrated in
+`cottage`+`wildflower`, `cottage`+`classic` and `cottage`+`mediterranean`. The
+definitions need tightening against each other in `lib/style-tags.ts`; that is an
+editorial call, not a mechanical one.
+
+**Verified.** All 10 commands across all 3 CI jobs, via `pnpm ci:check`.
+
 ### 2026-08-17 — The reviewed-mutation primitive, and trap 32 (not a round)
 
 **Branch** `session/2026-08-17-reviewed-mutation`. Plan step C.

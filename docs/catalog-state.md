@@ -48,7 +48,7 @@ its data becomes something a reader can see.
 | `curate-greenery` | `greenery_checked_at` | catalog | 748 / 748 | 100.0% |
 | `pick-plant-images` | `image_checked_at` | catalog | 748 / 748 | 100.0% |
 | `pick-plant-images --verify` | `image_verified_at` | catalog | 79 / 748 | 10.6% |
-| `curate-editorial` | `editorial_checked_at` | catalog | 244 / 748 | 32.6% |
+| `curate-editorial` | `editorial_checked_at` | catalog | 28 / 748 | 3.7% |
 
 1 of 13 steps is `forward`: `draft-hardiness`, which stamps no column and so is absent from the table above.
 
@@ -57,8 +57,8 @@ its data becomes something a reader can see.
 | field | state | count |
 | --- | --- | ---: |
 | `ai_drafted_at` | drafted | 748 |
-| `is_curated` | editorially reviewed | 232 |
-| `style_tags` | style-neutral (stamped, `[]` — a valid judgment) | 50 |
+| `is_curated` | editorially reviewed | 26 |
+| `style_tags` | style-neutral (stamped, `[]` — a valid judgment) | 31 |
 | `style_tags` | never judged (`style_checked_at` NULL — a gap) | 0 |
 | `seasonal_care` | null | 0 |
 | `native_region` | empty | 3 |
@@ -76,10 +76,23 @@ warns above that bar on every full run.
 
 | tag | plants | share |
 | --- | ---: | ---: |
-| cottage | 363 | 48.5% |
-| mediterranean | 195 | 26.1% |
-| wildflower | 131 | 17.5% |
-| classic | 120 | 16.0% |
-| lush | 118 | 15.8% |
-| modern | 115 | 15.4% |
-| chinese | 1 | 0.1% |
+| cottage | 215 | 28.7% |
+| woodland | 165 | 22.1% |
+| pollinator | 140 | 18.7% |
+| mediterranean | 128 | 17.1% |
+| herb | 84 | 11.2% |
+| prairie | 73 | 9.8% |
+| winter | 64 | 8.6% |
+| japanese | 63 | 8.4% |
+| sensory | 62 | 8.3% |
+| modern | 61 | 8.2% |
+| lush | 49 | 6.6% |
+| chinese | 48 | 6.4% |
+| wildflower | 45 | 6.0% |
+| cutting | 44 | 5.9% |
+| classic | 43 | 5.7% |
+| provence | 37 | 4.9% |
+| desert | 24 | 3.2% |
+| tropical | 18 | 2.4% |
+| moon | 14 | 1.9% |
+| gothic | 10 | 1.3% |

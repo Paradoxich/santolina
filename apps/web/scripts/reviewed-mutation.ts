@@ -368,7 +368,16 @@ export function openReviewedMutation(opts: SessionOptions): MutationSession {
           outcome.disposition === 'written' || outcome.disposition === 'stamped'
         if (!writes) continue
 
-        if (row?.is_curated) curatedBefore.add(intent.id)
+        // ONLY a value change can retire a verdict, so only a `written` row is
+        // examined for survival. A `stamped` row moves a stamp the trigger does
+        // not watch, so it keeps its verdict by definition — and counting it
+        // here made the survival warning fire on 26 rows the first time this
+        // ran catalog-wide (step D, 2026-08-17), every one of which had
+        // identical tags before and after. A warning that cries wolf is trap 31
+        // inverted: the report was wrong in the direction that gets reports
+        // ignored.
+        if (row?.is_curated && outcome.disposition === 'written')
+          curatedBefore.add(intent.id)
         if (dryRun) continue
 
         // One statement. A stamp split into a second one is written back after
