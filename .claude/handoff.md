@@ -37,99 +37,100 @@ supabase start -x studio,realtime,storage-api,imgproxy,edge-runtime,inbucket,vec
 
 ---
 
-## 2026-08-17 — Standing rule 15, provenance wiring, `common_issues` closed
+## 2026-08-17 — Two branches open: the obligation policy, and the style vocabulary
 
-**PR [#169](https://github.com/Paradoxich/santolina/pull/169) is MERGED** as
-`2c5cc02`, CI green before the merge. **Nothing from this session is in
-flight.** What the session did and what it found is the `2026-08-17` entry in
-`docs/database-log.md` and is not repeated here.
+**Nothing is merged. Two sessions ran in parallel and both branches are live.**
 
-**Next steps, in order. Ana's ruling 2026-08-17: the old rows are cleaned
-BEFORE round 13, not after.** The reason is not tidiness — **a round chooses
-its theme by measuring the catalog** (round 12 killed small-space at 84% held
-and dry shade at 73% by querying existing rows), so mis-tagged old rows make
-the gap test lie. The `modern` Build Backlog item is the proof case: a whole
-seed round was nearly run for what is a tagging gap. Tags first, then measure,
-then seed.
+| branch                                 | worktree                         | state                            |
+| -------------------------------------- | -------------------------------- | -------------------------------- |
+| `session/2026-08-17-obligation-policy` | `../santolina-obligation-policy` | plan steps A and B done, PR open |
+| `session/2026-08-17-style-vocabulary`  | `../santolina-style-vocabulary`  | style definitions in progress    |
 
-1. **Finish the out-of-round 15.** The three easy repair passes are wired; what
-   remains is mostly apply-scripts that CLEAR a stamp, so each needs a witness
-   that is not the column it nulls. Two worked examples now exist in the tree
-   rather than in a comment: `curate-greenery`'s `foliage_color` (a conditional
-   write, bounded not confirmed) and `apply-description-fixes` (a value column
-   with no stamp at all). `backfill-guard-stamps` still matters most, its
-   state-derived half having been deleted after it fabricated 100 stamps.
-2. **Build a removal path for a catalog row.** _Hydrangea anomala_ and
-   _H. petiolaris_ are the same plant to a reader and one should go, keeping
-   `petiolaris` (curated, hero verified, the one actually sold). No palette or
-   diary row depends on either and only 5 regenerable combination rows do, so
-   the data is trivial; **the missing piece is that nothing can remove a plant
-   at all.** `apply-description-fixes.ts` is the shape to copy: a committed
-   decision file carrying `why`, a staleness assertion, and a run record.
-3. **Build a catalog-wide check that does not depend on round manifests.**
-   **This is the one that stops old rows creeping into every session.**
-   `verify-round` goes plant by plant — that is how it found 6/50 — but it can
-   only see plants listed in a round manifest, and manifests exist only from
-   round 8: **254 of 748 plants. 494 are invisible to it.** That number sits
-   almost on top of the 504 never-judged rows, which is not a coincidence.
-   Sweeping every round in CI is worth doing and still misses two thirds of the
-   catalog, so the real job is a check that asks the per-plant questions of all
-   748 by querying the table rather than reading a round file. Creep happens
-   because that state is UNKNOWN and ambushes whichever session looks; a check
-   turns it into a number that is either zero or not.
-   **Second, smaller half:** nothing re-runs the round checks over CLOSED
-   rounds. `verify-round --round 10` had been failing at 6/50 for two days
-   saying exactly what trap 31 says, and nobody heard it, because a round is
-   verified once at close and rounds do not stay closed.
-4. **Fix what that check finds in tags and types**, `modern` first. This is the
-   half that actually gates round 13, per the ruling above.
-5. **Re-judge the 86 rows a repair pass silently un-curated (trap 31, new).**
-   Found 2026-08-17 while checking the Build Backlog against the live DB. The
-   2026-08-15 trap-26 repair re-tagged 86 of 100 rows across rounds 9 and 10,
-   and `style_tags` is watched by `invalidate_editorial_verdict`, so **all 86
-   lost their editorial sign-off**. Rounds 9 and 10 read 8/50 and 6/50; judged
-   catalog-wide went 277 → 244 while rounds 11 and 12 were adding 53. **The
-   trigger was right and the reporting was absent** — the repair said "86
-   tagged" and could not say "86 un-curated", because the clear happens in the
-   database. These 86 are the cheap half of the editorial backlog: descriptions
-   and heroes already passed once, only the tags changed. Trap 31 carries the
-   remedy and its verification predicate; the Build Backlog editorial row now
-   says 504, not 418.
-6. **Then per-column exclusivity, which is what earns `confirming` back.**
-   Still forced after step 1, and trap 29 still holds the reasoning: five of
-   the seven witnessed columns have more than one writing step
-   (`native_checked_at` three, `image_verified_at` four), so the key has to be
-   the COLUMN across every writer, and most of those writers are in step 1.
-   **Do not DESIGN it early either** — the census it must be designed against
-   is the complete one, and step 1 changes that census.
-7. **A cheap invariant nobody has written: every `--flag` a script parses must
-   appear in its own usage header.** Grep the flag strings out of
-   `args.includes('--x')` / `indexOf('--x')` and assert each one occurs in the
-   file's top comment block. Proposed 2026-08-17 after `curate-plants --only`
-   shipped documented only in code comments, on the same day the session was
-   enforcing "nothing reachable only from someone's memory" elsewhere. It is a
-   scan, not a test, so it belongs in `check-pipeline-invariants.ts`.
-   **The class it covers is the one the ratchets keep missing: a defect in the
-   code a session just wrote.** Every existing shape checks ground that was
-   already there.
-8. **Then the three hygiene items**, any order. The migration-drift content
-   check needs `applied_migrations()` to return `statements`, so it needs a
-   migration and Ana's push (rule 11); 31 of 34 versions already match byte for
-   byte. The graveyard pass moves the three in `SCRIPTS_PENDING_ARCHIVE` to
-   `archive/` with README rows, and `repair-combinations.ts` needs a
-   `database-log` line in the same change. And the trap ratchet is at 22 of 31
-   (`pnpm invariants:check` prints it) — trap 1 is still the cheapest and
-   highest-consequence, and trap 31 is new from this session.
-9. **Round 13, on a measurement you can trust.** It has no theme and needs a
-   gap test before it has one — run that AFTER steps 3 to 5. Round 12's
-   probes killed small-space (84% held), dry shade (73%) and left late-season
-   surviving but thin at 62%. Those numbers are in `seed-round12.ts`'s header
-   and are the starting point, not a result to reuse — the catalog moved.
-   **Two frictions will recur and neither is fixed:** `run-round` still has no
-   `--baseline` passthrough, so the rule-1 backup must be taken in the shared
-   checkout and copied into the worktree by hand; and `cross-check-plants` will
-   flag `plant_type` on every sedge and rush seeded, the round-4 false-positive
-   class, left naive on purpose.
+They share exactly one file, `apps/web/scripts/catalog-state.ts` — different
+functions, mergeable. **Land the obligation branch first**; the style branch has
+more work left and rebasing onto a merged main is cheaper than merging two
+branches that both edited it.
+
+**What this session did** is the `2026-08-17 — Who owes an old row` entry in
+`docs/database-log.md`, and the rule it established is standing rule 16. Neither
+is repeated here.
+
+---
+
+**Next steps, in order. Everything gates round 13** — Ana's ruling 2026-08-17,
+and the reason is not tidiness. A round chooses its theme by measuring the
+catalog, so mis-tagged rows make the gap test lie; the `modern` item is the proof
+case, where a seed round was nearly run against what was a tagging gap. Steps 1
+to 5 are the plan Ana approved; 6 to 9 are carried forward from the previous
+entry and are not in that plan.
+
+Three of the arrows below are load-bearing and the rest is preference. **A before
+B** — B's whole output is a classification A defines, so run first it produces a
+confident number that means nothing. **C before D** — D withdraws hundreds of
+verdicts and, without C, says nothing, which is trap 31 at ten times the scale.
+**D before D2** — the editorial pass judging rows whose tags are about to change
+pays for the same verdicts twice. The first two are enforced in code; the third
+is not, deliberately, because it costs money rather than correctness.
+
+1. **DONE — the obligation policy (A) and the catalog-wide check (B).** On the
+   branch above. `pnpm catalog:status` now answers, for all 748 plants, which
+   steps have run — the 494 that predate manifests included.
+2. **The reviewed-mutation primitive (C).** Six scripts hand-roll the same drift
+   guard: `from: string // expected current value — drift guard` appears verbatim
+   in `fix-round8-names.ts:59`, `fix-round11-names.ts:75`,
+   `fix-round12-names.ts:64`, `fix-round12-tags.ts:79`, with `expect` in
+   `apply-native-to-fixes.ts:50` and `apply-sun-widening.ts`. Extract it once,
+   **standalone rather than wrapping `lib/plants-write.ts`** — the two operate on
+   disjoint column sets today, which is why none of the six imports it. Fold in
+   collateral reporting as a returned fact, not a log line:
+   `matched` / `written` / `skipped_drift` / `verdict_retired`, the last true only
+   when `is_curated` was true BEFORE the write. Ratchet as a scan plus a named
+   excusal list, modelled on `HAND_ROLLED_PAGINATION`, so the six migrate one at
+   a time. This is the structural fix for trap 31's class.
+3. **The style vocabulary and the catalog-wide re-tag (D).** The other branch
+   holds the definitions. `curate-styles.ts --all --why "…"` — `--new-only` would
+   select nothing, since `style_checked_at IS NULL` is 0 rows. Pilot at
+   `--limit 50` against the ten confusable pairs the draft lists before spending
+   748 calls. Do not verify that `modern` rose: `prairie` is defined to take the
+   grasses-and-late-perennials look away from it, so a correct run may lower it.
+   Verify instead that mean tags per plant stays near the 1.39 baseline.
+4. **The editorial pass, catalog-wide (D2).** `curate-editorial.ts --all
+--new-only --why "…"`. Absorbs three populations at once: the 418 never
+   judged, the 86 withdrawn (trap 31), and whatever D's re-tag withdraws. Up to
+   ~1500 calls, two per row; `pnpm catalog:status` prints the current split.
+   **The rounds 1-6 pass DOES gate round 13** — see the correction below.
+5. **Round 13** (G), on tags fixed in 3 and a measurement from the committed gap
+   probe (F). `run-round` still has no `--baseline` passthrough, so the rule-1
+   backup is taken in the shared checkout and copied into the worktree by hand;
+   that step belongs in `runbook.ts` so it renders into the generated runbook
+   instead of living in muscle memory. `cross-check-plants` will flag
+   `plant_type` on every sedge and rush, the round-4 false-positive class, left
+   naive on purpose.
+6. **Finish the out-of-round 15.** Carried forward. The three easy repair passes
+   are wired; what remains is mostly apply-scripts that CLEAR a stamp, so each
+   needs a witness that is not the column it nulls. Two worked examples exist in
+   the tree: `curate-greenery`'s `foliage_color` and `apply-description-fixes`.
+   `backfill-guard-stamps` matters most, its state-derived half having been
+   deleted after it fabricated 100 stamps.
+7. **Build a removal path for a catalog row.** Carried forward. _Hydrangea
+   anomala_ and _H. petiolaris_ are the same plant to a reader and one should go,
+   keeping `petiolaris`. No palette or diary row depends on either and only 5
+   regenerable combination rows do — **the missing piece is that nothing can
+   remove a plant at all.** `apply-description-fixes.ts` is the shape to copy.
+8. **Per-column exclusivity, which is what earns `confirming` back.** Carried
+   forward, still forced after step 6, and trap 29 holds the reasoning: five of
+   the seven witnessed columns have more than one writing step, so the key has to
+   be the COLUMN across every writer. Do not design it early — the census it must
+   be designed against is the one step 6 changes.
+9. **The hygiene items**, any order. Carried forward, plus one new. The
+   flag-documentation scan: every `--flag` a script parses must appear in its own
+   usage header, about twenty lines in `check-pipeline-invariants.ts`, and it
+   covers the class every existing shape misses — a defect in code the session
+   just wrote. The migration-drift content check needs `applied_migrations()` to
+   return `statements`, so it needs a migration and Ana's push (rule 11). The
+   graveyard pass moves the three in `SCRIPTS_PENDING_ARCHIVE` to `archive/` with
+   README rows, and `repair-combinations.ts` needs a `database-log` line in the
+   same change. Trap ratchet is at 22 of 31 (`pnpm invariants:check` prints it).
 
 **Parked decisions.** Dated when FIRST raised, with who owes the answer.
 `invariants:check` shape 15 fails on an undated item and on one older than 14
@@ -137,29 +138,25 @@ days, so this list cannot become a paragraph again. Read that shape's header
 before adding a line: the paragraph it replaced ran for six handoffs and half
 its items were misfiled.
 
-_Empty._ Both questions this session raised were answered the same day.
+_Empty._ Every question this session raised was answered the same day.
 
-**Re-owned 2026-08-17, and no longer anyone's decision.** Each was parked on
-Ana and none was hers. The `Cenolophium` region correction is a fact question
-answerable against WCVP. The rounds 1-6 editorial pass and the `modern` re-tag
-are agent work under standing rule 6, her own 2026-07-28 ruling. The two
-round-12 photo holds (`Rodgersia pinnata`, `Acorus gramineus`) describe rows
-that already have photographs — the vision pass could not confirm the SPECIES
-from them, so what is needed is a better candidate, the job the Commons
-fallback did for _Filipendula purpurea_. All four are mechanical work.
+**CORRECTION to the entry this replaces.** It said, of the rounds 1-6 editorial
+pass: "does NOT gate round 13, checked rather than assumed 2026-08-17: nothing in
+`app/`, `components/` or `hooks/` reads `is_curated`, so it changes no behaviour
+today." The column claim is true and the conclusion does not follow. The pass
+rewrites descriptions on about 60% of the rows it touches and holds rows whose
+photograph is not the species — so the flag changes nothing and the pass changes
+the two things a reader looks at hardest. Standing rule 16 carries the test that
+gets this right. It was written and superseded inside a day, which is the point of
+recording it rather than editing it away.
 
-**The full rounds 1-6 editorial pass does NOT gate round 13**, checked rather
-than assumed 2026-08-17: nothing in `app/`, `components/` or `hooks/` reads
-`is_curated`, so it changes no behaviour today. It is quality before test
-users. The tag correctness above is the part that gates a round.
+**Build Backlog rows still owed:** the `curate-styles` withdrawal counter (step 2
+above is its implementation), the orphaned-photo reconciliation sweep, **the
+plant-removal path** (step 7 — it is an absence, and a ratchet witness for "we
+never built X" stays true forever, so the Backlog is its durable home), and **50
+of 748 rows still showing a Latin binomial where a garden name belongs** (round
+12's own six are fixed; the rest predate it).
 
-**Build Backlog rows still owed:** the `curate-styles` withdrawal counter, the
-orphaned-photo reconciliation sweep, **the plant-removal path** (next step 2 —
-it is an absence, and a ratchet witness for "we never built X" stays true
-forever, so the Backlog is its durable home), and **50 of 748 rows still
-showing a Latin binomial where a garden name belongs** (round 12's own six are
-fixed; the rest predate it).
-
-**Standing:** the next audit is round 13's close or 2026-09-14, whichever
-first, early if a PR adds a stamp column, adds a script, or touches
+**Standing:** the next audit is round 13's close or 2026-09-14, whichever first,
+early if a PR adds a stamp column, adds a script, or touches
 `upsert_trefle_plant`. It should come back **shorter**. Fresh session.

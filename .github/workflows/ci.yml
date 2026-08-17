@@ -110,6 +110,20 @@ jobs:
           printf 'NEXT_PUBLIC_SUPABASE_URL=%s\nSUPABASE_SERVICE_ROLE_KEY=%s\n' \
             "$SUPABASE_URL" "$SERVICE_ROLE" > apps/web/.env.local
           pnpm --filter santolina-web catalog:state:check
+          # Catalog-wide step coverage, RECORDED not gated. It exits 0 with gaps
+          # present on purpose: the gap is known work on a schedule, and a check
+          # that is red for months teaches people to scroll past it. Round close
+          # still FAILs through verify-round, which is where a regression shows.
+          #
+          # It runs here so the number lands in the log on every push to main
+          # rather than only when somebody remembers to ask. That is the whole
+          # fix — 494 plants predate manifests and were literally unreportable,
+          # and an unknown ambushes whichever session next looks at it.
+          #
+          # Not a test, and deliberately not dressed as one (trap 19). Turning it
+          # into a gate wants a committed baseline so a GROWING gap fails while a
+          # shrinking one passes; that is a ratchet and it is not built.
+          pnpm --filter santolina-web catalog:status
 
   migration-drift:
     # SAME "(main only)" CONVENTION AS THE JOB ABOVE, for the same reason — a

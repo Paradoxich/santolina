@@ -61,6 +61,10 @@ import { REPO_ROOT } from './token-source'
 // Imported rather than restated: the suffix list that decides "can this column
 // be compared to an instant" has one home, in the module that queries it.
 import { isWindowQueryable } from './run-provenance'
+// STEP_DEFS is a plain const and getSupabaseAdmin is lazy, so this import costs
+// no env and no connection — checked before adding it, because this script runs
+// in CI without .env.local.
+import { STEP_DEFS } from './round-status'
 
 // ---------------------------------------------------------------------------
 // Escape hatches. Each entry: subject → why it is allowed, today.
@@ -95,7 +99,7 @@ export const REPORT_ONLY_STAMPS: Record<string, string> = {
  * the rule allows a source scan as the alternative.
  */
 export const TRAPS_NOT_PINNED: Record<string, string> = {
-  '31': 'A repair pass retires editorial verdicts without counting them. The seam is each trigger-watched writer: select is_curated before the write and report the rows whose verdict fell, as apply-description-fixes.ts does. A test needs the before/after selection as a callable function; today curate-styles and curate-greenery do the write inline, so there is nothing to call.',
+  '31': 'A repair pass retires editorial verdicts without counting them. HALF PINNED as of 2026-08-17 and deliberately still listed: scripts/catalog-status.test.ts pins the MEASURING half — splitEditorial tells a withdrawn verdict from a never-judged row by which per-criterion stamps survived, and fails 3 of 5 against the obvious editorial_checked_at implementation. That test names this trap in a case rather than its header, on purpose, so the closure claim is not made on half the remedy. What is left is the WRITING half and it is the trap own predicate: curate-styles and curate-greenery must select is_curated before the write and report the rows whose verdict fell, as apply-description-fixes.ts does, and verify-round --round 9 and --round 10 must return to 50/50. Both land with the reviewed-mutation primitive; today those two do the write inline, so there is nothing to call.',
   '1': 'Rate-limit fallback. The fix removed the fallback; a test needs a fake fetch that 429s and an assertion that the error propagates. Cheap, and worth doing next.',
   '1b': 'Trigger semantics. Only observable against a live or replayed Postgres; pnpm trigger:contract is the existing home and would need to become a checked artifact.',
   '2': '--new-only scoping. Now state-based (*_checked_at IS NULL); the seam is each script argument parser, and the honest witness is a query, not a unit.',
@@ -190,6 +194,59 @@ export const HAND_ROLLED_PAGINATION: Record<string, string> = {
     'Third copy of the page loop. Its own pageSize, its own from/to arithmetic. Correct today — it does paginate — so this is duplication, not a cap bug. Named by the 2026-08-14 audit section 4.',
   'restore-catalog.ts':
     'Fourth copy, same shape as backup-catalog. The pair is the reason this check exists rather than a note in a report: CLAUDE.md already says that the third script working around a thing means the transport is wrong, not that the problem is hard.',
+}
+
+/**
+ * Shape 16. A `forward` step whose data became something a reader can see.
+ *
+ * WHAT `forward` CLAIMS. `StepDef.obligation` (round-status.ts, 2026-08-17) lets
+ * a step say that rows seeded before it existed are DONE rather than owed. That
+ * is the only thing in the repo that shrinks a backlog by ruling rather than by
+ * work, so it is the one that must not rot quietly. The claim is always the same
+ * negative: *no reader can tell that this check never ran on this row.* An
+ * asserted negative closes only by becoming a ratchet entry (standing rule 14),
+ * and this is that entry.
+ *
+ * EVERY `forward` STEP MUST APPEAR HERE. A step declaring `forward` with no
+ * witness fails, because "nobody can see it" with nothing naming HOW that stops
+ * being true is the 277-row ruling again — a decision with no mechanism, which a
+ * later session reversed without noticing it was reversing anything.
+ *
+ * TWO ASSERTIONS PER ENTRY, and the second is the one that matters:
+ *
+ *   `columns`  — the names must not be READ in code under app/, components/,
+ *                hooks/ or lib/. Comment-only lines are stripped and `allowedIn`
+ *                names the files where an appearance is not a read. Coarse on
+ *                purpose: a trailing comment or a same-named local will raise a
+ *                false alarm, which costs an allowlist line, where a false
+ *                silence costs the policy.
+ *   `module`   — the formatter or helper that WOULD render it must have no
+ *                importer. This is what a column scan cannot see: a module can
+ *                sit fully written, naming its columns only in prose, one import
+ *                away from being live.
+ *
+ * WHY THE SECOND ASSERTION EXISTS, in full, because it corrected the plan this
+ * work came from. That plan justified hardiness as `forward` on the August audit's
+ * "hardiness_verified has zero writers, so the display gate is permanently
+ * false". Checked 2026-08-17: **false.** `catalog-state.ts:185` counts 267 rows
+ * at `hardiness_verified = true` from the July verification pass. The
+ * classification survived only because of something nobody had looked at — that
+ * `lib/hardiness.ts` has no importer anywhere, and the survive-winter bullet that
+ * does render (`lib/good-for-your-garden.ts:59-72`) reads `hardiness_zone_min` /
+ * `hardiness_zone_max`, USDA columns, not the RHS pair at all. A witness written
+ * against the stated reason would have been asserting a falsehood.
+ */
+export const FORWARD_STEP_WITNESSES: Record<
+  string,
+  { columns: string[]; module?: string; allowedIn?: string[]; reason: string }
+> = {
+  'draft-hardiness': {
+    columns: ['hardiness_rating', 'hardiness_verified'],
+    module: 'apps/web/lib/hardiness.ts',
+    allowedIn: ['apps/web/lib/plants-db.ts'],
+    reason:
+      'The RHS hardiness track is parked (docs/curation.md#hardiness). lib/hardiness.ts formats a rating and NOTHING imports it; the live survive-winter bullet reads hardiness_zone_min/max instead. plants-db.ts carries the columns on the DbPlant row type, which is the shape of a row and not a read of one. This flips to catalog the day that module gains an importer.',
+  },
 }
 
 /**
@@ -1180,6 +1237,105 @@ function checkParkedDecisions(): number {
 }
 
 // ---------------------------------------------------------------------------
+// Shape 16. A `forward` step whose data became visible.
+//
+// See FORWARD_STEP_WITNESSES above for what the classification claims and why
+// the module half of the assertion exists.
+// ---------------------------------------------------------------------------
+
+/** Source lines with comment-only lines removed, so prose is not read as a read. */
+function codeLines(src: string): string {
+  return src
+    .split('\n')
+    .filter((l) => {
+      const t = l.trim()
+      return !(
+        t.startsWith('//') ||
+        t.startsWith('*') ||
+        t.startsWith('/*') ||
+        t.startsWith('*/')
+      )
+    })
+    .join('\n')
+}
+
+function checkForwardStepsStayInvisible(): number {
+  // Files a reader's page is built from. `server/` is included: a server action
+  // is as capable of putting a value on screen as a component is.
+  const APP_SURFACE = ALL.filter(
+    (f) =>
+      (f.startsWith('apps/web/app/') ||
+        f.startsWith('apps/web/components/') ||
+        f.startsWith('apps/web/hooks/') ||
+        f.startsWith('apps/web/lib/') ||
+        f.startsWith('apps/web/server/')) &&
+      (f.endsWith('.ts') || f.endsWith('.tsx')) &&
+      !f.endsWith('.test.ts') &&
+      !f.endsWith('.test.tsx')
+  )
+
+  const forwardSteps = STEP_DEFS.filter((d) => d.obligation === 'forward')
+
+  for (const def of forwardSteps) {
+    const witness = FORWARD_STEP_WITNESSES[def.step]
+    if (!witness) {
+      fail({
+        shape: 'forward step with no witness',
+        subject: def.step,
+        detail:
+          'Declares obligation: "forward" — that rows predating it are done — with nothing naming how that would stop being true.',
+        remedy: `Add an entry to FORWARD_STEP_WITNESSES in ${basename(__filename)} naming the columns that must stay unread and, if one exists, the module that would render them. A ruling with no mechanism is the 277-row ruling again.`,
+      })
+      continue
+    }
+
+    const allowed = new Set(witness.allowedIn ?? [])
+
+    for (const file of APP_SURFACE) {
+      if (allowed.has(file)) continue
+      const code = codeLines(read(file))
+      for (const col of witness.columns) {
+        if (new RegExp(`\\b${col}\\b`).test(code)) {
+          fail({
+            shape: 'forward step is readable after all',
+            subject: `${def.step} — ${col} read in ${file}`,
+            detail:
+              'A column this step is excused from backfilling is now read on a surface a user sees, so older rows are silently wrong rather than done.',
+            remedy: `Either promote ${def.step} to obligation: "catalog" and backfill it, or, if this appearance is not a read, add ${file} to allowedIn.`,
+          })
+        }
+      }
+    }
+
+    if (witness.module) {
+      const stem = basename(witness.module).replace(/\.tsx?$/, '')
+      const importers = APP_SURFACE.filter(
+        (f) =>
+          f !== witness.module &&
+          new RegExp(`from '[^']*/${stem}'`).test(codeLines(read(f)))
+      )
+      if (importers.length > 0) {
+        fail({
+          shape: 'forward step is readable after all',
+          subject: `${def.step} — ${witness.module} is imported by ${importers.join(', ')}`,
+          detail:
+            'The module that renders this step\'s data has an importer, so the parked feature is wired up and rows predating the step are no longer "done".',
+          remedy: `Promote ${def.step} to obligation: "catalog", backfill it, and delete its FORWARD_STEP_WITNESSES entry.`,
+        })
+      }
+    }
+  }
+
+  for (const step of Object.keys(FORWARD_STEP_WITNESSES)) {
+    if (!forwardSteps.some((d) => d.step === step)) {
+      staleHatches.push({ list: 'FORWARD_STEP_WITNESSES', key: step })
+    }
+  }
+
+  return forwardSteps.length
+}
+
+// ---------------------------------------------------------------------------
 // Run
 // ---------------------------------------------------------------------------
 
@@ -1193,6 +1349,7 @@ const unwiredProvenance = checkWriteProvenance()
 const handRolledPaging = checkPagination()
 const openFindings = checkOpenFindings()
 const parkedDecisions = checkParkedDecisions()
+const forwardSteps = checkForwardStepsStayInvisible()
 // Shape 7, runbook / registry drift, is round-rehearsal.test.ts. It imports
 // RUNBOOK and the step registry, so it is a test, not a scan. Do not add it here.
 
@@ -1243,6 +1400,7 @@ row(
 row('hand-rolled paging', String(handRolledPaging), 'HAND_ROLLED_PAGINATION')
 row('open findings', String(openFindings), 'OPEN_FINDINGS')
 row('parked decisions', String(parkedDecisions), HANDOFF)
+row('forward-obligation steps', String(forwardSteps), 'FORWARD_STEP_WITNESSES')
 console.log(
   '  Runbook and registry drift is checked by round-rehearsal.test.ts, not here.\n'
 )
