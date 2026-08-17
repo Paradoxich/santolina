@@ -168,8 +168,6 @@ export const RUNS_WITHOUT_PROVENANCE: Record<string, string> = {
   'fix-round11-names.ts': 'One-off name pass.',
   'fix-round12-names.ts':
     'One-off name pass, round 12. Same category as rounds 8 and 11 above.',
-  'fix-round12-tags.ts':
-    'One-off tag pass, round 12: the two editorial `tags:` blockers plus three older rows with the same label defect.',
   'fix-oversized-heroes.ts':
     'One-off image repair. Found by this scan rather than by the list, which is the scan doing its job.',
 
@@ -226,8 +224,6 @@ export const HAND_ROLLED_REVIEWED_MUTATION: Record<string, string> = {
     'Round 8. Matches by `scientific_name`, not id, so migrating it means resolving names to ids first — the primitive takes ids on purpose, because a name is a value and values drift.',
   'fix-round11-names.ts': 'Round 11. Same shape as fix-round8-names.',
   'fix-round12-names.ts': 'Round 12. Same shape as fix-round8-names.',
-  'fix-round12-tags.ts':
-    'Round 12, and the best first migration: it already normalises through JSON.stringify the way the primitive does, and it writes two different columns, so it exercises the multi-column guard.',
 }
 
 /**
