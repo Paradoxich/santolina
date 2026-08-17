@@ -67,7 +67,7 @@
  * Run scripts/backup-catalog.ts first. restore-catalog.ts is the undo.
  */
 
-import { readFileSync, writeFileSync } from 'node:fs'
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { getSupabaseAdmin } from '../lib/supabase-admin'
 import { fetchAllRows } from '../lib/paginate'
@@ -456,6 +456,13 @@ function readPreviousFindings(jsonPath: string): Finding[] {
 }
 
 function writeReport(current: Finding[], scopeLabel: string) {
+  // reports/ is gitignored (trap 8), so it does not exist in a fresh worktree —
+  // which is how every session starts. Without this, the pass did all of its
+  // database writes, opened and finalised its run, and THEN threw ENOENT on the
+  // report, exiting non-zero. run-round reads that exit code, so a step that
+  // fully succeeded reported failure. Found 2026-08-17 re-judging one row in a
+  // new worktree; five sibling scripts already do this and this one did not.
+  mkdirSync(REPORTS_DIR, { recursive: true })
   const slug = scopeLabel.replace(/[^a-z0-9]+/gi, '-').toLowerCase()
   const jsonPath = join(REPORTS_DIR, `editorial-${slug}.json`)
   const mdPath = join(REPORTS_DIR, `editorial-${slug}.md`)

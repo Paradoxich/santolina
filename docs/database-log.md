@@ -689,6 +689,8 @@ Trefle's name search silently resolves to sibling species. Seed by verified Tref
 
 Rounds run in `git worktree` checkouts, and a new one has no `reports/`, so every cache is cold and scripts refetch everything. **This is the condition that surfaces rate-limit and pagination bugs** — trap 1 lay dormant for rounds precisely because existing checkouts had warm caches.
 
+**A cold `reports/` is also a MISSING DIRECTORY, not just an empty one (2026-08-17).** `curate-editorial` wrote every row, opened and finalised its run, and then threw `ENOENT` from `writeReport` because nothing had created the directory — exiting non-zero after completely succeeding. `run-round` reads that exit code, so the round would have recorded a step as failed and, worse, invited a re-run of a pass that had already written and billed. **Trap 4 inverted**: not a step that silently did not run, but a step that ran and reported that it had not. Fixed with one `mkdirSync(REPORTS_DIR, { recursive: true })`, which five sibling scripts already had; found only because this session re-judged a single row in a brand-new worktree. The general shape to watch: **a write to a gitignored directory is a write to a directory that may not exist**, and the failure lands after the side effects, where it is most misleading.
+
 #### 9. Trefle field names: `tdwg_code` / `tdwg_level`, not `code` / `level`
 
 Reading the wrong field names leaves the code undefined, every zone falls through as unmapped, and the plant ends up untagged — no error anywhere. See [native_region](curation.md#native-region).
@@ -743,49 +745,49 @@ is unchanged.
 
 <!-- Newest first. Append with: scripts/log-db-session.ts --round <label> -->
 
-### 2026-08-17 — Standing rule 15, provenance wiring, and `common_issues` closed (not a round)
+### 2026-08-17 — Standing rule 15, provenance wiring, `common_issues` closed (not a round)
 
 **Branch** `session/2026-08-17-provenance`. No migration. Catalog backup
 `2026-08-17T09-23-15-618Z` (shared checkout) before the bulk write.
-**Changed** — standing rule 15 (above) with `invariants:check` shape 15 behind
-it. `RUNS_WITHOUT_PROVENANCE` **18 → 15**: `curate-styles`, `curate-greenery`
-and `draft-hardiness` open runs; a dry run opens none. `curate-plants` gained
-`--only <field>`, a field-scoped fill that drops the `is_curated` selection
-filter and restricts the patch to one column, refusing any column the editorial
-trigger watches. `common_issues` joined `REQUIRED_DRAFTED_FIELDS`.
+**Changed** — standing rule 15 (above), with `invariants:check` shape 15 behind
+it. `RUNS_WITHOUT_PROVENANCE` **18 → 15** (`curate-styles`, `curate-greenery`,
+`draft-hardiness`; a dry run opens none). `curate-plants` gained `--only
+<field>`: drops the `is_curated` selection filter, restricts the patch to one
+column, refuses any column the editorial trigger watches. `common_issues`
+joined `REQUIRED_DRAFTED_FIELDS`. New `apply-description-fixes.ts`, wired.
 
-**Database** — `common_issues` blank rows **27 → 0**, via
-`curate-plants --only common_issues` (2 then 25, `corroborated`). All 13
-signed-off rows among them KEPT `is_curated` and their stamp, verified after
-the write. Plus three single-row smoke tests for the wiring above.
+**Database** — `common_issues` blank rows **27 → 0** via
+`curate-plants --only common_issues` (2 then 25, `corroborated`); all 13
+signed-off rows among them KEPT `is_curated`, verified after the write.
+_Hydrangea hydrangeoides_ description rewritten (Ana: three near-identical
+white-lacecap climbers, so say what differs); its verdict fell to the trigger
+as designed and `curate-editorial` re-judged it APPROVE. Plus three smoke tests.
 
 **Found**
 
-- **The blank was a SANCTIONED answer, not a miss.** `curate-plants`' prompt
-  said "null if the species genuinely has no notable common issues", while 460
-  of 721 populated rows wrote "generally pest and disease free" in prose. Two
-  ways to write one answer. Backfilling without fixing the prompt would have
-  reproduced the blanks; the prompt now forbids null.
-- **The two prose fields fail in opposite directions under a gate**, which is
-  why Ana split them. `environment_benefits` stays optional: its 4 blanks are
-  three houseplants and an invasive, and requiring it buys four fabrications.
-- The recipe hash discriminates DECODING PARAMETERS, not only models:
-  `draft-hardiness` at `max_tokens: 16` separates from passes at 256. Nothing
-  recorded `confirmed` (trap 29, holding).
-- Shape 15's own parser was caught twice reporting zero parked items while
-  looking at one; it would have passed green while seeing nothing.
-- `verify-round --round 10` fails on `curate-editorial` 6/50, unchanged before
-  and after this session. Round 12's 231 curated reads 232 live: _Filipendula
-  purpurea_ was signed off at 23:28 that night, after the count was taken.
+- **The blank was a SANCTIONED answer, not a miss.** The prompt said "null if
+  the species genuinely has no notable common issues", while 460 of 721
+  populated rows wrote the trouble-free answer out in prose, so backfilling
+  without fixing the prompt would have reproduced the blanks. **The two fields
+  fail in opposite directions under a gate**, hence Ana's split:
+  `environment_benefits` stays optional, its 4 blanks being houseplants.
+- **`curate-editorial` exited NON-ZERO after fully succeeding**, because a cold
+  `reports/` is a MISSING directory and not merely an empty one. Written up in
+  trap 8, where it belongs.
+- The recipe hash discriminates DECODING PARAMETERS, not only models
+  (`max_tokens: 16` against 256); nothing recorded `confirmed` (trap 29).
+  Shape 15's parser was twice caught reporting zero parked items while looking
+  at one. `verify-round --round 10` fails on `curate-editorial` 6/50, unchanged
+  by this session. Round 12's 231 curated reads 232: _Filipendula purpurea_
+  was signed off after that count was taken.
 
-**Not done** — the twelve remaining unwired scripts; most clear a stamp, so
-each needs a witness that is not the column it nulls. No path exists to write a
-hand-authored `description`, which blocks the _Hydrangea hydrangeoides_ rewrite.
+**Not done** — the twelve unwired scripts, most of which clear a stamp. No
+removal path exists for a catalog row, still blocking _H. anomala_.
 
 **Verified** — 316 tests, `tsc`, `invariants:check`, `docs:claims`,
-`docs:links`, `runbook:check`, `catalog:state:check`, `verify-round` rounds 11
-and 12 at 0 failures. Shape 15's three failure modes and `restrictPatch`'s
-refusal each verified to FAIL against the pre-fix code (trap 19).
+`docs:links`, `runbook:check`, `catalog:state:check`, `verify-round` 11 and 12
+at 0. Shape 15's three failure modes, `restrictPatch`'s refusal, the applier's
+staleness guard and the `mkdirSync` fix each verified to FAIL first (trap 19).
 
 ### 2026-08-16 — Standing rule 14 gets a scan, and the backlog gets one home (not a round)
 

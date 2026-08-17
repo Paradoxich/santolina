@@ -344,6 +344,23 @@ what was reviewed, refuses a replacement carrying a dash or semicolon, and nulls
 `native_checked_at` so the rewritten phrase is re-read rather than inheriting a
 stamp earned by different words.
 
+**Hand-authored descriptions use the same shape.**
+`scripts/apply-description-fixes.ts` (added 2026-08-17) applies `description`
+rewrites a person wrote, from a committed decision file, with the same staleness
+assertion and the same copy guard. It exists because neither drafting pass could
+express the case: `curate-plants` writes a description only when there isn't one
+and refuses `--only description` outright, while `curate-editorial` writes what a
+model produces and has no way to accept "say THIS, for this reason". The worked
+example is _Hydrangea hydrangeoides_, one of three near-identical white-lacecap
+climbers whose old text described all three equally well.
+
+Unlike the `native_to` applier it does **not** protect the editorial verdict. It
+lets `invalidate_editorial_verdict` clear `is_curated`, because "the description
+reads well" is one of the three criteria the sign-off is made of ([the curation
+layer](architecture.md#curation-layer)), and new prose is exactly what a reviewer
+would judge again. It prints the rows whose verdict it retired so
+`curate-editorial` can be re-run on them.
+
 <a id="hardiness"></a>
 
 ## Hardiness: RHS rating is canonical, drafted then human-verified

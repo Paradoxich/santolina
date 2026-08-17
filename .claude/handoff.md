@@ -59,6 +59,13 @@ repeated here.
    the editorial trigger watches, pinned by five cases in
    `curate-plants.test.ts`. All 13 signed-off rows among the 27 kept their
    sign-off, verified after the write.
+4. **_Hydrangea hydrangeoides_ rewritten, and a path built to do it.** New
+   `apply-description-fixes.ts`: committed decision file, staleness assertion,
+   UI copy guard, run record from the first commit. It deliberately lets the
+   editorial verdict fall and says so; `curate-editorial` re-judged the new copy
+   APPROVE. Fixing this also surfaced a real defect — `curate-editorial` exited
+   NON-ZERO after fully succeeding, because a cold `reports/` is a MISSING
+   directory, not an empty one. Written up in trap 8.
 
 **Next steps, in order. 3 through 6 are carried forward unconsumed.**
 
@@ -68,19 +75,13 @@ repeated here.
    pattern in the small and is now in the tree. `backfill-guard-stamps` still
    matters most: its state-derived half was deleted after it fabricated 100
    stamps.
-2. **Rewrite _Hydrangea hydrangeoides_' description** — Ana's call 2026-08-17:
-   keep it, and say what makes it different. Its flower is ringed with single
-   teardrop bracts rather than the four-petalled florets of a true climbing
-   hydrangea, and the current text says none of that, so it reads as a third
-   identical climber. **No write path exists for this yet:** nothing in `scripts/` can
-   write a hand-authored `description`, and `--only description` is refused by
-   design because that column clears an editorial verdict. The shape the repo
-   already uses is a committed decision file plus a guarded `--apply` pass
-   (`apply-seasonal-care-fixes.ts`); building that for descriptions is the work.
-   _H. anomala_ and _H. petiolaris_ are the same plant to a reader and one
-   should go, keeping `petiolaris`; nothing but 5 regenerable combination rows
-   depends on either, and **there is no established removal path for a catalog
-   row** either.
+2. **Retire _Hydrangea anomala_, once there is a way to.** It and
+   _H. petiolaris_ are the same plant to a reader; `petiolaris` is the keeper
+   (curated, hero verified, the one actually sold). Nothing but 5 regenerable
+   combination rows depends on either, and no palette or diary row does.
+   **There is no established removal path for a catalog row**, and building one
+   is the work. `apply-description-fixes.ts` is the shape to copy: a committed
+   decision file with a `why`, a staleness assertion, and a run record.
 3. **Then per-column exclusivity, which is what earns `confirming` back.**
    The order is still forced and trap 29 still has the reasoning: five of the
    seven witnessed columns have more than one writing step
