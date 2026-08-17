@@ -794,6 +794,45 @@ is unchanged.
 
 <!-- Newest first. Append with: scripts/log-db-session.ts --round <label> -->
 
+### 2026-08-17 — The style vocabulary goes 6 to 20 (not a round)
+
+**Branch** `session/2026-08-17-style-vocabulary`, merged as
+[#171](https://github.com/Paradoxich/santolina/pull/171) `aac993d`. Plan step D's
+prerequisite: the vocabulary has to be settled before `curate-styles` runs
+catalog-wide, because the pass judges blind and a later expansion means a second
+748-row pass. **Written from `561f6b1..3c4a2ba` by a later session, not by the one
+that did the work** — the reasoning is in those commit messages at more length.
+
+**Changed.** `STYLE_TAGS` 6 → 20, with negative guidance per confusable pair and
+`CONFUSABLE_STYLE_PAIRS` making that checkable by a pilot rather than by reading
+the prompt. Share language removed from `STYLE_TAG_PROMPT` entirely. `STYLE_AXES`
+splits the vocabulary into aesthetic / place / purpose / mood and
+`EXCLUSIVE_STYLE_AXES` names the two where doubling up is a judgment error;
+`curate-styles` now reports mean, spread, within-axis doubling and confusable-pair
+co-occurrence at the end of every run, warning only on the within-axis half.
+`STYLE_OPTIONS` is derived from a generated count file above `STYLE_FILTER_FLOOR`
+(10), so a style reaches Explore the round its population does.
+`STYLE_DISPLAY_NAMES` defined once for its three consumers.
+
+**Database.** No writes. Three dry-run pilots, 153 calls, nothing stamped and no
+editorial verdicts withdrawn.
+
+**Found.** `sensory` and `herb` co-occurred on 5 of 9 rows, because aromatic
+foliage is what a herb IS and the sensory definition counted it as separate
+evidence; naming that took it to 1 of 9. Mean tags per plant came in at 1.90
+against the 1.39 baseline with 24% of rows at three or more; restarting the model
+from zero took it to 1.70. **The alphabetical slice `--limit` gives is not the
+population the pass acts on** — re-piloted on a random 50 (ids sorted by FNV-1a),
+the mean was 1.58, so the A-slice had read about 8% high. Three violations remain,
+all `cottage` paired with `wildflower` or `mediterranean`, left as measured.
+
+**Not done.** `ExploreBrowse`'s tile list, which needs artwork and a blurb per
+style and sits downstream of D. The real pass, which waits on the
+reviewed-mutation primitive.
+
+**Verified.** Typecheck, 325 tests, `invariants:check`, `docs:claims`. Dry-run
+only throughout.
+
 ### 2026-08-17 — Who owes an old row, and a check that can see all 748 (not a round)
 
 **Branch** `session/2026-08-17-obligation-policy`, parallel with
