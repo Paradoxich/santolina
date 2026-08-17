@@ -35,6 +35,7 @@ import { getAnthropicClient, CURATION_MODEL } from '../lib/anthropic-client'
 import { isHardinessRating, type HardinessRating } from '../lib/hardiness'
 import type { DbPlant } from '../lib/plants-db'
 import { requireScope, scopeIds, describeScope } from './scope'
+import { withRunRecord, type Witness } from './run-provenance'
 
 const INTER_PLANT_DELAY_MS = 2000
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
@@ -50,7 +51,21 @@ function parseLimit(): number | null {
   return n
 }
 
-function buildPrompt(plant: DbPlant): string {
+/**
+ * Only the three identity fields reach the model — the draft is blind by
+ * design — so the prompt takes that subset rather than a whole row. Narrowed
+ * for the recipe probe below: a template rendered from a real plant would fold
+ * its subject into the hash and give every row its own cohort.
+ */
+type PlantIdentity = Pick<DbPlant, 'common_name' | 'scientific_name' | 'family'>
+
+const RECIPE_PROBE_ROW: PlantIdentity = {
+  common_name: '',
+  scientific_name: null,
+  family: null,
+}
+
+function buildPrompt(plant: PlantIdentity): string {
   const identity = [
     `common name: ${plant.common_name}`,
     plant.scientific_name ? `scientific name: ${plant.scientific_name}` : '',
@@ -140,35 +155,67 @@ async function main() {
 
   console.log(`\n${describeScope(scope, ids)}`)
 
-  if (!plants.length) {
-    console.log('No plants need a hardiness draft — nothing to do.')
-    return
-  }
-  console.log(`\nDrafting hardiness for ${plants.length} plant(s)...\n`)
-
   const dist: Record<string, number> = {}
   const failures: Array<{ name: string; error: string }> = []
   let ok = 0
 
-  for (const [i, plant] of plants.entries()) {
-    const prefix = `[${pad(i + 1)}/${pad(plants.length)}]`
-    try {
-      const rating = await draftRating(plant)
-      const { error: upErr } = await db
-        .from('plants')
-        .update({ hardiness_rating: rating })
-        .eq('id', plant.id)
-      if (upErr) throw new Error(upErr.message)
-      dist[rating] = (dist[rating] ?? 0) + 1
-      ok++
-      console.log(`${prefix} ${plant.common_name} -> ${rating}`)
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err)
-      failures.push({ name: plant.common_name, error: msg })
-      console.log(`${prefix} ${plant.common_name} FAILED: ${msg}`)
-    }
-    if (i < plants.length - 1) await sleep(INTER_PLANT_DELAY_MS)
+  const runOptions = {
+    step: 'draft-hardiness',
+    // The one pass in the pipeline that writes NO stamp. hardiness_rating is
+    // editorial-owned state with a hardiness_verified flag beside it rather
+    // than a *_checked_at column, so there is nothing here that can witness
+    // itself and row-touched is the only honest witness available.
+    writeSet: ['hardiness_rating'],
+    evidence: [
+      {
+        kind: 'row-touched',
+        covers: 'hardiness_rating',
+        table: 'plants',
+        column: 'updated_at',
+      },
+    ] as Witness[],
+    scope: describeScope(scope, ids),
+    // max_tokens is 16 here against 2048 in curate-plants on the same model,
+    // which makes this a materially different recipe and the first real test of
+    // whether the hash separates cohorts rather than just models.
+    recipe: {
+      model: CURATION_MODEL,
+      template: buildPrompt(RECIPE_PROBE_ROW),
+      ingredients: {},
+      decoding: { max_tokens: 16 },
+    },
   }
+
+  await withRunRecord(runOptions, async (run) => {
+    if (!plants.length) {
+      console.log('No plants need a hardiness draft — nothing to do.')
+      return
+    }
+    console.log(`\nDrafting hardiness for ${plants.length} plant(s)...\n`)
+
+    for (const [i, plant] of plants.entries()) {
+      const prefix = `[${pad(i + 1)}/${pad(plants.length)}]`
+      try {
+        const rating = await draftRating(plant)
+        const { error: upErr } = await db
+          .from('plants')
+          .update({ hardiness_rating: rating })
+          .eq('id', plant.id)
+        if (upErr) throw new Error(upErr.message)
+        run.wrote(plant.id)
+        dist[rating] = (dist[rating] ?? 0) + 1
+        ok++
+        console.log(`${prefix} ${plant.common_name} -> ${rating}`)
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err)
+        failures.push({ name: plant.common_name, error: msg })
+        console.log(`${prefix} ${plant.common_name} FAILED: ${msg}`)
+      }
+      if (i < plants.length - 1) await sleep(INTER_PLANT_DELAY_MS)
+    }
+  })
+
+  if (!plants.length) return
 
   console.log('\n─────────────────────────────────────────')
   console.log(`Drafted ${ok}, failed ${failures.length}.`)

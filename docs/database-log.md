@@ -743,6 +743,36 @@ is unchanged.
 
 <!-- Newest first. Append with: scripts/log-db-session.ts --round <label> -->
 
+### 2026-08-17 — Standing rule 15, and the first three out-of-round passes wired (not a round)
+
+**Branch** `session/2026-08-17-provenance`. No migration.
+
+**Changed** — standing rule 15 (above) with `invariants:check` shape 15 behind
+it. `RUNS_WITHOUT_PROVENANCE` **18 → 15**: `curate-styles`, `curate-greenery`
+and `draft-hardiness` open runs. A dry run opens none, in all three.
+
+**Database** — three writes, `--ids` scoped to one UNCURATED row (`Absinthe`;
+`style_tags` is in the editorial-invalidation trigger's watch list, so a
+curated row would have lost its sign-off). `curate-styles` and
+`curate-greenery` wrote 1 row each, `corroborated`, both witnesses observing 1.
+`draft-hardiness` ran its empty path deliberately — row_count 0, `bounded` —
+rather than add a draft rating to a parked feature.
+
+**Found** — the recipe hash discriminates DECODING PARAMETERS, not only models:
+three hashes on one model, `draft-hardiness` at `max_tokens: 16` separating
+from the others at 256. That was the open question when it was listed. Nothing
+recorded `confirmed` (trap 29, holding). Shape 15's own parser was caught twice
+reporting zero parked items while looking at one — it would have passed green
+while seeing nothing.
+
+**Not done** — the twelve remaining unwired scripts. Most clear a stamp, so
+each needs a witness that is not the column it nulls; `curate-greenery`'s
+`foliage_color` is that pattern in the small.
+
+**Verified** — 311 tests, `tsc`, `invariants:check`, `docs:claims`,
+`docs:links`, `runbook:check`. Shape 15's three failure modes each verified by
+injection before the handoff was fixed (trap 19).
+
 ### 2026-08-16 — Standing rule 14 gets a scan, and the backlog gets one home (not a round)
 
 **Branch** `session/2026-08-16-doc-structure`. No migration, no catalog write, no

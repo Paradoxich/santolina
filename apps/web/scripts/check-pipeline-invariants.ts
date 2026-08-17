@@ -147,10 +147,6 @@ export const RUNS_WITHOUT_PROVENANCE: Record<string, string> = {
   //     without saying why a round step may write without a record. ---
 
   // --- outside the round cadence ---
-  'curate-styles.ts': 'Repair pass. Stamps style_checked_at.',
-  'curate-greenery.ts': 'Repair pass. Stamps greenery_checked_at.',
-  'draft-hardiness.ts':
-    'Parked feature. max_tokens is 16, which makes it a materially different recipe from the same model at 2048 — a good first test of whether the hash separates cohorts usefully.',
   'apply-native-to-fixes.ts':
     'Applies committed decisions and NULLS native_checked_at. A clearing write is still a write.',
   'apply-seasonal-care-fixes.ts': 'Same generate-then-apply shape.',
@@ -976,6 +972,18 @@ const NON_STAMP_WRITES = new Set([
   'image_url_curated',
   'image_attribution',
   'image_candidates',
+  // The browse axes. Each is re-judged blind by its own repair pass, which
+  // OVERWRITES rather than fills, so the value and its stamp move together in
+  // one statement (curate-styles, curate-greenery).
+  'style_tags',
+  'is_greenery',
+  // Fill-only, never overwritten: curate-greenery writes it on the subset of
+  // rows that had none, which is why it takes a bounding witness and not a
+  // confirming one.
+  'foliage_color',
+  // Editorial-owned state with a hardiness_verified flag rather than a
+  // *_checked_at column beside it, so draft-hardiness writes no stamp at all.
+  'hardiness_rating',
 ])
 
 // ---------------------------------------------------------------------------
