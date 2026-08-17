@@ -164,6 +164,43 @@ interface StepDef {
   /** FAIL once the feature the step feeds is shipped; WARN while it is parked. */
   level: 'FAIL' | 'WARN'
   /**
+   * WHO OWES THIS ROW — the second axis, added 2026-08-17 (Ana's ruling).
+   *
+   * `level` answers "how loudly does a MISSING stamp read", and it is about the
+   * feature. This answers a different question the registry could not previously
+   * express: when a standard arrives AFTER a row was seeded, does that row owe
+   * the standard at all?
+   *
+   *   `catalog` — every row owes it, whenever it was seeded.
+   *   `forward` — new rows owe it; rows seeded before it existed are DONE.
+   *
+   * WHY THE AXIS EXISTS. Eleven stamp columns landed between 2026-07-06 and
+   * 2026-08-13, five of them inside one 22-hour window while round 8 was open.
+   * Each made every already-seeded row NULL, so a new standard has always cost
+   * the catalog size rather than the round size, and nothing anywhere said
+   * whether that cost was owed. It was decided ad hoc each time, and one such
+   * decision — 277 `native_checked_at` rows ruled "recorded debt, left" — was
+   * quietly reversed by a later session because nothing held it.
+   *
+   * THE TEST IS ABOUT THE CHECK, NOT THE COLUMN. "Does anything read this
+   * column?" is the obvious formulation and it is wrong. Nothing reads
+   * `is_curated` anywhere under app/, components/ or hooks/ — but the pass that
+   * records it rewrites descriptions on ~60% of the rows it touches and holds
+   * rows whose photograph shows the wrong species. Classifying on the column
+   * would have declared ~504 rows finished while the descriptions a reader
+   * actually sees had never been through the bar. Ask instead: if this check had
+   * never run on a row, could a user tell?
+   *
+   * WHAT THIS IS NOT. It never backdates a stamp. A stamp is evidence and
+   * evidence cannot be invented (trap 28); `forward` changes what work is OWED,
+   * never what the record SAYS. A `forward` step still FAILs inside its own
+   * round's manifest — the standard applies going forward — it simply raises no
+   * catalog-wide obligation. Every `forward` step must carry a witness in
+   * FORWARD_STEP_WITNESSES (check-pipeline-invariants.ts), which is what makes
+   * the ruling fail the day it stops being true.
+   */
+  obligation: 'catalog' | 'forward'
+  /**
    * The bookkeeping column this step stamps, when it stamps one.
    *
    * This field is what makes the registry self-checking. `verify-round`
@@ -216,6 +253,9 @@ export const STEP_DEFS: StepDef[] = [
     evidence:
       'ai_drafted_at, style_checked_at, greenery_checked_at all NOT NULL',
     level: 'FAIL',
+    // Drafts description, care instructions, style tags and greenery. Every one
+    // of those renders.
+    obligation: 'catalog',
     ran: (p) =>
       Boolean(p.ai_drafted_at && p.style_checked_at && p.greenery_checked_at),
   },
@@ -223,12 +263,16 @@ export const STEP_DEFS: StepDef[] = [
     step: 'curate-combinations',
     evidence: 'appears in plant_combinations',
     level: 'FAIL',
+    // Companion pairings are a card on the plant page.
+    obligation: 'catalog',
     ran: (p, ctx) => ctx.paired.has(p.id),
   },
   {
     step: 'regenerate-native-region',
     evidence: 'native_region non-empty (hybrids excluded)',
     level: 'FAIL',
+    // native_region is the Explore native filter (lib/native-to-me.ts).
+    obligation: 'catalog',
     applies: (p) => !isHybrid(p.scientific_name),
     ran: (p) => nonEmpty(p.native_region),
   },
@@ -236,6 +280,9 @@ export const STEP_DEFS: StepDef[] = [
     step: 'cross-check-plants',
     evidence: 'botanical_checked_at NOT NULL',
     level: 'FAIL',
+    // Fact-checks the botanical fields the plant page prints. A wrong one is
+    // wrong on screen, whatever the stamp says.
+    obligation: 'catalog',
     stampColumn: 'botanical_checked_at',
     ran: (p) => Boolean(p.botanical_checked_at),
   },
@@ -243,6 +290,8 @@ export const STEP_DEFS: StepDef[] = [
     step: 'cross-check-native-to',
     evidence: 'native_checked_at NOT NULL',
     level: 'FAIL',
+    // native_to is the "Native to" row on the plant page.
+    obligation: 'catalog',
     stampColumn: 'native_checked_at',
     ran: (p) => Boolean(p.native_checked_at),
   },
@@ -255,6 +304,9 @@ export const STEP_DEFS: StepDef[] = [
     step: 'cross-check-native-region',
     evidence: 'native_region_checked_at NOT NULL',
     level: 'FAIL',
+    // Same live filter as the step it audits, and this one catches the plant
+    // tagged with the range it was INTRODUCED into.
+    obligation: 'catalog',
     stampColumn: 'native_region_checked_at',
     // A row with no scientific_name can't be looked up in GBIF, and neither
     // can the taxa upstream has no WCVP distribution for. Counting either
@@ -271,6 +323,9 @@ export const STEP_DEFS: StepDef[] = [
     step: 'curate-seasonal-care',
     evidence: 'seasonal_care NOT NULL',
     level: 'FAIL',
+    // Care Tips v2 is live and reads seasonal_care[currentStage]; without it a
+    // plant shows no tip at all.
+    obligation: 'catalog',
     ran: (p) => nonEmpty(p.seasonal_care),
   },
   {
@@ -282,6 +337,29 @@ export const STEP_DEFS: StepDef[] = [
     evidence: 'hardiness_rating NOT NULL',
     level: 'WARN',
     perRound: false,
+    // THE ONLY `forward` STEP IN THE REGISTRY TODAY, and worth stating plainly
+    // because a lone entry looks like an oversight.
+    //
+    // NOT because the display gate is stuck false — checked 2026-08-17 and it
+    // is not: `catalog-state.ts:185` counts 267 rows with
+    // `hardiness_verified = true`, from the July 2026 verification pass. The
+    // 2026-08-14 audit said "zero writers, so the gate is permanently false",
+    // and that was carried into the plan for this work as the justification.
+    // It is untrue, and it would have been read as evidence.
+    //
+    // The real reason is that no rendering path reaches these columns.
+    // `lib/hardiness.ts` formats a rating and **nothing imports it** — zero
+    // importers across lib/, app/, components/ and server/. The survive-winter
+    // bullet that DOES render (`lib/good-for-your-garden.ts:59-72`) reads
+    // `hardiness_zone_min` / `hardiness_zone_max` against the garden's zone:
+    // different columns, USDA rather than RHS. So an old plant with no
+    // `hardiness_rating` is invisible to a reader because the module that would
+    // show it is wired to nothing.
+    //
+    // WHAT FLIPS THIS TO `catalog`: the day `lib/hardiness.ts` gains an
+    // importer. FORWARD_STEP_WITNESSES asserts exactly that, because a column
+    // scan cannot see it — the module names its columns only in prose.
+    obligation: 'forward',
     ran: (p) => Boolean(p.hardiness_rating),
   },
   {
@@ -296,6 +374,13 @@ export const STEP_DEFS: StepDef[] = [
     evidence: 'style_checked_at NOT NULL',
     level: 'FAIL',
     perRound: false,
+    // `perRound: false` and `obligation: 'catalog'` together, which reads odd
+    // and is exactly the case the two axes exist to separate: a ROUND does not
+    // owe this step (curate-plants already tags new seeds from the same
+    // definitions), and every ROW in the catalog still owes the STANDARD.
+    // style_tags drives the Explore filter and the gap test that picks a
+    // round's theme.
+    obligation: 'catalog',
     stampColumn: 'style_checked_at',
     ran: (p) => Boolean(p.style_checked_at),
   },
@@ -314,6 +399,10 @@ export const STEP_DEFS: StepDef[] = [
     evidence: 'greenery_checked_at NOT NULL',
     level: 'FAIL',
     perRound: false,
+    // Same split as curate-styles above. is_greenery is the ONLY way into the
+    // Explore Green bucket and defaults to false, so an unjudged plant is
+    // silently missing from a live filter.
+    obligation: 'catalog',
     stampColumn: 'greenery_checked_at',
     ran: (p) => Boolean(p.greenery_checked_at),
   },
@@ -326,6 +415,11 @@ export const STEP_DEFS: StepDef[] = [
     step: 'pick-plant-images',
     evidence: 'image_checked_at NOT NULL',
     level: 'WARN',
+    // WARN and `catalog` together, the other instructive pairing: the pick is
+    // off the per-round cadence and a placeholder covers a miss, so it should
+    // not redden a round — but the hero photo is the most looked-at thing on
+    // the page, so every row owes it.
+    obligation: 'catalog',
     stampColumn: 'image_checked_at',
     ran: (p) => Boolean(p.image_checked_at),
   },
@@ -347,6 +441,9 @@ export const STEP_DEFS: StepDef[] = [
     step: 'pick-plant-images --verify',
     evidence: 'image_verified_at NOT NULL (medium-confidence heroes only)',
     level: 'WARN',
+    // Answers whether the photograph shows the species it claims. Getting that
+    // wrong is a reader looking at the wrong plant.
+    obligation: 'catalog',
     stampColumn: 'image_verified_at',
     applies: (p) => p.image_pick_confidence === 'medium',
     ran: (p) => Boolean(p.image_verified_at),
@@ -367,6 +464,21 @@ export const STEP_DEFS: StepDef[] = [
     step: 'curate-editorial',
     evidence: 'editorial_checked_at NOT NULL',
     level: 'FAIL',
+    // THE CASE THE AXIS WAS DEFINED AGAINST, so the reasoning lives here rather
+    // than only in the interface above.
+    //
+    // Nothing reads `is_curated` anywhere under app/, components/ or hooks/,
+    // and no query filters on it. By the obvious test — "does anything read the
+    // column?" — this is `forward`, and ~504 never-judged rows are finished.
+    //
+    // That answer is wrong, and expensively so. The pass this stamp records
+    // REWRITES descriptions that miss the bar in lib/editorial-standard.ts, at
+    // 30/50, 29/50 and 17/28 on rounds 9, 10 and 12 — about 60% — and holds
+    // rows whose photograph cannot be confirmed as the species. Declaring those
+    // rows done would have left roughly 250 descriptions on the site that had
+    // never been read against the standard. The flag is invisible; the copy and
+    // the photographs are the two things a reader looks at hardest.
+    obligation: 'catalog',
     stampColumn: 'editorial_checked_at',
     ran: (p) => Boolean(p.editorial_checked_at),
   },
