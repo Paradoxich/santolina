@@ -23,7 +23,19 @@
  *   D. Every fill/stroke in apps/web/public/icons is a current token value.
  *      The weather-*.svg set is exempt by design: illustrations with their
  *      own fixed palette, not UI glyphs (see DESIGN_SYSTEM.md).
+ *   E. No COMPONENT re-types a token's channels. Same rule as B, one layer
+ *      out. Added 2026-08-17 after a type-colour audit found three live
+ *      copies that B is structurally unable to see: it walks the token list
+ *      parsed out of index.css, so a copy that lives in a .tsx is outside
+ *      its scope. What it missed, for years:
  *
+ *        ExploreBrowse / ExplorePhotoPicker  rgba(17,20,17,0.8)  = sage-950
+ *        ExploreBrowse                       rgba(255,255,255,0.2) = white
+ *
+ *      The rule was written against exactly this shape and the guard was
+ *      covering half of where it occurs.
+ *
+
  * WHAT A GREEN RUN DOES NOT MEAN. This proves no token value is duplicated and
  * no token is missing from the design-system page. It proves nothing about
  * whether a doc's PROSE is true — whether a token is described as doing what
@@ -46,6 +58,7 @@ import { join, relative } from 'node:path'
 import {
   COLOR_LITERAL,
   REPO_ROOT,
+  listSourceFiles,
   readRepoFile,
   readTokenDeclarations,
 } from './token-source'
@@ -276,6 +289,128 @@ function checkIconColors(tokens: { name: string; value: string }[]) {
   }
 }
 
+/**
+ * E. No component re-types a token's channels.
+ *
+ * Exemptions are a ratchet, not a config: an entry that stops matching any
+ * literal FAILS, so a waiver cannot outlive the thing it waives. Same
+ * discipline as OPEN_FINDINGS in check-pipeline-invariants.ts, and for the
+ * same reason — a list nobody is forced to revisit stops being true quietly.
+ *
+ * Each entry needs a reason, and the reason has to survive the question
+ * "would this value change in a re-skin?". If it would, it is chrome and
+ * belongs in a token; the exemption is wrong.
+ */
+export const CHANNEL_COPY_EXEMPT: { prefix: string; why: string }[] = [
+  {
+    prefix: 'packages/ui/src/stories/',
+    why: 'Storybook fixtures — sample content for the demos, never shipped in the app',
+  },
+  {
+    prefix: 'apps/web/components/AuthOptions.tsx',
+    why: "the inlined Google mark's own white; a logo is not ours to re-colour",
+  },
+]
+
+/** Channels -> the token that legitimately owns them. */
+export function primitivesByChannels(
+  tokens: { name: string; value: string }[]
+): Map<string, string> {
+  const primitives = new Map<string, string>()
+  for (const { name, value } of tokens) {
+    if (value.includes('var(')) continue
+    const ch = channelsOf(value)
+    if (ch && !primitives.has(ch)) primitives.set(ch, name)
+  }
+  return primitives
+}
+
+export interface ChannelCopy {
+  file: string
+  line: number
+  literal: string
+  token: string
+}
+
+/**
+ * The callable seam for check E. Takes file CONTENTS rather than reading the
+ * disk, so a test can hand it the pre-fix source and prove the guard fires —
+ * check B's first version went green against a faithful reproduction of the
+ * bug it was written for, and nobody noticed until it was rewritten.
+ */
+export function findComponentChannelCopies(
+  primitives: Map<string, string>,
+  files: { path: string; text: string }[]
+): { copies: ChannelCopy[]; unusedExemptions: string[] } {
+  const copies: ChannelCopy[] = []
+  const used = new Set<string>()
+
+  for (const { path, text } of files) {
+    const exemption = CHANNEL_COPY_EXEMPT.find((e) => path.startsWith(e.prefix))
+    for (const literal of text.matchAll(
+      /#[0-9a-f]{3,8}\b|\brgba?\(\s*\d+[\s,]+\d+[\s,]+\d+[^)]*\)/gi
+    )) {
+      const ch = channelsOf(literal[0])
+      // Black is excepted for the same reason as in B: it is --color-scrim's
+      // own value, and it legitimately composes shadows and mask gradients.
+      if (!ch || ch === '0,0,0') continue
+      const token = primitives.get(ch)
+      if (!token) continue // matches no token — its own value, fine
+      if (exemption) {
+        used.add(exemption.prefix)
+        continue
+      }
+      copies.push({
+        file: path,
+        line: text.slice(0, literal.index).split('\n').length,
+        literal: literal[0],
+        token,
+      })
+    }
+  }
+
+  return {
+    copies,
+    unusedExemptions: CHANNEL_COPY_EXEMPT.filter(
+      (e) => !used.has(e.prefix)
+    ).map((e) => e.prefix),
+  }
+}
+
+function checkNoComponentChannelCopies(
+  tokens: { name: string; value: string }[]
+) {
+  const files = listSourceFiles().map((path) => ({
+    path,
+    text: readRepoFile(path),
+  }))
+  const { copies, unusedExemptions } = findComponentChannelCopies(
+    primitivesByChannels(tokens),
+    files
+  )
+
+  for (const c of copies) {
+    failures.push({
+      where: `${c.file}:${c.line}`,
+      detail:
+        `${c.literal} re-types the channels of ${c.token}. Use the token — ` +
+        `a preset class, or var(${c.token}) — rather than a copy that cannot ` +
+        'announce when the ramp step moves out from under it.',
+    })
+  }
+
+  for (const prefix of unusedExemptions) {
+    const why = CHANNEL_COPY_EXEMPT.find((e) => e.prefix === prefix)?.why ?? ''
+    failures.push({
+      where: 'apps/web/scripts/check-tokens.ts',
+      detail:
+        `the channel-copy exemption for "${prefix}" (${why}) no longer matches ` +
+        'any literal. Delete it — an exemption that waives nothing is a claim ' +
+        'about the code that has stopped being true.',
+    })
+  }
+}
+
 function main() {
   const tokens = readTokenDeclarations()
   const names = new Set(tokens.map((t) => t.name))
@@ -284,11 +419,13 @@ function main() {
   checkNoChannelCopies(tokens)
   checkDesignSystemCoverage(names)
   checkIconColors(tokens)
+  checkNoComponentChannelCopies(tokens)
 
   if (failures.length === 0) {
     console.log(
       `tokens: OK — ${tokens.length} declared, no values in prose, ` +
-        'icon colours current, design-system list matches'
+        'icon colours current, design-system list matches, ' +
+        'no component re-types a token'
     )
     return
   }
@@ -298,4 +435,6 @@ function main() {
   process.exit(1)
 }
 
-main()
+// Guarded so the test can import the seams above without the script running
+// (and calling process.exit) as a side effect of the import.
+if (require.main === module) main()
