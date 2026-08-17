@@ -33,9 +33,13 @@
  *   --ids a,b,c    Restrict to specific plant ids.
  *   --dry-run      Call Claude and print judgments; write nothing.
  *
- * Ends with the resulting tag distribution; warns if any tag still covers
- * more than 40% of the judged set — that means the definitions need another
- * pass, not that the run failed.
+ * Ends with two reports. The tag DISTRIBUTION warns if any tag covers more
+ * than 40% of the judged set. The CALIBRATION report covers the other
+ * question — whether the signature bar held — via mean tags per plant, the
+ * spread, within-axis doubling and confusable-pair co-occurrence. Only the
+ * within-axis half warns; see reportCalibration for why the mean does not.
+ * Either warning means the definitions need another pass, not that the run
+ * failed.
  */
 
 import { getSupabaseAdmin } from '../lib/supabase-admin'
