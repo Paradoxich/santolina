@@ -1,0 +1,20 @@
+{
+  "label": "style-retag-2026-08-17",
+  "not_a_round": true,
+  "what": "Plan step D, the catalog-wide style re-tag, plus the provence->mediterranean merge that followed it.",
+  "before_taken_at": "2026-08-17T14:04:16Z",
+  "before_source": "backups/2026-08-17T14-04-16-083Z",
+  "after_taken_at": "2026-08-17T15:46:13.032Z",
+  "restore": "tsx --env-file=.env.local scripts/restore-catalog.ts catalog-archives/style-retag-2026-08-17 --phase before",
+  "counts": {
+    "before": {
+      "plants": 748,
+      "plant_combinations": 1864
+    },
+    "after": {
+      "plants": 748,
+      "plant_combinations": 1864
+    }
+  },
+  "why_not_under_rounds": "This was a mutation, not a round. rounds/ holds per-round membership provenance, and its pre-commit hook requires a \"Round <label>\" heading in database-log.md -- which here would have meant writing a false heading. restore-catalog takes an arbitrary directory, so the rounds/ layout was never a requirement."
+}

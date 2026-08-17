@@ -84,11 +84,16 @@ Full UI-building guidance — tokens, typography, styling patterns, component re
   /rounds           ← per-round provenance, committed (manifests, reports, catalog archives)
   /runs             ← per-invocation write provenance, committed (one .jsonl per month)
   /reference        ← committed lookup caches the guards read
+  /catalog-archives ← committed catalog snapshots for mutations that are not rounds
 ```
 
 `/rounds` and `/runs` answer different questions and are not interchangeable:
 rounds record **membership** (where a plant entered the catalog), runs record
 **mutation** (what produced the value in a row). See [write provenance](docs/write-provenance.md).
+`/catalog-archives` is the rollback point for a catalog-wide change that is not
+a round — `rounds/` is round-shaped down to a pre-commit hook that demands a
+`Round <label>` log entry, and `restore-catalog` reads any directory holding
+`<phase>-<table>.json.gz`.
 
 No `/store` yet — the app holds no global client state (see Code conventions). A `/store` directory arrives only if Zustand is adopted. `/reports` may appear at runtime for cross-check output; it is gitignored, not source.
 
