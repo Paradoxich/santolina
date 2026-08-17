@@ -107,7 +107,9 @@ No `/store` yet — the app holds no global client state (see Code conventions).
 >
 > `scripts/log-db-session.ts --round <label>` writes the factual half of an entry for you.
 
-Seven tables. All IDs are UUIDs. Row-level security required on all user-owned tables.
+The domain tables are listed below. All IDs are UUIDs. Row-level security required on all user-owned tables.
+
+The count is deliberately not written here. Standing rule 14: a derivable number restated in prose is a second home for one fact. It read "Seven tables" until 2026-08-17, when `stamp_locks` made it eight and nothing caught it — the word was spelled out, and `docs:claims` matches digits.
 
 - `users` — extends Supabase auth.users; created (with an empty garden) by the `handle_new_user` trigger on signup
 - `gardens` — garden profile (location + lat/lon, space type, sun, style, size). One per user in v1; only location is populated until the onboarding wizard ships.
@@ -115,6 +117,7 @@ Seven tables. All IDs are UUIDs. Row-level security required on all user-owned t
 - `palette_plants` — join table between gardens and plants. User's palette. Includes status (planned/planted) and source. The check constraint allows `generated`, but nothing writes it — the app only produces `manual` and `existing`. The app only moves plants between planned and planted; a legacy `considering` status was dropped from the check constraint July 2026 (see [the palette write path](docs/architecture.md#palette-write-path)).
 - `plant_combinations` — which plants work well together. Public read, service role write. Populated by `apps/web/scripts/curate-combinations.ts` (see [plant combinations](docs/curation.md#plant-combinations)).
 - `agent_sessions` — reserved for the deferred agent. Nothing reads or writes it.
+- `stamp_locks` — not a domain table: per-column write locks held by an in-flight data script, so a run can prove it was the only writer of a stamp column ([write provenance](docs/write-provenance.md), trap 29). Service role only, rows transient. Nothing in the app touches it.
 - `diary_entries` — user's dated notes and photos. Keyed by garden + plant (not the palette row), so a plant's history survives being removed from the palette; `plant_id` is nullable and a null means a garden-level entry (weather, first frost). User-owned (RLS on garden ownership); photos live in the private `diary-photos` storage bucket (garden-ownership policies, signed-URL reads). See [diary identity](docs/architecture.md#diary-identity) and [private diary photos](docs/architecture.md#diary-photos-private).
 
 `supabase/migrations/` is the schema. Never store passwords — Supabase auth handles that.

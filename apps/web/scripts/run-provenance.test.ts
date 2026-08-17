@@ -23,10 +23,17 @@
  * TRAP 29, in the block after it: a timestamp window is coincidence, not
  * authorship. Two overlapping invocations of one stamp-writing step each query a
  * window holding BOTH sets of stamps, so the old `count >= rowCount` test let
- * both record `confirmed` for work neither did. `confirmed` now requires
- * established exclusivity, which nothing can declare yet — so the assertions
- * below are that the pipeline's own steps record `corroborated`, and that
- * asserting exclusivity without a mechanism does not buy it back.
+ * both record `confirmed` for work neither did. `confirmed` requires
+ * ESTABLISHED exclusivity, and that block asserts that claiming it without a
+ * mechanism does not buy it back.
+ *
+ * The mechanism arrived 2026-08-17 and is in the LAST block: a per-column row
+ * lock (`public.stamp_locks`), taken in `beginRun` and re-verified at
+ * finalisation rather than remembered. It could not have been built earlier for
+ * the reason the trap itself gives — a lock cannot bind a script that does not
+ * take it, and six writers were still off run provenance.
+ * `RUNS_WITHOUT_PROVENANCE` reached zero that same morning, which is what made
+ * the lock mean something instead of licensing a claim it could not keep.
  */
 import { describe, expect, it, vi } from 'vitest'
 
@@ -37,6 +44,7 @@ import {
   recipeHash,
   withRunRecord,
   type Exclusivity,
+  type LockClient,
   type RunRecord,
   type Witness,
 } from './run-provenance'
@@ -62,6 +70,11 @@ const harness = (observed: Record<string, number> = {}) => {
       },
       log: () => {},
       trapSignals: false,
+      // No database in a unit test. Every case that cares about exclusivity
+      // passes its own locks; the default here is "locking is off", which is
+      // what every run recorded before 2026-08-17 and keeps these cases
+      // asserting what they were written to assert.
+      lockPolicy: 'none' as const,
     },
   }
 }
@@ -195,6 +208,11 @@ describe('every invocation produces a record', () => {
       append: () => '/runs/2026-08.jsonl',
       log: () => {},
       trapSignals: false,
+      // No database in a unit test. Every case that cares about exclusivity
+      // passes its own locks; the default here is "locking is off", which is
+      // what every run recorded before 2026-08-17 and keeps these cases
+      // asserting what they were written to assert.
+      lockPolicy: 'none' as const,
     }
     const one = {
       step: 'curate-plants',
@@ -298,6 +316,11 @@ describe('a record never claims more than its evidence', () => {
       },
       log: () => {},
       trapSignals: false,
+      // No database in a unit test. Every case that cares about exclusivity
+      // passes its own locks; the default here is "locking is off", which is
+      // what every run recorded before 2026-08-17 and keeps these cases
+      // asserting what they were written to assert.
+      lockPolicy: 'none' as const,
     })
     wrote(run, 2)
     const rec = await run.finish('completed')
@@ -375,6 +398,11 @@ describe('declared mutation is not the same thing as verification evidence', () 
       },
       log: () => {},
       trapSignals: false,
+      // No database in a unit test. Every case that cares about exclusivity
+      // passes its own locks; the default here is "locking is off", which is
+      // what every run recorded before 2026-08-17 and keeps these cases
+      // asserting what they were written to assert.
+      lockPolicy: 'none' as const,
     })
     wrote(run, 25)
     const rec = await run.finish('completed')
@@ -406,6 +434,11 @@ describe('declared mutation is not the same thing as verification evidence', () 
       append: () => '/runs/2026-08.jsonl',
       log: () => {},
       trapSignals: false,
+      // No database in a unit test. Every case that cares about exclusivity
+      // passes its own locks; the default here is "locking is off", which is
+      // what every run recorded before 2026-08-17 and keeps these cases
+      // asserting what they were written to assert.
+      lockPolicy: 'none' as const,
     })
     wrote(run, 60)
     const rec = await run.finish('completed')
@@ -433,6 +466,11 @@ describe('declared mutation is not the same thing as verification evidence', () 
       append: () => '/runs/2026-08.jsonl',
       log: () => {},
       trapSignals: false,
+      // No database in a unit test. Every case that cares about exclusivity
+      // passes its own locks; the default here is "locking is off", which is
+      // what every run recorded before 2026-08-17 and keeps these cases
+      // asserting what they were written to assert.
+      lockPolicy: 'none' as const,
     })
     wrote(run, 4)
     const rec = await run.finish('completed')
@@ -475,6 +513,11 @@ describe('a bounding witness can neither confirm nor contradict', () => {
       },
       log: () => {},
       trapSignals: false,
+      // No database in a unit test. Every case that cares about exclusivity
+      // passes its own locks; the default here is "locking is off", which is
+      // what every run recorded before 2026-08-17 and keeps these cases
+      // asserting what they were written to assert.
+      lockPolicy: 'none' as const,
     })
     return { run, written }
   }
@@ -710,5 +753,212 @@ describe('trap 29: overlapping runs cannot confirm each other apart', () => {
     wrote(run, 20)
     const rec = await run.finish('completed')
     expect(rec.verification.substantiation).toBe('corroborated')
+  })
+})
+
+/**
+ * Per-column exclusivity — TRAP 29's second half, added 2026-08-17.
+ *
+ * The trap's own entry says what was owed: "A per-step lock would not have
+ * fixed it... exclusivity has to be per-COLUMN across every writer. And six of
+ * those writers are among the 16 passes not yet on run provenance, so a lock
+ * added today would not bind them: it would fail to lock while licensing
+ * `confirmed`. Wire the writers first, then the lock means something."
+ *
+ * The writers were wired the same day — `RUNS_WITHOUT_PROVENANCE` reached zero
+ * — so a lock taken in `beginRun` now binds every script that writes a stamp.
+ * That is the precondition, and it is why these cases could not have been
+ * written a week ago.
+ *
+ * WHAT MUST STAY TRUE, and each has a case below:
+ *   · holding the lock is what upgrades a stamp to `confirming`
+ *   · a lock LOST mid-run downgrades, and is re-checked rather than remembered
+ *   · a refusal names the holder, because "locked" with no owner is unactionable
+ *   · a refused run releases what it already took
+ *   · only window-queryable members are locked at all
+ */
+describe('per-column exclusivity', () => {
+  const lockClient = (over: Partial<LockClient> = {}): LockClient => ({
+    acquire: async () => ({
+      acquired: true,
+      holder_run_id: null,
+      holder_step: null,
+      holder_expires_at: null,
+    }),
+    holds: async () => true,
+    release: async () => {},
+    ...over,
+  })
+
+  it('earns confirming when the lock is held throughout', async () => {
+    const h = harness({ native_checked_at: 279 })
+    const run = beginRun({
+      step: 'cross-check-native-to',
+      writeSet: ['native_checked_at'],
+      recipe: RECIPE,
+      ...h.opts,
+      lockPolicy: 'lock',
+      locks: lockClient(),
+    })
+    await run.claimExclusivity()
+    wrote(run, 279)
+    await run.finish('completed')
+
+    const record = h.written[0]!
+    expect(record.verification.exclusivity).toEqual({
+      kind: 'locked',
+      columns: ['native_checked_at'],
+    })
+    expect(record.verification.substantiation).toBe('confirmed')
+  })
+
+  it('downgrades to corroborated when the lock was lost before the end', async () => {
+    // The SIGKILL-elsewhere case, and the pass that outlives its TTL. A run
+    // cannot detect this from a boolean it set at the start, which is why the
+    // check is a question asked at finalisation.
+    const h = harness({ native_checked_at: 279 })
+    const run = beginRun({
+      step: 'cross-check-native-to',
+      writeSet: ['native_checked_at'],
+      recipe: RECIPE,
+      ...h.opts,
+      lockPolicy: 'lock',
+      locks: lockClient({ holds: async () => false }),
+    })
+    await run.claimExclusivity()
+    wrote(run, 279)
+    await run.finish('completed')
+
+    const record = h.written[0]!
+    expect(record.verification.exclusivity.kind).toBe('none')
+    expect(record.verification.substantiation).toBe('corroborated')
+    expect(record.verification.notes.join(' ')).toContain(
+      'exclusivity DOWNGRADED'
+    )
+  })
+
+  it('treats a failed lock CHECK as lost, never as held', async () => {
+    // A database error at finalisation must not read as exclusivity. The safe
+    // direction is the quiet claim losing, not the loud one.
+    const h = harness({ native_checked_at: 279 })
+    const run = beginRun({
+      step: 'cross-check-native-to',
+      writeSet: ['native_checked_at'],
+      recipe: RECIPE,
+      ...h.opts,
+      lockPolicy: 'lock',
+      locks: lockClient({
+        holds: async () => {
+          throw new Error('connection reset')
+        },
+      }),
+    })
+    await run.claimExclusivity()
+    wrote(run, 279)
+    await run.finish('completed')
+
+    expect(h.written[0]!.verification.exclusivity.kind).toBe('none')
+  })
+
+  it('refuses to start and names the holder', async () => {
+    const h = harness({})
+    const run = beginRun({
+      step: 'curate-plants',
+      writeSet: ['native_checked_at'],
+      recipe: RECIPE,
+      ...h.opts,
+      lockPolicy: 'lock',
+      locks: lockClient({
+        acquire: async () => ({
+          acquired: false,
+          holder_run_id: 'cross-check-native-to-2026-abc',
+          holder_step: 'cross-check-native-to',
+          holder_expires_at: '2026-08-17T23:00:00.000Z',
+        }),
+      }),
+    })
+    await expect(run.claimExclusivity()).rejects.toThrow(
+      /cross-check-native-to-2026-abc/
+    )
+    // And no record is filed: nothing was written, so an optimistic record
+    // would describe an invocation that never started.
+    expect(h.written).toHaveLength(0)
+  })
+
+  it('releases what it already took when a later column is refused', async () => {
+    // Otherwise a run that cannot be exclusive sits on locks that block the
+    // run that can.
+    const released: string[] = []
+    const h = harness({})
+    const run = beginRun({
+      step: 'curate-plants',
+      writeSet: ['native_checked_at', 'style_checked_at'],
+      recipe: RECIPE,
+      ...h.opts,
+      lockPolicy: 'lock',
+      locks: lockClient({
+        acquire: async (column) =>
+          column === 'native_checked_at'
+            ? {
+                acquired: true,
+                holder_run_id: null,
+                holder_step: null,
+                holder_expires_at: null,
+              }
+            : {
+                acquired: false,
+                holder_run_id: 'other-run',
+                holder_step: 'curate-styles',
+                holder_expires_at: '2026-08-17T23:00:00.000Z',
+              },
+        release: async (column) => {
+          released.push(column)
+        },
+      }),
+    })
+    await expect(run.claimExclusivity()).rejects.toThrow(/other-run/)
+    expect(released).toEqual(['native_checked_at'])
+  })
+
+  it('locks only window-queryable members, never value columns', async () => {
+    // Locking `style_tags` would serialise runs to buy evidence that column can
+    // never supply — it is bounded by updated_at whatever happens.
+    const asked: string[] = []
+    const h = harness({ style_checked_at: 3 })
+    const run = beginRun({
+      step: 'curate-styles',
+      writeSet: ['style_tags', 'style_checked_at'],
+      evidence: [
+        {
+          kind: 'stamp',
+          covers: 'style_checked_at',
+          column: 'style_checked_at',
+        },
+        {
+          kind: 'row-touched',
+          covers: 'style_tags',
+          table: 'plants',
+          column: 'updated_at',
+        },
+      ],
+      recipe: RECIPE,
+      ...h.opts,
+      lockPolicy: 'lock',
+      locks: lockClient({
+        acquire: async (column) => {
+          asked.push(column)
+          return {
+            acquired: true,
+            holder_run_id: null,
+            holder_step: null,
+            holder_expires_at: null,
+          }
+        },
+      }),
+    })
+    await run.claimExclusivity()
+    wrote(run, 3)
+    await run.finish('completed')
+    expect(asked).toEqual(['style_checked_at'])
   })
 })

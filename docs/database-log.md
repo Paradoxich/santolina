@@ -584,13 +584,34 @@ passes not yet on run provenance, so a lock added today would not bind them: it
 would fail to lock while licensing `confirmed`. **Wire the writers first, then
 the lock means something.**
 
-**The fix is to stop claiming it.** A stamp is `corroborating` unless
-exclusivity has been ESTABLISHED, and `Exclusivity` has exactly one variant —
-`{ kind: 'none', reason }` — so a caller cannot assert its way to `confirmed`.
+**The first fix was to stop claiming it.** A stamp is `corroborating` unless
+exclusivity has been ESTABLISHED, and `Exclusivity` had exactly one variant —
+`{ kind: 'none', reason }` — so a caller could not assert its way to `confirmed`.
 A corroborating witness can still CONTRADICT. That asymmetry is deliberate: a
 concurrent clearer could produce a false contradiction, but a false alarm sends
 a person to look, while a false `confirmed` is a silent lie in a record someone
 will later cite as evidence.
+
+**The mechanism landed 2026-08-17, and the order was forced.** `public.stamp_locks`
+(migration `20260817174429`) is a per-COLUMN row lock taken in `beginRun` and
+re-verified at finalisation, so `Exclusivity` now has a second variant and a run
+that held its locks throughout records `confirmed`. It could not have been built
+sooner for the reason above: a lock cannot bind a script that does not take it,
+and `RUNS_WITHOUT_PROVENANCE` only reached zero that same morning. A row, not
+`pg_advisory_lock` — a session-level advisory lock lives on the connection, and
+these scripts reach Postgres through PostgREST's pool.
+
+Three properties, each with a case in `apps/web/scripts/run-provenance.test.ts`:
+a refusal names the holder and the call to free it; a refused run releases what
+it already took; and a lock LOST mid-run downgrades to `corroborating`, because
+a run cannot learn that from a boolean it set at the start. A failed lock check
+counts as lost, never as held.
+
+**Exclusivity alone does not earn `confirmed`** — measured, not assumed. The
+first real run under the lock (`apply-native-to-fixes`, 30 stale decisions, 0
+rows) recorded `kind: locked` and still `bounded`, because it CLEARS its stamp
+and so has no stamp witness for the lock to upgrade. A clearing write stays
+bounded forever, which is correct.
 
 **It also made one claim in the module too strong.** Orphaned stamps from a
 SIGKILL were described as detectable because they fall inside no recorded
@@ -850,41 +871,37 @@ is unchanged.
 ### 2026-08-17 — Provenance and hygiene, and the first catalog removal
 
 **Branch** `session/2026-08-17-provenance`. Every migrated script was run dry
-against production and reported its decisions already applied; the one
-deliberate data change is the removal below.
+against production; the one deliberate data change is the removal below.
 
 **Catalog 748 → 747 species, 1864 → 1859 combinations.** _Hydrangea anomala_
-deleted as a duplicate of _H. petiolaris_ (Ana, 2026-08-17) by the new
-`scripts/remove-plant.ts` — the first row ever removed from this catalog, and
-the reason the duplicate survived from round 11 is that nothing could remove
-one. 0 palette rows, 0 diary rows, 5 combinations went by cascade.
-**`curate-combinations` is owed** to refill those pairings; deferred by ruling,
-no API spend this session. The complete deleted rows are in
-`reference/removals.json`. Deliberately left open: the accepted botanical name
-is _H. anomala_ subsp. _petiolaris_, so the surviving row carries a subspecies
-epithet as a species — a naming question, not a duplicate question.
+deleted as a duplicate of _H. petiolaris_ (Ana) by the new
+`scripts/remove-plant.ts` — the first row ever removed here, and the reason the
+duplicate survived from round 11 is that nothing could remove one. 0 palette
+rows, 0 diary rows, 5 combinations by cascade. **`curate-combinations` is owed**
+to refill them; deferred by ruling. Complete deleted rows in
+`reference/removals.json`. Left open: the accepted name is _H. anomala_ subsp.
+_petiolaris_, so the surviving row carries a subspecies epithet as a species.
 
-**Migrations applied** (Ana waived rule 11 for these two; rule-10 backup taken
-first, `2026-08-17T16-56-45-254Z`, 1788575 bytes). `20260817165712_applied_migrations_statements.sql`
-adds `statements text[]` to `public.applied_migrations()` so `migrations:check`
-compares migration CONTENT, not just version and name.
-`20260817170724_reconcile_edited_migrations.sql` cleans up what that found.
+**Three migrations applied** (Ana waived rule 11; rule-10 backups
+`2026-08-17T16-56-45-254Z` and `2026-08-17T17-43-34-191Z`).
+`applied_migrations_statements` lets `migrations:check` compare migration
+CONTENT, `reconcile_edited_migrations` cleans up what that found, and
+`stamp_locks` earns `confirming` back.
 
-**It found three migrations edited AFTER they were applied** — new trap 33, with
-the measurement behind the comparison and the `col_description` lesson. All
-three verified against prod one at a time, then reverted to their applied text;
-the one statement that had never run anywhere moved to the reconcile migration,
-guarded.
+**Content checking found three migrations edited AFTER they were applied** —
+new trap 33. All three verified against prod one at a time and reverted to
+their applied text. Prod and local both clean now.
 
-**Prod and local both clean now**: 40 applied, content-checked 40 of 40 locally
-and 37 of 40 on prod — three ledger rows carry no statements at all.
+**Per-column exclusivity shipped**, which closes trap 29's open half; that
+entry records the mechanism, the two bugs the local rehearsal caught, and the
+thing measuring it taught. Verified against prod: the RPCs directly, then a
+real run took, held and released a lock writing zero rows.
 
-**Ratchets.** `HAND_ROLLED_REVIEWED_MUTATION` 6 → 0, `SCRIPTS_PENDING_ARCHIVE`
-3 → 0, `RUNS_WITHOUT_PROVENANCE` 15 → 8. Five scripts moved onto
-`reviewed-mutation.ts`; `apply-sun-widening.ts` was archived instead. The three
-name passes now share `scripts/name-fixes.ts`, so round 8 gains the collision
-pre-check it predates. New shape 18: a parsed but undocumented flag — seven
-found, all seven documented, hatch list empty.
+**Ratchets, all to zero:** `HAND_ROLLED_REVIEWED_MUTATION` 6 → 0,
+`SCRIPTS_PENDING_ARCHIVE` 3 → 0, `RUNS_WITHOUT_PROVENANCE` 15 → 0. Five scripts
+moved onto `reviewed-mutation.ts`, the three name passes now share
+`scripts/name-fixes.ts`, and new shape 18 found seven parsed-but-undocumented
+flags — all seven documented, hatch list empty.
 
 **Found — two silent ones, both fixed.** A trap number written for CONTEXT in a
 test file's top header counts as a PIN, so `docs:claims` read 20 unpinned while
