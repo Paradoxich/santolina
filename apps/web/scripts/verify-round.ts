@@ -438,13 +438,54 @@ async function checkRoundCompleteness(label: string): Promise<Finding[]> {
   )
   for (const line of formatStatus(rows)) console.log(`  ${line}`)
 
-  return rows
-    .filter((r) => !r.complete)
-    .map((r) => ({
-      level: r.level,
-      check: `step did not run: ${r.step}`,
-      detail: `${r.done}/${r.total} of the round's plants have ${r.evidence}`,
-    }))
+  const findings: Finding[] = []
+
+  // A MANIFEST ID WITH NO LIVE ROW, which became possible the day
+  // scripts/remove-plant.ts shipped (2026-08-17).
+  //
+  // `roundStatus` counts against the rows it can still FETCH, so a deleted
+  // plant leaves the manifest naming 101 and every step reporting out of 100 —
+  // and each of those steps then reads MORE complete than it is. That is this
+  // file's own founding bug wearing different clothes: round 8 reported 7/7
+  // green while two passes had never run, because nothing compared the
+  // denominator to what was claimed.
+  //
+  // Reported here rather than prevented at the source: a manifest records what
+  // entered the catalog in that round and stays true after the row is gone, so
+  // rewriting it to match would be falsifying provenance to silence a check.
+  const missing = await missingFromManifest(manifest.seeded_ids)
+  if (missing.length)
+    findings.push({
+      level: 'FAIL',
+      check: 'manifest id with no catalog row',
+      detail:
+        `${missing.length} of ${manifest.seeded_ids.length} seeded id(s) no longer exist, so every step above is ` +
+        `measured against ${manifest.seeded_ids.length - missing.length} plants and reads more complete than it is: ` +
+        `${missing.join(', ')}. If this was a deliberate removal it is in reference/removals.json with its reason ` +
+        `and the complete row; if it is not in there, a plant was deleted by something that keeps no record.`,
+    })
+
+  return [
+    ...findings,
+    ...rows
+      .filter((r) => !r.complete)
+      .map((r) => ({
+        level: r.level,
+        check: `step did not run: ${r.step}`,
+        detail: `${r.done}/${r.total} of the round's plants have ${r.evidence}`,
+      })),
+  ]
+}
+
+/** Manifest ids with no row in `plants`. Paginated: a manifest can hold 100+. */
+async function missingFromManifest(ids: string[]): Promise<string[]> {
+  if (ids.length === 0) return []
+  const db = getSupabaseAdmin()
+  const live = await fetchAllRows<{ id: string }>((from, to) =>
+    db.from('plants').select('id').in('id', ids).order('id').range(from, to)
+  )
+  const seen = new Set(live.map((r) => r.id))
+  return ids.filter((id) => !seen.has(id))
 }
 
 /**
