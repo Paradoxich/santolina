@@ -1041,7 +1041,17 @@ export const RAW_BEGIN_RUN_ALLOWED: Record<string, string> = {}
  * that accepted a table name out of the column list would be re-conflating the
  * two things the evidence split exists to keep separate.
  */
-const NON_COLUMN_WRITE_SETS = new Set(['plant_combinations'])
+const NON_COLUMN_WRITE_SETS = new Set([
+  'plant_combinations',
+  // remove-plant deletes a row, so what it mutates is that row's EXISTENCE and
+  // there is no column to name. It is also the only write-set member in the
+  // repo that can have no witness at all: every other witness reads something
+  // the write left behind, and a deletion leaves nothing — not even
+  // `updated_at`, whose row is the row that is gone. It declares
+  // `{ kind: 'none' }` with that reason, and reference/removals.json holds the
+  // complete deleted rows as the evidence instead.
+  'plants',
+])
 
 /** Declared write-set entries that are real writes but not stamp columns. */
 const NON_STAMP_WRITES = new Set([
