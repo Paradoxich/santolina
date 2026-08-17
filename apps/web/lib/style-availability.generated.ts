@@ -8,14 +8,14 @@
 import type { StyleTag } from './style-tags'
 
 export const stylePlantCounts: Record<StyleTag, number> = {
-  cottage: 364,
+  cottage: 363,
   mediterranean: 195,
   wildflower: 131,
   modern: 115,
   lush: 118,
   classic: 120,
   japanese: 0,
-  chinese: 0,
+  chinese: 1,
   provence: 0,
   tropical: 0,
   desert: 0,

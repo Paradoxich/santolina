@@ -76,9 +76,10 @@ warns above that bar on every full run.
 
 | tag | plants | share |
 | --- | ---: | ---: |
-| cottage | 364 | 48.7% |
+| cottage | 363 | 48.5% |
 | mediterranean | 195 | 26.1% |
 | wildflower | 131 | 17.5% |
 | classic | 120 | 16.0% |
 | lush | 118 | 15.8% |
 | modern | 115 | 15.4% |
+| chinese | 1 | 0.1% |
