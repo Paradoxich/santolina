@@ -833,6 +833,35 @@ is unchanged.
 
 <!-- Newest first. Append with: scripts/log-db-session.ts --round <label> -->
 
+### 2026-08-17 — The reviewed-mutation primitive, and trap 32 (not a round)
+
+**Branch** `session/2026-08-17-reviewed-mutation`. Plan step C.
+
+**Changed.** Added `scripts/reviewed-mutation.ts`, the one home for the drift
+guard six scripts hand-rolled; it reports the editorial verdicts a write
+retires, observed by reading `is_curated` back. `curate-styles` writes through
+it, and its dated `STYLE_WRITES_BLOCKED_UNTIL_STEP_C` boolean became
+`assertReportsRetirement`, conditional on the writer rather than on a date.
+Shape 17 and `HAND_ROLLED_REVIEWED_MUTATION` hold the six for one-at-a-time
+migration. Added `pnpm ci:check`, which derives every job in
+`.github/workflows/ci.yml` and runs it, database jobs included.
+
+**Database.** One row: `1c7be629` (Abelia chinensis), `cottage` → `chinese`, a
+real `curate-styles --ids` run to exercise the write path. Uncurated, so no
+verdict was spent. Recorded in `runs/2026-08.jsonl`. It moved a count, which
+regenerated `catalog-state.md` and `style-availability.generated.ts`.
+
+**Found.** Trap 31 named `curate-greenery` as a second offender; the trigger
+(`20260729112046`) does not watch `is_greenery` or `foliage_color`, so it
+retires no verdict. Corrected, and trap 31 is now pinned. Trap 32 added, from
+the morning's `token-consumers.generated.ts` miss.
+
+**Not done.** The verdict-retirement path has never run live; proving it costs
+a real editorial verdict. Step D's first batch settles it (instruction on step
+D in the handoff).
+
+**Verified.** All 10 commands across all 3 CI jobs, via `pnpm ci:check`.
+
 ### 2026-08-17 — The style vocabulary goes 6 to 20 (not a round)
 
 **Branch** `session/2026-08-17-style-vocabulary`, merged as

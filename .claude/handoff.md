@@ -75,8 +75,11 @@ editorial approval on every row whose tags change, and nothing counts them until
 C. D before D2: the editorial pass judging rows whose tags are about to change
 pays for the same verdicts twice.
 
-1. **The reviewed-mutation primitive (C). Next, and it gates the two paid
-   passes.** Six scripts hand-roll the same drift guard: `from: string //
+1. **The reviewed-mutation primitive (C). LANDED** — see the session entry in
+   `docs/database-log.md`. `scripts/reviewed-mutation.ts` plus
+   `HAND_ROLLED_REVIEWED_MUTATION`, which holds the six below so they migrate one
+   at a time. The original spec is kept here because the ratchet's entries point
+   back at it. Six scripts hand-roll the same drift guard: `from: string //
 expected current value — drift guard` appears verbatim in
    `fix-round8-names.ts:59`, `fix-round11-names.ts:75`,
    `fix-round12-names.ts:64`, `fix-round12-tags.ts:79`, with `expect` in
@@ -102,12 +105,20 @@ expected current value — drift guard` appears verbatim in
    provenance-SHAPED**: have it take the run record as a parameter, so wiring
    provenance later is a call-site change and not a second refactor. That buys the
    don't-touch-them-twice benefit without doubling the PR.
-2. **The catalog-wide re-tag (D), once C has landed.**
-   `curate-styles.ts --all --why "…"`. **`curate-styles --all` does not run until
-   C lands, because it withdraws editorial approval on every row whose tags
-   change and nothing counts them until C** — that is trap 31 at roughly ten
-   times the scale of its 86 rows. `--new-only` would select nothing: 0 rows have
-   a null `style_checked_at`. 748 calls. Do not verify that `modern` rose —
+2. **The catalog-wide re-tag (D). C has landed, so this is unblocked.**
+   `curate-styles.ts --all --why "…"`. It now writes through
+   `scripts/reviewed-mutation.ts` and prints the rows whose editorial verdict it
+   retired, which is what C was gating on.
+   **START WITH A SMALL `--limit` BATCH THAT INCLUDES A CURATED ROW, and check
+   the printed `verdict_retired` against `pnpm catalog:status` before and
+   after.** The retirement path is unit-tested against a simulated trigger but
+   has never run against the real database — proving it live costs a real
+   verdict, so it was left for the run that is going to spend them anyway. The
+   failure mode is why this is worth two minutes: a wrong count prints as a
+   confident number, and an under-count is trap 31 wearing the fix's clothes.
+   Once it matches once, the path is proven and this stops being a question.
+   `--new-only` would select nothing: 0 rows have a null `style_checked_at`. 748
+   calls. Do not verify that `modern` rose —
    `prairie` is defined to take the grasses-and-late-perennials look away from
    it, so a correct run may lower it.
    **Nor verify against the 1.39 mean.** That instrument was right for six styles
