@@ -54,7 +54,16 @@ export function AddNoteModal({
   const { toast } = useToast()
 
   const [plants, setPlants] = useState<GrowingPlant[]>([])
-  const [isLoadingPlants, setIsLoadingPlants] = useState(false)
+  /**
+   * The outcome of the scope load, not just whether it is in flight. An empty
+   * `plants` means two different things — you are growing nothing, or the list
+   * never arrived — and the modal used to assert the first one for both, telling
+   * someone with five plants that they had none while the failure sat directly
+   * below it. Only `ready` licenses that sentence.
+   */
+  const [scopeLoad, setScopeLoad] = useState<
+    'idle' | 'loading' | 'ready' | 'failed'
+  >('idle')
   /** null means the note is about the garden itself, not any one plant. */
   const [selectedPlantId, setSelectedPlantId] = useState<string | null>(null)
 
@@ -71,7 +80,7 @@ export function AddNoteModal({
   useEffect(() => {
     if (!isOpen) return
     let cancelled = false
-    setIsLoadingPlants(true)
+    setScopeLoad('loading')
     setError(null)
     listPalette({ status: 'planted' })
       .then((rows) => {
@@ -82,6 +91,7 @@ export function AddNoteModal({
           name: row.plant.common_name,
         }))
         setPlants(growing)
+        setScopeLoad('ready')
         // Falls back to the garden when the page's plant isn't growing (a
         // removed plant's page still renders its past story).
         setSelectedPlantId(
@@ -91,13 +101,12 @@ export function AddNoteModal({
         )
       })
       .catch((err) => {
-        if (!cancelled)
-          setError(
-            failureMessage(err, 'Could not load your plants. Try again.')
-          )
-      })
-      .finally(() => {
-        if (!cancelled) setIsLoadingPlants(false)
+        if (cancelled) return
+        setScopeLoad('failed')
+        // A garden note needs no plant list, so the composer stays usable; what
+        // is lost is the choice of plant, and the message says so.
+        setSelectedPlantId(null)
+        setError(failureMessage(err, 'Could not load your plants. Try again.'))
       })
     return () => {
       cancelled = true
@@ -239,7 +248,7 @@ export function AddNoteModal({
             trigger={
               <>
                 <span className="flex-1 truncate text-body text-primary">
-                  {isLoadingPlants
+                  {scopeLoad === 'loading'
                     ? 'Loading…'
                     : (selectedPlant?.name ?? 'Your garden')}
                 </span>
@@ -262,7 +271,10 @@ export function AddNoteModal({
               </>
             }
           />
-          {!isLoadingPlants && plants.length === 0 && (
+          {/* Only when the list actually arrived and was empty. On a failure the
+              error line above already says what happened, and a second line
+              guessing why would be the bug this replaced. */}
+          {scopeLoad === 'ready' && plants.length === 0 && (
             <p className="text-body-small text-muted">
               Nothing growing yet, so this note goes to your garden.
             </p>
