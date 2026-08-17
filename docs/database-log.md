@@ -67,6 +67,40 @@ The numbers **in this file are different and must stay written down**: a dated s
 
     The session entries below are exempt and the scan stops at the `## Sessions` heading, which is the tense half of this rule made structural: a dated entry records an event.
 
+### 2026-08-17 — Round 13
+
+**Branch** `session/2026-08-17-round-13`. Seeded 33 plant(s) on 2026-08-17.
+
+Catalog now **780 species / 1863 combinations** (26 with `is_curated = true`).
+
+Pipeline steps for this round:
+
+```
+✗ curate-plants                   0/33   ai_drafted_at, style_checked_at, greenery_checked_at all NOT NULL
+✗ curate-common-names             0/33   common_name_checked_at NOT NULL
+✗ curate-combinations             0/33   appears in plant_combinations
+✗ regenerate-native-region        0/32   native_region non-empty (hybrids excluded)
+✗ cross-check-plants              0/33   botanical_checked_at NOT NULL
+✗ cross-check-native-to           0/33   native_checked_at NOT NULL
+✗ cross-check-native-region       0/33   native_region_checked_at NOT NULL
+✗ curate-seasonal-care            0/33   seasonal_care NOT NULL
+⚠ pick-plant-images               0/33   image_checked_at NOT NULL
+✓ pick-plant-images --verify       0/0   image_verified_at NOT NULL (medium-confidence heroes only)
+✗ curate-editorial                0/33   editorial_checked_at NOT NULL
+```
+
+⚠️ **10 step(s) did not complete:** curate-plants, curate-common-names, curate-combinations, regenerate-native-region, cross-check-plants, cross-check-native-to, cross-check-native-region, curate-seasonal-care, pick-plant-images, curate-editorial. Say why here, or finish them.
+
+**In flight.** The pipeline has not run yet — the step table above is the state at seed time, not a set of failures. This entry is rewritten at close.
+
+**Theme, and the first one chosen by a committed measurement.** The style vocabulary went from 6 to 19 on 2026-08-17 (`6382866`), adding a place axis, and `pnpm probe:gap` tested the four thinnest new styles against the catalog: japanese 47% held, chinese 31% (both survive round 9's 70% kill rule), moon 28% and gothic 30% — both **unfillable**, because their signature planting is cultivar selections of species already held. That is the finding a flat tag count inverts: gothic is the emptiest style in the vocabulary and cannot be moved by any species-level round. Seeded 33 of the 39 absentees; the six cuts are in `seed-round13.ts`'s header.
+
+**What bit us:** trap 35 — `curate-common-names --apply` died having written 0 of 33 rows, because `reviewed-mutation` rejected the stamp-only intent a `keep` verdict produces. First real `--apply` for that step; six prior dry runs could not have caught it, since `validate()` lives inside the `--apply` gate. Fixed and pinned in the same commit.
+
+**Deliberately not done:** `Citrus trifoliata` cut on size and thorns in a small garden, **not** on its North American invasive status — ruling that way would bind round 12's `Lythrum` and `Iris pseudacorus` calls retroactively, and whether a Euro/Med-first catalog should be governed by US invasive status is Ana's, still open.
+
+---
+
 15. **A decision the round raises is a decision the round asks. Do not close a round with an open question parked on a person.** Ana's rule, 2026-08-17, and it applies hardest to the small items — a one-line ruling that would cost her a minute becomes a permanent fixture the moment it is written down instead of asked. Prompt her while the round is open. Closing on schedule and leaving the maintenance for a future session is how a round looks finished and is not.
 
     **What this cost.** A paragraph beginning "**Waiting on Ana:**" was copied WORD FOR WORD through six consecutive handoffs, `4006b7e` → `a5301e2`. Read back to her on 2026-08-17, **three of its six items were never hers**: the `Cenolophium` region correction is a fact question answerable against WCVP, and the rounds 1-6 editorial pass and the `modern` re-tag are both agent work under standing rule 6 — her own 2026-07-28 ruling, recorded in this file, contradicted by the list four sessions running. A fourth item described two round-12 rows as needing a photograph when both already had one; the hold was that the vision pass could not confirm the species from the photo it had. Nobody re-derived ownership because the paragraph read as settled: it had been there last time. **A list of other people's obligations is the one kind of backlog nobody audits**, because every item on it looks like someone else's problem.
@@ -287,7 +321,7 @@ The table below is the only index by shape, and `pnpm docs:claims` holds it to t
 
 | family | what it is                                                        | entries                                              |
 | ------ | ----------------------------------------------------------------- | ---------------------------------------------------- |
-| **A**  | a failure or narrower answer comes back shaped like a real result | 1, 1b, 10, 11, 15, 18, 19, 20, 23, 34                |
+| **A**  | a failure or narrower answer comes back shaped like a real result | 1, 1b, 10, 11, 15, 18, 19, 20, 23, 34, 35            |
 | **B**  | the record disagrees with what actually happened                  | 2, 4, 12, 13, 14, 16, 17, 24, 25, 26, 28, 29, 31, 33 |
 | **C**  | one fact with two homes, and only one got updated                 | 3, 5, 22, 32                                         |
 | **D**  | facts about the outside world you cannot design away              | 6, 7, 8, 9, 21, 27                                   |
@@ -391,6 +425,20 @@ The push that applied `20260817200000_common_name_checked_at` emitted an ENOENT 
 **Pinned by `apps/web/lib/migration-drift.test.ts`**, whose `trap 14` block is the same witness from the other side: a committed migration with no remote row is reported, and its own case asserts it "sorts ahead of every other kind, because it is the dangerous one". No new test was needed and none was written — the check that closes this trap already existed and is already in the rule.
 
 **A second cost, unrelated to the output.** A fresh `git worktree` is **not linked to the Supabase project**: `supabase/.temp/` is gitignored, so `db push` fails with `Cannot find project ref. Have you run supabase link?` until that directory is copied from the main checkout. Nothing about the message suggests the worktree is the cause.
+
+#### 35. A dry run that never reaches the write path is not a rehearsal — ADDED 2026-08-17
+
+`curate-common-names` ran with `--apply` for the first time in round 13 and died having written **0 of 33 rows**: `reviewed-mutation: Ziziphus jujuba writes no column`. Every `keep` verdict — the pass judging a name and agreeing with it — builds an intent with an empty `to` and one `common_name_checked_at` stamp, and `validate()` rejected the empty `to` outright.
+
+**The guard already knew better ten lines below.** The from-equals-to check distinguishes "this entry does nothing" from "a judging pass agreed, and still has a stamp to write" by asking whether a stamp is present, and says so in a comment. The zero-column check predated that reasoning and never received it, so it refused precisely the case its neighbour was written to allow. A stamp-only intent is the normal output of any guard, which is why this was never a niche path.
+
+**Why six clean dry runs proved nothing.** The write path is gated behind `--apply`, and `validate()` lives inside it. The six rows dry-run across two batches before this exercised the model, the parsing and the collision check, and not one line of the code that writes. **A dry run verifies the half of a script it reaches; state which half that is before treating it as a rehearsal.** Family A because a rehearsal that skips the write path returns the same green output as one that does not.
+
+Cheap here — the run recorded `failed, 0 rows` and was atomic, so the cost was one wasted pass, not a half-written batch.
+
+**A second finding from the same run, not a defect.** Re-running the identical pass produced **15 renames rather than 14**, and `Camellia sinensis` came back "Tea camellia" where the first run said "Tea plant". Both are correct; the pass is not deterministic about which correct name it picks, so **read its output before `--apply` and expect the applied set to differ from the one you read**. That is a property of the step, not a bug to fix.
+
+**Pinned by `apps/web/scripts/reviewed-mutation.test.ts`**, `a stamp-only intent (trap 35)`: a stamp-only intent is accepted, its stamp actually lands on the row, and an intent with neither a column nor a stamp is still refused. All three fail against the pre-fix `validate()`.
 
 ---
 

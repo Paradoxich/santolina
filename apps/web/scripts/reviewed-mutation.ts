@@ -227,8 +227,24 @@ function validate(intent: MutationIntent): void {
         `why a value reads as it does.`
     )
   const columns = Object.keys(intent.to)
-  if (columns.length === 0)
-    throw new Error(`reviewed-mutation: ${intent.label} writes no column`)
+  // A STAMP-ONLY INTENT IS LEGITIMATE, and this check used to deny it (trap 35,
+  // round 13). A judging pass that examines a row and AGREES with the stored
+  // value writes no column and one `*_checked_at` stamp — that is the whole
+  // shape of a guard, and `curate-common-names`' `keep` verdict is exactly it.
+  //
+  // The rule the check is really for is "an intent that does nothing", and ten
+  // lines below, the from-equals-to check already tells those apart the right
+  // way: by whether a stamp is written. This one predated that reasoning and
+  // never got it, so it rejected the case its neighbour was written to allow.
+  //
+  // It survived because a dry run never reaches here — the write path is gated
+  // behind --apply, so six dry runs across two batches exercised none of it.
+  const hasStampsToWrite = Object.keys(intent.alsoWrite ?? {}).length > 0
+  if (columns.length === 0 && !hasStampsToWrite)
+    throw new Error(
+      `reviewed-mutation: ${intent.label} writes no column and no stamp, so ` +
+        `this entry does nothing.`
+    )
   for (const column of columns) {
     if (!(column in intent.from))
       throw new Error(

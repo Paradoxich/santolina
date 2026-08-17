@@ -1,5 +1,7 @@
 /**
  * Pins TRAP 31 — a write that retires an editorial verdict and cannot say so.
+ * Pins TRAP 35 — a stamp-only intent rejected as writing nothing (see the
+ * `a stamp-only intent (trap 35)` block at the foot of this file).
  *
  * THE INCIDENT. 2026-08-15, `curate-styles --round 9` and `--round 10` re-tagged
  * 86 rows. `invalidate_editorial_verdict` cleared `is_curated` on every one of
@@ -319,5 +321,72 @@ describe('validation', () => {
         intent({ from: { style_tags: ['x'] }, to: { style_tags: ['x'] } }),
       ])
     ).rejects.toThrow(/does nothing/)
+  })
+})
+
+/**
+ * TRAP 35 — a stamp-only intent was rejected as writing nothing.
+ *
+ * Round 13, curate-common-names' first ever --apply run: every `keep` verdict
+ * builds an intent with an empty `to` and one common_name_checked_at stamp,
+ * which is what a guard that agrees with the stored value does. `validate`
+ * threw on the empty `to` before reaching the from-equals-to check ten lines
+ * below, which already told "does nothing" from "agreed, and stamped" the right
+ * way — by the presence of a stamp. The zero-column check predated that
+ * reasoning and never got it.
+ *
+ * The pass died having written 0 of 33 rows. It survived review because a DRY
+ * RUN NEVER REACHES validate: the write path is gated behind --apply, so six
+ * dry runs across two batches exercised none of this.
+ */
+describe('a stamp-only intent (trap 35)', () => {
+  const stampOnly = () =>
+    intent({
+      from: {},
+      to: {},
+      alsoWrite: { style_tags_checked_at: '2026-08-17T00:00:00.000Z' },
+      why: 'judged and agreed with the stored value',
+    })
+
+  it('is accepted — agreeing with the row is a real result', async () => {
+    const db = fakeDb([
+      { id: 'p1', is_curated: false, style_tags: ['cottage'] },
+    ])
+    const session = openReviewedMutation({
+      db,
+      table: 'plants',
+      onCurated: 'skip',
+    })
+    await expect(session.apply([stampOnly()])).resolves.toBeDefined()
+  })
+
+  it('writes the stamp rather than silently skipping the row', async () => {
+    const db = fakeDb([
+      { id: 'p1', is_curated: false, style_tags: ['cottage'] },
+    ])
+    const session = openReviewedMutation({
+      db,
+      table: 'plants',
+      onCurated: 'skip',
+    })
+    await session.apply([stampOnly()])
+    expect(db.rows.get('p1')!.style_tags_checked_at).toBe(
+      '2026-08-17T00:00:00.000Z'
+    )
+  })
+
+  it('still refuses an intent with neither a column nor a stamp', async () => {
+    // The rule the check was always for, kept intact.
+    const db = fakeDb([
+      { id: 'p1', is_curated: false, style_tags: ['cottage'] },
+    ])
+    const session = openReviewedMutation({
+      db,
+      table: 'plants',
+      onCurated: 'skip',
+    })
+    await expect(
+      session.apply([intent({ from: {}, to: {}, alsoWrite: {} })])
+    ).rejects.toThrow(/no column and no stamp/)
   })
 })

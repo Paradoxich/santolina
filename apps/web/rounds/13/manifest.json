@@ -1,0 +1,208 @@
+{
+  "label": "13",
+  "started_at": "2026-08-17T21:17:07.343Z",
+  "finished_at": "2026-08-17T21:18:15.188Z",
+  "seeded_count": 33,
+  "seeded_ids": [
+    "307023e5-5393-4913-b1b1-c2578d690f33",
+    "2a36422e-8593-4bf6-92e2-1026c6519af8",
+    "21a39bde-65e8-467b-8fcf-7422f2ad2d41",
+    "ea57fba0-72ff-4abe-89e8-e419832a5427",
+    "9ae72a23-e0df-4a5a-997f-7262f91d540e",
+    "7c8057ee-389f-4743-99b5-8ac320ecafaf",
+    "2259bfa8-8411-4761-8664-e40952586b1b",
+    "9e2f9b8e-0977-4158-9784-29346d964935",
+    "aa2bea7e-7024-4cda-a741-92f87c060566",
+    "c34e4c0f-be1e-4e60-aab5-0c8c1a504981",
+    "77433b7d-685a-4b44-a464-b8a737a341ab",
+    "d2be873f-6e93-4949-865d-a544006c0795",
+    "1f130d47-ce2e-4ee3-a7e0-e4ceab7214a3",
+    "443bdbc1-9ead-43de-9394-d840309a3205",
+    "e050c273-ac99-409f-b9cc-ee93d28edd99",
+    "a5930225-4541-44f8-bfae-e78132150055",
+    "2a275dc9-0aba-4fb7-8d6b-99500e08edb1",
+    "44ad5f45-8558-418e-8a4c-97a5b09ad80b",
+    "9cd2d197-618f-4d18-b3ab-a141725fe117",
+    "16c89345-ae72-4c54-87d8-764a8d0e7395",
+    "b2bb497b-c4d3-4f84-9777-9433e8051b00",
+    "b736435d-711b-4db0-98d7-c8aaa4c88506",
+    "5d6d77e2-72d1-4638-843f-deee695927b8",
+    "2fefdeca-b8cf-47c8-966c-e8564cc04dc3",
+    "88c85b6a-8488-45a5-a58a-183ddbbf138d",
+    "eeec436e-7574-45de-ad81-595498fba81f",
+    "859a5d2a-6d68-4fdc-b940-242273c04197",
+    "c32aa5c5-040f-4fac-9d16-7eb74a509d9d",
+    "a3479005-1bd8-4da8-87cb-138beca273d1",
+    "ccfb73da-99f9-4526-9491-aae8c043a480",
+    "c4e19666-af4f-4f2f-b9b8-db825e7cf9fb",
+    "0acb4592-697f-48c2-a3b6-7886bd559f35",
+    "c0866bf3-557d-4602-aae3-2ae5ce3f5e66"
+  ],
+  "seeded": [
+    {
+      "id": "307023e5-5393-4913-b1b1-c2578d690f33",
+      "source_species_id": 127305,
+      "common_name": "Black pine"
+    },
+    {
+      "id": "2a36422e-8593-4bf6-92e2-1026c6519af8",
+      "source_species_id": 127338,
+      "common_name": "Five-needle pine"
+    },
+    {
+      "id": "21a39bde-65e8-467b-8fcf-7422f2ad2d41",
+      "source_species_id": 127232,
+      "common_name": "Japanese pine"
+    },
+    {
+      "id": "ea57fba0-72ff-4abe-89e8-e419832a5427",
+      "source_species_id": 167868,
+      "common_name": "Japanese red-cedar"
+    },
+    {
+      "id": "9ae72a23-e0df-4a5a-997f-7262f91d540e",
+      "source_species_id": 159797,
+      "common_name": "Hinoki false cypress"
+    },
+    {
+      "id": "7c8057ee-389f-4743-99b5-8ac320ecafaf",
+      "source_species_id": 131750,
+      "common_name": "Umbrella-pine"
+    },
+    {
+      "id": "2259bfa8-8411-4761-8664-e40952586b1b",
+      "source_species_id": 128278,
+      "common_name": "Big-leaf podocarp"
+    },
+    {
+      "id": "9e2f9b8e-0977-4158-9784-29346d964935",
+      "source_species_id": 106087,
+      "common_name": "Satsuki azalea"
+    },
+    {
+      "id": "aa2bea7e-7024-4cda-a741-92f87c060566",
+      "source_species_id": 457467,
+      "common_name": "Rhododendron kiusianum"
+    },
+    {
+      "id": "c34e4c0f-be1e-4e60-aab5-0c8c1a504981",
+      "source_species_id": 156205,
+      "common_name": "Sasanqua camellia"
+    },
+    {
+      "id": "77433b7d-685a-4b44-a464-b8a737a341ab",
+      "source_species_id": 180121,
+      "common_name": "Enkianthus campanulatus"
+    },
+    {
+      "id": "d2be873f-6e93-4949-865d-a544006c0795",
+      "source_species_id": 263531,
+      "common_name": "Japanese cherry"
+    },
+    {
+      "id": "1f130d47-ce2e-4ee3-a7e0-e4ceab7214a3",
+      "source_species_id": 266588,
+      "common_name": "Fuji cherry"
+    },
+    {
+      "id": "443bdbc1-9ead-43de-9394-d840309a3205",
+      "source_species_id": 181863,
+      "common_name": "Dwarf lilyturf"
+    },
+    {
+      "id": "e050c273-ac99-409f-b9cc-ee93d28edd99",
+      "source_species_id": 29670,
+      "common_name": "Leopardplant"
+    },
+    {
+      "id": "a5930225-4541-44f8-bfae-e78132150055",
+      "source_species_id": 198037,
+      "common_name": "Rohdea japonica"
+    },
+    {
+      "id": "2a275dc9-0aba-4fb7-8d6b-99500e08edb1",
+      "source_species_id": 296259,
+      "common_name": "Paeonia suffruticosa"
+    },
+    {
+      "id": "44ad5f45-8558-418e-8a4c-97a5b09ad80b",
+      "source_species_id": 266561,
+      "common_name": "Japanese apricot"
+    },
+    {
+      "id": "9cd2d197-618f-4d18-b3ab-a141725fe117",
+      "source_species_id": 217360,
+      "common_name": "Sweet osmanthus"
+    },
+    {
+      "id": "16c89345-ae72-4c54-87d8-764a8d0e7395",
+      "source_species_id": 59004,
+      "common_name": "Lilytree"
+    },
+    {
+      "id": "b2bb497b-c4d3-4f84-9777-9433e8051b00",
+      "source_species_id": 59054,
+      "common_name": "Purple magnolia"
+    },
+    {
+      "id": "b736435d-711b-4db0-98d7-c8aaa4c88506",
+      "source_species_id": 200896,
+      "common_name": "Chrysanthemum × morifolium"
+    },
+    {
+      "id": "5d6d77e2-72d1-4638-843f-deee695927b8",
+      "source_species_id": 228928,
+      "common_name": "Umbrella bamboo"
+    },
+    {
+      "id": "2fefdeca-b8cf-47c8-966c-e8564cc04dc3",
+      "source_species_id": 98413,
+      "common_name": "Crepe-myrtle"
+    },
+    {
+      "id": "88c85b6a-8488-45a5-a58a-183ddbbf138d",
+      "source_species_id": 258659,
+      "common_name": "Cape jasmine"
+    },
+    {
+      "id": "eeec436e-7574-45de-ad81-595498fba81f",
+      "source_species_id": 156210,
+      "common_name": "Black tea"
+    },
+    {
+      "id": "859a5d2a-6d68-4fdc-b940-242273c04197",
+      "source_species_id": 216192,
+      "common_name": "Arabian jasmine"
+    },
+    {
+      "id": "c32aa5c5-040f-4fac-9d16-7eb74a509d9d",
+      "source_species_id": 194770,
+      "common_name": "Rose-of-sharon"
+    },
+    {
+      "id": "a3479005-1bd8-4da8-87cb-138beca273d1",
+      "source_species_id": 210402,
+      "common_name": "Shenan"
+    },
+    {
+      "id": "ccfb73da-99f9-4526-9491-aae8c043a480",
+      "source_species_id": 42107,
+      "common_name": "Chinese redbud"
+    },
+    {
+      "id": "c4e19666-af4f-4f2f-b9b8-db825e7cf9fb",
+      "source_species_id": 42193,
+      "common_name": "Japanese pagoda-tree"
+    },
+    {
+      "id": "0acb4592-697f-48c2-a3b6-7886bd559f35",
+      "source_species_id": 113259,
+      "common_name": "Chinese jujube"
+    },
+    {
+      "id": "c0866bf3-557d-4602-aae3-2ae5ce3f5e66",
+      "source_species_id": 297007,
+      "common_name": "Malus spectabilis"
+    }
+  ]
+}
