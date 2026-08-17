@@ -178,7 +178,13 @@ ${JSON.stringify(batch, null, 2)}
 
 Respond with a JSON array, one object per plant, in the same order:
 [{"scientific_name": "...", "verdict": "keep" | "rename", "to": "...", "why": "one short clause"}]
-Include "to" only when verdict is "rename".`
+Include "to" only when verdict is "rename".
+
+"why" is read later by a person deciding whether the change was right, so give the horticultural reason, not the input that flagged it. Never restate a field name from the batch above.
+  bad:  "looks_like_the_binomial is true"
+  good: "Trefle had no English name; this is what nurseries sell it as"
+  good: "bare genus name, and the catalog also holds L. stoechas"
+  good: "Cowflock is a flora name nobody uses for it"`
 }
 
 export function parseVerdicts(raw: string): NameVerdict[] {
