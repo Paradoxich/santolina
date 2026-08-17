@@ -65,26 +65,63 @@ export function trapNumbers(logSrc: string): string[] {
 }
 
 /**
- * Trap numbers named in the LEADING block comment of any given test source.
+ * Trap numbers a test file's LEADING block comment CLAIMS TO PIN.
  *
  * A file whose first non-whitespace is not `/**`, or whose block comment never
  * closes, contributes nothing — it has no header to make a claim in.
+ *
+ * A MENTION IS NOT A PIN, and the difference is the whole of this function.
+ * Until 2026-08-17 any `trap N` anywhere in a header counted, so a header
+ * explaining its reasoning — "this is trap 4's shape", "the same argument that
+ * produced species-resolver.ts (trap 7)" — silently CLOSED a trap nothing
+ * tested. That is the worst direction for this check to be wrong in: an
+ * untested trap reads as covered and leaves the backlog. It fired three times
+ * in one session, once in the very file written to stop it.
+ *
+ * So the citation must say so. The marker word `pin`/`pins`/`pinned` has to
+ * appear in the SAME SENTENCE as the number, which is what the convention
+ * already looked like — `Pins TRAP 32 — …`, `Trap 24, pinned: …`,
+ * `Traps 7 and 27, pinned: …`. Sentence-scoped rather than header-scoped for
+ * the obvious reason: a header that pins trap 31 and mentions trap 4 in its
+ * third paragraph must pin only 31.
  */
 export function pinnedTraps(testSources: string[]): Set<string> {
   const pinned = new Set<string>()
   for (const src of testSources) {
     const end = src.indexOf('*/')
     if (!src.trimStart().startsWith('/**') || end === -1) continue
-    for (const m of src.slice(0, end).matchAll(TRAP_CITATION)) {
-      // A LIST cites every number in it. "Traps 7 and 27" pins both, which the
-      // single-number rule this replaces did not — it pinned 7 and silently
-      // dropped 27, so a trap with a test could sit in TRAPS_NOT_PINNED with an
-      // invented reason. species-resolver.test.ts is the header that says so.
-      for (const n of m[1]!.matchAll(/\d+b?/g)) pinned.add(n[0])
+    for (const sentence of splitSentences(src.slice(0, end))) {
+      if (!PIN_MARKER.test(sentence)) continue
+      for (const m of sentence.matchAll(TRAP_CITATION)) {
+        // A LIST cites every number in it. "Traps 7 and 27" pins both, which
+        // the single-number rule this replaces did not — it pinned 7 and
+        // dropped 27, so a trap with a real test could sit in TRAPS_NOT_PINNED
+        // behind an invented reason. species-resolver.test.ts is that header.
+        for (const n of m[1]!.matchAll(/\d+b?/g)) pinned.add(n[0])
+      }
     }
   }
   return pinned
 }
+
+/**
+ * Sentences of a block comment, with the comment furniture stripped.
+ *
+ * Split on `.`, `?`, `!` and on a BLANK COMMENT LINE — a paragraph break ends a
+ * sentence even when a heading like "WHAT THIS ASSERTS" carries no full stop,
+ * and without it one unpunctuated heading would join two paragraphs and leak a
+ * marker across them. Em dashes and colons deliberately do NOT split: `Pins
+ * TRAP 32 — a generated file is invisible` is one claim.
+ */
+function splitSentences(header: string): string[] {
+  return header
+    .replace(/^[ \t]*\*[ \t]?/gm, '')
+    .split(/(?<=[.?!])\s+|\n[ \t]*\n/)
+    .filter((s) => s.trim())
+}
+
+/** `pins`, `pinned`, `Pin` — the word that turns a mention into a claim. */
+const PIN_MARKER = /\bpin(s|ned|ning)?\b/i
 
 /**
  * `trap 24`, `traps 3, 24 and 26`, `traps 7 and 27` — the citation and the

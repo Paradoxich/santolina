@@ -49,6 +49,8 @@ The numbers **in this file are different and must stay written down**: a dated s
 
 11. **Every migration replays on the local Supabase stack before it touches production, and `supabase db push` is the only thing that touches prod schema.** Agreed with Ana 2026-07-30; the stack exists since 2026-08-13 (`supabase/config.toml` is committed). Bring it up with `supabase start -x studio,realtime,storage-api,imgproxy,edge-runtime,inbucket,vector,logflare` (≈2 GB, Postgres + auth + PostgREST; Docker's disk allowance is capped at 8 GB so the VM cannot balloon). A wrong RLS policy fails silently rather than erroring, which is why replay-first is the rule (the bare-`name` → `gardens.name` storage bug is the class this catches; trap 18 is the same shape from the reading side) — and the very first replay caught both a false trap premise (16) and grants that existed nowhere in the repo (25). Order for a migration session: laptop `pnpm db:backup` → replay locally (`supabase migration up`; a fresh stack replays everything) → rehearse `pg_restore --data-only` from a `db-backups` dump (rule 10; rehearsed 2026-08-13, every table's count matched live — the only errors are the auth/storage services' own migration bookkeeping tables, expected) → `supabase db push --db-url "$SUPABASE_DB_URL"` → `pnpm migrations:check`.
 
+    **That last step is not bookkeeping, and 2026-08-17 is why it is written down (trap 34).** `supabase db push` printed a certificate ENOENT and `main worker has been destroyed`, then ended with `Finished supabase db push.` — and it HAD applied. The final line is not a status, so a push that genuinely failed ends the same way. `migrations:check` reads the remote ledger and is the only thing in the sequence that answers the question the push was asked. Run it even when the output looks clean; **especially** then. And note a fresh worktree is not linked at all — `supabase/.temp/` is gitignored, so `db push` fails with "Cannot find project ref" until it is copied from the main checkout.
+
     The queue this rule used to hold was **cleared 2026-08-13**: the `plant_combinations` timestamp needed no migration (trap 16, corrected — the column already existed) and the reviewed-and-kept stamp landed as migration `20260813110500`. Details in that date's session entry. A newly deferred schema change goes back on a list HERE, not only where the blocked work is described — a deferral recorded only at the blocked site is invisible at the moment the block lifts (trap 17).
 
 12. **Every remediation carries a verification predicate, not just a command.** A trap that says "run `curate-styles --round 9`" tells you what to type; it does not tell you how to know it worked. Write both: the command, and the query whose result changes when the repair lands — the shape the 2026-08-15 repair used, "fixed when `style_checked_at = ai_drafted_at AND style_tags = '{}'` returns 0". Remediations are the most dangerous claims in this file. They are never falsified until the day someone follows one, they are trusted because they are in the traps file, and trap 26's was one session away from being run as written.
@@ -285,7 +287,7 @@ The table below is the only index by shape, and `pnpm docs:claims` holds it to t
 
 | family | what it is                                                        | entries                                              |
 | ------ | ----------------------------------------------------------------- | ---------------------------------------------------- |
-| **A**  | a failure or narrower answer comes back shaped like a real result | 1, 1b, 10, 11, 15, 18, 19, 20, 23                    |
+| **A**  | a failure or narrower answer comes back shaped like a real result | 1, 1b, 10, 11, 15, 18, 19, 20, 23, 34                |
 | **B**  | the record disagrees with what actually happened                  | 2, 4, 12, 13, 14, 16, 17, 24, 25, 26, 28, 29, 31, 33 |
 | **C**  | one fact with two homes, and only one got updated                 | 3, 5, 22, 32                                         |
 | **D**  | facts about the outside world you cannot design away              | 6, 7, 8, 9, 21, 27                                   |
@@ -379,6 +381,16 @@ The `native_to` vs `native_region` check took three attempts; the first two each
 **What shipped:** the model translates only, code makes every severity call, and `contradicts` fires only where fuzziness cannot explain the gap — zero shared regions, or validated-empty tags against a phrase claiming a range. Partial gaps are a ranked list, not a verdict.
 
 **Two rules.** Give the model the translation and keep the comparison. And **a mechanical comparison is only as exact as its fuzzier side.** Both attempts were caught by spot-checking four rows against the database mid-run, which is the only reason ~1300 Claude calls went unpaid: **read the first twenty rows of a long run before letting it finish.**
+
+#### 34. `supabase db push` prints "Finished" over its own errors — ADDED 2026-08-17
+
+The push that applied `20260817200000_common_name_checked_at` emitted an ENOENT for a certificate file it needed — `Failed to read certificate file '/workspace/supabase/.temp/pgdelta/pgdelta-target-ca.crt'`, twice, plus `main worker has been destroyed` — and then printed **`Finished supabase db push.`** as its last line. It had in fact applied. **The last line is not a status**, so a push that genuinely failed can end the same way, and it ends that way in the reassuring direction.
+
+**The verification predicate, and it is already the last step of standing rule 11:** `pnpm migrations:check` — it reads the remote ledger and reports a committed migration that was never applied as `not-applied`, sorted ahead of every other finding. Rule 11 has always ended with it; what was missing is the reason, which is now written beside it. Do not read the CLI's own summary as the answer. Belongs to family A because the failure mode is a bad outcome wearing a good one's output.
+
+**Pinned by `apps/web/lib/migration-drift.test.ts`**, whose `trap 14` block is the same witness from the other side: a committed migration with no remote row is reported, and its own case asserts it "sorts ahead of every other kind, because it is the dangerous one". No new test was needed and none was written — the check that closes this trap already existed and is already in the rule.
+
+**A second cost, unrelated to the output.** A fresh `git worktree` is **not linked to the Supabase project**: `supabase/.temp/` is gitignored, so `db push` fails with `Cannot find project ref. Have you run supabase link?` until that directory is copied from the main checkout. Nothing about the message suggests the worktree is the cause.
 
 ---
 

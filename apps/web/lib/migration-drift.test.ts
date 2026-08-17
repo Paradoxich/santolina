@@ -1,12 +1,26 @@
 /**
- * Migration drift comparison. Pins TRAP 14 and TRAP 33.
+ * Migration drift comparison. Pins TRAP 13, TRAP 14, TRAP 33 and TRAP 34.
  *
- * Both numbers are named HERE, in the file's top header, because that is the
- * only block `check-doc-claims.ts` and `check-pipeline-invariants.ts` read — a
- * trap named in a `describe` block's own header counts for nothing. The
+ * TRAP 34 shares TRAP 14's witness and needed no new case, which is the honest
+ * reason it is listed rather than hatched: `supabase db push` can print an
+ * error and `Finished` in one breath, so the CLI's last line is not a status —
+ * and the thing that IS one is the ledger comparison the `trap 14` block below
+ * already asserts, down to sorting a never-applied migration ahead of every
+ * other finding.
+ *
+ * All three numbers are named HERE, in the file's top header, because that is
+ * the only block `check-doc-claims.ts` and `check-pipeline-invariants.ts` read
+ * — a trap named in a `describe` block's own header counts for nothing. The
  * converse bit them the same day: a trap number written for CONTEXT in a top
- * header counts as a pin, and moved the unpinned total without anything
- * failing. Name a trap up here when this file pins it, and nowhere else.
+ * header counted as a pin, and moved the unpinned total without anything
+ * failing. **That half is fixed** — since 2026-08-17 the number must sit in the
+ * same sentence as the word `pins`/`pinned`, so a mention is no longer a claim.
+ *
+ * TRAP 13 was pinned by accident under the old rule and is named deliberately
+ * now: the phrase "all three trap-13 tests" below is a note about mutation
+ * testing, and it happened to close the trap. Its `describe` block is real and
+ * always was, which is why this is a correction to the header rather than to
+ * the coverage.
  *
  * TRAP 33 is the content half, and its cases are at the bottom of this file.
  *

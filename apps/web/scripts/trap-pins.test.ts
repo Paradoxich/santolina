@@ -17,13 +17,17 @@
  * rather than reimplementing it. Against the pre-fix code `trap-pins.ts` does
  * not exist and this file does not compile.
  *
- * THE HEADER RULE IS WHERE THE SUBTLETY LIVES, so it is asserted in both
- * directions. A number named in a test file's leading block comment is a pin; a
- * number named inside a case body is not, however useful the cross-reference.
- * `wcvp-lookup.test.ts` is the live example of the second, and the case below
- * reads it from disk rather than naming its number here — because writing the
- * number in THIS header would pin it, which is the same defect one level up.
- * It is also how this file first ran: the count came out 20 against 21.
+ * THE HEADER RULE IS WHERE THE SUBTLETY LIVES, so it is asserted from every
+ * direction. Two things must both hold for a number to be a pin: it sits in the
+ * file's LEADING block comment, and its own sentence claims it — `pin`, `pins`,
+ * `pinned`. A number inside a case body is not a pin however useful the
+ * cross-reference, and neither is a bare mention up here.
+ *
+ * THE MARKER HALF WAS ADDED AFTER THIS FILE'S FIRST DRAFT PROVED IT NECESSARY.
+ * That draft named a trap number in this very header as CONTEXT and closed it,
+ * and the count came out 20 against 21 — the file written to stop the defect
+ * committing it. The cases below therefore never name a number they do not
+ * pin: the `wcvp-lookup.test.ts` case reads it from disk instead.
  */
 
 import { execFileSync } from 'node:child_process'
@@ -75,6 +79,44 @@ describe('the header rule', () => {
     expect(pinnedTraps([header('Pins traps 3, 24 and 26.')])).toEqual(
       new Set(['3', '24', '26'])
     )
+  })
+
+  it('does NOT count a MENTION — the number must claim to be pinned', () => {
+    // The defect this rule replaces, and the reason it is the dangerous
+    // direction: a header explaining its reasoning closed a trap nothing
+    // tested, so an untested trap read as covered and left the backlog.
+    expect(
+      pinnedTraps([header('This is TRAP 4’s shape, one level up.')])
+    ).toEqual(new Set())
+  })
+
+  it('does not let a marker leak across sentences', () => {
+    const src = header(
+      'Pins TRAP 31 — a write that retires a verdict. Trap 4 is the shape it resembles.'
+    )
+    expect(pinnedTraps([src])).toEqual(new Set(['31']))
+  })
+
+  it('does not let a marker leak across a paragraph break', () => {
+    // A heading with no full stop would otherwise join two paragraphs, which
+    // is exactly how a reasoning paragraph would inherit a pin.
+    const src = `/**\n * Pins TRAP 31.\n *\n * WHAT THIS ASSERTS\n *\n * The same shape as trap 4, one level up\n */\nimport x from 'y'\n`
+    expect(pinnedTraps([src])).toEqual(new Set(['31']))
+  })
+
+  it('accepts the phrasings the repo actually uses', () => {
+    expect(pinnedTraps([header('Pins TRAP 32 — a generated file.')])).toEqual(
+      new Set(['32'])
+    )
+    expect(
+      pinnedTraps([header('Trap 24, pinned: a report-only caller.')])
+    ).toEqual(new Set(['24']))
+    expect(
+      pinnedTraps([header('Traps 7 and 27, pinned: the species resolver.')])
+    ).toEqual(new Set(['7', '27']))
+    expect(
+      pinnedTraps([header('Trap 3’s live half, pinned: the plan scope.')])
+    ).toEqual(new Set(['3']))
   })
 
   it('does NOT count a trap named only inside a case body', () => {
