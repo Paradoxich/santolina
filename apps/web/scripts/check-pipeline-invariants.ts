@@ -95,6 +95,7 @@ export const REPORT_ONLY_STAMPS: Record<string, string> = {
  * the rule allows a source scan as the alternative.
  */
 export const TRAPS_NOT_PINNED: Record<string, string> = {
+  '31': 'A repair pass retires editorial verdicts without counting them. The seam is each trigger-watched writer: select is_curated before the write and report the rows whose verdict fell, as apply-description-fixes.ts does. A test needs the before/after selection as a callable function; today curate-styles and curate-greenery do the write inline, so there is nothing to call.',
   '1': 'Rate-limit fallback. The fix removed the fallback; a test needs a fake fetch that 429s and an assertion that the error propagates. Cheap, and worth doing next.',
   '1b': 'Trigger semantics. Only observable against a live or replayed Postgres; pnpm trigger:contract is the existing home and would need to become a checked artifact.',
   '2': '--new-only scoping. Now state-based (*_checked_at IS NULL); the seam is each script argument parser, and the honest witness is a query, not a unit.',

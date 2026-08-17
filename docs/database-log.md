@@ -271,12 +271,12 @@ Every trap below is really one of four shapes. The entries are the worked exampl
 
 The table below is the only index by shape, and `pnpm docs:claims` holds it to the entries: a trap with no family row fails, and so does a family row naming a trap that does not exist. It carried neither count above for that reason — a number restated in prose is a second home for a fact the headings already own.
 
-| family | what it is                                                        | entries                                      |
-| ------ | ----------------------------------------------------------------- | -------------------------------------------- |
-| **A**  | a failure or narrower answer comes back shaped like a real result | 1, 1b, 10, 11, 15, 18, 19, 20, 23            |
-| **B**  | the record disagrees with what actually happened                  | 2, 4, 12, 13, 14, 16, 17, 24, 25, 26, 28, 29 |
-| **C**  | one fact with two homes, and only one got updated                 | 3, 5, 22                                     |
-| **D**  | facts about the outside world you cannot design away              | 6, 7, 8, 9, 21, 27                           |
+| family | what it is                                                        | entries                                          |
+| ------ | ----------------------------------------------------------------- | ------------------------------------------------ |
+| **A**  | a failure or narrower answer comes back shaped like a real result | 1, 1b, 10, 11, 15, 18, 19, 20, 23                |
+| **B**  | the record disagrees with what actually happened                  | 2, 4, 12, 13, 14, 16, 17, 24, 25, 26, 28, 29, 31 |
+| **C**  | one fact with two homes, and only one got updated                 | 3, 5, 22                                         |
+| **D**  | facts about the outside world you cannot design away              | 6, 7, 8, 9, 21, 27                               |
 
 A is the one that keeps recurring, and it is subtle every single time.
 
@@ -591,6 +591,43 @@ constructs the two overlapping runs and asserts neither reads as `confirmed`,
 that the record says why, that contradiction survives, and that asserting
 exclusivity without a mechanism does not buy confirmation back. Verified by
 breaking it: forcing `strengthOf` back to always-confirming fails eight cases.
+
+#### 31. A repair pass silently retires editorial verdicts, and nothing counts them — ADDED 2026-08-17
+
+`invalidate_editorial_verdict` (migration `20260729101133`) clears
+`is_curated` and `editorial_checked_at` whenever a write changes `description`,
+`style_tags`, `space_types`, `image_url_curated` or `image_pick_confidence`.
+That is correct and is trap 24's lesson applied properly: a verdict about text
+or tags that no longer exist is not a verdict.
+
+**The defect is that the cascade is invisible from the writing side.** The
+2026-08-15 trap-26 repair re-ran `curate-styles` over rounds 9 and 10 and
+re-tagged 86 of 100 rows. It reported 86 tagged and 14 style-neutral, which is
+what it was asked. It did not report — and could not, since the clear happens
+in the database — that **the same 86 rows lost an editorial sign-off**. Rounds
+9 and 10 went from full coverage to 8/50 and 6/50.
+
+**Nobody noticed for two days.** It was found on 2026-08-17 only because the
+Build Backlog's editorial item restated a count (277 judged) and the live
+number had gone DOWN to 244 while two rounds added 53. The arithmetic is exact:
+42 + 44 = 86, matching the repair's own 86 tagged. The 14 style-neutral rows
+were spared because `[]` → `[]` is not a change, so the trigger did not fire.
+
+**Why this is not trap 24 or trap 26 again.** Those are about a stamp that
+outruns its finding. This is the reverse: a write in one lane correctly
+invalidating state in another, where the invalidation is real work created and
+appears in no report, no ratchet and no round close. `verify-round` DOES see it
+— that is what round 10's failing `curate-editorial 6/50` has been saying — but
+only if someone re-runs a closed round, which nothing prompts.
+
+**Remedy, and its verification predicate.** Any pass that writes a
+trigger-watched column should count and print the rows whose verdict it
+retired, the way `apply-description-fixes.ts` (2026-08-17) does — it selects
+`is_curated` before writing and names the affected rows afterwards. Fixed when
+`curate-styles` and `curate-greenery` print the same line, and when
+`verify-round --round 9` and `--round 10` return to 50/50 after the re-judge.
+The re-judge itself is a **Build Backlog** row (editorial pass, scope 504), not
+a ratchet entry: the rows are work, not a code defect.
 
 #### 24. A guard stamp records that the check RAN, not that its finding was acted on — ADDED 2026-07-30
 
