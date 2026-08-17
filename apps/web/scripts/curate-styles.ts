@@ -33,9 +33,13 @@
  *   --ids a,b,c    Restrict to specific plant ids.
  *   --dry-run      Call Claude and print judgments; write nothing.
  *
- * Ends with the resulting tag distribution; warns if any tag still covers
- * more than 40% of the judged set — that means the definitions need another
- * pass, not that the run failed.
+ * Ends with two reports. The tag DISTRIBUTION warns if any tag covers more
+ * than 40% of the judged set. The CALIBRATION report covers the other
+ * question — whether the signature bar held — via mean tags per plant, the
+ * spread, within-axis doubling and confusable-pair co-occurrence. Only the
+ * within-axis half warns; see reportCalibration for why the mean does not.
+ * Either warning means the definitions need another pass, not that the run
+ * failed.
  */
 
 import { getSupabaseAdmin } from '../lib/supabase-admin'
@@ -49,7 +53,15 @@ import {
 } from './scope'
 import { fetchAllRows } from '../lib/paginate'
 import { getAnthropicClient, CURATION_MODEL } from '../lib/anthropic-client'
-import { STYLE_TAGS, STYLE_TAG_PROMPT, type StyleTag } from '../lib/style-tags'
+import {
+  STYLE_TAGS,
+  STYLE_TAG_PROMPT,
+  STYLE_AXES,
+  EXCLUSIVE_STYLE_AXES,
+  CONFUSABLE_STYLE_PAIRS,
+  MEAN_TAGS_PER_PLANT_BASELINE,
+  type StyleTag,
+} from '../lib/style-tags'
 import { withRunRecord, type Witness } from './run-provenance'
 
 // ---------------------------------------------------------------------------
@@ -245,6 +257,9 @@ async function main() {
   )
 
   const tagCounts = new Map<StyleTag, number>()
+  // Per-plant judgments, kept for the calibration report below — a share is a
+  // statement about the population, and the bar being checked is per plant.
+  const judgments: { name: string; tags: StyleTag[] }[] = []
   let unchanged = 0
   let neutral = 0
   const failed: string[] = []
@@ -255,6 +270,7 @@ async function main() {
         const tags = await judgePlant(plant)
 
         for (const t of tags) tagCounts.set(t, (tagCounts.get(t) ?? 0) + 1)
+        judgments.push({ name: plant.common_name, tags })
         if (tags.length === 0) neutral++
 
         const before = [...(plant.style_tags ?? [])].sort()
@@ -348,11 +364,101 @@ async function main() {
       console.log(
         `\nWARNING: ${overSpread.join(', ')} still cover(s) more than ${DISTRIBUTION_WARN_PCT}% of the judged set — tighten the definitions in lib/style-tags.ts and re-run.`
       )
+
+    reportCalibration(judgments)
   }
   if (failed.length) {
     console.log(`\n${failed.length} failure(s):`)
     for (const f of failed) console.log(`  ${f}`)
     process.exit(1)
+  }
+}
+
+/**
+ * The calibration half of the report: whether the SIGNATURE bar held, as
+ * opposed to how the tags are spread.
+ *
+ * The two questions are different and only the second used to be asked. A tag
+ * share is a property of the population — it moves when a seed round lands and
+ * nobody re-judged anything, which is how `modern` reading low was mistaken
+ * for a species gap. These numbers are properties of the judgment and do not
+ * move with catalog size.
+ *
+ * Mean tags per plant is printed against the round-12 baseline but NOT warned
+ * on, deliberately. The 6 -> 20 expansion added purpose and mood styles that
+ * cut across aesthetics, so a higher mean is ambiguous between a working
+ * vocabulary and a slipped bar (see STYLE_AXES). Warning on an ambiguous
+ * number would train the next person to tune until it went green.
+ *
+ * The warn is on within-axis doubling, which stays unambiguous: two aesthetic
+ * tags means one plant was judged the signature of two different looks.
+ */
+function reportCalibration(judgments: { name: string; tags: StyleTag[] }[]) {
+  if (judgments.length === 0) return
+
+  const instances = judgments.reduce((a, j) => a + j.tags.length, 0)
+  const mean = instances / judgments.length
+  const spread = new Map<number, number>()
+  for (const j of judgments)
+    spread.set(j.tags.length, (spread.get(j.tags.length) ?? 0) + 1)
+
+  console.log(
+    '\nCalibration — properties of the judgment, not of catalog size:'
+  )
+  console.log(
+    `  mean tags per plant   ${mean.toFixed(2)}   (round-12 baseline ${MEAN_TAGS_PER_PLANT_BASELINE}, 6 styles)`
+  )
+  console.log(
+    `  spread                ${[...spread.entries()]
+      .sort((a, b) => a[0] - b[0])
+      .map(([n, c]) => `${n}:${c}`)
+      .join(' · ')}`
+  )
+
+  const violations: string[] = []
+  for (const axis of EXCLUSIVE_STYLE_AXES) {
+    const members: StyleTag[] = STYLE_AXES[axis]
+    const doubled = judgments.filter(
+      (j) => j.tags.filter((t) => members.includes(t)).length > 1
+    )
+    console.log(
+      `  two ${axis.padEnd(10)} tags   ${String(doubled.length).padStart(3)} of ${judgments.length}`
+    )
+    for (const d of doubled)
+      violations.push(
+        `${d.name}: [${d.tags.filter((t) => members.includes(t)).join(', ')}] (${axis})`
+      )
+  }
+
+  if (violations.length) {
+    console.log(
+      `\nWARNING: ${violations.length} plant(s) carry two tags on an axis where that is a judgment error.`
+    )
+    console.log(
+      'A plant is the signature of at most one look and at most one place. Tighten'
+    )
+    console.log('those definitions against each other in lib/style-tags.ts:')
+    for (const v of violations) console.log(`  ${v}`)
+  }
+
+  const pairHits = CONFUSABLE_STYLE_PAIRS.map(([a, b]) => {
+    const both = judgments.filter(
+      (j) => j.tags.includes(a) && j.tags.includes(b)
+    )
+    const either = judgments.filter(
+      (j) => j.tags.includes(a) || j.tags.includes(b)
+    ).length
+    return { a, b, both: both.length, either }
+  }).filter((p) => p.both > 0)
+
+  if (pairHits.length) {
+    console.log(
+      '\nConfusable pairs that co-occurred (bleed, not necessarily wrong):'
+    )
+    for (const p of pairHits)
+      console.log(
+        `  ${`${p.a} + ${p.b}`.padEnd(32)} ${p.both} of ${p.either} carrying either`
+      )
   }
 }
 

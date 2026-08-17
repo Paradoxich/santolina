@@ -18,6 +18,7 @@ import {
   countActiveFilters,
   visiblePlants,
 } from '@/lib/explore-filters'
+import { STYLE_DISPLAY_NAMES, type StyleTag } from '@/lib/style-tags'
 import { icons } from '@/lib/icons'
 import type { PlantDetail } from '@/lib/plant-detail'
 import type { CatalogPlant } from '@/types/garden'
@@ -205,7 +206,13 @@ export function ExploreClient({
               <ExploreBrowse
                 onSelectStyle={(style) =>
                   selectSearchTerm(
-                    STYLE_OPTIONS.find((o) => o.value === style)?.label ?? style
+                    // Falls through to the display name, not the slug: a tile
+                    // can name a style the filter is not offering yet (below
+                    // STYLE_FILTER_FLOOR), and a raw slug in the search box
+                    // reads as a bug.
+                    STYLE_OPTIONS.find((o) => o.value === style)?.label ??
+                      STYLE_DISPLAY_NAMES[style as StyleTag] ??
+                      style
                   )
                 }
                 onSelectColor={(bucket) =>
