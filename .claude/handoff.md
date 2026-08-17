@@ -75,9 +75,21 @@ expected current value — drift guard` appears verbatim in
    `matched` / `written` / `skipped_drift` / `verdict_retired`, the last true only
    when `is_curated` was true BEFORE the write. Ratchet as a scan plus a named
    excusal list modelled on `HAND_ROLLED_PAGINATION`, so the six migrate one at a
-   time. **Open the session by making `curate-styles --all` refuse**, so the gate
-   below is enforced during the days C is being written rather than resting on
-   this paragraph; the refusal then becomes conditional on the capability.
+   time.
+   **The gate is already in place** — `curate-styles` refuses every writing run,
+   not only `--all`, behind `STYLE_WRITES_BLOCKED_UNTIL_STEP_C`. Scoped runs are
+   blocked too because the trap-31 incident WAS a scoped run, `--round 9` and
+   `--round 10`; the size was never the problem, the silence was. `--dry-run` is
+   unaffected. C's job is to make the check conditional on the capability rather
+   than absolute: **delete the flag, not the check.**
+   **SCOPE DECISION, already taken — do not re-litigate it.** Every script C
+   touches is also listed in `RUNS_WITHOUT_PROVENANCE`, so folding provenance
+   wiring in will look efficient around the third file. Don't. C is the piece where a silent
+   bug is most expensive and nothing can check safety machinery that does not
+   exist yet, so it stays one reviewable change. **Instead make the primitive
+   provenance-SHAPED**: have it take the run record as a parameter, so wiring
+   provenance later is a call-site change and not a second refactor. That buys the
+   don't-touch-them-twice benefit without doubling the PR.
 2. **The catalog-wide re-tag (D), once C has landed.**
    `curate-styles.ts --all --why "…"`. **`curate-styles --all` does not run until
    C lands, because it withdraws editorial approval on every row whose tags

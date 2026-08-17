@@ -113,6 +113,42 @@ const WHY_ALL = requireReasonForAll(SCOPE)
 const guardScope = scopeGuard(SCOPE, SCOPE_IDS)
 
 /**
+ * TEMPORARY: this pass does not WRITE until the reviewed-mutation primitive
+ * lands (plan step C). Dry runs are unaffected.
+ *
+ * WHY. `style_tags` is watched by `invalidate_editorial_verdict`, so every row
+ * this pass re-tags loses its editorial sign-off — and the clear happens inside
+ * the database, so this script cannot currently report that it happened. That is
+ * trap 31: on 2026-08-15 a repair re-tagged 86 rows, said "86 tagged", could not
+ * say "86 un-curated", and nobody noticed for two days.
+ *
+ * IT REFUSES EVERY WRITING RUN, NOT JUST `--all`. The obvious gate is the
+ * catalog-wide one, since the vocabulary expansion ahead is 748 rows. But the
+ * incident that produced trap 31 was `--round 9` and `--round 10` — scoped,
+ * modest, exactly the shape a gate on `--all` would wave through. The size of the
+ * run was never the problem; the silence was.
+ *
+ * WHAT LIFTS IT. Step C gives this script a way to name the verdicts it retires,
+ * as `apply-description-fixes.ts` already does. Then this check becomes
+ * conditional on that capability rather than absolute, and stops being dated.
+ * Delete the flag, not the check.
+ */
+const STYLE_WRITES_BLOCKED_UNTIL_STEP_C = true
+if (STYLE_WRITES_BLOCKED_UNTIL_STEP_C && !DRY_RUN) {
+  console.error(
+    `\n✗ curate-styles will not write yet.\n\n` +
+      `  Re-tagging withdraws the editorial verdict on every row whose tags\n` +
+      `  change, and this script cannot yet count or report that — the clear\n` +
+      `  happens in the database. Trap 31 is what that costs: 86 rows silently\n` +
+      `  un-curated on 2026-08-15, unnoticed for two days.\n\n` +
+      `  This blocks scoped runs too. The trap-31 incident WAS a scoped run.\n\n` +
+      `  Lifted by plan step C, the reviewed-mutation primitive. Until then,\n` +
+      `  --dry-run works and is how the definitions were piloted.\n`
+  )
+  process.exit(1)
+}
+
+/**
  * The id to write to, refusing if the row is outside the active scope.
  *
  * Used inline at the `.eq('id', ...)` so the check cannot be separated from
