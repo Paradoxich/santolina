@@ -57,10 +57,11 @@ const JSON_OUT = process.argv.slice(2).includes('--json')
  * moment someone runs the report. What is left for runtime is the case types
  * cannot see: a value that got past `as` or arrived from JSON.
  */
-const unclassified = STEP_DEFS.filter(
-  (d) => d.obligation !== 'catalog' && d.obligation !== 'forward'
-)
-if (unclassified.length > 0) {
+function requireEveryStepClassified(): void {
+  const unclassified = STEP_DEFS.filter(
+    (d) => d.obligation !== 'catalog' && d.obligation !== 'forward'
+  )
+  if (unclassified.length === 0) return
   console.error(
     `\n✗ ${unclassified.length} step(s) carry no obligation: ` +
       `${unclassified.map((d) => d.step).join(', ')}\n\n` +
@@ -80,10 +81,49 @@ const SELECT =
   'editorial_checked_at, editorial_image_at, editorial_description_at, ' +
   'editorial_tags_at'
 
-type Row = StatusRow & {
+type Row = StatusRow & EditorialRow
+
+/** The four columns the editorial split reads, and nothing else. */
+export interface EditorialRow {
+  editorial_checked_at: string | null
   editorial_image_at: string | null
   editorial_description_at: string | null
   editorial_tags_at: string | null
+}
+
+/**
+ * Tell a never-judged row from one whose verdict was taken back.
+ *
+ * A callable seam rather than a filter inside `main`, because this is the only
+ * judgment in this file and the one thing about it that can be wrong. Pinned by
+ * `catalog-status.test.ts`.
+ *
+ * WHY IT CANNOT KEY ON `editorial_checked_at`. `invalidate_editorial_verdict`
+ * (migration `20260729112046`) nulls that column when it clears any criterion, so
+ * after a withdrawal a judged row is byte-identical to one the pass never
+ * reached. The per-criterion stamps are the only surviving difference: the
+ * trigger clears ONLY the criterion whose fields changed, so a row that lost its
+ * tags leg still carries `editorial_image_at` and `editorial_description_at`.
+ * That is trap 31's 86 rows exactly — "descriptions and heroes already passed
+ * once, only the tags changed".
+ *
+ * The distinction is not cosmetic. A withdrawal is a REGRESSION: the work was
+ * done and undone, so re-judging restores something that existed. A never-judged
+ * row is a RETROFIT: the standard arrived after it. They carry different
+ * arguments about whether to spend money on them, and one debt number hides that.
+ */
+export function splitEditorial<T extends EditorialRow>(
+  plants: T[]
+): { neverJudged: T[]; withdrawn: T[] } {
+  const noVerdict = plants.filter((p) => !p.editorial_checked_at)
+  const hasCriterion = (p: T) =>
+    Boolean(
+      p.editorial_image_at || p.editorial_description_at || p.editorial_tags_at
+    )
+  return {
+    neverJudged: noVerdict.filter((p) => !hasCriterion(p)),
+    withdrawn: noVerdict.filter(hasCriterion),
+  }
 }
 
 /**
@@ -105,6 +145,7 @@ function roundOf(): Map<string, string> {
 }
 
 async function main() {
+  requireEveryStepClassified()
   const db = getSupabaseAdmin()
 
   const plants = await fetchAllRows<Row>((from, to) =>
@@ -170,17 +211,7 @@ async function main() {
    * Collapsing the two into one debt number is the semantic flattening that
    * produced the backlog this check exists to measure.
    */
-  const noVerdict = plants.filter((p) => !p.editorial_checked_at)
-  const withdrawn = noVerdict.filter(
-    (p) =>
-      p.editorial_image_at || p.editorial_description_at || p.editorial_tags_at
-  )
-  const neverJudged = noVerdict.filter(
-    (p) =>
-      !p.editorial_image_at &&
-      !p.editorial_description_at &&
-      !p.editorial_tags_at
-  )
+  const { neverJudged, withdrawn } = splitEditorial(plants)
   const withdrawnByRound = new Map<string, number>()
   for (const p of withdrawn) {
     const r = roundLabel(p.id)
@@ -270,7 +301,12 @@ async function main() {
   )
 }
 
-main().catch((err) => {
-  console.error(err)
-  process.exit(1)
-})
+// Guarded so `splitEditorial` can be imported by the test without the module
+// connecting to Supabase on the way in — the pattern regenerate-native-region.ts
+// and cross-check-native-region.ts already use.
+if (require.main === module) {
+  main().catch((err) => {
+    console.error(err)
+    process.exit(1)
+  })
+}
