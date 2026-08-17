@@ -847,11 +847,22 @@ is unchanged.
 
 <!-- Newest first. Append with: scripts/log-db-session.ts --round <label> -->
 
-### 2026-08-17 — Provenance and hygiene: no catalog change
+### 2026-08-17 — Provenance and hygiene, and the first catalog removal
 
-**Branch** `session/2026-08-17-provenance`. No `plants` or `plant_combinations`
-row changed. Every script touched was run dry against production; all reported
-their decisions already applied.
+**Branch** `session/2026-08-17-provenance`. Every migrated script was run dry
+against production and reported its decisions already applied; the one
+deliberate data change is the removal below.
+
+**Catalog 748 → 747 species, 1864 → 1859 combinations.** _Hydrangea anomala_
+deleted as a duplicate of _H. petiolaris_ (Ana, 2026-08-17) by the new
+`scripts/remove-plant.ts` — the first row ever removed from this catalog, and
+the reason the duplicate survived from round 11 is that nothing could remove
+one. 0 palette rows, 0 diary rows, 5 combinations went by cascade.
+**`curate-combinations` is owed** to refill those pairings; deferred by ruling,
+no API spend this session. The complete deleted rows are in
+`reference/removals.json`. Deliberately left open: the accepted botanical name
+is _H. anomala_ subsp. _petiolaris_, so the surviving row carries a subspecies
+epithet as a species — a naming question, not a duplicate question.
 
 **Migrations applied** (Ana waived rule 11 for these two; rule-10 backup taken
 first, `2026-08-17T16-56-45-254Z`, 1788575 bytes). `20260817165712_applied_migrations_statements.sql`
@@ -875,15 +886,12 @@ name passes now share `scripts/name-fixes.ts`, so round 8 gains the collision
 pre-check it predates. New shape 18: a parsed but undocumented flag — seven
 found, all seven documented, hatch list empty.
 
-**Found — a test header moved a counter.** A header citing a trap for context
-makes `docs:claims` count it pinned; unpinned went 21 → 20 while
-`invariants:check` still said 21, and nothing failed. Header fixed. The two
-counters can still disagree silently — carried in the handoff.
-
-**Found — archiving a script breaks it silently.** `../lib/*` does not resolve
-from `scripts/archive/`, and the symptom is implicit `any`, not a missing
-module. Three of four moved files typechecked green with an untyped client. The
-four moved in July also still cited their old run paths. All eight fixed.
+**Found — two silent ones, both fixed.** A trap number written for CONTEXT in a
+test file's top header counts as a PIN, so `docs:claims` read 20 unpinned while
+`invariants:check` read 21 and nothing failed; the two counters can still
+disagree silently, carried in the handoff. And `../lib/*` does not resolve from
+`scripts/archive/`, so three of four moved files typechecked green with an
+untyped client — the symptom is implicit `any`, not a missing module.
 
 ### 2026-08-17 — Step D: the catalog-wide style re-tag (not a round)
 
