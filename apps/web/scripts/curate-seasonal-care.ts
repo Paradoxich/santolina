@@ -353,11 +353,32 @@ function leadingWords(line: string): [string, string] {
   return [(m?.[1] ?? '').toLowerCase(), (m?.[2] ?? '').toLowerCase()]
 }
 
+/**
+ * A hyphenated compound resolves to its head verb: "cloud-prune" → "prune".
+ *
+ * ROUND 13 FOUND THIS. `Pinus densiflora`'s autumn and winter lines both began
+ * "Cloud-prune ...", which is not merely valid but the SIGNATURE care action of
+ * the Japanese-tradition pines this round seeded. The validator took the whole
+ * first word, failed to find it in ACTION_VERBS, and discarded both lines as
+ * "not imperative" — the plant was left with no seasonal_care at all.
+ *
+ * It is the same allowance LEAD_ADVERBS already makes one level up: the real
+ * verb is not always the whole first token. Splitting on the hyphen rather than
+ * adding "cloud-prune" to ACTION_VERBS is deliberate — the list would then need
+ * every compound anyone coins, and the next one ("wind-prune", "pinch-prune")
+ * would fail in exactly the same way.
+ */
+export function headVerb(word: string): string {
+  const parts = word.split('-').filter(Boolean)
+  return parts.length > 1 ? (parts[parts.length - 1] ?? word) : word
+}
+
 // The imperative verb: the first word, or the second if the first is a lead
-// adverb ("Lightly prune" → "prune").
-function imperativeVerb(line: string): string {
+// adverb ("Lightly prune" → "prune"), resolving a hyphenated compound to its
+// head ("Cloud-prune" → "prune").
+export function imperativeVerb(line: string): string {
   const [w1, w2] = leadingWords(line)
-  return LEAD_ADVERBS.has(w1) && w2 ? w2 : w1
+  return LEAD_ADVERBS.has(w1) && w2 ? headVerb(w2) : headVerb(w1)
 }
 
 function validateLine(stage: string, line: string): Violation | null {
@@ -496,7 +517,7 @@ async function fetchEligiblePlants(newOnly: boolean): Promise<DbPlant[]> {
         .select('*')
         .is('seasonal_care', null)
         .not('seasonal_rhythm', 'is', null),
-      SCOPE_IDS
+      S().ids
     )
       .order('common_name')
       .order('id')
@@ -522,7 +543,7 @@ async function patchSeasonalCare(
   // Refuses if this row is outside the active scope. Checked at the write
   // rather than at selection, because the eligibility query is a state
   // predicate and a future edit to it would otherwise widen this silently.
-  guardScope(id)
+  S().guard(id)
   const db = getSupabaseAdmin()
   const { error } = await db
     .from('plants')
@@ -603,15 +624,49 @@ interface Flags {
 // the eligibility query ("seasonal_care IS NULL") is a state predicate, not a
 // scope — on a catalog where the field has been re-derived it matches every
 // round at once.
-const SCOPE = requireScope(
-  'curate-seasonal-care',
-  'This pass bills Claude per row and writes seasonal_care, which Care Tips ' +
-    'v2 reads live. An unscoped run would re-distil every eligible plant in ' +
-    'the catalog.'
-)
-const SCOPE_IDS = scopeIds(SCOPE)
-const WHY_ALL = requireReasonForAll(SCOPE)
-const guardScope = scopeGuard(SCOPE, SCOPE_IDS)
+/**
+ * Resolved on FIRST USE, not at import, and memoised.
+ *
+ * It was four module-level consts, which meant importing anything from this
+ * file — a pure text helper, for a test — ran `requireScope` and exited the
+ * process with code 1 before a single assertion. `curate-plants.ts` already
+ * resolves its scope inside a function and guards `main` with
+ * `require.main === module`; this file was the outlier, and the cost was that
+ * its validator could not be tested at all.
+ *
+ * Behaviour from the command line is unchanged: the first call happens inside
+ * `main`, so an unscoped run still refuses before it reads a row.
+ */
+let scopeBundle: {
+  scope: ReturnType<typeof requireScope>
+  ids: ReturnType<typeof scopeIds>
+  whyAll: ReturnType<typeof requireReasonForAll>
+  guard: ReturnType<typeof scopeGuard>
+} | null = null
+
+function S() {
+  if (!scopeBundle) {
+    // Scope is mandatory (scripts/scope.ts). The old `--new-only` here was a
+    // created_at day heuristic that architecture.md already called fragile,
+    // and the eligibility query ("seasonal_care IS NULL") is a state
+    // predicate, not a scope — on a catalog where the field has been
+    // re-derived it matches every round at once.
+    const scope = requireScope(
+      'curate-seasonal-care',
+      'This pass bills Claude per row and writes seasonal_care, which Care ' +
+        'Tips v2 reads live. An unscoped run would re-distil every eligible ' +
+        'plant in the catalog.'
+    )
+    const ids = scopeIds(scope)
+    scopeBundle = {
+      scope,
+      ids,
+      whyAll: requireReasonForAll(scope),
+      guard: scopeGuard(scope, ids),
+    }
+  }
+  return scopeBundle
+}
 
 function parseFlags(): Flags {
   const argv = process.argv.slice(2)
@@ -659,8 +714,8 @@ function parseFlags(): Flags {
 async function main() {
   const flags = parseFlags()
 
-  console.log(`\n${describeScope(SCOPE, SCOPE_IDS)}`)
-  if (WHY_ALL) console.log(`Whole-catalog run, because: ${WHY_ALL}`)
+  console.log(`\n${describeScope(S().scope, S().ids)}`)
+  if (S().whyAll) console.log(`Whole-catalog run, because: ${S().whyAll}`)
   console.log(
     'Fetching eligible plants (seasonal_care null, seasonal_rhythm present)...'
   )
@@ -689,7 +744,7 @@ async function main() {
       // One value column, and no stamp anywhere in this pass — the fill guard is
       // `seasonal_care IS NULL`, so the value is its own eligibility state.
       writeSet: ['seasonal_care'],
-      scope: `${describeScope(SCOPE, SCOPE_IDS)}${flags.sample ? ' (--sample, no writes)' : ''}`,
+      scope: `${describeScope(S().scope, S().ids)}${flags.sample ? ' (--sample, no writes)' : ''}`,
       recipe: {
         model: CURATION_MODEL,
         template: recipeTemplates(),
@@ -855,7 +910,11 @@ async function main() {
   }
 }
 
-main().catch((err) => {
-  console.error('Unexpected error:', err)
-  process.exit(1)
-})
+// Guarded so the validator helpers above can be imported by a test without
+// the pass starting a run as a side effect of the import.
+if (require.main === module) {
+  main().catch((err) => {
+    console.error('Unexpected error:', err)
+    process.exit(1)
+  })
+}

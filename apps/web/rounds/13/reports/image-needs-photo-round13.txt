@@ -1,0 +1,6 @@
+# Round 13: Trefle returned no candidate image in a usable category
+# (no "flower" or "habit" photo at all), so the vision pass had nothing to
+# judge and these three would fall through to the placeholder.
+Tree peony
+Kyushu azalea
+Chinese flowering crab apple

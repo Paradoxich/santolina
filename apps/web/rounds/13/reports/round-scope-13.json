@@ -1,0 +1,15 @@
+{
+  "round": "13",
+  "baseline": "backups/2026-08-17T21-16-59-048Z",
+  "window": "live",
+  "cleared_at": null,
+  "seeded_count": 33,
+  "plants_before": 747,
+  "plants_after": 780,
+  "counts": {
+    "fail": 0,
+    "allowed": 0,
+    "warn": 0
+  },
+  "findings": []
+}

@@ -1,0 +1,10 @@
+[
+  {
+    "scientific_name": "Rohdea japonica",
+    "common_name": "Japanese sacred lily",
+    "expect": "A clump-forming evergreen with glossy, dark green strap-shaped leaves that arch gracefully. In winter, it produces small cream or white flowers hidden among the foliage, followed by bright red berries. Grows well in shade and tolerates dry conditions once established.",
+    "description": "A clump-forming evergreen with glossy, dark green strap-shaped leaves that arch gracefully. Short cream flower spikes open low among the foliage in late spring, and the bright red berries that follow ripen in autumn and hold through winter. Grows well in shade and tolerates dry conditions once established.",
+    "why": "Round 13 cross-check, applied 2026-08-18. The row recorded the BERRY season as the bloom season: Rohdea flowers in late spring, and the red berries ripen in autumn and persist through winter. bloom_months and seasonal_rhythm were corrected in migration 20260818001500; this is the same false premise in the field a reader actually sees. Worth noting that curate-editorial rewrote this description during the round and carried the error through unchanged, because nothing blind-checks prose the way cross-check-plants checks scalar botanical fields.",
+    "id": "a5930225-4541-44f8-bfae-e78132150055"
+  }
+]

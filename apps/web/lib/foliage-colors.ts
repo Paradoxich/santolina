@@ -111,6 +111,13 @@ export const IGNORED_FOLIAGE_COLORS = new Set([
   'variegated green with burgundy undersides',
   // seasonal turns / indeterminate
   'bright green turning golden-yellow',
+  // round 13, Cryptomeria japonica. The winter bronzing is real and is half of
+  // why the tree is planted, but the value is BOTH halves of the ignore rule at
+  // once: a plain green standing colour, plus a seasonal turn. It is cultivar
+  // dependent too, since some selections hold their green and the golden forms
+  // do something else again. If winter colour ever becomes a filter it belongs
+  // on a seasonal axis, not in the standing-colour bucket.
+  'bright green, turning bronze in winter',
   'bronze when young',
   'bronze-green in winter',
   'bronze-tinted',

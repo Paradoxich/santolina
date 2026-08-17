@@ -23,8 +23,8 @@ date is the freshness record.
 
 | | |
 | --- | ---: |
-| species | 747 |
-| companion pairs | 1863 |
+| species | 780 |
+| companion pairs | 1945 |
 
 ## Pipeline coverage
 
@@ -41,15 +41,15 @@ its data becomes something a reader can see.
 
 | step | column | owed by | judged | share |
 | --- | --- | --- | ---: | ---: |
-| `curate-common-names` | `common_name_checked_at` | catalog | 0 / 747 | 0.0% |
-| `cross-check-plants` | `botanical_checked_at` | catalog | 631 / 747 | 84.5% |
-| `cross-check-native-to` | `native_checked_at` | catalog | 747 / 747 | 100.0% |
-| `cross-check-native-region` | `native_region_checked_at` | catalog | 719 / 747 | 96.3% |
-| `curate-styles` | `style_checked_at` | catalog | 747 / 747 | 100.0% |
-| `curate-greenery` | `greenery_checked_at` | catalog | 747 / 747 | 100.0% |
-| `pick-plant-images` | `image_checked_at` | catalog | 747 / 747 | 100.0% |
-| `pick-plant-images --verify` | `image_verified_at` | catalog | 79 / 747 | 10.6% |
-| `curate-editorial` | `editorial_checked_at` | catalog | 28 / 747 | 3.7% |
+| `curate-common-names` | `common_name_checked_at` | catalog | 33 / 780 | 4.2% |
+| `cross-check-plants` | `botanical_checked_at` | catalog | 664 / 780 | 85.1% |
+| `cross-check-native-to` | `native_checked_at` | catalog | 780 / 780 | 100.0% |
+| `cross-check-native-region` | `native_region_checked_at` | catalog | 752 / 780 | 96.4% |
+| `curate-styles` | `style_checked_at` | catalog | 780 / 780 | 100.0% |
+| `curate-greenery` | `greenery_checked_at` | catalog | 780 / 780 | 100.0% |
+| `pick-plant-images` | `image_checked_at` | catalog | 780 / 780 | 100.0% |
+| `pick-plant-images --verify` | `image_verified_at` | catalog | 93 / 780 | 11.9% |
+| `curate-editorial` | `editorial_checked_at` | catalog | 61 / 780 | 7.8% |
 
 1 of 14 steps is `forward`: `draft-hardiness`, which stamps no column and so is absent from the table above.
 
@@ -57,17 +57,17 @@ its data becomes something a reader can see.
 
 | field | state | count |
 | --- | --- | ---: |
-| `ai_drafted_at` | drafted | 747 |
-| `is_curated` | editorially reviewed | 26 |
+| `ai_drafted_at` | drafted | 780 |
+| `is_curated` | editorially reviewed | 53 |
 | `style_tags` | style-neutral (stamped, `[]` — a valid judgment) | 31 |
 | `style_tags` | never judged (`style_checked_at` NULL — a gap) | 0 |
 | `seasonal_care` | null | 0 |
 | `native_region` | empty | 3 |
-| `is_greenery` | true | 114 |
+| `is_greenery` | true | 126 |
 | `hardiness_rating` | drafted | 594 |
 | `hardiness_verified` | human-verified | 266 |
-| images | no image at all | 0 |
-| images | have an editorial pick (`image_url_curated`) | 747 |
+| images | no image at all | 1 |
+| images | have an editorial pick (`image_url_curated`) | 779 |
 
 ## Style tag distribution
 
@@ -77,22 +77,22 @@ warns above that bar on every full run.
 
 | tag | plants | share |
 | --- | ---: | ---: |
-| cottage | 215 | 28.8% |
-| woodland | 165 | 22.1% |
-| pollinator | 140 | 18.7% |
-| mediterranean | 131 | 17.5% |
-| herb | 84 | 11.2% |
-| prairie | 73 | 9.8% |
-| winter | 64 | 8.6% |
-| japanese | 63 | 8.4% |
-| sensory | 62 | 8.3% |
-| modern | 61 | 8.2% |
-| chinese | 48 | 6.4% |
-| lush | 48 | 6.4% |
-| wildflower | 45 | 6.0% |
-| cutting | 44 | 5.9% |
-| classic | 42 | 5.6% |
-| desert | 24 | 3.2% |
-| tropical | 18 | 2.4% |
-| moon | 14 | 1.9% |
+| cottage | 216 | 27.7% |
+| woodland | 166 | 21.3% |
+| pollinator | 140 | 17.9% |
+| mediterranean | 131 | 16.8% |
+| herb | 84 | 10.8% |
+| japanese | 81 | 10.4% |
+| prairie | 73 | 9.4% |
+| winter | 65 | 8.3% |
+| sensory | 65 | 8.3% |
+| modern | 62 | 7.9% |
+| chinese | 60 | 7.7% |
+| classic | 50 | 6.4% |
+| lush | 49 | 6.3% |
+| wildflower | 45 | 5.8% |
+| cutting | 45 | 5.8% |
+| desert | 24 | 3.1% |
+| tropical | 19 | 2.4% |
+| moon | 14 | 1.8% |
 | gothic | 10 | 1.3% |

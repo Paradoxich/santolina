@@ -67,35 +67,31 @@ The numbers **in this file are different and must stay written down**: a dated s
 
     The session entries below are exempt and the scan stops at the `## Sessions` heading, which is the tense half of this rule made structural: a dated entry records an event.
 
-### 2026-08-17 — Round 13
+### 2026-08-17 — Round 13 (East Asian traditions)
 
-**Branch** `session/2026-08-17-round-13`. Seeded 33 plant(s) on 2026-08-17.
+**Branch** `session/2026-08-17-round-13`. Seeded 33 plants; catalog **747 → 780 species**, 1863 → 1945 combinations. Every pipeline step green at close (`verify-round --round 13`), scope check clean (0 out-of-scope changes), archived to `rounds/13/`.
 
-Catalog now **780 species / 1863 combinations** (26 with `is_curated = true`).
+**Measured cost: ~$2.57 for 33 plants, about $0.078 each.** `runs:cost --round 13` reports $2.25; the true figure is ~$2.57 and the difference is the vision pass, which the report could not attribute (trap 37). This replaces the standing "roughly $3-6 for 28 plants" estimate and is the number round 14 should budget against. It is a floor, not a ceiling: four steps still record no tokens at all.
 
-Pipeline steps for this round:
+**Theme, and the first chosen by a committed measurement.** The style vocabulary went 6 → 19 on 2026-08-17 (`6382866`), adding a place axis, and `pnpm probe:gap` (new, runbook step 0) tested the four thinnest new styles: japanese 47% held, chinese 31% — both survive round 9's 70% kill rule — against moon 28% and gothic 30%, both **unfillable**. That is the finding a flat tag count inverts: `gothic` is the emptiest style in the vocabulary at 10 plants and cannot be moved by any species-level round, because the dark garden is cultivar selections of species already held. Both belong on standing rule 11's list, not on a seed. Result: japanese 63 → 81, chinese 48 → 60, so 30 of 33 earned a target tag.
 
-```
-✗ curate-plants                   0/33   ai_drafted_at, style_checked_at, greenery_checked_at all NOT NULL
-✗ curate-common-names             0/33   common_name_checked_at NOT NULL
-✗ curate-combinations             0/33   appears in plant_combinations
-✗ regenerate-native-region        0/32   native_region non-empty (hybrids excluded)
-✗ cross-check-plants              0/33   botanical_checked_at NOT NULL
-✗ cross-check-native-to           0/33   native_checked_at NOT NULL
-✗ cross-check-native-region       0/33   native_region_checked_at NOT NULL
-✗ curate-seasonal-care            0/33   seasonal_care NOT NULL
-⚠ pick-plant-images               0/33   image_checked_at NOT NULL
-✓ pick-plant-images --verify       0/0   image_verified_at NOT NULL (medium-confidence heroes only)
-✗ curate-editorial                0/33   editorial_checked_at NOT NULL
-```
+Seeded 33 of 39 absentees. Six cuts, reasoned in `seed-round13.ts`: two running bamboos and `Equisetum hyemale` (poor citizens), `Nelumbo nucifera` (aquatic, round 12's line), `Cymbidium goeringii` (not a garden plant), `Citrus trifoliata`.
 
-⚠️ **10 step(s) did not complete:** curate-plants, curate-common-names, curate-combinations, regenerate-native-region, cross-check-plants, cross-check-native-to, cross-check-native-region, curate-seasonal-care, pick-plant-images, curate-editorial. Say why here, or finish them.
+**What bit us — three defects, all found by running the thing.**
 
-**In flight.** The pipeline has not run yet — the step table above is the state at seed time, not a set of failures. This entry is rewritten at close.
+- **Trap 35.** `curate-common-names --apply` died having written 0 of 33 rows: `reviewed-mutation` rejected the stamp-only intent a `keep` verdict produces. First real `--apply` for that step, and six prior dry runs could not have caught it because `validate()` lives inside the `--apply` gate. Fixed and pinned.
+- **Trap 36.** The step then stamped all 33 correctly and still reported `0 already done` — `common_name_checked_at` was missing from `round-status`'s projection and had been for the step's whole life, so it could never be detected as complete and would have been re-billed every round. Fixed and pinned.
+- **Trap 37.** The cost report itself, above. NOT pinned; recorded in `TRAPS_NOT_PINNED` with what a pin needs.
 
-**Theme, and the first one chosen by a committed measurement.** The style vocabulary went from 6 to 19 on 2026-08-17 (`6382866`), adding a place axis, and `pnpm probe:gap` tested the four thinnest new styles against the catalog: japanese 47% held, chinese 31% (both survive round 9's 70% kill rule), moon 28% and gothic 30% — both **unfillable**, because their signature planting is cultivar selections of species already held. That is the finding a flat tag count inverts: gothic is the emptiest style in the vocabulary and cannot be moved by any species-level round. Seeded 33 of the 39 absentees; the six cuts are in `seed-round13.ts`'s header.
+**Also fixed:** the seasonal-care validator discarded `Cloud-prune ...` as "not imperative" (hyphenated compound, head verb is `prune`) — the signature action of the pines this round seeded, so no earlier round had the vocabulary to hit it. `curate-seasonal-care` also resolved its scope at import, which made it untestable; now lazy, with its first tests.
 
-**What bit us:** trap 35 — `curate-common-names --apply` died having written 0 of 33 rows, because `reviewed-mutation` rejected the stamp-only intent a `keep` verdict produces. First real `--apply` for that step; six prior dry runs could not have caught it, since `validate()` lives inside the `--apply` gate. Fixed and pinned in the same commit.
+**Corrections applied** (migration `20260818001500`, guarded and idempotent): `Rohdea japonica` recorded the BERRY season as bloom — `bloom_months` `[12,1,2]` → `[5,6,7]`, plus `seasonal_rhythm`, `description` and `seasonal_care`, because the false premise had spread into every field the cross-check does not compare. `Camellia sasanqua` gains `full_sun` as a tolerance (the distinction from `japonica`, which the catalog had stored identically); `Fargesia murielae` loses it. `Prunus incisa` lost an introduced US range and `Cryptomeria japonica` gained China, both WCVP-backed.
+
+**Ruling recorded in `lib/editorial-standard.ts`:** a name is not evidence of origin. Editorial twice flagged `Styphnolobium japonicum`'s `chinese` tag on the strength of "japonicum" and "Japanese pagoda tree"; it is the Chinese scholar tree, native to China and introduced to Japan (Ana, 2026-08-18). `japanese` and `chinese` name the garden tradition, never the botany.
+
+**The Wikimedia fallback works and is not wired in.** Three plants had no usable Trefle image; `feed-wikimedia-candidates.ts` found all three via Wikidata P18 under safe licences, and two became heroes (`Rhododendron kiusianum` high, `Paeonia suffruticosa` medium). The third, `Malus spectabilis`, was correctly rejected by the vision pass: its designated image is a trunk and canopy with a person in shot. So P18 is chosen for identification, not as a garden hero, and there is no second look at wider Commons when it is poor.
+
+**Left open, deliberately.** 6 editorial holds, all image (a held image is a recorded verdict; zero tag holds is the state that matters). `Malus spectabilis` has no hero. Three medium-confidence heroes survived the targeted verify on "species cannot be confirmed from the photo", which is the promotion rule holding. The uniform sun value across every ericaceous shrub and camellia in the catalog is unmeasured and is a catalog-wide question, not a round-13 one.
 
 **Deliberately not done:** `Citrus trifoliata` cut on size and thorns in a small garden, **not** on its North American invasive status — ruling that way would bind round 12's `Lythrum` and `Iris pseudacorus` calls retroactively, and whether a Euro/Med-first catalog should be governed by US invasive status is Ana's, still open.
 
@@ -321,7 +317,7 @@ The table below is the only index by shape, and `pnpm docs:claims` holds it to t
 
 | family | what it is                                                        | entries                                                  |
 | ------ | ----------------------------------------------------------------- | -------------------------------------------------------- |
-| **A**  | a failure or narrower answer comes back shaped like a real result | 1, 1b, 10, 11, 15, 18, 19, 20, 23, 34, 35                |
+| **A**  | a failure or narrower answer comes back shaped like a real result | 1, 1b, 10, 11, 15, 18, 19, 20, 23, 34, 35, 37            |
 | **B**  | the record disagrees with what actually happened                  | 2, 4, 12, 13, 14, 16, 17, 24, 25, 26, 28, 29, 31, 33, 36 |
 | **C**  | one fact with two homes, and only one got updated                 | 3, 5, 22, 32                                             |
 | **D**  | facts about the outside world you cannot design away              | 6, 7, 8, 9, 21, 27                                       |
@@ -796,6 +792,18 @@ Round 13, step 1a. `curate-common-names --apply` stamped all 33 rows correctly �
 **The tell was a contradiction between two reporters**, not an error: the pass printed `stamped only 20` while its own provenance witness said `0 row(s) carry a stamp inside the window`. Neither was the database. Query the column before believing either — see also trap 1b, test the object rather than its description.
 
 **Pinned by `apps/web/scripts/round-rehearsal.test.ts`**, `every registered stamp column is actually fetched (trap 36)`: `STATUS_PROJECTION` is now exported so it can be held to `registeredStampColumns()`, and the pre-fix projection fails the assertion naming `common_name_checked_at`. Two companion cases cover the evidence columns that are not `*_checked_at` stamps (`ai_drafted_at`, `seasonal_care`, `image_pick_confidence`), which fail the same way and are invisible to the first check.
+
+#### 37. A cost report reads complete while missing its most expensive step — ADDED 2026-08-18
+
+Round 13 was the first round priced by `pnpm runs:cost` instead of estimated, and the report it produced was wrong in two independent ways at once. Neither is visible in the output, which reads like a finished table.
+
+**Tokens are only counted inside `withRunRecord`.** `curate-common-names` judges every row and _then_ opens its run record to write the results, so all its model calls happen outside the window the meter snapshots. It recorded `usage: null`, and the report showed it as **0 calls** having spent real money. Any pass shaped think-first-write-second has the same hole.
+
+**A round is matched by the scope STRING, not the manifest.** `pick-plant-images` writes its scope as `batch <msgbatch_id>`, which names no round, so the vision pass — the most expensive step in the pipeline — never appeared under `runs:cost --round 13` at all. Its tokens were recorded correctly; nothing could attribute them.
+
+Round 13 therefore reported **$2.25** and actually cost **~$2.57**, and the whole gap is the step people most want the number for. Family A: a partial answer wearing a complete one's output. The `NOT MEASURED` footer is a real mitigation and the reason half of this was caught, but it lists steps that recorded nothing and cannot list a step that was never attributed to the round.
+
+**NOT PINNED, and recorded in `TRAPS_NOT_PINNED` rather than closed.** A source scan on "does `withRunRecord(` appear before `messages.create(`" was written and thrown away: it fires on `curate-seasonal-care`, `curate-styles`, `draft-hardiness` and `regenerate-native-region`, every one of which meters correctly, because the call sits in a helper DEFINED early and INVOKED from inside the record. **Textual order is not runtime order.** A real pin needs the metering seam exercised directly — a fake client, one call before the record opens and one inside it, asserting only the second is counted — plus a scope assertion that every run a round's steps write names that round. Neither exists yet.
 
 ---
 

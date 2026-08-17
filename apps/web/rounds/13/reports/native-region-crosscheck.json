@@ -1,0 +1,41 @@
+{
+  "findings": [
+    {
+      "id": "1f130d47-ce2e-4ee3-a7e0-e4ceab7214a3",
+      "common_name": "Fuji cherry",
+      "scientific_name": "Prunus incisa",
+      "stored": ["Eastern Asia", "Northeastern U.S.A."],
+      "wcvp_native": ["Eastern Asia"],
+      "wcvp_introduced_only": ["Northeastern U.S.A.", "Northern Europe"],
+      "native_l3_count": 1,
+      "missing": [],
+      "extra": ["Northeastern U.S.A."],
+      "extra_are_introduced": ["Northeastern U.S.A."],
+      "thin_evidence": ["Eastern Asia"],
+      "verdict": "disagrees"
+    },
+    {
+      "id": "ea57fba0-72ff-4abe-89e8-e419832a5427",
+      "common_name": "Japanese red-cedar",
+      "scientific_name": "Cryptomeria japonica",
+      "stored": ["Eastern Asia"],
+      "wcvp_native": ["China", "Eastern Asia"],
+      "wcvp_introduced_only": [
+        "Macaronesia",
+        "Middle Europe",
+        "New Zealand",
+        "Northern Africa",
+        "Northern Europe",
+        "Southeastern Europe",
+        "Western Asia",
+        "Western Indian Ocean"
+      ],
+      "native_l3_count": 3,
+      "missing": ["China"],
+      "extra": [],
+      "extra_are_introduced": [],
+      "thin_evidence": ["Eastern Asia"],
+      "verdict": "disagrees"
+    }
+  ]
+}

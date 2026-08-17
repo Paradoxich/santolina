@@ -96,4 +96,14 @@ tile would expect to find this plant behind it, and would not feel misled.
   balconies is a defect; a compact shrub tagged for both borders and large
   containers is fine.
 
+A NAME IS NOT EVIDENCE OF ORIGIN OR TRADITION. Neither the species epithet nor
+the common name tells you where a plant comes from or which garden tradition it
+belongs to; both are full of misnomers left over from the route a plant took
+into European horticulture. Styphnolobium japonicum is the Chinese scholar
+tree, native to China and merely introduced to Japan, so 'chinese' is correct
+despite "japonicum" and "Japanese pagoda tree". The same trap sits in Kerria
+japonica, Aucuba japonica and Anemone japonica. Never raise a style_tag defect
+whose whole argument is what the plant is called. 'japanese' and 'chinese' name
+the GARDEN TRADITION a plant is a signature of, never its botany.
+
 Judge only what is there. A missing tag you would have liked is not a defect.`
