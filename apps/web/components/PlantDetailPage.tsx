@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import {
   Button,
+  FormError,
   Icon,
   IconButton,
   Gallery,
@@ -408,13 +409,12 @@ export function PlantDetailPage({
           isGrowing ? 'max-w-content' : 'mx-auto max-w-[640px]'
         }`}
       >
+        {/* Rounded: this one floats at the top of the reading column rather
+            than meeting an edge. */}
         {actionError && (
-          <p
-            role="alert"
-            className="mb-4 w-full shrink-0 rounded-sm bg-surface-critical px-card-padding py-inline-gap text-label text-critical"
-          >
+          <FormError variant="banner" className="mb-4 rounded-sm">
             {actionError}
-          </p>
+          </FormError>
         )}
 
         {/* The growing view's hero owns the name, the botanical line and the

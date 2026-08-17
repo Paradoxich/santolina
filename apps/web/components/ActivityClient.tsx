@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 import {
   Button,
   EmptyState,
+  FormError,
   Icon,
   IconButton,
   Lightbox,
@@ -265,9 +266,7 @@ export function ActivityClient({
             : `This will permanently delete this note. This can't be undone.`}
         </p>
         {deleteError && (
-          <p className="mt-inline-gap text-body-small text-critical">
-            {deleteError}
-          </p>
+          <FormError className="mt-inline-gap">{deleteError}</FormError>
         )}
       </Modal>
     </div>

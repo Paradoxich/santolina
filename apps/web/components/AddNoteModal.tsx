@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import {
   Button,
   Chip,
+  FormError,
   Icon,
   IconButton,
   Menu,
@@ -350,7 +351,7 @@ export function AddNoteModal({
           )}
         </div>
 
-        {error && <p className="text-body-small text-critical">{error}</p>}
+        {error && <FormError>{error}</FormError>}
       </div>
     </Modal>
   )

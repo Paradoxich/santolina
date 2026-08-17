@@ -16,6 +16,15 @@ import { cn } from '../utils/cn'
 // caller that keeps this mounted and swaps its text gets the announcement too;
 // a caller that needs the region to exist before there is a message should
 // render nothing instead of rendering this empty.
+//
+// `variant="banner"` is the same failure on a page or a drawer rather than in a
+// form: a full-width strip on `surface-critical` at the top of the region whose
+// action failed. It carries `text-label` where the line carries
+// `text-body-small` — a strip that spans the content column is reading as a
+// piece of UI furniture, not as a sentence under a field, and label is the role
+// for that. The tone roles are identical, which is what has to be true.
+// Callers own only how the strip meets its container: `rounded-sm` when it
+// floats in a column, `border-b border-card` when it is flush to a drawer edge.
 
 export interface FormErrorProps {
   /** The message. Render nothing rather than passing an empty string. */
@@ -25,7 +34,9 @@ export interface FormErrorProps {
    * `aria-describedby`, and set `aria-invalid` on that input.
    */
   id?: string
-  /** `start` under a field, `center` in a card's failure slot. */
+  /** `line` in a form, `banner` at the top of a page or drawer region. */
+  variant?: 'line' | 'banner'
+  /** `start` under a field, `center` in a card's failure slot. Lines only. */
   align?: 'start' | 'center'
   className?: string
 }
@@ -33,6 +44,7 @@ export interface FormErrorProps {
 export function FormError({
   children,
   id,
+  variant = 'line',
   align = 'start',
   className,
 }: FormErrorProps) {
@@ -41,8 +53,11 @@ export function FormError({
       id={id}
       role="alert"
       className={cn(
-        'text-body-small text-critical',
-        align === 'center' && 'text-center',
+        'text-critical',
+        variant === 'banner'
+          ? 'w-full shrink-0 bg-surface-critical px-card-padding py-inline-gap text-label'
+          : 'text-body-small',
+        variant === 'line' && align === 'center' && 'text-center',
         className
       )}
     >

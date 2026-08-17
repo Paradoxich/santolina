@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Button, Chip, Icon, IconButton } from '@paradoxui/ui'
+import { Button, Chip, FormError, Icon, IconButton } from '@paradoxui/ui'
 import { icons } from '@/lib/icons'
 import {
   DIARY_EVENT_TYPES,
@@ -166,9 +166,7 @@ export function StoryComposer({
           {isReAdding ? 'Adding back…' : 'Add back to garden'}
           <Icon src={icons.arrowRight} />
         </Button>
-        {reAddError && (
-          <p className="text-body-small text-critical">{reAddError}</p>
-        )}
+        {reAddError && <FormError>{reAddError}</FormError>}
       </div>
     )
   }
@@ -215,9 +213,7 @@ export function StoryComposer({
         </ul>
       )}
 
-      {composerError && (
-        <p className="text-body-small text-critical">{composerError}</p>
-      )}
+      {composerError && <FormError>{composerError}</FormError>}
 
       <div className="flex w-full items-end gap-tight-gap rounded-md border border-card bg-surface-overlay p-tight-gap">
         <input

@@ -39,6 +39,21 @@ export const InACardSlot: Story = {
   ],
 }
 
+export const Banner: Story = {
+  args: {
+    variant: 'banner',
+    className: 'rounded-sm',
+    children: 'We could not move that plant. Try again in a moment.',
+  },
+  decorators: [
+    (Story) => (
+      <div className="w-96">
+        <Story />
+      </div>
+    ),
+  ],
+}
+
 // The pairing that matters: a field-level message must look the same whether
 // the field carries a label or is a bare pill wired up by hand.
 export const WiredToAnInput: Story = {

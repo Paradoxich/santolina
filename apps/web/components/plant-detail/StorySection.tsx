@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import {
   Button,
   DrawerSection,
+  FormError,
   Icon,
   IconButton,
   Lightbox,
@@ -340,9 +341,7 @@ export function StorySection({
           {`This will permanently delete ${pluralize(noteCount, 'note')} and ${pluralize(photoCount, 'photo')}. This can't be undone.`}
         </p>
         {clearError && (
-          <p className="mt-inline-gap text-body-small text-critical">
-            {clearError}
-          </p>
+          <FormError className="mt-inline-gap">{clearError}</FormError>
         )}
       </Modal>
 
@@ -378,9 +377,7 @@ export function StorySection({
             : `This will permanently delete this note. This can't be undone.`}
         </p>
         {noteDeleteError && (
-          <p className="mt-inline-gap text-body-small text-critical">
-            {noteDeleteError}
-          </p>
+          <FormError className="mt-inline-gap">{noteDeleteError}</FormError>
         )}
       </Modal>
     </DrawerSection>

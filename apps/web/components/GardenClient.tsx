@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { EmptyState, Tabs, useToast } from '@paradoxui/ui'
+import { EmptyState, FormError, Tabs, useToast } from '@paradoxui/ui'
 import { EmptyStateIllustration } from '@/components/EmptyStateIllustration'
 import { GardenPlantTile } from '@/components/GardenPlantTile'
 import { PlannedPlantTile } from '@/components/PlannedPlantTile'
@@ -220,11 +220,7 @@ export function GardenClient({ palette }: GardenClientProps) {
           )}
         </div>
 
-        {actionError && (
-          <p role="alert" className="mt-4 text-label text-critical">
-            {actionError}
-          </p>
-        )}
+        {actionError && <FormError className="mt-4">{actionError}</FormError>}
 
         {visible.length > 0 && (
           <div className="mt-6 grid grid-cols-1 gap-item-gap md:grid-cols-2 xl:grid-cols-3">

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Button, Icon, IconButton, Modal } from '@paradoxui/ui'
+import { Button, FormError, Icon, IconButton, Modal } from '@paradoxui/ui'
 import { icons, type IconName } from '@/lib/icons'
 import { LocationPickerModal } from '@/components/dashboard/LocationPickerModal'
 import { resetGarden, deleteAccount } from '@/server/account-actions'
@@ -210,12 +210,7 @@ export function SettingsModal({
               )}
 
               {error && (
-                <p
-                  className="pt-card-padding text-body-small text-critical"
-                  role="alert"
-                >
-                  {error}
-                </p>
+                <FormError className="pt-card-padding">{error}</FormError>
               )}
             </div>
           </div>

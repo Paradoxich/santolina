@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Modal } from '@paradoxui/ui'
+import { FormError, Modal } from '@paradoxui/ui'
 import { type GeocodingResult } from '@/lib/open-meteo'
 import { CitySearch } from '@/components/CitySearch'
 import { setGardenLocation } from '@/server/garden-actions'
@@ -92,7 +92,7 @@ export function LocationPickerModal({
           </div>
         )}
 
-        {error && <p className="text-body-small text-critical">{error}</p>}
+        {error && <FormError>{error}</FormError>}
 
         <CitySearch
           onSelect={handleSelect}

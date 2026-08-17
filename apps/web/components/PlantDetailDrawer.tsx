@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import {
   Button,
   Drawer,
+  FormError,
   Icon,
   IconButton,
   Gallery,
@@ -340,13 +341,12 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
         </>
       }
     >
+      {/* Flush to the drawer's top edge, so a bottom border instead of a
+          radius. Same failure and same copy as the page above. */}
       {actionError && (
-        <p
-          role="alert"
-          className="w-full shrink-0 border-b border-card bg-surface-critical px-card-padding py-inline-gap text-label text-critical"
-        >
+        <FormError variant="banner" className="border-b border-card">
           {actionError}
-        </p>
+        </FormError>
       )}
 
       <div className="flex w-full flex-1 flex-col gap-section-break overflow-y-auto p-card-padding">
