@@ -20,8 +20,8 @@
  * skips already-split rows.
  *
  * Usage (from apps/web):
- *   ./node_modules/.bin/tsx --env-file=.env.local scripts/backfill-sun-split.ts
- *   ./node_modules/.bin/tsx --env-file=.env.local scripts/backfill-sun-split.ts --dry-run
+ *   ./node_modules/.bin/tsx --env-file=.env.local scripts/archive/backfill-sun-split.ts
+ *   ./node_modules/.bin/tsx --env-file=.env.local scripts/archive/backfill-sun-split.ts --dry-run
  */
 
 import { getSupabaseAdmin } from '../../lib/supabase-admin'

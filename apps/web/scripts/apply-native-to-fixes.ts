@@ -36,6 +36,7 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { getSupabaseAdmin } from '../lib/supabase-admin'
+import { withRunRecord, type Witness } from './run-provenance'
 
 const DEFAULT_FILE = 'reference/native-to-fixes-2026-07-30.json'
 
@@ -92,42 +93,82 @@ async function main() {
   let applied = 0
   let stale = 0
 
-  for (const d of decisions) {
-    const { data, error } = await db
-      .from('plants')
-      .select('native_to')
-      .eq('id', d.id)
-      .single()
-    if (error)
-      throw new Error(`Re-read failed for ${d.common_name}: ${error.message}`)
+  const runOptions = {
+    step: 'apply-native-to-fixes',
+    // native_checked_at is NULLED in the same statement as the new phrase, so
+    // the guard re-reads words it has never judged. Declared, because a
+    // clearing write is still a write and this one deliberately destroys a
+    // certification.
+    writeSet: ['native_to', 'native_checked_at'],
+    // SHAPE 12. native_checked_at cannot witness itself here: this run sets it
+    // to NULL, a nulled row matches no window, and the run would observe 0
+    // against its own claim and file itself CONTRADICTED. Worse, the loss is
+    // permanent — nothing queried later can distinguish "this run nulled it"
+    // from "it was never set", which is exactly what the module header means by
+    // the stamp being current certification state and not an audit trail.
+    evidence: (['native_to', 'native_checked_at'] as const).map((covers) => ({
+      kind: 'row-touched' as const,
+      covers,
+      table: 'plants' as const,
+      column: 'updated_at',
+    })) as Witness[],
+    scope: `${decisions.length} hand-authored decision(s) from ${file}`,
+    // Hand-authored prose: the decision file is the recipe, and its content
+    // hash identifies the batch of phrasings this run applied.
+    recipe: {
+      model: 'human',
+      template: readFileSync(join(process.cwd(), file), 'utf8'),
+      ingredients: {},
+      decoding: {},
+    },
+  }
 
-    const current = (data?.native_to ?? '') as string
-    if (current !== d.expect) {
-      console.log(`  ⚠ ${d.common_name} — changed since review, skipped`)
-      console.log(`      expected: ${d.expect}`)
-      console.log(`      found   : ${current}`)
-      stale++
-      continue
-    }
-
-    if (!dryRun) {
-      const { error: writeError } = await db
+  const applyAll = async (wrote: (id: string) => void) => {
+    for (const d of decisions) {
+      const { data, error } = await db
         .from('plants')
-        .update({ native_to: d.phrase, native_checked_at: null })
+        .select('native_to')
         .eq('id', d.id)
-      if (writeError)
-        throw new Error(
-          `Write failed for ${d.common_name}: ${writeError.message}`
-        )
-    }
+        .single()
+      if (error)
+        throw new Error(`Re-read failed for ${d.common_name}: ${error.message}`)
 
-    console.log(
-      `  ${dryRun ? '·' : '✓'} ${d.common_name} (${d.scientific_name})`
-    )
-    console.log(`      ${d.expect}`)
-    console.log(`   -> ${d.phrase}`)
-    console.log(`      ${d.why}`)
-    applied++
+      const current = (data?.native_to ?? '') as string
+      if (current !== d.expect) {
+        console.log(`  ⚠ ${d.common_name} — changed since review, skipped`)
+        console.log(`      expected: ${d.expect}`)
+        console.log(`      found   : ${current}`)
+        stale++
+        continue
+      }
+
+      if (!dryRun) {
+        const { error: writeError } = await db
+          .from('plants')
+          .update({ native_to: d.phrase, native_checked_at: null })
+          .eq('id', d.id)
+        if (writeError)
+          throw new Error(
+            `Write failed for ${d.common_name}: ${writeError.message}`
+          )
+        wrote(d.id)
+      }
+
+      console.log(
+        `  ${dryRun ? '·' : '✓'} ${d.common_name} (${d.scientific_name})`
+      )
+      console.log(`      ${d.expect}`)
+      console.log(`   -> ${d.phrase}`)
+      console.log(`      ${d.why}`)
+      applied++
+    }
+  }
+
+  // A dry run opens NO run: it re-reads and writes nothing.
+  if (dryRun) {
+    await applyAll(() => {})
+  } else {
+    await withRunRecord(runOptions, (run) => applyAll((id) => run.wrote(id)))
   }
 
   console.log(

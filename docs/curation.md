@@ -361,6 +361,37 @@ layer](architecture.md#curation-layer)), and new prose is exactly what a reviewe
 would judge again. It prints the rows whose verdict it retired so
 `curate-editorial` can be re-run on them.
 
+<a id="removing-a-plant"></a>
+
+### Removing a plant
+
+`scripts/remove-plant.ts` (added 2026-08-17) is the only path that deletes a
+catalog row. Before it existed the catalog could only grow, which is why the
+_Hydrangea anomala_ / _H. petiolaris_ duplicate stayed known and unfixed from
+round 11 onward.
+
+**The foreign keys do not make a delete safe, and one makes it dangerous.**
+`palette_plants.plant_id` is `ON DELETE CASCADE`, so a plain
+`delete from plants` removes the plant from every user's garden without a word;
+`diary_entries.plant_id` is `NO ACTION` and blocks, but arrives as a raw FK
+error. So the refusals live in the script: **user-owned rows block, derived rows
+do not.** Combinations cascade and are regenerable, so they never block — the
+report says how many went and to re-run `curate-combinations`. There is no
+`--force`; the answer to "a user has this plant" is to move those rows first.
+
+**The removal record is the restore point.** Each removal appends the complete
+deleted rows to `reference/removals.json`, committed, with the reason and the
+round manifests that named the id. A whole-catalog snapshot to drop one row is
+an artifact nobody diffs, and it does not answer the question you have
+afterwards — what exactly went, and why.
+
+**Round manifests are reported, never rewritten.** A manifest records what
+entered the catalog in that round and stays true once the row is gone. But
+`roundStatus` counts against the rows it can still fetch, so a vanished id
+shrinks the denominator and every step reads more complete than it is —
+`verify-round` FAILs on a manifest id with no live row and points at the
+removal record.
+
 <a id="hardiness"></a>
 
 ## Hardiness: RHS rating is canonical, drafted then human-verified

@@ -40,6 +40,7 @@ import { getSupabaseAdmin } from '../lib/supabase-admin'
 import { fetchAllRows } from '../lib/paginate'
 import { displayUrlFor } from '../lib/image-probe'
 import { writePlant } from '../lib/plants-write'
+import { withRunRecord, type Witness } from './run-provenance'
 
 async function main() {
   const apply = process.argv.slice(2).includes('--apply')
@@ -68,49 +69,87 @@ async function main() {
   let changed = 0
   const unmeasured: string[] = []
 
-  for (const p of rows) {
-    const url = p.image_url_curated!
-    const result = await displayUrlFor(url)
+  const runOptions = {
+    step: 'fix-oversized-heroes',
+    // One column. The verdict columns are NOT declared: `preserveVerdict` asks
+    // plants-write to keep what is already there, so this run does not author
+    // them — and declaring a value you deliberately did not change would be
+    // claiming a write that never happened.
+    writeSet: ['image_url_curated'],
+    // A value column, and this pass writes no stamp at all, so `updated_at`
+    // bounds the claim and cannot corroborate it.
+    evidence: [
+      {
+        kind: 'row-touched',
+        covers: 'image_url_curated',
+        table: 'plants',
+        column: 'updated_at',
+      },
+    ] as Witness[],
+    scope: `${rows.length} Wikimedia hero(es) measured`,
+    // No model and no prompt: the rule is mechanical — swap an oversized
+    // rendition for the 1920px one at the same URL. The recipe is that rule.
+    recipe: {
+      model: 'human',
+      template: 'Wikimedia hero → 1920px rendition of the same file',
+      ingredients: {},
+      decoding: {},
+    },
+  }
 
-    // A row we could not measure is NOT a row we checked and approved. Counting
-    // it as clean is how a first run reported nine to fix, rewrote four, and
-    // then reported zero remaining.
-    if (result.kind === 'unmeasured') {
-      unmeasured.push(`${p.common_name} (${result.reason})`)
-      continue
-    }
-    if (result.kind === 'unchanged') continue
+  const applyAll = async (wrote: (id: string) => void) => {
+    for (const p of rows) {
+      const url = p.image_url_curated!
+      const result = await displayUrlFor(url)
 
-    if (apply) {
-      // `preserveVerdict` because this is a smaller rendition of the SAME
-      // photograph — not something a reviewer would judge differently, and
-      // losing sign-offs to a resize would be the guard working against the
-      // thing it protects. That exception is the only judgment this script
-      // makes about the verdict; how to keep one across a change now lives in
-      // `plants-write.ts` rather than being re-derived here.
-      //
-      // It was re-derived here, and wrongly: this script predates the
-      // per-criterion split and restored `is_curated` and
-      // `editorial_checked_at` without `editorial_image_at`, leaving the row
-      // approved with criterion 1 outstanding.
-      try {
-        await writePlant(
-          supabase,
-          p.id,
-          { image_url_curated: result.url },
-          { preserveVerdict: true }
-        )
-      } catch (err) {
-        console.log(
-          `  ${p.common_name} — ${err instanceof Error ? err.message : String(err)}`
-        )
+      // A row we could not measure is NOT a row we checked and approved. Counting
+      // it as clean is how a first run reported nine to fix, rewrote four, and
+      // then reported zero remaining.
+      if (result.kind === 'unmeasured') {
+        unmeasured.push(`${p.common_name} (${result.reason})`)
         continue
       }
+      if (result.kind === 'unchanged') continue
+
+      if (apply) {
+        // `preserveVerdict` because this is a smaller rendition of the SAME
+        // photograph — not something a reviewer would judge differently, and
+        // losing sign-offs to a resize would be the guard working against the
+        // thing it protects. That exception is the only judgment this script
+        // makes about the verdict; how to keep one across a change now lives in
+        // `plants-write.ts` rather than being re-derived here.
+        //
+        // It was re-derived here, and wrongly: this script predates the
+        // per-criterion split and restored `is_curated` and
+        // `editorial_checked_at` without `editorial_image_at`, leaving the row
+        // approved with criterion 1 outstanding.
+        try {
+          await writePlant(
+            supabase,
+            p.id,
+            { image_url_curated: result.url },
+            { preserveVerdict: true }
+          )
+          wrote(p.id)
+        } catch (err) {
+          console.log(
+            `  ${p.common_name} — ${err instanceof Error ? err.message : String(err)}`
+          )
+          continue
+        }
+      }
+      console.log(
+        `  ${p.common_name} — ${apply ? 'now' : 'would use'} a 1920px rendition`
+      )
+      changed++
     }
-    console.log(
-      `  ${p.common_name} — ${apply ? 'now' : 'would use'} a 1920px rendition`
-    )
-    changed++
+  }
+
+  // A dry run opens NO run: it measures and writes nothing.
+  if (apply) {
+    await withRunRecord(runOptions, (run) => applyAll((id) => run.wrote(id)))
+  } else {
+    await applyAll(() => {})
   }
 
   console.log(

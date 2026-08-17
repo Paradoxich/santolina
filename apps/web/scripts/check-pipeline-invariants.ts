@@ -124,12 +124,16 @@ export const TRAPS_NOT_PINNED: Record<string, string> = {
 
 /** Shape 5. Scripts with no runbook step and no end condition, not yet archived. */
 export const SCRIPTS_PENDING_ARCHIVE: Record<string, string> = {
-  'wikimedia-image-proof.ts':
-    'Proved Wikimedia CC-BY/BY-SA sourcing before the July 22 image pass. Decision shipped; resolveP18/fetchCommonsImage now live in lib/wikimedia.ts. Archive per artifact (c/1).',
-  'repair-combinations.ts':
-    'One-off repair. The only archive candidate with no record anywhere, so archiving it needs a database-log line naming what it repaired and when, in the same change.',
-  'backfill-legacy-editorial.ts':
-    'One-off. Archive as a WRONG-SHAPE example: it stamps all four editorial stamps and writes is_curated directly, against standing rule 6 and migration 20260728220852 own column comment.',
+  // EMPTY as of 2026-08-17. All four candidates moved to scripts/archive/ with
+  // README rows in one change: wikimedia-image-proof, repair-combinations (plus
+  // its database-log line, standing rule 5), backfill-legacy-editorial as a
+  // wrong-shape example, and apply-sun-widening, whose last reason to stay —
+  // being the drift-guard template every apply-script copied — ended when
+  // reviewed-mutation.ts became a library they call instead.
+  //
+  // An entry here is a script nothing references that is NOT being archived
+  // yet, with the reason. Adding one back needs that reason; the shape it
+  // guards against is scripts/ growing and never draining.
 }
 
 /**
@@ -146,39 +150,23 @@ export const SCRIPTS_PENDING_ARCHIVE: Record<string, string> = {
  * to prevent.
  */
 export const RUNS_WITHOUT_PROVENANCE: Record<string, string> = {
-  // --- round steps: EMPTY as of 2026-08-16, and the gate round 12 waited on.
-  //     Every step the runbook runs now opens a run. Do not add one back here
-  //     without saying why a round step may write without a record. ---
-
-  // --- outside the round cadence ---
-  'apply-native-to-fixes.ts':
-    'Applies committed decisions and NULLS native_checked_at. A clearing write is still a write.',
-  'apply-seasonal-care-fixes.ts': 'Same generate-then-apply shape.',
-  'apply-image-confirmations.ts':
-    'Writes image_verified_at from a review file.',
-  'apply-image-reverts.ts': 'Clears a curated hero and its stamps.',
-  'set-plant-hero.ts':
-    'Manual hero override. Writes image_url_curated and stamps.',
-  'feed-wikimedia-candidates.ts':
-    'Appends candidates and CLEARS image_checked_at so the pass re-picks.',
-  'backfill-guard-stamps.ts':
-    'Report-derived stamping. Its state-derived half was deleted 2026-08-14 after it fabricated 100 stamps, so this is the script whose provenance matters most and has none.',
-  'fix-round8-names.ts':
-    'One-off name pass, kept as the apply-script template.',
-  'fix-round11-names.ts': 'One-off name pass.',
-  'fix-round12-names.ts':
-    'One-off name pass, round 12. Same category as rounds 8 and 11 above.',
-  'fix-round12-tags.ts':
-    'One-off tag pass, round 12: the two editorial `tags:` blockers plus three older rows with the same label defect.',
-  'fix-oversized-heroes.ts':
-    'One-off image repair. Found by this scan rather than by the list, which is the scan doing its job.',
-
-  // --- archive candidates: these leave scripts/ rather than get wired ---
-  'apply-sun-widening.ts':
-    'Neutralized by a trigger; queued for archive (artifact c/1).',
-  'backfill-legacy-editorial.ts': 'Wrong-shape example; queued for archive.',
-  'repair-combinations.ts': 'One-off repair; queued for archive.',
+  // EMPTY as of 2026-08-17, and it took three sessions to get here. Every
+  // script in scripts/ that writes a stamp now opens a run record.
+  //
+  // AN ENTRY HERE IS A WRITE WHOSE VALUE HAS NO RECOVERABLE MODEL, RECIPE OR
+  // OUTCOME. Adding one back needs a reason why that is acceptable, and the
+  // honest answer has never yet been anything but "not done yet". The three
+  // routes out are the three that were used: wire it, archive it, or delete it.
 }
+
+/**
+ * Shape 18. A flag a script parses without documenting it in its own header.
+ *
+ * EMPTY, and it should stay that way: an entry here says an option exists that
+ * nobody can find, on purpose. The only honest reason is a flag that is
+ * genuinely internal — one a wrapper passes and a person never types.
+ */
+export const FLAGS_NOT_DOCUMENTED: Record<string, string> = {}
 
 /**
  * Shape 1. Places a not-null column is compared to null, allowed on inspection.
@@ -218,16 +206,11 @@ export const HAND_ROLLED_PAGINATION: Record<string, string> = {
  * produce would only fail as a stale hatch.
  */
 export const HAND_ROLLED_REVIEWED_MUTATION: Record<string, string> = {
-  'apply-description-fixes.ts':
-    'The closest to migrated already: it reports the verdicts it retires, which is where the primitive got that half from. Its `expect` guard covers a single column and its run record is wired, so it is the lowest-value migration of the six and goes last.',
-  'apply-sun-widening.ts':
-    'Guards on `stored` read out of a cross-check report rather than a hand-authored decision, and re-checks `is_curated` a second time at the write with `.eq("is_curated", false)`. That belt-and-braces has no equivalent in the primitive; decide whether to add it or drop it when this one moves.',
-  'fix-round8-names.ts':
-    'Round 8. Matches by `scientific_name`, not id, so migrating it means resolving names to ids first — the primitive takes ids on purpose, because a name is a value and values drift.',
-  'fix-round11-names.ts': 'Round 11. Same shape as fix-round8-names.',
-  'fix-round12-names.ts': 'Round 12. Same shape as fix-round8-names.',
-  'fix-round12-tags.ts':
-    'Round 12, and the best first migration: it already normalises through JSON.stringify the way the primitive does, and it writes two different columns, so it exercises the multi-column guard.',
+  // EMPTY as of 2026-08-17. Five migrated — fix-round12-tags, the three name
+  // passes (via scripts/name-fixes.ts, which is the shared procedure they had
+  // three copies of) and apply-description-fixes. The sixth, apply-sun-widening,
+  // left scripts/ instead: a write the database discards does not need a better
+  // guard around it.
 }
 
 /**
@@ -1043,7 +1026,17 @@ export const RAW_BEGIN_RUN_ALLOWED: Record<string, string> = {}
  * that accepted a table name out of the column list would be re-conflating the
  * two things the evidence split exists to keep separate.
  */
-const NON_COLUMN_WRITE_SETS = new Set(['plant_combinations'])
+const NON_COLUMN_WRITE_SETS = new Set([
+  'plant_combinations',
+  // remove-plant deletes a row, so what it mutates is that row's EXISTENCE and
+  // there is no column to name. It is also the only write-set member in the
+  // repo that can have no witness at all: every other witness reads something
+  // the write left behind, and a deletion leaves nothing — not even
+  // `updated_at`, whose row is the row that is gone. It declares
+  // `{ kind: 'none' }` with that reason, and reference/removals.json holds the
+  // complete deleted rows as the evidence instead.
+  'plants',
+])
 
 /** Declared write-set entries that are real writes but not stamp columns. */
 const NON_STAMP_WRITES = new Set([
@@ -1077,6 +1070,78 @@ const NON_STAMP_WRITES = new Set([
   // *_checked_at column beside it, so draft-hardiness writes no stamp at all.
   'hardiness_rating',
 ])
+
+// ---------------------------------------------------------------------------
+// Shape 18. A flag a script parses but does not document
+//
+// THE CLASS EVERY OTHER SHAPE HERE MISSES: a defect in code the session just
+// wrote. The rest of this file catches shapes that accumulated over rounds —
+// an unwired stamp, a copied page loop, a stale hatch. This one catches the
+// author of a new flag forgetting the two lines that make it reachable, in the
+// same pass that adds it.
+//
+// AN UNDOCUMENTED FLAG IS AN UNREACHABLE FEATURE. The header is the only place
+// anyone learns a script takes one: there is no --help anywhere in scripts/,
+// and the runbook renders usage from these headers. `--catalog-only` on
+// archive-round has been parsed and undocumented since it was written, which
+// means the fast path it exists to offer has never been offered to anybody.
+// That is the same failure as CLAUDE.md's "nothing may be reachable only from
+// someone's memory", one level down: not the script, its options.
+//
+// WHAT COUNTS AS PARSING, and why the check is narrow. A quoted `--flag` on a
+// line that also touches `argv` or `args` is read as parsed. That deliberately
+// excludes a flag in an `args: [...]` literal, which is a flag being PASSED to
+// a child command (runbook.ts renders four of those and parses none of them),
+// and it misses a parse split across lines. A first version that under-reports
+// is worth more than one that starts life with a list of excuses: a check full
+// of escape hatches teaches people to add another.
+// ---------------------------------------------------------------------------
+function parsedFlags(body: string): Set<string> {
+  const flags = new Set<string>()
+  for (const line of body.split('\n')) {
+    // `args: ['--apply']` is a flag handed to a child process, not parsed here.
+    if (/\bargs\s*:/.test(line)) continue
+    if (!/\bargv\b|\bargs\b/.test(line)) continue
+    for (const m of line.matchAll(/['"](--[a-z][a-z0-9-]*)['"]/g))
+      flags.add(m[1]!)
+  }
+  return flags
+}
+
+function checkFlagsDocumented(): number {
+  const excused: string[] = []
+
+  for (const file of SOURCE_TS.filter((f) => f.includes('/scripts/'))) {
+    const name = basename(file)
+    if (name === basename(__filename)) continue
+    const src = read(file)
+    const end = src.indexOf('*/')
+    const header =
+      src.trimStart().startsWith('/**') && end !== -1 ? src.slice(0, end) : ''
+    const undocumented = [...parsedFlags(src.slice(end + 2))].filter(
+      (flag) => !header.includes(flag)
+    )
+    if (!undocumented.length) continue
+
+    if (FLAGS_NOT_DOCUMENTED[name]) {
+      excused.push(name)
+      continue
+    }
+    fail({
+      shape: 'flag parsed but not documented',
+      subject: file,
+      detail: `Parses ${undocumented.join(', ')} and its header never names ${undocumented.length > 1 ? 'them' : 'it'}, so the only way to find the option is to read the argv handling.`,
+      remedy: `Add it to the Usage block in the file's own header. If it is deliberately private, record it in FLAGS_NOT_DOCUMENTED in ${basename(__filename)} with the reason.`,
+    })
+  }
+
+  for (const key of Object.keys(FLAGS_NOT_DOCUMENTED)) {
+    if (!excused.includes(key)) {
+      staleHatches.push({ list: 'FLAGS_NOT_DOCUMENTED', key })
+    }
+  }
+  return excused.length
+}
 
 // ---------------------------------------------------------------------------
 // Shape 13. Pagination hand-rolled instead of lib/paginate.ts
@@ -1439,6 +1504,7 @@ const traps = checkTrapsPinned()
 const pendingArchive = checkScriptReachability()
 checkNoForkedSynonymTables()
 const unwiredProvenance = checkWriteProvenance()
+const undocumentedFlags = checkFlagsDocumented()
 const handRolledPaging = checkPagination()
 const handRolledMutation = checkReviewedMutation()
 const openFindings = checkOpenFindings()
@@ -1491,6 +1557,7 @@ row(
   String(unwiredProvenance),
   'RUNS_WITHOUT_PROVENANCE'
 )
+row('undocumented flags', String(undocumentedFlags), 'FLAGS_NOT_DOCUMENTED')
 row('hand-rolled paging', String(handRolledPaging), 'HAND_ROLLED_PAGINATION')
 row(
   'hand-rolled mutation',

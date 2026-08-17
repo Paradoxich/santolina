@@ -1,0 +1,204 @@
+[
+  {
+    "removed_at": "2026-08-17T17:24:19.053Z",
+    "scientific_name": "Hydrangea anomala",
+    "common_name": "Climbing hydrangea",
+    "why": "Duplicate of Hydrangea petiolaris, which is the same plant to a reader and to a nursery. Kept petiolaris because round 11 manifest names it (Ana, carried in the handoff since round 11). Note for the record: the botanically accepted name is Hydrangea anomala subsp. petiolaris, so the surviving row carries the subspecies epithet as if it were a species - a naming question, not a duplicate question, and left open deliberately.",
+    "in_manifests": [],
+    "plant": {
+      "id": "339d1235-f8fe-445d-a062-6051c218493d",
+      "created_at": "2026-07-08T23:43:05.320152+00:00",
+      "updated_at": "2026-08-17T14:17:45.284274+00:00",
+      "source_species_id": 298438,
+      "common_name": "Climbing hydrangea",
+      "scientific_name": "Hydrangea anomala",
+      "description": "A vigorous climbing vine that attaches itself to walls and structures using aerial roots. In summer, it produces large flat clusters of white lace-cap flowers that are very attractive. The heart-shaped leaves turn yellow in autumn before dropping.",
+      "care_level": "medium",
+      "bloom_months": [6, 7],
+      "peak_season": null,
+      "height_min_cm": 600,
+      "height_max_cm": 1500,
+      "hardiness_zone_min": "5",
+      "hardiness_zone_max": "9",
+      "sun_requirements": ["partial_sun", "shade"],
+      "space_types": ["ground_garden", "mixed"],
+      "style_tags": ["lush", "classic"],
+      "bloom_color": ["white"],
+      "foliage_color": null,
+      "image_url": "https://bs.plantnet.org/image/o/2aeac2372209dc588f539373ffd67e8a08abcb34",
+      "image_urls": [
+        "https://bs.plantnet.org/image/o/6aa80c8af5c4668a80a79005d99421f2b25a30ee",
+        "https://bs.plantnet.org/image/o/23f927471180b977d2b5f2d04f95625fdff0e5b0",
+        "https://bs.plantnet.org/image/o/428a542885349c6c4bb7e9320d78c6fe60a3f94f",
+        "https://bs.plantnet.org/image/o/888523eea8f365e1d13368cf76e7eb9b4bd00ecb",
+        "https://bs.plantnet.org/image/o/1f2e128642b389c6d72b1d9e3370e3c358ed829a",
+        "https://bs.plantnet.org/image/o/2aeac2372209dc588f539373ffd67e8a08abcb34",
+        "https://bs.plantnet.org/image/o/dd15decf0c9eceef64072b304158d7bcc9c2c610",
+        "https://bs.plantnet.org/image/o/52b8d49df981216a6097c88ac234bb2652cba582",
+        "https://d2seqvvyy3b8p2.cloudfront.net/94f23ea3d8914c85f5213326135cd5c4.jpg",
+        "https://d2seqvvyy3b8p2.cloudfront.net/f60d042471201c47cc04ac7190f822be.jpg",
+        "https://d2seqvvyy3b8p2.cloudfront.net/f2e333563222d2fb8fc287c974769ae5.jpg"
+      ],
+      "is_curated": false,
+      "data_source": "trefle",
+      "ai_drafted_at": "2026-07-09T21:49:20.085+00:00",
+      "common_name_aliases": ["japanese climbing-hydrangea"],
+      "plant_type": "climber",
+      "family": "Hydrangeaceae",
+      "native_to": "Himalayas to eastern Asia",
+      "spread_min_cm": 200,
+      "spread_max_cm": 500,
+      "water_needs": "Regular watering during establishment and dry periods. Prefers consistent moisture but not waterlogged conditions.",
+      "soil_needs": "Prefers moist, well-drained, humus-rich soil. Tolerates a range of soil types but performs best with added organic matter.",
+      "maintenance_notes": "Prune after flowering to control size and remove dead or damaged growth. May take several years to establish and begin flowering. Tie in young stems until aerial roots develop.",
+      "common_issues": "Can be slow to establish and may take 3-5 years before flowering begins. Occasionally affected by aphids or powdery mildew in dry conditions.",
+      "best_placement": "North or east-facing walls, fences, or shaded structures where it can climb and spread.",
+      "environment_benefits": "Flowers provide nectar for pollinators including bees and beneficial insects during summer months.",
+      "seasonal_rhythm": {
+        "autumn": "Leaves turn yellow before dropping, revealing the attractive peeling bark on mature stems. The plant prepares for dormancy.",
+        "summer": "Large flat clusters of white lace-cap flowers open from June through July, creating a spectacular display. The plant is at its most attractive during this period.",
+        "winter": "Deciduous stems are bare, showing the cinnamon-brown peeling bark and aerial roots. The woody framework remains attached to its support structure.",
+        "late_spring": "Foliage fills out fully creating dense coverage. Flower buds begin to form at the tips of stems in preparation for summer blooming.",
+        "late_summer": "Flowers fade and foliage remains lush and green. The plant continues to grow and spread, producing new stems that will flower the following year.",
+        "early_spring": "New growth emerges with fresh green leaves appearing on woody stems. The plant begins to put out new shoots and aerial roots for climbing."
+      },
+      "garden_use_tags": [
+        "wall covering",
+        "vertical gardens",
+        "woodland gardens",
+        "shaded structures"
+      ],
+      "light_needs": "Thrives in partial shade to full shade. Can tolerate some morning sun but prefers protection from hot afternoon sun.",
+      "water_needs_summary": "Moderate",
+      "plant_type_label": "Deciduous climbing vine",
+      "sun_thrives": ["partial_sun"],
+      "sun_tolerates": ["shade"],
+      "native_region": [
+        "China",
+        "Eastern Asia",
+        "Indian Subcontinent",
+        "Indo-China"
+      ],
+      "hardiness_rating": "H4",
+      "hardiness_verified": true,
+      "seasonal_care": {
+        "autumn": null,
+        "summer": "Prune after flowering to control size and remove dead growth.",
+        "winter": null,
+        "late_spring": null,
+        "late_summer": null,
+        "early_spring": "Tie in young stems to support until aerial roots develop."
+      },
+      "botanical_checked_at": "2026-07-09T22:32:26.048+00:00",
+      "native_checked_at": "2026-07-30T15:24:16.495+00:00",
+      "image_candidates": [
+        {
+          "url": "https://bs.plantnet.org/image/o/6aa80c8af5c4668a80a79005d99421f2b25a30ee",
+          "category": "leaf"
+        },
+        {
+          "url": "https://bs.plantnet.org/image/o/23f927471180b977d2b5f2d04f95625fdff0e5b0",
+          "category": "leaf"
+        },
+        {
+          "url": "https://bs.plantnet.org/image/o/428a542885349c6c4bb7e9320d78c6fe60a3f94f",
+          "category": "leaf"
+        },
+        {
+          "url": "https://bs.plantnet.org/image/o/888523eea8f365e1d13368cf76e7eb9b4bd00ecb",
+          "category": "leaf"
+        },
+        {
+          "url": "https://bs.plantnet.org/image/o/1f2e128642b389c6d72b1d9e3370e3c358ed829a",
+          "category": "leaf"
+        },
+        {
+          "url": "https://bs.plantnet.org/image/o/2aeac2372209dc588f539373ffd67e8a08abcb34",
+          "category": "flower"
+        },
+        {
+          "url": "https://bs.plantnet.org/image/o/dd15decf0c9eceef64072b304158d7bcc9c2c610",
+          "category": "flower"
+        },
+        {
+          "url": "https://bs.plantnet.org/image/o/52b8d49df981216a6097c88ac234bb2652cba582",
+          "category": "habit"
+        },
+        {
+          "url": "https://d2seqvvyy3b8p2.cloudfront.net/94f23ea3d8914c85f5213326135cd5c4.jpg",
+          "category": "unknown"
+        },
+        {
+          "url": "https://d2seqvvyy3b8p2.cloudfront.net/f60d042471201c47cc04ac7190f822be.jpg",
+          "category": "unknown"
+        },
+        {
+          "url": "https://d2seqvvyy3b8p2.cloudfront.net/f2e333563222d2fb8fc287c974769ae5.jpg",
+          "category": "unknown"
+        }
+      ],
+      "image_url_curated": "https://d2seqvvyy3b8p2.cloudfront.net/94f23ea3d8914c85f5213326135cd5c4.jpg",
+      "image_pick_confidence": "high",
+      "image_pick_reason": "Shows a sharp, well-lit close-up of the distinctive sepal flower with fertile buds against a soft background, clearly identifying the species in bloom.",
+      "image_checked_at": "2026-07-21T22:04:53.081+00:00",
+      "image_attribution": null,
+      "is_greenery": false,
+      "greenery_checked_at": "2026-07-24T12:19:16.086+00:00",
+      "style_checked_at": "2026-08-17T14:17:45.053+00:00",
+      "native_region_checked_at": "2026-07-30T17:00:34.951+00:00",
+      "editorial_checked_at": null,
+      "image_verified_at": null,
+      "editorial_image_at": null,
+      "editorial_description_at": null,
+      "editorial_tags_at": null,
+      "native_to_reviewed_at": null
+    },
+    "combinations": [
+      {
+        "id": "46481c64-4232-4060-a6c3-33277596fa1b",
+        "created_at": "2026-07-09T06:35:02.36146+00:00",
+        "plant_id_a": "339d1235-f8fe-445d-a062-6051c218493d",
+        "plant_id_b": "86d65bb6-d03e-4671-8e0d-b8c4080a5637",
+        "combination_type": "ecological",
+        "strength": "strong",
+        "notes": "Both thrive in partial shade with similar moisture needs, and the hosta's bold foliage complements the climbing hydrangea's delicate flowers."
+      },
+      {
+        "id": "c0a6169a-ac2c-45fd-b15b-e347f2df917d",
+        "created_at": "2026-07-09T06:35:02.36146+00:00",
+        "plant_id_a": "339d1235-f8fe-445d-a062-6051c218493d",
+        "plant_id_b": "e1b75f91-5335-4a58-b77d-467924160e75",
+        "combination_type": "visual",
+        "strength": "strong",
+        "notes": "The fern's lush green fronds provide a classic woodland texture beneath the climbing hydrangea in shaded areas."
+      },
+      {
+        "id": "d419d1ce-3b62-4e90-8da2-14a73c6ada3f",
+        "created_at": "2026-07-09T06:35:02.36146+00:00",
+        "plant_id_a": "339d1235-f8fe-445d-a062-6051c218493d",
+        "plant_id_b": "f072ceb6-2baa-40f2-b67a-1f992ed1a4d3",
+        "combination_type": "seasonal",
+        "strength": "moderate",
+        "notes": "The brunnera's spring blue flowers and heart-shaped leaves provide early interest before the hydrangea blooms in summer."
+      },
+      {
+        "id": "d59d6e31-721c-4219-bd44-4dedcf4604e9",
+        "created_at": "2026-07-09T06:35:02.36146+00:00",
+        "plant_id_a": "339d1235-f8fe-445d-a062-6051c218493d",
+        "plant_id_b": "453ffe93-4eb0-48d4-90c6-a658aff15fee",
+        "combination_type": "ecological",
+        "strength": "strong",
+        "notes": "This shade-loving groundcover fills in below the climber and both tolerate similar cool, moist conditions."
+      },
+      {
+        "id": "e21d7ef3-27c0-4a16-b31a-31fc359a42a5",
+        "created_at": "2026-07-09T06:35:02.36146+00:00",
+        "plant_id_a": "339d1235-f8fe-445d-a062-6051c218493d",
+        "plant_id_b": "9ee9f066-13d8-496f-9d89-7ea80a4caa24",
+        "combination_type": "visual",
+        "strength": "strong",
+        "notes": "Pairing two hydrangea species creates a cohesive cottage garden look with layered blooms in early to mid-summer."
+      }
+    ]
+  }
+]

@@ -1,5 +1,14 @@
 /**
- * Migration drift comparison.
+ * Migration drift comparison. Pins TRAP 14 and TRAP 33.
+ *
+ * Both numbers are named HERE, in the file's top header, because that is the
+ * only block `check-doc-claims.ts` and `check-pipeline-invariants.ts` read — a
+ * trap named in a `describe` block's own header counts for nothing. The
+ * converse bit them the same day: a trap number written for CONTEXT in a top
+ * header counts as a pin, and moved the unpinned total without anything
+ * failing. Name a trap up here when this file pins it, and nowhere else.
+ *
+ * TRAP 33 is the content half, and its cases are at the bottom of this file.
  *
  * THE FAILURE THIS GUARDS IS TRAP 14, AND IT REACHED REAL USERS.
  * `20260727120000_diary_entries_garden_level.sql` was committed, merged in the
@@ -312,5 +321,94 @@ describe('an empty remote', () => {
     const report = compareMigrations(CLEAN_LOCAL, [])
     expect(report.findings).toHaveLength(2)
     expect(report.findings.every((f) => f.kind === 'not-applied')).toBe(true)
+  })
+})
+
+/**
+ * Content drift — TRAP 33, and trap 14's shape one step along. Added
+ * 2026-08-17, the day it found three production migrations in this state.
+ *
+ * The original check compared IDENTITY. A migration that was applied and then
+ * EDITED in the repo matched perfectly: same version, same name, different
+ * SQL. That is the same lie as trap 14 told — a file that reads as applied
+ * while what is live is something else — and it is now the more likely form,
+ * because the loud version has had a check since July.
+ *
+ * WHAT THE NORMALISATION IS ALLOWED TO IGNORE is the whole design, and it was
+ * measured rather than guessed. The ledger stores PARSED statements, so a
+ * literal comparison never matches: against the local stack, over all 38
+ * migrations, comments-and-whitespace matched 0 of 38 and adding statement
+ * separators matched 38 of 38. Three things ignored, nothing else — a
+ * normalisation that also folded case or quoting would start ignoring
+ * differences that matter, silently, in the direction the check exists for.
+ */
+describe('content drift', () => {
+  const applied = (sql: string) => [
+    { version: '20260101000000', name: 'a', statements: [sql] },
+  ]
+  const files = ['20260101000000_a.sql']
+
+  it('passes when only comments, whitespace and separators differ', () => {
+    const report = compareMigrations(
+      files,
+      applied('alter table plants add column x text'),
+      new Map([
+        [
+          '20260101000000_a.sql',
+          '-- a comment\nalter  table plants\n  add column x text;\n',
+        ],
+      ])
+    )
+    expect(report.findings).toEqual([])
+  })
+
+  it('reports a file edited after it was applied', () => {
+    const report = compareMigrations(
+      files,
+      applied('alter table plants add column x text'),
+      new Map([
+        ['20260101000000_a.sql', 'alter table plants add column y text'],
+      ])
+    )
+    expect(report.findings.map((f) => f.kind)).toEqual(['content-drift'])
+    expect(report.findings[0]!.remedy).toContain(
+      'Never edit an applied migration'
+    )
+  })
+
+  it('does not fold case, which would hide a real change', () => {
+    // 'X' and 'x' are different identifiers once quoted, and the check cannot
+    // know from here whether they were. Reporting is the safe direction.
+    const report = compareMigrations(
+      files,
+      applied('alter table plants add column "x" text'),
+      new Map([
+        ['20260101000000_a.sql', 'alter table plants add column "X" text'],
+      ])
+    )
+    expect(report.findings.map((f) => f.kind)).toEqual(['content-drift'])
+  })
+
+  it('skips the row, rather than passing it, when the ledger has no statements', () => {
+    // A remote still running the two-column applied_migrations(). Absent
+    // evidence is not a pass: the CLI says so in its own output.
+    const report = compareMigrations(
+      files,
+      [{ version: '20260101000000', name: 'a', statements: null }],
+      new Map([['20260101000000_a.sql', 'something else entirely']])
+    )
+    expect(report.findings).toEqual([])
+  })
+
+  it('checks content on a version-drifted pairing too (trap 13 does not excuse it)', () => {
+    const report = compareMigrations(
+      ['20260101000000_a.sql'],
+      [{ version: '20260101000001', name: 'a', statements: ['select 1'] }],
+      new Map([['20260101000000_a.sql', 'select 2']])
+    )
+    expect(report.findings.map((f) => f.kind).sort()).toEqual([
+      'content-drift',
+      'version-drift',
+    ])
   })
 })

@@ -337,7 +337,81 @@ export type WitnessStrength =
  * added today would not lock, and would license `confirmed` while doing it.
  * Wire the remaining writers first; then the lock means something.
  */
-export type Exclusivity = { kind: 'none'; reason: string }
+export type Exclusivity =
+  | { kind: 'none'; reason: string }
+  | {
+      /**
+       * This run HELD a per-column lock across its whole window, re-verified at
+       * finalisation. Earns `confirming`.
+       */
+      kind: 'locked'
+      columns: string[]
+    }
+
+/**
+ * The three lock calls, injectable so tests do not need a database.
+ *
+ * Backed by `public.stamp_locks` (migration 20260817174429). NOT
+ * `pg_advisory_lock`: a session-level advisory lock lives on the CONNECTION,
+ * and these scripts reach Postgres through PostgREST's pool, so it would be
+ * released at a moment nothing in the script can observe.
+ */
+export interface LockClient {
+  acquire: (
+    column: string,
+    runId: string,
+    step: string,
+    ttlSeconds: number
+  ) => Promise<{
+    acquired: boolean
+    holder_run_id: string | null
+    holder_step: string | null
+    holder_expires_at: string | null
+  }>
+  holds: (column: string, runId: string) => Promise<boolean>
+  release: (column: string, runId: string) => Promise<void>
+}
+
+export const supabaseLocks: LockClient = {
+  async acquire(column, runId, step, ttlSeconds) {
+    const { data, error } = await getSupabaseAdmin().rpc('acquire_stamp_lock', {
+      p_column: column,
+      p_run_id: runId,
+      p_step: step,
+      p_ttl_seconds: ttlSeconds,
+    })
+    if (error) throw new Error(`stamp lock acquire failed: ${error.message}`)
+    const row = (data as unknown[] | null)?.[0] as
+      | {
+          acquired: boolean
+          holder_run_id: string | null
+          holder_step: string | null
+          holder_expires_at: string | null
+        }
+      | undefined
+    if (!row)
+      throw new Error(`stamp lock acquire returned no row for ${column}`)
+    return row
+  },
+  async holds(column, runId) {
+    const { data, error } = await getSupabaseAdmin().rpc('holds_stamp_lock', {
+      p_column: column,
+      p_run_id: runId,
+    })
+    if (error) throw new Error(`stamp lock check failed: ${error.message}`)
+    return Boolean(data)
+  },
+  async release(column, runId) {
+    const { error } = await getSupabaseAdmin().rpc('release_stamp_lock', {
+      p_column: column,
+      p_run_id: runId,
+    })
+    if (error) throw new Error(`stamp lock release failed: ${error.message}`)
+  },
+}
+
+/** Six hours. The longest real pass is a whole-catalog curation run. */
+export const LOCK_TTL_SECONDS = 21600
 
 export function strengthOf(
   witness: Witness,
@@ -420,6 +494,20 @@ export interface BeginRunOptions {
    * wrote the caller.
    */
   exclusivity?: Exclusivity
+  /**
+   * How the run establishes it was the only writer of its stamp columns.
+   *
+   * `'lock'` (the default) takes a row lock per window-queryable write-set
+   * member, and REFUSES to start if another run holds one. That refusal is the
+   * mechanism: a run that proceeded anyway would break the holder's claim, and
+   * two runs both proceeding is trap 29 exactly.
+   *
+   * `'none'` skips locking and records that exclusivity was not established,
+   * which is what every run did before 2026-08-17.
+   */
+  lockPolicy?: 'lock' | 'none'
+  /** Injected in tests. */
+  locks?: LockClient
   recipe: Recipe
   scope?: string | null
   /** Injected in tests. */
@@ -434,6 +522,15 @@ export interface BeginRunOptions {
 export interface RunHandle {
   runId: string
   startedAt: string
+  /**
+   * Take the per-column locks. Async, which is why it is not inside `beginRun`:
+   * that returns synchronously and every caller reaches it through
+   * `withRunRecord`, which awaits this before running the body.
+   *
+   * Throws if another run holds a lock, naming the holder and the exact call to
+   * free it if you know that run is dead.
+   */
+  claimExclusivity: () => Promise<void>
   /**
    * Record a row this invocation wrote, BY ID, as it goes.
    *
@@ -527,6 +624,8 @@ export function beginRun(opts: BeginRunOptions): RunHandle {
       reason:
         'no lock: parallel worktrees share one production database and nothing serialises steps',
     },
+    lockPolicy = 'lock',
+    locks = supabaseLocks,
     now = nowIso,
     countRows = countByWitness,
     append = appendRunRecord,
@@ -574,6 +673,38 @@ export function beginRun(opts: BeginRunOptions): RunHandle {
   // randomness is what makes it an identity.
   const runId = `${step}-${startedAt.replace(/[:.]/g, '').slice(0, 15)}-${randomBytes(4).toString('hex')}`
 
+  // Only a window-queryable member can ever BE a stamp witness, so only those
+  // are worth locking: locking a value column would serialise runs to buy
+  // evidence that column can never supply.
+  const lockable = writeSet.filter(isWindowQueryable)
+  const held = new Set<string>()
+  // Starts as the honest default and is only upgraded by claimExclusivity, then
+  // re-checked at finalisation. Never assumed from the fact that we asked.
+  let exclusivityNow: Exclusivity = exclusivity
+
+  const claimExclusivity = async (): Promise<void> => {
+    if (lockPolicy === 'none' || lockable.length === 0) return
+    for (const column of lockable) {
+      const result = await locks.acquire(column, runId, step, LOCK_TTL_SECONDS)
+      if (!result.acquired) {
+        // Release what we already took: a run that cannot be exclusive must not
+        // sit on locks that block the run that can.
+        for (const taken of held) await locks.release(taken, runId)
+        throw new Error(
+          `${step} cannot start: run ${result.holder_run_id} (${result.holder_step}) holds the ` +
+            `write lock on ${column} until ${result.holder_expires_at}.\n\n` +
+            `Two runs writing one stamp column inside overlapping windows is trap 29 — ` +
+            `neither can then prove which rows it wrote. Wait for it, or run with ` +
+            `lockPolicy 'none' to proceed without an exclusivity claim.\n\n` +
+            `If you know that run is dead, free it:\n` +
+            `  select public.release_stamp_lock('${column}', '${result.holder_run_id}');`
+        )
+      }
+      held.add(column)
+    }
+    exclusivityNow = { kind: 'locked', columns: [...held] }
+  }
+
   const writtenRows = new Set<string>()
   let settled = false
   let softFailureReason: string | null = null
@@ -593,8 +724,38 @@ export function beginRun(opts: BeginRunOptions): RunHandle {
     let contradicted = false
     let anyFailed = false
 
+    // RE-VERIFY, DO NOT TRUST THE BOOLEAN WE SET AT THE START. A lock can
+    // expire mid-run (SIGKILL elsewhere, a pass that outlived the TTL) and be
+    // taken by someone else, and a run that lost it was not exclusive for the
+    // part of the window after it lapsed. Asking the database is the only way
+    // to know, and finalisation is the only moment the answer is still true.
+    if (exclusivityNow.kind === 'locked') {
+      const stillHeld: string[] = []
+      const lost: string[] = []
+      for (const column of exclusivityNow.columns) {
+        try {
+          ;(await locks.holds(column, runId))
+            ? stillHeld.push(column)
+            : lost.push(column)
+        } catch {
+          lost.push(column)
+        }
+      }
+      if (lost.length) {
+        const total = stillHeld.length + lost.length
+        notes.push(
+          `exclusivity DOWNGRADED: held ${stillHeld.length} of ${total} lock(s) to the end; ` +
+            `lost ${lost.join(', ')}`
+        )
+        exclusivityNow = {
+          kind: 'none',
+          reason: `the lock on ${lost.join(', ')} was lost or expired before this run finished, so another writer could have moved rows inside the window`,
+        }
+      }
+    }
+
     for (const witness of evidence) {
-      const strength = strengthOf(witness, exclusivity)
+      const strength = strengthOf(witness, exclusivityNow)
       if (witness.kind === 'none') {
         notes.push(
           `${witness.covers} is not observable at finalisation: ${witness.reason}`
@@ -618,7 +779,8 @@ export function beginRun(opts: BeginRunOptions): RunHandle {
         else {
           anyCorroborating = true
           notes.push(
-            `${witness.covers} is corroborating, not confirming: ${exclusivity.reason}, ` +
+            `${witness.covers} is corroborating, not confirming: ` +
+              `${exclusivity.kind === 'none' ? exclusivity.reason : 'lock lost'}, ` +
               `so another writer of this column could have moved rows inside the window`
           )
         }
@@ -688,11 +850,26 @@ export function beginRun(opts: BeginRunOptions): RunHandle {
       write_set: [...writeSet].sort(),
       evidence,
       row_count: rowCount,
-      verification: { substantiation, observed, exclusivity, notes },
+      verification: {
+        substantiation,
+        observed,
+        exclusivity: exclusivityNow,
+        notes,
+      },
       ...(extra.error ? { error: extra.error } : {}),
     }
 
     settled = true
+    // Released AFTER the record is built, so the window the record describes is
+    // the window the lock actually covered.
+    for (const column of held) {
+      try {
+        await locks.release(column, runId)
+      } catch {
+        // A lock we cannot release will expire. Losing the run record over it
+        // would trade a real artifact for a transient one.
+      }
+    }
     const path = append(record)
     log(
       `\nrun ${runId} — ${outcome}, ${rowCount} row(s), recipe ${hash}, ` +
@@ -721,6 +898,7 @@ export function beginRun(opts: BeginRunOptions): RunHandle {
   return {
     runId,
     startedAt,
+    claimExclusivity,
     markFailed: (reason: string) => {
       softFailureReason ??= reason
     },
@@ -755,6 +933,11 @@ export async function withRunRecord<T>(
   body: (run: RunHandle) => Promise<T>
 ): Promise<T> {
   const run = beginRun(opts)
+  // Before the body, so a refusal costs nothing and happens where the operator
+  // is still watching. A failure here is NOT recorded as a failed run: nothing
+  // was written, and filing a run record for an invocation that never started
+  // would be the optimistic-record mistake beginRun's header warns about.
+  await run.claimExclusivity()
   try {
     const result = await body(run)
     const soft = run.softFailure()

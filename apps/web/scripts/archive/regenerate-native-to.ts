@@ -14,7 +14,7 @@
  * Two phases so nothing unreviewed hits the live catalog:
  *   1. generate (default): calls Claude per plant, writes reports/native-to.json
  *      + reports/native-to-review.md. No DB writes.
- *        ./node_modules/.bin/tsx --env-file=.env.local scripts/regenerate-native-to.ts
+ *        ./node_modules/.bin/tsx --env-file=.env.local scripts/archive/regenerate-native-to.ts
  *   2. apply: reads reports/native-to.json and patches the plants table.
  *        ./node_modules/.bin/tsx --env-file=.env.local scripts/archive/regenerate-native-to.ts --apply
  */

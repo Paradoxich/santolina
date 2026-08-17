@@ -45,17 +45,27 @@ before reuse, and copy from a current script instead.
 | `merge-provence-into-mediterranean.ts` | Folded the retired `provence` style tag into `mediterranean` across 37 rows, set-preservingly                                   | Ran once, 2026-08-17, on Ana's ruling that the two describe the same look — `provence` co-occurred with `mediterranean` on 33 of the 132 rows carrying either. `provence` is gone from `STYLE_TAGS`, so nothing can carry it again and this can never match a row. Kept as the record of how those 37 rows changed. Notable as the first caller of `reviewed-mutation.ts` besides `curate-styles` |
 | `regenerate-native-to.ts`              | Replaced Trefle's raw TDWG dump in `native_to` with short readable phrases                                                      | Ran July 2026. **The most likely of these to be wanted again** — `native_to` unification is still open — so read it before reusing rather than copying it                                                                                                                                                                                                                                         |
 
+| `wikimedia-image-proof.ts` | Proved Wikimedia CC-BY/BY-SA sourcing was viable before the July 22 image pass | Decision shipped. Its `resolveP18` and `fetchCommonsImage` now live in `lib/wikimedia.ts` — copy from there, not from here |
+| `repair-combinations.ts` | Deleted the duplicate pairs and over-cap companions `curate-combinations` created while reading existing pairs unpaginated | Ran 2026-07-15 (`1ab38e1`) against round 6's damage: 13 duplicate pairs and 34 plants over the 5-companion cap. The cause is fixed at source — `lib/paginate.ts`, standing rule 5 — and `verify-round` fails on both classes now, so a re-run has nothing to find |
+| `backfill-legacy-editorial.ts` | Stamped the four editorial columns on rows that were `is_curated` before those stamps existed | **A WRONG-SHAPE EXAMPLE, not a template.** It stamps all four editorial stamps at once, which migration `20260728220852`'s own column comment forbids, and writes `is_curated` directly — the only script outside `lib/plants-write.ts` ever to do so, against standing rule 6. Kept for the shape to recognise, not to copy |
+| `apply-sun-widening.ts` | Widened `sun_tolerates` from `cross-check-plants` sun flags | **Neutralized by the database.** `trg_sync_sun_requirements` recomputes what it writes, so Postgres discards the write while the script prints success (pipeline audit 2026-08-14, F6). It survived here as the drift-guard template every apply-script copied; `scripts/reviewed-mutation.ts` is that template now, so the last reason to keep it in `scripts/` is gone |
+
 `regenerate-native-to.ts` is also the worked example behind the cascade rule in
 `architecture.md`: a script that mutates a checked field must null the matching
 stamp so the guard re-checks it.
 
 ## What deliberately stayed in `scripts/`
 
-`apply-sun-widening.ts` is a past correction too, but it is the pattern every
-later apply-script follows — each entry carries the value it expects to find,
-so a drifted row is skipped rather than overwritten. `fix-round8-names.ts` was
-built from it. It earns its place next to the live scripts by being a template
-worth copying, which is the opposite of everything in here.
+Nothing, as of 2026-08-17. `apply-sun-widening.ts` used to be the exception,
+and the reason it gave was real: each of its entries carried the value it
+expected to find, so a drifted row was skipped rather than overwritten, and
+`fix-round8-names.ts` was built from it. That made it worth sitting next to the
+live scripts even though it was spent.
+
+`scripts/reviewed-mutation.ts` is that template now, and it is a library the
+name passes CALL rather than a file they copy — so the pattern cannot drift
+between its copies, which is what happened while six of them held it. A
+template nobody needs to copy has no reason to sit where the live scripts sit.
 
 ## Running one anyway
 

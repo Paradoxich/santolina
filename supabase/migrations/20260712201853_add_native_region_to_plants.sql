@@ -15,8 +15,14 @@
 -- sun_thrives, ...): NOT NULL DEFAULT '{}'. Existing rows keep '{}' until a
 -- backfill pass tags the pre-existing catalog.
 
-alter table public.plants
-  add column if not exists native_region text[] not null default '{}';
+-- REVERTED 2026-08-17 to the SQL this migration actually applied. It had been
+-- edited afterwards — schema-qualified, and `if not exists` added — harmless in
+-- effect, and exactly what an applied migration may never be: a file that
+-- describes something the database never ran. Found by the content half of
+-- `pnpm migrations:check`, added the same day.
 
-comment on column public.plants.native_region is
+alter table plants
+  add column native_region text[] not null default '{}';
+
+comment on column plants.native_region is
   'Controlled provenance tags for a "native to my region" filter. Vocabulary: mediterranean (Mediterranean Basin), balkans (Balkan Peninsula), croatia (occurs natively in Croatia). Independently assigned per species; a plant may carry any combination.';

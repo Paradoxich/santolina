@@ -10,6 +10,10 @@
  *
  *   ./node_modules/.bin/tsx --env-file=.env.local scripts/archive-round.ts --round 8
  *
+ * `--catalog-only` refreshes the committed catalog snapshot and leaves the
+ * archived reports alone, for when a round's rows have moved since it closed.
+ * `--skip-catalog` is the other half: archive the reports, snapshot nothing.
+ *
  * Copies every file currently in reports/ into rounds/<label>/reports/. Stale
  * files from an earlier run are copied too — clear reports/ before a round's
  * guards if you want a clean snapshot.

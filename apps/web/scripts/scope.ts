@@ -5,6 +5,7 @@
  *   --round <label>   the ids that round's seed run recorded in its manifest
  *   --ids <a,b,c>     an explicit list
  *   --all             the whole catalog, deliberately
+ *   --why "<reason>" required alongside --all, and printed in the run output
  *
  * There is no default. A catalog-wide default is what let draft-hardiness pick
  * up 177 plants during round 8 (its own 101 plus round 7's 76) while every

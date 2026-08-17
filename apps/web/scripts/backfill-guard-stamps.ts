@@ -56,6 +56,7 @@ import { existsSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 
 import { fetchAllRows } from '../lib/paginate'
+import { withRunRecord, type Witness } from './run-provenance'
 import { getSupabaseAdmin } from '../lib/supabase-admin'
 
 const REPORTS_DIR = join(process.cwd(), 'reports')
@@ -196,52 +197,106 @@ async function main() {
 
   let totalWould = 0
 
-  for (const evidence of EVIDENCE) {
-    const path = join(REPORTS_DIR, evidence.report)
-    if (!existsSync(path)) {
-      console.log(`✗ ${evidence.report} — missing, skipped`)
-      continue
-    }
+  const STAMPS = [
+    'botanical_checked_at',
+    'native_checked_at',
+    'style_checked_at',
+  ] as const
 
-    const scoped = selectRows(rows, evidence, path)
-    const { at, source } = reportRanAt(path)
+  const runOptions = {
+    step: 'backfill-guard-stamps',
+    // Written out rather than spread from STAMPS: shape 9 reads this list
+    // literally, so `writeSet: [...STAMPS]` declares nothing as far as the
+    // checker is concerned — and a write-set the checker cannot read is one
+    // nothing verifies against the migrations.
+    writeSet: ['botanical_checked_at', 'native_checked_at', 'style_checked_at'],
+    // THESE STAMPS CANNOT WITNESS THEMSELVES, and the reason is peculiar to
+    // this script: it writes the report's OWN run time, which is weeks in the
+    // past. The default witness counts rows whose stamp lands inside THIS run's
+    // window, so it would observe 0 against a claim of hundreds and file the
+    // run CONTRADICTED — a correct run reporting itself caught lying. Same
+    // outcome as shape 12's clearing writes, arrived at from the opposite
+    // direction: not an absent value, a deliberately backdated one.
+    //
+    // updated_at is the honest witness, and it only BOUNDS the claim.
+    evidence: STAMPS.map((covers) => ({
+      kind: 'row-touched' as const,
+      covers,
+      table: 'plants' as const,
+      column: 'updated_at',
+    })) as Witness[],
+    scope: `report-derived stamps over ${rows.length} catalog rows`,
+    // The reports ARE the recipe: each stamp asserts that a named committed
+    // report covered a named population at a named time. This is the script
+    // whose state-derived half fabricated 100 stamps in 2026-08-14 and was
+    // deleted for it, so what licenses each write is exactly the list below.
+    recipe: {
+      model: 'report-derived',
+      template: EVIDENCE.map(
+        (e) =>
+          `${e.report} → ${e.column} (expects ${e.expected} rows): ${e.note}`
+      ),
+      ingredients: {},
+      decoding: {},
+    },
+  }
 
-    console.log(`${evidence.report}  [${evidence.column}]`)
-    console.log(`   ${evidence.note}`)
-    console.log(`   checked ${at} (${source})`)
+  const backfillAll = async (wrote: (id: string) => void) => {
+    for (const evidence of EVIDENCE) {
+      const path = join(REPORTS_DIR, evidence.report)
+      if (!existsSync(path)) {
+        console.log(`✗ ${evidence.report} — missing, skipped`)
+        continue
+      }
 
-    // The guard: the live population must be exactly what the report claims to
-    // have covered. A mismatch means the mapping is wrong, so write nothing.
-    if (scoped.length !== evidence.expected) {
+      const scoped = selectRows(rows, evidence, path)
+      const { at, source } = reportRanAt(path)
+
+      console.log(`${evidence.report}  [${evidence.column}]`)
+      console.log(`   ${evidence.note}`)
+      console.log(`   checked ${at} (${source})`)
+
+      // The guard: the live population must be exactly what the report claims to
+      // have covered. A mismatch means the mapping is wrong, so write nothing.
+      if (scoped.length !== evidence.expected) {
+        console.log(
+          `   ✗ SKIPPED — report covered ${evidence.expected} rows but this scope ` +
+            `selects ${scoped.length}. Mapping is unsafe; not writing.\n`
+        )
+        continue
+      }
+
+      const unstamped = scoped.filter((r) => r[evidence.column] === null)
       console.log(
-        `   ✗ SKIPPED — report covered ${evidence.expected} rows but this scope ` +
-          `selects ${scoped.length}. Mapping is unsafe; not writing.\n`
+        `   ${scoped.length} row(s) in scope, ${unstamped.length} unstamped ` +
+          `(${scoped.length - unstamped.length} already stamped, left alone)`
       )
-      continue
-    }
+      totalWould += unstamped.length
 
-    const unstamped = scoped.filter((r) => r[evidence.column] === null)
-    console.log(
-      `   ${scoped.length} row(s) in scope, ${unstamped.length} unstamped ` +
-        `(${scoped.length - unstamped.length} already stamped, left alone)`
-    )
-    totalWould += unstamped.length
+      if (!unstamped.length || !apply) {
+        console.log('')
+        continue
+      }
 
-    if (!unstamped.length || !apply) {
-      console.log('')
-      continue
+      const batchSize = 100
+      for (let i = 0; i < unstamped.length; i += batchSize) {
+        const batch = unstamped.slice(i, i + batchSize).map((r) => r.id)
+        const { error } = await db
+          .from('plants')
+          .update({ [evidence.column]: at })
+          .in('id', batch)
+        if (error) throw new Error(`Write failed: ${error.message}`)
+        for (const id of batch) wrote(id)
+      }
+      console.log(`   ✓ stamped ${unstamped.length} row(s)\n`)
     }
+  }
 
-    const batchSize = 100
-    for (let i = 0; i < unstamped.length; i += batchSize) {
-      const batch = unstamped.slice(i, i + batchSize).map((r) => r.id)
-      const { error } = await db
-        .from('plants')
-        .update({ [evidence.column]: at })
-        .in('id', batch)
-      if (error) throw new Error(`Write failed: ${error.message}`)
-    }
-    console.log(`   ✓ stamped ${unstamped.length} row(s)\n`)
+  // A dry run opens NO run: it reads the reports and writes nothing.
+  if (apply) {
+    await withRunRecord(runOptions, (run) => backfillAll((id) => run.wrote(id)))
+  } else {
+    await backfillAll(() => {})
   }
 
   console.log(

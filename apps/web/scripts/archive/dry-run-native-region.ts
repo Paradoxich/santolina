@@ -28,7 +28,7 @@
  *     derived from tdwg/wgsrpd level3.geojson (downloaded once if missing).
  *
  * Usage (from apps/web):
- *   ./node_modules/.bin/tsx --env-file=.env.local scripts/dry-run-native-region.ts
+ *   ./node_modules/.bin/tsx --env-file=.env.local scripts/archive/dry-run-native-region.ts
  *
  * Output: reports/native-region-dryrun.md (+ .json). No DB writes, ever.
  */

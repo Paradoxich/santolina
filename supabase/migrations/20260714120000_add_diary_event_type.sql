@@ -5,8 +5,12 @@
 -- photo) is valid. The table holds one throwaway seed row, so there is no
 -- backfill. See the Care Tips v2 behavior spec.
 
-alter table public.diary_entries
-  add column event_type text
-    check (event_type in ('planted', 'watered', 'fertilized', 'pruned'));
+-- REVERTED 2026-08-17 to the SQL this migration actually applied, which is the
+-- ALTER alone. The `comment on column` that used to sit below it was added to
+-- the file after the fact and never ran — and can no longer run at all:
+-- `event_type` was replaced by `event_types` (text[]) three days later by
+-- 20260724081741, which carries its own column comment. So the orphaned comment
+-- is dropped rather than re-applied. Found by the content half of
+-- `pnpm migrations:check`, added the same day.
 
-comment on column public.diary_entries.event_type is 'Optional typed care event: planted / watered / fertilized / pruned. Null for freeform notes. Powers Tier 3 event-relative Care Tips and the diary "did it" shortcut — see the Care Tips v2 behavior spec.';
+ALTER TABLE public.diary_entries ADD COLUMN event_type text CHECK (event_type = ANY (ARRAY['planted'::text, 'watered'::text, 'fertilized'::text, 'pruned'::text]));

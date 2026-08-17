@@ -40,7 +40,7 @@ The numbers **in this file are different and must stay written down**: a dated s
    **`--all` is the only way out, and it now requires `--why "<reason>"`**, which is printed in the run output. Whole-catalog runs are sometimes right (the style re-tag, the region regeneration); requiring a sentence does not stop them, it makes the operator state an intention instead of discovering one afterwards.
 
 4. **Generate, review, then apply.** Any script offering `--apply` writes nothing until you have read its report. This split is the single reason trap 1 did not corrupt the catalog.
-5. **Never bare `.select()` on a full table.** It silently caps at 1000 rows. Use `fetchAllRows` from `lib/paginate.ts`. `plant_combinations` has already crossed the cap once (round 6: 13 duplicate pairs, 34 plants over the companion limit); current sizes are in [`catalog-state.md`](catalog-state.md).
+5. **Never bare `.select()` on a full table.** It silently caps at 1000 rows. Use `fetchAllRows` from `lib/paginate.ts`. `plant_combinations` has already crossed the cap once (round 6: 13 duplicate pairs, 34 plants over the companion limit), repaired 2026-07-15 by `apps/web/scripts/archive/repair-combinations.ts` (commit `1ab38e1`), which deleted the surplus rows and trimmed each over-cap plant back to five; `verify-round` fails on both classes now, so the repair is not expected to be needed again. Current sizes are in [`catalog-state.md`](catalog-state.md).
 6. **`is_curated` is SET TRUE by exactly one script — `curate-editorial.ts` — and by nothing else. Since 2026-07-29 it is also CLEARED by a database trigger.** This rule used to read "never flip it; it is Ana's alone", which stopped being true on 2026-07-28 when she ruled that an agent owns the editorial pass, including the flag. What has not changed is that no _other_ script may touch it: a drafting or fact-checking pass that sets `is_curated` is claiming a sign-off it did not make. The bar is defined once in `lib/editorial-standard.ts` ([the curation layer](architecture.md#curation-layer), runbook step 7b). **Editorial coverage is still thin** — round 8 is largely signed off and everything seeded before round 7 is unreviewed. Current counts in [`catalog-state.md`](catalog-state.md), which is generated; do not restate them here. Round 8's held rows are recorded work with a "no" verdict, not a gap. The image re-check (`pick-plant-images.ts --verify`, runbook step 7a) has since cleared 19 of them; what remains needs a new photograph or a tag fix, not another pass. **The trigger (`invalidate_editorial_verdict`, migration `20260729101133`) clears the flag whenever a write changes the description, tags or hero — granting approval and withdrawing it are not the same power, and only the granting half was ever Ana's or one script's.** A caller that means to keep a verdict across such a write must re-assert it in a SECOND statement; doing it inside the same one silently fails, which is how the guard's own first consumer was un-curating rows on the day it shipped.
 7. **After any schema or request-shape change, run `--limit 3` first.** A green typecheck does not verify a runtime API contract.
 8. **Finish with `verify-round.ts --round <label>`.** Without `--round` it checks that data is _valid_ but not that the pipeline actually _ran_.
@@ -283,12 +283,12 @@ Every trap below is really one of four shapes. The entries are the worked exampl
 
 The table below is the only index by shape, and `pnpm docs:claims` holds it to the entries: a trap with no family row fails, and so does a family row naming a trap that does not exist. It carried neither count above for that reason — a number restated in prose is a second home for a fact the headings already own.
 
-| family | what it is                                                        | entries                                          |
-| ------ | ----------------------------------------------------------------- | ------------------------------------------------ |
-| **A**  | a failure or narrower answer comes back shaped like a real result | 1, 1b, 10, 11, 15, 18, 19, 20, 23                |
-| **B**  | the record disagrees with what actually happened                  | 2, 4, 12, 13, 14, 16, 17, 24, 25, 26, 28, 29, 31 |
-| **C**  | one fact with two homes, and only one got updated                 | 3, 5, 22, 32                                     |
-| **D**  | facts about the outside world you cannot design away              | 6, 7, 8, 9, 21, 27                               |
+| family | what it is                                                        | entries                                              |
+| ------ | ----------------------------------------------------------------- | ---------------------------------------------------- |
+| **A**  | a failure or narrower answer comes back shaped like a real result | 1, 1b, 10, 11, 15, 18, 19, 20, 23                    |
+| **B**  | the record disagrees with what actually happened                  | 2, 4, 12, 13, 14, 16, 17, 24, 25, 26, 28, 29, 31, 33 |
+| **C**  | one fact with two homes, and only one got updated                 | 3, 5, 22, 32                                         |
+| **D**  | facts about the outside world you cannot design away              | 6, 7, 8, 9, 21, 27                                   |
 
 A is the one that keeps recurring, and it is subtle every single time.
 
@@ -584,13 +584,34 @@ passes not yet on run provenance, so a lock added today would not bind them: it
 would fail to lock while licensing `confirmed`. **Wire the writers first, then
 the lock means something.**
 
-**The fix is to stop claiming it.** A stamp is `corroborating` unless
-exclusivity has been ESTABLISHED, and `Exclusivity` has exactly one variant —
-`{ kind: 'none', reason }` — so a caller cannot assert its way to `confirmed`.
+**The first fix was to stop claiming it.** A stamp is `corroborating` unless
+exclusivity has been ESTABLISHED, and `Exclusivity` had exactly one variant —
+`{ kind: 'none', reason }` — so a caller could not assert its way to `confirmed`.
 A corroborating witness can still CONTRADICT. That asymmetry is deliberate: a
 concurrent clearer could produce a false contradiction, but a false alarm sends
 a person to look, while a false `confirmed` is a silent lie in a record someone
 will later cite as evidence.
+
+**The mechanism landed 2026-08-17, and the order was forced.** `public.stamp_locks`
+(migration `20260817174429`) is a per-COLUMN row lock taken in `beginRun` and
+re-verified at finalisation, so `Exclusivity` now has a second variant and a run
+that held its locks throughout records `confirmed`. It could not have been built
+sooner for the reason above: a lock cannot bind a script that does not take it,
+and `RUNS_WITHOUT_PROVENANCE` only reached zero that same morning. A row, not
+`pg_advisory_lock` — a session-level advisory lock lives on the connection, and
+these scripts reach Postgres through PostgREST's pool.
+
+Three properties, each with a case in `apps/web/scripts/run-provenance.test.ts`:
+a refusal names the holder and the call to free it; a refused run releases what
+it already took; and a lock LOST mid-run downgrades to `corroborating`, because
+a run cannot learn that from a boolean it set at the start. A failed lock check
+counts as lost, never as held.
+
+**Exclusivity alone does not earn `confirmed`** — measured, not assumed. The
+first real run under the lock (`apply-native-to-fixes`, 30 stale decisions, 0
+rows) recorded `kind: locked` and still `bounded`, because it CLEARS its stamp
+and so has no stamp witness for the lock to upgrade. A clearing write stays
+bounded forever, which is correct.
 
 **It also made one claim in the module too strong.** Orphaned stamps from a
 SIGKILL were described as detectable because they fall inside no recorded
@@ -753,6 +774,20 @@ It found its own first defect on its first real run: this entry existed with no 
 
 Locally there is no blast radius to widen. `.env.local` is already on the machine, which is how those two commands get run by hand today. So `ci:check` runs all three jobs and **is now the only place the database jobs happen before a merge**; `--no-db` skips them and names what it is skipping. The two `run: |` blocks are read for their `pnpm` line and their secret-plumbing shell ignored, because that plumbing exists to write `.env.local` on a runner — and a block yielding no command throws rather than being silently skipped, since a step nobody runs is this trap.
 
+#### 33. A committed migration is not proof of the SQL that ran — ADDED 2026-08-17
+
+Trap 14 taught that a committed migration may never have been applied. This is the other half: a migration that **was** applied, whose file has been edited since. Version and name still match, so identity-based drift checking calls it clean, and the file reads as an account of what the database did when it is an account of what somebody later wished it had done.
+
+Three of 39 were in this state, found the hour the content check first ran against production ([the content half of `migrations:check`](../apps/web/lib/migration-drift.ts), `normaliseSql`). One had been schema-qualified after the fact; one had gained a `comment on column` that never ran; one carried an `update` its own comment admitted was applied out of band via `execute_sql`. None was malicious and none broke anything — which is exactly why nobody noticed for a month.
+
+**The comparison has to normalise, and what it may ignore was measured rather than argued.** The ledger stores PARSED statements, not the file, so a literal comparison never matches. Measured on the local stack against every migration then committed: ignoring comments and whitespace matched **none of them**; also ignoring statement separators matched **all of them**. Three things ignored and nothing else — folding case or quoting would start hiding real differences, silently, in the direction the check exists for.
+
+**A null `col_description` means "no comment" OR "no column".** Reading the first as the second is how the `event_type` comment was reported as merely unapplied and then queued for re-application; the apply failed with "column does not exist", because `event_type` had been replaced by `event_types` three days later. Query `information_schema.columns` before concluding a comment is absent.
+
+**Absent evidence is not a pass.** Three production ledger rows carry no statements at all, so their content cannot be checked either way. The CLI says so in its own output rather than counting them clean.
+
+**Pinned by `apps/web/lib/migration-drift.test.ts`** (2026-08-17), whose `content drift` block asserts the defect's own witness — a file whose SQL differs from the applied statements is reported, one whose SQL differs only in comments, whitespace and separators is not — and fails against the pre-fix comparison, which had no content check to run. One case exists purely to hold the normalisation still: case is NOT folded, because folding it is the tempting next step and it would hide a real change.
+
 ---
 
 ### D. Facts about the outside world you cannot design away
@@ -832,6 +867,42 @@ is unchanged.
 ## Sessions
 
 <!-- Newest first. Append with: scripts/log-db-session.ts --round <label> -->
+
+### 2026-08-17 — Provenance and hygiene, and the first catalog removal
+
+**Branch** `session/2026-08-17-provenance`. Handoff steps 1-5, all closed.
+
+**Catalog 748 → 747 species, 1864 → 1859 combinations.** _Hydrangea anomala_
+removed as a duplicate of _H. petiolaris_ (Ana), by the new
+`scripts/remove-plant.ts` — the first row ever deleted here. 0 palette rows, 0
+diary rows, 5 combinations by cascade. Complete deleted rows in
+`reference/removals.json`. The survivor was renamed to "Climbing hydrangea"
+(most-used name wins) via the new `scripts/apply-name-fixes.ts`, since all three
+name passes are round-scoped and no path existed to fix a name outside a round.
+
+**Combinations NOT refilled; no API spend needed.** Measured: the 5 partners
+dropped 5 → 4, joining 8 already at 4, and 5 is a cap not a minimum. Re-pointing
+them at _H. petiolaris_ is wrong — it already holds 5. Separately
+_Ranunculus aconitifolius_ sits at **1** and predates this; a real gap.
+
+**Three migrations applied** (Ana waived rule 11; rule-10 backups
+`2026-08-17T16-56-45-254Z`, `2026-08-17T17-43-34-191Z`).
+`applied_migrations_statements` lets `migrations:check` compare migration
+CONTENT; it immediately found **three migrations edited after they were
+applied** — new trap 33 — all verified against prod and reverted, with
+`reconcile_edited_migrations` restating the one statement that had never run.
+`stamp_locks` closes trap 29's open half and earns `confirming` back.
+
+**Ratchets, all to zero:** `HAND_ROLLED_REVIEWED_MUTATION` 6 → 0,
+`SCRIPTS_PENDING_ARCHIVE` 3 → 0, `RUNS_WITHOUT_PROVENANCE` 15 → 0. New shape 18
+found seven parsed-but-undocumented flags; all seven documented.
+
+**Found — two silent ones, both fixed.** A trap number written for CONTEXT in a
+test file's top header counts as a PIN, so `docs:claims` read 20 unpinned while
+`invariants:check` read 21 and nothing failed — the two counters can still
+disagree silently, carried in the handoff. And `../lib/*` does not resolve from
+`scripts/archive/`, so three of four moved files typechecked green with an
+untyped client: implicit `any`, not a missing module.
 
 ### 2026-08-17 — Step D: the catalog-wide style re-tag (not a round)
 

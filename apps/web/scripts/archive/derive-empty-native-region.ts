@@ -14,7 +14,7 @@
  * reads the main dry run's JSON for the plant list; it does not touch the DB.
  *
  * Usage (from apps/web):
- *   ./node_modules/.bin/tsx --env-file=.env.local scripts/derive-empty-native-region.ts
+ *   ./node_modules/.bin/tsx --env-file=.env.local scripts/archive/derive-empty-native-region.ts
  */
 
 import { readFileSync, writeFileSync } from 'node:fs'

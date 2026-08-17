@@ -36,15 +36,17 @@
  * names that are absent, wrong, or ambiguous, NOT Ana's editorial voice pass
  * (docs/architecture.md#curation-layer). Every row here still needs her read before `is_curated` goes true.
  *
- * SAFETY — the same discipline as apply-sun-widening.ts:
- *   - Every entry carries the value it EXPECTS to find. A row whose live
- *     `common_name` has drifted from that value is skipped and reported, never
- *     overwritten, so this cannot clobber a later editorial edit.
- *   - Only `is_curated = false` rows are touched. A finalized plant's name is
- *     frozen.
- *   - Idempotent: a row already holding the target value is skipped, so a
- *     re-run is a no-op.
- *   - Matched by `scientific_name`, which is stable, not by common_name.
+ * SAFETY IS NOT HERE ANY MORE, and that is the improvement: `scripts/name-fixes.ts`
+ * owns the drift guard, the frozen-row policy, the idempotence, the id
+ * resolution and the run record for all three name passes. This file is its
+ * decisions and the reasoning above.
+ *
+ * IT GAINED THE COLLISION PRE-CHECK IN THE MOVE, which is the one behaviour
+ * change worth naming. The COLLISIONS group below exists because this pass
+ * created a collision it then had to fix ("SELF-INFLICTED", Anemone
+ * quinquefolia); the check that refuses a target another row already holds
+ * arrived with round 11 and could not reach backwards. Now it runs here too, so
+ * a re-run cannot repeat the mistake this file documents.
  *
  * Usage (from apps/web) — dry run is the default, nothing writes without
  * --apply:
@@ -52,14 +54,9 @@
  *   ./node_modules/.bin/tsx --env-file=.env.local scripts/fix-round8-names.ts --apply
  */
 
-import { getSupabaseAdmin } from '../lib/supabase-admin'
+import { runNameFixes, type NameFix } from './name-fixes'
 
-interface Fix {
-  scientific_name: string
-  from: string // expected current value — drift guard
-  to: string
-  why: string
-}
+type Fix = NameFix
 
 // --- rows where Trefle had no English name and the mapper fell back to the
 // --- scientific name (docs/architecture.md#trefle-field-mapping). Names chosen as the one a nursery would print.
@@ -400,68 +397,11 @@ const COLLISIONS: Fix[] = [
 const FIXES: Fix[] = [...MISSING, ...WRONG, ...COLLISIONS]
 
 async function main() {
-  const apply = process.argv.slice(2).includes('--apply')
-  const db = getSupabaseAdmin()
-
-  console.log(
-    `\n${FIXES.length} name fixes (${MISSING.length} missing, ${WRONG.length} wrong, ${COLLISIONS.length} collisions).` +
-      (apply ? '\n' : ' DRY RUN — pass --apply to write.\n')
-  )
-
-  let changed = 0
-  const already: string[] = []
-  const drifted: string[] = []
-  const missingRow: string[] = []
-  const curated: string[] = []
-
-  for (const fix of FIXES) {
-    const { data, error } = await db
-      .from('plants')
-      .select('id, common_name, is_curated')
-      .eq('scientific_name', fix.scientific_name)
-      .maybeSingle()
-
-    if (error) throw new Error(`${fix.scientific_name}: ${error.message}`)
-    if (!data) {
-      missingRow.push(fix.scientific_name)
-      console.log(`  ??  ${fix.scientific_name} — no such row`)
-      continue
-    }
-    if (data.common_name === fix.to) {
-      already.push(fix.scientific_name)
-      continue
-    }
-    if (data.is_curated) {
-      curated.push(fix.scientific_name)
-      console.log(`  --  ${fix.scientific_name} — is_curated, frozen`)
-      continue
-    }
-    if (data.common_name !== fix.from) {
-      drifted.push(fix.scientific_name)
-      console.log(
-        `  !!  ${fix.scientific_name} — expected "${fix.from}", found "${data.common_name}" — skipped`
-      )
-      continue
-    }
-
-    if (apply) {
-      const { error: upErr } = await db
-        .from('plants')
-        .update({ common_name: fix.to })
-        .eq('id', data.id)
-      if (upErr) throw new Error(`${fix.scientific_name}: ${upErr.message}`)
-    }
-    changed++
-    console.log(
-      `  ${apply ? '✓' : '·'}   "${fix.from}" → "${fix.to}"  (${fix.scientific_name}) — ${fix.why}`
-    )
-  }
-
-  console.log('\n─────────────────────────────────────────')
-  console.log(
-    `${apply ? 'Updated' : 'Would update'}: ${changed}  ·  already correct: ${already.length}  ·  drifted (skipped): ${drifted.length}  ·  frozen: ${curated.length}  ·  no row: ${missingRow.length}`
-  )
-  if (!apply && changed) console.log('\nRe-run with --apply to write.')
+  await runNameFixes({
+    step: 'fix-round8-names',
+    fixes: FIXES,
+    summary: `${MISSING.length} missing, ${WRONG.length} wrong, ${COLLISIONS.length} collisions`,
+  })
 }
 
 main().catch((err) => {
