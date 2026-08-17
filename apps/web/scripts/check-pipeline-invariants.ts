@@ -65,7 +65,11 @@ import { isWindowQueryable } from './run-provenance'
 // no env and no connection — checked before adding it, because this script runs
 // in CI without .env.local.
 import { STEP_DEFS } from './round-status'
-import { pinnedTraps, trapNumbers as trapNumbersOf } from './trap-pins'
+import {
+  listTestFiles,
+  pinnedTraps,
+  trapNumbers as trapNumbersOf,
+} from './trap-pins'
 
 // ---------------------------------------------------------------------------
 // Escape hatches. Each entry: subject → why it is allowed, today.
@@ -341,15 +345,14 @@ export const OPEN_FINDINGS: Record<string, OpenFinding> = {
     remedy:
       "Either retarget the comparison at sun_thrives/sun_tolerates, the columns a person can actually change, or downgrade it to `minor` and let it be a read-only signal. The witness clears on either, because both stop the pass calling a derived column's value a disagreement.",
   },
-  'seed-orchestration-copied-per-round': {
-    what: 'Every round seeder carries its own copy of the same orchestration. Measured 2026-08-17 on the main() bodies: rounds 8, 9, 10 and 11 are BYTE-IDENTICAL at 133 lines (0 changed lines, all six pairs), round 12 is 137 and differs from them by 10, rounds 6 and 7 are 117, seed-regional-natives is 140 — roughly 850 lines of near-identical loop across 8 files. The per-round judgment is only the CANDIDATES list (37-118 lines), which is the part that legitimately differs.',
-    source:
-      "Measured directly on scripts/seed-round*.ts, 2026-08-17, by diffing the extracted main() bodies pairwise. Not an estimate and not a review finding. The duplication was noticed during round 12 and PARKED then, deliberately: an extraction prevents SEEDING bugs, and the problem the pipeline work was solving was old-row bugs, so it was correctly not that session's job.",
-    file: 'apps/web/scripts/seed-round12.ts',
-    witness: /const seenIds = new Set<number>\(\) \/\/ resolved this run/,
-    remedy:
-      'Extract the loop into a shared runner a seeder calls with its CANDIDATES list, the way catalog-identity.ts and species-resolver.ts were extracted from the same files. ROUND 13 IS THE DECISION POINT and it is a real fork, not a formality: extract before seeding, or write a ninth near-copy and extract after. Either is defensible; drifting into the ninth copy without choosing is not.',
-  },
+  // 'seed-orchestration-copied-per-round' CLOSED 2026-08-17, the same day it
+  // was recorded — extracted rather than deferred to round 13, because the
+  // measurement made the decision easy: rounds 8-11 were byte-identical, so
+  // there was nothing to reconcile. scripts/seed-runner.ts is the runner and
+  // all seven seed-round*.ts call it. What the eight copies had already cost is
+  // in that file's header: round 12's ten-line difference was two FIXES that
+  // never reached the other seven, one of them an exit code that let a round
+  // with unresolved candidates exit 0.
   'common-name-never-judged-at-seed': {
     what: 'Nothing between Trefle and the catalog judges common_name. lib/trefle.ts falls back to the scientific name when Trefle has no English one, so a row lands in Explore reading "Rodgersia pinnata"; nothing anywhere catches a flora name nobody uses ("Cowflock", "Premorse") or a name already held by a different species. curate-plants reads common_name and never writes it. So the whole of trap 6 is paid downstream, once per round, by hand.',
     source:
@@ -661,7 +664,11 @@ function checkTrapsPinned(): { total: number; unpinned: number } {
   // used to carry their own copy of it and printed 20 against 21 with nothing
   // failing; sharing the derivation is what makes that impossible. The hatch
   // list below stays here, beside the check that reads it.
-  const pinned = pinnedTraps(TEST_FILES.map(read))
+  // listTestFiles, not TEST_FILES: this file lists TRACKED files only and
+  // check-doc-claims.ts lists untracked ones too, so an uncommitted test whose
+  // header names a trap made the two counts disagree — 21 against 20 — even
+  // after they shared the derivation. The file set is half the derivation.
+  const pinned = pinnedTraps(listTestFiles(REPO_ROOT).map(read))
 
   const unpinned: string[] = []
   for (const trap of traps) {

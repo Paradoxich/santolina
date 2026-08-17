@@ -65,7 +65,11 @@ import { execFileSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { REPO_ROOT } from './token-source'
-import { trapNumbers as trapNumbersOf, unpinnedTraps } from './trap-pins'
+import {
+  listTestFiles,
+  trapNumbers as trapNumbersOf,
+  unpinnedTraps,
+} from './trap-pins'
 
 // Same FROZEN set as check-doc-links.ts, and for the same reason: an applied
 // migration is history, an archived round report is one run's record, and a
@@ -121,12 +125,7 @@ const trapNumbers = (): string[] => trapNumbersOf(read(LOG))
  * check that reads it.
  */
 const unpinnedTrapCount = (): number =>
-  unpinnedTraps(
-    read(LOG),
-    ALL.filter((f) => f.startsWith('apps/web/') && f.endsWith('.test.ts')).map(
-      read
-    )
-  ).length
+  unpinnedTraps(read(LOG), listTestFiles(REPO_ROOT).map(read)).length
 
 function publicTables(): number {
   const names = new Set<string>()

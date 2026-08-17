@@ -26,12 +26,18 @@
  * It is also how this file first ran: the count came out 20 against 21.
  */
 
+import { execFileSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 import { describe, expect, it } from 'vitest'
 
-import { pinnedTraps, trapNumbers, unpinnedTraps } from './trap-pins'
+import {
+  listTestFiles,
+  pinnedTraps,
+  trapNumbers,
+  unpinnedTraps,
+} from './trap-pins'
 
 const LOG = readFileSync(
   join(__dirname, '../../../docs/database-log.md'),
@@ -123,6 +129,34 @@ describe('the two counters cannot drift apart (the incident)', () => {
     ]) {
       expect(source(name)).toMatch(/from '\.\/trap-pins'/)
     }
+  })
+
+  it('has both checks listing test files through the shared listing', () => {
+    // Sharing the derivation was NOT enough and this is the case that proved
+    // it: check-doc-claims lists untracked files, check-pipeline-invariants
+    // listed tracked ones only, so an uncommitted test whose header named a
+    // trap made them print 21 against 20. The file set is half the derivation.
+    for (const name of [
+      'check-doc-claims.ts',
+      'check-pipeline-invariants.ts',
+    ]) {
+      expect(source(name)).toMatch(/listTestFiles\(REPO_ROOT\)/)
+    }
+  })
+
+  it('includes files git does not track yet', () => {
+    // The property that made the two disagree, asserted directly rather than
+    // through either script: a test written and not yet committed still counts.
+    const listed = listTestFiles(join(__dirname, '../../..'))
+    const tracked = execFileSync('git', ['ls-files', '-z'], {
+      cwd: join(__dirname, '../../..'),
+      encoding: 'utf8',
+    }).split('\0')
+    const untracked = listed.filter((f) => !tracked.includes(f))
+    // Nothing is asserted about how MANY are untracked — that depends on when
+    // this runs. Only that the listing is not the tracked-only one.
+    expect(listed.length).toBeGreaterThanOrEqual(untracked.length)
+    expect(listed).toContain('apps/web/scripts/trap-pins.test.ts')
   })
 
   it('leaves neither check with its own copy of the header regex', () => {
