@@ -42,16 +42,19 @@ supabase start -x studio,realtime,storage-api,imgproxy,edge-runtime,inbucket,vec
 **Nothing in flight. Two next steps, both of them round-scale and neither
 started.** Everything else this session raised is either closed or in a ratchet.
 
-**One thing is NOT done and it is blocking a green main.** The migration
-`20260817200000_common_name_checked_at.sql` is applied LOCALLY ONLY. `catalog-status`
-now selects that column, so both database CI jobs fail until it reaches
-production. Local replay of all 42 migrations is clean and the rule-1 backup is
-`apps/web/backups/2026-08-17T19-37-58-928Z`. Rule 11's steady state is the path:
-backup, replay, rehearse, `db push`.
+**Migration `20260817200000_common_name_checked_at` is applied to production**
+(Ana's call), with the rule-1 backup `apps/web/backups/2026-08-17T19-37-58-928Z`
+taken first and a clean local replay of all 42 before it. `pnpm ci:check` passes
+all 10 commands across all 3 jobs, database ones included.
 
-**Six merged `session/2026-08-17-*` branches are still on the remote.** All six
-are fully merged into `main` with zero commits ahead, checked. Deleting them was
-refused by the permission classifier, so it needs a hand.
+⚠ **`supabase db push` printed a pgdelta certificate error and "Finished" in the
+same output**, and it HAD applied. Verify the column and the ledger after a push
+rather than reading that last line — a step whose report and result disagree is
+trap 4's shape, and here it disagreed in the reassuring direction.
+
+**One thing needs a hand: six merged `session/2026-08-17-*` branches are still
+on the remote.** All six are fully merged into `main` with zero commits ahead,
+checked. Deleting them was refused by the permission classifier.
 
 ---
 

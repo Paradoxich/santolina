@@ -876,9 +876,11 @@ is unchanged.
 `backups/2026-08-17T19-37-58-928Z` (747 plants, 1859 pairs).
 
 **Migration** `20260817200000_common_name_checked_at.sql` — one nullable
-timestamptz on `plants`, no backfill. **Applied locally only at the time of
-writing; see the entry's end for the remote state.** All 42 migrations replay
-clean from scratch.
+timestamptz on `plants`, no backfill. **Applied to production**, Ana's call,
+after a clean local replay of all 42 from scratch. `supabase db push` printed a
+pgdelta certificate error alongside "Finished", so the outcome was VERIFIED
+rather than read off that line: the column is on `public.plants` and nullable,
+and the ledger holds the version. `migrations:check` reads 42 applied.
 
 **Changed.** `curate-common-names.ts` is new, runbook step 1a: it judges
 `common_name` as a GARDEN name at the round instead of leaving trap 6 to a
