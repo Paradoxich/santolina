@@ -5,7 +5,6 @@
  */
 export const icons = {
   account: '/icons/icon-account.svg',
-  agent: '/icons/icon-agent.svg',
   arrowRight: '/icons/icon-arrow-right.svg',
   benefits: '/icons/icon-benefits.svg',
   bloom: '/icons/icon-bloom.svg',
