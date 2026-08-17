@@ -833,6 +833,36 @@ is unchanged.
 
 <!-- Newest first. Append with: scripts/log-db-session.ts --round <label> -->
 
+### 2026-08-17 — Provenance and hygiene: no catalog change
+
+**Branch** `session/2026-08-17-provenance`. No `plants` or `plant_combinations`
+row changed. Every script touched was run dry against production; all reported
+their decisions already applied.
+
+**Migration — WRITTEN, NOT APPLIED.** `20260817190000_applied_migrations_statements.sql`
+adds `statements text[]` to `public.applied_migrations()` so `migrations:check`
+compares migration CONTENT, not just version and name. Rule 11: Ana applies it.
+Until then the check reports it not-applied against prod, reporting its own
+bootstrap. Rehearsed: `supabase db reset` replayed all 39 locally, then 39 of 39
+read content-clean; mutation-tested by editing an applied migration.
+
+**Ratchets.** `HAND_ROLLED_REVIEWED_MUTATION` 6 → 0, `SCRIPTS_PENDING_ARCHIVE`
+3 → 0, `RUNS_WITHOUT_PROVENANCE` 15 → 8. Five scripts moved onto
+`reviewed-mutation.ts`; `apply-sun-widening.ts` was archived instead. The three
+name passes now share `scripts/name-fixes.ts`, so round 8 gains the collision
+pre-check it predates. New shape 18: a parsed but undocumented flag — seven
+found, all seven documented, hatch list empty.
+
+**Found — a test header moved a counter.** A header citing a trap for context
+makes `docs:claims` count it pinned; unpinned went 21 → 20 while
+`invariants:check` still said 21, and nothing failed. Header fixed. The two
+counters can still disagree silently — carried in the handoff.
+
+**Found — archiving a script breaks it silently.** `../lib/*` does not resolve
+from `scripts/archive/`, and the symptom is implicit `any`, not a missing
+module. Three of four moved files typechecked green with an untyped client. The
+four moved in July also still cited their old run paths. All eight fixed.
+
 ### 2026-08-17 — Step D: the catalog-wide style re-tag (not a round)
 
 **Branch** `session/2026-08-17-style-retag`. Plan step D, unblocked by step C.

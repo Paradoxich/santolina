@@ -33,7 +33,7 @@
  *   ./node_modules/.bin/tsx --env-file=.env.local scripts/check-migration-drift.ts
  */
 
-import { readdirSync } from 'node:fs'
+import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { getSupabaseAdmin } from '../lib/supabase-admin'
 import {
@@ -48,6 +48,8 @@ const MIGRATIONS_DIR = join(process.cwd(), '..', '..', 'supabase', 'migrations')
 const HEADLINE: Record<Finding['kind'], string> = {
   'not-applied':
     'WRITTEN BUT NEVER APPLIED — the schema change is not live (trap 14)',
+  'content-drift':
+    'APPLIED, THEN THE FILE WAS EDITED — what is live is not what the file says',
   'remote-only':
     'APPLIED WITH NO COMMITTED FILE — a schema change with no source',
   'order-inversion': 'APPLY ORDER DISAGREES WITH THE DIRECTORY',
@@ -74,7 +76,14 @@ async function fetchRemote(): Promise<RemoteMigration[]> {
     )
   }
 
-  const rows = (data ?? []) as { version: string; name: string | null }[]
+  const rows = (data ?? []) as {
+    version: string
+    name: string | null
+    // Absent on a remote still running the pre-2026-08-17 two-column function.
+    // The content comparison then skips every row and says so, rather than
+    // reporting a clean identity check as a clean content check.
+    statements?: string[] | null
+  }[]
 
   // An empty ledger is not "nothing to check". It is either a wrong database
   // or a broken read, and treating it as clean is the vacuous-scope bug the
@@ -88,7 +97,11 @@ async function fetchRemote(): Promise<RemoteMigration[]> {
     )
   }
 
-  return rows.map((r) => ({ version: r.version, name: r.name }))
+  return rows.map((r) => ({
+    version: r.version,
+    name: r.name,
+    statements: r.statements ?? null,
+  }))
 }
 
 function readLocal(): string[] {
@@ -104,12 +117,28 @@ function readLocal(): string[] {
 async function main() {
   const localFiles = readLocal().filter((f) => !f.startsWith('.'))
   const remote = await fetchRemote()
-  const report = compareMigrations(localFiles, remote)
+  const sqlByFile = new Map(
+    localFiles
+      .filter((f) => f.endsWith('.sql'))
+      .map((f) => [f, readFileSync(join(MIGRATIONS_DIR, f), 'utf8')])
+  )
+  const report = compareMigrations(localFiles, remote, sqlByFile)
+
+  // How many pairings the content check could actually see. A remote still
+  // running the two-column applied_migrations() reports zero here and a clean
+  // identity check above, and those two sentences together are the honest
+  // reading — the check bootstrapping itself, the same way the function's own
+  // absence is reported.
+  const withStatements = remote.filter((r) => r.statements?.length).length
 
   if (report.findings.length === 0) {
     console.log(
       `migrations: OK — ${report.matched} committed migrations, all applied ` +
-        'under the version their filename claims'
+        'under the version their filename claims' +
+        (withStatements === 0
+          ? '\n  CONTENT NOT CHECKED: the remote ledger returned no statements. ' +
+            'Apply supabase/migrations/20260817190000_applied_migrations_statements.sql.'
+          : `, and ${withStatements} checked against the SQL that was applied`)
     )
     return
   }

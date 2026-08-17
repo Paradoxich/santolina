@@ -45,6 +45,14 @@ export interface RemoteMigration {
   version: string
   /** Null for rows applied by tooling that did not record one. */
   name: string | null
+  /**
+   * The SQL as APPLIED, split into statements by whatever applied it.
+   *
+   * Optional because a caller may not ask for it, and because the ledger
+   * column can be null for a row written by older tooling. Absent means the
+   * content comparison is skipped for that row, never that it passed.
+   */
+  statements?: string[] | null
 }
 
 export type FindingKind =
@@ -60,6 +68,12 @@ export type FindingKind =
   | 'order-inversion'
   /** A name repeats, so no pairing can be inferred safely. */
   | 'ambiguous'
+  /**
+   * Applied, and the file has been EDITED since. Trap 14's shape one step
+   * along: same version, same name, different SQL, so identity matching calls
+   * it a match while what is live is something else.
+   */
+  | 'content-drift'
   /** A file in the directory that is not a migration filename at all. */
   | 'malformed'
 
@@ -82,6 +96,33 @@ export interface DriftReport {
 }
 
 const FILENAME = /^(\d+)_(.+)\.sql$/
+
+/**
+ * Reduce SQL to what the comparison is ABOUT, and no less.
+ *
+ * THE LEDGER STORES PARSED STATEMENTS, NOT THE FILE, so a literal comparison
+ * is guaranteed to fail. Measured against the local stack on 2026-08-17, over
+ * all 38 migrations:
+ *
+ *   comments + whitespace normalised            0 of 38 matched
+ *   ...and statement separators too            38 of 38 matched
+ *
+ * That is the warrant for this function and the reason it ignores exactly
+ * three things and nothing else. A normalisation that threw away more — case,
+ * quoting, identifier spacing — would start ignoring differences that matter,
+ * and the failure would be silent in the direction this check exists to catch.
+ *
+ * The measurement is repeatable, and it is the thing to re-run if this ever
+ * starts crying wolf: a check that false-alarms gets ignored, which is trap 31
+ * inverted.
+ */
+export function normaliseSql(sql: string): string {
+  return sql
+    .replace(/--[^\n]*/g, '')
+    .replace(/\s+/g, ' ')
+    .replace(/\s*;\s*/g, ' ')
+    .trim()
+}
 
 /**
  * Parse a migrations directory listing. Anything that is not
@@ -114,7 +155,13 @@ export function parseLocalMigrations(files: string[]): {
 
 export function compareMigrations(
   localFiles: string[],
-  remote: RemoteMigration[]
+  remote: RemoteMigration[],
+  /**
+   * File contents, keyed by filename. Supply it and every pairing is checked
+   * for content drift as well as identity; omit it and the check is identity
+   * only, which is what it was before 2026-08-17.
+   */
+  sqlByFile?: Map<string, string>
 ): DriftReport {
   const { migrations: local, malformed } = parseLocalMigrations(localFiles)
 
@@ -208,6 +255,32 @@ export function compareMigrations(
     })
   }
 
+  // Content drift, over every pairing pass 1 and pass 2 established. Checked
+  // for a version-drifted file too: the filename being wrong does not make the
+  // SQL right, and those are exactly the rows applied by hand through the MCP.
+  if (sqlByFile) {
+    for (const [file, version] of appliedAs) {
+      const row =
+        remoteByVersion.get(version) ??
+        remote.find((r) => r.version === version)
+      const statements = row?.statements
+      const written = sqlByFile.get(file)
+      // Absent evidence is NOT a pass and NOT a failure. A row whose ledger
+      // predates the statements column can only be checked by identity, and
+      // saying so beats inventing a verdict either way.
+      if (!statements?.length || written === undefined) continue
+      if (normaliseSql(statements.join('\n')) === normaliseSql(written))
+        continue
+      findings.push({
+        kind: 'content-drift',
+        subject: file,
+        detail:
+          'applied, and the file has been EDITED since — what is live is not what this file says',
+        remedy: `diff the file against the applied SQL (select statements from supabase_migrations.schema_migrations where version = '${version}'), then either write a NEW migration for the change or revert the file to what was applied. Never edit an applied migration in place.`,
+      })
+    }
+  }
+
   // Pass 3: what is left on each side is a genuine one-sided fact.
   for (const entry of stillUnmatchedLocal) {
     findings.push({
@@ -284,12 +357,15 @@ function orderFindings(
  */
 const SEVERITY: Record<FindingKind, number> = {
   'not-applied': 0,
-  'remote-only': 1,
-  'order-inversion': 2,
-  ambiguous: 3,
-  'version-drift': 4,
-  'name-drift': 5,
-  malformed: 6,
+  // Same family as not-applied and nearly as dangerous: the file reads as
+  // applied and what is live is something else.
+  'content-drift': 1,
+  'remote-only': 2,
+  'order-inversion': 3,
+  ambiguous: 4,
+  'version-drift': 5,
+  'name-drift': 6,
+  malformed: 7,
 }
 
 function sortFindings(findings: Finding[]): Finding[] {
