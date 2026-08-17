@@ -44,7 +44,13 @@ supabase start -x studio,realtime,storage-api,imgproxy,edge-runtime,inbucket,vec
 flight.** What the session did and what it found is the `2026-08-17` entry in
 `docs/database-log.md` and is not repeated here.
 
-**Next steps, in order. 4 through 6 are carried forward unconsumed.**
+**Next steps, in order. Ana's ruling 2026-08-17: the old rows are cleaned
+BEFORE round 13, not after.** The reason is not tidiness — **a round chooses
+its theme by measuring the catalog** (round 12 killed small-space at 84% held
+and dry shade at 73% by querying existing rows), so mis-tagged old rows make
+the gap test lie. The `modern` Build Backlog item is the proof case: a whole
+seed round was nearly run for what is a tagging gap. Tags first, then measure,
+then seed.
 
 1. **Finish the out-of-round 15.** The three easy repair passes are wired; what
    remains is mostly apply-scripts that CLEAR a stamp, so each needs a witness
@@ -60,7 +66,24 @@ flight.** What the session did and what it found is the `2026-08-17` entry in
    the data is trivial; **the missing piece is that nothing can remove a plant
    at all.** `apply-description-fixes.ts` is the shape to copy: a committed
    decision file carrying `why`, a staleness assertion, and a run record.
-3. **Re-judge the 86 rows a repair pass silently un-curated (trap 31, new).**
+3. **Build a catalog-wide check that does not depend on round manifests.**
+   **This is the one that stops old rows creeping into every session.**
+   `verify-round` goes plant by plant — that is how it found 6/50 — but it can
+   only see plants listed in a round manifest, and manifests exist only from
+   round 8: **254 of 748 plants. 494 are invisible to it.** That number sits
+   almost on top of the 504 never-judged rows, which is not a coincidence.
+   Sweeping every round in CI is worth doing and still misses two thirds of the
+   catalog, so the real job is a check that asks the per-plant questions of all
+   748 by querying the table rather than reading a round file. Creep happens
+   because that state is UNKNOWN and ambushes whichever session looks; a check
+   turns it into a number that is either zero or not.
+   **Second, smaller half:** nothing re-runs the round checks over CLOSED
+   rounds. `verify-round --round 10` had been failing at 6/50 for two days
+   saying exactly what trap 31 says, and nobody heard it, because a round is
+   verified once at close and rounds do not stay closed.
+4. **Fix what that check finds in tags and types**, `modern` first. This is the
+   half that actually gates round 13, per the ruling above.
+5. **Re-judge the 86 rows a repair pass silently un-curated (trap 31, new).**
    Found 2026-08-17 while checking the Build Backlog against the live DB. The
    2026-08-15 trap-26 repair re-tagged 86 of 100 rows across rounds 9 and 10,
    and `style_tags` is watched by `invalidate_editorial_verdict`, so **all 86
@@ -72,14 +95,14 @@ flight.** What the session did and what it found is the `2026-08-17` entry in
    and heroes already passed once, only the tags changed. Trap 31 carries the
    remedy and its verification predicate; the Build Backlog editorial row now
    says 504, not 418.
-4. **Then per-column exclusivity, which is what earns `confirming` back.**
+6. **Then per-column exclusivity, which is what earns `confirming` back.**
    Still forced after step 1, and trap 29 still holds the reasoning: five of
    the seven witnessed columns have more than one writing step
    (`native_checked_at` three, `image_verified_at` four), so the key has to be
    the COLUMN across every writer, and most of those writers are in step 1.
    **Do not DESIGN it early either** — the census it must be designed against
    is the complete one, and step 1 changes that census.
-5. **Then the three hygiene items**, any order. The migration-drift content
+7. **Then the three hygiene items**, any order. The migration-drift content
    check needs `applied_migrations()` to return `statements`, so it needs a
    migration and Ana's push (rule 11); 31 of 34 versions already match byte for
    byte. The graveyard pass moves the three in `SCRIPTS_PENDING_ARCHIVE` to
@@ -87,7 +110,8 @@ flight.** What the session did and what it found is the `2026-08-17` entry in
    `database-log` line in the same change. And the trap ratchet is at 22 of 31
    (`pnpm invariants:check` prints it) — trap 1 is still the cheapest and
    highest-consequence, and trap 31 is new from this session.
-6. **Round 13 has no theme and needs a gap test before it has one.** Round 12's
+8. **Round 13, on a measurement you can trust.** It has no theme and needs a
+   gap test before it has one — run that AFTER steps 3 to 5. Round 12's
    probes killed small-space (84% held), dry shade (73%) and left late-season
    surviving but thin at 62%. Those numbers are in `seed-round12.ts`'s header
    and are the starting point, not a result to reuse — the catalog moved.
@@ -113,6 +137,11 @@ round-12 photo holds (`Rodgersia pinnata`, `Acorus gramineus`) describe rows
 that already have photographs — the vision pass could not confirm the SPECIES
 from them, so what is needed is a better candidate, the job the Commons
 fallback did for _Filipendula purpurea_. All four are mechanical work.
+
+**The full rounds 1-6 editorial pass does NOT gate round 13**, checked rather
+than assumed 2026-08-17: nothing in `app/`, `components/` or `hooks/` reads
+`is_curated`, so it changes no behaviour today. It is quality before test
+users. The tag correctness above is the part that gates a round.
 
 **Build Backlog rows still owed:** the `curate-styles` withdrawal counter, the
 orphaned-photo reconciliation sweep, **the plant-removal path** (next step 2 —
