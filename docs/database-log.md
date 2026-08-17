@@ -749,7 +749,9 @@ Four files are in this class today, each guarded only by its own script's `git d
 
 It found its own first defect on its first real run: this entry existed with no test, and `invariants:check` — one of the seven commands it had just been pointed at — said so.
 
-**It cannot cover the two main-only jobs**, and says so on every run rather than implying completeness: `catalog-state` and `migration drift` read the live database, are skipped on pull requests by design, and take `catalog-state.md` and `style-availability.generated.ts` with them. Those two are checked on the push to main after merge, which is the same window this trap describes — narrowed from five commands to two jobs, not closed.
+**It runs the database jobs too** (Ana's call, 2026-08-17). `catalog-state` and `migration drift` read the live catalog, so CI runs them only on the push to main — a PR-triggered job that can read `SUPABASE_SERVICE_ROLE_KEY` widens the blast radius of any workflow edit, and that decision stands. The consequence was that `catalog-state.md` and `style-availability.generated.ts` were checked **nowhere before a merge**, which is not theoretical: `style-availability.generated.ts` is derived from live counts, so editing `STYLE_TAGS` invalidates it — which is what PR #171 did two days earlier.
+
+Locally there is no blast radius to widen. `.env.local` is already on the machine, which is how those two commands get run by hand today. So `ci:check` runs all three jobs and **is now the only place the database jobs happen before a merge**; `--no-db` skips them and names what it is skipping. The two `run: |` blocks are read for their `pnpm` line and their secret-plumbing shell ignored, because that plumbing exists to write `.env.local` on a runner — and a block yielding no command throws rather than being silently skipped, since a step nobody runs is this trap.
 
 ---
 

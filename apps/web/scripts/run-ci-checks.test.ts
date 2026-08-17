@@ -12,18 +12,17 @@
  * file is current" — that is `tokens:check`'s job and it was already doing it
  * correctly. The defect was in the VERIFICATION SET: the commands a person runs
  * before pushing were a hand-remembered subset of CI's, and nothing could tell
- * you which two were missing. So the witness is `stepsOf`, and the assertion is
+ * you which two were missing. So the witness is `jobsOf`, and the assertion is
  * that the list it produces is READ OUT OF `.github/workflows/ci.yml` and
- * contains the two commands the incident's local run did not: `tokens:check`
- * and `runbook:check`.
+ * reaches every one of trap 32's four generated files.
  *
- * Against the pre-fix code there is no `stepsOf` and no `run-ci-checks.ts`, so
+ * Against the pre-fix code there is no `jobsOf` and no `run-ci-checks.ts`, so
  * this does not compile.
  *
- * THE LAST TWO CASES ARE THE SAME TRAP AIMED AT THIS FILE. A parser that
- * silently skipped a step it could not read, or that pointed at a job name that
- * no longer exists, would report green over a command nobody ran — which is
- * trap 32 exactly, one level up. Both must throw.
+ * THE REFUSAL CASES ARE THE SAME TRAP AIMED AT THIS FILE. A parser that
+ * silently dropped a step it could not read, or that returned an empty job,
+ * would report green over a command nobody ran — which is trap 32 exactly, one
+ * level up. Both must throw.
  */
 
 import { readFileSync } from 'node:fs'
@@ -31,36 +30,55 @@ import { join } from 'node:path'
 
 import { describe, expect, it } from 'vitest'
 
-import { stepsOf } from './run-ci-checks'
+import { jobsOf } from './run-ci-checks'
 
 const WORKFLOW = readFileSync(
   join(__dirname, '../../../.github/workflows/ci.yml'),
   'utf8'
 )
 
+const commandsOf = (yaml: string) => jobsOf(yaml).flatMap((j) => j.commands)
+
 describe('the verification set (trap 32)', () => {
   it("includes the two commands the incident's local run omitted", () => {
-    const steps = stepsOf(WORKFLOW, 'check')
     // tokens:check is the one that went red. runbook:check is its sibling —
     // same shape, same blind spot, and it had simply not been hit yet.
-    expect(steps).toContain('pnpm tokens:check')
-    expect(steps).toContain('pnpm runbook:check')
+    expect(commandsOf(WORKFLOW)).toContain('pnpm tokens:check')
+    expect(commandsOf(WORKFLOW)).toContain('pnpm runbook:check')
   })
 
-  it("covers everything CI's pull-request job runs, in order", () => {
-    // The whole list, so a step added to ci.yml and not to this expectation
-    // fails here rather than on main. That is the point of deriving it: the
-    // list has one home and this test is what holds the second one honest.
-    expect(stepsOf(WORKFLOW, 'check')).toEqual([
-      'pnpm install --frozen-lockfile',
-      'pnpm typecheck',
-      'pnpm test',
-      'pnpm tokens:check',
-      'pnpm runbook:check',
-      'pnpm docs:links',
-      'pnpm docs:claims',
-      'pnpm invariants:check',
+  it("reaches all four of trap 32's generated files", () => {
+    // The two database commands are the half CI never runs on a pull request,
+    // and they carry docs/catalog-state.md and style-availability.generated.ts.
+    // Reading them out of the `run: |` blocks rather than naming them here is
+    // what keeps this a derivation.
+    const commands = commandsOf(WORKFLOW)
+    expect(commands).toContain(
+      'pnpm --filter santolina-web catalog:state:check'
+    )
+    expect(commands).toContain('pnpm --filter santolina-web migrations:check')
+  })
+
+  it('covers every job in the workflow, in order', () => {
+    // A job or step added to ci.yml and not to this expectation fails here
+    // rather than on main. That is the point of deriving the list: it has one
+    // home, and this test is what holds the second one honest.
+    expect(
+      jobsOf(WORKFLOW).map((j) => ({ key: j.key, mainOnly: j.mainOnly }))
+    ).toEqual([
+      { key: 'check', mainOnly: false },
+      { key: 'catalog-state', mainOnly: true },
+      { key: 'migration-drift', mainOnly: true },
     ])
+  })
+
+  it('marks the database jobs as skipped on a pull request', () => {
+    // Derived from the `(main only)` the workflow deliberately carries in its
+    // job names. If somebody shortens a name, this fails — which is the
+    // workflow's own comment about that name, made executable.
+    const dbJobs = jobsOf(WORKFLOW).filter((j) => j.mainOnly)
+    expect(dbJobs).toHaveLength(2)
+    for (const job of dbJobs) expect(job.name).toMatch(/\(main only\)/)
   })
 
   it('reads the workflow rather than restating it', () => {
@@ -68,18 +86,24 @@ describe('the verification set (trap 32)', () => {
       '      - run: pnpm invariants:check',
       '      - run: pnpm invariants:check\n      - run: pnpm styles:check'
     )
-    expect(stepsOf(withExtra, 'check')).toContain('pnpm styles:check')
+    expect(commandsOf(withExtra)).toContain('pnpm styles:check')
   })
 
-  it('refuses a multi-line run block instead of skipping it', () => {
-    const multiline = WORKFLOW.replace(
-      '      - run: pnpm tokens:check',
-      '      - run: |\n          pnpm tokens:check'
+  it('refuses a run block it cannot find a command in', () => {
+    // The shell plumbing in the database jobs is ignored on purpose — it exists
+    // to write .env.local on a runner. A block with ONLY plumbing means the real
+    // command moved, and silently running nothing is the trap.
+    const gutted = WORKFLOW.replace(
+      '          pnpm --filter santolina-web migrations:check',
+      '          echo done'
     )
-    expect(() => stepsOf(multiline, 'check')).toThrow(/multi-line/)
+    expect(() => jobsOf(gutted)).toThrow(/no `pnpm` line/)
   })
 
-  it('refuses a job name that is not in the workflow', () => {
-    expect(() => stepsOf(WORKFLOW, 'checks')).toThrow(/no job "checks"/)
+  it('refuses a job that parsed to nothing', () => {
+    // Strips every inline `- run:`, which empties the `check` job while the two
+    // block-scalar jobs keep their pnpm lines.
+    const emptied = WORKFLOW.replace(/^ {6}- run: .*$/gm, '')
+    expect(() => jobsOf(emptied)).toThrow(/zero\s+commands/)
   })
 })
