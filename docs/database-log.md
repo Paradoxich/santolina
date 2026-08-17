@@ -287,7 +287,7 @@ The table below is the only index by shape, and `pnpm docs:claims` holds it to t
 | ------ | ----------------------------------------------------------------- | ------------------------------------------------ |
 | **A**  | a failure or narrower answer comes back shaped like a real result | 1, 1b, 10, 11, 15, 18, 19, 20, 23                |
 | **B**  | the record disagrees with what actually happened                  | 2, 4, 12, 13, 14, 16, 17, 24, 25, 26, 28, 29, 31 |
-| **C**  | one fact with two homes, and only one got updated                 | 3, 5, 22                                         |
+| **C**  | one fact with two homes, and only one got updated                 | 3, 5, 22, 32                                     |
 | **D**  | facts about the outside world you cannot design away              | 6, 7, 8, 9, 21, 27                               |
 
 A is the one that keeps recurring, and it is subtle every single time.
@@ -633,11 +633,27 @@ appears in no report, no ratchet and no round close. `verify-round` DOES see it
 only if someone re-runs a closed round, which nothing prompts.
 
 **Remedy, and its verification predicate.** Any pass that writes a
-trigger-watched column should count and print the rows whose verdict it
-retired, the way `apply-description-fixes.ts` (2026-08-17) does — it selects
-`is_curated` before writing and names the affected rows afterwards. Fixed when
-`curate-styles` and `curate-greenery` print the same line, and when
-`verify-round --round 9` and `--round 10` return to 50/50 after the re-judge.
+trigger-watched column must count and print the rows whose verdict it retired.
+`apply-description-fixes.ts` (2026-08-17) did it first by hand;
+`apps/web/scripts/reviewed-mutation.ts` is now the one home, and `curate-styles`
+writes through it. **Pinned by `apps/web/scripts/reviewed-mutation.test.ts`**,
+whose witness is `MutationReport.verdict_retired` — observed by reading
+`is_curated` back after the write, not inferred from what the trigger is
+believed to watch, because `lib/plants-write.ts` says in its own header that
+nothing verifies its column map against the trigger's.
+
+**`curate-greenery` was named here as a second offender and is not one**
+(checked 2026-08-17 against `20260729112046_editorial_verdict_per_criterion.sql`,
+which is the current definition). The trigger watches `image_url_curated`,
+`image_pick_confidence`, `description`, `style_tags` and `space_types`.
+`is_greenery` and `foliage_color` are on none of those lists, so that pass
+retires no verdict and has nothing to report. The claim was written from the
+shape of the script rather than from the trigger.
+
+**What is left is data, not code.** Rounds 9 and 10 still hold the 86 withdrawn
+verdicts; `verify-round --round 9` and `--round 10` return to 50/50 only after
+the paid re-judge, which is plan step D2. That is a queued run, not an open
+defect.
 The re-judge itself is a **Build Backlog** row (editorial pass, scope 504), not
 a ratchet entry: the rows are work, not a code defect.
 
@@ -713,6 +729,29 @@ Run `check-bloom-colors.ts` after every seed and map each new value into a bucke
 `native_to` (the phrase on the plant page) and `native_region` (the filter's tags) describe the same origin, and only the tags go through WCVP. The July 30 tail corrected 53 regions and left all 53 phrases saying the old thing, because nothing linked them: `Imperata cylindrica` still named the range it was **introduced** into on its own page while the filter had it right.
 
 The cascade rule had only ever been applied _within_ a field. **Across fields: a correction invalidates every other field answering the same question** — `cross-check-native-region --apply` now nulls `native_checked_at` too. And **where two fields answer one question, the coarse guard passing is not evidence they agree**: the prose guard tested continents, and both the phrase and the truth said "Asia" (trap 23, [`curation.md`](curation.md#native-to)).
+
+#### 32. A generated file is invisible to every check but its own — ADDED 2026-08-17
+
+A file that is generated and held current by a `regenerate && git diff --exit-code` step is guarded by that step **and by nothing else**. Every other check reads it as ordinary source, or does not read it at all. So a change that invalidates it passes typecheck, passes the tests, and passes every scan — and the only thing that disagrees is the one job nobody ran.
+
+`29993cd`, the UI error-system merge, added `packages/ui/src/components/FormError.tsx`, a token consumer, without regenerating `token-consumers.generated.ts`. Local verification before pushing ran the tests, `typecheck`, `invariants:check`, `docs:claims` and `docs:links` — five commands, all green, **none of which touches that file**. Main went red on `tokens:check` at `6f00469`. Fixed by [PR #174](https://github.com/Paradoxich/santolina/pull/174), merged `9e9b46d`.
+
+Four files are in this class today, each guarded only by its own script's `git diff --exit-code`:
+
+| file                                                    | held by                    |
+| ------------------------------------------------------- | -------------------------- |
+| `components/design-system/token-consumers.generated.ts` | `pnpm tokens:check`        |
+| `docs/round-runbook.md`                                 | `pnpm runbook:check`       |
+| `docs/catalog-state.md`                                 | `pnpm catalog:state:check` |
+| `lib/style-availability.generated.ts`                   | `pnpm catalog:state:check` |
+
+**The predicate is `pnpm ci:check`** (standing rule 12 wants one, and prose describing the gap is not one). It reads the `check` job's steps out of `.github/workflows/ci.yml` and runs them in order, so "I verified it" and "CI will pass" stop being different claims. It derives the list rather than restating it — a hand-kept copy of the job list in `package.json` would be this same trap, one level up. Pinned by `apps/web/scripts/run-ci-checks.test.ts`, whose witness is the derived list containing `tokens:check` and `runbook:check`, the two commands the incident's local run did not have.
+
+It found its own first defect on its first real run: this entry existed with no test, and `invariants:check` — one of the seven commands it had just been pointed at — said so.
+
+**It runs the database jobs too** (Ana's call, 2026-08-17). `catalog-state` and `migration drift` read the live catalog, so CI runs them only on the push to main — a PR-triggered job that can read `SUPABASE_SERVICE_ROLE_KEY` widens the blast radius of any workflow edit, and that decision stands. The consequence was that `catalog-state.md` and `style-availability.generated.ts` were checked **nowhere before a merge**, which is not theoretical: `style-availability.generated.ts` is derived from live counts, so editing `STYLE_TAGS` invalidates it — which is what PR #171 did two days earlier.
+
+Locally there is no blast radius to widen. `.env.local` is already on the machine, which is how those two commands get run by hand today. So `ci:check` runs all three jobs and **is now the only place the database jobs happen before a merge**; `--no-db` skips them and names what it is skipping. The two `run: |` blocks are read for their `pnpm` line and their secret-plumbing shell ignored, because that plumbing exists to write `.env.local` on a runner — and a block yielding no command throws rather than being silently skipped, since a step nobody runs is this trap.
 
 ---
 
@@ -793,6 +832,35 @@ is unchanged.
 ## Sessions
 
 <!-- Newest first. Append with: scripts/log-db-session.ts --round <label> -->
+
+### 2026-08-17 — The reviewed-mutation primitive, and trap 32 (not a round)
+
+**Branch** `session/2026-08-17-reviewed-mutation`. Plan step C.
+
+**Changed.** Added `scripts/reviewed-mutation.ts`, the one home for the drift
+guard six scripts hand-rolled; it reports the editorial verdicts a write
+retires, observed by reading `is_curated` back. `curate-styles` writes through
+it, and its dated `STYLE_WRITES_BLOCKED_UNTIL_STEP_C` boolean became
+`assertReportsRetirement`, conditional on the writer rather than on a date.
+Shape 17 and `HAND_ROLLED_REVIEWED_MUTATION` hold the six for one-at-a-time
+migration. Added `pnpm ci:check`, which derives every job in
+`.github/workflows/ci.yml` and runs it, database jobs included.
+
+**Database.** One row: `1c7be629` (Abelia chinensis), `cottage` → `chinese`, a
+real `curate-styles --ids` run to exercise the write path. Uncurated, so no
+verdict was spent. Recorded in `runs/2026-08.jsonl`. It moved a count, which
+regenerated `catalog-state.md` and `style-availability.generated.ts`.
+
+**Found.** Trap 31 named `curate-greenery` as a second offender; the trigger
+(`20260729112046`) does not watch `is_greenery` or `foliage_color`, so it
+retires no verdict. Corrected, and trap 31 is now pinned. Trap 32 added, from
+the morning's `token-consumers.generated.ts` miss.
+
+**Not done.** The verdict-retirement path has never run live; proving it costs
+a real editorial verdict. Step D's first batch settles it (instruction on step
+D in the handoff).
+
+**Verified.** All 10 commands across all 3 CI jobs, via `pnpm ci:check`.
 
 ### 2026-08-17 — The style vocabulary goes 6 to 20 (not a round)
 

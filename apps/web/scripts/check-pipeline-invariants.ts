@@ -99,7 +99,6 @@ export const REPORT_ONLY_STAMPS: Record<string, string> = {
  * the rule allows a source scan as the alternative.
  */
 export const TRAPS_NOT_PINNED: Record<string, string> = {
-  '31': 'A repair pass retires editorial verdicts without counting them. HALF PINNED as of 2026-08-17 and deliberately still listed: scripts/catalog-status.test.ts pins the MEASURING half — splitEditorial tells a withdrawn verdict from a never-judged row by which per-criterion stamps survived, and fails 3 of 5 against the obvious editorial_checked_at implementation. That test names this trap in a case rather than its header, on purpose, so the closure claim is not made on half the remedy. What is left is the WRITING half and it is the trap own predicate: curate-styles and curate-greenery must select is_curated before the write and report the rows whose verdict fell, as apply-description-fixes.ts does, and verify-round --round 9 and --round 10 must return to 50/50. Both land with the reviewed-mutation primitive; today those two do the write inline, so there is nothing to call.',
   '1': 'Rate-limit fallback. The fix removed the fallback; a test needs a fake fetch that 429s and an assertion that the error propagates. Cheap, and worth doing next.',
   '1b': 'Trigger semantics. Only observable against a live or replayed Postgres; pnpm trigger:contract is the existing home and would need to become a checked artifact.',
   '2': '--new-only scoping. Now state-based (*_checked_at IS NULL); the seam is each script argument parser, and the honest witness is a query, not a unit.',
@@ -194,6 +193,41 @@ export const HAND_ROLLED_PAGINATION: Record<string, string> = {
     'Third copy of the page loop. Its own pageSize, its own from/to arithmetic. Correct today — it does paginate — so this is duplication, not a cap bug. Named by the 2026-08-14 audit section 4.',
   'restore-catalog.ts':
     'Fourth copy, same shape as backup-catalog. The pair is the reason this check exists rather than a note in a report: CLAUDE.md already says that the third script working around a thing means the transport is wrong, not that the problem is hard.',
+}
+
+/**
+ * Shape 17. A write conditioned on editorial state, hand-rolled.
+ *
+ * THE DUPLICATION. `from: string // expected current value — drift guard`
+ * appears verbatim in four scripts; two more spell the same field `expect` and
+ * `stored`. Each then re-derives the same three decisions: is the stored value
+ * still what my decision was about, is this row curated, and what do I print.
+ * `scripts/reviewed-mutation.ts` is the one home.
+ *
+ * ONE AT A TIME, WHICH IS WHY THIS IS A LIST AND NOT A SWEEP. Every entry here
+ * is also in `RUNS_WITHOUT_PROVENANCE`, so migrating one is a natural moment to
+ * wire its run record too — but the two were deliberately not done together
+ * (plan step C's scope decision, 2026-08-17): safety machinery that does not
+ * exist yet cannot check the refactor that introduces it.
+ *
+ * `apply-native-to-fixes.ts` IS NOT HERE, and the reason is the shape rather
+ * than an oversight. It hand-rolls the drift guard, so it reads like the other
+ * six — but `native_to` is not a column any editorial verdict is about, so it
+ * never conditions its write on `is_curated` and the scan does not see it. It
+ * should still migrate; nothing forces it, and a hatch entry the scan cannot
+ * produce would only fail as a stale hatch.
+ */
+export const HAND_ROLLED_REVIEWED_MUTATION: Record<string, string> = {
+  'apply-description-fixes.ts':
+    'The closest to migrated already: it reports the verdicts it retires, which is where the primitive got that half from. Its `expect` guard covers a single column and its run record is wired, so it is the lowest-value migration of the six and goes last.',
+  'apply-sun-widening.ts':
+    'Guards on `stored` read out of a cross-check report rather than a hand-authored decision, and re-checks `is_curated` a second time at the write with `.eq("is_curated", false)`. That belt-and-braces has no equivalent in the primitive; decide whether to add it or drop it when this one moves.',
+  'fix-round8-names.ts':
+    'Round 8. Matches by `scientific_name`, not id, so migrating it means resolving names to ids first — the primitive takes ids on purpose, because a name is a value and values drift.',
+  'fix-round11-names.ts': 'Round 11. Same shape as fix-round8-names.',
+  'fix-round12-names.ts': 'Round 12. Same shape as fix-round8-names.',
+  'fix-round12-tags.ts':
+    'Round 12, and the best first migration: it already normalises through JSON.stringify the way the primitive does, and it writes two different columns, so it exercises the multi-column guard.',
 }
 
 /**
@@ -1088,6 +1122,65 @@ function checkPagination(): number {
 }
 
 // ---------------------------------------------------------------------------
+// Shape 17. A write conditioned on editorial state, hand-rolled
+//
+// THE SIGNAL IS THE PAIR, not either half. A declared prior-value field
+// (`from` / `expect` / `expected` / `stored`) says the write is guarded against
+// drift; a per-row branch on `is_curated` says it is conditioned on an editorial
+// verdict. Either alone is common and usually fine — `cross-check-plants` has
+// the first, `curate-plants` has the second — and flagging either alone put six
+// false positives on the list when this was drafted. Together they are the shape
+// `scripts/reviewed-mutation.ts` exists to hold, and as of 2026-08-17 they catch
+// exactly the six the plan named and nothing else.
+//
+// WHY THIS SHAPE AT ALL. Trap 31: the copy in `curate-styles` did NOT read
+// is_curated, so it re-tagged 86 rows, retired 86 verdicts inside the database
+// and reported neither. Six near-identical copies of a guard is six places for
+// the next omission to hide.
+// ---------------------------------------------------------------------------
+function checkReviewedMutation(): number {
+  const excused: string[] = []
+  const PRIOR_VALUE_FIELD = /^ +(from|expect|expected|stored)\??: /m
+  const CURATED_BRANCH =
+    /if \(!?[a-zA-Z]+([.]|\['|\.)is_curated'?\]?\)|if \([a-zA-Z]+\.curated\)|\.eq\('is_curated', false\)/
+
+  for (const file of SOURCE_TS) {
+    const name = basename(file)
+    // The primitive and the provenance module are the machinery, not callers.
+    if (name === 'reviewed-mutation.ts' || name === 'run-provenance.ts')
+      continue
+    const raw = read(file)
+    // NOT stripComments: the drift-guard field is recognised by its declaration,
+    // and three of the six declare it on a line that carries the explaining
+    // comment. Stripping first would still match the declaration, but the
+    // `stored`/`expect` spellings are only legible with the comment beside them.
+    if (!/\.update\s*\(/.test(raw)) continue
+    if (!PRIOR_VALUE_FIELD.test(raw)) continue
+    if (!CURATED_BRANCH.test(raw)) continue
+    if (/\bopenReviewedMutation\b/.test(raw)) continue
+
+    if (HAND_ROLLED_REVIEWED_MUTATION[name]) {
+      excused.push(name)
+      continue
+    }
+    fail({
+      shape: 'reviewed mutation hand-rolled',
+      subject: file,
+      detail:
+        'Guards a write with a declared prior value AND branches on is_curated, which is the drift-guard-plus-verdict shape scripts/reviewed-mutation.ts holds. Trap 31 is what a copy of it missing the is_curated half costs.',
+      remedy: `Write through openReviewedMutation from scripts/reviewed-mutation.ts. If this one genuinely cannot, record it in HAND_ROLLED_REVIEWED_MUTATION in ${basename(__filename)} with the reason.`,
+    })
+  }
+
+  for (const key of Object.keys(HAND_ROLLED_REVIEWED_MUTATION)) {
+    if (!excused.includes(key)) {
+      staleHatches.push({ list: 'HAND_ROLLED_REVIEWED_MUTATION', key })
+    }
+  }
+  return excused.length
+}
+
+// ---------------------------------------------------------------------------
 // Shape 14. A recorded open finding must still be true
 //
 // The inverse of every check above: these fail when the defect is GONE. A
@@ -1347,6 +1440,7 @@ const pendingArchive = checkScriptReachability()
 checkNoForkedSynonymTables()
 const unwiredProvenance = checkWriteProvenance()
 const handRolledPaging = checkPagination()
+const handRolledMutation = checkReviewedMutation()
 const openFindings = checkOpenFindings()
 const parkedDecisions = checkParkedDecisions()
 const forwardSteps = checkForwardStepsStayInvisible()
@@ -1398,6 +1492,11 @@ row(
   'RUNS_WITHOUT_PROVENANCE'
 )
 row('hand-rolled paging', String(handRolledPaging), 'HAND_ROLLED_PAGINATION')
+row(
+  'hand-rolled mutation',
+  String(handRolledMutation),
+  'HAND_ROLLED_REVIEWED_MUTATION'
+)
 row('open findings', String(openFindings), 'OPEN_FINDINGS')
 row('parked decisions', String(parkedDecisions), HANDOFF)
 row('forward-obligation steps', String(forwardSteps), 'FORWARD_STEP_WITNESSES')

@@ -63,6 +63,13 @@ import {
   type StyleTag,
 } from '../lib/style-tags'
 import { withRunRecord, type Witness } from './run-provenance'
+import {
+  openReviewedMutation,
+  asMutationDb,
+  mergeReports,
+  formatReport,
+  type MutationReport,
+} from './reviewed-mutation'
 
 // ---------------------------------------------------------------------------
 // Config
@@ -113,37 +120,39 @@ const WHY_ALL = requireReasonForAll(SCOPE)
 const guardScope = scopeGuard(SCOPE, SCOPE_IDS)
 
 /**
- * TEMPORARY: this pass does not WRITE until the reviewed-mutation primitive
- * lands (plan step C). Dry runs are unaffected.
+ * This pass may only write through a writer that REPORTS verdict retirement.
  *
  * WHY. `style_tags` is watched by `invalidate_editorial_verdict`, so every row
  * this pass re-tags loses its editorial sign-off — and the clear happens inside
- * the database, so this script cannot currently report that it happened. That is
- * trap 31: on 2026-08-15 a repair re-tagged 86 rows, said "86 tagged", could not
- * say "86 un-curated", and nobody noticed for two days.
+ * the database, where a script that does not look cannot see it. That is trap
+ * 31: on 2026-08-15 a repair re-tagged 86 rows, said "86 tagged", could not say
+ * "86 un-curated", and nobody noticed for two days.
  *
- * IT REFUSES EVERY WRITING RUN, NOT JUST `--all`. The obvious gate is the
+ * IT COVERS EVERY WRITING RUN, NOT JUST `--all`. The obvious gate is the
  * catalog-wide one, since the vocabulary expansion ahead is 748 rows. But the
- * incident that produced trap 31 was `--round 9` and `--round 10` — scoped,
- * modest, exactly the shape a gate on `--all` would wave through. The size of the
- * run was never the problem; the silence was.
+ * trap-31 incident WAS a scoped run, `--round 9` and `--round 10` — modest, and
+ * exactly the shape a gate on `--all` would wave through. The size was never the
+ * problem; the silence was.
  *
- * WHAT LIFTS IT. Step C gives this script a way to name the verdicts it retires,
- * as `apply-description-fixes.ts` already does. Then this check becomes
- * conditional on that capability rather than absolute, and stops being dated.
- * Delete the flag, not the check.
+ * THIS USED TO BE A DATED BOOLEAN, `STYLE_WRITES_BLOCKED_UNTIL_STEP_C`, which
+ * refused every writing run outright while the primitive did not exist. The
+ * primitive exists now, so the check is conditional on the CAPABILITY instead:
+ * it asserts that whatever writes here observes and reports retirement. Deleting
+ * the check along with the flag would have left nothing standing between the
+ * next writer and the same incident.
  */
-const STYLE_WRITES_BLOCKED_UNTIL_STEP_C = true
-if (STYLE_WRITES_BLOCKED_UNTIL_STEP_C && !DRY_RUN) {
+function assertReportsRetirement(writer: {
+  reportsVerdictRetirement: boolean
+}): void {
+  if (writer.reportsVerdictRetirement) return
   console.error(
-    `\n✗ curate-styles will not write yet.\n\n` +
+    `\n✗ curate-styles will not write through a writer that cannot report\n` +
+      `  verdict retirement.\n\n` +
       `  Re-tagging withdraws the editorial verdict on every row whose tags\n` +
-      `  change, and this script cannot yet count or report that — the clear\n` +
-      `  happens in the database. Trap 31 is what that costs: 86 rows silently\n` +
-      `  un-curated on 2026-08-15, unnoticed for two days.\n\n` +
-      `  This blocks scoped runs too. The trap-31 incident WAS a scoped run.\n\n` +
-      `  Lifted by plan step C, the reviewed-mutation primitive. Until then,\n` +
-      `  --dry-run works and is how the definitions were piloted.\n`
+      `  change, and the clear happens inside the database. Trap 31 is what\n` +
+      `  the silence costs: 86 rows un-curated on 2026-08-15, unnoticed for\n` +
+      `  two days.\n\n` +
+      `  Use openReviewedMutation from scripts/reviewed-mutation.ts.\n`
   )
   process.exit(1)
 }
@@ -292,6 +301,17 @@ async function main() {
     `Judging ${selected.length} plant(s)${NEW_ONLY ? ' (new only)' : ''}${DRY_RUN ? ' — DRY RUN, no writes' : ''}`
   )
 
+  // The writer, and the gate that is now about it rather than about a date.
+  // `retire` because a re-tag is exactly the judgment the `tags` criterion was
+  // made about: the verdict SHOULD fall. Reporting it is the whole fix.
+  const writer = openReviewedMutation({
+    db: asMutationDb(db),
+    table: 'plants',
+    onCurated: 'retire',
+    dryRun: DRY_RUN,
+  })
+  assertReportsRetirement(writer)
+
   const tagCounts = new Map<StyleTag, number>()
   // Per-plant judgments, kept for the calibration report below — a share is a
   // statement about the population, and the bar being checked is per plant.
@@ -299,6 +319,7 @@ async function main() {
   let unchanged = 0
   let neutral = 0
   const failed: string[] = []
+  const reports: MutationReport[] = []
 
   const judgeAll = async (wrote: (id: string) => void) => {
     for (const [i, plant] of selected.entries()) {
@@ -320,17 +341,31 @@ async function main() {
           }`
         )
 
-        if (!DRY_RUN) {
-          const { error } = await db
-            .from('plants')
-            .update({
-              style_tags: tags,
-              style_checked_at: new Date().toISOString(),
-            })
-            .eq('id', guardWrite(plant))
-          if (error) throw new Error(`DB write failed: ${error.message}`)
-          wrote(plant.id)
-        }
+        // Applied per row, not batched at the end: an interrupted run must have
+        // written what it judged, and each row's `to` is only known once the
+        // model has answered. `guardWrite` still runs, so the scope refusal
+        // cannot be separated from the write it protects.
+        reports.push(
+          await writer.apply(
+            [
+              {
+                id: guardWrite(plant),
+                label: plant.scientific_name ?? plant.common_name,
+                // The tags as read at fetch time. A row re-tagged by anything
+                // else since then is drift and is skipped rather than clobbered
+                // — a guard these 748 rows never had.
+                from: { style_tags: plant.style_tags ?? null },
+                to: { style_tags: tags },
+                // Stamped in the SAME statement, and on an unchanged row too:
+                // a stamp that lands on only some of the counted rows cannot
+                // witness the run (trap 28).
+                alsoWrite: { style_checked_at: new Date().toISOString() },
+                why: 'blind re-judgment against the lib/style-tags definitions',
+              },
+            ],
+            { wrote }
+          )
+        )
       } catch (err) {
         failed.push(`${plant.common_name} — ${(err as Error).message}`)
         console.error(
@@ -384,6 +419,17 @@ async function main() {
   const judged = selected.length - failed.length
   console.log(
     `\nDone. ${judged} judged, ${unchanged} unchanged, ${neutral} style-neutral ([]).`
+  )
+
+  // The retirement report — the sentence trap 31 was missing. Printed before
+  // the distribution and calibration reports because it is the one that says a
+  // paid editorial pass has to be re-run.
+  console.log(
+    '\n' +
+      formatReport(mergeReports(reports), {
+        dryRun: DRY_RUN,
+        reJudgeWith: 'curate-editorial --ids <the ids above>',
+      })
   )
   if (judged > 0) {
     console.log('\nResulting distribution:')
