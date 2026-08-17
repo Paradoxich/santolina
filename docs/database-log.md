@@ -65,6 +65,14 @@ The numbers **in this file are different and must stay written down**: a dated s
 
     The session entries below are exempt and the scan stops at the `## Sessions` heading, which is the tense half of this rule made structural: a dated entry records an event.
 
+15. **A decision the round raises is a decision the round asks. Do not close a round with an open question parked on a person.** Ana's rule, 2026-08-17, and it applies hardest to the small items — a one-line ruling that would cost her a minute becomes a permanent fixture the moment it is written down instead of asked. Prompt her while the round is open. Closing on schedule and leaving the maintenance for a future session is how a round looks finished and is not.
+
+    **What this cost.** A paragraph beginning "**Waiting on Ana:**" was copied WORD FOR WORD through six consecutive handoffs, `4006b7e` → `a5301e2`. Read back to her on 2026-08-17, **three of its six items were never hers**: the `Cenolophium` region correction is a fact question answerable against WCVP, and the rounds 1-6 editorial pass and the `modern` re-tag are both agent work under standing rule 6 — her own 2026-07-28 ruling, recorded in this file, contradicted by the list four sessions running. A fourth item described two round-12 rows as needing a photograph when both already had one; the hold was that the vision pass could not confirm the species from the photo it had. Nobody re-derived ownership because the paragraph read as settled: it had been there last time. **A list of other people's obligations is the one kind of backlog nobody audits**, because every item on it looks like someone else's problem.
+
+    **The prose paragraph is the defect, not the deferring.** A comma-separated sentence has no items, so nothing can count them, date them, or ask who owes the answer — rule 14's failure applied to work instead of to numbers. If an item genuinely must outlive the round it belongs in its real home with an owner: the Notion **Build Backlog** for a product decision, rule 11's list for a deferred schema change. Never a handoff paragraph.
+
+    **The enforcement half is `invariants:check` shape 15.** `.claude/handoff.md` may carry a `**Parked decisions.**` list and nothing else; each line is `- (raised YYYY-MM-DD, Owner) the question`, dated when FIRST raised. The scan fails on the old prose form, on an undated or unowned item, and on any item older than 14 days — longer than a round, shorter than two. **It is designed to go red with no code change**, which is normally a smell and here is the mechanism: an expiring item stops the next PR and forces either the ruling or the routing. There is deliberately no escape hatch, because a hatch would be a way to park an item forever.
+
 ### 2026-08-16 — Round 12
 
 **Branch** `session/2026-08-16-round-12`. Seeded 28 plant(s) on 2026-08-16.

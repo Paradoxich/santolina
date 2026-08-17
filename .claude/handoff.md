@@ -90,16 +90,30 @@ previous entry; round 12 consumed only its own step.**
    flag `plant_type` on every sedge and rush seeded, the round-4 false-positive
    class, left naive on purpose.
 
-**Waiting on Ana:** the two climbing hydrangeas, the `Cenolophium` region
-correction, the rounds 1-6 editorial pass, the `modern` re-tag, and whether an
-empty `common_issues` / `environment_benefits` is legitimate (21 and 4 drafted
-rows) — that last one decides whether they join `REQUIRED_DRAFTED_FIELDS`.
-Round 12 added two photo holds to the pile (`Rodgersia pinnata` and
-`Acorus gramineus`, both "species unsure"), and they need a photograph rather
-than a decision. Build Backlog rows still owed: the `curate-styles` withdrawal
-counter, the orphaned-photo reconciliation sweep, and **50 of 748 rows still
-showing a Latin binomial where a garden name belongs** (round 12's own six are
-fixed; the rest predate it).
+**Parked decisions.** Dated when FIRST raised, with who owes the answer.
+`invariants:check` shape 15 fails on an undated item and on one older than 14
+days, so this list cannot become a paragraph again. Read that shape's header
+before adding a line: the paragraph this replaced ran for six handoffs and
+half its items were misfiled.
+
+- (raised 2026-08-17, Ana) Keep _Hydrangea hydrangeoides_ with a description
+  that names its single-bract florets, or cut it as a third near-identical
+  climber? The catalog holds three, not the two previously recorded.
+
+**Re-owned 2026-08-17, and no longer anyone's decision.** Each was parked on
+Ana and none was hers. The `Cenolophium` region correction is a fact question
+answerable against WCVP. The rounds 1-6 editorial pass and the `modern` re-tag
+are both agent work under standing rule 6, her own 2026-07-28 ruling. The two
+round-12 photo holds (`Rodgersia pinnata`, `Acorus gramineus`) describe rows
+that already have photographs — the hold is that the vision pass could not
+confirm the species from them, so what is needed is a better candidate, the
+same job the Commons fallback did for _Filipendula purpurea_ in that round.
+All four are mechanical work; none goes back on a list of questions.
+
+**Build Backlog rows still owed:** the `curate-styles` withdrawal counter, the
+orphaned-photo reconciliation sweep, and **50 of 748 rows still showing a Latin
+binomial where a garden name belongs** (round 12's own six are fixed; the rest
+predate it).
 
 **Standing:** the next audit is round 13's close or 2026-09-14, whichever
 first, early if a PR adds a stamp column, adds a script, or touches
