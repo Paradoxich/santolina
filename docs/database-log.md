@@ -73,6 +73,18 @@ The numbers **in this file are different and must stay written down**: a dated s
 
     **The enforcement half is `invariants:check` shape 15.** `.claude/handoff.md` may carry a `**Parked decisions.**` list and nothing else; each line is `- (raised YYYY-MM-DD, Owner) the question`, dated when FIRST raised. The scan fails on the old prose form, on an undated or unowned item, and on any item older than 14 days — longer than a round, shorter than two. **It is designed to go red with no code change**, which is normally a smell and here is the mechanism: an expiring item stops the next PR and forces either the ruling or the routing. There is deliberately no escape hatch, because a hatch would be a way to park an item forever.
 
+16. **A new standard applies to the whole catalog only if a reader can tell. Otherwise it applies going forward, and older rows are done.** Ana's ruling 2026-08-17, and `StepDef.obligation` in `scripts/round-status.ts` is the executable half — `catalog` means every row owes it whenever it was seeded, `forward` means a gap reaches nobody and is information rather than work. Current classification and the per-step reasoning are in that file; the split is printed by [`catalog-state.md`](catalog-state.md), which is generated, so do not restate it here.
+
+    **What this costs when it is not written down.** Eleven stamp columns landed between 2026-07-06 and 2026-08-13, five inside one 22-hour window while round 8 was open, and each made every already-seeded row NULL. A new standard has therefore always cost the catalog size rather than the round size, and nothing recorded whether that cost was owed — it was decided ad hoc, once per column, by whoever was in the file. On 2026-07-29 one such decision was made explicitly, 277 `native_checked_at` rows left as "recorded debt (Ana's call)", and a later session re-checked all 695 anyway. Nobody was overruling anything; the ruling simply had no home that could fail.
+
+    **The test is about the CHECK, not the column, and `curate-editorial` is why.** Nothing reads `is_curated` anywhere under `app/`, `components/` or `hooks/`, and no query filters on it — so "does anything read this column?" classifies the editorial pass as `forward` and declares roughly 504 rows finished. That is wrong and expensively so: the pass rewrites descriptions failing `lib/editorial-standard.ts` on about 60% of the rows it touches (30/50, 29/50 and 17/28 on rounds 9, 10 and 12) and holds rows whose photograph cannot be confirmed as the species. The flag is invisible; the copy and the photographs are the two things a reader looks at hardest. Ask instead: **if this check had never run on a row, could a user tell?** This handoff carried the column version of the test for one day and it read as checked rather than as reasoned.
+
+    **`forward` is not "older rows are settled".** That is the usual explanation and it is not the rule. `draft-hardiness` is missing on rounds 9-12, the newest rows, because ratings were drafted for the then-catalog in July and the track was parked before those rounds existed. What makes its gap informational is that nothing renders the column.
+
+    **It never backdates a stamp.** A stamp is evidence and evidence cannot be invented (trap 28). This changes what work is OWED, never what the record SAYS, and a `forward` step still FAILs inside its own round's manifest.
+
+    **The enforcement half is `invariants:check` shape 16.** Every `forward` step must carry a `FORWARD_STEP_WITNESSES` entry naming the columns that must stay unread on the app surface and, where one exists, the module that would render them. A `forward` step with no witness fails — a ruling with no mechanism is the 277-row ruling again. The module half is not decoration: it caught this work asserting a falsehood. The plan justified hardiness as `forward` via the 2026-08-14 audit's "`hardiness_verified` has zero writers, so the gate is permanently false", and `catalog-state.ts` counts 267 rows at true from the July pass. The classification survives because `lib/hardiness.ts` has no importer anywhere and the live survive-winter bullet reads `hardiness_zone_min`/`_max` instead — a fact nobody had checked, and one a column scan cannot see.
+
 ### 2026-08-16 — Round 12
 
 **Branch** `session/2026-08-16-round-12`. Seeded 28 plant(s) on 2026-08-16.
@@ -781,6 +793,35 @@ is unchanged.
 ## Sessions
 
 <!-- Newest first. Append with: scripts/log-db-session.ts --round <label> -->
+
+### 2026-08-17 — Who owes an old row, and a check that can see all 748 (not a round)
+
+**Branch** `session/2026-08-17-obligation-policy`, parallel with
+`session/2026-08-17-style-vocabulary`. Plan steps A and B; C through G not here.
+
+**Changed.** Added `StepDef.obligation` and classified every step (standing rule
+16). Added `invariants:check` shape 16 with `FORWARD_STEP_WITNESSES`, an `owed by`
+column in [`catalog-state.md`](catalog-state.md), and `scripts/catalog-status.ts`
+(`pnpm catalog:status`) with its test, run by CI on main.
+
+**Database.** No writes and no migration. Read-only throughout.
+
+**Found.** One step classified `forward`, so the policy exempts almost nothing.
+`catalog-status` reproduced three recorded numbers from queries none of them used:
+494 plants predate manifests, 86 verdicts withdrawn (42 in round 9, 44 in round
+10), 418 never judged. `verify-round --round 9` reports 8/50 and 50 − 42 = 8. Two
+documented premises were false — the 2026-08-14 audit's "`hardiness_verified` has
+zero writers" (267 rows are true), and the previous handoff's "the rounds 1-6
+editorial pass does not gate round 13" (the flag is unread; the pass rewrites
+about 60% of descriptions).
+
+**Not done.** Plan steps C through G. `catalog:status` reports rather than fails;
+gating it wants a committed baseline. Trap 31 stays open: its measuring half is
+pinned, its writing half is the reviewed-mutation work.
+
+**Verified.** 321 tests, tsc, invariants, docs:claims, docs:links, runbook,
+tokens, catalog:state:check. Shape 16 negative-tested three ways, each reverted;
+`splitEditorial` fails 3 of 5 against the naive implementation.
 
 ### 2026-08-17 — Standing rule 15, provenance wiring, `common_issues` closed (not a round)
 
