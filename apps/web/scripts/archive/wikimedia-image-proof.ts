@@ -15,17 +15,17 @@
  * that work is worth doing.
  *
  * Usage (from apps/web):
- *   ./node_modules/.bin/tsx --env-file=.env.local scripts/wikimedia-image-proof.ts
- *   ./node_modules/.bin/tsx --env-file=.env.local scripts/wikimedia-image-proof.ts --limit 20
+ *   ./node_modules/.bin/tsx --env-file=.env.local scripts/archive/wikimedia-image-proof.ts
+ *   ./node_modules/.bin/tsx --env-file=.env.local scripts/archive/wikimedia-image-proof.ts --limit 20
  *   open reports/wikimedia-proof.html
  */
 
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { getSupabaseAdmin } from '../lib/supabase-admin'
-import { getAnthropicClient, VISION_MODEL } from '../lib/anthropic-client'
-import { fetchAllRows } from '../lib/paginate'
-import { probeImage } from '../lib/image-probe'
+import { getSupabaseAdmin } from '../../lib/supabase-admin'
+import { getAnthropicClient, VISION_MODEL } from '../../lib/anthropic-client'
+import { fetchAllRows } from '../../lib/paginate'
+import { probeImage } from '../../lib/image-probe'
 
 // Wikimedia asks API clients to identify themselves with a descriptive UA and a
 // contact — anonymous or generic UAs get rate-limited or blocked.

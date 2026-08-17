@@ -124,12 +124,16 @@ export const TRAPS_NOT_PINNED: Record<string, string> = {
 
 /** Shape 5. Scripts with no runbook step and no end condition, not yet archived. */
 export const SCRIPTS_PENDING_ARCHIVE: Record<string, string> = {
-  'wikimedia-image-proof.ts':
-    'Proved Wikimedia CC-BY/BY-SA sourcing before the July 22 image pass. Decision shipped; resolveP18/fetchCommonsImage now live in lib/wikimedia.ts. Archive per artifact (c/1).',
-  'repair-combinations.ts':
-    'One-off repair. The only archive candidate with no record anywhere, so archiving it needs a database-log line naming what it repaired and when, in the same change.',
-  'backfill-legacy-editorial.ts':
-    'One-off. Archive as a WRONG-SHAPE example: it stamps all four editorial stamps and writes is_curated directly, against standing rule 6 and migration 20260728220852 own column comment.',
+  // EMPTY as of 2026-08-17. All four candidates moved to scripts/archive/ with
+  // README rows in one change: wikimedia-image-proof, repair-combinations (plus
+  // its database-log line, standing rule 5), backfill-legacy-editorial as a
+  // wrong-shape example, and apply-sun-widening, whose last reason to stay —
+  // being the drift-guard template every apply-script copied — ended when
+  // reviewed-mutation.ts became a library they call instead.
+  //
+  // An entry here is a script nothing references that is NOT being archived
+  // yet, with the reason. Adding one back needs that reason; the shape it
+  // guards against is scripts/ growing and never draining.
 }
 
 /**
@@ -166,11 +170,8 @@ export const RUNS_WITHOUT_PROVENANCE: Record<string, string> = {
   'fix-oversized-heroes.ts':
     'One-off image repair. Found by this scan rather than by the list, which is the scan doing its job.',
 
-  // --- archive candidates: these leave scripts/ rather than get wired ---
-  'apply-sun-widening.ts':
-    'Neutralized by a trigger; queued for archive (artifact c/1).',
-  'backfill-legacy-editorial.ts': 'Wrong-shape example; queued for archive.',
-  'repair-combinations.ts': 'One-off repair; queued for archive.',
+  // --- archive candidates: EMPTY as of 2026-08-17. All three left scripts/
+  //     for scripts/archive/, which is the other way an entry here closes. ---
 }
 
 /**
@@ -211,8 +212,11 @@ export const HAND_ROLLED_PAGINATION: Record<string, string> = {
  * produce would only fail as a stale hatch.
  */
 export const HAND_ROLLED_REVIEWED_MUTATION: Record<string, string> = {
-  'apply-sun-widening.ts':
-    'Guards on `stored` read out of a cross-check report rather than a hand-authored decision, and re-checks `is_curated` a second time at the write with `.eq("is_curated", false)`. That belt-and-braces has no equivalent in the primitive; decide whether to add it or drop it when this one moves.',
+  // EMPTY as of 2026-08-17. Five migrated — fix-round12-tags, the three name
+  // passes (via scripts/name-fixes.ts, which is the shared procedure they had
+  // three copies of) and apply-description-fixes. The sixth, apply-sun-widening,
+  // left scripts/ instead: a write the database discards does not need a better
+  // guard around it.
 }
 
 /**

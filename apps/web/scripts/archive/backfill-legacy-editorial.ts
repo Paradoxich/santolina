@@ -31,12 +31,12 @@
  * DRY RUN BY DEFAULT. Pass --apply to write.
  *
  * Usage (from apps/web):
- *   ./node_modules/.bin/tsx --env-file=.env.local scripts/backfill-legacy-editorial.ts
- *   ./node_modules/.bin/tsx --env-file=.env.local scripts/backfill-legacy-editorial.ts --apply
+ *   ./node_modules/.bin/tsx --env-file=.env.local scripts/archive/backfill-legacy-editorial.ts
+ *   ./node_modules/.bin/tsx --env-file=.env.local scripts/archive/backfill-legacy-editorial.ts --apply
  */
 
-import { getSupabaseAdmin } from '../lib/supabase-admin'
-import { fetchAllRows } from '../lib/paginate'
+import { getSupabaseAdmin } from '../../lib/supabase-admin'
+import { fetchAllRows } from '../../lib/paginate'
 
 async function main() {
   const apply = process.argv.slice(2).includes('--apply')

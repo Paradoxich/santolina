@@ -17,12 +17,12 @@
  * Deletes rows by id; never inserts or edits. Dry-run by default; --apply
  * writes. Run backup-catalog.ts first.
  *
- *   ./node_modules/.bin/tsx --env-file=.env.local scripts/repair-combinations.ts
- *   ./node_modules/.bin/tsx --env-file=.env.local scripts/repair-combinations.ts --apply
+ *   ./node_modules/.bin/tsx --env-file=.env.local scripts/archive/repair-combinations.ts
+ *   ./node_modules/.bin/tsx --env-file=.env.local scripts/archive/repair-combinations.ts --apply
  */
 
-import { getSupabaseAdmin } from '../lib/supabase-admin'
-import { fetchAllRows } from '../lib/paginate'
+import { getSupabaseAdmin } from '../../lib/supabase-admin'
+import { fetchAllRows } from '../../lib/paginate'
 
 const COMPANION_CAP = 5
 const STRENGTH_RANK: Record<string, number> = {

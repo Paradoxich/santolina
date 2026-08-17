@@ -48,14 +48,14 @@
  *   seed → curate-plants → cross-check-plants → apply-sun-widening → curate-combinations
  *
  * Usage (from apps/web):
- *   ./node_modules/.bin/tsx --env-file=.env.local scripts/apply-sun-widening.ts
- *   ./node_modules/.bin/tsx --env-file=.env.local scripts/apply-sun-widening.ts --dry-run
- *   ./node_modules/.bin/tsx --env-file=.env.local scripts/apply-sun-widening.ts --report reports/cross-check-2026-07-09-15-49-19.json
+ *   ./node_modules/.bin/tsx --env-file=.env.local scripts/archive/apply-sun-widening.ts
+ *   ./node_modules/.bin/tsx --env-file=.env.local scripts/archive/apply-sun-widening.ts --dry-run
+ *   ./node_modules/.bin/tsx --env-file=.env.local scripts/archive/apply-sun-widening.ts --report reports/cross-check-2026-07-09-15-49-19.json
  */
 
 import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { getSupabaseAdmin } from '../lib/supabase-admin'
+import { getSupabaseAdmin } from '../../lib/supabase-admin'
 
 // Canonical ordering for stored sun arrays (matches how curation drafts them)
 const SUN_ORDER = ['full_sun', 'partial_sun', 'shade'] as const
