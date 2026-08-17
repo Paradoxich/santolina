@@ -319,12 +319,12 @@ Every trap below is really one of four shapes. The entries are the worked exampl
 
 The table below is the only index by shape, and `pnpm docs:claims` holds it to the entries: a trap with no family row fails, and so does a family row naming a trap that does not exist. It carried neither count above for that reason — a number restated in prose is a second home for a fact the headings already own.
 
-| family | what it is                                                        | entries                                              |
-| ------ | ----------------------------------------------------------------- | ---------------------------------------------------- |
-| **A**  | a failure or narrower answer comes back shaped like a real result | 1, 1b, 10, 11, 15, 18, 19, 20, 23, 34, 35            |
-| **B**  | the record disagrees with what actually happened                  | 2, 4, 12, 13, 14, 16, 17, 24, 25, 26, 28, 29, 31, 33 |
-| **C**  | one fact with two homes, and only one got updated                 | 3, 5, 22, 32                                         |
-| **D**  | facts about the outside world you cannot design away              | 6, 7, 8, 9, 21, 27                                   |
+| family | what it is                                                        | entries                                                  |
+| ------ | ----------------------------------------------------------------- | -------------------------------------------------------- |
+| **A**  | a failure or narrower answer comes back shaped like a real result | 1, 1b, 10, 11, 15, 18, 19, 20, 23, 34, 35                |
+| **B**  | the record disagrees with what actually happened                  | 2, 4, 12, 13, 14, 16, 17, 24, 25, 26, 28, 29, 31, 33, 36 |
+| **C**  | one fact with two homes, and only one got updated                 | 3, 5, 22, 32                                             |
+| **D**  | facts about the outside world you cannot design away              | 6, 7, 8, 9, 21, 27                                       |
 
 A is the one that keeps recurring, and it is subtle every single time.
 
@@ -784,6 +784,18 @@ It surfaced only because the `native_to` queue ranked a phrase against those tag
 > that, and will fail round close until the phrase is rewritten instead. The
 > `--review-keep` writer (audit F5, filed as can-wait) is now the thing that
 > closes it.
+
+#### 36. A step reads a column the status query never fetched — ADDED 2026-08-17
+
+Round 13, step 1a. `curate-common-names --apply` stamped all 33 rows correctly — verified by querying `plants` directly — and `run-round --round 13 --plan` still reported **`0 already done`**. `common_name_checked_at` was missing from `roundStatus`'s `.select()` projection, and had been for the entire life of the step.
+
+**Nothing could catch it from either side.** `StatusRow` declares the field, so `ran: (p) => Boolean(p.common_name_checked_at)` typechecks and reads `undefined` on every row; PostgREST raises nothing for a column you simply did not ask for. **A projection is a string, which is the one part of a typed query the compiler cannot see into** — the type says the field is there and the query never fetches it.
+
+**What it would have cost:** a step that can never report as done is a step `run-round` re-runs and re-bills every round, and `verify-round` reports as an outstanding gap forever. This is trap 4 one layer down — there a step was missing from the registry; here it is correctly registered and missing from the query.
+
+**The tell was a contradiction between two reporters**, not an error: the pass printed `stamped only 20` while its own provenance witness said `0 row(s) carry a stamp inside the window`. Neither was the database. Query the column before believing either — see also trap 1b, test the object rather than its description.
+
+**Pinned by `apps/web/scripts/round-rehearsal.test.ts`**, `every registered stamp column is actually fetched (trap 36)`: `STATUS_PROJECTION` is now exported so it can be held to `registeredStampColumns()`, and the pre-fix projection fails the assertion naming `common_name_checked_at`. Two companion cases cover the evidence columns that are not `*_checked_at` stamps (`ai_drafted_at`, `seasonal_care`, `image_pick_confidence`), which fail the same way and are invisible to the first check.
 
 ---
 
