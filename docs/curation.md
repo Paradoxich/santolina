@@ -624,6 +624,27 @@ or exact scientific-name match, never the top name-search hit** (trap 7); name
 search resolves to sibling species silently, and woodland genera in particular
 have been widely re-segregated, so synonym groups belong in the dry run.
 
+**A plant is cut for being a poor citizen HERE, never for being one somewhere
+else** (Ana, 2026-08-18, delegated and decided). Invasiveness is a property of a
+plant in a place, not of the plant. This catalog is Euro/Med first, so the test
+is whether a species is a bad recommendation for the reader we actually have: an
+uneradicable runner in their garden, dangerous, out of scope, too big. Those
+reasons are region-neutral and did all the work in round 13, including cutting
+`Citrus trifoliata` on thorns and size rather than on its North American status.
+
+**Cutting on non-European invasive status amputates the local flora**, which is
+why the rule points the other way: `Lythrum salicaria` and `Iris pseudacorus`
+are Balkan natives, and round 5 seeded regional natives on purpose. A rule that
+drops them to protect American wetlands is serving the wrong reader. Round 12
+cut both on exactly that ground, and its own header predicted the overrule; they
+need one re-judgement against the local criterion, which they may well survive,
+since both self-seed hard in Europe too.
+
+**The durable answer is a field, not a cut.** "Poor citizen in region X" belongs
+beside `native_region` so the app can warn the reader who needs warning, instead
+of a seeding decision silently deciding for everyone. That is a schema ask and
+lives on standing rule 11's deferred list, not here.
+
 **Guards flag; they do not fix.** A cross-check writes nothing but its own
 `*_checked_at` stamp, because resolving a disagreement is a judgment and a
 machine that quietly "corrects" the catalog destroys the evidence that it
