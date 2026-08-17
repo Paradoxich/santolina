@@ -800,6 +800,8 @@ Trefle's names come from floras and USDA lists, and every batch lands three defe
 
 Worst case is a **collision with a species already held**: round 8 received _Cercis canadensis_ as "Judastree", which is _C. siliquastrum_. `verify-round` now FAILs on duplicate `common_name`. Pattern a fix pass on `scripts/fix-round8-names.ts` — each entry carries the value it expects to find. **A name pass can create the collision it exists to remove** (renaming _Anemonoides nemorosa_ to "Wood anemone" collided with _Anemone quinquefolia_), so re-check duplicates afterwards.
 
+**The downstream fix above has now run three rounds consecutively, and that is a finding rather than a cost of doing business — ADDED 2026-08-17.** `fix-round8-names.ts`, `fix-round11-names.ts` and `fix-round12-names.ts` are three hand-written per-row tables solving the same defect three times; round 7 needed the step before it had a name. Nothing between Trefle and the catalog judges `common_name` at all — `lib/trefle.ts` falls back to the scientific name and `curate-plants` only ever reads the column. **Decide before round 13 whether to fix it upstream**, because the alternative is a fourth instance: `common-name-never-judged-at-seed` in `check-pipeline-invariants.ts`, which holds the decision so it cannot be lost between rounds. Continuing to pay it downstream is a valid answer; it closes the entry with the reason recorded.
+
 #### 7. Seed by ID, never by name search — recurring
 
 Trefle's name search silently resolves to sibling species. Seed by verified Trefle ID or exact synonym-aware genus+species match, and log any drift.
@@ -926,11 +928,11 @@ alongside `written` ones. Fixed, with a regression case that fails against the
 pre-fix source. **A warning that cries wolf is trap 31 inverted** — wrong in the
 direction that teaches people to skip the report.
 
-**Not done — needs Ana.** 74 of 748 carry two tags on one axis (65 aesthetic, 9
-place), against 3/50 and 0/50 in the PR #171 pilot. Concentrated in
-`cottage`+`wildflower`, `cottage`+`classic` and `cottage`+`mediterranean`. The
-definitions need tightening against each other in `lib/style-tags.ts`; that is an
-editorial call, not a mechanical one.
+**Raised for Ana, and ANSWERED the same day — `6382866`, 17:35.** 74 of 748 came
+back carrying two tags on one axis (65 aesthetic, 9 place). This entry asked for
+the definitions to be tightened against each other; that is not what she ruled.
+The BAR moved instead — `MAX_TAGS_PER_EXCLUSIVE_AXIS` 1 → 2, reasoning in
+`lib/style-tags.ts`. **Nothing is owed here.**
 
 **Rollback point.** `apps/web/catalog-archives/style-retag-2026-08-17/`, both
 phases, committed and gzipped. Restore with `restore-catalog.ts

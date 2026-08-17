@@ -71,6 +71,18 @@ started.**
    add that check and let it find whatever else is there, or fix this one row and
    accept that the next one is found the same accidental way. The check is the
    better buy and it is cheap.
+
+   **It now has a second column, found the same accidental way — 2026-08-17.**
+   _Iris × germanica_ carries `cottage`+`classic`+`mediterranean`, three tags on
+   the aesthetic axis, against `MAX_TAGS_PER_EXCLUSIVE_AXIS = 2`. It is the only
+   such row in 748 (counted live: aesthetic 0/1/2/3 = 270/412/64/1, place
+   0/1/2 = 603/135/9). It survived because `curate-styles` warns only about rows
+   the run in front of it just judged, so relaxing the bar 1 → 2 at 17:35 left
+   nobody to re-read the catalog against the new value. **Same shape, same
+   remedy**: a check that reads the whole catalog, not a run's own output. Do not
+   hand-fix the row — which two tags survive is an editorial call, and it is
+   `is_curated = false`, so a re-judge reaches it for free.
+
 2. **Round 13.** Carried forward and still **not chosen** — Ana, 2026-08-17. Its
    prerequisites landed and its tags are now correct, which made it possible
    rather than next. What it still needs, unchanged: a **committed gap probe**
@@ -80,6 +92,18 @@ started.**
    commits), and a `--baseline` passthrough in `run-round` so the rule-1 backup
    stops living in muscle memory. `cross-check-plants` will flag `plant_type` on
    every sedge and rush, the round-4 false-positive class, left naive on purpose.
+
+   **Two decisions are due BEFORE it seeds, not during.** Both are now
+   `OPEN_FINDINGS` entries in `check-pipeline-invariants.ts`, so they survive this
+   file being rewritten and they fail the day they are fixed without being
+   deleted; the entries carry the measurements and this line carries only the
+   ordering. `seed-orchestration-copied-per-round` — extract the shared seeder
+   loop first, or knowingly write a ninth near-copy and extract after.
+   `common-name-never-judged-at-seed` — fix trap 6 upstream, or knowingly pay the
+   fourth consecutive `fix-roundN-names` pass. **Knowingly is the operative word
+   in both**: either answer is defensible and deciding by drift is what put them
+   here. Neither costs API money to decide.
+
 3. **The editorial pass over the legacy catalog. NOT A BLOCKER — Ana,
    2026-08-17.** Do not treat it as one; that framing was withdrawn and stays
    withdrawn. Scope is the **422 never-judged, not 720** — the other 298 are
@@ -127,6 +151,16 @@ deleted duplicate had been holding.
 **50 of 747 rows still showing a Latin binomial where a garden name belongs**
 (round 12's own six are fixed; the rest predate it). The plant-removal row is no
 longer owed — `scripts/remove-plant.ts` built it.
+
+**Housekeeping, deliberately not done mid-session by the session that found it.**
+Six `session/2026-08-17-*` branches are still on the remote from today's earlier
+sessions; whoever sweeps them should confirm each is merged first, since a
+session branch is not finished just because its date has passed. Separately,
+today's two pre-migration backups now live in the MAIN checkout at
+`apps/web/backups/db/` (`2026-08-17T16-56-45-254Z`,
+`2026-08-17T17-43-34-191Z`) — they were inside a worktree that was about to be
+removed, and a guard caught it. Rule 10's own reasoning is why both copies
+matter: the bucket dies with the project and the laptop copy does not.
 
 **Standing:** the next audit is round 13's close or 2026-09-14, whichever first,
 early if a PR adds a stamp column, adds a script, or touches
