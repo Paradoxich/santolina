@@ -53,6 +53,7 @@ export const tokenConsumers: Record<string, string[]> = {
   ],
   '--color-sage-600': [
     'apps/web/components/StatusFilterMenu.tsx',
+    'apps/web/components/dashboard/WeatherCard.tsx',
     'apps/web/components/design-system/chapters/colors.tsx',
   ],
   '--color-sage-700': [

@@ -8,7 +8,7 @@
  * the ramp step it claimed, and the token was reassigned to a different
  * component. Both halves read as current fact. Neither was.
  *
- * Four checks:
+ * Five checks:
  *
  *   A. No token VALUE in prose. `packages/tokens/index.css` is the only home.
  *      Docs may point at /design-system, which reads values live from :root.
@@ -35,7 +35,6 @@
  *      The rule was written against exactly this shape and the guard was
  *      covering half of where it occurs.
  *
-
  * WHAT A GREEN RUN DOES NOT MEAN. This proves no token value is duplicated and
  * no token is missing from the design-system page. It proves nothing about
  * whether a doc's PROSE is true — whether a token is described as doing what

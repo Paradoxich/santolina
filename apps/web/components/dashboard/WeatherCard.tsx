@@ -61,7 +61,17 @@ export function WeatherCard({ location, country, days }: WeatherCardProps) {
               </div>
               <div className="flex items-baseline justify-center gap-inline-gap">
                 <span className="text-stat text-primary">{day.high}°</span>
-                <span className="text-stat text-faint">{day.low}°</span>
+                {/* The night low, deliberately ghosted — it is not the
+                    temperature now, and the high beside it is the reading
+                    that matters. It sat on text-faint at 1.68:1, below even
+                    the 3:1 large-text bar, which is why it was nudged (Ana,
+                    2026-08-17: "a touch more visible"). Sage-600 is that
+                    touch, 1.68 -> 2.56, still a sixth of the high's 15.21 so
+                    the ghosting survives. A ramp step rather than a role:
+                    text-faint IS the right role for a de-emphasised value,
+                    but its value cannot move — the login placeholder is
+                    pinned to it at ~1.9:1 by a settled ruling. */}
+                <span className="text-stat text-sage-600">{day.low}°</span>
               </div>
               <p className="w-full text-center text-body-small tracking-compact text-body-secondary">
                 {day.description}
