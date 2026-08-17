@@ -46,7 +46,6 @@ export const STYLE_TAGS = [
   // place-inspired
   'japanese',
   'chinese',
-  'provence',
   'tropical',
   'desert',
   // purpose
@@ -86,7 +85,6 @@ export const STYLE_DISPLAY_NAMES: Record<StyleTag, string> = {
   classic: 'Classic',
   japanese: 'Japanese',
   chinese: 'Chinese',
-  provence: 'Provence',
   tropical: 'Tropical',
   desert: 'Desert',
   herb: 'Herb',
@@ -112,7 +110,6 @@ export const STYLE_DISPLAY_NAMES: Record<StyleTag, string> = {
  */
 export const CONFUSABLE_STYLE_PAIRS: [StyleTag, StyleTag][] = [
   ['wildflower', 'prairie'], // annual meadow vs designed perennial
-  ['mediterranean', 'provence'], // broad tradition vs signature of Provence
   ['mediterranean', 'desert'], // aromatic soft vs sculptural sparse
   ['lush', 'tropical'], // temperate foliage vs true exotics
   ['japanese', 'chinese'], // tradition, not botany; avoid double-tagging
@@ -153,7 +150,7 @@ export const STYLE_AXES = {
     'lush',
     'classic',
   ],
-  place: ['japanese', 'chinese', 'provence', 'tropical', 'desert'],
+  place: ['japanese', 'chinese', 'tropical', 'desert'],
   purpose: ['herb', 'pollinator', 'cutting', 'sensory', 'woodland'],
   mood: ['moon', 'gothic', 'prairie', 'winter'],
 } satisfies Record<string, StyleTag[]>
@@ -161,11 +158,39 @@ export const STYLE_AXES = {
 export type StyleAxis = keyof typeof STYLE_AXES
 
 /**
- * Axes where holding two tags at once is a judgment error rather than a
+ * Axes where carrying too many tags at once is a judgment error rather than a
  * legitimate combination — see STYLE_AXES. This is the growth-invariant bar
  * that replaced the flat mean for the expanded vocabulary.
  */
 export const EXCLUSIVE_STYLE_AXES: StyleAxis[] = ['aesthetic', 'place']
+
+/**
+ * How many tags on an exclusive axis stop being a plant and start being a
+ * shrug. Two is allowed; three is not.
+ *
+ * IT WAS TWO UNTIL 2026-08-17, AND ANA CHANGED IT. The catalog-wide re-tag
+ * flagged 74 of 748 for carrying two same-axis tags, and reading the list is
+ * what settled it: the top three pairs were `cottage`+`wildflower` (24),
+ * `cottage`+`mediterranean` (17) and `classic`+`cottage` (14). Those are not
+ * confusions. A peony really does anchor both the cottage tradition and the
+ * classic one, and forcing a single tag makes the filter WRONG — a reader
+ * browsing classic who is shown no peonies has been failed by the bar, not
+ * served by it. Her ruling: a plant has a main style and may have others.
+ *
+ * WHAT DOES NOT CHANGE, because it is the reason any bar exists. A tag still
+ * means SIGNATURE OF, never "would look fine in". That distinction is the
+ * whole of why `cottage` fell from 48.5% to 28.7%: nearly anything fits a
+ * cottage garden, so a compatibility reading puts cottage back on most of the
+ * catalog and the filter stops filtering. Relaxing the COUNT is not relaxing
+ * the bar; three same-axis tags is still a judgment that answered "which of
+ * these" with "all of them".
+ *
+ * THE PRIMARY IS NOT RECORDED, deliberately (Ana, same ruling). Nothing in the
+ * UI ranks or badges a main style today, and a column no reader consumes is
+ * the shelf-ware this repo already refuses to build. When Explore wants to lead
+ * with one, that is when it gets a home — and the Backlog is where that lives.
+ */
+export const MAX_TAGS_PER_EXCLUSIVE_AXIS = 2
 
 /**
  * Mean tags per plant, measured on the round-12 archive: 748 plants, 1043
@@ -184,14 +209,13 @@ export const STYLE_TAG_PROMPT = `- style_tags: Subset of exactly ${JSON.stringif
   [...STYLE_TAGS]
 )}. A tag means this plant is a SIGNATURE of that style — a gardener deliberately building that style would put it on their shortlist, and seeing it planted evokes that style. "Wouldn't look out of place" is NOT enough. Definitions:
   - "cottage": the romantic English cottage-garden tradition — informal, billowing, flowery abundance in a mixed border. Hollyhocks, foxgloves, delphiniums, lupins, sweet peas, old roses, aquilegias. The bar is PRIMARY identity, not membership: many plants can live in a cottage garden; tag only those the style is built around. NOT for woodland or shade plants, groundcovers, grasses, ferns, or shrubs grown for structure, however charming. If the plant would sit equally well in a meadow, gravel, or woodland planting, tag that style instead — and when torn, leave cottage off.
-  - "mediterranean": sun-baked, dry, gravel-and-terracotta. Aromatic, silvery, drought-adapted. Lavender, rosemary, cistus, santolina, olive, spurges. Shares plants with "provence" — tag both only when the plant is central to both traditions.
+  - "mediterranean": sun-baked, dry, gravel-and-terracotta. Aromatic, silvery, drought-adapted. Lavender, rosemary, cistus, santolina, olive, spurges.
   - "wildflower": meadow and naturalistic ANNUAL/native planting — simple open flowers, native or native-looking, drifts that read as wild rather than composed. Ox-eye daisies, cornflowers, field poppies, knautia, yarrow. NOT for the designed perennial-and-grass look — that is "prairie".
   - "modern": architectural and sculptural — strong form, clean lines, restrained palette, mass planting. Ornamental grasses, alliums, agapanthus, phormium, bamboo.
   - "lush": green, leafy, layered abundance — the foliage-first, jungly look in temperate shade. Large leaves, ferns, hostas, hydrangeas, fatsia, rodgersia. NOT for true tropicals or bold-flowered exotics — that is "tropical".
   - "classic": formal, traditional structure — symmetry, clipped evergreens, refined borders. Box, yew, roses, peonies, wisteria.
   - "japanese": the Japanese garden tradition — restraint, form over flower, green on green with brief seasonal moments. Japanese maples, cloud-pruned pines, clipped azaleas, hakonechloa, mondo grass, moss, camellia, flowering cherry. NOT for any plant merely native to Japan; the bar is the garden tradition, not botany.
   - "chinese": the classical Chinese scholar's garden — plants grown for cultural meaning and display as specimens. Tree peony, plum blossom (Prunus mume), bamboo, lotus, wisteria, chrysanthemum, magnolia, osmanthus, wintersweet. NOT a synonym for "japanese"; when unsure which tradition a plant defines, pick one, not both.
-  - "provence": the south-of-France look — lavender in rows, olives, cypress, perfumed herbs around warm stone. Lavandin, olive, Italian cypress, rosemary, santolina, bearded iris, fig, grape vine. Overlaps "mediterranean"; reserve "provence" for the plants a Provence planting is BUILT around.
   - "tropical": bold exotics — oversized leaves and saturated flowers, resort-garden drama. Bananas, cannas, gingers, hibiscus, palms, tetrapanax, colocasia. NOT for temperate shade foliage — that is "lush".
   - "desert": sparse, sculptural dry planting — solitary architectural plants in gravel. Agaves, yuccas, cacti, dasylirion, hesperaloe, hardy ice plant. NOT for soft aromatic dry-garden plants — that is "mediterranean".
   - "herb": the herb/physic garden — culinary and traditional medicinal plants grown for use. Sage, thyme, rosemary, mint, chamomile, fennel, lemon balm, calendula. The bar is being grown FOR use; ornamental plants with herbal history don't qualify on history alone.

@@ -79,7 +79,7 @@ warns above that bar on every full run.
 | cottage | 215 | 28.7% |
 | woodland | 165 | 22.1% |
 | pollinator | 140 | 18.7% |
-| mediterranean | 128 | 17.1% |
+| mediterranean | 132 | 17.6% |
 | herb | 84 | 11.2% |
 | prairie | 73 | 9.8% |
 | winter | 64 | 8.6% |
@@ -91,7 +91,6 @@ warns above that bar on every full run.
 | wildflower | 45 | 6.0% |
 | cutting | 44 | 5.9% |
 | classic | 43 | 5.7% |
-| provence | 37 | 4.9% |
 | desert | 24 | 3.2% |
 | tropical | 18 | 2.4% |
 | moon | 14 | 1.9% |
