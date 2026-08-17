@@ -870,45 +870,39 @@ is unchanged.
 
 ### 2026-08-17 — Provenance and hygiene, and the first catalog removal
 
-**Branch** `session/2026-08-17-provenance`. Every migrated script was run dry
-against production; the one deliberate data change is the removal below.
+**Branch** `session/2026-08-17-provenance`. Handoff steps 1-5, all closed.
 
 **Catalog 748 → 747 species, 1864 → 1859 combinations.** _Hydrangea anomala_
-deleted as a duplicate of _H. petiolaris_ (Ana) by the new
-`scripts/remove-plant.ts` — the first row ever removed here, and the reason the
-duplicate survived from round 11 is that nothing could remove one. 0 palette
-rows, 0 diary rows, 5 combinations by cascade. **`curate-combinations` is owed**
-to refill them; deferred by ruling. Complete deleted rows in
-`reference/removals.json`. Left open: the accepted name is _H. anomala_ subsp.
-_petiolaris_, so the surviving row carries a subspecies epithet as a species.
+removed as a duplicate of _H. petiolaris_ (Ana), by the new
+`scripts/remove-plant.ts` — the first row ever deleted here. 0 palette rows, 0
+diary rows, 5 combinations by cascade. Complete deleted rows in
+`reference/removals.json`. The survivor was renamed to "Climbing hydrangea"
+(most-used name wins) via the new `scripts/apply-name-fixes.ts`, since all three
+name passes are round-scoped and no path existed to fix a name outside a round.
+
+**Combinations NOT refilled; no API spend needed.** Measured: the 5 partners
+dropped 5 → 4, joining 8 already at 4, and 5 is a cap not a minimum. Re-pointing
+them at _H. petiolaris_ is wrong — it already holds 5. Separately
+_Ranunculus aconitifolius_ sits at **1** and predates this; a real gap.
 
 **Three migrations applied** (Ana waived rule 11; rule-10 backups
-`2026-08-17T16-56-45-254Z` and `2026-08-17T17-43-34-191Z`).
+`2026-08-17T16-56-45-254Z`, `2026-08-17T17-43-34-191Z`).
 `applied_migrations_statements` lets `migrations:check` compare migration
-CONTENT, `reconcile_edited_migrations` cleans up what that found, and
-`stamp_locks` earns `confirming` back.
-
-**Content checking found three migrations edited AFTER they were applied** —
-new trap 33. All three verified against prod one at a time and reverted to
-their applied text. Prod and local both clean now.
-
-**Per-column exclusivity shipped**, which closes trap 29's open half; that
-entry records the mechanism, the two bugs the local rehearsal caught, and the
-thing measuring it taught. Verified against prod: the RPCs directly, then a
-real run took, held and released a lock writing zero rows.
+CONTENT; it immediately found **three migrations edited after they were
+applied** — new trap 33 — all verified against prod and reverted, with
+`reconcile_edited_migrations` restating the one statement that had never run.
+`stamp_locks` closes trap 29's open half and earns `confirming` back.
 
 **Ratchets, all to zero:** `HAND_ROLLED_REVIEWED_MUTATION` 6 → 0,
-`SCRIPTS_PENDING_ARCHIVE` 3 → 0, `RUNS_WITHOUT_PROVENANCE` 15 → 0. Five scripts
-moved onto `reviewed-mutation.ts`, the three name passes now share
-`scripts/name-fixes.ts`, and new shape 18 found seven parsed-but-undocumented
-flags — all seven documented, hatch list empty.
+`SCRIPTS_PENDING_ARCHIVE` 3 → 0, `RUNS_WITHOUT_PROVENANCE` 15 → 0. New shape 18
+found seven parsed-but-undocumented flags; all seven documented.
 
 **Found — two silent ones, both fixed.** A trap number written for CONTEXT in a
 test file's top header counts as a PIN, so `docs:claims` read 20 unpinned while
-`invariants:check` read 21 and nothing failed; the two counters can still
+`invariants:check` read 21 and nothing failed — the two counters can still
 disagree silently, carried in the handoff. And `../lib/*` does not resolve from
 `scripts/archive/`, so three of four moved files typechecked green with an
-untyped client — the symptom is implicit `any`, not a missing module.
+untyped client: implicit `any`, not a missing module.
 
 ### 2026-08-17 — Step D: the catalog-wide style re-tag (not a round)
 
