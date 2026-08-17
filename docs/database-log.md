@@ -861,6 +861,18 @@ place), against 3/50 and 0/50 in the PR #171 pilot. Concentrated in
 definitions need tightening against each other in `lib/style-tags.ts`; that is an
 editorial call, not a mechanical one.
 
+**Rollback point.** `apps/web/catalog-archives/style-retag-2026-08-17/`, both
+phases, committed and gzipped. Restore with `restore-catalog.ts
+catalog-archives/style-retag-2026-08-17 --phase before`, rehearsed as a dry run
+the same day (748 rows differ, 0 deleted). **The gap it closes:**
+`apps/web/backups/` is gitignored, and the durable path runs through
+`archive-round`, which needs a round manifest — so for two hours the only copy
+of the pre-re-tag catalog was on one laptop. **Why a new directory and not
+`rounds/`:** this was a mutation, not a round; `rounds/`'s pre-commit hook
+requires a matching `Round <label>` heading, which here would have meant writing
+a false one. `restore-catalog` takes an arbitrary directory, so the round layout
+was never a requirement.
+
 **Verified.** All 10 commands across all 3 CI jobs, via `pnpm ci:check`.
 
 ### 2026-08-17 — The reviewed-mutation primitive, and trap 32 (not a round)
