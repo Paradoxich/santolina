@@ -37,140 +37,97 @@ supabase start -x studio,realtime,storage-api,imgproxy,edge-runtime,inbucket,vec
 
 ---
 
-## 2026-08-17 — Steps A and B, the style vocabulary, and the error system. Nothing in flight.
+## 2026-08-17 — Step C, step D, and two style rulings. Nothing in flight.
 
-**Three of the day's branches are merged and no worktree holds anything.**
+**Four PRs, all merged, main green including the two database-only CI jobs.**
 
-| PR                                                                 | branch                                 | what landed                                                                                                                   |
-| ------------------------------------------------------------------ | -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| [#170](https://github.com/Paradoxich/santolina/pull/170) `839eaf8` | `session/2026-08-17-obligation-policy` | plan steps A and B: `StepDef.obligation`, `invariants:check` shape 16, `pnpm catalog:status`                                  |
-| [#171](https://github.com/Paradoxich/santolina/pull/171) `aac993d` | `session/2026-08-17-style-vocabulary`  | plan step D's inputs: `STYLE_TAGS` 6 → 20, definitions tuned against a 50-row pilot, `STYLE_OPTIONS` derived from live counts |
-| `29993cd` (local merge, unpushed)                                  | `session/2026-08-17-auth-form-errors`  | the UI error system: `FormError`, `/login`'s native bubble gone, and 24 sites that were showing users raw thrown messages     |
+| PR                                                       | what landed                                                                                                    |
+| -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| [#175](https://github.com/Paradoxich/santolina/pull/175) | plan step C: `scripts/reviewed-mutation.ts`, `curate-styles` migrated, shape 17, **trap 32 + `pnpm ci:check`** |
+| [#176](https://github.com/Paradoxich/santolina/pull/176) | plan step D: the catalog-wide re-tag, 748 rows                                                                 |
+| [#177](https://github.com/Paradoxich/santolina/pull/177) | Ana's two style rulings: the same-axis bar 1 → 2, `provence` retired into `mediterranean`                      |
+| [#178](https://github.com/Paradoxich/santolina/pull/178) | the step-D rollback point, off this laptop                                                                     |
 
-The obligation half is the `2026-08-17 — Who owes an old row` entry in
-`docs/database-log.md` and standing rule 16. **The vocabulary half has no entry
-there** — see the correction at the foot of this file.
+**Another session was live in `../santolina-type-color`** doing the type-colour
+pass, with a dev server up. It has its own branch and its own database-log entry
+to write. Nothing here touched its files.
 
-**The UI merge is local and not pushed** — the only thing in this file that is
-not already on `origin/main`. It touches no pipeline, no schema and no script, so
-`invariants:check`, `docs:links` and `docs:claims` pass unchanged; the merged tree
-builds, and 335 app + 17 ui tests pass. Its durable half is the new
-**"How a failure is shown"** section in `DESIGN_SYSTEM.md`, which the Input
-fields redesign has to read before it invents a second error convention. **Do not
-re-derive its reasoning from this file** — it is in the commit messages and in
-`apps/web/lib/failure.ts`'s header, which is where the incident is recorded: the
-friendly copy beside every `err instanceof Error ? err.message` was dead code, so
-what users actually saw was Postgres text.
+**`pnpm ci:check` is the thing to adopt from today.** It derives every job in
+`.github/workflows/ci.yml` and runs it — including `catalog-state` and
+`migration drift`, which CI skips on every pull request by design, so a local run
+is the ONLY place those two happen before a merge. `--no-db` skips them and says
+so. That is trap 32: five green local commands, none of which read the file that
+went red on main.
+
+**Read the commit messages, not this file, for step C's reasoning.** The
+after-read-as-witness argument, the `alsoWrite` and `stamped` shapes, and the
+false-alarm fix are all in `6edcc7b`, `869b105` and `5f67516`.
 
 ---
 
-**Next steps, in order. Everything gates round 13** — Ana's ruling 2026-08-17.
-A round chooses its theme by measuring the catalog, so mis-tagged rows make the
-gap test lie; the `modern` item is the proof case, where a seed round was nearly
-run against what was a tagging gap.
+**Next steps, in order. Round 13 is unblocked** — its two prerequisites (C, then
+D) both landed today.
 
-Steps 1 to 4 are the rest of the approved plan; 5 to 8 are carried forward and
-are not in it. **Two arrows are load-bearing.** C before D: the re-tag withdraws
-editorial approval on every row whose tags change, and nothing counts them until
-C. D before D2: the editorial pass judging rows whose tags are about to change
-pays for the same verdicts twice.
-
-1. **The reviewed-mutation primitive (C). LANDED** — see the session entry in
-   `docs/database-log.md`. `scripts/reviewed-mutation.ts` plus
-   `HAND_ROLLED_REVIEWED_MUTATION`, which holds the six below so they migrate one
-   at a time. The original spec is kept here because the ratchet's entries point
-   back at it. Six scripts hand-roll the same drift guard: `from: string //
-expected current value — drift guard` appears verbatim in
-   `fix-round8-names.ts:59`, `fix-round11-names.ts:75`,
-   `fix-round12-names.ts:64`, `fix-round12-tags.ts:79`, with `expect` in
-   `apply-native-to-fixes.ts:50` and `apply-sun-widening.ts`. Extract it once,
-   **standalone rather than wrapping `lib/plants-write.ts`** — the two operate on
-   disjoint column sets today, which is why none of the six imports it. Fold in
-   collateral reporting as a returned fact, not a log line:
-   `matched` / `written` / `skipped_drift` / `verdict_retired`, the last true only
-   when `is_curated` was true BEFORE the write. Ratchet as a scan plus a named
-   excusal list modelled on `HAND_ROLLED_PAGINATION`, so the six migrate one at a
-   time.
-   **The gate is already in place** — `curate-styles` refuses every writing run,
-   not only `--all`, behind `STYLE_WRITES_BLOCKED_UNTIL_STEP_C`. Scoped runs are
-   blocked too because the trap-31 incident WAS a scoped run, `--round 9` and
-   `--round 10`; the size was never the problem, the silence was. `--dry-run` is
-   unaffected. C's job is to make the check conditional on the capability rather
-   than absolute: **delete the flag, not the check.**
-   **SCOPE DECISION, already taken — do not re-litigate it.** Every script C
-   touches is also listed in `RUNS_WITHOUT_PROVENANCE`, so folding provenance
-   wiring in will look efficient around the third file. Don't. C is the piece where a silent
-   bug is most expensive and nothing can check safety machinery that does not
-   exist yet, so it stays one reviewable change. **Instead make the primitive
-   provenance-SHAPED**: have it take the run record as a parameter, so wiring
-   provenance later is a call-site change and not a second refactor. That buys the
-   don't-touch-them-twice benefit without doubling the PR.
-2. **The catalog-wide re-tag (D). C has landed, so this is unblocked.**
-   `curate-styles.ts --all --why "…"`. It now writes through
-   `scripts/reviewed-mutation.ts` and prints the rows whose editorial verdict it
-   retired, which is what C was gating on.
-   **START WITH A SMALL `--limit` BATCH THAT INCLUDES A CURATED ROW, and check
-   the printed `verdict_retired` against `pnpm catalog:status` before and
-   after.** The retirement path is unit-tested against a simulated trigger but
-   has never run against the real database — proving it live costs a real
-   verdict, so it was left for the run that is going to spend them anyway. The
-   failure mode is why this is worth two minutes: a wrong count prints as a
-   confident number, and an under-count is trap 31 wearing the fix's clothes.
-   Once it matches once, the path is proven and this stops being a question.
-   `--new-only` would select nothing: 0 rows have a null `style_checked_at`. 748
-   calls. Do not verify that `modern` rose —
-   `prairie` is defined to take the grasses-and-late-perennials look away from
-   it, so a correct run may lower it.
-   **Nor verify against the 1.39 mean.** That instrument was right for six styles
-   that all describe a LOOK and therefore partition, and PR #171 showed it stopped
-   meaning what it meant: eleven of the fourteen added styles are purpose or mood
-   and cut ACROSS aesthetics, so a culinary sage is honestly `mediterranean` and
-   `herb` where under six styles it had one place to go. Tuning to 1.39 would be
-   tuning to a stale number — the same error as writing a direction into the
-   `modern` criterion, on a different quantity. **The growth-invariant bar is now
-   within-axis doubling**, which `curate-styles` prints and warns on: two
-   aesthetic tags or two place tags is a judgment error, two tags from different
-   axes is not. The random-50 pilot read 3 of 50 and 0 of 50. Read that, and the
-   confusable-pair co-occurrence beside it.
-3. **The editorial pass, catalog-wide (D2).** `curate-editorial.ts --all
---new-only --why "…"`. Absorbs three populations at once, and
-   `pnpm catalog:status` prints the current split: 418 never judged, 86 whose
-   verdict was withdrawn, plus whatever D's re-tag withdraws. Up to ~1500 calls,
-   two per row. The rounds 1-6 pass DOES gate round 13; the flag is unread but
-   the pass rewrites about 60% of descriptions (standing rule 16).
-4. **Round 13 (G)**, on tags fixed in 2 and a measurement from a committed gap
-   probe, which does not exist yet — round 12's probes were hand-run and recorded
-   only in `seed-round12.ts`'s header, so the measurement that picks a theme is
-   the one part of a round that is not reproducible. Write it to `reports/`, which
-   `archive-round.ts` already commits. `run-round` still has no `--baseline`
-   passthrough, so the rule-1 backup is taken in the shared checkout and copied
-   into the worktree by hand — that step belongs in `runbook.ts` so it renders
-   into the generated runbook instead of living in muscle memory.
-   `cross-check-plants` will flag `plant_type` on every sedge and rush, the
-   round-4 false-positive class, left naive on purpose.
-5. **Finish the out-of-round 15.** Carried forward. What remains is mostly
+1. **Round 13 (G).** The tags it will measure against are now correct. It needs a
+   **committed gap probe**, which still does not exist: round 12's probes were
+   hand-run and recorded only in `seed-round12.ts`'s header, so the measurement
+   that picks a theme is the one part of a round that is not reproducible. Write
+   it to `reports/`, which `archive-round.ts` already commits. `run-round` still
+   has no `--baseline` passthrough, so the rule-1 backup is taken in the shared
+   checkout and copied into the worktree by hand — that step belongs in
+   `runbook.ts` so it renders into the generated runbook instead of living in
+   muscle memory. `cross-check-plants` will flag `plant_type` on every sedge and
+   rush, the round-4 false-positive class, left naive on purpose.
+2. **Migrate the six in `HAND_ROLLED_REVIEWED_MUTATION`, one at a time.** Each is
+   also in `RUNS_WITHOUT_PROVENANCE`, so each migration is the natural moment to
+   wire its run record. `fix-round12-tags.ts` is the best first: it already
+   normalises through `JSON.stringify` and writes two columns, so it exercises the
+   multi-column guard. `apply-native-to-fixes.ts` hand-rolls the same guard but is
+   **not** in the list and cannot be — `native_to` is not a column any verdict is
+   about, so it never branches on `is_curated` and the scan cannot see it. It
+   should still migrate; nothing forces it.
+3. **The editorial pass (D2). NOT A BLOCKER — Ana, 2026-08-17. Do not treat it as
+   one.** The previous handoff said the rounds 1-6 pass gates round 13; that was
+   an overstatement and is withdrawn. `verify-round` checks a round against its
+   own rows, and `curate-editorial` is **step 7b of the runbook**, so every new
+   round judges its own plants — this backlog is a fixed historical set that does
+   not grow. Nothing in the product reads `is_curated` (verified across `app/`,
+   `components/`, `hooks/`, `lib/`, `server/`).
+   **Scope it to the 422 never-judged, not the 720.** The other 298 are
+   verdict-withdrawn rows whose descriptions and images already passed; only the
+   tags claim fell, so re-judging them restores a flag nobody displays. **The
+   images are already bought** — `curate-editorial` reads the stored
+   `image_pick_confidence` with no vision call, and 364 of the 422 clear at `high`
+   for free; 58 sit at `medium` and are held, which is the only population a
+   targeted `pick-plant-images --verify` would cost anything for.
+   ~675 calls, ~$15-30 unbatched. **Cheaper, none applied yet:** the Batch API is
+   50% off with a working precedent in `pick-plant-images.ts`, and prompt caching
+   on the shared system prompt would cut the repeated input — together roughly
+   $4-8. ⚠ It rewrites ~60% of the descriptions it judges. **Run ~100 rows from
+   rounds 1-6 and read the rewrites before buying the rest.**
+4. **Finish the out-of-round 15.** Carried forward. What remains is mostly
    apply-scripts that CLEAR a stamp, so each needs a witness that is not the
    column it nulls. Two worked examples are in the tree: `curate-greenery`'s
    `foliage_color` and `apply-description-fixes`. `backfill-guard-stamps` matters
    most, its state-derived half having been deleted after it fabricated 100
    stamps.
-6. **Build a removal path for a catalog row.** Carried forward. _Hydrangea
+5. **Build a removal path for a catalog row.** Carried forward. _Hydrangea
    anomala_ and _H. petiolaris_ are the same plant to a reader and one should go,
    keeping `petiolaris`. Only 5 regenerable combination rows depend on either —
    **the missing piece is that nothing can remove a plant at all.**
-7. **Per-column exclusivity, which is what earns `confirming` back.** Carried
-   forward, still forced after step 5, and trap 29 holds the reasoning. Do not
-   design it early: the census it must be designed against is the one step 5
+6. **Per-column exclusivity, which is what earns `confirming` back.** Carried
+   forward, still forced after step 4, and trap 29 holds the reasoning. Do not
+   design it early: the census it must be designed against is the one step 4
    changes.
-8. **The hygiene items**, any order. Carried forward, plus one new. The
-   flag-documentation scan — every `--flag` a script parses must appear in its own
-   usage header, about twenty lines in `check-pipeline-invariants.ts` — covers the
-   class every existing shape misses: a defect in code the session just wrote. The
+7. **The hygiene items**, any order. Carried forward. The flag-documentation scan
+   — every `--flag` a script parses must appear in its own usage header, about
+   twenty lines in `check-pipeline-invariants.ts` — covers the class every
+   existing shape misses: a defect in code the session just wrote. The
    migration-drift content check needs `applied_migrations()` to return
    `statements`, so it needs a migration and Ana's push (rule 11). The graveyard
    pass moves the three in `SCRIPTS_PENDING_ARCHIVE` to `archive/` with README
    rows, and `repair-combinations.ts` needs a `database-log` line in the same
-   change. Trap ratchet is at 22 of 31 (`pnpm invariants:check` prints it).
+   change. `pnpm invariants:check` prints every ratchet's current count.
 
 **Parked decisions.** Dated when FIRST raised, with who owes the answer.
 `invariants:check` shape 15 fails on an undated item and on one older than 14
@@ -178,24 +135,24 @@ days, so this list cannot become a paragraph again. Read that shape's header
 before adding a line: the paragraph it replaced ran for six handoffs and half
 its items were misfiled.
 
-_Empty._ Every question either session raised was answered the same day.
+_Empty._ Both questions this session raised — the primary-style representation
+and the provence/mediterranean overlap — were put to Ana and answered the same
+hour, which is standing rule 15 working rather than a coincidence.
 
-**A rule-9 gap, now closed, and worth knowing how.** PR #171 shipped without a
-`docs/database-log.md` entry. One was written afterwards from `561f6b1..3c4a2ba`
-by a different session and says so in its own first paragraph, because an entry
-reconstructed from a diff and one written by the people who did the work are not
-the same evidence and should not read alike. It cost nothing here only because
-those five commit messages carried the reasoning, the numbers and the discarded
-options. **That is the thing to keep doing** — if the commits had said "expand
-vocabulary" and "tune definitions", the entry would have been unwritable and the
-three pilot findings would have been gone.
+**Two corrections landed today, and both were doc claims nobody had checked.**
+Trap 31 named `curate-greenery` as a second offender; the trigger does not watch
+`is_greenery` or `foliage_color`, so it retires no verdict — the claim had been
+written from the shape of the script rather than from the migration. And step C's
+own survival warning fired on 26 rows the first time it ran at scale, every one
+of which was fine. **A warning that cries wolf is trap 31 inverted**, and it is
+worth remembering that the fix for a silent report can overshoot into a noisy one.
 
-**Build Backlog rows still owed:** the `curate-styles` withdrawal counter (step 1
-is its implementation), the orphaned-photo reconciliation sweep, **the
-plant-removal path** (step 6 — it is an absence, and a ratchet witness for "we
+**Build Backlog rows still owed:** the orphaned-photo reconciliation sweep, **the
+plant-removal path** (step 5 — it is an absence, and a ratchet witness for "we
 never built X" stays true forever, so the Backlog is its durable home), and **50
 of 748 rows still showing a Latin binomial where a garden name belongs** (round
-12's own six are fixed; the rest predate it).
+12's own six are fixed; the rest predate it). The `curate-styles` withdrawal
+counter is no longer owed — step C built it.
 
 **One thing Ana owes, and it is not a decision:** a look at the `/login` error
 state in her own Firefox. Everything about it was verified on localhost through
