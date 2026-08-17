@@ -67,15 +67,9 @@
  *   ./node_modules/.bin/tsx --env-file=.env.local scripts/fix-round11-names.ts --apply
  */
 
-import { getSupabaseAdmin } from '../lib/supabase-admin'
-import { fetchAllRows } from '../lib/paginate'
+import { runNameFixes, type NameFix } from './name-fixes'
 
-interface Fix {
-  scientific_name: string
-  from: string // expected current value — drift guard
-  to: string
-  why: string
-}
+type Fix = NameFix
 
 // --- Trefle had no English name; the mapper fell back to the scientific name.
 const MISSING: Fix[] = [
@@ -174,109 +168,11 @@ const COLLISIONS: Fix[] = [
 const FIXES: Fix[] = [...MISSING, ...WRONG, ...TYPOS, ...COLLISIONS]
 
 async function main() {
-  const apply = process.argv.slice(2).includes('--apply')
-  const db = getSupabaseAdmin()
-
-  console.log(
-    `\n${FIXES.length} name fixes (${MISSING.length} missing, ${WRONG.length} wrong, ${TYPOS.length} typo/casing, ${COLLISIONS.length} collision).` +
-      (apply ? '\n' : ' DRY RUN — pass --apply to write.\n')
-  )
-
-  // Collision pre-check: every target string, against the whole catalog.
-  // A name pass can create the collision it exists to remove (trap 6), so a
-  // colliding target is refused rather than written.
-  // Paginated, not a bare .select(): the pre-check must see the WHOLE catalog
-  // or the refusal it exists to raise stops firing exactly when the catalog is
-  // big enough to make a collision likely (standing rule 5, 1000-row cap).
-  const allNames = await fetchAllRows<{
-    scientific_name: string
-    common_name: string
-  }>((from, to) =>
-    db
-      .from('plants')
-      .select('scientific_name, common_name')
-      .order('id')
-      .range(from, to)
-  )
-
-  const heldBy = new Map<string, string[]>()
-  for (const row of allNames) {
-    if (!row.common_name) continue
-    const key = row.common_name.toLowerCase()
-    heldBy.set(key, [...(heldBy.get(key) ?? []), row.scientific_name])
-  }
-
-  const blocked = new Set<string>()
-  for (const fix of FIXES) {
-    const holders = (heldBy.get(fix.to.toLowerCase()) ?? []).filter(
-      (s) => s !== fix.scientific_name // a row already holding its own target is fine
-    )
-    if (holders.length) {
-      blocked.add(fix.scientific_name)
-      console.log(
-        `  ✗   REFUSED "${fix.to}" for ${fix.scientific_name} — already held by ${holders.join(', ')}`
-      )
-    }
-  }
-  if (blocked.size) console.log('')
-
-  let changed = 0
-  const already: string[] = []
-  const drifted: string[] = []
-  const missingRow: string[] = []
-  const curated: string[] = []
-
-  for (const fix of FIXES) {
-    if (blocked.has(fix.scientific_name)) continue
-
-    const { data, error } = await db
-      .from('plants')
-      .select('id, common_name, is_curated')
-      .eq('scientific_name', fix.scientific_name)
-      .maybeSingle()
-
-    if (error) throw new Error(`${fix.scientific_name}: ${error.message}`)
-    if (!data) {
-      missingRow.push(fix.scientific_name)
-      console.log(`  ??  ${fix.scientific_name} — no such row`)
-      continue
-    }
-    if (data.common_name === fix.to) {
-      already.push(fix.scientific_name)
-      continue
-    }
-    if (data.is_curated) {
-      curated.push(fix.scientific_name)
-      console.log(`  --  ${fix.scientific_name} — is_curated, frozen`)
-      continue
-    }
-    if (data.common_name !== fix.from) {
-      drifted.push(fix.scientific_name)
-      console.log(
-        `  !!  ${fix.scientific_name} — expected "${fix.from}", found "${data.common_name}" — skipped`
-      )
-      continue
-    }
-
-    if (apply) {
-      const { error: upErr } = await db
-        .from('plants')
-        .update({ common_name: fix.to })
-        .eq('id', data.id)
-      if (upErr) throw new Error(`${fix.scientific_name}: ${upErr.message}`)
-    }
-    changed++
-    console.log(
-      `  ${apply ? '✓' : '·'}   "${fix.from}" → "${fix.to}"  (${fix.scientific_name}) — ${fix.why}`
-    )
-  }
-
-  console.log('\n─────────────────────────────────────────')
-  console.log(
-    `${apply ? 'Updated' : 'Would update'}: ${changed}  ·  already correct: ${already.length}  ·  drifted (skipped): ${drifted.length}  ·  frozen: ${curated.length}  ·  no row: ${missingRow.length}  ·  refused (collision): ${blocked.size}`
-  )
-  if (!apply && changed) console.log('\nRe-run with --apply to write.')
-  if (blocked.size) process.exit(1)
+  await runNameFixes({
+    step: 'fix-round11-names',
+    fixes: FIXES,
+    summary: `${MISSING.length} missing, ${WRONG.length} wrong, ${TYPOS.length} typo/casing, ${COLLISIONS.length} collision`,
+  })
 }
 
 main().catch((err) => {

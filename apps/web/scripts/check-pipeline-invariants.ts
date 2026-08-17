@@ -163,11 +163,6 @@ export const RUNS_WITHOUT_PROVENANCE: Record<string, string> = {
     'Appends candidates and CLEARS image_checked_at so the pass re-picks.',
   'backfill-guard-stamps.ts':
     'Report-derived stamping. Its state-derived half was deleted 2026-08-14 after it fabricated 100 stamps, so this is the script whose provenance matters most and has none.',
-  'fix-round8-names.ts':
-    'One-off name pass, kept as the apply-script template.',
-  'fix-round11-names.ts': 'One-off name pass.',
-  'fix-round12-names.ts':
-    'One-off name pass, round 12. Same category as rounds 8 and 11 above.',
   'fix-oversized-heroes.ts':
     'One-off image repair. Found by this scan rather than by the list, which is the scan doing its job.',
 
@@ -220,10 +215,6 @@ export const HAND_ROLLED_REVIEWED_MUTATION: Record<string, string> = {
     'The closest to migrated already: it reports the verdicts it retires, which is where the primitive got that half from. Its `expect` guard covers a single column and its run record is wired, so it is the lowest-value migration of the six and goes last.',
   'apply-sun-widening.ts':
     'Guards on `stored` read out of a cross-check report rather than a hand-authored decision, and re-checks `is_curated` a second time at the write with `.eq("is_curated", false)`. That belt-and-braces has no equivalent in the primitive; decide whether to add it or drop it when this one moves.',
-  'fix-round8-names.ts':
-    'Round 8. Matches by `scientific_name`, not id, so migrating it means resolving names to ids first — the primitive takes ids on purpose, because a name is a value and values drift.',
-  'fix-round11-names.ts': 'Round 11. Same shape as fix-round8-names.',
-  'fix-round12-names.ts': 'Round 12. Same shape as fix-round8-names.',
 }
 
 /**
