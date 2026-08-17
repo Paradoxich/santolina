@@ -70,13 +70,15 @@ export type StyleTag = (typeof STYLE_TAGS)[number]
  * lib/good-for-your-garden.ts, and the styles.name column when the curated
  * editorial lists land.
  *
- * Defined here rather than at each consumer because a slug rendered raw reads
- * wrong in two ways the tiles made obvious: lowercase "chinese" is a proper
- * noun mis-set, and "cottage" alone loses the tradition the definition
- * actually describes. Names carry no em or en dashes, per the UI copy rule.
+ * Defined here rather than at each consumer because a slug rendered raw sets
+ * proper nouns lowercase — "chinese", "japanese" — which is what the tiles
+ * made obvious. Names carry no em or en dashes, per the UI copy rule.
+ *
+ * Voice-passed by Ana 2026-08-17. The draft had "English cottage" for the
+ * cottage slug; she dropped the qualifier.
  */
 export const STYLE_DISPLAY_NAMES: Record<StyleTag, string> = {
-  cottage: 'English cottage',
+  cottage: 'Cottage',
   mediterranean: 'Mediterranean',
   wildflower: 'Wildflower',
   modern: 'Modern',
