@@ -102,7 +102,17 @@ then seed.
    the COLUMN across every writer, and most of those writers are in step 1.
    **Do not DESIGN it early either** — the census it must be designed against
    is the complete one, and step 1 changes that census.
-7. **Then the three hygiene items**, any order. The migration-drift content
+7. **A cheap invariant nobody has written: every `--flag` a script parses must
+   appear in its own usage header.** Grep the flag strings out of
+   `args.includes('--x')` / `indexOf('--x')` and assert each one occurs in the
+   file's top comment block. Proposed 2026-08-17 after `curate-plants --only`
+   shipped documented only in code comments, on the same day the session was
+   enforcing "nothing reachable only from someone's memory" elsewhere. It is a
+   scan, not a test, so it belongs in `check-pipeline-invariants.ts`.
+   **The class it covers is the one the ratchets keep missing: a defect in the
+   code a session just wrote.** Every existing shape checks ground that was
+   already there.
+8. **Then the three hygiene items**, any order. The migration-drift content
    check needs `applied_migrations()` to return `statements`, so it needs a
    migration and Ana's push (rule 11); 31 of 34 versions already match byte for
    byte. The graveyard pass moves the three in `SCRIPTS_PENDING_ARCHIVE` to
@@ -110,7 +120,7 @@ then seed.
    `database-log` line in the same change. And the trap ratchet is at 22 of 31
    (`pnpm invariants:check` prints it) — trap 1 is still the cheapest and
    highest-consequence, and trap 31 is new from this session.
-8. **Round 13, on a measurement you can trust.** It has no theme and needs a
+9. **Round 13, on a measurement you can trust.** It has no theme and needs a
    gap test before it has one — run that AFTER steps 3 to 5. Round 12's
    probes killed small-space (84% held), dry shade (73%) and left late-season
    surviving but thin at 62%. Those numbers are in `seed-round12.ts`'s header
