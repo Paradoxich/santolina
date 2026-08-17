@@ -52,6 +52,13 @@ repeated here.
    handoffs and three of its six items were never hers.
 2. **`RUNS_WITHOUT_PROVENANCE` 18 → 15.** `curate-styles`, `curate-greenery`
    and `draft-hardiness` open runs, each smoke-tested against the live database.
+3. **`common_issues` 27 blank rows → 0, and it is now a required field.**
+   `curate-plants` gained `--only <field>`: a field-scoped fill that drops the
+   `is_curated` selection filter so it can reach signed-off rows, and restricts
+   the PATCH to one column so it cannot un-curate one. It refuses any column
+   the editorial trigger watches, pinned by five cases in
+   `curate-plants.test.ts`. All 13 signed-off rows among the 27 kept their
+   sign-off, verified after the write.
 
 **Next steps, in order. 3 through 6 are carried forward unconsumed.**
 
@@ -61,19 +68,19 @@ repeated here.
    pattern in the small and is now in the tree. `backfill-guard-stamps` still
    matters most: its state-derived half was deleted after it fabricated 100
    stamps.
-2. **Fill `common_issues` on the 27 rows, then gate it.** Ana ruled 2026-08-17
-   that the two prose fields split: `common_issues` becomes required because the
-   drafter demonstrably writes "generally pest and disease free" when that is
-   the answer (460 of 721 populated rows do), so a blank is a miss;
-   `environment_benefits` stays optional because its 4 blanks are three
-   houseplants and a noxious invasive, and requiring it would buy four fabricated
-   sentences. **Order is forced:** adding `common_issues` to
-   `REQUIRED_DRAFTED_FIELDS` before the 27 are filled fails closed rounds 7, 11
-   and 12 retroactively in `verify-round`. Do NOT write a `fix-common-issues.ts`
-   one-off — that adds a 16th entry to the list step 1 is clearing. Teach
-   `curate-plants` a field-scoped mode, or wire it from the first commit. The
-   editorial trigger does not watch this column, so the 14 curated rows among
-   the 27 keep their sign-off.
+2. **Rewrite _Hydrangea hydrangeoides_' description** — Ana's call 2026-08-17:
+   keep it, and say what makes it different. Its flower is ringed with single
+   teardrop bracts rather than the four-petalled florets of a true climbing
+   hydrangea, and the current text says none of that, so it reads as a third
+   identical climber. **No write path exists for this yet:** nothing in `scripts/` can
+   write a hand-authored `description`, and `--only description` is refused by
+   design because that column clears an editorial verdict. The shape the repo
+   already uses is a committed decision file plus a guarded `--apply` pass
+   (`apply-seasonal-care-fixes.ts`); building that for descriptions is the work.
+   _H. anomala_ and _H. petiolaris_ are the same plant to a reader and one
+   should go, keeping `petiolaris`; nothing but 5 regenerable combination rows
+   depends on either, and **there is no established removal path for a catalog
+   row** either.
 3. **Then per-column exclusivity, which is what earns `confirming` back.**
    The order is still forced and trap 29 still has the reasoning: five of the
    seven witnessed columns have more than one writing step
@@ -88,13 +95,7 @@ repeated here.
    `archive/` with README rows, and `repair-combinations.ts` needs a
    `database-log` line in the same change. And 21 of 30 traps are unpinned —
    trap 1 is still the cheapest and highest-consequence.
-5. **The climbing hydrangeas, once Ana answers below.** _H. anomala_ and
-   _H. petiolaris_ are the same plant to a reader — near-identical descriptions,
-   same flower, same placement — and _petiolaris_ is the keeper: curated, hero
-   verified, the one actually sold. Neither has any palette or diary row, so only
-   5 regenerable combination rows depend on either. **There is no established
-   removal path for a catalog row**; that is the real work in this item.
-6. **Round 13 has no theme and needs a gap test before it has one.** Round 12's
+5. **Round 13 has no theme and needs a gap test before it has one.** Round 12's
    probes killed small-space (84% held), dry shade (73%) and left late-season
    surviving but thin at 62%. Those numbers are in `seed-round12.ts`'s header
    and are the starting point, not a result to reuse — the catalog moved.
@@ -110,9 +111,8 @@ days, so this list cannot become a paragraph again. Read that shape's header
 before adding a line: the paragraph this replaced ran for six handoffs and
 half its items were misfiled.
 
-- (raised 2026-08-17, Ana) Keep _Hydrangea hydrangeoides_ with a description
-  that names its single-bract florets, or cut it as a third near-identical
-  climber? The catalog holds three, not the two previously recorded.
+_Empty._ The hydrangeoides question was raised and answered the same day, which
+is the rule working.
 
 **Re-owned 2026-08-17, and no longer anyone's decision.** Each was parked on
 Ana and none was hers. The `Cenolophium` region correction is a fact question

@@ -743,35 +743,49 @@ is unchanged.
 
 <!-- Newest first. Append with: scripts/log-db-session.ts --round <label> -->
 
-### 2026-08-17 — Standing rule 15, and the first three out-of-round passes wired (not a round)
+### 2026-08-17 — Standing rule 15, provenance wiring, and `common_issues` closed (not a round)
 
-**Branch** `session/2026-08-17-provenance`. No migration.
-
+**Branch** `session/2026-08-17-provenance`. No migration. Catalog backup
+`2026-08-17T09-23-15-618Z` (shared checkout) before the bulk write.
 **Changed** — standing rule 15 (above) with `invariants:check` shape 15 behind
 it. `RUNS_WITHOUT_PROVENANCE` **18 → 15**: `curate-styles`, `curate-greenery`
-and `draft-hardiness` open runs. A dry run opens none, in all three.
+and `draft-hardiness` open runs; a dry run opens none. `curate-plants` gained
+`--only <field>`, a field-scoped fill that drops the `is_curated` selection
+filter and restricts the patch to one column, refusing any column the editorial
+trigger watches. `common_issues` joined `REQUIRED_DRAFTED_FIELDS`.
 
-**Database** — three writes, `--ids` scoped to one UNCURATED row (`Absinthe`;
-`style_tags` is in the editorial-invalidation trigger's watch list, so a
-curated row would have lost its sign-off). `curate-styles` and
-`curate-greenery` wrote 1 row each, `corroborated`, both witnesses observing 1.
-`draft-hardiness` ran its empty path deliberately — row_count 0, `bounded` —
-rather than add a draft rating to a parked feature.
+**Database** — `common_issues` blank rows **27 → 0**, via
+`curate-plants --only common_issues` (2 then 25, `corroborated`). All 13
+signed-off rows among them KEPT `is_curated` and their stamp, verified after
+the write. Plus three single-row smoke tests for the wiring above.
 
-**Found** — the recipe hash discriminates DECODING PARAMETERS, not only models:
-three hashes on one model, `draft-hardiness` at `max_tokens: 16` separating
-from the others at 256. That was the open question when it was listed. Nothing
-recorded `confirmed` (trap 29, holding). Shape 15's own parser was caught twice
-reporting zero parked items while looking at one — it would have passed green
-while seeing nothing.
+**Found**
 
-**Not done** — the twelve remaining unwired scripts. Most clear a stamp, so
-each needs a witness that is not the column it nulls; `curate-greenery`'s
-`foliage_color` is that pattern in the small.
+- **The blank was a SANCTIONED answer, not a miss.** `curate-plants`' prompt
+  said "null if the species genuinely has no notable common issues", while 460
+  of 721 populated rows wrote "generally pest and disease free" in prose. Two
+  ways to write one answer. Backfilling without fixing the prompt would have
+  reproduced the blanks; the prompt now forbids null.
+- **The two prose fields fail in opposite directions under a gate**, which is
+  why Ana split them. `environment_benefits` stays optional: its 4 blanks are
+  three houseplants and an invasive, and requiring it buys four fabrications.
+- The recipe hash discriminates DECODING PARAMETERS, not only models:
+  `draft-hardiness` at `max_tokens: 16` separates from passes at 256. Nothing
+  recorded `confirmed` (trap 29, holding).
+- Shape 15's own parser was caught twice reporting zero parked items while
+  looking at one; it would have passed green while seeing nothing.
+- `verify-round --round 10` fails on `curate-editorial` 6/50, unchanged before
+  and after this session. Round 12's 231 curated reads 232 live: _Filipendula
+  purpurea_ was signed off at 23:28 that night, after the count was taken.
 
-**Verified** — 311 tests, `tsc`, `invariants:check`, `docs:claims`,
-`docs:links`, `runbook:check`. Shape 15's three failure modes each verified by
-injection before the handoff was fixed (trap 19).
+**Not done** — the twelve remaining unwired scripts; most clear a stamp, so
+each needs a witness that is not the column it nulls. No path exists to write a
+hand-authored `description`, which blocks the _Hydrangea hydrangeoides_ rewrite.
+
+**Verified** — 316 tests, `tsc`, `invariants:check`, `docs:claims`,
+`docs:links`, `runbook:check`, `catalog:state:check`, `verify-round` rounds 11
+and 12 at 0 failures. Shape 15's three failure modes and `restrictPatch`'s
+refusal each verified to FAIL against the pre-fix code (trap 19).
 
 ### 2026-08-16 — Standing rule 14 gets a scan, and the backlog gets one home (not a round)
 

@@ -135,7 +135,22 @@ const RECIPE_PROBE_ROW = {
   scientific_name: 'Probe probe',
 } as DbPlant
 
-function buildPrompt(plant: DbPlant): string {
+/**
+ * Fields a `--only` run may not target, because writing one CLEARS the
+ * editorial verdict (migration 20260729101133). Field-scoped mode exists
+ * precisely to reach already-curated rows, so it has to be unable to
+ * un-curate them; keeping the list here rather than in a comment is what
+ * makes that a property of the code and not of whoever runs it.
+ */
+const EDITORIAL_TRIGGER_COLUMNS = new Set([
+  'description',
+  'style_tags',
+  'space_types',
+  'image_url_curated',
+  'image_pick_confidence',
+])
+
+function buildPrompt(plant: DbPlant, only: string | null = null): string {
   // plant_type gates hardiness: determine whether to ask for hardiness at all
   const knownPlantType = plant.plant_type
   const isAnnual = knownPlantType === 'annual'
@@ -143,6 +158,12 @@ function buildPrompt(plant: DbPlant): string {
     !isAnnual && (!plant.hardiness_zone_min || !plant.hardiness_zone_max)
 
   const missing: string[] = []
+
+  // Field-scoped: ask for the one field and nothing else. Returning early
+  // rather than filtering the list afterwards keeps every gate below —
+  // needsHardiness, the sun pair, the style stamp — out of a run that has no
+  // business re-deciding them.
+  if (only) return renderPrompt(plant, [only], knownPlantType)
 
   // plant_type first — it gates other field decisions
   if (!knownPlantType) missing.push('plant_type')
@@ -190,6 +211,14 @@ function buildPrompt(plant: DbPlant): string {
   if (!plant.seasonal_rhythm) missing.push('seasonal_rhythm')
   if (!plant.native_to) missing.push('native_to')
 
+  return renderPrompt(plant, missing, knownPlantType)
+}
+
+function renderPrompt(
+  plant: DbPlant,
+  missing: string[],
+  knownPlantType: string | null
+): string {
   const knownFields = {
     common_name: plant.common_name,
     scientific_name: plant.scientific_name,
@@ -242,7 +271,7 @@ ${STYLE_TAG_PROMPT}
 - light_needs: 1-2 short sentences of prose light requirements. E.g. "Performs best in full sun. Tolerates light afternoon shade." Must be consistent with sun_requirements.
 - soil_needs: 1-2 short sentences. E.g. "Prefers well-drained, slightly alkaline soil. Tolerates poor, stony ground."
 - maintenance_notes: 1-2 short sentences on key care tasks (pruning, deadheading, dividing etc.).
-- common_issues: 1-2 sentences on common pests, diseases, or cultural problems. null if the species genuinely has no notable common issues.
+- common_issues: 1-2 sentences on common pests, diseases, or cultural problems. NEVER null. If the species is genuinely untroubled, SAY SO ("Generally pest and disease free.") and add the one condition that does cause trouble if there is one. A blank cannot be told apart from an unanswered question, and 460 of the 721 rows that already have this field say exactly that — the null option was producing two ways to write one answer.
 - best_placement: 1 short sentence. E.g. "South-facing borders and dry sunny beds."
 - environment_benefits: 1 short sentence on ecological value (pollinators, birds, etc.). null if not notably beneficial.
 - seasonal_rhythm: Object with ALL 6 required keys — each a 1-2 sentence description of what is happening with this plant at that time. Keys: ${JSON.stringify(SEASONAL_KEYS)}. Must be consistent with bloom_months if known.
@@ -256,10 +285,11 @@ Only include fields listed under "missing fields" above. Do not include fields a
 // ---------------------------------------------------------------------------
 
 async function getCurationFromClaude(
-  plant: DbPlant
+  plant: DbPlant,
+  only: string | null = null
 ): Promise<{ response: CurationResponse; lowConfidence: boolean }> {
   const client = getAnthropicClient()
-  const prompt = buildPrompt(plant)
+  const prompt = buildPrompt(plant, only)
 
   const message = await client.messages.create({
     model: CURATION_MODEL,
@@ -407,13 +437,42 @@ export function buildPatch(
   return patch
 }
 
+/**
+ * Narrow a patch to a single field plus the drafting stamp.
+ *
+ * THE SAFETY PROPERTY OF FIELD-SCOPED MODE LIVES HERE, not in the prompt.
+ * `--only` drops the `is_curated` filter so it can reach signed-off rows, and
+ * what makes that safe is that no editorially-watched column can be in the
+ * patch — regardless of what the model returned, what buildPatch decided, or
+ * what a future field added to buildPatch does. A guard that depends on the
+ * response is a guard that a chatty response defeats.
+ *
+ * Exported as a seam: the refusal is only testable if it can be called.
+ */
+export function restrictPatch(
+  patch: PlantPatch,
+  only: string | null
+): PlantPatch {
+  if (!only) return patch
+  // ai_drafted_at is required on PlantPatch and is written on every row, so it
+  // is the floor rather than something copied conditionally.
+  const narrowed: PlantPatch = { ai_drafted_at: patch.ai_drafted_at }
+  if (only in patch) {
+    ;(narrowed as Record<string, unknown>)[only] = (
+      patch as Record<string, unknown>
+    )[only]
+  }
+  return narrowed
+}
+
 // ---------------------------------------------------------------------------
 // DB helpers
 // ---------------------------------------------------------------------------
 
 async function fetchUncuratedPlants(
   ids: string[] | null,
-  newOnly = false
+  newOnly = false,
+  only: string | null = null
 ): Promise<DbPlant[]> {
   const db = getSupabaseAdmin()
 
@@ -422,7 +481,25 @@ async function fetchUncuratedPlants(
   // bare .select() would silently start dropping rows from the drafting pass
   // as soon as it crosses 1000.
   return fetchAllRows<DbPlant>((from, to) => {
-    let query = db.from('plants').select('*').eq('is_curated', false)
+    let query = db.from('plants').select('*')
+
+    // THE is_curated FILTER IS THE DRAFTING PASS'S GUARD, and field-scoped mode
+    // deliberately drops it. A full draft may fill `space_types` or a
+    // `description`, either of which clears an editorial verdict, so it must
+    // never see a signed-off row. A `--only` run cannot: the patch is
+    // restricted to one column and that column is refused if the trigger
+    // watches it. The 14 signed-off rows among the 27 blank `common_issues`
+    // rows are the reason this mode exists — without it they are unreachable
+    // by the tool that drafts the field.
+    if (!only) query = query.eq('is_curated', false)
+
+    // Field-scoped: only rows actually missing it. Absent means NULL here, so
+    // `.is(null)` is the whole predicate. Counted rather than assumed
+    // (2026-08-17): `count(*) filter (where common_issues is null)` = 27,
+    // `filter (where common_issues is not null and btrim(common_issues) = '')`
+    // = 0. If a future --only target does carry empty strings, this predicate
+    // silently skips them.
+    if (only) query = query.is(only, null)
 
     // ids is null only for --all.
     if (ids) query = query.in('id', ids)
@@ -461,24 +538,55 @@ async function main() {
       'a catalog-wide write.'
   )
   const ids = scopeIds(scope)
-  const newOnly = process.argv.slice(2).includes('--new-only')
+  const argv = process.argv.slice(2)
+  const newOnly = argv.includes('--new-only')
+
+  // --only <field>: fill ONE field on the rows that lack it, and nothing else.
+  // The gap-filling counterpart to a full draft, for a field added or
+  // re-specified after rows were already drafted.
+  const onlyIdx = argv.indexOf('--only')
+  const only = onlyIdx >= 0 ? (argv[onlyIdx + 1] ?? '') : null
+  if (only !== null) {
+    if (!only || only.startsWith('--')) {
+      console.error('\n--only needs a field name, e.g. --only common_issues\n')
+      process.exit(1)
+    }
+    if (EDITORIAL_TRIGGER_COLUMNS.has(only)) {
+      console.error(
+        `\n--only ${only} is refused: writing that column clears the editorial\n` +
+          `verdict (migration 20260729101133), and field-scoped mode drops the\n` +
+          `is_curated filter precisely so it can reach signed-off rows. Use a\n` +
+          `full curate-plants run, which never sees them.\n`
+      )
+      process.exit(1)
+    }
+  }
 
   console.log(`\n${describeScope(scope, ids)}`)
   console.log(
-    `Fetching ${newOnly ? 'undrafted ' : ''}uncurated plants from Supabase...`
+    only
+      ? `Fetching plants with no ${only} from Supabase...`
+      : `Fetching ${newOnly ? 'undrafted ' : ''}uncurated plants from Supabase...`
   )
-  const plants = await fetchUncuratedPlants(ids, newOnly)
+  const plants = await fetchUncuratedPlants(ids, newOnly, only)
 
   // withRunRecord owns the terminal paths, which is the canonical shape: the
   // guarantee that finalisation happens on every path is then structural rather
   // than something this file has to get right. Even "nothing to do" is recorded —
   // a real invocation whose honest row_count is 0. See run-provenance.ts.
   const runOptions = {
-    step: 'curate-plants',
+    step: only ? `curate-plants --only ${only}` : 'curate-plants',
     // Declared, not inferred: this pass writes the drafting stamp AND both
     // verdict stamps named after other scripts, which is exactly why the
     // column cannot identify the writer.
-    writeSet: ['ai_drafted_at', 'style_checked_at', 'greenery_checked_at'],
+    //
+    // A field-scoped run declares what it can actually write, which is the one
+    // field and the drafting stamp. Declaring the full set would claim two
+    // stamps it is structurally incapable of moving, and finalisation would
+    // then observe zero against a claim of N on both.
+    writeSet: only
+      ? [only, 'ai_drafted_at']
+      : ['ai_drafted_at', 'style_checked_at', 'greenery_checked_at'],
     // TRAP 28, and this file is where it was found — by writing the test, a day
     // after this run was called correct.
     //
@@ -494,28 +602,46 @@ async function main() {
     //
     // Annotated because `runOptions` is a named const rather than an inline
     // argument, so there is no contextual type to narrow `kind` against.
-    evidence: [
-      { kind: 'stamp', covers: 'ai_drafted_at', column: 'ai_drafted_at' },
-      {
-        kind: 'row-touched',
-        covers: 'style_checked_at',
-        table: 'plants',
-        column: 'updated_at',
-      },
-      {
-        kind: 'row-touched',
-        covers: 'greenery_checked_at',
-        table: 'plants',
-        column: 'updated_at',
-      },
-    ] as Witness[],
+    evidence: (only
+      ? [
+          { kind: 'stamp', covers: 'ai_drafted_at', column: 'ai_drafted_at' },
+          // The scoped field is a value column: not window-queryable, so it
+          // needs a witness or beginRun throws. It IS written on every row the
+          // run writes — selection is `.is(only, null)` — but row-touched is
+          // still the only observable available for a value column.
+          {
+            kind: 'row-touched',
+            covers: only,
+            table: 'plants',
+            column: 'updated_at',
+          },
+        ]
+      : [
+          { kind: 'stamp', covers: 'ai_drafted_at', column: 'ai_drafted_at' },
+          {
+            kind: 'row-touched',
+            covers: 'style_checked_at',
+            table: 'plants',
+            column: 'updated_at',
+          },
+          {
+            kind: 'row-touched',
+            covers: 'greenery_checked_at',
+            table: 'plants',
+            column: 'updated_at',
+          },
+        ]) as Witness[],
     scope: describeScope(scope, ids),
     recipe: {
       model: CURATION_MODEL,
       // The template as assembled, with a representative row substituted out:
-      // per-row subject is excluded from the recipe by construction.
-      template: buildPrompt(RECIPE_PROBE_ROW),
-      ingredients: { style_tags: STYLE_TAG_PROMPT, greenery: GREENERY_PROMPT },
+      // per-row subject is excluded from the recipe by construction. A scoped
+      // run renders its own narrower template, so its hash separates from a
+      // full draft's — which is the point: they are different recipes.
+      template: buildPrompt(RECIPE_PROBE_ROW, only),
+      ingredients: only
+        ? {}
+        : { style_tags: STYLE_TAG_PROMPT, greenery: GREENERY_PROMPT },
       decoding: { max_tokens: 2048 },
     },
   }
@@ -544,7 +670,10 @@ async function main() {
 
       try {
         process.stdout.write(`${prefix} ${label} … `)
-        const { response, lowConfidence } = await getCurationFromClaude(plant)
+        const { response, lowConfidence } = await getCurationFromClaude(
+          plant,
+          only
+        )
 
         if (lowConfidence) lowConfidenceHardiness.push(label)
 
@@ -552,7 +681,20 @@ async function main() {
         const effectiveType = plant.plant_type ?? response.plant_type
         if (!effectiveType) nullPlantType.push(label)
 
-        const patch = buildPatch(plant, response)
+        // Restricting the PATCH rather than trusting the prompt is what makes
+        // field-scoped mode safe on a signed-off row. The model can return any
+        // field it likes and buildPatch stays fill-only for all of them; this
+        // is the line that guarantees only the named column reaches the
+        // database, so the refusal list above cannot be bypassed by a chatty
+        // response.
+        const patch = restrictPatch(buildPatch(plant, response), only)
+        // A scoped run exists to fill ONE field, so getting nothing back for it
+        // is a failed row, not a quiet skip. Thrown rather than `continue`d:
+        // the catch records it in `failures`, and control still reaches the
+        // pacing sleep at the bottom of the loop.
+        if (only && !(only in patch)) {
+          throw new Error(`no ${only} returned`)
+        }
         await patchPlant(plant.id, patch)
         run.wrote(plant.id)
 
