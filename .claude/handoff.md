@@ -90,7 +90,24 @@ order is not runtime order** — do not retry that shape.
    correctly rejected it. Nothing takes a second look at wider Commons when P18
    is poor, so this shrinks the placeholder class, it does not eliminate it.
 
-2. **Make `curate-plants` skip its finished rows by default.** It is the ONLY
+2. **Extend the copy-rule check to every prose field.** Best value-per-effort on
+   this list: free, deterministic, no model call, no judgement. The vocabulary
+   ruling is _autumn, never the US "fall"_, and it is enforced **only in
+   `seasonal_care`**, by that pass's own validator. Measured 2026-08-18 across
+   780 rows, in fields nothing watches:
+
+   | field               | "fall" instead of "autumn" |
+   | ------------------- | -------------------------- |
+   | `description`       | 15                         |
+   | `seasonal_rhythm`   | 16                         |
+   | `maintenance_notes` | 6                          |
+
+   Plus **2 em/en dashes in `seasonal_rhythm`**, which the UI copy rule bans
+   outright. That is ~37 reader-facing violations of rules this repo already
+   decided. Same shape as trap 36: the rule exists, the enforcement covers one
+   field, and nobody noticed the others were unguarded.
+
+3. **Make `curate-plants` skip its finished rows by default.** It is the ONLY
    pass that re-drafts rows it has already done — `cross-check-plants`,
    `cross-check-native-to`, `curate-seasonal-care` and `curate-editorial` all
    skip on their own stamp unasked. Round 13 paid for it: one bad row out of 33
@@ -105,14 +122,14 @@ order is not runtime order** — do not retry that shape.
    cover that case completely. If it does, the default is vestigial and safe to
    invert.
 
-3. **Close trap 37.** Two halves, done together: move `curate-common-names`'
+4. **Close trap 37.** Two halves, done together: move `curate-common-names`'
    judging inside `withRunRecord` so it stops recording `usage: null` on a pass
    that spent real money, and pin the metering seam — a fake client, one call
    before the record opens and one inside, asserting only the second is counted.
    Add the scope half as an assertion that every run a round's steps write names
    that round.
 
-4. **Fill `sun_tolerates` where it is empty: 171 rows, 22% of the catalog.**
+5. **Fill `sun_tolerates` where it is empty: 171 rows, 22% of the catalog.**
    Measured 2026-08-18. "Thrives in full sun, tolerates nothing" is almost never
    true of a real plant, and an empty tolerance makes one read as fussier than it
    is, which is the expensive direction to be wrong in for a beginner.
@@ -126,7 +143,7 @@ order is not runtime order** — do not retry that shape.
    thrives/tolerates, add no schema.** Sun is genuinely coarse, and three levels
    answers a beginner's real question.
 
-5. **One hero and one re-judgement, both agent editorial work, not Ana's.**
+6. **One hero and one re-judgement, both agent editorial work, not Ana's.**
    `Malus spectabilis` still has no usable photo. And `Lythrum salicaria` and
    `Iris pseudacorus` were cut in round 12 on North American invasive status,
    which the 2026-08-18 ruling rejects as a ground — they may still deserve the
@@ -134,13 +151,36 @@ order is not runtime order** — do not retry that shape.
    against. Reasoning in
    [why a round is shaped the way it is](../docs/curation.md#round-runbook).
 
+7. **Two `bloom_months` values are narrower than their own prose, and the
+   detector that found them is worth keeping.** Measured 2026-08-18: prose
+   contradicting a checked scalar runs at **2 rows in 741**, and in BOTH the
+   prose is the more accurate half. `Cornus mas` blooms `[3]` while its
+   description says late winter (Cornelian cherry is February into March, so
+   `[2,3]`); `Dicentra eximia` ends at 9 while its autumn stage records a real
+   rebloom in cool weather.
+
+   **Do not buy a prose fact-check on the strength of the Rohdea case.** 0.3% is
+   not a spend. What IS worth ~40 lines is the contradiction detector as a guard
+   run after any scalar correction, because that is when propagation happens —
+   Rohdea's description, rhythm and care tips all rested on one wrong
+   `bloom_months` and nothing would have flagged them once it was fixed.
+
+   ⚠ Its false positives are known and cost two iterations to find: a naive
+   "flower word near a season word" flags **71%** of the catalog. "The blooms
+   are FOLLOWED BY seedheads that persist into autumn", "flowers FADE and seed
+   heads develop", and `Winter savory`, where the season is part of the plant's
+   name. Require an assertion of flowering (`flowers appear/open`, `produces
+flowers`, `in full bloom`), exclude aftermath and anticipation markers, and
+   skip season words occurring in the plant's own common name. "Flower stalks
+   begin to rise" is still a false positive at that setting.
+
 **Parked decisions.** Dated when FIRST raised, with who owes the answer.
 `invariants:check` shape 15 fails on an undated item and on one older than 14
 days, so this list cannot become a paragraph again.
 
 _Empty._ Both decisions this session raised were delegated back and **decided**,
 not parked — invasive-status scope and sun granularity. Each is recorded where it
-binds, the first in `docs/curation.md` and the second in step 4 above, because a
+binds, the first in `docs/curation.md` and the second in step 5 above, because a
 ruling that lives only in the handoff dies with it.
 
 **Standing:** the next audit is round 14's close or 2026-09-14, whichever first,
