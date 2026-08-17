@@ -171,8 +171,15 @@ interface StepDef {
    * express: when a standard arrives AFTER a row was seeded, does that row owe
    * the standard at all?
    *
-   *   `catalog` — every row owes it, whenever it was seeded.
-   *   `forward` — new rows owe it; rows seeded before it existed are DONE.
+   *   `catalog` — every row owes it, whenever it was seeded. A gap is work.
+   *   `forward` — a gap reaches no reader, so it is information, not work.
+   *
+   * The usual `forward` case is a standard that arrived after the rows and never
+   * became visible, and it is tempting to define the class as "older rows are
+   * settled". Do not: `draft-hardiness` is missing on rounds 9-12, the NEWEST
+   * rows, because ratings were drafted for the then-catalog in July and the track
+   * was parked before those rounds existed. Seeding order is the common
+   * explanation, never the test.
    *
    * WHY THE AXIS EXISTS. Eleven stamp columns landed between 2026-07-06 and
    * 2026-08-13, five of them inside one 22-hour window while round 8 was open.
