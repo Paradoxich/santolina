@@ -4,12 +4,14 @@ import { motion } from 'framer-motion'
 import {
   Button,
   Drawer,
+  FormError,
   Icon,
   IconButton,
   Gallery,
   Tooltip,
   useToast,
 } from '@paradoxui/ui'
+import { failureMessage } from '@/lib/failure'
 import { icons } from '@/lib/icons'
 import { PlantImage } from '@/components/PlantImage'
 import { DRAWER_MOTION } from '@/lib/drawer-motion'
@@ -95,7 +97,10 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
       .catch((err) => {
         if (!cancelled)
           setActionError(
-            err instanceof Error ? err.message : 'Failed to load palette status'
+            failureMessage(
+              err,
+              "Could not load this plant's status. Try again."
+            )
           )
       })
       .finally(() => {
@@ -132,7 +137,7 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
                   router.refresh()
                 } catch (err) {
                   setActionError(
-                    err instanceof Error ? err.message : 'Undo failed.'
+                    failureMessage(err, 'Could not undo that. Try again.')
                   )
                 }
               },
@@ -165,7 +170,7 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
                   router.refresh()
                 } catch (err) {
                   setActionError(
-                    err instanceof Error ? err.message : 'Undo failed.'
+                    failureMessage(err, 'Could not undo that. Try again.')
                   )
                 }
               },
@@ -175,7 +180,7 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
       }
     } catch (err) {
       setActionError(
-        err instanceof Error ? err.message : 'Something went wrong.'
+        failureMessage(err, 'Could not update your planned list. Try again.')
       )
     } finally {
       setPendingAction(null)
@@ -213,7 +218,7 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
                   router.refresh()
                 } catch (err) {
                   setActionError(
-                    err instanceof Error ? err.message : 'Undo failed.'
+                    failureMessage(err, 'Could not undo that. Try again.')
                   )
                 }
               },
@@ -242,7 +247,7 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
                   router.refresh()
                 } catch (err) {
                   setActionError(
-                    err instanceof Error ? err.message : 'Undo failed.'
+                    failureMessage(err, 'Could not undo that. Try again.')
                   )
                 }
               },
@@ -252,7 +257,7 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
       }
     } catch (err) {
       setActionError(
-        err instanceof Error ? err.message : 'Something went wrong.'
+        failureMessage(err, 'Could not update your garden. Try again.')
       )
     } finally {
       setPendingAction(null)
@@ -340,13 +345,12 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
         </>
       }
     >
+      {/* Flush to the drawer's top edge, so a bottom border instead of a
+          radius. Same failure and same copy as the page above. */}
       {actionError && (
-        <p
-          role="alert"
-          className="w-full shrink-0 border-b border-card bg-surface-critical px-card-padding py-inline-gap text-label text-critical"
-        >
+        <FormError variant="banner" className="border-b border-card">
           {actionError}
-        </p>
+        </FormError>
       )}
 
       <div className="flex w-full flex-1 flex-col gap-section-break overflow-y-auto p-card-padding">

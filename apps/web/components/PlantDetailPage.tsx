@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import {
   Button,
+  FormError,
   Icon,
   IconButton,
   Gallery,
@@ -12,6 +13,7 @@ import {
   Tooltip,
   useToast,
 } from '@paradoxui/ui'
+import { failureMessage } from '@/lib/failure'
 import { icons } from '@/lib/icons'
 import { SubpageHeader } from '@/components/SubpageHeader'
 import { PlantImage } from '@/components/PlantImage'
@@ -130,7 +132,7 @@ export function PlantDetailPage({
                   router.refresh()
                 } catch (err) {
                   setActionError(
-                    err instanceof Error ? err.message : 'Undo failed.'
+                    failureMessage(err, 'Could not undo that. Try again.')
                   )
                 }
               },
@@ -163,7 +165,7 @@ export function PlantDetailPage({
                   router.refresh()
                 } catch (err) {
                   setActionError(
-                    err instanceof Error ? err.message : 'Undo failed.'
+                    failureMessage(err, 'Could not undo that. Try again.')
                   )
                 }
               },
@@ -173,7 +175,7 @@ export function PlantDetailPage({
       }
     } catch (err) {
       setActionError(
-        err instanceof Error ? err.message : 'Something went wrong.'
+        failureMessage(err, 'Could not update your planned list. Try again.')
       )
     } finally {
       setPendingAction(null)
@@ -204,7 +206,7 @@ export function PlantDetailPage({
               router.refresh()
             } catch (err) {
               setActionError(
-                err instanceof Error ? err.message : 'Undo failed.'
+                failureMessage(err, 'Could not undo that. Try again.')
               )
             }
           },
@@ -229,7 +231,7 @@ export function PlantDetailPage({
       performRemoveFromGarden()
         .catch((err) => {
           setActionError(
-            err instanceof Error ? err.message : 'Something went wrong.'
+            failureMessage(err, 'Could not remove that plant. Try again.')
           )
         })
         .finally(() => setPendingAction(null))
@@ -247,7 +249,7 @@ export function PlantDetailPage({
       closeRemoveDialog()
     } catch (err) {
       setActionError(
-        err instanceof Error ? err.message : 'Something went wrong.'
+        failureMessage(err, 'Could not remove that plant. Try again.')
       )
     } finally {
       setPendingAction(null)
@@ -284,7 +286,7 @@ export function PlantDetailPage({
                   router.refresh()
                 } catch (err) {
                   setActionError(
-                    err instanceof Error ? err.message : 'Undo failed.'
+                    failureMessage(err, 'Could not undo that. Try again.')
                   )
                 }
               },
@@ -313,7 +315,7 @@ export function PlantDetailPage({
                   router.refresh()
                 } catch (err) {
                   setActionError(
-                    err instanceof Error ? err.message : 'Undo failed.'
+                    failureMessage(err, 'Could not undo that. Try again.')
                   )
                 }
               },
@@ -323,7 +325,7 @@ export function PlantDetailPage({
       }
     } catch (err) {
       setActionError(
-        err instanceof Error ? err.message : 'Something went wrong.'
+        failureMessage(err, 'Could not update your garden. Try again.')
       )
     } finally {
       setPendingAction(null)
@@ -408,13 +410,12 @@ export function PlantDetailPage({
           isGrowing ? 'max-w-content' : 'mx-auto max-w-[640px]'
         }`}
       >
+        {/* Rounded: this one floats at the top of the reading column rather
+            than meeting an edge. */}
         {actionError && (
-          <p
-            role="alert"
-            className="mb-4 w-full shrink-0 rounded-sm bg-surface-critical px-card-padding py-inline-gap text-label text-critical"
-          >
+          <FormError variant="banner" className="mb-4 rounded-sm">
             {actionError}
-          </p>
+          </FormError>
         )}
 
         {/* The growing view's hero owns the name, the botanical line and the

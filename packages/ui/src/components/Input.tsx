@@ -1,5 +1,6 @@
 import React from 'react'
 import { cn } from '../utils/cn'
+import { FormError } from './FormError'
 
 export interface InputProps extends Omit<
   React.InputHTMLAttributes<HTMLInputElement>,
@@ -80,11 +81,10 @@ export function Input({
         aria-invalid={displayVariant === 'error'}
         {...props}
       />
-      {errorMessage && (
-        <p id={errorId} className="text-sm text-critical" role="alert">
-          {errorMessage}
-        </p>
-      )}
+      {/* Through FormError rather than its own paragraph: a labelled field and
+          a bare field like the login pill have to fail in the same voice, and
+          two copies of this markup drift the first time either is touched. */}
+      {errorMessage && <FormError id={errorId}>{errorMessage}</FormError>}
       {helperText && !errorMessage && (
         <p id={helperId} className="text-sm text-muted">
           {helperText}

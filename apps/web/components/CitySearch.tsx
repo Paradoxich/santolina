@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { SearchField, Spinner } from '@paradoxui/ui'
+import { FormError, SearchField, Spinner } from '@paradoxui/ui'
 import { searchCities, type GeocodingResult } from '@/lib/open-meteo'
 import { useDebounce } from '@/hooks/useDebounce'
 
@@ -78,7 +78,7 @@ export function CitySearch({
         </div>
       )}
 
-      {error && <p className="text-body-small text-critical">{error}</p>}
+      {error && <FormError>{error}</FormError>}
 
       {!isSearching && results.length > 0 && (
         <ul className="flex max-h-64 flex-col gap-1 overflow-y-auto">

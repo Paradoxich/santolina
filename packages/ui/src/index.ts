@@ -6,6 +6,9 @@ export type { IconButtonProps } from './components/IconButton'
 export { Input } from './components/Input'
 export type { InputProps } from './components/Input'
 
+export { FormError } from './components/FormError'
+export type { FormErrorProps } from './components/FormError'
+
 export { Card, CardHeader, CardBody, CardFooter } from './components/Card'
 export type {
   CardProps,

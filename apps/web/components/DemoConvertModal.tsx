@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { Modal } from '@paradoxui/ui'
+import { FormError, Modal } from '@paradoxui/ui'
+import { UserFacingError } from '@/lib/failure'
 import { AuthOptions } from '@/components/AuthOptions'
 import { createSupabaseBrowserClient } from '@/lib/supabase-client'
 
@@ -37,7 +38,7 @@ export function DemoConvertModal({ isOpen, onClose }: DemoConvertModalProps) {
       { emailRedirectTo: `${window.location.origin}/auth/callback` }
     )
     if (error) {
-      throw new Error(
+      throw new UserFacingError(
         error.message.toLowerCase().includes('already')
           ? 'That email already has an account. Log in to it instead.'
           : 'We could not send the link. Check the address and try again.'
@@ -53,7 +54,7 @@ export function DemoConvertModal({ isOpen, onClose }: DemoConvertModalProps) {
     })
     // Manual linking has to be enabled on the Supabase project for this to
     // work; without it the call fails here rather than at Google.
-    if (error) throw new Error('Google is not available right now.')
+    if (error) throw new UserFacingError('Google is not available right now.')
   }
 
   function handleClose() {
@@ -95,11 +96,9 @@ export function DemoConvertModal({ isOpen, onClose }: DemoConvertModalProps) {
             </h2>
           </div>
 
-          {error && (
-            <p className="text-body-small text-critical" role="alert">
-              {error}
-            </p>
-          )}
+          {/* Same failure slot as /login, same component: this card is the
+              sign-in card in a dialog, so a failure has to look identical. */}
+          {error && <FormError align="center">{error}</FormError>}
 
           <AuthOptions
             onGoogle={keepWithGoogle}

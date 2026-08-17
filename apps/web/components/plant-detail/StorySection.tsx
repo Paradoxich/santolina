@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import {
   Button,
   DrawerSection,
+  FormError,
   Icon,
   IconButton,
   Lightbox,
@@ -13,6 +14,7 @@ import {
   useToast,
 } from '@paradoxui/ui'
 import type { MenuItem } from '@paradoxui/ui'
+import { failureMessage } from '@/lib/failure'
 import { icons } from '@/lib/icons'
 import { DIARY_EVENT_LABELS } from '@/lib/diary-events'
 import type { DiaryNote } from '@/types/diary'
@@ -222,7 +224,7 @@ export function StorySection({
       setIsClearDialogOpen(false)
     } catch (err) {
       setClearError(
-        err instanceof Error ? err.message : 'Something went wrong.'
+        failureMessage(err, 'Could not clear these notes. Try again.')
       )
     } finally {
       setIsClearing(false)
@@ -243,7 +245,7 @@ export function StorySection({
       setNoteToDelete(null)
     } catch (err) {
       setNoteDeleteError(
-        err instanceof Error ? err.message : 'Something went wrong.'
+        failureMessage(err, 'Could not delete that note. Try again.')
       )
     } finally {
       setIsDeletingNote(false)
@@ -340,9 +342,7 @@ export function StorySection({
           {`This will permanently delete ${pluralize(noteCount, 'note')} and ${pluralize(photoCount, 'photo')}. This can't be undone.`}
         </p>
         {clearError && (
-          <p className="mt-inline-gap text-body-small text-critical">
-            {clearError}
-          </p>
+          <FormError className="mt-inline-gap">{clearError}</FormError>
         )}
       </Modal>
 
@@ -378,9 +378,7 @@ export function StorySection({
             : `This will permanently delete this note. This can't be undone.`}
         </p>
         {noteDeleteError && (
-          <p className="mt-inline-gap text-body-small text-critical">
-            {noteDeleteError}
-          </p>
+          <FormError className="mt-inline-gap">{noteDeleteError}</FormError>
         )}
       </Modal>
     </DrawerSection>

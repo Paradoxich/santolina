@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 import {
   Button,
   EmptyState,
+  FormError,
   Icon,
   IconButton,
   Lightbox,
@@ -14,6 +15,7 @@ import {
   Tooltip,
   useToast,
 } from '@paradoxui/ui'
+import { failureMessage } from '@/lib/failure'
 import { icons } from '@/lib/icons'
 import { DIARY_EVENT_LABELS } from '@/lib/diary-events'
 import { formatDayLabel, formatMonthLabel } from '@/lib/utils'
@@ -95,7 +97,7 @@ export function ActivityClient({
       setToDelete(null)
     } catch (err) {
       setDeleteError(
-        err instanceof Error ? err.message : 'Something went wrong.'
+        failureMessage(err, 'Could not delete that note. Try again.')
       )
     } finally {
       setIsDeleting(false)
@@ -265,9 +267,7 @@ export function ActivityClient({
             : `This will permanently delete this note. This can't be undone.`}
         </p>
         {deleteError && (
-          <p className="mt-inline-gap text-body-small text-critical">
-            {deleteError}
-          </p>
+          <FormError className="mt-inline-gap">{deleteError}</FormError>
         )}
       </Modal>
     </div>

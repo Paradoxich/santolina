@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Button, Icon, IconButton, Modal } from '@paradoxui/ui'
+import { Button, FormError, Icon, IconButton, Modal } from '@paradoxui/ui'
+import { failureMessage } from '@/lib/failure'
 import { icons, type IconName } from '@/lib/icons'
 import { LocationPickerModal } from '@/components/dashboard/LocationPickerModal'
 import { resetGarden, deleteAccount } from '@/server/account-actions'
@@ -75,7 +76,7 @@ export function SettingsModal({
       setResetOpen(false)
       router.refresh()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong.')
+      setError(failureMessage(err, 'Could not reset your garden. Try again.'))
     } finally {
       setBusy(null)
     }
@@ -88,7 +89,7 @@ export function SettingsModal({
       // Redirects on success, so control does not return here.
       await deleteAccount()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong.')
+      setError(failureMessage(err, 'Could not delete your account. Try again.'))
       setBusy(null)
     }
   }
@@ -210,12 +211,7 @@ export function SettingsModal({
               )}
 
               {error && (
-                <p
-                  className="pt-card-padding text-body-small text-critical"
-                  role="alert"
-                >
-                  {error}
-                </p>
+                <FormError className="pt-card-padding">{error}</FormError>
               )}
             </div>
           </div>
