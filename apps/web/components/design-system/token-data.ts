@@ -368,7 +368,11 @@ export const allTokens: TokenTier[] = [
       },
       {
         title: 'Effects',
-        entries: n('--thumbnail-scrim', '--landing-scrim'),
+        entries: n(
+          '--thumbnail-scrim',
+          '--photo-tile-scrim',
+          '--landing-scrim'
+        ),
       },
     ],
   },

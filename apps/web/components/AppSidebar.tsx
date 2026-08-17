@@ -139,18 +139,6 @@ export function AppSidebar({ identity }: { identity: SidebarIdentity }) {
         })}
       </nav>
 
-      <button
-        type="button"
-        disabled
-        className="flex h-14 shrink-0 items-center gap-inline-gap border-t border-[var(--sidebar-divider)] px-card-padding py-inline-gap text-left opacity-50"
-      >
-        <span className={glyphSlot}>
-          <Icon src={icons.agent} />
-        </span>
-        <span className="flex-1 text-body text-primary">Agent</span>
-        <span className="text-label text-accent">⌘K</span>
-      </button>
-
       <SettingsModal
         isOpen={settingsOpen}
         onClose={() => setSettingsOpen(false)}

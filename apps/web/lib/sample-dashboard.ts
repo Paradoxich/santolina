@@ -1,2 +1,8 @@
-/** Decorative bullet colors for recent activity rows — data, cycled by index. */
-export const activityDotColors = ['#9aa4c4', '#c9b6c2', '#c4b6a4']
+import { CHART_COLORS } from '@/lib/chart-colors'
+
+/** Decorative bullet colors for recent activity rows, cycled by index. */
+export const activityDotColors = [
+  CHART_COLORS.blue,
+  CHART_COLORS.pink,
+  CHART_COLORS.sand,
+]

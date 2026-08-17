@@ -61,7 +61,8 @@ export function WeatherCard({ location, country, days }: WeatherCardProps) {
               </div>
               <div className="flex items-baseline justify-center gap-inline-gap">
                 <span className="text-stat text-primary">{day.high}°</span>
-                <span className="text-stat text-faint">{day.low}°</span>
+                {/* The night low, deliberately ghosted against the high. */}
+                <span className="text-stat text-sage-600">{day.low}°</span>
               </div>
               <p className="w-full text-center text-body-small tracking-compact text-body-secondary">
                 {day.description}

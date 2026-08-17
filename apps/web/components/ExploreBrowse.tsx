@@ -147,7 +147,7 @@ const COLOR_HERO: Record<string, string> = {
 
 /** Overlay that lifts white type off the photo. Matches the Figma gradient. */
 const SCRIM =
-  'pointer-events-none absolute inset-0 bg-gradient-to-t from-[rgba(17,20,17,0.8)] to-[rgba(17,20,17,0)] to-70%'
+  'pointer-events-none absolute inset-0 bg-[image:var(--photo-tile-scrim)]'
 
 export function ExploreBrowse({
   onSelectStyle,
@@ -259,7 +259,7 @@ export function ExploreBrowse({
                 key={condition.value}
                 type="button"
                 onClick={() => onSelectSun(condition.value)}
-                className="group flex aspect-[271/365] flex-col gap-item-gap rounded-card-dashboard border border-card-translucent bg-[rgba(255,255,255,0.2)] p-card-padding text-left transition-colors duration-normal hover:bg-surface-hover"
+                className="group flex aspect-[271/365] flex-col gap-item-gap rounded-card-dashboard border border-card-translucent bg-surface-card p-card-padding text-left transition-colors duration-normal hover:bg-surface-hover"
               >
                 <div className="relative min-h-0 flex-1 overflow-hidden rounded-md">
                   <PlantImage

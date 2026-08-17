@@ -124,7 +124,7 @@ export function ExplorePhotoPicker({ plants }: { plants: CatalogPlant[] }) {
                     />
                     <span
                       aria-hidden="true"
-                      className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[rgba(17,20,17,0.8)] to-[rgba(17,20,17,0)] to-70%"
+                      className="pointer-events-none absolute inset-0 bg-[image:var(--photo-tile-scrim)]"
                     />
                     <span className="relative line-clamp-2 text-body-small font-medium text-inverse">
                       {plant.commonName}

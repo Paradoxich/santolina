@@ -53,6 +53,7 @@ export const tokenConsumers: Record<string, string[]> = {
   ],
   '--color-sage-600': [
     'apps/web/components/StatusFilterMenu.tsx',
+    'apps/web/components/dashboard/WeatherCard.tsx',
     'apps/web/components/design-system/chapters/colors.tsx',
   ],
   '--color-sage-700': [
@@ -700,7 +701,6 @@ export const tokenConsumers: Record<string, string[]> = {
   ],
   '--color-text-faint': [
     'apps/web/components/AuthOptions.tsx',
-    'apps/web/components/dashboard/WeatherCard.tsx',
     'apps/web/components/design-system/TokenTable.tsx',
     'apps/web/components/design-system/chapters/colors.tsx',
     'packages/ui/src/components/Input.tsx',
@@ -756,6 +756,7 @@ export const tokenConsumers: Record<string, string[]> = {
     'apps/web/app/login/page.tsx',
     'apps/web/components/DemoBanner.tsx',
     'apps/web/components/DemoConvertModal.tsx',
+    'apps/web/components/ExploreBrowse.tsx',
     'apps/web/components/ExploreClient.tsx',
     'apps/web/components/ExplorePhotoPicker.tsx',
     'apps/web/components/ExplorePlantListRow.tsx',
@@ -979,7 +980,6 @@ export const tokenConsumers: Record<string, string[]> = {
     'apps/web/app/design-system/dither-lab/page.tsx',
     'apps/web/app/not-found.tsx',
     'apps/web/app/plant-preview/page.tsx',
-    'apps/web/components/AppSidebar.tsx',
     'apps/web/components/AuthOptions.tsx',
     'apps/web/components/ExploreClient.tsx',
     'apps/web/components/FilterDropdown.tsx',
@@ -1355,7 +1355,6 @@ export const tokenConsumers: Record<string, string[]> = {
     'apps/web/app/design-system/layout.tsx',
     'apps/web/app/not-found.tsx',
     'apps/web/app/plant-preview/page.tsx',
-    'apps/web/components/AppSidebar.tsx',
     'apps/web/components/CareTipsDrawer.tsx',
     'apps/web/components/ExploreBrowse.tsx',
     'apps/web/components/ExplorePhotoPicker.tsx',
@@ -1460,6 +1459,10 @@ export const tokenConsumers: Record<string, string[]> = {
   '--thumbnail-scrim': [
     'apps/web/components/dashboard/MyPlantsCard.tsx',
     'packages/ui/src/components/Thumbnail.tsx',
+  ],
+  '--photo-tile-scrim': [
+    'apps/web/components/ExploreBrowse.tsx',
+    'apps/web/components/ExplorePhotoPicker.tsx',
   ],
   '--landing-scrim': [
     'apps/web/app/page.tsx',
