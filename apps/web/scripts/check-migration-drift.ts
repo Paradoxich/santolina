@@ -137,8 +137,10 @@ async function main() {
         'under the version their filename claims' +
         (withStatements === 0
           ? '\n  CONTENT NOT CHECKED: the remote ledger returned no statements. ' +
-            'Apply supabase/migrations/20260817190000_applied_migrations_statements.sql.'
-          : `, and ${withStatements} checked against the SQL that was applied`)
+            'Apply supabase/migrations/20260817165712_applied_migrations_statements.sql.'
+          : `, and ${withStatements} of them checked against the SQL that was ` +
+            `applied (the rest carry no statements in the ledger, so their ` +
+            `content cannot be checked either way)`)
     )
     return
   }

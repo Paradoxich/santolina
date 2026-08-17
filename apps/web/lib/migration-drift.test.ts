@@ -1,5 +1,14 @@
 /**
- * Migration drift comparison.
+ * Migration drift comparison. Pins TRAP 14 and TRAP 33.
+ *
+ * Both numbers are named HERE, in the file's top header, because that is the
+ * only block `check-doc-claims.ts` and `check-pipeline-invariants.ts` read — a
+ * trap named in a `describe` block's own header counts for nothing. The
+ * converse bit them the same day: a trap number written for CONTEXT in a top
+ * header counts as a pin, and moved the unpinned total without anything
+ * failing. Name a trap up here when this file pins it, and nowhere else.
+ *
+ * TRAP 33 is the content half, and its cases are at the bottom of this file.
  *
  * THE FAILURE THIS GUARDS IS TRAP 14, AND IT REACHED REAL USERS.
  * `20260727120000_diary_entries_garden_level.sql` was committed, merged in the
@@ -316,7 +325,8 @@ describe('an empty remote', () => {
 })
 
 /**
- * Content drift — trap 14's shape one step along, added 2026-08-17.
+ * Content drift — TRAP 33, and trap 14's shape one step along. Added
+ * 2026-08-17, the day it found three production migrations in this state.
  *
  * The original check compared IDENTITY. A migration that was applied and then
  * EDITED in the repo matched perfectly: same version, same name, different

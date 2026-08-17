@@ -283,12 +283,12 @@ Every trap below is really one of four shapes. The entries are the worked exampl
 
 The table below is the only index by shape, and `pnpm docs:claims` holds it to the entries: a trap with no family row fails, and so does a family row naming a trap that does not exist. It carried neither count above for that reason — a number restated in prose is a second home for a fact the headings already own.
 
-| family | what it is                                                        | entries                                          |
-| ------ | ----------------------------------------------------------------- | ------------------------------------------------ |
-| **A**  | a failure or narrower answer comes back shaped like a real result | 1, 1b, 10, 11, 15, 18, 19, 20, 23                |
-| **B**  | the record disagrees with what actually happened                  | 2, 4, 12, 13, 14, 16, 17, 24, 25, 26, 28, 29, 31 |
-| **C**  | one fact with two homes, and only one got updated                 | 3, 5, 22, 32                                     |
-| **D**  | facts about the outside world you cannot design away              | 6, 7, 8, 9, 21, 27                               |
+| family | what it is                                                        | entries                                              |
+| ------ | ----------------------------------------------------------------- | ---------------------------------------------------- |
+| **A**  | a failure or narrower answer comes back shaped like a real result | 1, 1b, 10, 11, 15, 18, 19, 20, 23                    |
+| **B**  | the record disagrees with what actually happened                  | 2, 4, 12, 13, 14, 16, 17, 24, 25, 26, 28, 29, 31, 33 |
+| **C**  | one fact with two homes, and only one got updated                 | 3, 5, 22, 32                                         |
+| **D**  | facts about the outside world you cannot design away              | 6, 7, 8, 9, 21, 27                                   |
 
 A is the one that keeps recurring, and it is subtle every single time.
 
@@ -753,6 +753,20 @@ It found its own first defect on its first real run: this entry existed with no 
 
 Locally there is no blast radius to widen. `.env.local` is already on the machine, which is how those two commands get run by hand today. So `ci:check` runs all three jobs and **is now the only place the database jobs happen before a merge**; `--no-db` skips them and names what it is skipping. The two `run: |` blocks are read for their `pnpm` line and their secret-plumbing shell ignored, because that plumbing exists to write `.env.local` on a runner — and a block yielding no command throws rather than being silently skipped, since a step nobody runs is this trap.
 
+#### 33. A committed migration is not proof of the SQL that ran — ADDED 2026-08-17
+
+Trap 14 taught that a committed migration may never have been applied. This is the other half: a migration that **was** applied, whose file has been edited since. Version and name still match, so identity-based drift checking calls it clean, and the file reads as an account of what the database did when it is an account of what somebody later wished it had done.
+
+Three of 39 were in this state, found the hour the content check first ran against production ([the content half of `migrations:check`](../apps/web/lib/migration-drift.ts), `normaliseSql`). One had been schema-qualified after the fact; one had gained a `comment on column` that never ran; one carried an `update` its own comment admitted was applied out of band via `execute_sql`. None was malicious and none broke anything — which is exactly why nobody noticed for a month.
+
+**The comparison has to normalise, and what it may ignore was measured rather than argued.** The ledger stores PARSED statements, not the file, so a literal comparison never matches. Measured on the local stack against every migration then committed: ignoring comments and whitespace matched **none of them**; also ignoring statement separators matched **all of them**. Three things ignored and nothing else — folding case or quoting would start hiding real differences, silently, in the direction the check exists for.
+
+**A null `col_description` means "no comment" OR "no column".** Reading the first as the second is how the `event_type` comment was reported as merely unapplied and then queued for re-application; the apply failed with "column does not exist", because `event_type` had been replaced by `event_types` three days later. Query `information_schema.columns` before concluding a comment is absent.
+
+**Absent evidence is not a pass.** Three production ledger rows carry no statements at all, so their content cannot be checked either way. The CLI says so in its own output rather than counting them clean.
+
+**Pinned by `apps/web/lib/migration-drift.test.ts`** (2026-08-17), whose `content drift` block asserts the defect's own witness — a file whose SQL differs from the applied statements is reported, one whose SQL differs only in comments, whitespace and separators is not — and fails against the pre-fix comparison, which had no content check to run. One case exists purely to hold the normalisation still: case is NOT folded, because folding it is the tempting next step and it would hide a real change.
+
 ---
 
 ### D. Facts about the outside world you cannot design away
@@ -839,12 +853,20 @@ is unchanged.
 row changed. Every script touched was run dry against production; all reported
 their decisions already applied.
 
-**Migration — WRITTEN, NOT APPLIED.** `20260817190000_applied_migrations_statements.sql`
+**Migrations applied** (Ana waived rule 11 for these two; rule-10 backup taken
+first, `2026-08-17T16-56-45-254Z`, 1788575 bytes). `20260817165712_applied_migrations_statements.sql`
 adds `statements text[]` to `public.applied_migrations()` so `migrations:check`
-compares migration CONTENT, not just version and name. Rule 11: Ana applies it.
-Until then the check reports it not-applied against prod, reporting its own
-bootstrap. Rehearsed: `supabase db reset` replayed all 39 locally, then 39 of 39
-read content-clean; mutation-tested by editing an applied migration.
+compares migration CONTENT, not just version and name.
+`20260817170724_reconcile_edited_migrations.sql` cleans up what that found.
+
+**It found three migrations edited AFTER they were applied** — new trap 33, with
+the measurement behind the comparison and the `col_description` lesson. All
+three verified against prod one at a time, then reverted to their applied text;
+the one statement that had never run anywhere moved to the reconcile migration,
+guarded.
+
+**Prod and local both clean now**: 40 applied, content-checked 40 of 40 locally
+and 37 of 40 on prod — three ledger rows carry no statements at all.
 
 **Ratchets.** `HAND_ROLLED_REVIEWED_MUTATION` 6 → 0, `SCRIPTS_PENDING_ARCHIVE`
 3 → 0, `RUNS_WITHOUT_PROVENANCE` 15 → 8. Five scripts moved onto

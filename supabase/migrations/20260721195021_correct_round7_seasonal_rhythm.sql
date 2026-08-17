@@ -112,10 +112,10 @@ update public.plants set seasonal_rhythm = jsonb_set(seasonal_rhythm, '{late_sum
 where scientific_name = 'Myrrhis odorata'
   and seasonal_rhythm->>'late_summer' = 'Flowering continues into late summer. Seeds develop and ripen, ready to disperse.';
 
--- 10b. Sweet cicely autumn carried the same "if not deadheaded" hook one
---      stage later still; by autumn the seed has long scattered. (Spotted
---      after the main batch; applied separately via execute_sql same day.)
-update public.plants set seasonal_rhythm = jsonb_set(seasonal_rhythm, '{autumn}',
-  to_jsonb('Foliage begins to yellow and die back as temperatures cool. Any seed not cut earlier has already scattered.'::text))
-where scientific_name = 'Myrrhis odorata'
-  and seasonal_rhythm->>'autumn' = 'Foliage begins to yellow and die back as temperatures cool. Seeds scatter freely if not deadheaded.';
+-- 10b. Sweet cicely autumn carried the same "if not deadheaded" hook one stage
+--      later still. Its statement was applied via execute_sql the same day and
+--      never ran as part of THIS file, so the file claimed a statement the
+--      ledger had no record of. REMOVED 2026-08-17 and restated, guarded, in
+--      20260817170724_reconcile_edited_migrations.sql. The production value was
+--      read and confirmed correct before the move. Found by the content half of
+--      `pnpm migrations:check`, added the same day.
