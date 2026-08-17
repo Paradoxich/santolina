@@ -369,14 +369,6 @@
     rgb(from var(--color-sage-950) r g b / 0.8),
     rgb(from var(--color-sage-950) r g b / 0) 70%
   );
-  /* The Explore condition tile's resting fill: white at 0.2, a fifth
-   * translucent white beside surface-overlay (0.5), field (0.6) and
-   * control/hover (0.7). Component tier rather than a new semantic role
-   * BECAUSE it is a fifth one — the value was invented at the call site as
-   * `bg-[rgba(255,255,255,0.2)]`, and giving it a home is not the same as
-   * ruling that the surface family needs another step. If Ana snaps it to
-   * surface-overlay, this token goes away rather than being re-pointed. */
-  --condition-tile-surface: rgb(from var(--color-white) r g b / 0.2);
   /* sage-950 fading upward — grounds the hero copy on the landing footage.
    * The stop is sage-950 @ 0% alpha (not `transparent`) so engines that
    * interpolate unpremultiplied don't drag the ramp through gray. */

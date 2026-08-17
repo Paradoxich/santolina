@@ -354,8 +354,7 @@ export const allTokens: TokenTier[] = [
           '--sidebar-surface',
           '--avatar-fill',
           '--sidebar-divider',
-          '--login-border',
-          '--condition-tile-surface'
+          '--login-border'
         ),
       },
       {

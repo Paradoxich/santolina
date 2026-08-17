@@ -756,6 +756,7 @@ export const tokenConsumers: Record<string, string[]> = {
     'apps/web/app/login/page.tsx',
     'apps/web/components/DemoBanner.tsx',
     'apps/web/components/DemoConvertModal.tsx',
+    'apps/web/components/ExploreBrowse.tsx',
     'apps/web/components/ExploreClient.tsx',
     'apps/web/components/ExplorePhotoPicker.tsx',
     'apps/web/components/ExplorePlantListRow.tsx',
@@ -1462,9 +1463,6 @@ export const tokenConsumers: Record<string, string[]> = {
   '--photo-tile-scrim': [
     'apps/web/components/ExploreBrowse.tsx',
     'apps/web/components/ExplorePhotoPicker.tsx',
-  ],
-  '--condition-tile-surface': [
-    'apps/web/components/ExploreBrowse.tsx',
   ],
   '--landing-scrim': [
     'apps/web/app/page.tsx',

@@ -259,7 +259,7 @@ export function ExploreBrowse({
                 key={condition.value}
                 type="button"
                 onClick={() => onSelectSun(condition.value)}
-                className="group flex aspect-[271/365] flex-col gap-item-gap rounded-card-dashboard border border-card-translucent bg-[var(--condition-tile-surface)] p-card-padding text-left transition-colors duration-normal hover:bg-surface-hover"
+                className="group flex aspect-[271/365] flex-col gap-item-gap rounded-card-dashboard border border-card-translucent bg-surface-card p-card-padding text-left transition-colors duration-normal hover:bg-surface-hover"
               >
                 <div className="relative min-h-0 flex-1 overflow-hidden rounded-md">
                   <PlantImage
