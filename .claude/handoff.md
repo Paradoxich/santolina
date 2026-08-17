@@ -85,9 +85,18 @@ expected current value — drift guard` appears verbatim in
    times the scale of its 86 rows. `--new-only` would select nothing: 0 rows have
    a null `style_checked_at`. 748 calls. Do not verify that `modern` rose —
    `prairie` is defined to take the grasses-and-late-perennials look away from
-   it, so a correct run may lower it. Verify that mean tags per plant stays near
-   the 1.39 baseline, and read the per-axis calibration `curate-styles` now
-   prints.
+   it, so a correct run may lower it.
+   **Nor verify against the 1.39 mean.** That instrument was right for six styles
+   that all describe a LOOK and therefore partition, and PR #171 showed it stopped
+   meaning what it meant: eleven of the fourteen added styles are purpose or mood
+   and cut ACROSS aesthetics, so a culinary sage is honestly `mediterranean` and
+   `herb` where under six styles it had one place to go. Tuning to 1.39 would be
+   tuning to a stale number — the same error as writing a direction into the
+   `modern` criterion, on a different quantity. **The growth-invariant bar is now
+   within-axis doubling**, which `curate-styles` prints and warns on: two
+   aesthetic tags or two place tags is a judgment error, two tags from different
+   axes is not. The random-50 pilot read 3 of 50 and 0 of 50. Read that, and the
+   confusable-pair co-occurrence beside it.
 3. **The editorial pass, catalog-wide (D2).** `curate-editorial.ts --all
 --new-only --why "…"`. Absorbs three populations at once, and
    `pnpm catalog:status` prints the current split: 418 never judged, 86 whose
@@ -136,13 +145,15 @@ its items were misfiled.
 
 _Empty._ Every question either session raised was answered the same day.
 
-**MISSING RECORD, and it is not a parked decision — it is a rule-9 gap.** PR #171
-changed the style vocabulary from 6 slugs to 20, tuned the definitions against a
-50-row pilot costing 153 calls, and derived `STYLE_OPTIONS` from live counts, and
-it wrote **no `docs/database-log.md` entry**. The commits carry the reasoning; the
-log does not. Whoever next opens that file should write the entry from
-`561f6b1..3c4a2ba` before the context is only in a diff. Recorded here rather than
-fixed silently, because a missing entry is invisible by construction.
+**A rule-9 gap, now closed, and worth knowing how.** PR #171 shipped without a
+`docs/database-log.md` entry. One was written afterwards from `561f6b1..3c4a2ba`
+by a different session and says so in its own first paragraph, because an entry
+reconstructed from a diff and one written by the people who did the work are not
+the same evidence and should not read alike. It cost nothing here only because
+those five commit messages carried the reasoning, the numbers and the discarded
+options. **That is the thing to keep doing** — if the commits had said "expand
+vocabulary" and "tune definitions", the entry would have been unwritable and the
+three pilot findings would have been gone.
 
 **Build Backlog rows still owed:** the `curate-styles` withdrawal counter (step 1
 is its implementation), the orphaned-photo reconciliation sweep, **the
