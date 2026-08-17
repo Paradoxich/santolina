@@ -58,6 +58,7 @@ import {
   STYLE_TAG_PROMPT,
   STYLE_AXES,
   EXCLUSIVE_STYLE_AXES,
+  MAX_TAGS_PER_EXCLUSIVE_AXIS,
   CONFUSABLE_STYLE_PAIRS,
   MEAN_TAGS_PER_PLANT_BASELINE,
   type StyleTag,
@@ -497,29 +498,41 @@ function reportCalibration(judgments: { name: string; tags: StyleTag[] }[]) {
       .join(' · ')}`
   )
 
+  // The bar counts tags per exclusive axis. TWO is legitimate — a peony anchors
+  // both the cottage tradition and the classic one — and THREE is a judgment
+  // that answered "which of these" with "all of them". See
+  // MAX_TAGS_PER_EXCLUSIVE_AXIS for Ana's 2026-08-17 ruling and, more
+  // importantly, for what did NOT change: a tag still means SIGNATURE OF.
   const violations: string[] = []
   for (const axis of EXCLUSIVE_STYLE_AXES) {
     const members: StyleTag[] = STYLE_AXES[axis]
-    const doubled = judgments.filter(
-      (j) => j.tags.filter((t) => members.includes(t)).length > 1
+    const onAxis = (j: { tags: StyleTag[] }) =>
+      j.tags.filter((t) => members.includes(t))
+    const over = judgments.filter(
+      (j) => onAxis(j).length > MAX_TAGS_PER_EXCLUSIVE_AXIS
+    )
+    // Two is reported without warning: it is the number worth watching for
+    // drift even though it is allowed, and a count nobody prints is a count
+    // nobody notices moving.
+    const paired = judgments.filter((j) => onAxis(j).length === 2)
+    console.log(
+      `  two ${axis.padEnd(10)} tags   ${String(paired.length).padStart(3)} of ${judgments.length}   (allowed)`
     )
     console.log(
-      `  two ${axis.padEnd(10)} tags   ${String(doubled.length).padStart(3)} of ${judgments.length}`
+      `  3+  ${axis.padEnd(10)} tags   ${String(over.length).padStart(3)} of ${judgments.length}`
     )
-    for (const d of doubled)
-      violations.push(
-        `${d.name}: [${d.tags.filter((t) => members.includes(t)).join(', ')}] (${axis})`
-      )
+    for (const d of over)
+      violations.push(`${d.name}: [${onAxis(d).join(', ')}] (${axis})`)
   }
 
   if (violations.length) {
     console.log(
-      `\nWARNING: ${violations.length} plant(s) carry two tags on an axis where that is a judgment error.`
+      `\nWARNING: ${violations.length} plant(s) carry more than ${MAX_TAGS_PER_EXCLUSIVE_AXIS} tags on one axis.`
     )
     console.log(
-      'A plant is the signature of at most one look and at most one place. Tighten'
+      'A plant may be the signature of two looks. Three means the judgment did not'
     )
-    console.log('those definitions against each other in lib/style-tags.ts:')
+    console.log('choose. Tighten those definitions in lib/style-tags.ts:')
     for (const v of violations) console.log(`  ${v}`)
   }
 
