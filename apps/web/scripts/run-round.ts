@@ -36,6 +36,14 @@
  *   ./node_modules/.bin/tsx --env-file=.env.local scripts/run-round.ts --round 9
  *   # Only report what remains:
  *   ./node_modules/.bin/tsx --env-file=.env.local scripts/run-round.ts --round 9 --plan
+ *   # Name the rollback point, when it is not where the resolver looks:
+ *   ./node_modules/.bin/tsx --env-file=.env.local scripts/run-round.ts --round 9 --baseline backups/2026-08-17T09-00
+ *
+ * `--baseline <dir>` goes to the preflight AND to every step that reads one
+ * (`Step.acceptsBaseline`). One snapshot for the whole run: the resolver's
+ * fallback order means the runner and step 8a could otherwise pick DIFFERENT
+ * baselines and only agree by luck, and a scope check run against the wrong
+ * window reports a round's own writes as spill.
  */
 
 import { spawnSync } from 'node:child_process'
@@ -48,14 +56,28 @@ import { RUNBOOK, type Step } from './runbook'
 
 const TSX = './node_modules/.bin/tsx'
 
-function run(step: Step, label: string): boolean {
-  const args = [
+/**
+ * The argv a step is spawned with, as a function so the forwarding rule is
+ * testable without spawning anything.
+ *
+ * The rule it exists to pin: `--baseline` reaches a step that DECLARED it reads
+ * one, and no other. Passing it to every step would hand an unknown flag to
+ * scripts that reject unknown flags; passing it to none is what let the runner
+ * and step 8a resolve different snapshots independently.
+ */
+export function stepArgs(step: Step, label: string, baseline?: string) {
+  return [
     '--env-file=.env.local',
     `scripts/${step.script}`,
     '--round',
     label,
+    ...(step.acceptsBaseline && baseline ? ['--baseline', baseline] : []),
     ...(step.args ?? []),
   ]
+}
+
+function run(step: Step, label: string, baseline?: string): boolean {
+  const args = stepArgs(step, label, baseline)
   console.log(`\n${'─'.repeat(72)}`)
   console.log(`▶ ${step.runbook}. ${step.step}`)
   console.log(`  ${TSX} ${args.join(' ')}`)
@@ -109,8 +131,21 @@ async function main() {
   // does not seed, so its step 0 always happens AFTER the plants exist. A
   // pre-seed snapshot has to be taken by whoever seeds, and this is the check
   // that says so at second zero instead of at the end of the round.
+  // --baseline names the rollback point when it does not live where the
+  // resolver looks. It is passed to the preflight AND forwarded to every step
+  // that reads a baseline, so the snapshot this run validated is the snapshot
+  // step 8a compares against. Before this, the two were resolved independently
+  // and only agreed by luck: the runner could pass its preflight against a
+  // hand-taken backup and 8a then fall back to the round archive, which is a
+  // DIFFERENT window and would report the round's own writes as spill.
+  let baselineDir: string | undefined
   try {
-    const baseline = resolveBaselineDir(label, manifest.started_at)
+    const baseline = resolveBaselineDir(
+      label,
+      manifest.started_at,
+      flagValue('--baseline')
+    )
+    baselineDir = baseline.dir
     console.log(`Rollback point: ${baseline.dir} (${baseline.source})\n`)
   } catch {
     console.error(
@@ -207,7 +242,7 @@ async function main() {
       )
     }
 
-    if (run(step, label)) {
+    if (run(step, label, baselineDir)) {
       await refreshDone()
       continue
     }
@@ -234,7 +269,11 @@ async function main() {
   )
 }
 
-main().catch((err) => {
-  console.error(err)
-  process.exit(1)
-})
+// Guarded so `stepArgs` can be imported by a test without the runner starting
+// a round as a side effect of the import.
+if (require.main === module) {
+  main().catch((err) => {
+    console.error(err)
+    process.exit(1)
+  })
+}

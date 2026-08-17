@@ -53,6 +53,10 @@ The numbers **in this file are different and must stay written down**: a dated s
 
     The queue this rule used to hold was **cleared 2026-08-13**: the `plant_combinations` timestamp needed no migration (trap 16, corrected — the column already existed) and the reviewed-and-kept stamp landed as migration `20260813110500`. Details in that date's session entry. A newly deferred schema change goes back on a list HERE, not only where the blocked work is described — a deferral recorded only at the blocked site is invisible at the moment the block lifts (trap 17).
 
+    **Deferred, added 2026-08-18 (round 13).**
+    - **A cultivar tier.** `moon` and `gothic` cannot be filled by any seeding round at any batch size: their signature planting is cultivar selections of species the catalog already holds ('Queen of Night', 'Black Lace', black mondo, white roses). Measured by `pnpm probe:gap`, which reports the style as cultivar-bound so no future round re-derives it from a low tag count. Until the tier exists those two styles stay thin, and that is correct rather than neglected.
+    - **"Poor citizen in region X".** A field beside `native_region`, so the app can warn the reader who needs warning instead of a seeding decision quietly deciding for everyone. Reasoning and the interim rule are in [why a round is shaped the way it is](curation.md#round-runbook) (Ana, 2026-08-18).
+
 12. **Every remediation carries a verification predicate, not just a command.** A trap that says "run `curate-styles --round 9`" tells you what to type; it does not tell you how to know it worked. Write both: the command, and the query whose result changes when the repair lands — the shape the 2026-08-15 repair used, "fixed when `style_checked_at = ai_drafted_at AND style_tags = '{}'` returns 0". Remediations are the most dangerous claims in this file. They are never falsified until the day someone follows one, they are trusted because they are in the traps file, and trap 26's was one session away from being run as written.
 
 13. **Corrections are struck and annotated, never overwritten.** When an entry turns out to be wrong, leave the wrong claim visible, strike it (`~~like this~~`), and add a dated annotation saying what is true and how it was checked — the form traps 16 and 24 already use. Overwriting is cheaper and destroys the only evidence about which claim shapes rot: trap 16's premise was false for a month, and its visible correction is now the reason nobody re-proposes that migration. A silently fixed entry reads exactly like an entry that was always right.
@@ -66,6 +70,36 @@ The numbers **in this file are different and must stay written down**: a dated s
     It deliberately does not read a bare "three scripts cite X" as a claim about a population: a subset count is ordinary prose, and the version that guessed produced nine false positives against two real findings. **Cited migration versions are deliberately not checked** — eleven do not exist as files and every one is legitimate, because trap 13's reconciliation table below is precisely a list of local versions that were wrong and got renamed. It cannot check an **asserted negative** ("nothing writes X") at all — that class closes only by becoming a ratchet entry in `check-pipeline-invariants.ts`, which fails when the negative stops holding. **Reasoning does not rot and stays prose.**
 
     The session entries below are exempt and the scan stops at the `## Sessions` heading, which is the tense half of this rule made structural: a dated entry records an event.
+
+### 2026-08-17 — Round 13 (East Asian traditions)
+
+**Branch** `session/2026-08-17-round-13`. Seeded 33 plants; catalog **747 → 780 species**, 1863 → 1945 combinations. Every pipeline step green at close (`verify-round --round 13`), scope check clean (0 out-of-scope changes), archived to `rounds/13/`.
+
+**Measured cost: ~$2.57 for 33 plants, about $0.078 each.** `runs:cost --round 13` reports $2.25; the true figure is ~$2.57 and the difference is the vision pass, which the report could not attribute (trap 37). This replaces the standing "roughly $3-6 for 28 plants" estimate and is the number round 14 should budget against. It is a floor, not a ceiling: four steps still record no tokens at all.
+
+**Theme, and the first chosen by a committed measurement.** The style vocabulary went 6 → 19 on 2026-08-17 (`6382866`), adding a place axis, and `pnpm probe:gap` (new, runbook step 0) tested the four thinnest new styles: japanese 47% held, chinese 31% — both survive round 9's 70% kill rule — against moon 28% and gothic 30%, both **unfillable**. That is the finding a flat tag count inverts: `gothic` is the emptiest style in the vocabulary at 10 plants and cannot be moved by any species-level round, because the dark garden is cultivar selections of species already held. Both belong on standing rule 11's list, not on a seed. Result: japanese 63 → 81, chinese 48 → 60, so 30 of 33 earned a target tag.
+
+Seeded 33 of 39 absentees. Six cuts, reasoned in `seed-round13.ts`: two running bamboos and `Equisetum hyemale` (poor citizens), `Nelumbo nucifera` (aquatic, round 12's line), `Cymbidium goeringii` (not a garden plant), `Citrus trifoliata`.
+
+**What bit us — three defects, all found by running the thing.**
+
+- **Trap 35.** `curate-common-names --apply` died having written 0 of 33 rows: `reviewed-mutation` rejected the stamp-only intent a `keep` verdict produces. First real `--apply` for that step, and six prior dry runs could not have caught it because `validate()` lives inside the `--apply` gate. Fixed and pinned.
+- **Trap 36.** The step then stamped all 33 correctly and still reported `0 already done` — `common_name_checked_at` was missing from `round-status`'s projection and had been for the step's whole life, so it could never be detected as complete and would have been re-billed every round. Fixed and pinned.
+- **Trap 37.** The cost report itself, above. NOT pinned; recorded in `TRAPS_NOT_PINNED` with what a pin needs.
+
+**Also fixed:** the seasonal-care validator discarded `Cloud-prune ...` as "not imperative" (hyphenated compound, head verb is `prune`) — the signature action of the pines this round seeded, so no earlier round had the vocabulary to hit it. `curate-seasonal-care` also resolved its scope at import, which made it untestable; now lazy, with its first tests.
+
+**Corrections applied** (migration `20260818001500`, guarded and idempotent): `Rohdea japonica` recorded the BERRY season as bloom — `bloom_months` `[12,1,2]` → `[5,6,7]`, plus `seasonal_rhythm`, `description` and `seasonal_care`, because the false premise had spread into every field the cross-check does not compare. `Camellia sasanqua` gains `full_sun` as a tolerance (the distinction from `japonica`, which the catalog had stored identically); `Fargesia murielae` loses it. `Prunus incisa` lost an introduced US range and `Cryptomeria japonica` gained China, both WCVP-backed.
+
+**Ruling recorded in `lib/editorial-standard.ts`:** a name is not evidence of origin. Editorial twice flagged `Styphnolobium japonicum`'s `chinese` tag on the strength of "japonicum" and "Japanese pagoda tree"; it is the Chinese scholar tree, native to China and introduced to Japan (Ana, 2026-08-18). `japanese` and `chinese` name the garden tradition, never the botany.
+
+**The Wikimedia fallback works and is not wired in.** Three plants had no usable Trefle image; `feed-wikimedia-candidates.ts` found all three via Wikidata P18 under safe licences, and two became heroes (`Rhododendron kiusianum` high, `Paeonia suffruticosa` medium). The third, `Malus spectabilis`, was correctly rejected by the vision pass: its designated image is a trunk and canopy with a person in shot. So P18 is chosen for identification, not as a garden hero, and there is no second look at wider Commons when it is poor.
+
+**Left open, deliberately.** 6 editorial holds, all image (a held image is a recorded verdict; zero tag holds is the state that matters). `Malus spectabilis` has no hero. Three medium-confidence heroes survived the targeted verify on "species cannot be confirmed from the photo", which is the promotion rule holding. The uniform sun value across every ericaceous shrub and camellia in the catalog is unmeasured and is a catalog-wide question, not a round-13 one.
+
+**Deliberately not done:** `Citrus trifoliata` cut on size and thorns in a small garden, **not** on its North American invasive status — ruling that way would bind round 12's `Lythrum` and `Iris pseudacorus` calls retroactively, and whether a Euro/Med-first catalog should be governed by US invasive status is Ana's, still open.
+
+---
 
 15. **A decision the round raises is a decision the round asks. Do not close a round with an open question parked on a person.** Ana's rule, 2026-08-17, and it applies hardest to the small items — a one-line ruling that would cost her a minute becomes a permanent fixture the moment it is written down instead of asked. Prompt her while the round is open. Closing on schedule and leaving the maintenance for a future session is how a round looks finished and is not.
 
@@ -285,12 +319,12 @@ Every trap below is really one of four shapes. The entries are the worked exampl
 
 The table below is the only index by shape, and `pnpm docs:claims` holds it to the entries: a trap with no family row fails, and so does a family row naming a trap that does not exist. It carried neither count above for that reason — a number restated in prose is a second home for a fact the headings already own.
 
-| family | what it is                                                        | entries                                              |
-| ------ | ----------------------------------------------------------------- | ---------------------------------------------------- |
-| **A**  | a failure or narrower answer comes back shaped like a real result | 1, 1b, 10, 11, 15, 18, 19, 20, 23, 34                |
-| **B**  | the record disagrees with what actually happened                  | 2, 4, 12, 13, 14, 16, 17, 24, 25, 26, 28, 29, 31, 33 |
-| **C**  | one fact with two homes, and only one got updated                 | 3, 5, 22, 32                                         |
-| **D**  | facts about the outside world you cannot design away              | 6, 7, 8, 9, 21, 27                                   |
+| family | what it is                                                        | entries                                                  |
+| ------ | ----------------------------------------------------------------- | -------------------------------------------------------- |
+| **A**  | a failure or narrower answer comes back shaped like a real result | 1, 1b, 10, 11, 15, 18, 19, 20, 23, 34, 35, 37            |
+| **B**  | the record disagrees with what actually happened                  | 2, 4, 12, 13, 14, 16, 17, 24, 25, 26, 28, 29, 31, 33, 36 |
+| **C**  | one fact with two homes, and only one got updated                 | 3, 5, 22, 32                                             |
+| **D**  | facts about the outside world you cannot design away              | 6, 7, 8, 9, 21, 27                                       |
 
 A is the one that keeps recurring, and it is subtle every single time.
 
@@ -391,6 +425,20 @@ The push that applied `20260817200000_common_name_checked_at` emitted an ENOENT 
 **Pinned by `apps/web/lib/migration-drift.test.ts`**, whose `trap 14` block is the same witness from the other side: a committed migration with no remote row is reported, and its own case asserts it "sorts ahead of every other kind, because it is the dangerous one". No new test was needed and none was written — the check that closes this trap already existed and is already in the rule.
 
 **A second cost, unrelated to the output.** A fresh `git worktree` is **not linked to the Supabase project**: `supabase/.temp/` is gitignored, so `db push` fails with `Cannot find project ref. Have you run supabase link?` until that directory is copied from the main checkout. Nothing about the message suggests the worktree is the cause.
+
+#### 35. A dry run that never reaches the write path is not a rehearsal — ADDED 2026-08-17
+
+`curate-common-names` ran with `--apply` for the first time in round 13 and died having written **0 of 33 rows**: `reviewed-mutation: Ziziphus jujuba writes no column`. Every `keep` verdict — the pass judging a name and agreeing with it — builds an intent with an empty `to` and one `common_name_checked_at` stamp, and `validate()` rejected the empty `to` outright.
+
+**The guard already knew better ten lines below.** The from-equals-to check distinguishes "this entry does nothing" from "a judging pass agreed, and still has a stamp to write" by asking whether a stamp is present, and says so in a comment. The zero-column check predated that reasoning and never received it, so it refused precisely the case its neighbour was written to allow. A stamp-only intent is the normal output of any guard, which is why this was never a niche path.
+
+**Why six clean dry runs proved nothing.** The write path is gated behind `--apply`, and `validate()` lives inside it. The six rows dry-run across two batches before this exercised the model, the parsing and the collision check, and not one line of the code that writes. **A dry run verifies the half of a script it reaches; state which half that is before treating it as a rehearsal.** Family A because a rehearsal that skips the write path returns the same green output as one that does not.
+
+Cheap here — the run recorded `failed, 0 rows` and was atomic, so the cost was one wasted pass, not a half-written batch.
+
+**A second finding from the same run, not a defect.** Re-running the identical pass produced **15 renames rather than 14**, and `Camellia sinensis` came back "Tea camellia" where the first run said "Tea plant". Both are correct; the pass is not deterministic about which correct name it picks, so **read its output before `--apply` and expect the applied set to differ from the one you read**. That is a property of the step, not a bug to fix.
+
+**Pinned by `apps/web/scripts/reviewed-mutation.test.ts`**, `a stamp-only intent (trap 35)`: a stamp-only intent is accepted, its stamp actually lands on the row, and an intent with neither a column nor a stamp is still refused. All three fail against the pre-fix `validate()`.
 
 ---
 
@@ -736,6 +784,30 @@ It surfaced only because the `native_to` queue ranked a phrase against those tag
 > that, and will fail round close until the phrase is rewritten instead. The
 > `--review-keep` writer (audit F5, filed as can-wait) is now the thing that
 > closes it.
+
+#### 36. A step reads a column the status query never fetched — ADDED 2026-08-17
+
+Round 13, step 1a. `curate-common-names --apply` stamped all 33 rows correctly — verified by querying `plants` directly — and `run-round --round 13 --plan` still reported **`0 already done`**. `common_name_checked_at` was missing from `roundStatus`'s `.select()` projection, and had been for the entire life of the step.
+
+**Nothing could catch it from either side.** `StatusRow` declares the field, so `ran: (p) => Boolean(p.common_name_checked_at)` typechecks and reads `undefined` on every row; PostgREST raises nothing for a column you simply did not ask for. **A projection is a string, which is the one part of a typed query the compiler cannot see into** — the type says the field is there and the query never fetches it.
+
+**What it would have cost:** a step that can never report as done is a step `run-round` re-runs and re-bills every round, and `verify-round` reports as an outstanding gap forever. This is trap 4 one layer down — there a step was missing from the registry; here it is correctly registered and missing from the query.
+
+**The tell was a contradiction between two reporters**, not an error: the pass printed `stamped only 20` while its own provenance witness said `0 row(s) carry a stamp inside the window`. Neither was the database. Query the column before believing either — see also trap 1b, test the object rather than its description.
+
+**Pinned by `apps/web/scripts/round-rehearsal.test.ts`**, `every registered stamp column is actually fetched (trap 36)`: `STATUS_PROJECTION` is now exported so it can be held to `registeredStampColumns()`, and the pre-fix projection fails the assertion naming `common_name_checked_at`. Two companion cases cover the evidence columns that are not `*_checked_at` stamps (`ai_drafted_at`, `seasonal_care`, `image_pick_confidence`), which fail the same way and are invisible to the first check.
+
+#### 37. A cost report reads complete while missing its most expensive step — ADDED 2026-08-18
+
+Round 13 was the first round priced by `pnpm runs:cost` instead of estimated, and the report it produced was wrong in two independent ways at once. Neither is visible in the output, which reads like a finished table.
+
+**Tokens are only counted inside `withRunRecord`.** `curate-common-names` judges every row and _then_ opens its run record to write the results, so all its model calls happen outside the window the meter snapshots. It recorded `usage: null`, and the report showed it as **0 calls** having spent real money. Any pass shaped think-first-write-second has the same hole.
+
+**A round is matched by the scope STRING, not the manifest.** `pick-plant-images` writes its scope as `batch <msgbatch_id>`, which names no round, so the vision pass — the most expensive step in the pipeline — never appeared under `runs:cost --round 13` at all. Its tokens were recorded correctly; nothing could attribute them.
+
+Round 13 therefore reported **$2.25** and actually cost **~$2.57**, and the whole gap is the step people most want the number for. Family A: a partial answer wearing a complete one's output. The `NOT MEASURED` footer is a real mitigation and the reason half of this was caught, but it lists steps that recorded nothing and cannot list a step that was never attributed to the round.
+
+**NOT PINNED, and recorded in `TRAPS_NOT_PINNED` rather than closed.** A source scan on "does `withRunRecord(` appear before `messages.create(`" was written and thrown away: it fires on `curate-seasonal-care`, `curate-styles`, `draft-hardiness` and `regenerate-native-region`, every one of which meters correctly, because the call sits in a helper DEFINED early and INVOKED from inside the record. **Textual order is not runtime order.** A real pin needs the metering seam exercised directly — a fake client, one call before the record opens and one inside it, asserting only the second is counted — plus a scope assertion that every run a round's steps write names that round. Neither exists yet.
 
 ---
 

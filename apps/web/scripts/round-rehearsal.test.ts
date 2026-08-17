@@ -2,6 +2,10 @@
  * THE REHEARSAL — run a round's bookkeeping against a synthetic plant, so the
  * pipeline's structural bugs are found in CI instead of in a live round.
  *
+ * Pins TRAP 36 — a step reads a column the status query never fetched (see the
+ * `every registered stamp column is actually fetched (trap 36)` block at the
+ * foot of this file).
+ *
  * WHY THIS FILE EXISTS. Round 9 found three bugs in the runner, and all three
  * cost a live round to discover — one of them after a vision pass had already
  * been billed for 50 plants. None of the three needed a database, an API key,
@@ -38,6 +42,7 @@ import { join } from 'node:path'
 import {
   computeStatus,
   STEP_DEFS,
+  STATUS_PROJECTION,
   registeredStampColumns,
   type StatusRow,
   type StepContext,
@@ -281,5 +286,68 @@ describe('prerequisites are steps, not folklore', () => {
       after.map((s) => s.step),
       'these steps run after sign-off, so their output is never judged'
     ).toEqual([])
+  })
+})
+
+/**
+ * TRAP 36 — a step reads a column the status query never fetched.
+ *
+ * THE INCIDENT. Round 13, `curate-common-names` step 1a. The step was properly
+ * registered in STEP_DEFS with the right stampColumn and the right evidence
+ * string, and `curate-common-names --apply` correctly stamped all 33 rows. It
+ * still reported `0 already done`, because `common_name_checked_at` was absent
+ * from `roundStatus`'s `.select()` projection and had been for the life of the
+ * step.
+ *
+ * WHY NOTHING CAUGHT IT. `StatusRow` declares the field, so
+ * `ran: (p) => Boolean(p.common_name_checked_at)` typechecks and quietly reads
+ * `undefined` on every row; PostgREST raises nothing for a column you did not
+ * ask for. A projection is a string — the one part of a typed query the
+ * compiler cannot see into.
+ *
+ * WHAT IT WOULD HAVE COST. A step that can never be detected as done is a step
+ * `run-round` re-runs and re-bills every single round, and `verify-round`
+ * reports as an outstanding gap forever. This is trap 4's family seen one layer
+ * down: there the step was missing from the registry, here it is in the
+ * registry and missing from the query.
+ *
+ * THE WITNESS is the projection itself, which is why it is now exported rather
+ * than inline. Against the pre-fix code the first assertion below fails,
+ * naming `common_name_checked_at`.
+ */
+describe('every registered stamp column is actually fetched (trap 36)', () => {
+  const fetched = new Set(STATUS_PROJECTION.split(',').map((c) => c.trim()))
+
+  it('fetches every column a step detects itself by', () => {
+    const missing = [...registeredStampColumns()].filter((c) => !fetched.has(c))
+    expect(
+      missing,
+      'these steps read a column the status query never selected, so they can ' +
+        'never report as done and will be re-run and re-billed every round'
+    ).toEqual([])
+  })
+
+  it('fetches the identity columns the report prints', () => {
+    // A missing id or name does not break detection, it breaks the output that
+    // a person reads to decide whether the round is finished.
+    expect(fetched.has('id')).toBe(true)
+    expect(fetched.has('scientific_name')).toBe(true)
+  })
+
+  it('fetches the non-stamp evidence columns steps read', () => {
+    // Not every step detects itself by a *_checked_at stamp: curate-plants
+    // reads ai_drafted_at, seasonal care reads seasonal_care, and the image
+    // verify step reads image_pick_confidence to compute its scope. A missing
+    // one of these fails the same way and is invisible to the check above.
+    for (const column of [
+      'ai_drafted_at',
+      'native_region',
+      'seasonal_care',
+      'image_pick_confidence',
+    ]) {
+      expect(fetched.has(column), `${column} is read but never fetched`).toBe(
+        true
+      )
+    }
   })
 })

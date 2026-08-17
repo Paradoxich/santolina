@@ -174,6 +174,19 @@ interface Manifest {
   batchId: string
   createdAt: string
   model: string
+  /**
+   * The human scope description this batch was submitted under, e.g.
+   * "Scope: round 13 — 33 plant(s) ...".
+   *
+   * TRAP 37. The run record's `scope` used to be the batch id alone, and
+   * `runs:cost --round N` attributes a run by MATCHING THE ROUND IN THAT
+   * STRING. So the vision pass — the most expensive step in the pipeline —
+   * never appeared under its own round, and round 13 reported $2.25 against a
+   * real ~$2.57. Stored on the manifest rather than recomputed at collect
+   * time, because a --resume days later must report the round the batch was
+   * SUBMITTED under, the same reasoning that stores `model` here.
+   */
+  scopeLabel?: string | null
   /** null means the batch was built under --all. */
   scopeIds?: string[] | null
   plants: Record<
@@ -674,6 +687,8 @@ interface VerifyManifest {
   batchId: string
   createdAt: string
   model: string
+  /** See Manifest.scopeLabel — trap 37, so runs:cost can attribute a round. */
+  scopeLabel?: string | null
   plants: Record<
     string,
     {
@@ -815,6 +830,8 @@ async function runVerify(
     batchId: batch.id,
     createdAt: new Date().toISOString(),
     model: VISION_MODEL,
+    // Trap 37, same as the pick batch above.
+    scopeLabel: describeScope(scope, ids),
     plants: manifestPlants,
   }
   mkdirSync(MANIFEST_DIR, { recursive: true })
@@ -885,7 +902,7 @@ async function collectVerifyResults(
           column: 'updated_at',
         },
       ],
-      scope: `batch ${manifest.batchId} (submitted ${manifest.createdAt})`,
+      scope: `${manifest.scopeLabel ? `${manifest.scopeLabel} · ` : ''}batch ${manifest.batchId} (submitted ${manifest.createdAt})`,
       recipe: {
         model: manifest.model,
         template: buildVerifyPrompt(RECIPE_PROBE_VERIFY_ROW),
@@ -1349,6 +1366,9 @@ async function main() {
     // still bound by the scope the batch was built under. Re-parsing the flags
     // at resume time would let a different --round silently rebind the writes.
     scopeIds: scopeIdList,
+    // Trap 37: carried so the run record can name the round, which is the only
+    // thing runs:cost matches on.
+    scopeLabel: describeScope(scope, scopeIdList),
     plants: manifestPlants,
   }
   const path = saveManifest(manifest)
@@ -1431,7 +1451,9 @@ async function collectResults(
       evidence: pickWitnesses(),
       // The batch id, because it is the only thing that ties a resumed collect
       // back to the submission that produced its answers.
-      scope: `batch ${manifest.batchId} (submitted ${manifest.createdAt})${
+      scope: `${
+        manifest.scopeLabel ? `${manifest.scopeLabel} · ` : ''
+      }batch ${manifest.batchId} (submitted ${manifest.createdAt})${
         manifest.scopeIds ? `, ${manifest.scopeIds.length} id(s)` : ', --all'
       }`,
       recipe: {

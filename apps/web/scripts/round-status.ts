@@ -515,6 +515,30 @@ export const STEP_DEFS: StepDef[] = [
  * The bookkeeping columns some step claims. `verify-round` compares this
  * against the columns that actually exist on `plants`.
  */
+/**
+ * The columns `roundStatus` actually fetches — exported so a test can hold it
+ * to `STEP_DEFS` rather than trusting that they agree.
+ *
+ * TRAP 36. This was an inline string in the query, and `common_name_checked_at`
+ * was missing from it for the whole life of the step. Nothing caught it from
+ * either side: `StatusRow` DECLARES the field, so `ran: (p) =>
+ * Boolean(p.common_name_checked_at)` typechecks and reads `undefined` on every
+ * row; PostgREST does not complain about a column you simply did not ask for.
+ * The step was therefore undetectable as done, and `run-round` would have
+ * re-run and re-billed it every round forever.
+ *
+ * A projection is a string, so it is the one part of a typed query the compiler
+ * cannot see into. Anything a step reads has to be listed here AND asserted.
+ */
+export const STATUS_PROJECTION =
+  'id, scientific_name, ai_drafted_at, native_region, ' +
+  'common_name_checked_at, ' +
+  'botanical_checked_at, native_checked_at, native_region_checked_at, ' +
+  'hardiness_rating, seasonal_care, ' +
+  'style_checked_at, greenery_checked_at, image_checked_at, ' +
+  'image_pick_confidence, image_verified_at, ' +
+  'editorial_checked_at'
+
 export function registeredStampColumns(): Set<string> {
   return new Set(
     STEP_DEFS.map((d) => d.stampColumn).filter((c): c is string => Boolean(c))
@@ -538,14 +562,7 @@ export async function roundStatus(ids: string[]): Promise<StepStatus[]> {
   const plants = await fetchAllRows<StatusRow>((from, to) =>
     db
       .from('plants')
-      .select(
-        'id, scientific_name, ai_drafted_at, native_region, ' +
-          'botanical_checked_at, native_checked_at, native_region_checked_at, ' +
-          'hardiness_rating, seasonal_care, ' +
-          'style_checked_at, greenery_checked_at, image_checked_at, ' +
-          'image_pick_confidence, image_verified_at, ' +
-          'editorial_checked_at'
-      )
+      .select(STATUS_PROJECTION)
       .in('id', ids)
       .order('id')
       .range(from, to)
