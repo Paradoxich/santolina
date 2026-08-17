@@ -122,6 +122,50 @@ export const CONFUSABLE_STYLE_PAIRS: [StyleTag, StyleTag][] = [
 ]
 
 /**
+ * The four axes the vocabulary is built from, and the reason a flat tag count
+ * is the wrong instrument for it.
+ *
+ * The original six styles all describe a LOOK, so they partition: a plant that
+ * is more cottage is less modern, and a rising tag count meant a slipping bar.
+ * Eleven of the fourteen added styles do not partition that way — purpose and
+ * mood cut ACROSS aesthetics. A culinary sage is honestly `mediterranean` and
+ * `herb`; under six styles it had one place to go. So a mean that rises after
+ * the expansion is ambiguous between a working vocabulary and a slipped bar,
+ * and tuning to hit the old number could fail a good run.
+ *
+ * What still discriminates is DOUBLING UP WITHIN an axis. Two aesthetic tags
+ * means the plant was judged to be the signature of two different looks, which
+ * is the thing the signature bar exists to prevent; two purpose tags is
+ * ordinary (plenty of plants are grown to cut and for pollinators both).
+ *
+ * Measured per axis, the pilot's suspicious rows separate cleanly: Absinthe's
+ * four tags sit on four different axes and are each defensible, while Amethyst
+ * eryngo carrying both `mediterranean` and `modern` is a real miss.
+ */
+export const STYLE_AXES = {
+  aesthetic: [
+    'cottage',
+    'mediterranean',
+    'wildflower',
+    'modern',
+    'lush',
+    'classic',
+  ],
+  place: ['japanese', 'chinese', 'provence', 'tropical', 'desert'],
+  purpose: ['herb', 'pollinator', 'cutting', 'sensory', 'woodland'],
+  mood: ['moon', 'gothic', 'prairie', 'winter'],
+} satisfies Record<string, StyleTag[]>
+
+export type StyleAxis = keyof typeof STYLE_AXES
+
+/**
+ * Axes where holding two tags at once is a judgment error rather than a
+ * legitimate combination — see STYLE_AXES. This is the growth-invariant bar
+ * that replaced the flat mean for the expanded vocabulary.
+ */
+export const EXCLUSIVE_STYLE_AXES: StyleAxis[] = ['aesthetic', 'place']
+
+/**
  * Mean tags per plant, measured on the round-12 archive: 748 plants, 1043
  * tag-instances, distribution 0:50 / 1:362 / 2:327 / 3:9.
  *
