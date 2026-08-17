@@ -316,6 +316,44 @@ A disagreement is **recorded, not thrown**. Overlapping invocations are a normal
 operating condition, so a column showing more movement than this run claims is
 not evidence against the claim. A claim _larger_ than its evidence is.
 
+## What it cost is a measurement, not evidence
+
+Since 2026-08-17 a run record carries `usage`: tokens billed between its start
+and its finish, keyed `${model}:${mode}`. It answers a question the log could not
+before — a round's cost had no home in this repo, and the only figure anywhere
+was an estimate in a handoff, which matters because the API spend here is
+self-funded.
+
+It sits beside `row_count` and deliberately **not** inside `verification`. There
+is no witness that could disagree with it: it is the run's own report of what the
+API said it spent, so calling it verified would repeat the mistake the
+`{ checked, agrees }` pair made. It is recorded, not corroborated.
+
+**Tokens, never dollars.** Prices change and are not a property of the run, so
+cost is derived at read time from the model and the mode. The mode is in the key
+because the Batch API bills at half rate and the image pass — the most expensive
+step in a round — is the batch one; a total that mixed the two could not be
+priced afterwards.
+
+**Reading it back.** `pnpm runs:cost` prices the log — per step, per round,
+per month — and its useful half is what it refuses to price. Three ways a total
+can lie are reported rather than absorbed: a run with no `usage` (every record
+before 2026-08-17, and every free step) is UNMEASURED and never summed as zero;
+a model with no rate is UNPRICED and named; and `--round` says how many runs it
+could not attribute, because `scope` is prose and the manifest is the authority
+on round membership. The price table lives in that script with its source and
+the date it was read — dollars have one home, and it is not the run record.
+
+**The meter is in the client, not at the call sites.** Every spending script goes
+through `getAnthropicClient()`, so `lib/anthropic-client.ts` is the only place
+that sees all of them, including the next one somebody writes. Two limits follow
+from that and are worth knowing when reading a record: batch tokens bill to the
+invocation that READS the results rather than the one that submitted the batch
+(so a resumed collection, or a second read of a finished batch, attributes them
+there), and two runs open concurrently _in one process_ would each claim the
+other's tokens. Nothing does the latter today — a step is one process, and
+parallel work here means parallel worktrees, which are separate meters.
+
 ## Non-goals
 
 - No per-row provenance column.

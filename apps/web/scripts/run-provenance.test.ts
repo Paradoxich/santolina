@@ -35,8 +35,14 @@
  * `RUNS_WITHOUT_PROVENANCE` reached zero that same morning, which is what made
  * the lock mean something instead of licensing a claim it could not keep.
  */
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import {
+  meterUsage,
+  readUsageMeter,
+  recordUsage,
+  resetUsageMeter,
+} from '../lib/anthropic-client'
 import {
   beginRun,
   defaultEvidence,
@@ -960,5 +966,226 @@ describe('per-column exclusivity', () => {
     wrote(run, 3)
     await run.finish('completed')
     expect(asked).toEqual(['style_checked_at'])
+  })
+})
+
+/**
+ * WHAT A ROUND COST — added 2026-08-17.
+ *
+ * The question "how expensive is a new round?" had no answer in this repo. Runs
+ * recorded which rows moved and never what was billed to move them, so the only
+ * figure anywhere was an estimate in a handoff. API spend here is self-funded,
+ * which makes the answer a budgeting input rather than trivia.
+ *
+ * The meter lives in `lib/anthropic-client.ts` — the one place every spending
+ * script passes through — and these cases use the REAL meter rather than a
+ * stub, because the arithmetic that can go wrong is the windowing: attributing
+ * to a run tokens that were spent before it opened.
+ */
+describe('a run records what it was billed', () => {
+  beforeEach(() => resetUsageMeter())
+
+  it('records tokens spent inside its window, keyed by model and mode', async () => {
+    const h = harness({ care_checked_at: 2 })
+    const run = beginRun({
+      step: 'curate-plants',
+      writeSet: ['care_checked_at'],
+      recipe: RECIPE,
+      ...h.opts,
+    })
+    recordUsage('claude-sonnet-4-5', 'sync', {
+      input_tokens: 1800,
+      output_tokens: 900,
+    })
+    recordUsage('claude-sonnet-4-5', 'sync', {
+      input_tokens: 2000,
+      output_tokens: 1100,
+    })
+    wrote(run, 2)
+    await run.finish('completed')
+
+    expect(h.written[0]!.usage).toEqual({
+      'claude-sonnet-4-5:sync': {
+        calls: 2,
+        input_tokens: 3800,
+        output_tokens: 2000,
+        cache_creation_input_tokens: 0,
+        cache_read_input_tokens: 0,
+      },
+    })
+  })
+
+  it('does not bill a run for tokens spent before it opened', async () => {
+    // The live shape: one process curates, then opens a second run to verify.
+    // A meter read at finalisation alone would hand the first pass's spend to
+    // the second run and double the round's apparent cost.
+    recordUsage('claude-sonnet-4-5', 'sync', {
+      input_tokens: 50_000,
+      output_tokens: 20_000,
+    })
+    const h = harness({ care_checked_at: 1 })
+    const run = beginRun({
+      step: 'cross-check-plants',
+      writeSet: ['care_checked_at'],
+      recipe: RECIPE,
+      ...h.opts,
+    })
+    recordUsage('claude-sonnet-4-5', 'sync', {
+      input_tokens: 100,
+      output_tokens: 40,
+    })
+    wrote(run, 1)
+    await run.finish('completed')
+
+    expect(h.written[0]!.usage!['claude-sonnet-4-5:sync']).toMatchObject({
+      calls: 1,
+      input_tokens: 100,
+      output_tokens: 40,
+    })
+  })
+
+  it('keeps batch apart from sync, because batch bills at half rate', async () => {
+    const h = harness({ image_checked_at: 1 })
+    const run = beginRun({
+      step: 'pick-plant-images',
+      writeSet: ['image_checked_at'],
+      recipe: RECIPE,
+      ...h.opts,
+    })
+    recordUsage('claude-sonnet-5', 'batch', {
+      input_tokens: 9000,
+      output_tokens: 300,
+    })
+    recordUsage('claude-sonnet-5', 'sync', {
+      input_tokens: 400,
+      output_tokens: 100,
+    })
+    wrote(run, 1)
+    await run.finish('completed')
+
+    expect(Object.keys(h.written[0]!.usage!).sort()).toEqual([
+      'claude-sonnet-5:batch',
+      'claude-sonnet-5:sync',
+    ])
+  })
+
+  it('records the spend of an INTERRUPTED run, which is the unrecoverable one', async () => {
+    // A completed run's cost could be reconstructed from the console dashboard
+    // by date if someone tried. A run killed at row 279 spent real money on
+    // work that half-landed, and nothing else remembers it.
+    const h = harness({ care_checked_at: 279 })
+    const run = beginRun({
+      step: 'curate-plants',
+      writeSet: ['care_checked_at'],
+      recipe: RECIPE,
+      ...h.opts,
+    })
+    wrote(run, 279)
+    recordUsage('claude-sonnet-4-5', 'sync', {
+      input_tokens: 500_000,
+      output_tokens: 250_000,
+    })
+    await run.finish('interrupted', { error: 'received SIGINT' })
+
+    expect(h.written[0]!.outcome).toBe('interrupted')
+    expect(h.written[0]!.usage!['claude-sonnet-4-5:sync']!.output_tokens).toBe(
+      250_000
+    )
+  })
+
+  it('omits the field entirely when the run spent nothing', async () => {
+    // The book-end steps (backup, verify, archive) are free, and a wall of
+    // zeroes on them would make the log harder to read for no fact gained.
+    // It also keeps records written before this existed the same shape.
+    const h = harness({ image_checked_at: 1 })
+    const run = beginRun({
+      step: 'recover-image-categories',
+      writeSet: ['image_checked_at'],
+      recipe: RECIPE,
+      ...h.opts,
+    })
+    wrote(run, 1)
+    await run.finish('completed')
+
+    expect(h.written[0]).not.toHaveProperty('usage')
+  })
+})
+
+/**
+ * The meter has to see the BATCH path, not just `messages.create`.
+ *
+ * The image pass is the most expensive step in a round and it is the one step
+ * that does not call `create` at all — it submits a batch and reads usage back
+ * per entry. A meter wrapping only `create` would report a round as costing
+ * text money alone, which is the wrong answer confidently.
+ */
+describe('the client meters every path that bills', () => {
+  beforeEach(() => resetUsageMeter())
+
+  const fakeClient = (batchEntries: unknown[]) =>
+    meterUsage({
+      messages: {
+        create: async (body: { model: string }) => ({
+          model: body.model,
+          usage: { input_tokens: 120, output_tokens: 30 },
+        }),
+        batches: {
+          results: async () => batchEntries,
+        },
+      },
+    } as unknown as Parameters<typeof meterUsage>[0])
+
+  it('meters a plain message call', async () => {
+    const client = fakeClient([])
+    await client.messages.create({
+      model: 'claude-sonnet-4-5',
+      max_tokens: 2048,
+      messages: [],
+    })
+    expect(readUsageMeter()['claude-sonnet-4-5:sync']).toMatchObject({
+      calls: 1,
+      input_tokens: 120,
+    })
+  })
+
+  it('meters batch results, and skips the entries that errored', async () => {
+    const client = fakeClient([
+      {
+        custom_id: 'a',
+        result: {
+          type: 'succeeded',
+          message: {
+            model: 'claude-sonnet-5',
+            usage: { input_tokens: 8000, output_tokens: 200 },
+          },
+        },
+      },
+      { custom_id: 'b', result: { type: 'errored' } },
+      {
+        custom_id: 'c',
+        result: {
+          type: 'succeeded',
+          message: {
+            model: 'claude-sonnet-5',
+            usage: { input_tokens: 7000, output_tokens: 150 },
+          },
+        },
+      },
+    ])
+    const seen: string[] = []
+    for await (const entry of await client.messages.batches.results(
+      'batch_1'
+    )) {
+      seen.push((entry as { custom_id: string }).custom_id)
+    }
+
+    // Still an iterable of every entry: metering must not eat the errored one,
+    // which is how the callers count `stats.errored`.
+    expect(seen).toEqual(['a', 'b', 'c'])
+    expect(readUsageMeter()['claude-sonnet-5:batch']).toMatchObject({
+      calls: 2,
+      input_tokens: 15_000,
+      output_tokens: 350,
+    })
   })
 })
