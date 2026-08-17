@@ -79,7 +79,7 @@ const SELECT =
   'hardiness_rating, seasonal_care, style_checked_at, greenery_checked_at, ' +
   'image_checked_at, image_pick_confidence, image_verified_at, ' +
   'editorial_checked_at, editorial_image_at, editorial_description_at, ' +
-  'editorial_tags_at'
+  'editorial_tags_at, common_name_checked_at'
 
 type Row = StatusRow & EditorialRow
 

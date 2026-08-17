@@ -64,6 +64,22 @@ export const RUNBOOK: Step[] = [
     onFail:
       'No backup, no round. Everything below is reversible only because this ran.',
   },
+  {
+    // BEFORE curate-plants, and the order is a requirement rather than a
+    // preference: curate-plants writes a description that names the plant, and
+    // every later pass reads common_name as the label it reasons about. A name
+    // corrected afterwards leaves that text talking about the old one.
+    //
+    // It is also before `verify-round`, which FAILs on a duplicate common_name
+    // — the failure rounds 8 and 11 each hit, and the reason the corrective
+    // pass existed at all. Trap 6, upstream at last.
+    step: 'curate-common-names',
+    runbook: '1a',
+    script: 'curate-common-names.ts',
+    args: ['--apply'],
+    onFail:
+      "Names are Trefle's, not a gardener's. Re-run with --round <label> and read the proposed renames before --apply.",
+  },
   { step: 'curate-plants', runbook: '2', script: 'curate-plants.ts' },
   {
     step: 'curate-combinations',

@@ -65,6 +65,11 @@ import { isWindowQueryable } from './run-provenance'
 // no env and no connection — checked before adding it, because this script runs
 // in CI without .env.local.
 import { STEP_DEFS } from './round-status'
+import {
+  listTestFiles,
+  pinnedTraps,
+  trapNumbers as trapNumbersOf,
+} from './trap-pins'
 
 // ---------------------------------------------------------------------------
 // Escape hatches. Each entry: subject → why it is allowed, today.
@@ -339,6 +344,24 @@ export const OPEN_FINDINGS: Record<string, OpenFinding> = {
     witness: /field: 'sun_requirements',\s*\n\s*severity: 'disagree'/,
     remedy:
       "Either retarget the comparison at sun_thrives/sun_tolerates, the columns a person can actually change, or downgrade it to `minor` and let it be a read-only signal. The witness clears on either, because both stop the pass calling a derived column's value a disagreement.",
+  },
+  // 'seed-orchestration-copied-per-round' CLOSED 2026-08-17, the same day it
+  // was recorded — extracted rather than deferred to round 13, because the
+  // measurement made the decision easy: rounds 8-11 were byte-identical, so
+  // there was nothing to reconcile. scripts/seed-runner.ts is the runner and
+  // all seven seed-round*.ts call it. What the eight copies had already cost is
+  // in that file's header: round 12's ten-line difference was two FIXES that
+  // never reached the other seven, one of them an exit code that let a round
+  // with unresolved candidates exit 0.
+  'common-name-never-judged-at-seed': {
+    what: 'Nothing between Trefle and the catalog judges common_name. lib/trefle.ts falls back to the scientific name when Trefle has no English one, so a row lands in Explore reading "Rodgersia pinnata"; nothing anywhere catches a flora name nobody uses ("Cowflock", "Premorse") or a name already held by a different species. curate-plants reads common_name and never writes it. So the whole of trap 6 is paid downstream, once per round, by hand.',
+    source:
+      'Trap 6 in docs/database-log.md, which documents the defect class as recurring and prescribes the DOWNSTREAM fix. The count is what makes it a finding rather than a known cost: scripts/fix-round8-names.ts, fix-round11-names.ts and fix-round12-names.ts, three corrective passes in three consecutive seeding rounds, each one a hand-written per-row table. Round 7 needed the same step before the pattern was named. Confirmed 2026-08-17 by grep: common_name appears in curate-plants.ts only in selects and log labels.',
+    file: 'apps/web/lib/trefle.ts',
+    witness:
+      /const commonName = detail\.common_name \?\? detail\.scientific_name/,
+    remedy:
+      'DECIDE BEFORE ROUND 13, because the alternative is a fourth instance. The fallback line is only defect 1; defects 2 and 3 need a judgment, so the upstream fix is a naming step inside the round (an AI pass proposing a garden name, checked against the catalog for collisions — which verify-round already FAILs on) rather than a one-line change. Deciding to keep paying it downstream is a valid answer and closes this entry by deleting it with the reason recorded.',
   },
   'combo-fields-unchecked': {
     what: 'verify-round checkCombos selects only the two plant ids, so a plant_combinations row with a null combination_type, strength or notes passes round close while the companion card has nothing to render.',
@@ -634,23 +657,18 @@ function checkStampSelectors(): void {
 // ---------------------------------------------------------------------------
 function checkTrapsPinned(): { total: number; unpinned: number } {
   const log = read('docs/database-log.md')
-  const traps = [...log.matchAll(/^#### (\d+b?)\./gm)].map((m) => m[1]!)
+  const traps = trapNumbersOf(log)
 
-  // A citation is the trap number named in the test file's HEADER, which is
-  // where the rule requires it — the leading block comment, not a mention
-  // somewhere in a case. The difference is deliberate: a header is a claim
-  // about what the file is for, and it is what a person scanning the directory
-  // reads. wcvp-lookup.test.ts names trap 15 inside a case; that is a useful
-  // comment and not a closure.
-  const pinned = new Set<string>()
-  for (const file of TEST_FILES) {
-    const src = read(file)
-    const end = src.indexOf('*/')
-    if (!src.trimStart().startsWith('/**') || end === -1) continue
-    for (const m of src.slice(0, end).matchAll(/\btraps?\s+(\d+b?)\b/gi)) {
-      pinned.add(m[1]!)
-    }
-  }
+  // A citation is the trap number named in the test file's HEADER — the rule
+  // lives in trap-pins.ts, which check-doc-claims.ts reads too. Both scripts
+  // used to carry their own copy of it and printed 20 against 21 with nothing
+  // failing; sharing the derivation is what makes that impossible. The hatch
+  // list below stays here, beside the check that reads it.
+  // listTestFiles, not TEST_FILES: this file lists TRACKED files only and
+  // check-doc-claims.ts lists untracked ones too, so an uncommitted test whose
+  // header names a trap made the two counts disagree — 21 against 20 — even
+  // after they shared the derivation. The file set is half the derivation.
+  const pinned = pinnedTraps(listTestFiles(REPO_ROOT).map(read))
 
   const unpinned: string[] = []
   for (const trap of traps) {

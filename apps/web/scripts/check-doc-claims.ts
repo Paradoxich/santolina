@@ -65,6 +65,11 @@ import { execFileSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { REPO_ROOT } from './token-source'
+import {
+  listTestFiles,
+  trapNumbers as trapNumbersOf,
+  unpinnedTraps,
+} from './trap-pins'
 
 // Same FROZEN set as check-doc-links.ts, and for the same reason: an applied
 // migration is history, an archived round report is one run's record, and a
@@ -107,34 +112,20 @@ const read = (rel: string) => readFileSync(join(REPO_ROOT, rel), 'utf8')
 const LOG = 'docs/database-log.md'
 
 /** Trap numbers, in heading order. The heading is the trap's definition. */
-function trapNumbers(): string[] {
-  return [...read(LOG).matchAll(/^#### (\d+b?)\./gm)].map((m) => m[1]!)
-}
+const trapNumbers = (): string[] => trapNumbersOf(read(LOG))
 
 /**
  * Traps with no test naming them in a test file's HEADER.
  *
- * Deliberately the same rule as `check-pipeline-invariants.ts` shape 4, and
- * deliberately recomputed rather than imported: that file runs its checks at
- * module scope, so importing it would run the whole suite as a side effect. The
- * duplication is a header comment's worth of risk, and the alternative — a
- * shared module — would separate each escape hatch from the check that reads it,
- * which is the property that makes those lists reviewable.
+ * The rule lives in `trap-pins.ts` and is IMPORTED rather than recopied, which
+ * it was until 2026-08-17. `check-pipeline-invariants.ts` shape 4 asks the same
+ * question and reads the same module, so the two counts cannot drift apart —
+ * they did, printing 20 against 21, which is what moved the derivation out.
+ * Only the derivation moved: each script's escape-hatch list stays beside the
+ * check that reads it.
  */
-function unpinnedTrapCount(): number {
-  const pinned = new Set<string>()
-  for (const file of ALL.filter(
-    (f) => f.startsWith('apps/web/') && f.endsWith('.test.ts')
-  )) {
-    const src = read(file)
-    const end = src.indexOf('*/')
-    if (!src.trimStart().startsWith('/**') || end === -1) continue
-    for (const m of src.slice(0, end).matchAll(/\btraps?\s+(\d+b?)\b/gi)) {
-      pinned.add(m[1]!)
-    }
-  }
-  return trapNumbers().filter((t) => !pinned.has(t)).length
-}
+const unpinnedTrapCount = (): number =>
+  unpinnedTraps(read(LOG), listTestFiles(REPO_ROOT).map(read)).length
 
 function publicTables(): number {
   const names = new Set<string>()
