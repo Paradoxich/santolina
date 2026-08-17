@@ -29,10 +29,11 @@ time. Run the seed first; the runner picks up from a round that exists.
 **It does not decide anything a person should.** Held rows, waivers and
 editorial verdicts are recorded, not resolved.
 
-## The 10 steps
+## The 11 steps
 
 | # | step | command |
 | --- | --- | --- |
+| 1a | `curate-common-names` | `scripts/curate-common-names.ts --round <label> --apply` |
 | 2 | `curate-plants` | `scripts/curate-plants.ts --round <label>` |
 | 3 | `curate-combinations` | `scripts/curate-combinations.ts --round <label>` |
 | 4a | `regenerate-native-region` | `scripts/regenerate-native-region.ts --round <label> --apply` |

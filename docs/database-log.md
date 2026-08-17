@@ -870,6 +870,36 @@ is unchanged.
 
 <!-- Newest first. Append with: scripts/log-db-session.ts --round <label> -->
 
+### 2026-08-17 — Trap 6 fixed upstream, and two invariants nothing watched (not a round)
+
+**Branch** `session/2026-08-17-plan-orphans`. Rule-1 backup
+`backups/2026-08-17T19-37-58-928Z` (747 plants, 1859 pairs).
+
+**Migration** `20260817200000_common_name_checked_at.sql` — one nullable
+timestamptz on `plants`, no backfill. **Applied locally only at the time of
+writing; see the entry's end for the remote state.** All 42 migrations replay
+clean from scratch.
+
+**Changed.** `curate-common-names.ts` is new, runbook step 1a: it judges
+`common_name` as a GARDEN name at the round instead of leaving trap 6 to a
+hand-written correction table afterwards, which rounds 7, 8, 11 and 12 each
+needed. It stamps every row it reads, not every row it changes — a kept name is
+the judgement that was missing, and stamping only changed rows is trap 28.
+
+**Database.** Two rows repaired through the passes that own them, not by hand:
+_Ranunculus aconitifolius_ 1 → 5 companions (`curate-combinations --ids`), and
+_Iris × germanica_ `[cottage, classic, mediterranean]` → `[cottage, classic]`
+(`curate-styles --ids`, which dropped `mediterranean` unprompted). Pairs 1859 → 1863.
+
+**Found.** Both rows were found by counting during unrelated questions, and
+nothing was watching for either. `verify-round` now reads the catalog for a
+companion FLOOR (WARN below 4; 733 of 747 hold 5, 13 hold 4, one held 1) and for
+the same-axis style bar (FAIL). The style bar existed in `curate-styles` and
+could only ever see the rows a run had just judged, so moving the bar 1 → 2
+earlier the same day left nobody to re-read the catalog against the new value.
+
+**Verified.** 424 tests, typecheck, `invariants:check`, `docs:claims`.
+
 ### 2026-08-17 — Provenance and hygiene, and the first catalog removal
 
 **Branch** `session/2026-08-17-provenance`. Handoff steps 1-5, all closed.

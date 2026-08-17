@@ -27,6 +27,15 @@
  * the same one that produced `species-resolver.ts` (twelve synonym groups lost
  * to hand-carrying between round files, trap 7) and `catalog-identity.ts`.
  *
+ * THE FLAG IT PARSES, on its callers' behalf: `--dry-run`. Every seeder's own
+ * Usage block reads the same as it did when the file parsed argv itself:
+ *
+ *   ./node_modules/.bin/tsx --env-file=.env.local scripts/seed-round13.ts --dry-run
+ *   ./node_modules/.bin/tsx --env-file=.env.local scripts/seed-round13.ts
+ *
+ * A dry run resolves every candidate and writes nothing, which is where the
+ * synonym drift and the already-in-catalog skips show up — run it first.
+ *
  * WHAT IS DELIBERATELY NOT HERE. The candidate list, and the judgment in it.
  * Choosing 28 damp-border plants and writing down why each one is on the list
  * is the actual work of a round; this file is the part that was never a

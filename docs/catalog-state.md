@@ -41,6 +41,7 @@ its data becomes something a reader can see.
 
 | step | column | owed by | judged | share |
 | --- | --- | --- | ---: | ---: |
+| `curate-common-names` | `common_name_checked_at` | catalog | 0 / 747 | 0.0% |
 | `cross-check-plants` | `botanical_checked_at` | catalog | 631 / 747 | 84.5% |
 | `cross-check-native-to` | `native_checked_at` | catalog | 747 / 747 | 100.0% |
 | `cross-check-native-region` | `native_region_checked_at` | catalog | 719 / 747 | 96.3% |
@@ -50,7 +51,7 @@ its data becomes something a reader can see.
 | `pick-plant-images --verify` | `image_verified_at` | catalog | 79 / 747 | 10.6% |
 | `curate-editorial` | `editorial_checked_at` | catalog | 28 / 747 | 3.7% |
 
-1 of 13 steps is `forward`: `draft-hardiness`, which stamps no column and so is absent from the table above.
+1 of 14 steps is `forward`: `draft-hardiness`, which stamps no column and so is absent from the table above.
 
 ## Field coverage
 

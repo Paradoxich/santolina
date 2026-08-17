@@ -91,6 +91,7 @@ export interface StatusRow {
   image_pick_confidence: string | null
   image_verified_at: string | null
   editorial_checked_at: string | null
+  common_name_checked_at: string | null
 }
 
 /** A garden hybrid has no wild range, so an empty native_region is correct. */
@@ -265,6 +266,25 @@ export const STEP_DEFS: StepDef[] = [
     obligation: 'catalog',
     ran: (p) =>
       Boolean(p.ai_drafted_at && p.style_checked_at && p.greenery_checked_at),
+  },
+  {
+    step: 'curate-common-names',
+    evidence: 'common_name_checked_at NOT NULL',
+    level: 'FAIL',
+    // `catalog`, and the test settles it immediately: if this check had never
+    // run on a row, could a user tell? Yes — 50 rows show a Latin binomial
+    // where a garden name belongs, on the Explore card and in search. It is
+    // the most visible unjudged field in the catalog.
+    //
+    // So this step arrives with every row owing it, which is the honest number
+    // rather than a discouraging one. It was always true and was previously
+    // unreportable: common_name is never null (lib/trefle.ts falls back to the
+    // binomial), so a good name and an unexamined one are the same value.
+    // Backfilling the stamp instead of judging the rows would assert a
+    // judgement nobody made.
+    obligation: 'catalog',
+    stampColumn: 'common_name_checked_at',
+    ran: (p) => Boolean(p.common_name_checked_at),
   },
   {
     step: 'curate-combinations',

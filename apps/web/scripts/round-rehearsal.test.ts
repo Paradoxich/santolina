@@ -65,6 +65,7 @@ function freshlySeededPlant(id = 'plant-1'): StatusRow {
     image_pick_confidence: null,
     image_verified_at: null,
     editorial_checked_at: null,
+    common_name_checked_at: null,
   }
 }
 
