@@ -65,10 +65,55 @@ false-alarm fix are all in `6edcc7b`, `869b105` and `5f67516`.
 
 ---
 
-**Next steps, in order. Round 13 is unblocked** — its two prerequisites (C, then
-D) both landed today.
+**Next steps, in order. Round 13 is unblocked but not chosen** — Ana, 2026-08-17.
+Its two prerequisites both landed today, which made it possible, not next. The
+cheap mechanical items come first because they cost no API spend and continue
+what today built.
 
-1. **Round 13 (G).** The tags it will measure against are now correct. It needs a
+**The plan letters are gone from this file, deliberately.** Every next step used
+to carry one — C, D, D2, G — from a plan at
+`~/.claude/plans/ok-the-other-session-elegant-stream.md`: outside the repo,
+outside git, on one laptop, under an auto-generated name, superseded twice on the
+day it was written. Two of its seven steps (the flag-documentation scan, and
+committing the gap probe) never got a letter here at all, so anyone reading from
+the plan hit what looked like missing work and was in fact a missing label. **One
+fact, two homes, one updated** — the shape of most of today. The letters are
+struck rather than completed because nothing is mid-flight on that vocabulary any
+more: C and D landed, D2 and round 13 are deferred by ruling. This file is the
+carrier now; do not cite the plan file again.
+
+1. **Migrate the six in `HAND_ROLLED_REVIEWED_MUTATION`, one at a time.** Each is
+   also in `RUNS_WITHOUT_PROVENANCE`, so each migration is the natural moment to
+   wire its run record. `fix-round12-tags.ts` is the best first: it already
+   normalises through `JSON.stringify` and writes two columns, so it exercises the
+   multi-column guard. `apply-native-to-fixes.ts` hand-rolls the same guard but is
+   **not** in the list and cannot be — `native_to` is not a column any verdict is
+   about, so it never branches on `is_curated` and the scan cannot see it. It
+   should still migrate; nothing forces it.
+2. **The hygiene items**, any order. Carried forward. The flag-documentation scan
+   — every `--flag` a script parses must appear in its own usage header, about
+   twenty lines in `check-pipeline-invariants.ts` — covers the class every
+   existing shape misses: a defect in code the session just wrote. The
+   migration-drift content check needs `applied_migrations()` to return
+   `statements`, so it needs a migration and Ana's push (rule 11). The graveyard
+   pass moves the three in `SCRIPTS_PENDING_ARCHIVE` to `archive/` with README
+   rows, and `repair-combinations.ts` needs a `database-log` line in the same
+   change. `pnpm invariants:check` prints every ratchet's current count.
+3. **Build a removal path for a catalog row.** Carried forward. _Hydrangea
+   anomala_ and _H. petiolaris_ are the same plant to a reader and one should go,
+   keeping `petiolaris`. Only 5 regenerable combination rows depend on either —
+   **the missing piece is that nothing can remove a plant at all.**
+4. **Finish the out-of-round 15.** Carried forward. What remains is mostly
+   apply-scripts that CLEAR a stamp, so each needs a witness that is not the
+   column it nulls. Two worked examples are in the tree: `curate-greenery`'s
+   `foliage_color` and `apply-description-fixes`. `backfill-guard-stamps` matters
+   most, its state-derived half having been deleted after it fabricated 100
+   stamps.
+5. **Per-column exclusivity, which is what earns `confirming` back.** Carried
+   forward, still forced after the out-of-round 15 above, and trap 29 holds the
+   reasoning. Do not design it early: the census it must be designed against is
+   the one that step changes.
+6. **Round 13.** The tags it will measure against are now correct. It needs a
    **committed gap probe**, which still does not exist: round 12's probes were
    hand-run and recorded only in `seed-round12.ts`'s header, so the measurement
    that picks a theme is the one part of a round that is not reproducible. Write
@@ -78,15 +123,7 @@ D) both landed today.
    `runbook.ts` so it renders into the generated runbook instead of living in
    muscle memory. `cross-check-plants` will flag `plant_type` on every sedge and
    rush, the round-4 false-positive class, left naive on purpose.
-2. **Migrate the six in `HAND_ROLLED_REVIEWED_MUTATION`, one at a time.** Each is
-   also in `RUNS_WITHOUT_PROVENANCE`, so each migration is the natural moment to
-   wire its run record. `fix-round12-tags.ts` is the best first: it already
-   normalises through `JSON.stringify` and writes two columns, so it exercises the
-   multi-column guard. `apply-native-to-fixes.ts` hand-rolls the same guard but is
-   **not** in the list and cannot be — `native_to` is not a column any verdict is
-   about, so it never branches on `is_curated` and the scan cannot see it. It
-   should still migrate; nothing forces it.
-3. **The editorial pass (D2). NOT A BLOCKER — Ana, 2026-08-17. Do not treat it as
+7. **The editorial pass over the legacy catalog. NOT A BLOCKER — Ana, 2026-08-17. Do not treat it as
    one.** The previous handoff said the rounds 1-6 pass gates round 13; that was
    an overstatement and is withdrawn. `verify-round` checks a round against its
    own rows, and `curate-editorial` is **step 7b of the runbook**, so every new
@@ -105,35 +142,11 @@ D) both landed today.
    on the shared system prompt would cut the repeated input — together roughly
    $4-8. ⚠ It rewrites ~60% of the descriptions it judges. **Run ~100 rows from
    rounds 1-6 and read the rewrites before buying the rest.**
-4. **Finish the out-of-round 15.** Carried forward. What remains is mostly
-   apply-scripts that CLEAR a stamp, so each needs a witness that is not the
-   column it nulls. Two worked examples are in the tree: `curate-greenery`'s
-   `foliage_color` and `apply-description-fixes`. `backfill-guard-stamps` matters
-   most, its state-derived half having been deleted after it fabricated 100
-   stamps.
-5. **Build a removal path for a catalog row.** Carried forward. _Hydrangea
-   anomala_ and _H. petiolaris_ are the same plant to a reader and one should go,
-   keeping `petiolaris`. Only 5 regenerable combination rows depend on either —
-   **the missing piece is that nothing can remove a plant at all.**
-6. **Per-column exclusivity, which is what earns `confirming` back.** Carried
-   forward, still forced after step 4, and trap 29 holds the reasoning. Do not
-   design it early: the census it must be designed against is the one step 4
-   changes.
-7. **The hygiene items**, any order. Carried forward. The flag-documentation scan
-   — every `--flag` a script parses must appear in its own usage header, about
-   twenty lines in `check-pipeline-invariants.ts` — covers the class every
-   existing shape misses: a defect in code the session just wrote. The
-   migration-drift content check needs `applied_migrations()` to return
-   `statements`, so it needs a migration and Ana's push (rule 11). The graveyard
-   pass moves the three in `SCRIPTS_PENDING_ARCHIVE` to `archive/` with README
-   rows, and `repair-combinations.ts` needs a `database-log` line in the same
-   change. `pnpm invariants:check` prints every ratchet's current count.
-
-**Parked decisions.** Dated when FIRST raised, with who owes the answer.
-`invariants:check` shape 15 fails on an undated item and on one older than 14
-days, so this list cannot become a paragraph again. Read that shape's header
-before adding a line: the paragraph it replaced ran for six handoffs and half
-its items were misfiled.
+   **Parked decisions.** Dated when FIRST raised, with who owes the answer.
+   `invariants:check` shape 15 fails on an undated item and on one older than 14
+   days, so this list cannot become a paragraph again. Read that shape's header
+   before adding a line: the paragraph it replaced ran for six handoffs and half
+   its items were misfiled.
 
 _Empty._ Both questions this session raised — the primary-style representation
 and the provence/mediterranean overlap — were put to Ana and answered the same
@@ -148,7 +161,7 @@ of which was fine. **A warning that cries wolf is trap 31 inverted**, and it is
 worth remembering that the fix for a silent report can overshoot into a noisy one.
 
 **Build Backlog rows still owed:** the orphaned-photo reconciliation sweep, **the
-plant-removal path** (step 5 — it is an absence, and a ratchet witness for "we
+plant-removal path** (step 3 — it is an absence, and a ratchet witness for "we
 never built X" stays true forever, so the Backlog is its durable home), and **50
 of 748 rows still showing a Latin binomial where a garden name belongs** (round
 12's own six are fixed; the rest predate it). The `curate-styles` withdrawal
