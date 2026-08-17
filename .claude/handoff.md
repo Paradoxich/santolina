@@ -37,18 +37,30 @@ supabase start -x studio,realtime,storage-api,imgproxy,edge-runtime,inbucket,vec
 
 ---
 
-## 2026-08-17 — Steps A, B and the style vocabulary landed. Nothing in flight.
+## 2026-08-17 — Steps A and B, the style vocabulary, and the error system. Nothing in flight.
 
-**Both of the day's branches are merged and neither worktree holds anything.**
+**Three of the day's branches are merged and no worktree holds anything.**
 
 | PR                                                                 | branch                                 | what landed                                                                                                                   |
 | ------------------------------------------------------------------ | -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
 | [#170](https://github.com/Paradoxich/santolina/pull/170) `839eaf8` | `session/2026-08-17-obligation-policy` | plan steps A and B: `StepDef.obligation`, `invariants:check` shape 16, `pnpm catalog:status`                                  |
 | [#171](https://github.com/Paradoxich/santolina/pull/171) `aac993d` | `session/2026-08-17-style-vocabulary`  | plan step D's inputs: `STYLE_TAGS` 6 → 20, definitions tuned against a 50-row pilot, `STYLE_OPTIONS` derived from live counts |
+| `29993cd` (local merge, unpushed)                                  | `session/2026-08-17-auth-form-errors`  | the UI error system: `FormError`, `/login`'s native bubble gone, and 24 sites that were showing users raw thrown messages     |
 
 The obligation half is the `2026-08-17 — Who owes an old row` entry in
 `docs/database-log.md` and standing rule 16. **The vocabulary half has no entry
 there** — see the correction at the foot of this file.
+
+**The UI merge is local and not pushed** — the only thing in this file that is
+not already on `origin/main`. It touches no pipeline, no schema and no script, so
+`invariants:check`, `docs:links` and `docs:claims` pass unchanged; the merged tree
+builds, and 335 app + 17 ui tests pass. Its durable half is the new
+**"How a failure is shown"** section in `DESIGN_SYSTEM.md`, which the Input
+fields redesign has to read before it invents a second error convention. **Do not
+re-derive its reasoning from this file** — it is in the commit messages and in
+`apps/web/lib/failure.ts`'s header, which is where the incident is recorded: the
+friendly copy beside every `err instanceof Error ? err.message` was dead code, so
+what users actually saw was Postgres text.
 
 ---
 
@@ -173,6 +185,13 @@ plant-removal path** (step 6 — it is an absence, and a ratchet witness for "we
 never built X" stays true forever, so the Backlog is its durable home), and **50
 of 748 rows still showing a Latin binomial where a garden name belongs** (round
 12's own six are fixed; the rest predate it).
+
+**One thing Ana owes, and it is not a decision:** a look at the `/login` error
+state in her own Firefox. Everything about it was verified on localhost through
+the Browser pane — computed colours, the ring surviving focus, the live region —
+but the pane is Electron and has misreported layout and clipping before, and the
+pill's error ring is exactly the kind of accelerated-layer detail that has
+differed there. Nothing depends on it; it is a confirmation, not a gate.
 
 **Standing:** the next audit is round 13's close or 2026-09-14, whichever first,
 early if a PR adds a stamp column, adds a script, or touches

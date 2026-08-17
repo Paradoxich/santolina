@@ -262,6 +262,45 @@ list is not copied here; a copied list goes stale and this one had.
 - Sample/mock data lives in `apps/web/lib/`, typed against `apps/web/types/`,
   structured so Supabase data can replace it 1:1.
 
+### How a failure is shown
+
+**`FormError` from `@paradoxui/ui` is the only way.** Never a `<p>` with
+`text-critical` — that is what fourteen call sites did, and they drifted on
+alignment, type role and `role="alert"` (four had no live region at all, so
+those failures were silent to a screen reader). The component fixes the tone,
+because a form failure is always `critical`; there is no tone prop to get wrong.
+
+Three shapes, and the choice is about **whose fault it is**, never about what
+looks tidy:
+
+| Placement                       | When                                                                                                                                                                                             |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `align="start"` under the field | that field's value is wrong. Wire `aria-describedby` + `aria-invalid` to it                                                                                                                      |
+| `align="center"` in a card      | the request failed, and no one field is at fault                                                                                                                                                 |
+| `variant="banner"`              | an action failed on a page or drawer — a strip on `surface-critical` at the top of the region. Callers pass only how it meets the container (`rounded-sm` floating, `border-b` flush to an edge) |
+
+`Input` renders its own `errorMessage` through `FormError`, so a labelled field
+and a bare one (the `/login` email pill) fail identically. **A field error's
+colour must survive focus** — on the pill, error is `ring-2 ring-critical` and
+stays critical through `focus-within`, because focusing a field to fix it cannot
+be what hides the reason it is wrong. That also means a white control on a photo
+signals error with the ring, not a border: there is no border there to tint.
+
+**Never let the browser show a validation bubble.** Put `noValidate` on the form
+and validate on submit; keep `required` and `type="email"` for the semantics they
+give assistive tech. The native bubble is a second visual system, positioned by
+the OS, unstyleable, and gone on the next keystroke.
+
+**Validate on submit, clear on edit, never re-check on edit.** A value is
+malformed for as long as it is half typed.
+
+**The words are not the thrown error.** Server actions throw for developers
+(`Failed to add diary entry: <postgres text>`), so a component passes its own
+copy through `failureMessage(err, copy)` in `apps/web/lib/failure.ts`; the real
+error goes to the console. `apps/web/lib/failure.test.ts` scans for the old
+shape. Copy names what did not happen, then what to do — "Could not save your
+note. Try again." — and carries no dash.
+
 ### Icon export checklist (Figma → `/public/icons`)
 
 Icons render through `Icon`, a plain `<img>` wrapper — so whatever the SVG
