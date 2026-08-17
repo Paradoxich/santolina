@@ -16,6 +16,7 @@
     "docs:claims": "turbo run docs:claims",
     "invariants:check": "turbo run invariants:check",
     "backlog": "turbo run backlog",
+    "runs:cost": "turbo run runs:cost",
     "tokens:usage": "turbo run tokens:usage"
   },
   "devDependencies": {

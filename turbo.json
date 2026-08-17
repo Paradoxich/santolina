@@ -48,6 +48,10 @@
       "cache": false,
       "outputs": []
     },
+    "runs:cost": {
+      "cache": false,
+      "outputs": []
+    },
     "tokens:usage": {
       "cache": false,
       "outputs": []
