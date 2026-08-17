@@ -25,10 +25,19 @@
   --color-white: #ffffff;
 
   /* Sage — THE neutral ramp (H 152). Light end carries surfaces, dark end
-   * carries text. Hand-tuned by Ana in Figma (see docs/architecture.md);
-   * 700/600 now read lighter than the OKLCH draft — text-muted is back
-   * under 4.5:1 (3.6 on card, 3.2 on page) and the sage-600 icon step
-   * under 3:1 (2.6) until the semantic remap addresses it. */
+   * carries text. Hand-tuned by Ana in Figma (see docs/architecture.md).
+   *
+   * The dark end was remapped 2026-08-17, which is the "semantic remap" this
+   * comment used to defer to. The three text roles now sit at 700/900/950
+   * instead of 700/800/950, and 700 itself moved darker. Measured in the
+   * running app rather than derived: text-muted was failing on 26 live
+   * elements across Overview and My Plants, all of it small type.
+   *
+   * Why the roles moved rather than only the step: darkening 700 alone
+   * squeezed muted against secondary, 1.97 -> 1.39 (Ana caught this). The
+   * 700->800 gap was the widest in the ramp and 900 was carrying no text
+   * role at all, so the level shifted up into room that already existed.
+   * Separation is now 2.04, wider than before the change. */
   --color-sage-50: #f4f9f5;
   --color-sage-100: #e8f2ea; /* shipped — sidebar nav hover/selected */
   --color-sage-200: #e2ebe2; /* shipped — surface-card, surface-drawer, divider */
@@ -36,9 +45,9 @@
   --color-sage-400: #c4d0c6;
   --color-sage-500: #adb8ae; /* ~was gray-100 — disabled/faint only */
   --color-sage-600: #8b948c; /* icon/large-text de-emphasis — now 2.6:1, below 3:1 */
-  --color-sage-700: #727a73; /* ~was gray-500 — now 3.6:1 on card, below 4.5:1 */
-  --color-sage-800: #464d47; /* ~was gray-600 */
-  --color-sage-900: #2f3330;
+  --color-sage-700: #5b625c; /* text-muted + body-secondary — 5.1 card, 4.6 page */
+  --color-sage-800: #464d47; /* ~was gray-600 — no text role since the remap */
+  --color-sage-900: #2f3330; /* text-secondary */
   --color-sage-950: #111411; /* ~was gray-900 */
 
   /* Fern — brand accent (H 151). Chroma peaks at 500. */
@@ -193,7 +202,7 @@
    * (body-secondary and muted share a primitive today; they are separate
    *  roles so they can diverge without touching components.) */
   --color-text-primary: var(--color-sage-950);
-  --color-text-secondary: var(--color-sage-800);
+  --color-text-secondary: var(--color-sage-900);
   --color-text-body-secondary: var(--color-sage-700);
   --color-text-muted: var(--color-sage-700);
   --color-text-faint: var(--color-sage-500);
