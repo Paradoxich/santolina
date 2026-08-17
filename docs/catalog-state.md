@@ -31,16 +31,26 @@ date is the freshness record.
 One row per step that stamps a column, from the `STEP_DEFS` registry in
 `apps/web/scripts/round-status.ts`. A step added there appears here automatically.
 
-| step | column | judged | share |
-| --- | --- | ---: | ---: |
-| `cross-check-plants` | `botanical_checked_at` | 632 / 748 | 84.5% |
-| `cross-check-native-to` | `native_checked_at` | 748 / 748 | 100.0% |
-| `cross-check-native-region` | `native_region_checked_at` | 720 / 748 | 96.3% |
-| `curate-styles` | `style_checked_at` | 748 / 748 | 100.0% |
-| `curate-greenery` | `greenery_checked_at` | 748 / 748 | 100.0% |
-| `pick-plant-images` | `image_checked_at` | 748 / 748 | 100.0% |
-| `pick-plant-images --verify` | `image_verified_at` | 79 / 748 | 10.6% |
-| `curate-editorial` | `editorial_checked_at` | 244 / 748 | 32.6% |
+**`owed` is not a synonym for the gap.** A `catalog` step is owed by every
+row whenever it was seeded, so a shortfall there is work. A `forward` step is
+owed only by rows seeded after it existed; older rows are settled, not
+behind, and its shortfall is reported for information. The classification
+and the reasoning per step live on `StepDef.obligation`, and every `forward`
+step carries a witness in `check-pipeline-invariants.ts` that fails the day
+its data becomes something a reader can see.
+
+| step | column | owed by | judged | share |
+| --- | --- | --- | ---: | ---: |
+| `cross-check-plants` | `botanical_checked_at` | catalog | 632 / 748 | 84.5% |
+| `cross-check-native-to` | `native_checked_at` | catalog | 748 / 748 | 100.0% |
+| `cross-check-native-region` | `native_region_checked_at` | catalog | 720 / 748 | 96.3% |
+| `curate-styles` | `style_checked_at` | catalog | 748 / 748 | 100.0% |
+| `curate-greenery` | `greenery_checked_at` | catalog | 748 / 748 | 100.0% |
+| `pick-plant-images` | `image_checked_at` | catalog | 748 / 748 | 100.0% |
+| `pick-plant-images --verify` | `image_verified_at` | catalog | 79 / 748 | 10.6% |
+| `curate-editorial` | `editorial_checked_at` | catalog | 244 / 748 | 32.6% |
+
+1 of 13 steps is `forward`: `draft-hardiness`, which stamps no column and so is absent from the table above.
 
 ## Field coverage
 

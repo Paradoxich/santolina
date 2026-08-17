@@ -143,15 +143,60 @@ async function main() {
     '`apps/web/scripts/round-status.ts`. A step added there appears here automatically.'
   )
   L.push('')
-  L.push('| step | column | judged | share |')
-  L.push('| --- | --- | ---: | ---: |')
+  L.push(
+    '**`owed` is not a synonym for the gap.** A `catalog` step is owed by every'
+  )
+  L.push(
+    'row whenever it was seeded, so a shortfall there is work. A `forward` step is'
+  )
+  L.push(
+    'owed only by rows seeded after it existed; older rows are settled, not'
+  )
+  L.push(
+    'behind, and its shortfall is reported for information. The classification'
+  )
+  L.push(
+    'and the reasoning per step live on `StepDef.obligation`, and every `forward`'
+  )
+  L.push(
+    'step carries a witness in `check-pipeline-invariants.ts` that fails the day'
+  )
+  L.push('its data becomes something a reader can see.')
+  L.push('')
+  L.push('| step | column | owed by | judged | share |')
+  L.push('| --- | --- | --- | ---: | ---: |')
   for (const def of stampSteps) {
     const col = def.stampColumn as keyof Row
     const n = count((p) => p[col] != null)
     L.push(
-      `| \`${def.step}\` | \`${def.stampColumn}\` | ${n} / ${total} | ${pct(n, total)} |`
+      `| \`${def.step}\` | \`${def.stampColumn}\` | ${def.obligation} | ${n} / ${total} | ${pct(n, total)} |`
     )
   }
+  L.push('')
+  // This table is stamp-column rows only, and the forward steps are exactly the
+  // ones most likely to have no stamp column — draft-hardiness has none — so
+  // without this line the split above reads as all-`catalog` and the axis looks
+  // like it does nothing. Generated from the registry, so it cannot drift.
+  const forward = STEP_DEFS.filter((d) => d.obligation === 'forward')
+  const unstamped = forward.filter((d) => !d.stampColumn)
+  const name = (d: (typeof STEP_DEFS)[number]) => `\`${d.step}\``
+  let line = `${forward.length} of ${STEP_DEFS.length} steps ${forward.length === 1 ? 'is' : 'are'} \`forward\``
+  if (forward.length === 0) {
+    line += '.'
+  } else {
+    line += `: ${forward.map(name).join(', ')}`
+    if (unstamped.length === forward.length) {
+      line +=
+        forward.length === 1
+          ? ', which stamps no column and so is absent from the table above.'
+          : ', none of which stamp a column, so none appear in the table above.'
+    } else if (unstamped.length > 0) {
+      line += `. ${unstamped.map(name).join(', ')} stamp no column and so ${unstamped.length === 1 ? 'is' : 'are'} absent from the table above.`
+    } else {
+      line += '.'
+    }
+  }
+  L.push(line)
   L.push('')
   L.push('## Field coverage')
   L.push('')
