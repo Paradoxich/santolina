@@ -15,6 +15,7 @@ import {
   Tooltip,
   useToast,
 } from '@paradoxui/ui'
+import { failureMessage } from '@/lib/failure'
 import { icons } from '@/lib/icons'
 import { DIARY_EVENT_LABELS } from '@/lib/diary-events'
 import { formatDayLabel, formatMonthLabel } from '@/lib/utils'
@@ -96,7 +97,7 @@ export function ActivityClient({
       setToDelete(null)
     } catch (err) {
       setDeleteError(
-        err instanceof Error ? err.message : 'Something went wrong.'
+        failureMessage(err, 'Could not delete that note. Try again.')
       )
     } finally {
       setIsDeleting(false)

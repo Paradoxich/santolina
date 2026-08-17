@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { FormError, Modal } from '@paradoxui/ui'
+import { UserFacingError } from '@/lib/failure'
 import { AuthOptions } from '@/components/AuthOptions'
 import { createSupabaseBrowserClient } from '@/lib/supabase-client'
 
@@ -37,7 +38,7 @@ export function DemoConvertModal({ isOpen, onClose }: DemoConvertModalProps) {
       { emailRedirectTo: `${window.location.origin}/auth/callback` }
     )
     if (error) {
-      throw new Error(
+      throw new UserFacingError(
         error.message.toLowerCase().includes('already')
           ? 'That email already has an account. Log in to it instead.'
           : 'We could not send the link. Check the address and try again.'
@@ -53,7 +54,7 @@ export function DemoConvertModal({ isOpen, onClose }: DemoConvertModalProps) {
     })
     // Manual linking has to be enabled on the Supabase project for this to
     // work; without it the call fails here rather than at Google.
-    if (error) throw new Error('Google is not available right now.')
+    if (error) throw new UserFacingError('Google is not available right now.')
   }
 
   function handleClose() {

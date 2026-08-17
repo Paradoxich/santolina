@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { FormError } from '@paradoxui/ui'
+import { UserFacingError } from '@/lib/failure'
 import { AuthOptions } from '@/components/AuthOptions'
 import { createSupabaseBrowserClient } from '@/lib/supabase-client'
 
@@ -49,7 +50,7 @@ export function LoginForm() {
       options: { emailRedirectTo: callbackUrl(next) },
     })
     if (error)
-      throw new Error(
+      throw new UserFacingError(
         'We could not send the link. Check the address and try again.'
       )
   }
@@ -60,7 +61,8 @@ export function LoginForm() {
       provider: 'google',
       options: { redirectTo: callbackUrl(next) },
     })
-    if (error) throw new Error('Google sign in is not available right now.')
+    if (error)
+      throw new UserFacingError('Google sign in is not available right now.')
   }
 
   if (sentTo) {

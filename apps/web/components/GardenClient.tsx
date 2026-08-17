@@ -17,6 +17,7 @@ import {
   toDisplayStatus,
 } from '@/lib/bloom-status'
 import { formatExposure, formatBloomRange } from '@/lib/format-plant'
+import { failureMessage } from '@/lib/failure'
 import { heroImageUrl } from '@/lib/plant-image'
 import {
   addToPalette,
@@ -145,7 +146,7 @@ export function GardenClient({ palette }: GardenClientProps) {
       }
     } catch (err) {
       setActionError(
-        err instanceof Error ? err.message : 'Something went wrong.'
+        failureMessage(err, 'Could not remove that plant. Try again.')
       )
     } finally {
       setPendingId(null)
@@ -175,7 +176,7 @@ export function GardenClient({ palette }: GardenClientProps) {
       })
     } catch (err) {
       setActionError(
-        err instanceof Error ? err.message : 'Something went wrong.'
+        failureMessage(err, 'Could not move that plant to growing. Try again.')
       )
     } finally {
       setPendingId(null)

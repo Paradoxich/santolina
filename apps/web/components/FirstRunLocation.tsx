@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardBody, FormError } from '@paradoxui/ui'
 import { CitySearch } from '@/components/CitySearch'
+import { failureMessage } from '@/lib/failure'
 import { type GeocodingResult } from '@/lib/open-meteo'
 import { setGardenLocation } from '@/server/garden-actions'
 
@@ -26,7 +27,7 @@ export function FirstRunLocation() {
       // Location set — the app is now reachable; the gate will let us through.
       router.replace('/overview')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong.')
+      setError(failureMessage(err, 'Could not save your location. Try again.'))
       setSelectingId(null)
     }
   }

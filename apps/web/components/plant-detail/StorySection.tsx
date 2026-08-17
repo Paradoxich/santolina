@@ -14,6 +14,7 @@ import {
   useToast,
 } from '@paradoxui/ui'
 import type { MenuItem } from '@paradoxui/ui'
+import { failureMessage } from '@/lib/failure'
 import { icons } from '@/lib/icons'
 import { DIARY_EVENT_LABELS } from '@/lib/diary-events'
 import type { DiaryNote } from '@/types/diary'
@@ -223,7 +224,7 @@ export function StorySection({
       setIsClearDialogOpen(false)
     } catch (err) {
       setClearError(
-        err instanceof Error ? err.message : 'Something went wrong.'
+        failureMessage(err, 'Could not clear these notes. Try again.')
       )
     } finally {
       setIsClearing(false)
@@ -244,7 +245,7 @@ export function StorySection({
       setNoteToDelete(null)
     } catch (err) {
       setNoteDeleteError(
-        err instanceof Error ? err.message : 'Something went wrong.'
+        failureMessage(err, 'Could not delete that note. Try again.')
       )
     } finally {
       setIsDeletingNote(false)

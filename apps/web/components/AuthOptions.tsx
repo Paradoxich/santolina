@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Button, FormError, cn } from '@paradoxui/ui'
+import { UserFacingError, failureMessage } from '@/lib/failure'
 
 // The two ways into an account — Google, or a link by email — as one set of
 // controls. Extracted from LoginForm so the demo conversion modal is the same
@@ -17,7 +18,10 @@ import { Button, FormError, cn } from '@paradoxui/ui'
 //   · the REQUEST failed (link not sent, Google down, expired link, demo
 //     could not open) -> handed up through onError. The copy differs by
 //     caller (signing in vs converting a demo) and the fault is not the
-//     field's, so the caller renders it in its own failure slot.
+//     field's, so the caller renders it in its own failure slot. A caller
+//     raises `UserFacingError` to choose that copy; anything else that comes
+//     out of its handler is a fault nobody wrote a sentence for, and gets a
+//     generic one here rather than showing its own text.
 //
 // Both use FormError, so the two placements read as one system rather than
 // two. That is also why the form carries `noValidate`: the browser's own
@@ -28,9 +32,9 @@ import { Button, FormError, cn } from '@paradoxui/ui'
 // Layout matches the Figma sign up screen (node 636:1811).
 
 export interface AuthOptionsProps {
-  /** Runs on "Continue with Google". Throw with user-facing copy to fail. */
+  /** Runs on "Continue with Google". Throw `UserFacingError` to fail with copy. */
   onGoogle: () => Promise<void>
-  /** Runs on submit. Throw with user-facing copy to fail. */
+  /** Runs on submit. Throw `UserFacingError` to fail with copy. */
   onEmail: (email: string) => Promise<void>
   /** Called after onEmail resolves, so the caller can show its own sent state. */
   onSent: (email: string) => void
@@ -74,7 +78,11 @@ export function AuthOptions({
       await onEmail(email)
       onSent(email)
     } catch (error) {
-      onError((error as Error).message)
+      onError(
+        error instanceof UserFacingError
+          ? error.message
+          : failureMessage(error, 'Could not send the link. Try again.')
+      )
     } finally {
       setStatus('idle')
     }
@@ -92,7 +100,11 @@ export function AuthOptions({
       // over a page that is on its way out.
     } catch (error) {
       setGoogleLoading(false)
-      onError((error as Error).message)
+      onError(
+        error instanceof UserFacingError
+          ? error.message
+          : failureMessage(error, 'Could not reach Google. Try again.')
+      )
     }
   }
 

@@ -13,6 +13,7 @@ import {
   Tooltip,
   useToast,
 } from '@paradoxui/ui'
+import { failureMessage } from '@/lib/failure'
 import { icons } from '@/lib/icons'
 import { SubpageHeader } from '@/components/SubpageHeader'
 import { PlantImage } from '@/components/PlantImage'
@@ -131,7 +132,7 @@ export function PlantDetailPage({
                   router.refresh()
                 } catch (err) {
                   setActionError(
-                    err instanceof Error ? err.message : 'Undo failed.'
+                    failureMessage(err, 'Could not undo that. Try again.')
                   )
                 }
               },
@@ -164,7 +165,7 @@ export function PlantDetailPage({
                   router.refresh()
                 } catch (err) {
                   setActionError(
-                    err instanceof Error ? err.message : 'Undo failed.'
+                    failureMessage(err, 'Could not undo that. Try again.')
                   )
                 }
               },
@@ -174,7 +175,7 @@ export function PlantDetailPage({
       }
     } catch (err) {
       setActionError(
-        err instanceof Error ? err.message : 'Something went wrong.'
+        failureMessage(err, 'Could not update your planned list. Try again.')
       )
     } finally {
       setPendingAction(null)
@@ -205,7 +206,7 @@ export function PlantDetailPage({
               router.refresh()
             } catch (err) {
               setActionError(
-                err instanceof Error ? err.message : 'Undo failed.'
+                failureMessage(err, 'Could not undo that. Try again.')
               )
             }
           },
@@ -230,7 +231,7 @@ export function PlantDetailPage({
       performRemoveFromGarden()
         .catch((err) => {
           setActionError(
-            err instanceof Error ? err.message : 'Something went wrong.'
+            failureMessage(err, 'Could not remove that plant. Try again.')
           )
         })
         .finally(() => setPendingAction(null))
@@ -248,7 +249,7 @@ export function PlantDetailPage({
       closeRemoveDialog()
     } catch (err) {
       setActionError(
-        err instanceof Error ? err.message : 'Something went wrong.'
+        failureMessage(err, 'Could not remove that plant. Try again.')
       )
     } finally {
       setPendingAction(null)
@@ -285,7 +286,7 @@ export function PlantDetailPage({
                   router.refresh()
                 } catch (err) {
                   setActionError(
-                    err instanceof Error ? err.message : 'Undo failed.'
+                    failureMessage(err, 'Could not undo that. Try again.')
                   )
                 }
               },
@@ -314,7 +315,7 @@ export function PlantDetailPage({
                   router.refresh()
                 } catch (err) {
                   setActionError(
-                    err instanceof Error ? err.message : 'Undo failed.'
+                    failureMessage(err, 'Could not undo that. Try again.')
                   )
                 }
               },
@@ -324,7 +325,7 @@ export function PlantDetailPage({
       }
     } catch (err) {
       setActionError(
-        err instanceof Error ? err.message : 'Something went wrong.'
+        failureMessage(err, 'Could not update your garden. Try again.')
       )
     } finally {
       setPendingAction(null)

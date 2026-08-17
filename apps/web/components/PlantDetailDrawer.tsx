@@ -11,6 +11,7 @@ import {
   Tooltip,
   useToast,
 } from '@paradoxui/ui'
+import { failureMessage } from '@/lib/failure'
 import { icons } from '@/lib/icons'
 import { PlantImage } from '@/components/PlantImage'
 import { DRAWER_MOTION } from '@/lib/drawer-motion'
@@ -96,7 +97,10 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
       .catch((err) => {
         if (!cancelled)
           setActionError(
-            err instanceof Error ? err.message : 'Failed to load palette status'
+            failureMessage(
+              err,
+              "Could not load this plant's status. Try again."
+            )
           )
       })
       .finally(() => {
@@ -133,7 +137,7 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
                   router.refresh()
                 } catch (err) {
                   setActionError(
-                    err instanceof Error ? err.message : 'Undo failed.'
+                    failureMessage(err, 'Could not undo that. Try again.')
                   )
                 }
               },
@@ -166,7 +170,7 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
                   router.refresh()
                 } catch (err) {
                   setActionError(
-                    err instanceof Error ? err.message : 'Undo failed.'
+                    failureMessage(err, 'Could not undo that. Try again.')
                   )
                 }
               },
@@ -176,7 +180,7 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
       }
     } catch (err) {
       setActionError(
-        err instanceof Error ? err.message : 'Something went wrong.'
+        failureMessage(err, 'Could not update your planned list. Try again.')
       )
     } finally {
       setPendingAction(null)
@@ -214,7 +218,7 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
                   router.refresh()
                 } catch (err) {
                   setActionError(
-                    err instanceof Error ? err.message : 'Undo failed.'
+                    failureMessage(err, 'Could not undo that. Try again.')
                   )
                 }
               },
@@ -243,7 +247,7 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
                   router.refresh()
                 } catch (err) {
                   setActionError(
-                    err instanceof Error ? err.message : 'Undo failed.'
+                    failureMessage(err, 'Could not undo that. Try again.')
                   )
                 }
               },
@@ -253,7 +257,7 @@ export function PlantDetailDrawer({ detail, onClose }: PlantDetailDrawerProps) {
       }
     } catch (err) {
       setActionError(
-        err instanceof Error ? err.message : 'Something went wrong.'
+        failureMessage(err, 'Could not update your garden. Try again.')
       )
     } finally {
       setPendingAction(null)

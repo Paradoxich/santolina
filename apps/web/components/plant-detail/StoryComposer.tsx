@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button, Chip, FormError, Icon, IconButton } from '@paradoxui/ui'
+import { failureMessage } from '@/lib/failure'
 import { icons } from '@/lib/icons'
 import {
   DIARY_EVENT_TYPES,
@@ -118,7 +119,7 @@ export function StoryComposer({
       resetComposer()
     } catch (err) {
       setComposerError(
-        err instanceof Error ? err.message : 'Something went wrong.'
+        failureMessage(err, 'Could not save your note. Try again.')
       )
     } finally {
       setIsSubmitting(false)
@@ -138,7 +139,7 @@ export function StoryComposer({
       router.refresh()
     } catch (err) {
       setReAddError(
-        err instanceof Error ? err.message : 'Something went wrong.'
+        failureMessage(err, 'Could not add this plant back. Try again.')
       )
     } finally {
       setIsReAdding(false)

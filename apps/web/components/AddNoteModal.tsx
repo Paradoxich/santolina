@@ -13,6 +13,7 @@ import {
   useToast,
 } from '@paradoxui/ui'
 import type { MenuItem } from '@paradoxui/ui'
+import { failureMessage } from '@/lib/failure'
 import { icons } from '@/lib/icons'
 import {
   DIARY_EVENT_TYPES,
@@ -92,7 +93,7 @@ export function AddNoteModal({
       .catch((err) => {
         if (!cancelled)
           setError(
-            err instanceof Error ? err.message : 'Failed to load your plants.'
+            failureMessage(err, 'Could not load your plants. Try again.')
           )
       })
       .finally(() => {
@@ -188,7 +189,7 @@ export function AddNoteModal({
       reset()
       onClose()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong.')
+      setError(failureMessage(err, 'Could not save your note. Try again.'))
     } finally {
       setIsSubmitting(false)
     }
