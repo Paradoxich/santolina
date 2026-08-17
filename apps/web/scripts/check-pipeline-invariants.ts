@@ -65,6 +65,7 @@ import { isWindowQueryable } from './run-provenance'
 // no env and no connection — checked before adding it, because this script runs
 // in CI without .env.local.
 import { STEP_DEFS } from './round-status'
+import { pinnedTraps, trapNumbers as trapNumbersOf } from './trap-pins'
 
 // ---------------------------------------------------------------------------
 // Escape hatches. Each entry: subject → why it is allowed, today.
@@ -653,23 +654,14 @@ function checkStampSelectors(): void {
 // ---------------------------------------------------------------------------
 function checkTrapsPinned(): { total: number; unpinned: number } {
   const log = read('docs/database-log.md')
-  const traps = [...log.matchAll(/^#### (\d+b?)\./gm)].map((m) => m[1]!)
+  const traps = trapNumbersOf(log)
 
-  // A citation is the trap number named in the test file's HEADER, which is
-  // where the rule requires it — the leading block comment, not a mention
-  // somewhere in a case. The difference is deliberate: a header is a claim
-  // about what the file is for, and it is what a person scanning the directory
-  // reads. wcvp-lookup.test.ts names trap 15 inside a case; that is a useful
-  // comment and not a closure.
-  const pinned = new Set<string>()
-  for (const file of TEST_FILES) {
-    const src = read(file)
-    const end = src.indexOf('*/')
-    if (!src.trimStart().startsWith('/**') || end === -1) continue
-    for (const m of src.slice(0, end).matchAll(/\btraps?\s+(\d+b?)\b/gi)) {
-      pinned.add(m[1]!)
-    }
-  }
+  // A citation is the trap number named in the test file's HEADER — the rule
+  // lives in trap-pins.ts, which check-doc-claims.ts reads too. Both scripts
+  // used to carry their own copy of it and printed 20 against 21 with nothing
+  // failing; sharing the derivation is what makes that impossible. The hatch
+  // list below stays here, beside the check that reads it.
+  const pinned = pinnedTraps(TEST_FILES.map(read))
 
   const unpinned: string[] = []
   for (const trap of traps) {
