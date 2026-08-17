@@ -27,6 +27,7 @@ import { join } from 'node:path'
 import { getSupabaseAdmin } from '../lib/supabase-admin'
 import { parseRevertList } from '../lib/image-reverts'
 import { writePlant } from '../lib/plants-write'
+import { withRunRecord, type Witness } from './run-provenance'
 
 const DEFAULT_FILE = join(process.cwd(), 'reports', 'image-reverts.txt')
 const REVERT_REASON = 'Reviewer preferred the previous photo over the AI pick.'
@@ -83,62 +84,117 @@ async function main() {
     `${apply ? 'APPLYING' : 'DRY RUN —'} ${ids.length} revert(s) from ${file}.\n`
   )
 
+  const runOptions = {
+    step: 'apply-image-reverts',
+    // image_attribution is CLEARED (set to null) in the same statement as the
+    // rest. It is declared because a clearing write is still a write — the
+    // credit line disappearing from a page is a change somebody can see.
+    writeSet: [
+      'image_url_curated',
+      'image_attribution',
+      'image_pick_confidence',
+      'image_pick_reason',
+      'image_verified_at',
+      'is_curated',
+    ],
+    // image_verified_at is SET here, so it witnesses itself. Everything else is
+    // a value column, and image_attribution could not witness itself even if it
+    // were a stamp: a nulled column matches no window, so a run that correctly
+    // cleared 20 would observe 0 against a claim of 20 and file itself as
+    // CONTRADICTED (shape 12).
+    evidence: [
+      {
+        kind: 'stamp',
+        covers: 'image_verified_at',
+        column: 'image_verified_at',
+      },
+      ...(
+        [
+          'image_url_curated',
+          'image_attribution',
+          'image_pick_confidence',
+          'image_pick_reason',
+          'is_curated',
+        ] as const
+      ).map((covers) => ({
+        kind: 'row-touched' as const,
+        covers,
+        table: 'plants' as const,
+        column: 'updated_at',
+      })),
+    ] as Witness[],
+    scope: `${ids.length} reviewer revert(s) from ${file}`,
+    // A reviewer rejected a photograph. No model, no prompt: the revert file is
+    // the recipe, and its hash identifies this batch of verdicts.
+    recipe: { model: 'human', template: text, ingredients: {}, decoding: {} },
+  }
+
   let reverted = 0
   let noop = 0
   let noPrevious = 0
 
-  for (const id of ids) {
-    const p = found.get(id)
-    if (!p) continue
+  const applyAll = async (wrote: (id: string) => void) => {
+    for (const id of ids) {
+      const p = found.get(id)
+      if (!p) continue
 
-    if (!p.image_url) {
-      console.log(`  ${p.common_name} — SKIP: no previous photo to revert to`)
-      noPrevious++
-      continue
-    }
-    if (p.image_url_curated === p.image_url) {
-      console.log(
-        `  ${p.common_name} — already on the previous photo, nothing to do`
-      )
-      noop++
-      continue
-    }
-
-    if (apply) {
-      // `claim: ['image']` — a reviewer choosing this photograph is criterion 1
-      // being cleared by hand, so record it rather than clearing the verdict
-      // and paying to re-derive what a person just decided
-      // (migration 20260729112046). `plants-write.ts` owns the same-statement
-      // rule that makes the claim stick, and settles `is_curated` afterwards.
-      try {
-        await writePlant(
-          supabase,
-          id,
-          {
-            image_url_curated: p.image_url,
-            // The previous photo is the Trefle/PlantNet default, which we don't
-            // credit — clear any attribution left over from a beaten Wikimedia
-            // pick.
-            image_attribution: null,
-            image_pick_confidence: 'high', // human confirmation is the strongest signal we have
-            image_pick_reason: REVERT_REASON,
-            // A reviewer choosing this photo is a verification, and the
-            // strongest one available — stamp it so --verify does not re-ask.
-            image_verified_at: new Date().toISOString(),
-          },
-          { claim: ['image'] }
-        )
-      } catch (err) {
-        console.log(
-          `  ${p.common_name} — ${err instanceof Error ? err.message : String(err)}`
-        )
+      if (!p.image_url) {
+        console.log(`  ${p.common_name} — SKIP: no previous photo to revert to`)
+        noPrevious++
         continue
       }
+      if (p.image_url_curated === p.image_url) {
+        console.log(
+          `  ${p.common_name} — already on the previous photo, nothing to do`
+        )
+        noop++
+        continue
+      }
+
+      if (apply) {
+        // `claim: ['image']` — a reviewer choosing this photograph is criterion 1
+        // being cleared by hand, so record it rather than clearing the verdict
+        // and paying to re-derive what a person just decided
+        // (migration 20260729112046). `plants-write.ts` owns the same-statement
+        // rule that makes the claim stick, and settles `is_curated` afterwards.
+        try {
+          await writePlant(
+            supabase,
+            id,
+            {
+              image_url_curated: p.image_url,
+              // The previous photo is the Trefle/PlantNet default, which we don't
+              // credit — clear any attribution left over from a beaten Wikimedia
+              // pick.
+              image_attribution: null,
+              image_pick_confidence: 'high', // human confirmation is the strongest signal we have
+              image_pick_reason: REVERT_REASON,
+              // A reviewer choosing this photo is a verification, and the
+              // strongest one available — stamp it so --verify does not re-ask.
+              image_verified_at: new Date().toISOString(),
+            },
+            { claim: ['image'] }
+          )
+          wrote(id)
+        } catch (err) {
+          console.log(
+            `  ${p.common_name} — ${err instanceof Error ? err.message : String(err)}`
+          )
+          continue
+        }
+      }
+      console.log(
+        `  ${p.common_name} — ${apply ? 'reverted' : 'would revert'} to previous photo`
+      )
+      reverted++
     }
-    console.log(
-      `  ${p.common_name} — ${apply ? 'reverted' : 'would revert'} to previous photo`
-    )
-    reverted++
+  }
+
+  // A dry run opens NO run: a pass that writes no value produced none.
+  if (apply) {
+    await withRunRecord(runOptions, (run) => applyAll((id) => run.wrote(id)))
+  } else {
+    await applyAll(() => {})
   }
 
   console.log(

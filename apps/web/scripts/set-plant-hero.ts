@@ -38,6 +38,7 @@
 
 import { getSupabaseAdmin } from '../lib/supabase-admin'
 import { writePlant } from '../lib/plants-write'
+import { withRunRecord, type Witness } from './run-provenance'
 import type { ImageCandidate } from '../lib/image-shortlist'
 
 function parseFlag(name: string): string | null {
@@ -120,17 +121,62 @@ async function main() {
   // Attribution is written even when null: a Trefle photo winning must CLEAR a
   // credit left behind by a previous Wikimedia hero, or the page credits a
   // photographer whose photo is no longer on it.
-  await writePlant(
-    supabase,
-    id,
+  await withRunRecord(
     {
-      image_url_curated: url,
-      image_attribution: attribution,
-      image_pick_confidence: 'high',
-      image_pick_reason: `manual hero override: ${why}`,
-      image_verified_at: new Date().toISOString(),
+      step: 'set-plant-hero',
+      writeSet: [
+        'image_url_curated',
+        'image_attribution',
+        'image_pick_confidence',
+        'image_pick_reason',
+        'image_verified_at',
+        'is_curated',
+      ],
+      // image_verified_at is SET, so it witnesses itself. The rest are value
+      // columns; image_attribution may be written as NULL, and a nulled column
+      // matches no window, so it could not witness itself even as a stamp.
+      evidence: [
+        {
+          kind: 'stamp',
+          covers: 'image_verified_at',
+          column: 'image_verified_at',
+        },
+        ...(
+          [
+            'image_url_curated',
+            'image_attribution',
+            'image_pick_confidence',
+            'image_pick_reason',
+            'is_curated',
+          ] as const
+        ).map((covers) => ({
+          kind: 'row-touched' as const,
+          covers,
+          table: 'plants' as const,
+          column: 'updated_at',
+        })),
+      ] as Witness[],
+      scope: `${plant.scientific_name} (${id})`,
+      // A person overrode an automated judgment. `--why` is mandatory and is
+      // the entire recipe: there is no model and no prompt, and the reason is
+      // what makes this write reviewable at all.
+      recipe: { model: 'human', template: why, ingredients: {}, decoding: {} },
     },
-    { claim: ['image'] }
+    async (run) => {
+      await writePlant(
+        supabase,
+        id,
+        {
+          image_url_curated: url,
+          image_attribution: attribution,
+          image_pick_confidence: 'high',
+          image_pick_reason: `manual hero override: ${why}`,
+          image_verified_at: new Date().toISOString(),
+        },
+        { claim: ['image'] }
+      )
+      run.wrote(id)
+    }
   )
 
   console.log('\nDone. Hero replaced and the image criterion claimed.')

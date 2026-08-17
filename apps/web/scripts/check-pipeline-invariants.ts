@@ -158,17 +158,10 @@ export const RUNS_WITHOUT_PROVENANCE: Record<string, string> = {
   'apply-native-to-fixes.ts':
     'Applies committed decisions and NULLS native_checked_at. A clearing write is still a write.',
   'apply-seasonal-care-fixes.ts': 'Same generate-then-apply shape.',
-  'apply-image-confirmations.ts':
-    'Writes image_verified_at from a review file.',
-  'apply-image-reverts.ts': 'Clears a curated hero and its stamps.',
-  'set-plant-hero.ts':
-    'Manual hero override. Writes image_url_curated and stamps.',
   'feed-wikimedia-candidates.ts':
     'Appends candidates and CLEARS image_checked_at so the pass re-picks.',
   'backfill-guard-stamps.ts':
     'Report-derived stamping. Its state-derived half was deleted 2026-08-14 after it fabricated 100 stamps, so this is the script whose provenance matters most and has none.',
-  'fix-oversized-heroes.ts':
-    'One-off image repair. Found by this scan rather than by the list, which is the scan doing its job.',
 
   // --- archive candidates: EMPTY as of 2026-08-17. All three left scripts/
   //     for scripts/archive/, which is the other way an entry here closes. ---
