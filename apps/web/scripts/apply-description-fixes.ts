@@ -26,7 +26,13 @@
  * Guarded, the same discipline as the botanical and native_to corrections:
  * - `expect` must still match the stored description exactly, or the row is
  *   STALE and skipped rather than clobbered. Someone else's rewrite is never
- *   silently overwritten by a decision made about older text.
+ *   silently overwritten by a decision made about older text. EXACTLY is now
+ *   literal: the guard moved to `scripts/reviewed-mutation.ts`, which compares
+ *   normalised JSON, where this file used to compare trimmed strings. A stored
+ *   description differing only in surrounding whitespace therefore reports
+ *   stale and exits 1 rather than being written. That is the safe direction —
+ *   loud and skipped, not silent and clobbered — and it is worth knowing before
+ *   authoring a decision file by hand.
  * - Refuses any replacement containing an em dash, en dash or semicolon (the UI
  *   copy rules), so a bad decision file fails before it reaches a page. All 748
  *   live descriptions were free of all three when this shipped (counted
@@ -59,6 +65,13 @@ import { join } from 'node:path'
 import { getSupabaseAdmin } from '../lib/supabase-admin'
 import { fetchAllRows } from '../lib/paginate'
 import { withRunRecord, type Witness } from './run-provenance'
+import {
+  classify,
+  openReviewedMutation,
+  asMutationDb,
+  formatReport,
+  type MutationIntent,
+} from './reviewed-mutation'
 
 const DEFAULT_FILE = 'reference/description-fixes-2026-08-17.json'
 
@@ -140,39 +153,42 @@ async function main() {
   )
   const byId = new Map(rows.map((r) => [r.id, r]))
 
-  const stale: string[] = []
-  const missing: string[] = []
-  const applied: string[] = []
-  const uncurated: string[] = []
-  const applicable: Array<{ fix: DescriptionFix; row: PlantRow }> = []
+  // CLASSIFICATION IS THE PRIMITIVE'S NOW. Its four dispositions are this
+  // script's four outcomes under different names, and the mapping is exact:
+  // `noop` is already-applied, `drift` is stale, `missing` is missing, and
+  // `written` is applicable. The ordering that matters — already-applied
+  // checked BEFORE drift — is a property of `classify`, and its header records
+  // the same incident this file used to record on its own: a decision file is
+  // COMMITTED and stays in the tree, so already-applied is the normal steady
+  // state, and calling it stale made the default invocation fail forever.
+  //
+  // `retire`, not `skip`: a description rewrite is exactly what the sign-off
+  // was partly a judgment about, so the verdict SHOULD fall. What changes is
+  // that the retirement is now OBSERVED — the primitive reads `is_curated` back
+  // for the rows it wrote — where this script inferred it from the before-state
+  // and would have kept reporting confidently if the trigger ever stopped
+  // watching `description`.
+  const writer = openReviewedMutation({
+    db: asMutationDb(db),
+    table: 'plants',
+    onCurated: 'retire',
+    dryRun: DRY_RUN,
+  })
 
+  const intents: MutationIntent[] = []
+  const unknown: string[] = []
   for (const fix of fixes) {
-    const row = byId.get(fix.id)
-    if (!row) {
-      missing.push(`${fix.scientific_name} — no row with id ${fix.id}`)
+    if (!byId.has(fix.id)) {
+      unknown.push(`${fix.scientific_name} — no row with id ${fix.id}`)
       continue
     }
-    const stored = (row.description ?? '').trim()
-    // ALREADY APPLIED IS NOT STALE, and conflating them made this script fail
-    // forever. A decision file is COMMITTED and stays in the tree as the record
-    // of why a sentence reads as it does, so the normal state of the default
-    // file is "already applied" — and the first version reported that as STALE
-    // and exited 1. A script whose default invocation always fails is a script
-    // people stop reading, which is trap 1's shape wearing an exit code.
-    if (stored === fix.description.trim()) {
-      applied.push(fix.scientific_name)
-      continue
-    }
-    // STALENESS, the whole safety property: a decision made about older text
-    // must not overwrite a rewrite somebody else has landed since. Checked
-    // AFTER the already-applied case, or the two are indistinguishable.
-    if (stored !== fix.expect.trim()) {
-      stale.push(
-        `${fix.scientific_name} — stored description matches neither \`expect\` nor \`description\`; someone else rewrote it, so re-read the row and re-author the decision`
-      )
-      continue
-    }
-    applicable.push({ fix, row })
+    intents.push({
+      id: fix.id,
+      label: `${fix.common_name} (${fix.scientific_name})`,
+      from: { description: fix.expect },
+      to: { description: fix.description },
+      why: fix.why,
+    })
   }
 
   const runOptions = {
@@ -191,7 +207,7 @@ async function main() {
         column: 'updated_at',
       },
     ] as Witness[],
-    scope: `${applicable.length} hand-authored decision(s) from ${FILE}`,
+    scope: `${intents.length} hand-authored decision(s) from ${FILE}`,
     // Hand-authored copy: there is no model and no prompt. The decision file IS
     // the recipe, and its content hash is what identifies this cohort.
     recipe: {
@@ -202,59 +218,59 @@ async function main() {
     },
   }
 
-  const apply = async (wrote: (id: string) => void) => {
-    for (const { fix, row } of applicable) {
-      console.log(`${fix.common_name} (${fix.scientific_name})`)
-      console.log(`  before: ${fix.expect}`)
-      console.log(`  after:  ${fix.description}`)
-      console.log(`  why:    ${fix.why}`)
+  // NOTHING TO DO OPENS NO RUN, and restoring this cost one line because the
+  // rows are already in hand. Provenance records what produced a value, and a
+  // pass with no applicable decision produced none; `beginRun` would otherwise
+  // file a completed, zero-row invocation whose own note reads "vacuous, not
+  // evidence of work". The first cut of this migration dropped the property and
+  // filed exactly that record.
+  //
+  // `classify` is the same function `apply` uses, not a second opinion about
+  // what counts as applicable — which is the only way this pre-pass can be
+  // guaranteed to agree with the write that follows it.
+  const applicable = intents.filter((intent) => {
+    const row = byId.get(intent.id)!
+    const outcome = classify(
+      intent,
+      { id: row.id, is_curated: row.is_curated, values: { ...row } },
+      'retire'
+    )
+    return (
+      outcome.disposition === 'written' || outcome.disposition === 'stamped'
+    )
+  })
 
-      if (!DRY_RUN) {
-        const { error } = await db
-          .from('plants')
-          .update({ description: fix.description })
-          .eq('id', fix.id)
-        if (error)
-          throw new Error(
-            `${fix.scientific_name}: write failed — ${error.message}`
-          )
-        wrote(fix.id)
-      }
-      if (row.is_curated) uncurated.push(fix.scientific_name)
-      console.log('')
-    }
-  }
+  const report =
+    DRY_RUN || applicable.length === 0
+      ? await writer.apply(intents)
+      : await withRunRecord(runOptions, (run) =>
+          writer.apply(intents, { wrote: (id) => run.wrote(id) })
+        )
 
-  // Nothing to do is a success, and it opens no run: a pass with no applicable
-  // decision produced no value.
-  if (applicable.length === 0) {
-    console.log('Nothing to apply.\n')
-  } else if (DRY_RUN) {
-    await apply(() => {})
-  } else {
-    await withRunRecord(runOptions, async (run) => {
-      await apply((id) => run.wrote(id))
-    })
+  for (const outcome of report.outcomes) {
+    if (outcome.disposition !== 'written') continue
+    const fix = fixes.find((f) => f.id === outcome.intent.id)!
+    console.log(`${fix.common_name} (${fix.scientific_name})`)
+    console.log(`  before: ${fix.expect}`)
+    console.log(`  after:  ${fix.description}`)
+    console.log(`  why:    ${fix.why}`)
+    console.log('')
   }
 
   console.log('─────────────────────────────────────────')
   console.log(
-    `${DRY_RUN ? 'Would apply' : 'Applied'} ${applicable.length}, ${applied.length} already applied, ${stale.length} stale, ${missing.length} missing.`
+    formatReport(report, {
+      dryRun: DRY_RUN,
+      reJudgeWith: 'curate-editorial --ids <the ids above>',
+    })
   )
-  if (applied.length) console.log(`  applied earlier: ${applied.join(', ')}`)
-  for (const s of stale) console.log(`  STALE   ${s}`)
-  for (const m of missing) console.log(`  MISSING ${m}`)
+  for (const u of unknown) console.log(`  MISSING ${u}`)
 
-  if (uncurated.length) {
-    console.log(
-      `\n${uncurated.length} row(s) lost an editorial verdict, which is the trigger working:` +
-        `\n  ${uncurated.join('\n  ')}` +
-        `\nThe sign-off was partly a judgment that the OLD description read well.` +
-        `\nRe-run: curate-editorial --ids <those ids>`
-    )
-  }
-
-  if (stale.length || missing.length) process.exit(1)
+  // A stale decision and an unknown id are both defects in the decision file,
+  // not skips: the first means somebody rewrote the sentence this decision was
+  // made about, the second that the row it names is gone.
+  const stale = report.skipped_drift
+  if (stale || report.missing || unknown.length) process.exit(1)
 }
 
 main().catch((err) => {

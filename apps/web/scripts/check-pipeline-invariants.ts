@@ -211,8 +211,6 @@ export const HAND_ROLLED_PAGINATION: Record<string, string> = {
  * produce would only fail as a stale hatch.
  */
 export const HAND_ROLLED_REVIEWED_MUTATION: Record<string, string> = {
-  'apply-description-fixes.ts':
-    'The closest to migrated already: it reports the verdicts it retires, which is where the primitive got that half from. Its `expect` guard covers a single column and its run record is wired, so it is the lowest-value migration of the six and goes last.',
   'apply-sun-widening.ts':
     'Guards on `stored` read out of a cross-check report rather than a hand-authored decision, and re-checks `is_curated` a second time at the write with `.eq("is_curated", false)`. That belt-and-braces has no equivalent in the primitive; decide whether to add it or drop it when this one moves.',
 }
