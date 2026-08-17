@@ -17,13 +17,17 @@
  * rather than reimplementing it. Against the pre-fix code `trap-pins.ts` does
  * not exist and this file does not compile.
  *
- * THE HEADER RULE IS WHERE THE SUBTLETY LIVES, so it is asserted in both
- * directions. A number named in a test file's leading block comment is a pin; a
- * number named inside a case body is not, however useful the cross-reference.
- * `wcvp-lookup.test.ts` is the live example of the second, and the case below
- * reads it from disk rather than naming its number here — because writing the
- * number in THIS header would pin it, which is the same defect one level up.
- * It is also how this file first ran: the count came out 20 against 21.
+ * THE HEADER RULE IS WHERE THE SUBTLETY LIVES, so it is asserted from every
+ * direction. Two things must both hold for a number to be a pin: it sits in the
+ * file's LEADING block comment, and its own sentence claims it — `pin`, `pins`,
+ * `pinned`. A number inside a case body is not a pin however useful the
+ * cross-reference, and neither is a bare mention up here.
+ *
+ * THE MARKER HALF WAS ADDED AFTER THIS FILE'S FIRST DRAFT PROVED IT NECESSARY.
+ * That draft named a trap number in this very header as CONTEXT and closed it,
+ * and the count came out 20 against 21 — the file written to stop the defect
+ * committing it. The cases below therefore never name a number they do not
+ * pin: the `wcvp-lookup.test.ts` case reads it from disk instead.
  */
 
 import { execFileSync } from 'node:child_process'
