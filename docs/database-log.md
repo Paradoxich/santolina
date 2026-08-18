@@ -56,7 +56,7 @@ The numbers **in this file are different and must stay written down**: a dated s
     **Deferred, added 2026-08-18 (round 13).**
     - **A cultivar tier.** `moon` and `gothic` cannot be filled by any seeding round at any batch size: their signature planting is cultivar selections of species the catalog already holds ('Queen of Night', 'Black Lace', black mondo, white roses). Measured by `pnpm probe:gap`, which reports the style as cultivar-bound so no future round re-derives it from a low tag count. Until the tier exists those two styles stay thin, and that is correct rather than neglected.
     - **"Poor citizen in region X".** A field beside `native_region`, so the app can warn the reader who needs warning instead of a seeding decision quietly deciding for everyone. Reasoning and the interim rule are in [why a round is shaped the way it is](curation.md#round-runbook) (Ana, 2026-08-18).
-    - **A `foliage_checked_at` stamp.** `curate-plants` asks for `foliage_color` whenever it is NULL, and NULL is also its legitimate answer ("typical green"), so the question can never be satisfied: 587 of 780 drafted rows carry NULL, 538 of them uncurated and therefore re-asked on every run (measured 2026-08-18). It is trap 26's shape a third time, after `style_tags` `[]` and `is_greenery` `false`, and it closes the same way — a stamp is the only thing that can tell a real answer from an unasked question. Until it lands, `curate-plants`' skip-when-nothing-is-missing is nearly inert: it passed over 0 of round 13's 6 selected rows, 1 of 27, and 3 of 21 on rounds 12 and 11.
+    - **`foliage_checked_at` — WRITTEN AND REPLAYED LOCALLY, NOT YET PUSHED.** Migration `20260818100000`. `curate-plants` asks for `foliage_color` whenever it is NULL, and NULL is also its legitimate answer ("typical green"), so the question can never be satisfied: 587 of 780 drafted rows carry NULL, 538 of them uncurated and therefore re-asked on every run (measured 2026-08-18). Trap 26's shape a third time, after `style_tags` `[]` and `is_greenery` `false`. **The branch's code READS the column** (`STATUS_PROJECTION`, `missingFields`, `buildPatch`), so every catalog script on it fails against production until the push lands — PostgREST errors on a column that does not exist. `supabase db push` then `pnpm migrations:check`; do not merge before that.
 
 12. **Every remediation carries a verification predicate, not just a command.** A trap that says "run `curate-styles --round 9`" tells you what to type; it does not tell you how to know it worked. Write both: the command, and the query whose result changes when the repair lands — the shape the 2026-08-15 repair used, "fixed when `style_checked_at = ai_drafted_at AND style_tags = '{}'` returns 0". Remediations are the most dangerous claims in this file. They are never falsified until the day someone follows one, they are trusted because they are in the traps file, and trap 26's was one session away from being run as written.
 
@@ -981,9 +981,14 @@ descriptions open by naming another plant, including `Sweet marjoram`
 described as "Pot marjoram is...", which is a different row.
 
 **Also.** `curate-plants` now skips a row that owes no field, before the call
-rather than after (`missingFields`). It is nearly inert until `foliage_color`
-gets a stamp — that measurement, 587 of 780 rows re-asked forever, is on rule
-11's deferred list above.
+rather than after (`missingFields`). Migration `20260818100000` adds
+`foliage_checked_at` so the skip can actually fire — backfilled from
+`ai_drafted_at`, which is derived rather than invented: the field has been in
+the prompt since the script's first commit (2026-07-06) and the earliest row
+was drafted 2026-07-09, so every existing row was genuinely asked. Replayed on
+the local stack and the backfill statement exercised there. **NOT pushed to
+production** — the push was not run in this session, and the branch's code
+reads the column, so it must not merge first.
 
 **Not done.** The remaining 52 violations (36 feed, 16 dashes) — neither has a
 safe substitution, so both are a person's. The 37 stale-name descriptions. The

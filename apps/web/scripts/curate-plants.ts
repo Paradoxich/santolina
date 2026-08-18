@@ -138,6 +138,9 @@ type PlantPatch = Omit<CurationResponse, 'hardiness_confidence'> & {
   // Written alongside style_tags, for the same reason — see the note at the
   // assignment for why this pass owns a stamp named after another script.
   style_checked_at?: string
+  // Written alongside foliage_color, so a null answer ("typical green") can be
+  // told from a question nobody asked (migration 20260818100000).
+  foliage_checked_at?: string
 }
 
 // ---------------------------------------------------------------------------
@@ -233,7 +236,11 @@ export function missingFields(plant: DbPlant): string[] {
   if (!plant.space_types?.length) missing.push('space_types')
   if (!plant.garden_use_tags?.length) missing.push('garden_use_tags')
   if (!plant.bloom_color?.length) missing.push('bloom_color')
-  if (plant.foliage_color === null) missing.push('foliage_color')
+  // The STAMP, never the value — migration 20260818100000. NULL foliage_color
+  // is a real answer ("typical green"), so asking on the value re-asked 587 of
+  // 780 rows on every run. Same reasoning as style_tags `[]` and is_greenery
+  // `false` above; this was the third instance and the last one left.
+  if (!plant.foliage_checked_at) missing.push('foliage_color')
   // Folded in from curate-greenery (2026-07-29). It is one boolean on a call
   // we are already making for this plant, so asking it here removes a whole
   // per-round pass for free. curate-greenery survives as the repair tool for
@@ -456,8 +463,14 @@ export function buildPatch(
   // `false`): a legitimate answer that is indistinguishable from an unasked
   // question, so only a stamp can tell them apart. Closing it is a schema
   // change and is on standing rule 11's list, not fixed here.
-  if (plant.foliage_color === null && 'foliage_color' in response)
+  // STAMPED WHENEVER ASKED, and the stamp is what makes a null answer legible.
+  // Written even when the answer is null and the column does not change —
+  // that IS the case the stamp exists for, and it is the same discipline as
+  // trap 28's "a row whose value is already correct is still stamped".
+  if (!plant.foliage_checked_at && 'foliage_color' in response) {
     patch.foliage_color = response.foliage_color ?? null
+    patch.foliage_checked_at = new Date().toISOString()
+  }
   // Stamped as well as written, so round-status can tell "judged false" from
   // "never asked" — false is the column default, so the value alone says
   // nothing (the same trap greenery_checked_at was added for).
@@ -650,7 +663,12 @@ async function main() {
     // then observe zero against a claim of N on both.
     writeSet: only
       ? [only, 'ai_drafted_at']
-      : ['ai_drafted_at', 'style_checked_at', 'greenery_checked_at'],
+      : [
+          'ai_drafted_at',
+          'style_checked_at',
+          'greenery_checked_at',
+          'foliage_checked_at',
+        ],
     // TRAP 28, and this file is where it was found — by writing the test, a day
     // after this run was called correct.
     //
@@ -691,6 +709,14 @@ async function main() {
           {
             kind: 'row-touched',
             covers: 'greenery_checked_at',
+            table: 'plants',
+            column: 'updated_at',
+          },
+          // Conditional like the two above (`if (!plant.foliage_checked_at)`),
+          // so it bounds the run rather than confirming it — trap 28.
+          {
+            kind: 'row-touched',
+            covers: 'foliage_checked_at',
             table: 'plants',
             column: 'updated_at',
           },

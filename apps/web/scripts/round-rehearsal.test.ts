@@ -66,6 +66,7 @@ function freshlySeededPlant(id = 'plant-1'): StatusRow {
     seasonal_care: null,
     style_checked_at: null,
     greenery_checked_at: null,
+    foliage_checked_at: null,
     image_checked_at: null,
     image_pick_confidence: null,
     image_verified_at: null,

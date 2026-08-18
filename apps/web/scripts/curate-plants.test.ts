@@ -176,6 +176,7 @@ describe('a fully drafted row owes nothing, and is not worth a call', () => {
       // value — trap 26, which is what the rest of this file is about.
       style_checked_at: '2026-08-18T00:00:00Z',
       greenery_checked_at: '2026-08-18T00:00:00Z',
+      foliage_checked_at: '2026-08-18T00:00:00Z',
       space_types: ['ground_garden'],
       garden_use_tags: ['sunny borders'],
       bloom_color: ['pink'],
@@ -219,6 +220,22 @@ describe('a fully drafted row owes nothing, and is not worth a call', () => {
     )
     expect(missingFields(completeRow({ greenery_checked_at: null }))).toContain(
       'is_greenery'
+    )
+  })
+
+  it('treats a null foliage_color WITH its stamp as answered, not unasked', () => {
+    // THE ASSERTION THE MIGRATION EXISTS FOR (20260818100000). "Typical green"
+    // IS null, so before the stamp this row was re-asked on every run: 587 of
+    // 780 drafted rows, 538 of them selected every time. The value cannot say
+    // whether the question was asked; only the stamp can.
+    expect(missingFields(completeRow({ foliage_color: null }))).toEqual([])
+  })
+
+  it('owes foliage_color when the stamp is absent, whatever the value says', () => {
+    // The other direction: a row carrying a colour but no stamp was never
+    // asked by this pass (the value came from elsewhere), so it still owes it.
+    expect(missingFields(completeRow({ foliage_checked_at: null }))).toContain(
+      'foliage_color'
     )
   })
 

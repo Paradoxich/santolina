@@ -87,6 +87,7 @@ export interface StatusRow {
   seasonal_care: unknown
   style_checked_at: string | null
   greenery_checked_at: string | null
+  foliage_checked_at: string | null
   image_checked_at: string | null
   image_pick_confidence: string | null
   image_verified_at: string | null
@@ -259,13 +260,26 @@ export const STEP_DEFS: StepDef[] = [
     // perRound: false repair pass that round close never looks at.
     step: 'curate-plants',
     evidence:
-      'ai_drafted_at, style_checked_at, greenery_checked_at all NOT NULL',
+      'ai_drafted_at, style_checked_at, greenery_checked_at, foliage_checked_at all NOT NULL',
     level: 'FAIL',
     // Drafts description, care instructions, style tags and greenery. Every one
     // of those renders.
     obligation: 'catalog',
+    // foliage_checked_at joins the evidence on 2026-08-18 and fails NO existing
+    // round, which is the only reason it can join `ran` rather than merely be
+    // claimed: migration 20260818100000 backfills it from ai_drafted_at, and
+    // that backfill is derived (the field has been in the prompt since the
+    // script's first commit, and no row predates it — counts in the migration).
+    // A stamp added without that proof belongs in the registry unread, the way
+    // common_name_checked_at arrived.
+    stampColumn: 'foliage_checked_at',
     ran: (p) =>
-      Boolean(p.ai_drafted_at && p.style_checked_at && p.greenery_checked_at),
+      Boolean(
+        p.ai_drafted_at &&
+        p.style_checked_at &&
+        p.greenery_checked_at &&
+        p.foliage_checked_at
+      ),
   },
   {
     step: 'curate-common-names',
@@ -535,7 +549,8 @@ export const STATUS_PROJECTION =
   'common_name_checked_at, ' +
   'botanical_checked_at, native_checked_at, native_region_checked_at, ' +
   'hardiness_rating, seasonal_care, ' +
-  'style_checked_at, greenery_checked_at, image_checked_at, ' +
+  'style_checked_at, greenery_checked_at, foliage_checked_at, ' +
+  'image_checked_at, ' +
   'image_pick_confidence, image_verified_at, ' +
   'editorial_checked_at'
 
