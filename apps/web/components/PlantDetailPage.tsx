@@ -402,9 +402,15 @@ export function PlantDetailPage({
         </Tooltip>
       </SubpageHeader>
 
-      {/* Growing plants get a 1128px column — wider than the dashboard's
-          1032, Ana's call, because this page's hero and full-width timeline
-          want the room. Everything else keeps the 640px reading column. */}
+      {/* Growing plants get the full content column, because this page's hero
+          and full-width timeline want the room. Everything else keeps a 640px
+          reading column: those pages are mostly prose, which reads badly at
+          the full width.
+
+          The width itself is --content-max and is not named here. This said
+          "a 1128px column — wider than the dashboard's 1032" until
+          2026-08-18, and both numbers had been wrong since the July 29 sweep
+          put every surface on one cap. */}
       <div
         className={`flex w-full flex-col pt-8 md:pt-12 ${
           isGrowing ? 'max-w-content' : 'mx-auto max-w-[640px]'
