@@ -129,15 +129,27 @@ Ask me explicitly, presenting the summary from step 2:
   actually does** — 21 of the 25 merges before 2026-08-18 came through one, and
   the Session Log cites PR numbers as a session's durable record.
 
+  From the session worktree:
+
   ```bash
   git push -u origin session/<name>
   gh pr create --fill                       # or --title/--body for a real summary
   gh pr checks --watch                      # branch CI must be green BEFORE merging
-  gh pr merge --merge --delete-branch       # a merge commit, matching the history
   ```
 
-  Then, in the main checkout: `git pull --ff-only`, `git worktree remove <path>`,
-  `git worktree prune`.
+  **Then leave the worktree BEFORE merging**, and finish from the main checkout:
+
+  ```bash
+  git worktree remove <path> && git worktree prune
+  gh pr merge --merge --delete-branch       # a merge commit, matching the history
+  git pull --ff-only
+  ```
+
+  The order is not cosmetic. `gh pr merge --delete-branch` checks `main` out
+  locally to clean up, which FAILS inside a worktree — `fatal: 'main' is already
+used by worktree at …`. It fails AFTER the remote merge has gone through, so
+  the PR is merged, the local step is not, and the remote branch survives. Merge
+  from the main checkout and the whole sequence is one command each.
 
   **Why a PR rather than a local merge, beyond review.** `gh pr merge` merges ON
   THE REMOTE, so there is no merged-but-unpushed state to forget to leave. A
