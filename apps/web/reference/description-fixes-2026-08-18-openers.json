@@ -1,0 +1,26 @@
+[
+  {
+    "scientific_name": "Origanum majorana",
+    "common_name": "Sweet marjoram",
+    "expect": "Pot marjoram is a compact, aromatic herb with soft grey-green leaves and small white or pale pink flowers. It has a sweeter, milder flavor than common oregano and is prized in cooking. The bushy plant forms neat mounds perfect for herb gardens and containers.",
+    "description": "Sweet marjoram is a compact, aromatic herb with soft grey-green leaves and small white or pale pink flowers. It has a sweeter, milder flavor than common oregano and is prized in cooking. The bushy plant forms neat mounds perfect for herb gardens and containers.",
+    "why": "Opener named a DIFFERENT species that the catalog also holds: pot marjoram is Origanum onites (row 167a6c88-66dd-4c6b-9962-19a5c0f4ab10), this row is Origanum majorana. The rest of the sentence is accurate for O. majorana, so only the name is replaced. Cause is the ordering fault runbook step 1a now prevents: curate-plants wrote a description naming the plant, and curate-common-names corrected common_name afterwards, leaving the prose talking about the old name. Audited 2026-08-18.",
+    "id": "2a7d2465-40ef-4c10-8500-c7056f841fc7"
+  },
+  {
+    "scientific_name": "Nepeta cataria",
+    "common_name": "Catnip",
+    "expect": "Catmint is a highly aromatic herb with grey-green leaves and spikes of small lavender-blue flowers that bloom throughout summer. It's a vigorous, drought-tolerant plant that forms bushy clumps and spreads readily. Beloved by bees and butterflies, it's easy to grow and perfect for cottage gardens.",
+    "description": "Catnip is a highly aromatic herb with grey-green leaves and spikes of small lavender-blue flowers that bloom throughout summer. It's a vigorous, drought-tolerant plant that forms bushy clumps and spreads readily. Beloved by bees and butterflies, it's easy to grow and perfect for cottage gardens.",
+    "why": "Opener named a DIFFERENT catalog row: Catmint is Nepeta x faasenii in this catalog, and Nepeta nuda holds Hairless catmint. This row is Nepeta cataria. The remaining description is accurate for N. cataria, so only the name is replaced. Same pre-step-1a ordering fault as Sweet marjoram. Audited 2026-08-18.",
+    "id": "be2da8cc-4e1d-44f4-9c82-1d7cc2f1da8c"
+  },
+  {
+    "scientific_name": "Cichorium intybus",
+    "common_name": "Chicory",
+    "expect": "Belgium endive is a leafy plant grown primarily for its crisp, slightly bitter leaves that are eaten fresh or cooked. It produces attractive blue daisy-like flowers on tall stems in summer. The plant is related to radicchio and wild chicory.",
+    "description": "Chicory is a tall perennial grown for its clear sky-blue daisy-like flowers, which open along wiry stems through summer and close by early afternoon. The deeply toothed basal leaves are edible and bitter, and the blanched shoots sold as Belgian endive are forced from the same species. It self-sows freely and copes with poor, dry soil.",
+    "why": "The whole description was written about a different plant from the row. It opened \"Belgium endive is...\" and closed by saying the plant is \"related to radicchio and wild chicory\" while the row IS wild chicory, Cichorium intybus. Belgian endive is not a separate species but a forced cultivar group of this one, so the text described a vegetable crop and then disowned the species it belongs to. Rewritten around the ornamental habit a reader of this catalog sees, with the endive connection stated correctly rather than as a separate plant. Audited 2026-08-18.",
+    "id": "43d0cf3e-44dd-4964-9b73-9683c17640e7"
+  }
+]

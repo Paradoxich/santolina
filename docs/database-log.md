@@ -959,39 +959,34 @@ is unchanged.
 
 ### 2026-08-18 — Trap 37 closed, sun tolerance re-judged (not a round)
 
-**Branch** `session/2026-08-18-wikimedia-copy`. Rule-1 backup
-`backups/2026-08-18T08-56-44-341Z` (780 plants, 1945 pairs). No migration.
+**Branch** `session/2026-08-18-wikimedia-copy`. Rule-1 backups
+`backups/2026-08-18T08-56-44-341Z` and `T09-32-20-566Z`. No migration.
 
-**Changed.** Trap 37 fixed and PINNED, both halves: `curate-common-names`
-judges inside its run record (the meter is windowed, so a call made before it
-opens is money the record cannot see), and `runs:cost --round N` now names the
-runs started in that round's window that do not name it — on round 13 that is
-the four `pick-plant-images` batches whose scope is a batch id. A run whose
-recipe names a model, that wrote rows, and that observed zero tokens now
-records `usage_unobserved`. `TRAPS_NOT_PINNED` 22 → 21.
+**Changed.** Trap 37 fixed and pinned, both halves: `curate-common-names` now
+judges inside its run record, and `runs:cost --round N` names the runs started
+in that round's window that do not name it. A model-bearing run that wrote rows
+and observed no tokens records `usage_unobserved`. `TRAPS_NOT_PINNED` 22 → 21.
 
-**Database.** `curate-sun-tolerance --all --apply` re-judged the 175 rows
-recording no sun tolerance: 81 widened, 75 written, **6 frozen as
-`is_curated`**, 94 kept `[]`. Run
-`curate-sun-tolerance-2026-08-18T0856-64eb15de`, 7 calls, 21,824 in / 8,065
-out (~$0.19). `verify-round` 0 failures — no thrives/tolerates overlap.
+**Database.** `curate-sun-tolerance --all --apply`: 175 rows with no tolerance
+re-judged, 81 widened, 75 written, 6 frozen as `is_curated`, 94 kept `[]`. Run
+`curate-sun-tolerance-2026-08-18T0856-64eb15de`, 7 calls, ~$0.19. Then
+`apply-description-fixes --file reference/description-fixes-2026-08-18-openers.json`,
+3 of 3, drift 0, all uncurated so no verdict retired.
 
-**Found.** The premise did not survive contact: "thrives in full sun, tolerates
-nothing is almost never true" predicted most of 175 would widen, and the real
-rate is 46%. The 94 that kept `[]` are correct horticulture — lavender,
-rosemary and cistus do not take shade; woodland species do not take full sun.
-**A 25-row sample predicted 16%**, a third of the true rate, because the first
-rows by id were Mediterranean and woodland. Sampling by the predicate is not
-enough when the predicate correlates with id order.
+**Found.** The sun premise did not survive: "tolerates nothing is almost never
+true" predicted most of 175 would widen; the rate is 46%, and the 94 that kept
+`[]` are correct (lavender takes no shade, woodland species take no full sun).
+A 25-row sample predicted 16% because the first rows by id were Mediterranean
+and woodland — sampling by the predicate does not help when the predicate
+correlates with id order. Separately, 3 descriptions named a different species
+(`Sweet marjoram`, `Catnip`, `Chicory`), all drafted before step 1a's ordering.
 
-**Not done.** The 6 curated rows the pass would have widened — an editorial
-call, not a mechanical one. No `sun_checked_at`, so a row that keeps `[]` is
-re-judged on every run. The 2026-08-18 session decided under delegation that
-the sun model adds no schema (not reviewed by Ana), and the pass costs ~$0.19,
-so `--ids` narrows a repeat instead.
+**Not done.** The 6 curated rows the sun pass would widen. No `sun_checked_at`,
+so a row keeping `[]` is re-judged every run; the pass costs ~$0.19 and the sun
+model adds no schema, so `--ids` narrows a repeat.
 
-**Verified.** `verify-round` 0 failures, 780 rows, 175 → 100 with no tolerance.
-532 tests green, invariants and doc claims clean.
+**Verified.** `verify-round` 0 failures, 175 → 100 with no tolerance, the three
+rewritten descriptions pass `copy:check`. 532 tests green.
 
 ### 2026-08-18 — Copy rules extended past seasonal_care, season "fall" swept (not a round)
 
@@ -1030,7 +1025,7 @@ failures. The skip now passes over 5 of round 13's 6 selected rows where it
 passed over 0.
 
 **Not done.** The remaining 52 violations (36 feed, 16 dashes) — neither has a
-safe substitution, so both are a person's. The 37 stale-name descriptions.
+safe substitution, so both are a person's.
 
 **Verified.** `copy:check --all` re-run independently after the sweep: 88 → 52.
 Six seasonal_rhythm stages intact on three spot-checked rows. 516 tests green.

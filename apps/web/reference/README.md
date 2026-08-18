@@ -53,6 +53,23 @@ fresh worktree and the copy was taken from the shared checkout by hand. The
 error names the fix, which is the only reason it cost minutes rather than a
 re-download.
 
+## `description-fixes-<date>[-<pass>].json`
+
+Hand-authored `description` rewrites, applied by
+`scripts/apply-description-fixes.ts`. One object per row: `id`,
+`scientific_name`, `common_name`, `expect` (the stored text the decision was
+made against, so a row edited since is skipped rather than clobbered),
+`description` (the replacement), and `why`.
+
+**Why it is committed.** For a copy edit the reasoning is the only record of why
+a sentence reads as it does, and there is no other path for a correction a
+person authored: `curate-plants` is fill-only and refuses this column, and
+`curate-editorial` writes what a model produces.
+
+Files are per-pass and are never rewritten. A suffix names the pass when a date
+carries more than one — `-openers` is the 2026-08-18 audit of descriptions whose
+first clause named a different plant than the row.
+
 ## `native-to-fixes-<date>.json`
 
 The reviewed decisions behind a `native_to` rewrite pass, applied by
