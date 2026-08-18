@@ -60,7 +60,16 @@ export function EmptyState({
           {illustration}
         </div>
       )}
-      <div className="flex items-center justify-between gap-row-gap">
+      {/* justify-between exists to push the CTA to the far edge. With no CTA
+          there is nothing to push against, so left-alignment would be an
+          accident rather than a decision — a message alone centres under the
+          illustration. Every call site that passes a CTA renders unchanged. */}
+      <div
+        className={cn(
+          'flex items-center gap-row-gap',
+          ctaLabel ? 'justify-between' : 'justify-center text-center'
+        )}
+      >
         <p className="text-body-small text-secondary">{message}</p>
         {ctaLabel &&
           (ctaHref ? (
