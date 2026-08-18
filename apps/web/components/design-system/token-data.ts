@@ -365,6 +365,9 @@ export const allTokens: TokenTier[] = [
           '--sidebar-width',
           '--sidebar-offset',
           '--content-gutter',
+          '--content-pad',
+          '--content-lead',
+          '--content-bleed',
           '--content-max'
         ),
       },

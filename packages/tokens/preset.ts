@@ -259,6 +259,8 @@ const preset = {
         sidebar: 'var(--sidebar-width)',
         'sidebar-offset': 'var(--sidebar-offset)',
         'content-gutter': 'var(--content-gutter)',
+        'content-lead': 'var(--content-lead)',
+        'content-bleed': 'var(--content-bleed)',
       },
       maxWidth: {
         content: 'var(--content-max)',

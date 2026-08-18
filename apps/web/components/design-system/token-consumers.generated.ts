@@ -815,6 +815,7 @@ export const tokenConsumers: Record<string, string[]> = {
     'apps/web/components/ExploreClient.tsx',
     'apps/web/components/design-system/chapters/colors.tsx',
     'packages/ui/src/components/FieldShell.tsx',
+    'packages/ui/src/stories/Menu.stories.tsx',
   ],
   '--color-surface-overlay': [
     'apps/web/components/ActivityClient.tsx',
@@ -1027,6 +1028,7 @@ export const tokenConsumers: Record<string, string[]> = {
     'packages/ui/src/components/Menu.tsx',
     'packages/ui/src/components/Modal.tsx',
     'packages/ui/src/components/Select.tsx',
+    'packages/ui/src/stories/Menu.stories.tsx',
     'packages/ui/src/stories/Modal.stories.tsx',
     'packages/ui/src/utils/cn.ts',
   ],
@@ -1099,6 +1101,7 @@ export const tokenConsumers: Record<string, string[]> = {
     'packages/ui/src/stories/Gallery.stories.tsx',
     'packages/ui/src/stories/Lightbox.stories.tsx',
     'packages/ui/src/stories/MediaCard.stories.tsx',
+    'packages/ui/src/stories/Menu.stories.tsx',
     'packages/ui/src/stories/Modal.stories.tsx',
     'packages/ui/src/utils/cn.ts',
   ],
@@ -1436,17 +1439,22 @@ export const tokenConsumers: Record<string, string[]> = {
     'apps/web/components/AppSidebar.tsx',
   ],
   '--content-gutter': [
+    'apps/web/app/plant-preview/page.tsx',
+  ],
+  '--sidebar-offset': [
+    'apps/web/app/plant-preview/page.tsx',
+  ],
+  '--content-pad': [],
+  '--content-lead': [
     'apps/web/app/(app)/layout.tsx',
     'apps/web/app/(app)/plants/(list)/loading.tsx',
-    'apps/web/app/plant-preview/page.tsx',
-    'apps/web/components/ExploreClient.tsx',
     'apps/web/components/GardenClient.tsx',
     'apps/web/components/SubpageHeader.tsx',
   ],
-  '--sidebar-offset': [
+  '--content-bleed': [
     'apps/web/app/(app)/layout.tsx',
     'apps/web/app/(app)/plants/(list)/loading.tsx',
-    'apps/web/app/plant-preview/page.tsx',
+    'apps/web/components/ExploreClient.tsx',
     'apps/web/components/GardenClient.tsx',
     'apps/web/components/SubpageHeader.tsx',
   ],

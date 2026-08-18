@@ -115,7 +115,7 @@ export function ExploreClient({
         <div
           ref={searchRef}
           className={[
-            'sticky top-0 z-10 -mx-4 mt-4 bg-surface-page px-4 py-4 md:-ml-content-gutter md:-mr-content-gutter md:pl-content-gutter md:pr-content-gutter',
+            'sticky top-0 z-10 -mx-4 mt-4 bg-surface-page px-4 py-4 md:-ml-content-bleed md:-mr-content-bleed md:pl-content-bleed md:pr-content-bleed',
             'transition-transform duration-normal',
             searchHidden ? '-translate-y-full' : 'translate-y-0',
           ].join(' ')}
@@ -200,7 +200,7 @@ export function ExploreClient({
                 content-gutter on both sides (px-4 on mobile) so the line
                 runs from the sidebar's hairline to the right edge of the
                 screen, in the sidebar hairline's own colour. */}
-            <hr className="-mx-4 border-[var(--sidebar-divider)] md:-ml-content-gutter md:-mr-content-gutter" />
+            <hr className="-mx-4 border-[var(--sidebar-divider)] md:-mx-content-bleed" />
             <div className="pt-12">
               <ExploreBrowse
                 onSelectStyle={(style) =>

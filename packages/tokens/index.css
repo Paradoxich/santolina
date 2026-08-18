@@ -349,6 +349,36 @@
   --content-gutter: var(--spacing-10); /* 40px */
   /* main content clearance: sidebar width + the gutter (sidebar is flush to the viewport edge) */
   --sidebar-offset: calc(var(--sidebar-width) + var(--content-gutter));
+  /* Past --content-max the column stops growing, so on a wide screen the
+   * leftover space has to go somewhere. It used to all pile up on the right,
+   * leaving the page hanging off the sidebar; this splits it and centres the
+   * column in the space beside the sidebar.
+   *
+   * --content-lead and --content-bleed are the ONLY things layout should
+   * measure from. They are the real distances from the shell's edges to the
+   * column, gutter and centring pad included, so a full-bleed element escapes
+   * by one of them and lands exactly on the edge. Reaching for
+   * --sidebar-offset or --content-gutter directly is what breaks: those are
+   * the pre-centring values and they fall short by the pad.
+   *
+   * 100vw includes the classic scrollbar on Windows and Linux, which would
+   * overshoot the escapes by a few px; the shell clips its x overflow so that
+   * cannot become a horizontal scrollbar. `clip` rather than `hidden`: hidden
+   * makes a scroll container and would break the sticky search bar. */
+  --content-pad: max(
+    0px,
+    calc(
+      (
+          100vw - var(--sidebar-offset) - var(--content-gutter) -
+            var(--content-max)
+        ) /
+        2
+    )
+  );
+  /* shell's left edge → column's left edge */
+  --content-lead: calc(var(--sidebar-offset) + var(--content-pad));
+  /* column's edge → the shell edge beside it, on either side */
+  --content-bleed: calc(var(--content-gutter) + var(--content-pad));
   /* Content cap: fits a 14in MacBook Pro (1512px) exactly —
    * 1512 - 232 sidebar - 40 - 40 = 1200. */
   --content-max: 75rem; /* 1200px */
