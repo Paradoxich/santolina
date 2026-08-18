@@ -50,7 +50,7 @@ its data becomes something a reader can see.
 | `curate-greenery` | `greenery_checked_at` | catalog | 780 / 780 | 100.0% |
 | `pick-plant-images` | `image_checked_at` | catalog | 780 / 780 | 100.0% |
 | `pick-plant-images --verify` | `image_verified_at` | catalog | 93 / 780 | 11.9% |
-| `curate-editorial` | `editorial_checked_at` | catalog | 60 / 780 | 7.7% |
+| `curate-editorial` | `editorial_checked_at` | catalog | 61 / 780 | 7.8% |
 
 1 of 14 steps is `forward`: `draft-hardiness`, which stamps no column and so is absent from the table above.
 
@@ -59,7 +59,7 @@ its data becomes something a reader can see.
 | field | state | count |
 | --- | --- | ---: |
 | `ai_drafted_at` | drafted | 780 |
-| `is_curated` | editorially reviewed | 53 |
+| `is_curated` | editorially reviewed | 54 |
 | `style_tags` | style-neutral (stamped, `[]` — a valid judgment) | 31 |
 | `style_tags` | never judged (`style_checked_at` NULL — a gap) | 0 |
 | `seasonal_care` | null | 0 |
