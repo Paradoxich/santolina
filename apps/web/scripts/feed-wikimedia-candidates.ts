@@ -7,7 +7,8 @@
  * docs/curation.md#wikimedia-attribution.
  *
  * Dry run by default. Pass --apply to write the candidates and clear
- * image_checked_at.
+ * image_checked_at. Pass --refresh to re-feed a plant that already
+ * carries Wikimedia candidates, which the gate otherwise skips.
  *
  * Usage (from apps/web):
  *   ./node_modules/.bin/tsx --env-file=.env.local scripts/feed-wikimedia-candidates.ts --round 13
@@ -21,9 +22,17 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { getSupabaseAdmin } from '../lib/supabase-admin'
 import { fetchAllRows } from '../lib/paginate'
-import { fetchSpeciesCandidate } from '../lib/wikimedia'
+import {
+  fetchCategoryCandidates,
+  fetchSpeciesCandidate,
+  type WikimediaCandidate,
+} from '../lib/wikimedia'
 import { isCommercialSafeLicense } from '../lib/image-attribution'
-import { shortlist, type ImageCandidate } from '../lib/image-shortlist'
+import {
+  MAX_WIKIMEDIA,
+  shortlist,
+  type ImageCandidate,
+} from '../lib/image-shortlist'
 import {
   parseScope,
   scopeIds,
@@ -74,13 +83,17 @@ export interface PlantRow {
 
 /** Has this plant nothing for the vision pass to look at? Asks `shortlist`,
  * the selector the pass itself uses, and skips a plant already widened. */
-export function needsWikimediaCandidate(row: {
-  image_url: string | null
-  image_candidates: ImageCandidate[] | null
-}): boolean {
+export function needsWikimediaCandidate(
+  row: {
+    image_url: string | null
+    image_candidates: ImageCandidate[] | null
+  },
+  refresh = false
+): boolean {
   const candidates = row.image_candidates ?? []
-  if (candidates.some((c) => c.source === 'wikimedia')) return false
-  return shortlist(candidates, row.image_url).length === 0
+  if (!refresh && candidates.some((c) => c.source === 'wikimedia')) return false
+  const trefle = candidates.filter((c) => c.source !== 'wikimedia')
+  return shortlist(refresh ? trefle : candidates, row.image_url).length === 0
 }
 
 /** Resolve an explicit name list to rows, reporting what it could not match. */
@@ -118,6 +131,7 @@ function resolveNames(
 
 async function main() {
   const apply = process.argv.slice(2).includes('--apply')
+  const refresh = process.argv.slice(2).includes('--refresh')
   const scope = parseScope()
   const supabase = getSupabaseAdmin()
 
@@ -134,7 +148,7 @@ async function main() {
         .order('id')
         .range(from, to)
     )
-    targets = inScope.filter(needsWikimediaCandidate)
+    targets = inScope.filter((row) => needsWikimediaCandidate(row, refresh))
     scopeLabel =
       `${describeScope(scope, scopeIdList)} — ` +
       `${targets.length} of ${inScope.length} with nothing usable to judge`
@@ -198,9 +212,11 @@ async function main() {
     ) as Witness[],
     scope: scopeLabel,
     recipe: {
-      model: 'wikimedia',
+      // No model: the candidates come from Wikidata and Commons, and the
+      // licence filter is the only judgement.
+      model: null,
       template:
-        'P18 then isStraightSpeciesFile search, commercial-safe licences only',
+        'P18, then the species Commons category, then isStraightSpeciesFile search; commercial-safe licences only',
       ingredients: {},
       decoding: {},
     },
@@ -217,24 +233,35 @@ async function main() {
         continue
       }
 
-      // P18 first, then a guarded Commons search.
-      const found = await fetchSpeciesCandidate(plant.scientific_name)
-      if (!found) {
-        console.log(
-          `${label} — no usable photo (no P18, no matching Commons file)`
-        )
-        noP18++
-        await sleep(INTER_PLANT_DELAY_MS)
-        continue
+      // P18, the species' own Commons category, then a guarded search. The
+      // category is what makes a poor P18 recoverable: it is a designated
+      // identification image, not a garden hero, and one photo gives the
+      // vision pass nothing to choose between.
+      const gathered: Array<{ candidate: WikimediaCandidate; via: string }> = []
+      const seen = new Set<string>()
+      const take = (c: WikimediaCandidate, via: string) => {
+        if (seen.has(c.url) || gathered.length >= MAX_WIKIMEDIA) return
+        // Commercial-safe licences only.
+        if (!isCommercialSafeLicense(c.attribution.license)) {
+          badLicense++
+          return
+        }
+        seen.add(c.url)
+        gathered.push({ candidate: c, via })
       }
-      const { candidate, via } = found
 
-      // Commercial-safe licences only.
-      if (!isCommercialSafeLicense(candidate.attribution.license)) {
-        console.log(
-          `${label} — SKIP: licence "${candidate.attribution.license ?? 'unknown'}" not commercial-safe`
-        )
-        badLicense++
+      const p18 = await fetchSpeciesCandidate(plant.scientific_name)
+      if (p18) take(p18.candidate, p18.via)
+      for (const c of await fetchCategoryCandidates(
+        plant.scientific_name,
+        MAX_WIKIMEDIA
+      )) {
+        take(c, 'category')
+      }
+
+      if (gathered.length === 0) {
+        console.log(`${label} — no usable photo under a safe licence`)
+        noP18++
         await sleep(INTER_PLANT_DELAY_MS)
         continue
       }
@@ -245,12 +272,12 @@ async function main() {
       )
       const merged: ImageCandidate[] = [
         ...trefleOnly,
-        {
+        ...gathered.map(({ candidate }) => ({
           url: candidate.url,
           category: 'wikimedia',
-          source: 'wikimedia',
+          source: 'wikimedia' as const,
           attribution: candidate.attribution,
-        },
+        })),
       ]
 
       if (apply) {
@@ -270,7 +297,13 @@ async function main() {
       }
 
       console.log(
-        `${label} — ${apply ? 'added' : 'would add'} ${candidate.width}x${candidate.height} (${candidate.attribution.license ?? 'license?'}, via ${via})`
+        `${label} — ${apply ? 'added' : 'would add'} ${gathered.length}: ` +
+          gathered
+            .map(
+              ({ candidate: c, via }) =>
+                `${c.width}x${c.height} ${c.attribution.license ?? 'license?'} (${via})`
+            )
+            .join(', ')
       )
       added++
       await sleep(INTER_PLANT_DELAY_MS)
@@ -284,7 +317,7 @@ async function main() {
   }
 
   console.log(
-    `\n${apply ? 'Done' : 'Dry run'}: ${added} Wikimedia candidate(s) ${apply ? 'added' : 'to add'}, ` +
+    `\n${apply ? 'Done' : 'Dry run'}: ${added} plant(s) ${apply ? 'widened' : 'to widen'}, ` +
       `${noP18} with no usable photo, ${badLicense} with an unusable licence, ${noSciName} with no scientific name, ${unmatched.length} unmatched.`
   )
   if (unmatched.length) {

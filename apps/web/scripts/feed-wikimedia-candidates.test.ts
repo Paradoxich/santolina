@@ -79,6 +79,30 @@ describe('the gate is what makes an alwaysRun step idempotent', () => {
     ).toBe(false)
   })
 
+  it('selects an already-widened plant when refreshing', () => {
+    // The escape hatch for a plant whose Wikimedia candidate the vision pass
+    // rejected: without it the gate skips the row forever.
+    expect(
+      needsWikimediaCandidate(
+        { image_url: null, image_candidates: [wikimedia] },
+        true
+      )
+    ).toBe(true)
+  })
+
+  it('still leaves a Trefle-covered plant alone when refreshing', () => {
+    // Refresh reopens the Wikimedia half of the gate, not the whole gate.
+    expect(
+      needsWikimediaCandidate(
+        {
+          image_url: null,
+          image_candidates: [trefle('flower'), trefle('habit'), wikimedia],
+        },
+        true
+      )
+    ).toBe(false)
+  })
+
   it('does not select it after the pass has picked the Wikimedia photo', () => {
     expect(
       needsWikimediaCandidate({

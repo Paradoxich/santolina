@@ -629,13 +629,27 @@ reimplemented — returns nothing AND the plant carries no Wikimedia candidate
 yet, so a second run selects nothing. Pinned in
 `scripts/feed-wikimedia-candidates.test.ts`.
 
-**It shrinks the placeholder class rather than ending it**, for two reasons
-worth knowing before trusting it. P18 is Wikidata's designated _identification_
-image, not a garden hero — round 13's `Malus spectabilis` got a trunk and canopy
-with a person in shot, correctly rejected — and nothing takes a second look at
-wider Commons when P18 is poor. And the gate is free and deterministic by
-choice, so a plant whose candidates are all too small passes it and is rejected
-later at probe time.
+**The species' own Commons category is the second look**, added 2026-08-18, and
+it is what makes a poor P18 recoverable. P18 is Wikidata's designated
+_identification_ image, not a garden hero: `Malus spectabilis` got a trunk and
+canopy with a person in shot, correctly rejected, and the catalog carried a
+placeholder for it. Its category held 20 files, 19 of them commercial-safe and
+five over 4000px. The feeder now gathers up to `MAX_WIKIMEDIA` candidates from
+P18, then the category, then the guarded search, so the vision pass has
+something to choose between rather than one photo to accept or refuse — and it
+picked a 5443x3628 blossom shot at high confidence. **No plant in the catalog
+is without an image now.**
+
+Category membership, not the filename, is the species evidence there: those
+files are named for their subject ("Xifuhaitang.jpg"), so
+`isStraightSpeciesFile` ranks them rather than filtering, and a cultivar photo
+can appear. The vision pass is what judges whether a photo shows the species.
+
+`--refresh` reopens the Wikimedia half of the gate for a plant already widened,
+which is how a rejected candidate gets a second chance; without it the gate
+skips that row forever. The gate is still free and deterministic, so a plant
+whose candidates are all too small passes it and is rejected later at probe
+time.
 
 **Attribution is the real product work, not the fetching.** CC-BY and CC-BY-SA
 oblige a visible credit, so `plants.image_attribution` is written whenever a
