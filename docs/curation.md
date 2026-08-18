@@ -712,8 +712,14 @@ search resolves to sibling species silently, and woodland genera in particular
 have been widely re-segregated, so synonym groups belong in the dry run.
 
 **A plant is cut for being a poor citizen HERE, never for being one somewhere
-else** (Ana, 2026-08-18, delegated and decided). Invasiveness is a property of a
-plant in a place, not of the plant. This catalog is Euro/Med first, so the test
+else** (Ana, confirmed 2026-08-18). Invasiveness is a property of a plant in a
+place, not of the plant.
+
+**The bet underneath it is Euro/Med first, and it is the part to re-open if the
+product moves.** The rule is right for the reader Santolina has; it also means
+the catalog is not safe to ship to North America as it stands, because it will
+recommend species that are harmful and in places illegal to plant there. That
+is accepted deliberately, not overlooked. This catalog is Euro/Med first, so the test
 is whether a species is a bad recommendation for the reader we actually have: an
 uneradicable runner in their garden, dangerous, out of scope, too big. Those
 reasons are region-neutral and did all the work in round 13, including cutting
