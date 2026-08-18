@@ -776,6 +776,14 @@ uneradicable runner in their garden, dangerous, out of scope, too big. Those
 reasons are region-neutral and did all the work in round 13, including cutting
 `Citrus trifoliata` on thorns and size rather than on its North American status.
 
+**Round 14 candidate, re-judged 2026-08-18: `Lythrum salicaria`.** It was cut
+in round 12 on North American invasive status, which this rule rejects as a
+ground. In Europe it is a native wetland perennial and a well-behaved border
+plant, and no other reason was recorded against it, so the cut has nothing left
+holding it up. `Iris pseudacorus` was cut in the same pass and **stays cut** on
+a ground this rule allows: it self-seeds hard and wants a pond margin, so it is
+out of scope for a small ornamental garden whatever its status elsewhere.
+
 **Cutting on non-European invasive status amputates the local flora**, which is
 why the rule points the other way: `Lythrum salicaria` and `Iris pseudacorus`
 are Balkan natives, and round 5 seeded regional natives on purpose. A rule that
