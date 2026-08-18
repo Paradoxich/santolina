@@ -11,6 +11,8 @@ export interface SearchFieldProps extends Omit<
   className?: string
   /** Class applied to the leading magnifier icon. Defaults to `text-secondary`. */
   iconClassName?: string
+  /** Class applied to the inner `<input>` — text size, placeholder colour. */
+  inputClassName?: string
   /**
    * Optional slot rendered at the trailing edge of the pill — typically an
    * icon button (e.g. a filter toggle). Interactive elements are safe here:
@@ -30,6 +32,7 @@ export function SearchField({
   placeholder = 'Search...',
   className,
   iconClassName,
+  inputClassName,
   trailingAction,
   ref,
   ...props
@@ -72,7 +75,8 @@ export function SearchField({
           'text-body-small text-primary',
           'placeholder:text-secondary',
           'outline-none',
-          '[&::-webkit-search-cancel-button]:hidden'
+          '[&::-webkit-search-cancel-button]:hidden',
+          inputClassName
         )}
         {...props}
       />

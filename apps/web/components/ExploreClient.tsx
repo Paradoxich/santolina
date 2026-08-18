@@ -135,12 +135,13 @@ export function ExploreClient({
               searchPinned ? 'opacity-100' : 'opacity-0',
             ].join(' ')}
           />
-          {/* Search sits on the page ground with a sage-100 hairline and a 12px
-              radius, rather than the kit's translucent pill. The border reaches
-              for a primitive because no border token sits at sage-100 yet. The
-              filter toggle is its own bordered box to the right, matching the
-              search field's border treatment, rather than living inside the
-              search pill. */}
+          {/* PREVIEW — the unified field shell, for Ana to rule on before it
+              becomes the real Input. Fill is surface-field (translucent, so
+              one token holds on both the page and a modal), edge is white and
+              brighter than the fill, focus is a 2px accent outline. This
+              replaces a sage-100 hairline over an opaque card, which was the
+              same relationship hardcoded for this one ground.
+              Revert target: see /design-system/field-lab. */}
           <div className="flex items-center gap-inline-gap">
             <SearchField
               ref={searchInputRef}
@@ -149,7 +150,8 @@ export function ExploreClient({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               iconClassName="text-primary"
-              className="h-10 flex-1 rounded-md border bg-surface-card pl-item-gap pr-tight-gap !shadow-none [border-color:var(--color-sage-100)] hover:[border-color:var(--color-sage-50)] focus-within:!bg-surface-card focus-within:[border-color:var(--color-sage-50)] focus-within:![box-shadow:0_0_0_1px_var(--color-sage-50)]"
+              className="h-10 flex-1 gap-inline-gap rounded-md border border-card bg-surface-field pl-item-gap pr-tight-gap !shadow-none focus-within:!bg-surface-field focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-focus"
+              inputClassName="text-body placeholder:text-muted"
               trailingAction={
                 query && (
                   <IconButton
@@ -167,7 +169,9 @@ export function ExploreClient({
                 )
               }
             />
-            <div className="flex h-10 shrink-0 items-center justify-center rounded-md border bg-surface-card px-tight-gap [border-color:var(--color-sage-100)] transition-colors duration-normal hover:[border-color:var(--color-sage-50)]">
+            {/* Moves with the search field by design — it was written to match
+                its border treatment, so it follows it onto the shell. */}
+            <div className="flex h-10 shrink-0 items-center justify-center rounded-md border border-card bg-surface-field px-tight-gap transition-colors duration-normal">
               <IconButton
                 variant={filtersOpen ? 'control' : 'ghost'}
                 size="sm"

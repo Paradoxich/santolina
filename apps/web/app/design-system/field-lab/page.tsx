@@ -557,7 +557,7 @@ export default function FieldLabPage() {
           ground="overlay"
           metrics={{
             today: '36px · 14px · white edge · outline+offset',
-            unified: '36px · 14px · white edge · outline on focus',
+            unified: '40px · 14px · white edge · outline on focus',
           }}
           note="A menu trigger dressed as a field. Its edge is border-card, which resolves to pure white — a lift, not a hairline. The sidebar hairline was moved off white in July for exactly this reason: too harsh against the sage ground."
           today={
@@ -577,7 +577,6 @@ export default function FieldLabPage() {
           unified={
             <UnifiedField
               state={state}
-              size="sm"
               value="Your garden"
               errorMessage="Pick what this note is about."
               trailing={<ChevronDown />}
