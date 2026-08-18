@@ -1,10 +1,5 @@
 /**
- * What the sweep would WRITE, asserted without a database.
- *
- * A dry run against the live catalog tells you this last and only for the rows
- * that happen to exist today. The two properties below are the ones a wrong
- * answer costs real prose for: writing a column the fix did not change, and
- * splitting one row's fields across two guarded statements.
+ * What the sweep would write, asserted without a database.
  */
 
 import { describe, it, expect } from 'vitest'
@@ -18,8 +13,6 @@ const row = (fields: Record<string, unknown>) => ({
 
 describe('the sweep writes one statement per row', () => {
   it('folds every fixed column of a row into a single intent', () => {
-    // Two intents for one row would have the second guard against a value the
-    // first had already changed, and report drift against its own sibling.
     const intent = intentsFor(
       row({
         description: 'Blooms into fall.',
@@ -35,8 +28,6 @@ describe('the sweep writes one statement per row', () => {
   })
 
   it('guards every written column with its stored value', () => {
-    // reviewed-mutation refuses an intent that writes a column with no expected
-    // prior, but the hole would be exactly where the caller was least sure.
     const intent = intentsFor(row({ description: 'In fall it turns.' }))!
     for (const column of Object.keys(intent.to)) {
       expect(intent.from).toHaveProperty(column)
@@ -55,9 +46,6 @@ describe('the sweep writes one statement per row', () => {
   })
 
   it('does not touch a column it did not change', () => {
-    // The expensive mistake: rewriting a whole row on the strength of one
-    // field, so an unrelated column is re-written and (for description) an
-    // editorial verdict retires for nothing.
     const intent = intentsFor(
       row({
         description: 'In fall it turns.',
@@ -81,18 +69,14 @@ describe('a jsonb prose column is rewritten whole, stage by stage', () => {
       })
     )!
     expect(intent.to['seasonal_rhythm']).toEqual({
-      // fixed
       autumn: 'Flowering persists into autumn.',
-      // the verb, untouched — and it travels through unchanged rather than
-      // being dropped, because the whole object is the unit of storage
+      // the verb, untouched, and carried through unchanged
       winter: 'Dormant, as leaves fall.',
       summer: null,
     })
   })
 
   it('names the stage in `why`, not just the column', () => {
-    // The `why` is the only record of why a sentence reads as it does, and
-    // "seasonal_rhythm" alone sends the next reader through six stages.
     const intent = intentsFor(
       row({ seasonal_rhythm: { autumn: 'Persists into fall.' } })!
     )!

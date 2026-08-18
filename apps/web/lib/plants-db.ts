@@ -120,9 +120,8 @@ export interface DbPlant {
   // `style_tags == null` — a condition the column makes unreachable — and
   // silently drafted no style tag for any round (found round 11, 2026-08-14).
   style_checked_at: string | null
-  // `foliage_color` NULL is a real answer ("typical green"), so without this
-  // the drafting pass could not tell it from an unasked question and re-asked
-  // 587 of 780 rows on every run (migration 20260818100000).
+  // `foliage_color` NULL is a real answer ("typical green"); this says whether
+  // the question was asked (migration 20260818100000).
   foliage_checked_at: string | null
   created_at: string
   updated_at: string

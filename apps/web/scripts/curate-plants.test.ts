@@ -139,24 +139,6 @@ describe('restrictPatch — field-scoped mode cannot un-curate a row', () => {
   })
 })
 
-/**
- * A ROW THAT OWES NOTHING MUST NOT BE CALLED FOR.
- *
- * THE INCIDENT. Round 13: one bad row out of 33 failed the step, and the retry
- * re-billed all 33. Nothing was wrong with the other 32 — the pass has no skip,
- * so every selected row is sent to Claude whether or not it has a gap.
- *
- * THE WITNESS IS THE MISSING LIST, not the cost, because the cost is only
- * observable on a bill. `missingFields` is what the loop now consults before
- * spending, and its emptiness is the exact condition under which `buildPatch`
- * — fill-only for every column — can produce nothing but a fresh timestamp.
- * Against the pre-fix code this block does not compile: the list was inline in
- * `buildPrompt` and there was no seam to call.
- *
- * The pairing matters more than either half: `missingFields(row) === []` and
- * `buildPatch(row, anything)` writing only `ai_drafted_at` are the same claim
- * seen from the two ends, and the last test here asserts they agree.
- */
 describe('a fully drafted row owes nothing, and is not worth a call', () => {
   /** Every column the prompt asks about, filled. */
   const completeRow = (overrides: Partial<DbPlant> = {}): DbPlant =>
@@ -172,8 +154,7 @@ describe('a fully drafted row owes nothing, and is not worth a call', () => {
       spread_max_cm: 20,
       hardiness_zone_min: 5,
       hardiness_zone_max: 9,
-      // The two defaulted columns are answered by their STAMP, never their
-      // value — trap 26, which is what the rest of this file is about.
+      // The defaulted columns are answered by their stamp, never their value.
       style_checked_at: '2026-08-18T00:00:00Z',
       greenery_checked_at: '2026-08-18T00:00:00Z',
       foliage_checked_at: '2026-08-18T00:00:00Z',
@@ -202,19 +183,12 @@ describe('a fully drafted row owes nothing, and is not worth a call', () => {
   })
 
   it('still owes a field the row is genuinely missing', () => {
-    // The reason the skip is NOT `ai_drafted_at IS NOT NULL`: a partially
-    // drafted row is drafted and still owes its gaps. Skipping on the stamp
-    // would strand them, silently, which is the failure this pipeline keeps
-    // finding.
     expect(missingFields(completeRow({ common_issues: null }))).toEqual([
       'common_issues',
     ])
   })
 
   it('owes the style question on a stamp, not on a tag count', () => {
-    // Trap 26 again, from the selection side: `style_tags: []` is a real
-    // verdict and looks exactly like the default, so only the stamp can say
-    // whether the question was asked.
     expect(missingFields(completeRow({ style_checked_at: null }))).toContain(
       'style_tags'
     )
@@ -224,25 +198,16 @@ describe('a fully drafted row owes nothing, and is not worth a call', () => {
   })
 
   it('treats a null foliage_color WITH its stamp as answered, not unasked', () => {
-    // THE ASSERTION THE MIGRATION EXISTS FOR (20260818100000). "Typical green"
-    // IS null, so before the stamp this row was re-asked on every run: 587 of
-    // 780 drafted rows, 538 of them selected every time. The value cannot say
-    // whether the question was asked; only the stamp can.
     expect(missingFields(completeRow({ foliage_color: null }))).toEqual([])
   })
 
   it('owes foliage_color when the stamp is absent, whatever the value says', () => {
-    // The other direction: a row carrying a colour but no stamp was never
-    // asked by this pass (the value came from elsewhere), so it still owes it.
     expect(missingFields(completeRow({ foliage_checked_at: null }))).toContain(
       'foliage_color'
     )
   })
 
   it('agrees with the patch builder: nothing missing means nothing to write', () => {
-    // The two ends of one claim. If these ever disagree, the skip is either
-    // stranding a field the patch would have filled, or paying for a call
-    // whose patch is a timestamp.
     const row = completeRow()
     const patch = buildPatch(
       row,

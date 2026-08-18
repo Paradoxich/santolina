@@ -265,13 +265,8 @@ export const STEP_DEFS: StepDef[] = [
     // Drafts description, care instructions, style tags and greenery. Every one
     // of those renders.
     obligation: 'catalog',
-    // foliage_checked_at joins the evidence on 2026-08-18 and fails NO existing
-    // round, which is the only reason it can join `ran` rather than merely be
-    // claimed: migration 20260818100000 backfills it from ai_drafted_at, and
-    // that backfill is derived (the field has been in the prompt since the
-    // script's first commit, and no row predates it — counts in the migration).
-    // A stamp added without that proof belongs in the registry unread, the way
-    // common_name_checked_at arrived.
+    // foliage_checked_at is in `ran` because migration 20260818100000
+    // backfilled it, so no existing round is failed by it.
     stampColumn: 'foliage_checked_at',
     ran: (p) =>
       Boolean(

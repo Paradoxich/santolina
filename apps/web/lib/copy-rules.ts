@@ -1,50 +1,14 @@
 /**
- * The copy rules the catalog's prose is held to, and their single home.
+ * The copy rules the catalog's prose is held to.
  *
- * WHY THIS FILE EXISTS. The rulings are old and were enforced in exactly one
- * place: `curate-seasonal-care.ts`'s own line validator. Every other prose
- * field the reader sees — description, seasonal_rhythm, maintenance_notes,
- * environment_benefits, common_issues, best_placement — is written by
- * `curate-plants`, which validates none of it. Measured 2026-08-18 across 780
- * rows: 16 em dashes and 36 uses of "fall" in fields nothing watches. Same
- * shape as trap 36 — the rule exists, the enforcement covers one field, and
- * nobody checked whether the others were guarded.
- *
- * A RULE IS NOT AUTOMATICALLY PORTABLE, which is the part worth reading before
- * adding one. The seasonal-care validator bans "feed" (the ruling is
- * fertilize, never feed), and lifting that rule wholesale onto descriptive
- * prose flags 50 correct sentences: "berries feed birds in autumn", "Japanese
- * beetles may feed on foliage", "slugs feeding on ripe fruit". The ruling is
- * about the gardener's ACTION, so it belongs to prose that instructs, and
- * `ProseKind` below is that distinction made explicit rather than assumed.
- *
- * Rules here must be free, deterministic and field-agnostic within their kind.
- * Anything needing a model or a plant's biology is not a copy rule; it belongs
- * to the pass that has the plant in hand.
+ * Rationale, measurements and the per-field reasoning:
+ * docs/curation.md#copy-rules.
  */
 
-/**
- * What a piece of prose is FOR, which decides which rules bind it.
- *
- *   `prescriptive` — tells the gardener to do something (maintenance_notes,
- *     seasonal_care). Vocabulary rulings about garden actions bind here.
- *   `descriptive` — says what the plant or the garden does (description,
- *     seasonal_rhythm, environment_benefits, common_issues, best_placement).
- *     Only the rules about how we WRITE bind here, never the ones about which
- *     verb a gardener uses.
- */
+/** What a piece of prose is for, which decides which rules bind it. */
 export type ProseKind = 'prescriptive' | 'descriptive'
 
-/**
- * Every reader-facing prose field on `plants`, and what it is.
- *
- * The jsonb pair are listed by their column names; a caller flattens their
- * stage values and checks each as one piece of prose.
- *
- * A field missing from this map is a field nothing checks, which is the exact
- * hole this module was written to close — so `check-copy-rules.ts` asserts the
- * map against the columns it fetches rather than trusting them to agree.
- */
+/** Every reader-facing prose field on `plants`, and what it is. */
 export const PROSE_FIELDS: Record<string, ProseKind> = {
   description: 'descriptive',
   seasonal_rhythm: 'descriptive',
@@ -55,37 +19,12 @@ export const PROSE_FIELDS: Record<string, ProseKind> = {
   seasonal_care: 'prescriptive',
 }
 
-/**
- * The rules stated for a drafting prompt, so the pass that WRITES the prose
- * asks for it correctly instead of being corrected afterwards.
- *
- * IT IS PREVENTION, NOT ENFORCEMENT, and the distinction is the point: a
- * prompt line lowers the rate, `checkCopy` is what actually fails. Round 13
- * shows why both are wanted — it was drafted with no copy rule in the prompt
- * at all and introduced 6 violations in 33 plants, five of them the same
- * "Minimal pruning required — ..." sentence shape.
- *
- * It lives here so the wording cannot drift from the rules that judge it.
- */
-export const COPY_RULES_PROMPT = `Copy rules for every prose field you write:
-- Never use an em dash or en dash. Use a comma, a semicolon, or a second sentence.
-- The season is "autumn", never the US "fall". ("as leaves fall" is the verb and is fine.)
-- In instructions, the verb is "fertilize", never "feed". Foliage dying back nourishes a bulb or root: that is "replenish". ("berries feed birds" is descriptive and is fine.)`
-
 /** The prose columns, for a query projection. */
 export const PROSE_COLUMNS = Object.keys(PROSE_FIELDS)
 
 /**
- * Flatten a plant row into (field label, prose) pairs.
- *
- * The jsonb fields hold one string per stage, so each stage is checked as its
- * own piece of prose and labelled with the stage — "seasonal_rhythm.autumn",
- * not "seasonal_rhythm". Whoever fixes it needs the key, and a whole-object
- * dump buries which one is wrong.
- *
- * Lives here rather than in either caller because two of them now walk rows —
- * the standalone guard and `verify-round` — and the flattening is where a new
- * prose column silently goes unchecked.
+ * Flatten a plant row into (field label, prose) pairs, one per jsonb stage.
+ * Stage values are labelled `seasonal_rhythm.autumn`, not `seasonal_rhythm`.
  */
 export function proseOf(
   row: Record<string, unknown>
@@ -108,59 +47,22 @@ export function proseOf(
   return out
 }
 
-/**
- * Rewrite the season "fall" to "autumn", leaving the verb alone.
- *
- * THE ONLY COPY RULE WITH A MECHANICAL FIX, and it lives beside its detector so
- * the two cannot drift: the fix rewrites exactly the occurrences `isSeasonFall`
- * flags, by construction rather than by a second regex that happens to agree.
- *
- * The other two rules have no function like this on purpose. Removing an em
- * dash is a wording decision — comma, semicolon, or a second sentence, and
- * which one depends on the clause — and "feed" becomes "fertilize" or
- * "replenish" depending on whether a gardener or a plant's own foliage is
- * doing it. A substitution that picks for you is a silent editorial act.
- */
-export function fixSeasonFall(text: string): string {
-  let out = ''
-  let last = 0
-  for (const m of text.matchAll(/\bfall\b/gi)) {
-    const i = m.index ?? 0
-    if (!isSeasonFall(text, i)) continue
-    const replacement = m[0][0] === 'F' ? 'Autumn' : 'autumn'
-    out += text.slice(last, i) + replacement
-    last = i + m[0].length
-  }
-  return out + text.slice(last)
-}
+/** The rules as stated for a drafting prompt. */
+export const COPY_RULES_PROMPT = `Copy rules for every prose field you write:
+- Never use an em dash or en dash. Use a comma, a semicolon, or a second sentence.
+- The season is "autumn", never the US "fall". ("as leaves fall" is the verb and is fine.)
+- In instructions, the verb is "fertilize", never "feed". Foliage dying back nourishes a bulb or root: that is "replenish". ("berries feed birds" is descriptive and is fine.)`
 
 export interface CopyViolation {
-  /** Stable id, so a report can be grouped and a waiver can name one. */
   rule: string
-  /** The offending text, quoted back so a reader can see it without the row. */
+  /** The offending text in context, for the report. */
   match: string
   reason: string
 }
 
-/**
- * "fall" is a season AND a verb, and the catalog uses both.
- *
- * A bare /\bfall\b/ flags "as leaves fall", "as temperatures fall" and "as
- * leaves fall, revealing the branch structure" — correct English in all three,
- * and 4 of the 40 raw hits when this was measured. So the season is identified
- * by its company rather than by the word:
- *
- *   · a preposition or a season-adjective in front ("in fall", "into fall",
- *     "spring or fall", "late fall", "through the fall"), or
- *   · a season noun behind it ("fall color", "fall weather").
- *
- * The verb takes neither, because its subject is a noun ("leaves fall").
- *
- * DELIBERATELY UNDER-REPORTING: an unaccompanied "fall" is left alone rather
- * than guessed at. A guard that flags correct prose teaches people to ignore
- * it, and the missed case is one a reader can still catch — the reverse is
- * not true.
- */
+// A season "fall" is identified by its company: a preposition or season
+// adjective in front, or a season noun behind. The verb ("as leaves fall")
+// takes neither.
 const FALL_LEADS = new Set([
   'in',
   'into',
@@ -216,7 +118,6 @@ export function isSeasonFall(text: string, index: number): boolean {
     .split(/[^a-z]+/)
     .filter(Boolean)
 
-  // "through THE fall" — the article carries no information, so look past it.
   let lead = before[before.length - 1]
   if (lead === 'the') lead = before[before.length - 2]
 
@@ -227,17 +128,26 @@ export function isSeasonFall(text: string, index: number): boolean {
 }
 
 /**
- * Check one piece of prose against every rule that binds its kind.
- *
- * Pure, and the seam the tests call. Returns every violation rather than the
- * first: a report that stops at one makes a field look one fix away when it is
- * three.
+ * Rewrite the season "fall" to "autumn", leaving the verb alone. Rewrites
+ * exactly the occurrences `isSeasonFall` flags.
  */
+export function fixSeasonFall(text: string): string {
+  let out = ''
+  let last = 0
+  for (const m of text.matchAll(/\bfall\b/gi)) {
+    const i = m.index ?? 0
+    if (!isSeasonFall(text, i)) continue
+    const replacement = m[0][0] === 'F' ? 'Autumn' : 'autumn'
+    out += text.slice(last, i) + replacement
+    last = i + m[0].length
+  }
+  return out + text.slice(last)
+}
+
+/** Every violation in one piece of prose, for the rules binding its kind. */
 export function checkCopy(text: string, kind: ProseKind): CopyViolation[] {
   const found: CopyViolation[] = []
 
-  // COPY RULE: no em or en dashes, anywhere a reader can see. Ana's standing
-  // UI-copy rule, and the one rule with no exceptions in either kind.
   for (const m of text.matchAll(/[—–]/g)) {
     const i = m.index ?? 0
     found.push({
@@ -247,8 +157,6 @@ export function checkCopy(text: string, kind: ProseKind): CopyViolation[] {
     })
   }
 
-  // VOCABULARY RULING: autumn, never the US "fall". Binds both kinds — it is
-  // about the word we print, not about who is acting.
   for (const m of text.matchAll(/\bfall\b/gi)) {
     const i = m.index ?? 0
     if (!isSeasonFall(text, i)) continue
@@ -259,9 +167,7 @@ export function checkCopy(text: string, kind: ProseKind): CopyViolation[] {
     })
   }
 
-  // VOCABULARY RULING: fertilize, never feed — PRESCRIPTIVE ONLY. In
-  // descriptive prose "feed" is the correct verb for what wildlife does, and
-  // applying this rule there flags ~50 correct sentences. See the header.
+  // Prescriptive only: in descriptive prose "feed" is what wildlife does.
   if (kind === 'prescriptive') {
     for (const m of text.matchAll(/\bfeed(s|ing)?\b/gi)) {
       const i = m.index ?? 0
@@ -272,9 +178,6 @@ export function checkCopy(text: string, kind: ProseKind): CopyViolation[] {
       })
     }
 
-    // The "feed the bulb" metaphor misfire: foliage nourishing a bulb or root
-    // is "replenish", not "fertilize". This is the fertilize-not-feed rule
-    // over-applied, and it has its own name because the fix differs.
     for (const m of text.matchAll(
       /\bfertiliz(e|es|ing)\b[^.]*\b(bulb|bulbs|corm|corms|rhizome|rhizomes|tuber|tubers|root|roots)\b/gi
     )) {

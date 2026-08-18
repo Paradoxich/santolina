@@ -986,8 +986,9 @@ enough when the predicate correlates with id order.
 
 **Not done.** The 6 curated rows the pass would have widened — an editorial
 call, not a mechanical one. No `sun_checked_at`, so a row that keeps `[]` is
-re-judged on every run; the sun model's standing ruling is "add no schema", and
-the pass costs ~$0.19, so `--ids` narrows a repeat instead.
+re-judged on every run. The 2026-08-18 session decided under delegation that
+the sun model adds no schema (not reviewed by Ana), and the pass costs ~$0.19,
+so `--ids` narrows a repeat instead.
 
 **Verified.** `verify-round` 0 failures, 780 rows, 175 → 100 with no tolerance.
 532 tests green, invariants and doc claims clean.

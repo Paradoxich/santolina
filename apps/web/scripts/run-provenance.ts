@@ -142,12 +142,8 @@ export interface RunRecord {
    * parallel work here means parallel worktrees, which are separate meters.
    */
   usage?: UsageMeter
-  /**
-   * The recipe named a model, rows were written, and the meter saw nothing —
-   * so this run's spend happened outside its own window (trap 37). Absent on a
-   * healthy run. `runs:cost` reports it rather than quietly costing the step
-   * at zero.
-   */
+  /** The recipe named a model, rows were written, and the meter saw nothing,
+   * so the spend happened outside this run's window. Absent on a healthy run. */
   usage_unobserved?: true
   /** Present only when outcome is 'failed'. */
   error?: string
@@ -909,24 +905,9 @@ export function beginRun(opts: BeginRunOptions): RunHandle {
         notes,
       },
       ...(Object.keys(spent).length ? { usage: spent } : {}),
-      // TRAP 37, generalised. A run whose recipe NAMES A MODEL, that wrote
-      // rows, and that observed no tokens at all, did not run for free: its
-      // spend happened outside the meter's window — almost always because the
-      // model call was made before `withRunRecord` opened, which is exactly
-      // how `curate-common-names` recorded `usage: null` on a pass that cost
-      // real money, and how `runs:cost` came to under-report a round.
-      //
-      // RECORDED RATHER THAN THROWN, and the reason is the Batch API: a batch
-      // pass legitimately settles its tokens outside this process's meter, so
-      // failing here would fail correct runs. A flag makes the next instance
-      // announce itself in the record and in `runs:cost` instead of being
-      // silently absorbed — which is the half that made this trap expensive.
-      //
-      // This is what a source scan could not do. One was written during round
-      // 13 and thrown away: it false-positived on four scripts that meter
-      // correctly, because the call sits in a helper defined early and invoked
-      // from inside the record. Textual order is not runtime order; this asks
-      // the runtime.
+      // A model-bearing run that wrote rows and observed no tokens spent them
+      // outside the meter's window. Flagged, not thrown: a Batch API pass
+      // legitimately settles its tokens elsewhere.
       ...(recipe.model && rowCount > 0 && !Object.keys(spent).length
         ? { usage_unobserved: true as const }
         : {}),

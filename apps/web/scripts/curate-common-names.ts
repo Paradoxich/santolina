@@ -285,16 +285,8 @@ async function main() {
     .filter((p) => !judging.has(p.id) && p.common_name)
     .map((p) => p.common_name)
 
-  // THE JUDGING CALL LIVES IN HERE SO IT CAN BE MADE INSIDE THE RUN RECORD.
-  //
-  // TRAP 37. It used to run straight-line, above `withRunRecord`, and the token
-  // meter is WINDOWED from the moment the run opens — so a pass that spent real
-  // money recorded `usage: null`, and `runs:cost` reported a step that had been
-  // billed as free. Nothing was wrong with the meter; the spend simply happened
-  // before anyone was watching.
-  //
-  // Everything this closure needs is computed above it, so moving the call is
-  // the whole fix: no state crosses the boundary except the verdicts it returns.
+  // Wrapped so the call can be made inside the run record: the token meter is
+  // windowed from the moment the run opens.
   const judge = async (): Promise<MutationIntent[]> => {
     const client = getAnthropicClient()
     const prompt = buildPrompt(selected, heldNames)
@@ -390,12 +382,8 @@ async function main() {
     return intents
   }
 
-  // A DRY RUN STILL SPENDS, AND STILL RECORDS NOTHING. The house rule is that a
-  // dry run opens no run record, and this pass's dry run makes the same paid
-  // call as a real one — so its tokens are invisible to `runs:cost` by design.
-  // Recorded here rather than fixed: closing it means deciding what a run with
-  // no writes should look like, which is a change to the provenance contract
-  // and not to this script.
+  // A dry run makes the same paid call and opens no record, so its tokens are
+  // not in runs:cost.
   if (!APPLY) {
     await judge()
     return
@@ -440,8 +428,6 @@ async function main() {
   }
 
   await withRunRecord(runOptions, async (run) => {
-    // Inside, deliberately — see `judge` above. The tokens this call spends are
-    // only counted because the run is already open when it is made.
     const intents = await judge()
     const report = await writer.apply(intents, run)
     console.log(formatReport(report))

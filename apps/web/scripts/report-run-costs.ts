@@ -50,33 +50,14 @@ import type { UsageTotals } from '../lib/anthropic-client'
 import { RUNS_DIR, readRunRecords, type RunRecord } from './run-provenance'
 import { readRoundManifest } from './round-manifest'
 
-/**
- * Does this run's scope name that round?
- *
- * Scope is prose, so this is a match rather than a lookup — see the header.
- * Bounded to a word so `--round 1` cannot swallow rounds 10 through 12.
- */
+/** Does this run's scope name that round? Scope is prose, so this is a match
+ * rather than a lookup, bounded to a word so `1` cannot match `13`. */
 export function scopeNamesRound(record: RunRecord, label: string): boolean {
   return new RegExp(`\\bround ${label}\\b`).test(record.scope ?? '')
 }
 
-/**
- * Runs that STARTED after the round was seeded and do not name it.
- *
- * TRAP 37, the scope half, made answerable. Attribution is a string match, so a
- * step that writes something else as its scope is silently excluded from the
- * round's cost — `pick-plant-images` wrote its batch id, and round 13 was
- * reported $2.25 against an actual $2.57. A catalog-wide count of runs that do
- * not name the round cannot show this, because it is dominated by other rounds;
- * bounded to the round's own window it is a short list of suspects.
- *
- * NOT A FAILURE, and deliberately not: a run started during a round can
- * legitimately belong to something else (a hand-run correction, another
- * worktree). It is a prompt to look, which is exactly what nobody had.
- *
- * Exported and pure so it can be tested against fixtures rather than against
- * whatever happens to be in runs/.
- */
+/** Runs that started after the round was seeded and do not name it, so their
+ * cost is missing from the round's figure. A prompt to look, not a failure. */
 export function unattributedInWindow(
   records: RunRecord[],
   label: string,
@@ -385,12 +366,8 @@ function main(): void {
         `${records.length} run(s) name round ${round}, ${unattributed} do not.`
     )
 
-    // TRAP 37, the scope half. A bare count of "runs that do not name round 13"
-    // is mostly other rounds, so it reads as noise and round 13's own missing
-    // run hid inside it: `pick-plant-images` wrote the BATCH ID as its scope,
-    // was silently excluded, and the round was reported $0.32 cheaper than it
-    // was. Narrowed to the round's own window, the same fact is a short list of
-    // suspects instead.
+    // Narrowed to the round's own window: catalog-wide the count is mostly
+    // other rounds.
     const manifest = readRoundManifest(round)
     if (manifest) {
       const suspects = unattributedInWindow(all, round, manifest.started_at)

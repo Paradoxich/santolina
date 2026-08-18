@@ -1,59 +1,18 @@
 /**
  * Re-judge `sun_tolerates` on rows that record no tolerance at all.
  *
- * WHICH RUNBOOK STEP RUNS THIS: none. It is a REPAIR pass, the same class as
- * `curate-styles` and `curate-greenery` — new seeds get both sun fields from
- * `curate-plants` in one call, so a round does not owe this. WHAT ENDS IT: the
- * day no row in the catalog thrives in one exposure and tolerates nothing.
+ * A repair pass, not a runbook step: new seeds get both sun fields from
+ * `curate-plants`. Reasoning, measured rates and what is left open:
+ * docs/curation.md#sun-model.
  *
- * THE PROBLEM, AND IT IS NOT A MISSING VALUE. Every row has been asked: all 780
- * carry a non-empty `sun_thrives`, and the pair is drafted in the same call. So
- * `sun_tolerates = []` is an ANSWER — "performs only in its thriving range" —
- * and 175 rows carry it (measured 2026-08-18). `curate-plants --only` cannot
- * reach them at all, because it selects `.is(field, null)` and these are `[]`.
- *
- * WHAT MAKES 51 OF THEM SUSPECT RATHER THAN ALL 175. With a three-value
- * vocabulary, a plant that thrives in TWO exposures has one value left, so `[]`
- * is a mild claim: 73 rows thriving in partial sun and shade are saying "never
- * full sun", which is true of most woodland plants, and 51 thriving in full sun
- * and partial sun are saying "not shade", equally ordinary. The sharp class is
- * the 51 that thrive in FULL SUN ALONE and tolerate nothing — "thrives in full
- * sun, tolerates nothing" is almost never true of a real plant, and an empty
- * tolerance makes one read as fussier than it is, which is the expensive
- * direction to be wrong in for a beginner (Ana, 2026-08-18).
- *
- * All 175 are judged anyway, and the reason is that this is a re-judgement, not
- * a widening: the model is asked what the species actually tolerates and is
- * told plainly that `[]` is a legitimate answer. A woodland plant that keeps
- * `[]` is the pass working, not failing.
- *
- * WHAT THE FIRST FULL RUN ACTUALLY FOUND (2026-08-18), because the paragraph
- * above is the expectation and this is the outcome: 81 of 175 widened (46%),
- * 75 written, 6 frozen as `is_curated`, and 94 kept `[]`. So an empty tolerance
- * is right more often than "almost never true of a real plant" suggests —
- * lavender, rosemary and cistus do not take shade, and woodland species do not
- * take full sun. **A 25-row sample predicted 16%**, a third of the real rate,
- * because the first rows by id happened to be Mediterranean and woodland: the
- * predicate correlated with id order, which sampling by the predicate does not
- * protect against.
- *
- * ⚠ A ROW THAT KEEPS `[]` IS SELECTED AGAIN NEXT RUN. There is no
- * `sun_checked_at`, so "judged and kept empty" and "never judged" are the same
- * value — trap 26's family, and the third instance this session after
- * `style_tags` and `foliage_color`. Not closed here because the sun model's
- * standing ruling is "add no schema" (Ana, 2026-08-18) and a stamp is a
- * migration; the pass is cheap enough (7 calls, ~$0.19 for all 175, measured)
- * that re-judging is affordable, and `--ids` narrows a repeat run. If this becomes routine,
- * the stamp is the fix, exactly as it was for foliage_color.
- *
- * DRY RUN BY DEFAULT (house discipline). Pass --apply to write.
+ * Dry run by default. Pass --apply to write.
  *
  * Usage (from apps/web) — a scope flag is mandatory, see scripts/scope.ts:
  *   ./node_modules/.bin/tsx --env-file=.env.local scripts/curate-sun-tolerance.ts --all --why "<reason>" --limit 3
  *   ./node_modules/.bin/tsx --env-file=.env.local scripts/curate-sun-tolerance.ts --all --why "<reason>" --apply
  *   ./node_modules/.bin/tsx --env-file=.env.local scripts/curate-sun-tolerance.ts --ids <a,b,c> --apply
  *
- *   --limit N   judge at most N rows. Smoke-test the prompt before the batch.
+ *   --limit N   judge at most N rows.
  */
 
 import { getSupabaseAdmin } from '../lib/supabase-admin'
@@ -102,16 +61,8 @@ interface Verdict {
   why: string
 }
 
-/**
- * The prompt, and the two things it is careful about.
- *
- * It states that `[]` is a real answer, because a prompt that only ever asks
- * "what else does it tolerate?" gets a tolerance for everything — the pass
- * would then widen 175 rows and mean nothing by it. And it gives the stored
- * `thrives` values, because tolerance is defined against them: the answer must
- * be disjoint, which is an invariant `verify-round` enforces (FAIL) rather than
- * a preference.
- */
+/** The batch prompt. States that `[]` is a valid answer, and passes `thrives`
+ * so the model can keep its answer disjoint from it. */
 export function buildPrompt(plants: PlantRow[]): string {
   const rows = plants.map((p) => ({
     scientific_name: p.scientific_name,
@@ -138,7 +89,7 @@ Return JSON: {"verdicts":[{"scientific_name":"...","tolerates":["..."],"why":"<8
 One entry per plant, using the scientific_name exactly as given.`
 }
 
-/** Parse and harden the model's answer. Exported: the seam a test can call. */
+/** Parse the model's answer, dropping values outside the vocabulary. */
 export function parseVerdicts(text: string): Verdict[] {
   const cleaned = text
     .trim()
@@ -151,9 +102,6 @@ export function parseVerdicts(text: string): Verdict[] {
   return parsed.verdicts.flatMap((raw) => {
     const v = raw as Partial<Verdict>
     if (!v.scientific_name || !Array.isArray(v.tolerates)) return []
-    // Unknown values are DROPPED rather than failing the batch: one invented
-    // string should not cost 24 good verdicts. Anything dropped shows up as a
-    // narrower tolerance, which is the safe direction.
     const tolerates = v.tolerates.filter((t): t is Sun =>
       (SUN_VALUES as readonly string[]).includes(t)
     )
@@ -167,19 +115,8 @@ export function parseVerdicts(text: string): Verdict[] {
   })
 }
 
-/**
- * The verdict as it will be written, with the invariant enforced HERE rather
- * than hoped for in the prompt.
- *
- * `sun_thrives` and `sun_tolerates` must be disjoint — `verify-round` FAILs on
- * an overlap, so a model that repeats a thriving exposure would turn a helpful
- * pass into a red catalog. Subtracting is right rather than rejecting: the
- * model's intent ("also copes with partial sun") survives, and only the
- * duplicate is dropped.
- *
- * Exported and pure, because this is the line that decides what lands in the
- * database.
- */
+/** The tolerance to write: the verdict minus any thriving exposure, which
+ * `verify-round` requires to be disjoint. */
 export function tolerancePatch(
   row: Pick<PlantRow, 'sun_thrives'>,
   verdict: Sun[]
@@ -221,8 +158,7 @@ async function main() {
   console.log(`${describeScope(scope, scopeIdList)} — ${all.length} row(s).`)
   if (whyAll) console.log(`Whole-catalog run, because: ${whyAll}`)
 
-  // The state predicate, narrowing WITHIN the scope: rows recording no
-  // tolerance. A row with a tolerance has been answered and is left alone.
+  // State predicate, narrowing within the scope.
   let selected = all.filter(
     (p) => !p.sun_tolerates?.length && p.scientific_name
   )
@@ -305,11 +241,6 @@ async function main() {
   const writer = openReviewedMutation({
     db: asMutationDb(db),
     table: 'plants',
-    // sun_tolerates is NOT watched by invalidate_editorial_verdict (migration
-    // 20260729101133 watches description, style_tags, space_types and the two
-    // image columns), so a write here retires no verdict. `skip` regardless:
-    // 8 of the selected rows are signed off, and a re-judgement of a field the
-    // reviewer saw is not a correction that should overrule them.
     onCurated: 'skip',
     dryRun: false,
   })
@@ -317,8 +248,7 @@ async function main() {
   const runOptions = {
     step: 'curate-sun-tolerance',
     writeSet: ['sun_tolerates'],
-    // A value column, so it cannot be compared to an instant. No stamp exists
-    // for this pass (see the header), so updated_at bounds the claim.
+    // A value column: updated_at bounds the claim.
     evidence: [
       {
         kind: 'row-touched' as const,
@@ -337,7 +267,6 @@ async function main() {
   }
 
   await withRunRecord(runOptions, async (run) => {
-    // Inside the record, so the tokens are counted — trap 37.
     const intents = await judge()
     if (!intents.length) {
       console.log('\nNo row earned a widening.')

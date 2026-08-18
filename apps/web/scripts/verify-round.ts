@@ -27,9 +27,7 @@
  *       round-status, because Care Tips v2 is live and reads the field)
  *     · hardiness_rating null (track parked)
  *     · no image on either column (PlantImage placeholder covers it)
- *     · copy-rule violations in any prose field (lib/copy-rules.ts) — Ana's
- *       ruling 2026-08-18: a dash must not halt a paid pipeline mid-round, and
- *       a round must not close without anyone knowing it is there
+ *     · copy-rule violations in any prose field (lib/copy-rules.ts)
  *
  * Read-only, no AI calls — cheap enough to run after every round.
  *
@@ -38,9 +36,7 @@
  *
  * `--round <label>` ADDS the per-step completeness checks for that round. It
  * does NOT narrow the checks above — those always run against the whole
- * catalog, which is what makes them catalog invariants. (This paragraph said
- * the opposite until 2026-08-18; the code has always read this way.) Findings
- * on rows the named round seeded are labelled `← THIS ROUND`.
+ * catalog. Findings on rows the named round seeded are labelled `← THIS ROUND`.
  */
 
 import { IGNORED_BLOOM_COLORS, RAW_TO_BUCKET } from '../lib/bloom-colors'
@@ -111,8 +107,7 @@ interface PlantRow {
   soil_needs: string | null
   common_issues: string | null
   style_tags: string[] | null
-  // Read only by the copy check. Deliberately NOT in REQUIRED_DRAFTED_FIELDS —
-  // see the ruling below on why it stays optional.
+  // Read only by the copy check; not a required field.
   environment_benefits: string | null
 }
 
@@ -210,15 +205,8 @@ function isEmpty(value: unknown): boolean {
   return false
 }
 
-/**
- * The columns this check reads — exported so a test can hold it to what the
- * checks actually consume. That is trap 36's lesson: a projection is a string,
- * the one part of a typed query the compiler cannot see into, and a column a
- * check reads without fetching reads `undefined` on every row and passes.
- *
- * `environment_benefits` is here for the copy check and nothing else. It was
- * absent until 2026-08-18, which is exactly how a whole field goes unguarded.
- */
+/** The columns this check reads. Exported so a test can hold it to what the
+ * checks consume — a column read but not fetched reads `undefined` and passes. */
 export const VERIFY_PROJECTION =
   'id, common_name, scientific_name, ai_drafted_at, native_region, ' +
   'bloom_color, foliage_color, plant_type, plant_type_label, space_types, ' +
@@ -246,12 +234,7 @@ async function fetchAllCombos(): Promise<ComboRow[]> {
   )
 }
 
-/**
- * @param ownedByRound ids the round being verified seeded, when one was named.
- *   Used ONLY to label copy findings, so a round can tell its own five dashes
- *   from the catalog's sixteen. Every check here runs catalog-wide — `--round`
- *   ADDS the completeness checks, it does not narrow these.
- */
+/** @param ownedByRound ids the named round seeded, used to label copy findings. */
 function checkPlants(
   plants: PlantRow[],
   ownedByRound: Set<string> = new Set()
@@ -371,17 +354,8 @@ function checkPlants(
         detail: `${p.common_name} — no image at all, placeholder in use`,
       })
     }
-    // COPY RULES (lib/copy-rules.ts) — WARN, and the level is the ruling
-    // (Ana, 2026-08-18): a dash must not halt a paid pipeline mid-round, but
-    // it must not be closeable without anyone knowing either. WARN is exactly
-    // that pair — visible at step 8, exit 0.
-    //
-    // CATALOG-WIDE, LIKE EVERY OTHER CHECK IN THIS FUNCTION. `--round` adds the
-    // completeness checks; it does not narrow these, whatever the header used
-    // to say. That matters here more than for the other warnings, because the
-    // back catalog carries 52 of these and a round's own handful would vanish
-    // into them — so a finding on a row this round seeded is LABELLED. For the
-    // round's rows alone: `pnpm copy:check --round <label>`.
+    // Catalog-wide, like every check here. Rows the named round seeded are
+    // labelled, since the back catalog carries most of these.
     for (const { field, kind, text } of proseOf(
       p as unknown as Record<string, unknown>
     )) {
@@ -638,9 +612,7 @@ async function main() {
   ])
   console.log(`${plants.length} plants, ${combos.length} combinations.`)
 
-  // The round's own ids, for labelling copy findings. Read here rather than
-  // inside checkPlants so the catalog-wide checks stay independent of whether
-  // a round was named.
+  // The round's own ids, for labelling copy findings.
   const ownedByRound = new Set(
     roundLabel ? (readRoundManifest(roundLabel)?.seeded_ids ?? []) : []
   )
@@ -669,9 +641,7 @@ async function main() {
   if (fails.length) process.exit(1)
 }
 
-// Guarded so VERIFY_PROJECTION can be imported by a test without the verifier
-// opening a database connection and running a whole catalog check as a side
-// effect of the import. Same pattern as run-round.ts.
+// Guarded so the exports can be imported without running the check.
 if (require.main === module) {
   main().catch((err) => {
     console.error(err)

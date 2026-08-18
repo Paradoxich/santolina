@@ -277,16 +277,8 @@ describe('prerequisites are steps, not folklore', () => {
   })
 
   it('widens the candidate pool before the vision pass is billed', () => {
-    // The same shape as the bug above, one step along, and it cost round 13
-    // three plants: feed-wikimedia-candidates is the ONLY source of a photo
-    // for a species Trefle has none for, and it was in no runbook — reachable
-    // only from a hand-written "needs a new photo" list, so "Trefle gave us
-    // nothing" never triggered it.
-    //
-    // ORDER IS THE ASSERTION, not mere presence. Run after the pick it still
-    // works, and is billed twice: the pass judges Trefle's candidates, the
-    // feed then clears image_checked_at, and the pass pays to judge the row
-    // again. Between 6 and 7a, one call sees both pools.
+    // Order is the assertion: run after the pick, the feed clears
+    // image_checked_at and the pass pays to judge the row a second time.
     const recover = RUNBOOK.findIndex(
       (s) => s.script === 'recover-image-categories.ts'
     )
@@ -310,10 +302,8 @@ describe('prerequisites are steps, not folklore', () => {
   })
 
   it('runs the Wikimedia feed with --apply, not as a dry run', () => {
-    // It is dry-run-by-default house discipline, so the runbook has to ask for
-    // the write explicitly. Without the flag the step succeeds, prints what it
-    // would have added, writes nothing, and 7a judges the un-widened pool — a
-    // green round carrying the exact defect the step was added to prevent.
+    // Dry run by default, so without the flag the step succeeds and writes
+    // nothing while 7a judges the un-widened pool.
     const feed = RUNBOOK.find(
       (s) => s.script === 'feed-wikimedia-candidates.ts'
     )!

@@ -199,9 +199,10 @@ predicate correlated with id order, which is the one thing sampling by the
 predicate does not protect against.
 
 There is no `sun_checked_at`, so a row that keeps `[]` is selected again on
-every run. That is trap 26's family and it stays open deliberately: the
-standing ruling is that the sun model adds no schema, and the pass is cheap
-enough (~$0.19 for 175 rows) that re-judging costs less than the migration.
+every run. That is trap 26's family and it stays open: the 2026-08-18 session
+decided under delegation that the sun model adds no schema (not reviewed by
+Ana), and the pass is cheap enough (~$0.19 for 175 rows) that re-judging costs
+less than the migration. Worth re-asking if the pass becomes routine.
 
 <a id="native-region"></a>
 
@@ -533,8 +534,9 @@ picks for you is a silent editorial act on copy a reader sees.
 **Prevention and enforcement are separate, on purpose.** `COPY_RULES_PROMPT` is
 in the drafting prompt so the pass asks for correct copy; the guard is what
 fails, and `verify-round` reports a round's own violations at WARN so a round
-cannot close without anyone knowing they are there (Ana's ruling: a dash must
-not halt a paid pipeline mid-round). The prompt lowers the rate and cannot be relied on — round 13 was drafted
+cannot close without anyone knowing they are there. Ana set that constraint on
+2026-08-18 (must not stop the round, must be known before it closes); WARN is
+this session's choice of level. The prompt lowers the rate and cannot be relied on — round 13 was drafted
 with no copy rule at all and produced the same "Minimal pruning required — ..."
 sentence five times.
 
