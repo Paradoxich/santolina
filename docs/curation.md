@@ -503,9 +503,20 @@ only the first. `fall` needed the same care in miniature: a bare word match flag
 front, a season noun behind) and an unaccompanied `fall` is deliberately left
 alone rather than guessed at.
 
+**Swept once, and what was left behind is the interesting half.** The season
+`fall` has a mechanical fix (`fixSeasonFall`, which rewrites exactly what the
+detector flags), so it was swept catalog-wide on 2026-08-18: 26 rows, 36
+occurrences, 88 violations down to 52. The remaining 52 are the 36 `feed`s and
+16 dashes, and they are deliberately not automated — removing an em dash is a
+wording decision (comma, semicolon, or a second sentence) and `feed` becomes
+_fertilize_ or _replenish_ depending on who is doing it. A substitution that
+picks for you is a silent editorial act on copy a reader sees.
+
 **Prevention and enforcement are separate, on purpose.** `COPY_RULES_PROMPT` is
 in the drafting prompt so the pass asks for correct copy; the guard is what
-fails. The prompt lowers the rate and cannot be relied on — round 13 was drafted
+fails, and `verify-round` reports a round's own violations at WARN so a round
+cannot close without anyone knowing they are there (Ana's ruling: a dash must
+not halt a paid pipeline mid-round). The prompt lowers the rate and cannot be relied on — round 13 was drafted
 with no copy rule at all and produced the same "Minimal pruning required — ..."
 sentence five times.
 

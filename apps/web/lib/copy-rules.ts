@@ -72,6 +72,68 @@ export const COPY_RULES_PROMPT = `Copy rules for every prose field you write:
 - The season is "autumn", never the US "fall". ("as leaves fall" is the verb and is fine.)
 - In instructions, the verb is "fertilize", never "feed". Foliage dying back nourishes a bulb or root: that is "replenish". ("berries feed birds" is descriptive and is fine.)`
 
+/** The prose columns, for a query projection. */
+export const PROSE_COLUMNS = Object.keys(PROSE_FIELDS)
+
+/**
+ * Flatten a plant row into (field label, prose) pairs.
+ *
+ * The jsonb fields hold one string per stage, so each stage is checked as its
+ * own piece of prose and labelled with the stage — "seasonal_rhythm.autumn",
+ * not "seasonal_rhythm". Whoever fixes it needs the key, and a whole-object
+ * dump buries which one is wrong.
+ *
+ * Lives here rather than in either caller because two of them now walk rows —
+ * the standalone guard and `verify-round` — and the flattening is where a new
+ * prose column silently goes unchecked.
+ */
+export function proseOf(
+  row: Record<string, unknown>
+): Array<{ field: string; kind: ProseKind; text: string }> {
+  const out: Array<{ field: string; kind: ProseKind; text: string }> = []
+  for (const column of PROSE_COLUMNS) {
+    const kind = PROSE_FIELDS[column]!
+    const value = row[column]
+    if (typeof value === 'string') {
+      if (value.trim()) out.push({ field: column, kind, text: value })
+      continue
+    }
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
+      for (const [key, stage] of Object.entries(value)) {
+        if (typeof stage === 'string' && stage.trim())
+          out.push({ field: `${column}.${key}`, kind, text: stage })
+      }
+    }
+  }
+  return out
+}
+
+/**
+ * Rewrite the season "fall" to "autumn", leaving the verb alone.
+ *
+ * THE ONLY COPY RULE WITH A MECHANICAL FIX, and it lives beside its detector so
+ * the two cannot drift: the fix rewrites exactly the occurrences `isSeasonFall`
+ * flags, by construction rather than by a second regex that happens to agree.
+ *
+ * The other two rules have no function like this on purpose. Removing an em
+ * dash is a wording decision — comma, semicolon, or a second sentence, and
+ * which one depends on the clause — and "feed" becomes "fertilize" or
+ * "replenish" depending on whether a gardener or a plant's own foliage is
+ * doing it. A substitution that picks for you is a silent editorial act.
+ */
+export function fixSeasonFall(text: string): string {
+  let out = ''
+  let last = 0
+  for (const m of text.matchAll(/\bfall\b/gi)) {
+    const i = m.index ?? 0
+    if (!isSeasonFall(text, i)) continue
+    const replacement = m[0][0] === 'F' ? 'Autumn' : 'autumn'
+    out += text.slice(last, i) + replacement
+    last = i + m[0].length
+  }
+  return out + text.slice(last)
+}
+
 export interface CopyViolation {
   /** Stable id, so a report can be grouped and a waiver can name one. */
   rule: string

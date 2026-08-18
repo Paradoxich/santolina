@@ -30,12 +30,15 @@
 
 import { getSupabaseAdmin } from '../lib/supabase-admin'
 import { fetchAllRows } from '../lib/paginate'
-import { checkCopy, PROSE_FIELDS, type CopyViolation } from '../lib/copy-rules'
+import {
+  checkCopy,
+  proseOf,
+  PROSE_COLUMNS,
+  type CopyViolation,
+} from '../lib/copy-rules'
 import { requireScope, scopeIds, applyScope, describeScope } from './scope'
 
-/** The columns holding prose, in the order a reader meets them. */
-const COLUMNS = Object.keys(PROSE_FIELDS)
-const SELECT = ['id', 'common_name', ...COLUMNS].join(', ')
+const SELECT = ['id', 'common_name', ...PROSE_COLUMNS].join(', ')
 
 type PlantRow = Record<string, unknown> & {
   id: string
@@ -45,35 +48,6 @@ type PlantRow = Record<string, unknown> & {
 interface Finding extends CopyViolation {
   plant: string
   field: string
-}
-
-/**
- * Flatten a row into (field label, prose) pairs.
- *
- * The jsonb fields (seasonal_rhythm, seasonal_care) hold one string per stage,
- * so each stage is checked as its own piece of prose and labelled with the
- * stage — "seasonal_rhythm.autumn", not "seasonal_rhythm". A reader fixing it
- * needs the key, and a whole-object dump buries which one is wrong.
- *
- * Exported so a test can call it: this is where a new prose column silently
- * goes unchecked if PROSE_FIELDS and the query drift apart.
- */
-export function proseOf(row: PlantRow): Array<{ field: string; text: string }> {
-  const out: Array<{ field: string; text: string }> = []
-  for (const column of COLUMNS) {
-    const value = row[column]
-    if (typeof value === 'string') {
-      if (value.trim()) out.push({ field: column, text: value })
-      continue
-    }
-    if (value && typeof value === 'object' && !Array.isArray(value)) {
-      for (const [key, stage] of Object.entries(value)) {
-        if (typeof stage === 'string' && stage.trim())
-          out.push({ field: `${column}.${key}`, text: stage })
-      }
-    }
-  }
-  return out
 }
 
 async function main() {
@@ -99,8 +73,7 @@ async function main() {
 
   const findings: Finding[] = []
   for (const row of rows) {
-    for (const { field, text } of proseOf(row)) {
-      const kind = PROSE_FIELDS[field.split('.')[0]!]!
+    for (const { field, kind, text } of proseOf(row)) {
       for (const violation of checkCopy(text, kind)) {
         findings.push({ ...violation, plant: row.common_name, field })
       }

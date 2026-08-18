@@ -10,7 +10,15 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { checkCopy, isSeasonFall, PROSE_FIELDS } from './copy-rules'
+import {
+  checkCopy,
+  isSeasonFall,
+  fixSeasonFall,
+  proseOf,
+  PROSE_COLUMNS,
+  PROSE_FIELDS,
+} from './copy-rules'
+import { VERIFY_PROJECTION } from '../scripts/verify-round'
 
 const rules = (text: string, kind: Parameters<typeof checkCopy>[1]) =>
   checkCopy(text, kind).map((v) => v.rule)
@@ -98,6 +106,92 @@ describe('fertilize-not-feed is a rule about the gardener, so it binds one kind'
     expect(
       rules('Allow foliage to die back to fertilize the bulb.', 'prescriptive')
     ).toEqual(['replenish-not-fertilize'])
+  })
+})
+
+describe('the fix rewrites exactly what the detector flags', () => {
+  it.each([
+    [
+      'Blooms from late summer into fall.',
+      'Blooms from late summer into autumn.',
+    ],
+    [
+      'In fall, the foliage turns soft yellow.',
+      'In autumn, the foliage turns soft yellow.',
+    ],
+    ['Divide in spring or fall.', 'Divide in spring or autumn.'],
+    ['The best fall color displays.', 'The best autumn color displays.'],
+  ])('rewrites %j', (before, after) => {
+    expect(fixSeasonFall(before)).toBe(after)
+  })
+
+  it('leaves the verb untouched, in the same sentence as a season it fixes', () => {
+    // The case that makes a blind replace unsafe: one sentence, both senses.
+    expect(fixSeasonFall('In fall the bark shows as leaves fall.')).toBe(
+      'In autumn the bark shows as leaves fall.'
+    )
+  })
+
+  it('keeps the capitalisation it found', () => {
+    expect(fixSeasonFall('Fall color is reliable.')).toBe(
+      'Autumn color is reliable.'
+    )
+  })
+
+  it('is idempotent, and clean text is returned unchanged', () => {
+    const clean = 'Blooms into autumn as leaves fall.'
+    expect(fixSeasonFall(clean)).toBe(clean)
+    expect(fixSeasonFall(fixSeasonFall('Blooms into fall.'))).toBe(
+      'Blooms into autumn.'
+    )
+  })
+
+  it('leaves nothing behind for the detector to find', () => {
+    // The property that matters more than any single rewrite: fix then check
+    // is clean. If the two ever disagree, the sweep runs forever on rows it
+    // believes it has fixed.
+    const samples = [
+      'Blooms from late summer into fall.',
+      'In fall, the foliage turns.',
+      'The best fall color displays.',
+      'In fall the bark shows as leaves fall.',
+    ]
+    for (const s of samples) {
+      expect(checkCopy(fixSeasonFall(s), 'descriptive')).toEqual([])
+    }
+  })
+})
+
+describe('the round check fetches every field it judges (trap 36 shape)', () => {
+  it('selects every prose column in verify-round', () => {
+    // Trap 36 was a step reading a column the status query never selected: it
+    // typechecks, reads `undefined` on every row, and passes forever.
+    // `environment_benefits` was in exactly that position on 2026-08-18 — read
+    // by nothing, so adding the copy check without it would have declared a
+    // whole field clean without looking at it.
+    const fetched = new Set(VERIFY_PROJECTION.split(',').map((c) => c.trim()))
+    const missing = PROSE_COLUMNS.filter((c) => !fetched.has(c))
+    expect(
+      missing,
+      'verify-round judges these prose columns without fetching them, so they read undefined and pass'
+    ).toEqual([])
+  })
+})
+
+describe('a row is flattened into every piece of prose it holds', () => {
+  it('labels a jsonb stage with its key and carries the field kind', () => {
+    // The stage key is what a person needs to find the sentence. A whole-object
+    // dump buries which of six is wrong.
+    const found = proseOf({
+      description: 'In fall the leaves turn.',
+      seasonal_care: { autumn: 'Feed the roses.', winter: null },
+      maintenance_notes: '   ',
+    })
+    expect(found.map((f) => f.field)).toEqual([
+      'description',
+      'seasonal_care.autumn',
+    ])
+    expect(found.map((f) => f.kind)).toEqual(['descriptive', 'prescriptive'])
   })
 })
 

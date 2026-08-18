@@ -954,6 +954,37 @@ is unchanged.
 
 <!-- Newest first. Append with: scripts/log-db-session.ts --round <label> -->
 
+### 2026-08-18 — Copy rules extended past seasonal_care, season "fall" swept (not a round)
+
+**Branch** `session/2026-08-18-wikimedia-copy`. Rule-1 backup
+`backups/2026-08-18T07-51-02-572Z` (780 plants, 1945 pairs). No migration.
+
+**Changed.** The three copy rulings moved to `lib/copy-rules.ts` and are now
+checked across every prose field (`pnpm copy:check`), not just `seasonal_care`.
+`verify-round` reports them at WARN; `curate-plants` carries them in its
+prompt. Runbook step 6a added for `feed-wikimedia-candidates`.
+
+**Database.** `apply-copy-fixes --all --apply` rewrote the season "fall" to
+"autumn": 26 rows, 36 occurrences (15 description, 13 seasonal_rhythm, 6
+maintenance_notes, 2 environment_benefits). Run
+`apply-copy-fixes-2026-08-18T0751-bc7db885`, recipe `c6088202acc1a731`, 0
+drift, 0 frozen. 0 of the 26 rows were `is_curated` (counted first), so no
+editorial verdict was retired.
+
+**Found.** 88 violations across 780 rows, 6 of them introduced by round 13 — a
+live leak, not a legacy one. Porting fertilize-not-feed to descriptive prose
+flags ~50 correct sentences ("berries feed birds"), so fields are classified
+prescriptive/descriptive; a bare `\bfall\b` flags "as leaves fall". Both
+false-positive sets pinned in `lib/copy-rules.test.ts`. Separately: 37
+descriptions open by naming another plant, including `Sweet marjoram`
+described as "Pot marjoram is...", which is a different row.
+
+**Not done.** The remaining 52 violations (36 feed, 16 dashes) — neither has a
+safe substitution, so both are a person's. The 37 stale-name descriptions.
+
+**Verified.** `copy:check --all` re-run independently after the sweep: 88 → 52.
+Six seasonal_rhythm stages intact on three spot-checked rows. 516 tests green.
+
 ### 2026-08-17 — Trap 6 fixed upstream, and two invariants nothing watched (not a round)
 
 **Branch** `session/2026-08-17-plan-orphans`. Rule-1 backup

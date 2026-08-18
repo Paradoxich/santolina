@@ -29,6 +29,7 @@
     "runs:cost": "tsx scripts/report-run-costs.ts",
     "probe:gap": "tsx --env-file=.env.local scripts/probe-gap.ts",
     "copy:check": "tsx --env-file=.env.local scripts/check-copy-rules.ts",
+    "copy:fix": "tsx --env-file=.env.local scripts/apply-copy-fixes.ts",
     "trigger:contract": "tsx --env-file=.env.local scripts/test-editorial-trigger.ts"
   },
   "dependencies": {

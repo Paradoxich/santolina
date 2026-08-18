@@ -27,6 +27,9 @@
  *       round-status, because Care Tips v2 is live and reads the field)
  *     · hardiness_rating null (track parked)
  *     · no image on either column (PlantImage placeholder covers it)
+ *     · copy-rule violations in any prose field (lib/copy-rules.ts) — Ana's
+ *       ruling 2026-08-18: a dash must not halt a paid pipeline mid-round, and
+ *       a round must not close without anyone knowing it is there
  *
  * Read-only, no AI calls — cheap enough to run after every round.
  *
@@ -50,6 +53,7 @@ import {
 import { getSupabaseAdmin } from '../lib/supabase-admin'
 import { fetchAllRows } from '../lib/paginate'
 import { readRoundManifest } from './round-manifest'
+import { checkCopy, proseOf } from '../lib/copy-rules'
 import {
   roundStatus,
   formatStatus,
@@ -104,6 +108,9 @@ interface PlantRow {
   soil_needs: string | null
   common_issues: string | null
   style_tags: string[] | null
+  // Read only by the copy check. Deliberately NOT in REQUIRED_DRAFTED_FIELDS —
+  // see the ruling below on why it stays optional.
+  environment_benefits: string | null
 }
 
 interface ComboRow {
@@ -200,17 +207,28 @@ function isEmpty(value: unknown): boolean {
   return false
 }
 
+/**
+ * The columns this check reads — exported so a test can hold it to what the
+ * checks actually consume. That is trap 36's lesson: a projection is a string,
+ * the one part of a typed query the compiler cannot see into, and a column a
+ * check reads without fetching reads `undefined` on every row and passes.
+ *
+ * `environment_benefits` is here for the copy check and nothing else. It was
+ * absent until 2026-08-18, which is exactly how a whole field goes unguarded.
+ */
+export const VERIFY_PROJECTION =
+  'id, common_name, scientific_name, ai_drafted_at, native_region, ' +
+  'bloom_color, foliage_color, plant_type, plant_type_label, space_types, ' +
+  'description, care_level, seasonal_rhythm, seasonal_care, sun_thrives, ' +
+  'sun_tolerates, hardiness_rating, image_url, image_url_curated, ' +
+  'maintenance_notes, best_placement, water_needs, ' +
+  'water_needs_summary, light_needs, soil_needs, common_issues, style_tags, ' +
+  'environment_benefits'
+
 async function fetchAllPlants(): Promise<PlantRow[]> {
   const db = getSupabaseAdmin()
-  const columns =
-    'id, common_name, scientific_name, ai_drafted_at, native_region, ' +
-    'bloom_color, foliage_color, plant_type, plant_type_label, space_types, ' +
-    'description, care_level, seasonal_rhythm, seasonal_care, sun_thrives, ' +
-    'sun_tolerates, hardiness_rating, image_url, image_url_curated, ' +
-    'maintenance_notes, best_placement, water_needs, ' +
-    'water_needs_summary, light_needs, soil_needs, common_issues, style_tags'
   return fetchAllRows<PlantRow>((from, to) =>
-    db.from('plants').select(columns).order('id').range(from, to)
+    db.from('plants').select(VERIFY_PROJECTION).order('id').range(from, to)
   )
 }
 
@@ -340,6 +358,25 @@ function checkPlants(plants: PlantRow[]): Finding[] {
         check: 'no image',
         detail: `${p.common_name} — no image at all, placeholder in use`,
       })
+    }
+    // COPY RULES (lib/copy-rules.ts) — WARN, and the level is the ruling
+    // (Ana, 2026-08-18): a dash must not halt a paid pipeline mid-round, but
+    // it must not be closeable without anyone knowing either. WARN is exactly
+    // that pair — visible at step 8, exit 0.
+    //
+    // It reports the round's OWN rows because verify-round already scopes its
+    // findings that way; the back catalog is `pnpm copy:check --all`'s job.
+    // Round 13 closed green with 6 of these, which is what this check ends.
+    for (const { field, kind, text } of proseOf(
+      p as unknown as Record<string, unknown>
+    )) {
+      for (const v of checkCopy(text, kind)) {
+        findings.push({
+          level: 'WARN',
+          check: `copy: ${v.rule}`,
+          detail: `${p.common_name} [${field}] …${v.match.replace(/\n/g, ' ')}…`,
+        })
+      }
     }
   }
 
@@ -605,7 +642,12 @@ async function main() {
   if (fails.length) process.exit(1)
 }
 
-main().catch((err) => {
-  console.error(err)
-  process.exit(1)
-})
+// Guarded so VERIFY_PROJECTION can be imported by a test without the verifier
+// opening a database connection and running a whole catalog check as a side
+// effect of the import. Same pattern as run-round.ts.
+if (require.main === module) {
+  main().catch((err) => {
+    console.error(err)
+    process.exit(1)
+  })
+}
