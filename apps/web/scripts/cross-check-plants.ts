@@ -1,7 +1,7 @@
 /**
  * Botanical fact cross-check — a second, independent Claude pass over
  * AI-drafted plants that fact-checks the first pass's botanical fields:
- * plant_type, hardiness_zone_min/max, sun_requirements, bloom_months.
+ * plant_type, hardiness_zone_min/max, sun exposure, bloom_months.
  *
  * The check is BLIND: Claude is given only the species identity (names +
  * family), never the stored values, so it can't be anchored by the first
@@ -73,7 +73,7 @@ const SUN_VALUES = ['full_sun', 'partial_sun', 'shade'] as const
 // Types
 // ---------------------------------------------------------------------------
 
-interface CrossCheckResponse {
+export interface CrossCheckResponse {
   plant_type?: PlantType | null
   hardiness_zone_min?: number | null
   hardiness_zone_max?: number | null
@@ -249,7 +249,30 @@ async function getCheckFromClaude(plant: DbPlant): Promise<CrossCheckResponse> {
 // Comparison — tolerance rules, since botanical sources disagree at margins
 // ---------------------------------------------------------------------------
 
-function comparePlant(plant: DbPlant, check: CrossCheckResponse): Flag[] {
+/**
+ * The exposures a row actually records, and whether they come from the split.
+ *
+ * `sun_thrives ∪ sun_tolerates` is the truth about what a person edited.
+ * `sun_requirements` is the trigger's recomputation of it, and is the ONLY
+ * thing a row predating migration 20260709220000 has — that migration says so:
+ * rows with both source fields empty keep their existing mirror.
+ */
+export function storedSunExposures(plant: DbPlant): {
+  exposures: string[]
+  split: boolean
+} {
+  const thrives = plant.sun_thrives ?? []
+  const tolerates = plant.sun_tolerates ?? []
+  if (thrives.length || tolerates.length)
+    return { exposures: [...new Set([...thrives, ...tolerates])], split: true }
+  return { exposures: plant.sun_requirements ?? [], split: false }
+}
+
+/** Exported as a seam: the flags are the artefact, and untestable inline. */
+export function comparePlant(
+  plant: DbPlant,
+  check: CrossCheckResponse
+): Flag[] {
   const flags: Flag[] = []
 
   // plant_type: exact match expected
@@ -299,46 +322,69 @@ function comparePlant(plant: DbPlant, check: CrossCheckResponse): Flag[] {
     }
   }
 
-  // sun_requirements: compared as sets.
-  //   no overlap                        → disagree (contradiction)
-  //   stored is a proper subset of check → disagree (under-reported tolerance —
-  //                                        the systematic first-pass tendency)
-  //   any other partial overlap (shift)  → minor
-  const storedSun = plant.sun_requirements ?? []
+  // SUN: compared as sets, and reported against the fields a person can edit.
+  //
+  // WHY NOT sun_requirements, WHICH IS WHAT THE MODEL IS ASKED FOR. That column
+  // is a DERIVED mirror — migration 20260709220000 made it `sun_thrives ∪
+  // sun_tolerates`, recomputed by a BEFORE trigger — so a flag naming it is a
+  // flag nobody can act on: a write to it is recomputed away, and the one
+  // consumer that ever tried, apply-sun-widening, was non-convergent for
+  // exactly that reason and is now archived. The comparison itself was always
+  // sound; the model is asked for everything the species accepts, which IS the
+  // union. Only the address was wrong.
+  const stored = storedSunExposures(plant)
   const checkedSun = check.sun_requirements ?? []
-  if (storedSun.length && checkedSun.length) {
+  if (stored.exposures.length && checkedSun.length) {
     const checkedSet = new Set<string>(checkedSun)
-    const overlap = storedSun.filter((s) => checkedSet.has(s))
+    const overlap = stored.exposures.filter((s) => checkedSet.has(s))
+    const payload = stored.split
+      ? { sun_thrives: plant.sun_thrives, sun_tolerates: plant.sun_tolerates }
+      : { sun_requirements: plant.sun_requirements }
+    // A row whose source fields are both empty predates the split and still
+    // carries only the mirror. Saying so is the remedy: it has to be split
+    // before either flag below can be acted on at all.
+    const unsplit = stored.split
+      ? ''
+      : ' (row predates the sun split — its source fields are empty, so split it first)'
+
     if (!overlap.length) {
+      // No overlap contradicts the recorded exposures outright, and nothing
+      // here can tell which of the two fields carries the error.
       flags.push({
-        field: 'sun_requirements',
+        field: 'sun_thrives+sun_tolerates',
         severity: 'disagree',
-        stored: storedSun,
+        stored: payload,
         checked: checkedSun,
-        detail: 'no overlap',
+        detail: `no overlap${unsplit}`,
       })
     } else {
-      const storedSubsetOfChecked = storedSun.every((s) => checkedSet.has(s))
+      const storedSubsetOfChecked = stored.exposures.every((s) =>
+        checkedSet.has(s)
+      )
       const widened =
-        storedSubsetOfChecked && checkedSun.length > storedSun.length
+        storedSubsetOfChecked && checkedSun.length > stored.exposures.length
       if (widened) {
+        // Accepting more than is recorded is under-reported TOLERANCE by the
+        // migration's own definition — sun_thrives is where it performs best,
+        // sun_tolerates is what it additionally accepts. That names one field,
+        // and curate-sun-tolerance is the pass that writes it.
         flags.push({
-          field: 'sun_requirements',
+          field: 'sun_tolerates',
           severity: 'disagree',
-          stored: storedSun,
+          stored: payload,
           checked: checkedSun,
-          detail: 'stored range narrower than check (under-reported tolerance)',
+          detail: `stored range narrower than check (under-reported tolerance — curate-sun-tolerance writes this field)${unsplit}`,
         })
       } else if (
-        storedSun.length !== checkedSun.length ||
-        overlap.length !== storedSun.length
+        stored.exposures.length !== checkedSun.length ||
+        overlap.length !== stored.exposures.length
       ) {
         flags.push({
-          field: 'sun_requirements',
+          field: 'sun_thrives+sun_tolerates',
           severity: 'minor',
-          stored: storedSun,
+          stored: payload,
           checked: checkedSun,
-          detail: 'partial overlap',
+          detail: `partial overlap${unsplit}`,
         })
       }
     }
@@ -594,7 +640,12 @@ async function main() {
   }
 }
 
-main().catch((err) => {
-  console.error('Unexpected error:', err)
-  process.exit(1)
-})
+// Only when invoked, so comparePlant can be imported and asserted. The seam is
+// the point: a finding you cannot call is a finding you cannot pin. Same shape
+// as run-ci-checks.ts, and the reason editorial-report.ts was split out at all.
+if (require.main === module) {
+  main().catch((err) => {
+    console.error('Unexpected error:', err)
+    process.exit(1)
+  })
+}

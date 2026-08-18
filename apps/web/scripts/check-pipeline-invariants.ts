@@ -347,23 +347,19 @@ export const OPEN_FINDINGS: Record<string, OpenFinding> = {
   // shape. FORWARD ONLY, as the review recorded: the state it produced is
   // indistinguishable by query from a genuine approval, so no sweep can find
   // the rows already out there.
-  'sun-audit-targets-a-derived-column': {
-    what: 'cross-check-plants raises `disagree` flags on sun_requirements, a BEFORE-trigger-derived mirror of sun_thrives/sun_tolerates (migration 20260709220000). Nothing can act on them: a write to that column is recomputed away, and the only consumer that ever tried is apply-sun-widening, which is non-convergent for exactly that reason and is queued for archive.',
-    source:
-      'Pipeline audit 2026-08-14 section 4 and schema design review section 6b, both unverified passes. Confirmed 2026-08-16 by reading cross-check-plants.ts against migration 20260709220000, which is where the derive trigger is declared.',
-    file: 'apps/web/scripts/cross-check-plants.ts',
-    witness: /field: 'sun_requirements',\s*\n\s*severity: 'disagree'/,
-    remedy:
-      "Either retarget the comparison at sun_thrives/sun_tolerates, the columns a person can actually change, or downgrade it to `minor` and let it be a read-only signal. The witness clears on either, because both stop the pass calling a derived column's value a disagreement.",
-  },
-  // 'seed-orchestration-copied-per-round' CLOSED 2026-08-17, the same day it
-  // was recorded — extracted rather than deferred to round 13, because the
-  // measurement made the decision easy: rounds 8-11 were byte-identical, so
-  // there was nothing to reconcile. scripts/seed-runner.ts is the runner and
-  // all seven seed-round*.ts call it. What the eight copies had already cost is
-  // in that file's header: round 12's ten-line difference was two FIXES that
-  // never reached the other seven, one of them an exit code that let a round
-  // with unresolved candidates exit 0.
+  // 'sun-audit-targets-a-derived-column' CLOSED 2026-08-18 by RETARGETING, the
+  // first of the two options it offered. The comparison was always sound — the
+  // model is asked for everything the species accepts, which IS
+  // `sun_thrives ∪ sun_tolerates` — so only the address was wrong. Flags now
+  // name `sun_tolerates` when the species accepts more than is recorded (that
+  // is under-reported tolerance by the migration's own definition, and
+  // curate-sun-tolerance is the pass that writes it) and the pair otherwise,
+  // and carry the two SOURCE fields as their stored value. A row predating the
+  // split says so in its detail, because it must be split before either flag
+  // can be acted on. Pinned by scripts/cross-check-plants.test.ts, where 5 of
+  // 10 cases fail against the pre-fix address. The entry's prose also outlived
+  // one of its own claims: apply-sun-widening was "queued for archive" and had
+  // in fact already been archived.
   'common-name-never-judged-at-seed': {
     what: 'Nothing between Trefle and the catalog judges common_name. lib/trefle.ts falls back to the scientific name when Trefle has no English one, so a row lands in Explore reading "Rodgersia pinnata"; nothing anywhere catches a flora name nobody uses ("Cowflock", "Premorse") or a name already held by a different species. curate-plants reads common_name and never writes it. So the whole of trap 6 is paid downstream, once per round, by hand.',
     source:

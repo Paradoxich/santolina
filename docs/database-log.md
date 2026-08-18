@@ -957,6 +957,48 @@ is unchanged.
 
 <!-- Newest first. Append with: scripts/log-db-session.ts --round <label> -->
 
+### 2026-08-18 — The sun audit flagged a column the trigger recomputes (not a round)
+
+**Branch** `session/2026-08-18-backup-freshness`. No migration, no catalog
+write, no model calls — the prompt and the recipe are untouched, so this changes
+where a flag points and nothing about what is asked.
+
+**The defect.** `cross-check-plants` raised `disagree` flags on
+`sun_requirements`, which migration 20260709220000 made a BEFORE-trigger-derived
+mirror of `sun_thrives ∪ sun_tolerates`. A write to it is recomputed away, so
+the flags addressed a column no reader could act on; the one consumer that ever
+tried, `apply-sun-widening`, was non-convergent for exactly that reason.
+
+**The comparison was sound. Only the address was wrong.** The model is asked for
+the exposures the species accepts, which IS the union — so the fix is not a new
+question, it is reporting the answer against the two fields a person edits.
+Flags now name `sun_tolerates` when the species accepts more than is recorded
+(under-reported tolerance by the migration's own definition, and
+`curate-sun-tolerance` is the pass that writes it) and `sun_thrives+sun_tolerates`
+when the exposures are contradicted or merely shifted, since nothing can tell
+which of the two carries that error. Stored values are now the two source
+fields. A row predating the split says so in its own detail — it has to be split
+before either flag means anything.
+
+**Pinned.** `scripts/cross-check-plants.test.ts`, new. `comparePlant` and
+`storedSunExposures` are exported and `main()` is behind `require.main`, the
+run-ci-checks pattern — the finding had no callable seam, which is why it sat
+open. 5 of the 10 cases fail against the pre-fix address, the first of them
+asserting the finding's own witness: no flag names `sun_requirements`.
+
+**The entry outlived one of its own claims.** It said `apply-sun-widening` was
+"queued for archive"; it had already been archived some sessions earlier and
+nobody updated the sentence. Recorded because it is the shape standing rule 14
+exists for, in a ratchet entry rather than a doc.
+
+**Not this.** The `sun_tolerates` DATA pass is separate and already done
+(2026-08-18, `session/2026-08-18-wikimedia-copy`: 175 rows re-judged, 81 widened,
+75 written). Nothing here re-judges a row.
+
+**Verified.** `pnpm ci:check --no-db` green: 590 tests, typecheck,
+`tokens:check`, `runbook:check`, `docs:links`, `docs:claims`,
+`invariants:check`. Open findings 3 → 2.
+
 ### 2026-08-18 — A hold could not withdraw an approval (not a round)
 
 **Branch** `session/2026-08-18-backup-freshness`. No migration, no catalog
