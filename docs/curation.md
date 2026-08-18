@@ -185,6 +185,24 @@ alter what the field means.
 
 **Still deferred to post-test:** surfacing the distinction in the UI ("thrives in full sun, tolerates part shade") and using it in matching (prefer thrive-matches, still surface tolerate-matches). The data is captured now; the presentation waits for the test to inform it.
 
+**The empty tolerance, and what re-judging 175 of them found (2026-08-18).**
+`sun_tolerates = []` is a real answer — "performs only in its thriving range" —
+and it was on 175 rows. `curate-plants --only` cannot reach them, because it
+selects `.is(field, null)` and these are `[]`; `curate-sun-tolerance.ts` is the
+repair pass that can. It widened 46% of them and left 94 alone, and the 94 are
+the interesting half: lavender, rosemary and cistus genuinely do not take
+shade, and woodland species genuinely do not take full sun. So an empty
+tolerance is often correct, not a gap — the expectation going in was that
+almost none of it would be. **A 25-row sample predicted 16%**, a third of the
+true rate, because the first rows by id were Mediterranean and woodland; the
+predicate correlated with id order, which is the one thing sampling by the
+predicate does not protect against.
+
+There is no `sun_checked_at`, so a row that keeps `[]` is selected again on
+every run. That is trap 26's family and it stays open deliberately: the
+standing ruling is that the sun model adds no schema, and the pass is cheap
+enough (~$0.19 for 175 rows) that re-judging costs less than the migration.
+
 <a id="native-region"></a>
 
 ## `native_region`: WGSRPD Level-2, and why the source needed a second opinion

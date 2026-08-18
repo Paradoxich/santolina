@@ -957,6 +957,41 @@ is unchanged.
 
 <!-- Newest first. Append with: scripts/log-db-session.ts --round <label> -->
 
+### 2026-08-18 — Trap 37 closed, sun tolerance re-judged (not a round)
+
+**Branch** `session/2026-08-18-wikimedia-copy`. Rule-1 backup
+`backups/2026-08-18T08-56-44-341Z` (780 plants, 1945 pairs). No migration.
+
+**Changed.** Trap 37 fixed and PINNED, both halves: `curate-common-names`
+judges inside its run record (the meter is windowed, so a call made before it
+opens is money the record cannot see), and `runs:cost --round N` now names the
+runs started in that round's window that do not name it — on round 13 that is
+the four `pick-plant-images` batches whose scope is a batch id. A run whose
+recipe names a model, that wrote rows, and that observed zero tokens now
+records `usage_unobserved`. `TRAPS_NOT_PINNED` 22 → 21.
+
+**Database.** `curate-sun-tolerance --all --apply` re-judged the 175 rows
+recording no sun tolerance: 81 widened, 75 written, **6 frozen as
+`is_curated`**, 94 kept `[]`. Run
+`curate-sun-tolerance-2026-08-18T0856-64eb15de`, 7 calls, 21,824 in / 8,065
+out (~$0.19). `verify-round` 0 failures — no thrives/tolerates overlap.
+
+**Found.** The premise did not survive contact: "thrives in full sun, tolerates
+nothing is almost never true" predicted most of 175 would widen, and the real
+rate is 46%. The 94 that kept `[]` are correct horticulture — lavender,
+rosemary and cistus do not take shade; woodland species do not take full sun.
+**A 25-row sample predicted 16%**, a third of the true rate, because the first
+rows by id were Mediterranean and woodland. Sampling by the predicate is not
+enough when the predicate correlates with id order.
+
+**Not done.** The 6 curated rows the pass would have widened — an editorial
+call, not a mechanical one. No `sun_checked_at`, so a row that keeps `[]` is
+re-judged on every run; the sun model's standing ruling is "add no schema", and
+the pass costs ~$0.19, so `--ids` narrows a repeat instead.
+
+**Verified.** `verify-round` 0 failures, 780 rows, 175 → 100 with no tolerance.
+532 tests green, invariants and doc claims clean.
+
 ### 2026-08-18 — Copy rules extended past seasonal_care, season "fall" swept (not a round)
 
 **Branch** `session/2026-08-18-wikimedia-copy`. Rule-1 backup
