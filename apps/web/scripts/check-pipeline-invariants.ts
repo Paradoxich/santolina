@@ -98,8 +98,16 @@ export const COLUMNS_NO_PRODUCT_READS: Record<string, string> = {
 
 /** Shape 2. Stamp columns that exist in the schema with no TypeScript writer. */
 export const STAMPS_WITHOUT_WRITERS: Record<string, string> = {
-  native_to_reviewed_at:
-    'Written only by migration 20260813110500, backfilling 151 reviewed-and-kept rows from reference/native-to-review-2026-07-30.json. NOW LOAD-BEARING: since 2026-08-16 shouldStamp() in cross-check-native-to.ts treats this column as the record that a person read a phrase and kept it, which is the only way a gross/contradicts row settles without a rewrite. With no writer, a NEW kept row cannot be recorded and will fail round close until the phrase is rewritten instead. The --review-keep writer (audit F5) is what deletes this entry.',
+  // EMPTY as of 2026-08-18. `native_to_reviewed_at` was the only entry and it
+  // got its writer: `apply-native-to-fixes.ts --review-keep`, which stamps the
+  // rows a review read and kept. It lives beside the rewrite path because a
+  // keep and a rewrite are two verdicts from one review, and splitting them
+  // would have been a second home for one fact.
+  //
+  // An entry here is a column a migration declares and no script can ever set.
+  // That is only honest for a column nothing READS as state; the moment one
+  // does, the entry describes a column that drains monotonically, which is what
+  // this one did for a month.
 }
 
 /** Shape 3. `stampChecked` callers with no finding-aware selector (trap 24). */

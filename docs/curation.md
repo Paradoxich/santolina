@@ -363,6 +363,17 @@ what was reviewed, refuses a replacement carrying a dash or semicolon, and nulls
 `native_checked_at` so the rewritten phrase is re-read rather than inheriting a
 stamp earned by different words.
 
+**A keep is a decision too, and the same script records it.**
+`apply-native-to-fixes.ts --review-keep` reads the committed review file
+(`reference/native-to-review-<date>.json`) and stamps `native_to_reviewed_at` on
+every row whose verdict was `keep` and whose phrase still reads exactly as the
+reviewer read it; a drifted row is reported, never stamped. That stamp is what
+lets the guard settle a `gross` or `contradicts` row without rewriting copy that
+is right (`shouldStamp`), and a trigger withdraws it the moment the phrase is
+edited. It is dated to the review, not to the run. Before 2026-08-18 the column
+had no writer at all outside migration `20260813110500`'s backfill, so a newly
+kept row could not be recorded.
+
 **Hand-authored descriptions use the same shape.**
 `scripts/apply-description-fixes.ts` (added 2026-08-17) applies `description`
 rewrites a person wrote, from a committed decision file, with the same staleness

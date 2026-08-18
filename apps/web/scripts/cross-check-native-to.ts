@@ -201,11 +201,12 @@ function guardStampTarget(id: string): string {
  *     outlive the phrase it was about. A reviewed-and-kept row is settled, and
  *     is stamped even on `gross` or `contradicts`.
  *
- * What stays open, and is now load-bearing: nothing in TypeScript writes
- * `native_to_reviewed_at` — the 2026-07-30 review was backfilled by migration
- * `20260813110500`. Until the `--review-keep` writer exists, a NEW row a person
- * reads and keeps has no way to record that, so it keeps failing round close
- * until the phrase is rewritten instead.
+ * The stamp has a writer as of 2026-08-18: `apply-native-to-fixes.ts
+ * --review-keep` reads a committed review file and stamps every kept row whose
+ * phrase still reads as the reviewer read it. Before that, the only write in
+ * repo history was migration `20260813110500`'s backfill, so a NEW kept row
+ * could not be recorded and kept failing round close until someone rewrote a
+ * phrase that was right.
  */
 export function shouldStamp(
   row: Pick<Result, 'verdict' | 'native_to_reviewed_at'>

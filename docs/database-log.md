@@ -957,6 +957,37 @@ is unchanged.
 
 <!-- Newest first. Append with: scripts/log-db-session.ts --round <label> -->
 
+### 2026-08-18 — The keep that could not be recorded (not a round)
+
+**Branch** `session/2026-08-18-stamp-writers`. No migration, no prod catalog
+write. Empties `STAMPS_WITHOUT_WRITERS`.
+
+**Found.** `native_to_reviewed_at` had one writer in repo history — migration
+`20260813110500`'s 151-row backfill — and a trigger that withdraws the stamp on
+any phrase edit, so it could only drain. Since 2026-08-16 `shouldStamp()` reads
+it as the only way a `gross`/`contradicts` row settles without a rewrite, which
+made a new keep unrecordable and would have failed round close on the first one.
+
+**Changed.** `apply-native-to-fixes.ts --review-keep` stamps the kept rows of a
+committed review file. It lives beside the rewrite path because a keep and a
+rewrite are two verdicts from one review; the audit's alternative, coupling the
+stamp into the three `native_to` writers, was withdrawn by the schema review.
+The match is on `scientific_name` AND the exact reviewed phrase, so a drifted
+row is reported and never inherits a verdict about other words. The stamp is
+dated to the review, not the run — which is why `updated_at` witnesses the run
+and the stamp cannot: a backdated value lands outside the window and would file
+the run CONTRADICTED for doing what it promised.
+
+**Verified.** Local stack (rule 11): the write lands at the review date, the
+drifted row is refused, and editing the phrase withdraws the stamp. Against
+prod, `--dry-run` reports 151 already stamped, 0 stale, 0 missing — the same
+151/151 the backfill matched, which also proves the timestamp literal is
+identical. The write path itself has not run against prod; there is nothing to
+write until a review happens.
+
+**Open.** A `model: 'human'` run warns that no tokens were observed (trap 37).
+Pre-existing, shared with the rewrite path.
+
 ### 2026-08-18 — Three columns written every round and read by nothing (not a round)
 
 **Branch** `session/2026-08-18-backup-freshness`. No migration, no catalog

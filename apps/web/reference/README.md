@@ -70,6 +70,16 @@ Files are per-pass and are never rewritten. A suffix names the pass when a date
 carries more than one — `-openers` is the 2026-08-18 audit of descriptions whose
 first clause named a different plant than the row.
 
+## `native-to-review-<date>.json`
+
+Every row of a `native_to` review queue with the verdict a person reached —
+`keep` or `rewritten` — plus `phrase_at_review`, the words they actually read.
+The narrative record migration `20260813110500` backfilled from, and since
+2026-08-18 the input to `apply-native-to-fixes.ts --review-keep`, which stamps
+`native_to_reviewed_at` on the kept rows that have not drifted. A keep is a
+decision, not an absence of one; without this file the catalog cannot tell the
+two apart and the cross-check re-ranks the same right phrases forever.
+
 ## `native-to-fixes-<date>.json`
 
 The reviewed decisions behind a `native_to` rewrite pass, applied by
