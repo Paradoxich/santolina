@@ -104,7 +104,6 @@ export const REPORT_ONLY_STAMPS: Record<string, string> = {
  * the rule allows a source scan as the alternative.
  */
 export const TRAPS_NOT_PINNED: Record<string, string> = {
-  '37': 'Cost report misses a step. Two seams, neither exercised: the METER (a fake client, one call before withRunRecord opens and one inside, asserting only the second is counted) and the SCOPE STRING (every run a round writes must name that round; pick-plant-images writes the batch id instead). A source scan on withRunRecord-before-messages.create was written and discarded during round 13 — it false-positives on curate-seasonal-care, curate-styles, draft-hardiness and regenerate-native-region, all of which meter correctly, because the call sits in a helper defined early and invoked from inside the record. Textual order is not runtime order.',
   '1': 'Rate-limit fallback. The fix removed the fallback; a test needs a fake fetch that 429s and an assertion that the error propagates. Cheap, and worth doing next.',
   '1b': 'Trigger semantics. Only observable against a live or replayed Postgres; pnpm trigger:contract is the existing home and would need to become a checked artifact.',
   '2': '--new-only scoping. Now state-based (*_checked_at IS NULL); the seam is each script argument parser, and the honest witness is a query, not a unit.',

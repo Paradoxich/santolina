@@ -285,98 +285,121 @@ async function main() {
     .filter((p) => !judging.has(p.id) && p.common_name)
     .map((p) => p.common_name)
 
-  const client = getAnthropicClient()
-  const prompt = buildPrompt(selected, heldNames)
-  const response = await client.messages.create({
-    model: CURATION_MODEL,
-    max_tokens: MAX_TOKENS,
-    system: SYSTEM_PROMPT,
-    messages: [{ role: 'user', content: prompt }],
-  })
-  const block = response.content[0]
-  if (!block || block.type !== 'text')
-    throw new Error('Claude returned no text block')
-  const verdicts = parseVerdicts(block.text)
-
-  // --- refusals, before anything is written -------------------------------
-  const bySci = new Map(
-    selected
-      .filter((p) => p.scientific_name)
-      .map((p) => [p.scientific_name!, p])
-  )
-
-  const intra = intraBatchCollisions(verdicts)
-  for (const [name, holders] of intra)
-    console.log(
-      `  ✗   REFUSED "${name}" — proposed for ${holders.join(' and ')}`
-    )
-
-  const renames = verdicts.filter(
-    (v) =>
-      v.verdict === 'rename' && v.to && !intra.has(v.to.trim().toLowerCase())
-  )
-  const blocked = findCollisions(
-    renames.map((v) => ({
-      scientific_name: v.scientific_name,
-      from: bySci.get(v.scientific_name)?.common_name ?? '',
-      to: v.to!,
-      why: v.why,
-    })),
-    all
-  )
-  for (const [sci, holders] of blocked)
-    console.log(
-      `  ✗   REFUSED "${renames.find((v) => v.scientific_name === sci)?.to}" for ${sci} — already held by ${holders.join(', ')}`
-    )
-
-  // --- intents ------------------------------------------------------------
-  const now = new Date().toISOString()
-  const intents: MutationIntent[] = []
-  let kept = 0
-  let renamed = 0
-
-  for (const v of verdicts) {
-    const row = bySci.get(v.scientific_name)
-    if (!row) {
-      console.log(`  ⚠   ${v.scientific_name} — not in this batch, ignored`)
-      continue
-    }
-    const refused =
-      blocked.has(v.scientific_name) ||
-      (v.to ? intra.has(v.to.trim().toLowerCase()) : false)
-    const rename = v.verdict === 'rename' && !refused
-
-    if (rename) renamed++
-    else kept++
-
-    console.log(
-      rename
-        ? `  ✎   ${row.scientific_name}: "${row.common_name}" → "${v.to}" (${v.why})`
-        : `  ·   ${row.scientific_name}: keeps "${row.common_name}"`
-    )
-
-    intents.push({
-      id: row.id,
-      label: row.scientific_name ?? row.common_name,
-      // The drift guard reads the value the decision was made about. A kept
-      // row writes no value column at all, only the stamp.
-      from: rename ? { common_name: row.common_name } : {},
-      to: rename ? { common_name: v.to! } : {},
-      // The stamp goes in the SAME statement, and lands on a KEPT row too —
-      // trap 28: a stamp on only the changed rows could not corroborate a run
-      // that counted all of them. A kept row writes nothing but the stamp.
-      alsoWrite: { common_name_checked_at: now },
-      why: rename
-        ? v.why || 'not a name a garden catalog can use'
-        : 'judged and kept',
+  // THE JUDGING CALL LIVES IN HERE SO IT CAN BE MADE INSIDE THE RUN RECORD.
+  //
+  // TRAP 37. It used to run straight-line, above `withRunRecord`, and the token
+  // meter is WINDOWED from the moment the run opens — so a pass that spent real
+  // money recorded `usage: null`, and `runs:cost` reported a step that had been
+  // billed as free. Nothing was wrong with the meter; the spend simply happened
+  // before anyone was watching.
+  //
+  // Everything this closure needs is computed above it, so moving the call is
+  // the whole fix: no state crosses the boundary except the verdicts it returns.
+  const judge = async (): Promise<MutationIntent[]> => {
+    const client = getAnthropicClient()
+    const prompt = buildPrompt(selected, heldNames)
+    const response = await client.messages.create({
+      model: CURATION_MODEL,
+      max_tokens: MAX_TOKENS,
+      system: SYSTEM_PROMPT,
+      messages: [{ role: 'user', content: prompt }],
     })
+    const block = response.content[0]
+    if (!block || block.type !== 'text')
+      throw new Error('Claude returned no text block')
+    const verdicts = parseVerdicts(block.text)
+
+    // --- refusals, before anything is written -------------------------------
+    const bySci = new Map(
+      selected
+        .filter((p) => p.scientific_name)
+        .map((p) => [p.scientific_name!, p])
+    )
+
+    const intra = intraBatchCollisions(verdicts)
+    for (const [name, holders] of intra)
+      console.log(
+        `  ✗   REFUSED "${name}" — proposed for ${holders.join(' and ')}`
+      )
+
+    const renames = verdicts.filter(
+      (v) =>
+        v.verdict === 'rename' && v.to && !intra.has(v.to.trim().toLowerCase())
+    )
+    const blocked = findCollisions(
+      renames.map((v) => ({
+        scientific_name: v.scientific_name,
+        from: bySci.get(v.scientific_name)?.common_name ?? '',
+        to: v.to!,
+        why: v.why,
+      })),
+      all
+    )
+    for (const [sci, holders] of blocked)
+      console.log(
+        `  ✗   REFUSED "${renames.find((v) => v.scientific_name === sci)?.to}" for ${sci} — already held by ${holders.join(', ')}`
+      )
+
+    // --- intents ------------------------------------------------------------
+    const now = new Date().toISOString()
+    const intents: MutationIntent[] = []
+    let kept = 0
+    let renamed = 0
+
+    for (const v of verdicts) {
+      const row = bySci.get(v.scientific_name)
+      if (!row) {
+        console.log(`  ⚠   ${v.scientific_name} — not in this batch, ignored`)
+        continue
+      }
+      const refused =
+        blocked.has(v.scientific_name) ||
+        (v.to ? intra.has(v.to.trim().toLowerCase()) : false)
+      const rename = v.verdict === 'rename' && !refused
+
+      if (rename) renamed++
+      else kept++
+
+      console.log(
+        rename
+          ? `  ✎   ${row.scientific_name}: "${row.common_name}" → "${v.to}" (${v.why})`
+          : `  ·   ${row.scientific_name}: keeps "${row.common_name}"`
+      )
+
+      intents.push({
+        id: row.id,
+        label: row.scientific_name ?? row.common_name,
+        // The drift guard reads the value the decision was made about. A kept
+        // row writes no value column at all, only the stamp.
+        from: rename ? { common_name: row.common_name } : {},
+        to: rename ? { common_name: v.to! } : {},
+        // The stamp goes in the SAME statement, and lands on a KEPT row too —
+        // trap 28: a stamp on only the changed rows could not corroborate a run
+        // that counted all of them. A kept row writes nothing but the stamp.
+        alsoWrite: { common_name_checked_at: now },
+        why: rename
+          ? v.why || 'not a name a garden catalog can use'
+          : 'judged and kept',
+      })
+    }
+
+    console.log(
+      `\n${renamed} rename(s), ${kept} kept, ${blocked.size + intra.size} refused.`
+    )
+
+    return intents
   }
 
-  console.log(
-    `\n${renamed} rename(s), ${kept} kept, ${blocked.size + intra.size} refused.`
-  )
-
-  if (!APPLY) return
+  // A DRY RUN STILL SPENDS, AND STILL RECORDS NOTHING. The house rule is that a
+  // dry run opens no run record, and this pass's dry run makes the same paid
+  // call as a real one — so its tokens are invisible to `runs:cost` by design.
+  // Recorded here rather than fixed: closing it means deciding what a run with
+  // no writes should look like, which is a change to the provenance contract
+  // and not to this script.
+  if (!APPLY) {
+    await judge()
+    return
+  }
 
   const writer = openReviewedMutation({
     db: asMutationDb(db),
@@ -417,6 +440,9 @@ async function main() {
   }
 
   await withRunRecord(runOptions, async (run) => {
+    // Inside, deliberately — see `judge` above. The tokens this call spends are
+    // only counted because the run is already open when it is made.
+    const intents = await judge()
     const report = await writer.apply(intents, run)
     console.log(formatReport(report))
   })

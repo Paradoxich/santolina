@@ -86,7 +86,7 @@ Seeded 33 of 39 absentees. Six cuts, reasoned in `seed-round13.ts`: two running 
 
 - **Trap 35.** `curate-common-names --apply` died having written 0 of 33 rows: `reviewed-mutation` rejected the stamp-only intent a `keep` verdict produces. First real `--apply` for that step, and six prior dry runs could not have caught it because `validate()` lives inside the `--apply` gate. Fixed and pinned.
 - **Trap 36.** The step then stamped all 33 correctly and still reported `0 already done` — `common_name_checked_at` was missing from `round-status`'s projection and had been for the step's whole life, so it could never be detected as complete and would have been re-billed every round. Fixed and pinned.
-- **Trap 37.** The cost report itself, above. NOT pinned; recorded in `TRAPS_NOT_PINNED` with what a pin needs.
+- **Trap 37.** The cost report itself, above. Pinned 2026-08-18 (`run-provenance.test.ts`, `report-run-costs.test.ts`).
 
 **Also fixed:** the seasonal-care validator discarded `Cloud-prune ...` as "not imperative" (hyphenated compound, head verb is `prune`) — the signature action of the pines this round seeded, so no earlier round had the vocabulary to hit it. `curate-seasonal-care` also resolved its scope at import, which made it untestable; now lazy, with its first tests.
 
@@ -808,7 +808,9 @@ Round 13 was the first round priced by `pnpm runs:cost` instead of estimated, an
 
 Round 13 therefore reported **$2.25** and actually cost **~$2.57**, and the whole gap is the step people most want the number for. Family A: a partial answer wearing a complete one's output. The `NOT MEASURED` footer is a real mitigation and the reason half of this was caught, but it lists steps that recorded nothing and cannot list a step that was never attributed to the round.
 
-**NOT PINNED, and recorded in `TRAPS_NOT_PINNED` rather than closed.** A source scan on "does `withRunRecord(` appear before `messages.create(`" was written and thrown away: it fires on `curate-seasonal-care`, `curate-styles`, `draft-hardiness` and `regenerate-native-region`, every one of which meters correctly, because the call sits in a helper DEFINED early and INVOKED from inside the record. **Textual order is not runtime order.** A real pin needs the metering seam exercised directly — a fake client, one call before the record opens and one inside it, asserting only the second is counted — plus a scope assertion that every run a round's steps write names that round. Neither exists yet.
+**PINNED 2026-08-18, both halves.** The meter: `scripts/run-provenance.test.ts`, "the token meter counts the window, not the process (trap 37)" — a fake client, one call before the record opens and one inside, asserting only the second is counted. The scope: `scripts/report-run-costs.test.ts`, "a round names its own runs (trap 37)", over `unattributedInWindow`. **Fixed** by moving `curate-common-names`' judging inside its run record, and by narrowing the report's unattributed count to the round's own window, where it names the suspects instead of counting the whole file.
+
+**A source scan was written for this and thrown away, so do not retry that shape.** "Does `withRunRecord(` appear before `messages.create(`" fires on `curate-seasonal-care`, `curate-styles`, `draft-hardiness` and `regenerate-native-region`, every one of which meters correctly, because the call sits in a helper DEFINED early and INVOKED from inside the record. **Textual order is not runtime order.** What replaced it asks the runtime instead: a run whose recipe names a model, that wrote rows, and that observed zero tokens now records `usage_unobserved: true` and says so on the console. It is a flag and not a failure, because a Batch API pass legitimately settles its tokens outside the process meter — the next instance announces itself rather than being absorbed.
 
 ---
 

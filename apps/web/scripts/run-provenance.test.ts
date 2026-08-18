@@ -9,6 +9,12 @@
  * resumable steps would punch a hole in provenance every time someone hit
  * Ctrl-C, which is precisely where intent cannot reconstruct the answer later.
  *
+ * TRAP 37 is pinned in the metering block near the foot: the token meter is
+ * WINDOWED from the instant a run opens, so a model call made before that is
+ * real money the record cannot see. A fake client makes one call outside the
+ * window and one inside, and only the second is counted. The scope half of the
+ * same trap lives in report-run-costs.test.ts.
+ *
  * TRAP 28 is pinned in both halves, in the last describe block: a stamp can only witness a
  * write that SET it, on every row counted. A cleared stamp matches no window and
  * a conditionally-set one covers a subset, so in both cases the default witness
@@ -42,6 +48,7 @@ import {
   readUsageMeter,
   recordUsage,
   resetUsageMeter,
+  type UsageMeter,
 } from '../lib/anthropic-client'
 import {
   beginRun,
@@ -1187,5 +1194,175 @@ describe('the client meters every path that bills', () => {
       input_tokens: 15_000,
       output_tokens: 350,
     })
+  })
+})
+
+/**
+ * TRAP 37, the meter half — a run that spent real money and recorded `usage:
+ * null`, so `runs:cost` priced the step at zero.
+ *
+ * THE INCIDENT. `curate-common-names` made its Claude call straight-line, above
+ * `withRunRecord`. The meter is WINDOWED from the instant the run opens
+ * (`usageAtStart`), which is correct and deliberate — a resumed pass must not
+ * inherit tokens spent before it. The consequence is that WHERE the call sits
+ * decides whether it is counted, and nothing said so.
+ *
+ * WHY A FAKE CLIENT AND NOT A SOURCE SCAN. One was written during round 13 and
+ * thrown away: `withRunRecord(...)` appearing textually after `messages.create`
+ * false-positives on four scripts that meter correctly, because the call sits
+ * in a helper defined early and invoked from inside the record. Textual order
+ * is not runtime order. These cases run the thing instead.
+ */
+describe('the token meter counts the window, not the process (trap 37)', () => {
+  /** A meter that only moves when the fake client is called. */
+  const fakeMeter = () => {
+    const meter: UsageMeter = {}
+    return {
+      read: (): UsageMeter => JSON.parse(JSON.stringify(meter)) as UsageMeter,
+      delta: (before: UsageMeter): UsageMeter => {
+        const out: UsageMeter = {}
+        for (const [key, now] of Object.entries(meter)) {
+          const was = before[key]
+          const calls = now.calls - (was?.calls ?? 0)
+          if (calls > 0)
+            out[key] = {
+              calls,
+              input_tokens: now.input_tokens - (was?.input_tokens ?? 0),
+              output_tokens: now.output_tokens - (was?.output_tokens ?? 0),
+              cache_creation_input_tokens: 0,
+              cache_read_input_tokens: 0,
+            }
+        }
+        return out
+      },
+      /** Stands in for `client.messages.create`. */
+      call: () => {
+        const key = 'claude-sonnet-4-5:sync'
+        const prev = meter[key] ?? {
+          calls: 0,
+          input_tokens: 0,
+          output_tokens: 0,
+          cache_creation_input_tokens: 0,
+          cache_read_input_tokens: 0,
+        }
+        meter[key] = {
+          ...prev,
+          calls: prev.calls + 1,
+          input_tokens: prev.input_tokens + 1000,
+          output_tokens: prev.output_tokens + 100,
+        }
+      },
+    }
+  }
+
+  it('does not count a call made before the run opened', async () => {
+    // The defect, exactly: judge first, open the record afterwards.
+    const client = fakeMeter()
+    const h = harness({ common_name_checked_at: 5 })
+
+    client.call() // ← the paid call, made too early
+
+    const run = beginRun({
+      step: 'curate-common-names',
+      writeSet: ['common_name_checked_at'],
+      recipe: RECIPE,
+      ...h.opts,
+      readUsage: client.read,
+      usageDelta: client.delta,
+    })
+    wrote(run, 5)
+    await run.finish('completed')
+
+    const record = h.written[0]!
+    expect(
+      record.usage,
+      'a call before the run must not be counted'
+    ).toBeUndefined()
+    // And the run must SAY it noticed, which is the half that makes the next
+    // instance visible instead of silently free.
+    expect(record.usage_unobserved).toBe(true)
+  })
+
+  it('counts a call made inside the run', async () => {
+    const client = fakeMeter()
+    const h = harness({ common_name_checked_at: 5 })
+
+    const run = beginRun({
+      step: 'curate-common-names',
+      writeSet: ['common_name_checked_at'],
+      recipe: RECIPE,
+      ...h.opts,
+      readUsage: client.read,
+      usageDelta: client.delta,
+    })
+    client.call() // ← the same call, made inside the window
+    wrote(run, 5)
+    await run.finish('completed')
+
+    const record = h.written[0]!
+    expect(record.usage?.['claude-sonnet-4-5:sync']).toMatchObject({
+      calls: 1,
+      input_tokens: 1000,
+      output_tokens: 100,
+    })
+    expect(record.usage_unobserved).toBeUndefined()
+  })
+
+  it('counts only the inside call when both happen', async () => {
+    // The assertion the trap asks for in one case: one before, one inside.
+    const client = fakeMeter()
+    const h = harness({ common_name_checked_at: 5 })
+
+    client.call()
+    const run = beginRun({
+      step: 'curate-common-names',
+      writeSet: ['common_name_checked_at'],
+      recipe: RECIPE,
+      ...h.opts,
+      readUsage: client.read,
+      usageDelta: client.delta,
+    })
+    client.call()
+    wrote(run, 5)
+    await run.finish('completed')
+
+    expect(h.written[0]!.usage?.['claude-sonnet-4-5:sync']?.calls).toBe(1)
+  })
+
+  it('does not flag a run whose recipe names no model', async () => {
+    // A free pass (Trefle, Wikimedia, a local validator) legitimately observes
+    // no tokens. Flagging those would make the signal worthless.
+    const client = fakeMeter()
+    const h = harness({ native_region_checked_at: 5 })
+    const run = beginRun({
+      step: 'cross-check-native-region',
+      writeSet: ['native_region_checked_at'],
+      recipe: { model: null, template: 'gbif + local geojson, no model' },
+      ...h.opts,
+      readUsage: client.read,
+      usageDelta: client.delta,
+    })
+    wrote(run, 5)
+    await run.finish('completed')
+
+    expect(h.written[0]!.usage_unobserved).toBeUndefined()
+  })
+
+  it('does not flag a model-bearing run that wrote nothing', async () => {
+    // A run that selected no rows spends nothing and writes nothing. That is a
+    // no-op, not an unobserved spend.
+    const client = fakeMeter()
+    const h = harness({})
+    const run = beginRun({
+      step: 'curate-common-names',
+      writeSet: ['common_name_checked_at'],
+      recipe: RECIPE,
+      ...h.opts,
+      readUsage: client.read,
+      usageDelta: client.delta,
+    })
+    await run.finish('completed')
+
+    expect(h.written[0]!.usage_unobserved).toBeUndefined()
   })
 })
