@@ -41,7 +41,7 @@ describe('prose that names a season without claiming flowering', () => {
     // the guard advised would have put winter in a summer grass's bloom.
     'Bears airy, feathery flower plumes in summer that catch the light beautifully and persist into winter.',
     'In summer, it produces feathery flower plumes that rise well above the foliage and persist through winter, turning golden as they age.',
-    'A rounded, bushy shrub grown for its dramatic smoke-like flower plumes that appear in summer and persist into autumn.',
+    'Dramatic smoke-like flower plumes appear in summer and persist into autumn.',
     'Cone-shaped white flower clusters appear in early summer, aging to pink and tan and persisting through winter.',
     // The season belongs to a clause about the leaves, not the flowers.
     'The rosettes of fresh green leaves emerge in spring before the impressive flower spikes appear.',
