@@ -73,6 +73,18 @@ Ask me explicitly, presenting the summary from step 2:
 **"Merge `session/<name>` into main, or leave the branch for review?"**
 
 - **If I say merge:** switch to the main checkout (the original repo directory, not this worktree), `git pull --ff-only`, then `git merge --no-ff session/<name>`. If the merge succeeds: remove the worktree (`git worktree remove <path>`), delete the branch (`git branch -d session/<name>`), and run `git worktree prune`.
+  **Then `git push origin main`, and watch the run it triggers.** Merging is not
+  shipping. A merge that stays on the laptop leaves the work in exactly one
+  place, which is the state this whole skill exists to get out of — and the
+  handoff written in step 5 will describe a main that nobody else can see. It is
+  also the only way the `(main only)` CI jobs ever run: they are skipped on every
+  pull request by design, so until the push they have never executed against
+  what you merged. Push, then `gh run list --branch main --limit 1` until it
+  completes, and report the result. A red run is this session's problem, not the
+  next one's.
+  **Merge, push and CI are one step, not three.** They were separated once, and
+  session-end reported a finished session over six unpushed commits and a CI job
+  that had never run.
 - **If I say leave:** keep the branch and the worktree untouched. Note in the handoff (step 5) that the branch exists, what's on it, and what review it's waiting for.
 - **If the build/tests failed in step 2:** recommend "leave" and say why, but the decision is mine.
 
@@ -129,11 +141,12 @@ Run `git worktree list` and `git branch --list 'session/*'` and report what rema
 
 Then state, in one line each, **whether anything is left for me to handle**:
 
+- Whether `main` is pushed (`git status -sb` shows no `ahead`) and whether the run it triggered went green. Never report a session finished while either is outstanding — say which, and fix it rather than handing it over.
 - Open PRs this session created (`gh pr list --state open`) — and if there are none, say so.
 - Any file from step 3 that was moved into the main checkout rather than committed, by path. If nothing was, say "no loose artifacts".
 - Anything I have to decide before the next session can start.
 
-If all three are empty, say that plainly. **I should never have to open a folder
+If all four are empty, say that plainly. **I should never have to open a folder
 to find out what a session left behind** — if the answer needs me to go looking,
 this step has not been done.
 
