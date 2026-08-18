@@ -13,7 +13,7 @@ import {
   Tooltip,
   useToast,
 } from '@paradoxui/ui'
-import type { MenuItem } from '@paradoxui/ui'
+import type { MenuAction } from '@paradoxui/ui'
 import { failureMessage } from '@/lib/failure'
 import { icons } from '@/lib/icons'
 import { DIARY_EVENT_LABELS } from '@/lib/diary-events'
@@ -72,7 +72,7 @@ function NoteCard({
 }) {
   const { toast } = useToast()
 
-  const menuItems: MenuItem[] = []
+  const menuItems: MenuAction[] = []
   if (note.text) {
     menuItems.push({
       label: 'Copy text',
@@ -141,6 +141,7 @@ function NoteCard({
       {menuItems.length > 0 && (
         <div className="absolute right-inline-gap top-inline-gap">
           <Menu
+            intent="actions"
             label="Note actions"
             items={menuItems}
             trigger={

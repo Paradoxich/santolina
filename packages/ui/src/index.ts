@@ -35,7 +35,12 @@ export { SwatchChip } from './components/SwatchChip'
 export type { SwatchChipProps } from './components/SwatchChip'
 
 export { Menu } from './components/Menu'
-export type { MenuProps, MenuItem } from './components/Menu'
+export type {
+  MenuProps,
+  MenuItem,
+  MenuAction,
+  MenuChoice,
+} from './components/Menu'
 
 export { Tabs } from './components/Tabs'
 export type { TabsProps, TabItem } from './components/Tabs'

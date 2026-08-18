@@ -57,6 +57,7 @@ export function AppSidebar({ identity }: { identity: SidebarIdentity }) {
           gives the hover fill room. */}
       <div className="px-inline-gap py-row-gap">
         <Menu
+          intent="actions"
           label="Your account"
           align="start"
           className="w-full"

@@ -3,7 +3,7 @@
 import React, { useEffect, useId, useRef, useState } from 'react'
 import { cn } from '../utils/cn'
 
-export interface MenuItem {
+interface MenuItemBase {
   label: string
   onSelect: () => void
   /** `critical` renders the destructive treatment. */
@@ -12,10 +12,20 @@ export interface MenuItem {
   icon?: React.ReactNode
 }
 
-export interface MenuProps {
-  /** Menu items in display order. */
-  items: MenuItem[]
-  /** Accessible name for the trigger button. */
+/** A thing that happens when picked. Announces no state. */
+export interface MenuAction extends MenuItemBase {
+  selected?: never
+}
+
+/** One of a set, with one currently in effect. Announces `aria-checked`. */
+export interface MenuChoice extends MenuItemBase {
+  selected: boolean
+}
+
+export type MenuItem = MenuAction | MenuChoice
+
+interface MenuBaseProps {
+  /** Accessible name for the trigger. */
   label: string
   /** Content rendered inside the trigger button (e.g. a chevron icon). */
   trigger: React.ReactNode
@@ -32,15 +42,41 @@ export interface MenuProps {
 }
 
 /**
- * A small dropdown action menu — a trigger button that opens a `role="menu"`
- * panel. Keyboard: Enter/Space/ArrowDown open and focus the first item;
- * arrows cycle; Home/End jump; Escape closes and returns focus to the
- * trigger. Closes on outside click and on selection.
+ * `intent` is required, and it is the whole point of this type. Twice a
+ * control that picks a VALUE was built here as a list of actions, and both
+ * times the reason was the same: nobody was asked which it was. A plain
+ * `menuitem` announces no state, so a screen reader user hears the options and
+ * never which one is in effect.
+ *
+ * Declaring `choices` forces every item to carry `selected`, so the state
+ * cannot be forgotten once the intent is named. Declaring `actions` forbids
+ * it, so an action cannot accidentally claim to be checked.
+ *
+ * A menu is not the only answer for `choices`. If the current value should be
+ * visible at REST rather than only inside the panel, use Select — it is
+ * field-shaped and puts the value in the trigger. A Menu with `choices` is for
+ * a compact trigger, typically an icon, where the value goes into `label`.
+ */
+export type MenuProps = MenuBaseProps &
+  (
+    | { intent: 'actions'; items: MenuAction[] }
+    | { intent: 'choices'; items: MenuChoice[] }
+  )
+
+/**
+ * A small dropdown menu — a trigger button that opens a `role="menu"` panel of
+ * actions, or of choices with one checked. See MenuProps for which, and for
+ * when Select is the right component instead.
+ *
+ * Keyboard: Enter/Space/ArrowDown open and focus the first item; arrows cycle;
+ * Home/End jump; Escape closes and returns focus to the trigger. Closes on
+ * outside click and on selection.
  */
 export function Menu({
   items,
   label,
   trigger,
+  intent,
   position = 'bottom',
   align = 'end',
   triggerClassName,
@@ -156,7 +192,8 @@ export function Menu({
                 itemRefs.current[i] = el
               }}
               type="button"
-              role="menuitem"
+              role={intent === 'choices' ? 'menuitemradio' : 'menuitem'}
+              aria-checked={intent === 'choices' ? item.selected : undefined}
               tabIndex={-1}
               disabled={item.disabled}
               onClick={() => {
