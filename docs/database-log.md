@@ -957,6 +957,41 @@ is unchanged.
 
 <!-- Newest first. Append with: scripts/log-db-session.ts --round <label> -->
 
+### 2026-08-18 — The copy guard told the reader to write "fertilize the bulb" (not a round)
+
+**Branch** `session/2026-08-18-db-backup`. No migration. Rollback
+`catalog-archives/session-2026-08-18-copy` (restore rehearsed: 35 rows differ,
+matching the write count).
+
+**Found.** `copy:check` reported all 36 `feed` hits as "must be 'fertilize'".
+The rule's own text says foliage dying back into a bulb is "replenish", and the
+sibling rule `replenish-not-fertilize` flags "fertilize the bulb" — so **the
+message sent the reader into a violation of the next rule down**. 22 of the 36
+were the bulb case. The handoff had called these undecidable ("feed becomes
+fertilize or replenish depending on who is doing it"); the discriminator was
+already implemented one rule below.
+
+**Found.** `kind` is assigned per COLUMN, so a descriptive clause inside a
+prescriptive field is read as an instruction. Foxglove's "allow some seed heads
+to remain for self-sowing and to feed birds" was flagged, and the mechanical
+fix turned it into "fertilize birds". Wildlife feeding is now exempt in both
+kinds, pinned with that sentence.
+
+**Fixed.** `lib/copy-rules.ts` splits the rule by replacement word:
+`replenish-not-feed` when a storage organ is fed, `fertilize-not-feed`
+otherwise. Four cases pinned in `lib/copy-rules.test.ts`; three fail against
+the pre-fix file.
+
+**Database.** 35 rows rewritten across `maintenance_notes` and `seasonal_care`.
+22 mechanical (`feed the bulb` → `replenish the bulb`). 13 hand-written,
+because substitution gives "fertilize regularly with balanced fertilizer" —
+those took the noun instead ("Apply a balanced fertilizer regularly through the
+growing season"). Foxglove untouched. `copy:check` 52 → 16.
+
+**Not done.** The 16 `no-dash` violations. Each needs a comma, a semicolon or a
+sentence split depending on the clause. Ana voice-passes copy before merge, so
+these and the 35 above want her pass.
+
 ### 2026-08-18 — The bloom-prose detector read persistence as flowering (not a round)
 
 **Branch** `session/2026-08-18-db-backup`. No migration.

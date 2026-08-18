@@ -171,10 +171,28 @@ export function checkCopy(text: string, kind: ProseKind): CopyViolation[] {
   if (kind === 'prescriptive') {
     for (const m of text.matchAll(/\bfeed(s|ing)?\b/gi)) {
       const i = m.index ?? 0
+      // Which word replaces it depends on what is being fed. Foliage dying
+      // back into a storage organ is "replenish"; a gardener applying
+      // something is "fertilize". Reporting every hit as "fertilize" sent the
+      // reader straight into replenish-not-fertilize below, which flags the
+      // very sentence the message asked for.
+      // "to feed birds" is descriptive even inside a prescriptive field: the
+      // kind is assigned per column, so a maintenance note that ends on what
+      // the seed heads do for wildlife was read as an instruction.
+      if (
+        /\bfeed(s|ing)?\b[^.]{0,40}\b(?:bird|birds|bee|bees|pollinator|pollinators|wildlife|insect|insects|caterpillar|caterpillars|larvae)\b/i.test(
+          text.slice(i)
+        )
+      )
+        continue
+      const organ =
+        /\b(?:bulb|bulbs|corm|corms|rhizome|rhizomes|tuber|tubers|root|roots)\b/i.test(
+          text.slice(i, i + 60)
+        )
       found.push({
-        rule: 'fertilize-not-feed',
+        rule: organ ? 'replenish-not-feed' : 'fertilize-not-feed',
         match: text.slice(Math.max(0, i - 30), i + 30),
-        reason: `uses "${m[0]}" (must be "fertilize")`,
+        reason: `uses "${m[0]}" (must be "${organ ? 'replenish' : 'fertilize'}")`,
       })
     }
 

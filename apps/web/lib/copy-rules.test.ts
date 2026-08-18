@@ -90,6 +90,38 @@ describe('fertilize-not-feed is a rule about the gardener, so it binds one kind'
       rules('Allow foliage to die back to fertilize the bulb.', 'prescriptive')
     ).toEqual(['replenish-not-fertilize'])
   })
+
+  // The report said "must be fertilize" for all 36 hits on 2026-08-18. Taking
+  // that advice on a bulb sentence produces "fertilize the bulb", which
+  // replenish-not-fertilize then flags: the fix tripped its own sibling rule.
+  it.each([
+    'Allow foliage to die back naturally after flowering to feed the bulbs.',
+    'Let the leaves die back to feed the tuber for next year.',
+    'Allow foliage to die back naturally to feed the rhizome.',
+  ])(
+    'asks for "replenish", not "fertilize", when a storage organ is fed: %j',
+    (text) => {
+      expect(rules(text, 'prescriptive')).toEqual(['replenish-not-feed'])
+    }
+  )
+
+  // Real Foxglove maintenance_notes. kind is per column, so a descriptive
+  // clause at the end of a prescriptive field was flagged, and the mechanical
+  // fix turned it into "fertilize birds".
+  it('does not flag wildlife feeding inside a prescriptive field', () => {
+    expect(
+      rules(
+        'Allow some seed heads to remain for self-sowing and to feed birds.',
+        'prescriptive'
+      )
+    ).toEqual([])
+  })
+
+  it('still asks for "fertilize" when the gardener is the one feeding', () => {
+    expect(
+      rules('Feed monthly through the growing season.', 'prescriptive')
+    ).toEqual(['fertilize-not-feed'])
+  })
 })
 
 describe('the fix rewrites exactly what the detector flags', () => {
