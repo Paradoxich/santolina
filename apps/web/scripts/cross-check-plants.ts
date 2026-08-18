@@ -83,7 +83,7 @@ export interface CrossCheckResponse {
 
 type Severity = 'disagree' | 'minor'
 
-interface Flag {
+export interface Flag {
   field: string
   severity: Severity
   stored: unknown
@@ -91,7 +91,7 @@ interface Flag {
   detail: string
 }
 
-interface PlantReport {
+export interface PlantReport {
   id: string
   common_name: string
   scientific_name: string | null
@@ -159,6 +159,65 @@ let activeGuard: ((id: string) => void) | null = null
 function guardStampTarget(id: string): string {
   activeGuard?.(id)
   return id
+}
+
+/**
+ * Whether this run settled the row, and may therefore stamp it.
+ *
+ * `botanical_checked_at` is FAIL-level evidence in `round-status.ts:315-323`
+ * that this step ran AND settled the row, and `--new-only` selects on it. So a
+ * stamp on a row this pass DISAGREED with certifies a correction nobody made,
+ * and hides the row from every later sweep — trap 24, which fired twice at
+ * cross-check-native-region before `rowsToStamp` fixed it there.
+ *
+ * A PER-ROW PREDICATE, not that batch selector, and for the reason the
+ * invariant check already states: native-region writes its own corrections, so
+ * its decision is keyed on the run flags. This guard has no `--apply` at all
+ * and never will — the fields are botanical facts a person adjudicates — so
+ * there is no flag to key on and the honest question is per row.
+ *
+ * MINOR FLAGS DO NOT WITHHOLD. The two severities are not degrees of the same
+ * thing: `comparePlant` raises `minor` where botanical sources legitimately
+ * disagree at the margins (a bloom month either side, an adjacent sun band) and
+ * `disagree` where the two passes cannot both be right. Withholding on minor
+ * would park roughly a fifth of the catalog on drift the check itself calls
+ * tolerable; the 2026-07-09 run over 201 rows flagged 40 rows and only 14 held
+ * a disagreement.
+ *
+ * A withheld row settles through `apply-botanical-fixes.ts`, which stamps in
+ * the same statement as the correction — or as the person's decision to keep
+ * the stored value.
+ */
+export function shouldStamp(report: Pick<PlantReport, 'flags'>): boolean {
+  return !report.flags.some((f) => f.severity === 'disagree')
+}
+
+/**
+ * The committed queue: exactly the rows `shouldStamp` withheld, in the shape a
+ * person rules on and `apply-botanical-fixes.ts` reads back.
+ *
+ * ONLY THE `disagree` FLAGS TRAVEL. A minor flag did not withhold the stamp, so
+ * asking someone to rule on it would be asking for a decision that changes
+ * nothing — and a queue full of those is how a queue stops being read.
+ *
+ * `verdict` and `why` ship EMPTY rather than defaulted. A default here would be
+ * a decision the file's author never made, and the applier would happily act on
+ * it; `planRow` refuses any row still holding one.
+ */
+export function buildQueue(disagreements: PlantReport[], checkedAt: string) {
+  return {
+    checked_at: checkedAt,
+    model: CURATION_MODEL,
+    note: 'Rows the blind botanical check disagreed with, left unstamped until settled. Fill in `verdict` on every flag — "correct" takes the checked value, "keep" leaves the stored one standing — then run apply-botanical-fixes.ts. A row settles only when all of its flags carry a verdict.',
+    rows: disagreements.map((r) => ({
+      id: r.id,
+      common_name: r.common_name,
+      scientific_name: r.scientific_name,
+      flags: r.flags
+        .filter((f) => f.severity === 'disagree')
+        .map((f) => ({ ...f, verdict: '', why: '' })),
+    })),
+  }
 }
 
 async function stampChecked(id: string): Promise<void> {
@@ -520,6 +579,7 @@ async function main() {
       const failures: Array<{ name: string; error: string }> = []
       let clean = 0
       let stamped = 0
+      let withheld = 0
 
       for (const [i, plant] of plants.entries()) {
         const label = plant.scientific_name ?? plant.common_name
@@ -546,14 +606,19 @@ async function main() {
             console.log('✓')
           }
 
-          // Stamp only after a successful check (flagged or clean — both mean the
-          // guard ran on this row). A row that threw stays unstamped, so --new-only
-          // picks it up on the next run.
-          await stampChecked(plant.id)
-          // Counted only after the write returned, so an interrupted run's count
-          // is what it actually got through rather than what it attempted.
-          run.wrote(plant.id)
-          stamped++
+          // Stamp only after a successful check AND only if the check settled
+          // the row (shouldStamp). A row that threw stays unstamped either way,
+          // so --new-only picks it up on the next run.
+          if (shouldStamp({ flags })) {
+            await stampChecked(plant.id)
+            // Counted only after the write returned, so an interrupted run's
+            // count is what it actually got through rather than what it
+            // attempted.
+            run.wrote(plant.id)
+            stamped++
+          } else {
+            withheld++
+          }
         } catch (err) {
           const message = err instanceof Error ? err.message : String(err)
           console.log(`✗  ${message}`)
@@ -567,14 +632,14 @@ async function main() {
       if (failures.length && !stamped) {
         run.markFailed(`all ${failures.length} row(s) failed`)
       }
-      return { reports, failures, clean }
+      return { reports, failures, clean, withheld }
     }
   )
 
   // Nothing to check: the run recorded a vacuous invocation and there is no
   // report to write.
   if (!outcome) return
-  const { reports, failures, clean } = outcome
+  const { reports, failures, clean, withheld } = outcome
 
   // Terminal report — disagreements first
   const disagreements = reports.filter((r) =>
@@ -589,6 +654,11 @@ async function main() {
     `Cross-check complete: ${clean} clean, ${disagreements.length} with disagreements, ` +
       `${minorOnly.length} with minor drift only, ${failures.length} failed`
   )
+  if (withheld)
+    console.log(
+      `${withheld} row(s) left UNSTAMPED — a disagreement is pending, and the ` +
+        `stamp is what round close reads as settled.`
+    )
 
   if (disagreements.length) {
     console.log('\nDISAGREEMENTS — spot-check these:')
@@ -632,6 +702,37 @@ async function main() {
     )
   )
   console.log(`\nFull report written to ${reportPath}`)
+
+  // The disagreements ALSO go somewhere that survives this worktree. reports/
+  // is gitignored (.gitignore:17) — 51 files there and none in git — so until
+  // now the only record that two independent passes contradicted each other
+  // died with the machine that ran the check, while the stamp saying the row
+  // was checked lived on in the database. That asymmetry is the defect: the
+  // certification was durable and the doubt was not.
+  //
+  // One file per run that found something, named for the run, holding exactly
+  // the rows shouldStamp withheld. A person fills in `verdict` per flag and
+  // apply-botanical-fixes.ts turns it into corrections and stamps.
+  if (disagreements.length) {
+    const queuePath = join(
+      __dirname,
+      '..',
+      'reference',
+      `botanical-flags-${stamp.slice(0, 10)}.json`
+    )
+    writeFileSync(
+      queuePath,
+      JSON.stringify(
+        buildQueue(disagreements, new Date().toISOString()),
+        null,
+        2
+      ) + '\n'
+    )
+    console.log(
+      `${disagreements.length} disagreement(s) queued in ${queuePath}`
+    )
+    console.log('  Commit it — reports/ is gitignored and this is the record.')
+  }
 
   if (failures.length) {
     console.log('\nFailed plants:')

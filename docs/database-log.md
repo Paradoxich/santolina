@@ -957,6 +957,42 @@ is unchanged.
 
 <!-- Newest first. Append with: scripts/log-db-session.ts --round <label> -->
 
+### 2026-08-18 — The botanical check stamped what it disagreed with (not a round)
+
+**Branch** `session/2026-08-18-stamp-writers`. No migration, no prod catalog
+write. Empties `REPORT_ONLY_STAMPS`.
+
+**Found.** `cross-check-plants` stamped `botanical_checked_at` on every row it
+walked. A row it CONTRADICTED therefore left the `--new-only` queue for good and
+round close read the stamp as FAIL-level proof the step had settled it, while
+the disagreement itself lived only in gitignored `reports/` — 51 files there,
+none in git. The certification was durable and the doubt was not.
+
+**The handoff's fix would not have worked.** It said to copy `rowsToStamp` from
+`cross-check-native-region`. That guard can withhold a stamp because its own
+`--apply` later earns it; this one has no `--apply` and never will. Withholding
+alone would have parked every disagreeing row on a FAIL-level step with nothing
+able to settle it, and re-billed each to Claude on every `--new-only` run. Scale,
+from the 2026-07-09 run over 201 rows: 40 flagged, 14 holding a `disagree` — so
+roughly 55 of 780 catalog-wide, or ~200 if `minor` withheld too.
+
+**Changed.** Three parts, in the order they had to happen. `shouldStamp` (per
+row, not the batch selector — this guard has no flags to key on) withholds only
+on `disagree`; `minor` is the tolerance band the check exists to define.
+`buildQueue` writes the withheld rows to a committed
+`reference/botanical-flags-<date>.json` with every verdict empty. And
+`apply-botanical-fixes.ts` turns a person's ruling into a correction or a keep,
+stamping in the same statement via `reviewed-mutation.ts`, freezing curated rows.
+
+**Verified.** Local stack (rule 11): a correction writes and stamps, a curated
+row is frozen, the run records `evidence confirmed`. The first cut recorded
+CONTRADICTED instead — it minted the stamp before `beginRun`, so the value
+landed before the window opened. The clock is now read inside the run. That bug
+was invisible to typecheck and to every unit test.
+
+**Open.** A `model: 'human'` run warns that no tokens were observed (trap 37).
+Pre-existing, shared with the other apply scripts.
+
 ### 2026-08-18 — The keep that could not be recorded (not a round)
 
 **Branch** `session/2026-08-18-stamp-writers`. No migration, no prod catalog

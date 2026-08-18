@@ -70,6 +70,22 @@ Files are per-pass and are never rewritten. A suffix names the pass when a date
 carries more than one — `-openers` is the 2026-08-18 audit of descriptions whose
 first clause named a different plant than the row.
 
+## `botanical-flags-<date>.json`
+
+The rows `cross-check-plants` disagreed with, written by the guard itself and
+left UNSTAMPED until settled ([the botanical cross-check](../../../docs/curation.md#botanical-cross-check)).
+One entry per row, one flag per contradicted field, each carrying `stored`,
+`checked`, and an empty `verdict` and `why` for a person to fill in — `correct`
+takes the checked value, `keep` leaves the stored one. `apply-botanical-fixes.ts`
+reads it back and stamps a row only when all of its flags are ruled on.
+
+**Why it is committed.** The full report goes to gitignored `reports/`, so
+before this file existed the stamp saying a row had been checked was durable and
+the disagreement that check found was not — it died with the worktree that ran
+it. Only the `disagree` flags travel here; a `minor` flag never withheld a stamp
+and asking for a ruling on one would be asking for a decision that changes
+nothing.
+
 ## `native-to-review-<date>.json`
 
 Every row of a `native_to` review queue with the verdict a person reached —

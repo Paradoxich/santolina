@@ -112,8 +112,22 @@ export const STAMPS_WITHOUT_WRITERS: Record<string, string> = {
 
 /** Shape 3. `stampChecked` callers with no finding-aware selector (trap 24). */
 export const REPORT_ONLY_STAMPS: Record<string, string> = {
-  'cross-check-plants.ts':
-    'Stamps botanical_checked_at per row as the pass walks the catalog, so the stamp records that the check ran, not that a disagreement was acted on. Report-only by design today: it never edits catalog data. Fix is the rowsToStamp shape from cross-check-native-region.ts.',
+  // EMPTY as of 2026-08-18. `cross-check-plants` was the last entry and it now
+  // has `shouldStamp`, a per-row predicate that withholds the stamp on any row
+  // carrying a `disagree` flag.
+  //
+  // THE SELECTOR WAS NEVER THE HARD HALF, and the entry's own remedy line said
+  // otherwise for two days. Copying `rowsToStamp` alone would have parked ~7% of
+  // the catalog (14 of 201 rows on the 2026-07-09 run) on a FAIL-level round
+  // close with nothing in existence able to settle them, because unlike
+  // cross-check-native-region this guard has no `--apply` and never will. The
+  // fix needed a settlement path first: a committed queue instead of a report
+  // that dies in gitignored reports/, and `apply-botanical-fixes.ts` to turn a
+  // person's verdict into a correction or a keep, stamping either way.
+  //
+  // An entry here is a stamp written per row walked rather than per row
+  // settled. Before adding one, check whether the guard has any way to settle
+  // what it found — if it does not, the selector is not the fix.
 }
 
 /**
