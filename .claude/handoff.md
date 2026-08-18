@@ -38,76 +38,60 @@ supabase start -x studio,realtime,storage-api,imgproxy,edge-runtime,inbucket,vec
 
 ---
 
-## 2026-08-18 — The seven handoff items, and a rule about who decided what
+## 2026-08-18 — Three guards were advising the sweep that would corrupt the data
 
 **Nothing in flight. Nothing uncommitted. The branch is merged and gone.** All
-seven of the previous entry's next steps are done, plus three things that were
-not on the list. `pnpm ci:check` passes in full. What each commit did is in
-`git log`; what it found is in `docs/database-log.md`; why the pipeline is
-shaped this way is in `docs/curation.md`.
+six of the previous entry's next steps are done. `pnpm ci:check` passes in full.
+What each commit did is in `git log`; what it found is in `docs/database-log.md`.
 
-**Production is ahead of what a code review would show.** Five catalog writes
-landed and migration `20260818100000` is applied: the season "fall" swept on 26
-rows, `foliage_checked_at` backfilled on 780, `sun_tolerates` re-judged with 75
-written, 3 cross-species descriptions fixed, 1 hero picked. The rollback point
-for all of it is committed at `apps/web/catalog-archives/session-2026-08-18`
-(restore rehearsed as a dry run, both phases readable).
+**Production is ahead of what a code review would show.** 57 catalog rows
+written and no migration: 35 `feed` rewrites, 16 dashes across 14 plants, 8
+`bloom_months` widened, 7 prose fields corrected, 2 editorial re-judgements.
+Rollback for the copy work is committed at
+`apps/web/catalog-archives/session-2026-08-18-copy` (restore rehearsed, 56 rows
+differ). `copy:check` and `bloom:prose` are both at **zero** for the whole
+catalog for the first time.
 
-**⚠ I attributed decisions to Ana that she never made, and it took her to catch
-it.** The previous handoff recorded "Ruling (delegated to me and decided)" — the
-assistant — and I copied that into code comments and docs as "(Ana,
-2026-08-18)" and "standing ruling", seven times. A name makes a decision
-unchallengeable: the next session neither reconsiders it nor asks. **Write what
-you decided as yours.** Ana has since adopted the invasiveness rulings knowingly
-(`docs/curation.md#round-runbook`), and the sun ruling is now labelled as the
-session's, not hers.
+**⚠ The pattern of the session: a guard's advice line is load-bearing, and all
+three were wrong.** `bloom:prose` said "the prose is usually the more accurate
+half; correct the scalar" — following it would have put winter into a summer
+grass's bloom months on 6 of 20 rows. `copy:check` reported every `feed` as
+"must be fertilize", which for the 22 bulb cases produces text its own sibling
+rule flags. Both messages made a sweep look safe, and both were what the
+previous handoff had believed when it called the work undecidable. **Read a
+guard's output against the data before acting on its recommendation**; the
+recommendation is written by someone who has not seen this catalog.
 
-**Comments carry what the code does, and nothing else.** Ana's ruling this
-session: no reasoning, no incident histories, no traps-in-waiting, no names.
-That reasoning belongs in `docs/`, where almost all of it already was — the
-cleanup deleted 888 lines and kept 177. Two shapes are load-bearing and stay: a
-script's usage block (`FLAGS_NOT_DOCUMENTED` fails without it) and the trap
-number in a test file's LEADING comment (the pin ratchet reads only the header).
+**A prose fix to a curated row costs its editorial verdict.** `description` is a
+watched criterion, so this session's own `Magnolia liliiflora` fix withdrew its
+approval, the same shape it opened on with `Malus spectabilis`. Both re-judged.
+A copy sweep and an editorial pass are coupled; budget for the second.
+
+**The editorial voice pass is mine to perform.** Ana's instruction this session:
+do it rather than routing copy back to her.
 
 ---
 
 **Next steps, in order.**
 
-1. **Re-judge `Malus spectabilis` editorially.** Its new hero retired its
-   verdict — `pick-plant-images` writes two columns the trigger watches — so it
-   is correctly sitting unjudged with a photograph nobody has approved. One row,
-   `curate-editorial --ids`. It is first only because it is the one thing this
-   session left in a knowingly incomplete state.
+1. **Harden the weekly backup, in three parts.** The workflow is proven green on
+   the bumped actions (run 32126932071) but two weaknesses are recorded and
+   undone. **(a)** A freshness check is the real fix: assert the newest object in
+   `db-backups` is younger than ~10 days, from a job that already runs often.
+   Failure email only fires when the job RUNS, and GitHub disables scheduled
+   workflows after 60 days of repo inactivity, so the silent case is the one an
+   alert-on-failure cannot see. **(b)** Move the cron to twice weekly; one bad
+   Monday currently costs the week. **(c)** A bounded retry in
+   `backup-database.ts`. Order matters: (a) catches every failure mode including
+   the ones (b) and (c) do not.
 
-2. **Decide the 52 remaining copy violations: 36 `feed`, 16 dashes.** Neither
-   has a safe substitution — a dash becomes a comma, a semicolon or a second
-   sentence depending on the clause, and "feed" becomes _fertilize_ or
-   _replenish_ depending on who is doing it. `pnpm copy:check --all --why "…"`
-   lists them. This is editorial work, so it is an agent's, not Ana's.
+2. **`Lythrum salicaria` re-adds when round 14 opens.** Decision already made
+   and recorded at `docs/curation.md#round-runbook`; nothing to do until there
+   is a round to put it in. `Iris pseudacorus` stays cut.
 
-3. **Read `pnpm bloom:prose --all` and correct the scalars it points at.** 20
-   plants whose prose asserts flowering outside `bloom_months`; in the ones read
-   so far the prose is the more accurate half. Each needs a person to say which
-   half is wrong, which is why the guard reports and does not sweep.
-
-4. **`Lythrum salicaria` is a round-14 re-add candidate.** Cut in round 12 on
-   North American invasive status, which Ana's adopted rule rejects as a ground,
-   and nothing else was recorded against it. `Iris pseudacorus` stays cut on a
-   ground the rule allows. Reasoning in `docs/curation.md#round-runbook`.
-
-5. **`db-backup.yml` has not run since its actions were bumped.** The workflow
-   actions moved off the deprecated Node 20 runtime (PR #191, merged): checkout
-   v7, setup-node v7, pnpm/action-setup v6, each verified against its own
-   `action.yml`. `ci.yml` is proven — the PR run is green with the deprecation
-   annotation gone — but `db-backup.yml` runs on a schedule and uses the same
-   three actions, so its next scheduled run is the first real test. Watch it, or
-   dispatch it early; a failure there means no backup ran, which is the kind of
-   thing that is only noticed when it is needed.
-
-6. **The comment sweep stopped at this session's own work.** Older files carry
-   the same essays and about a dozen more `Ana`/`Ana's ruling` mentions I did
-   not touch, because two other sessions were live. Worth a pass when the repo
-   is quiet — and worth checking each attribution rather than assuming.
+3. **Read the 57 rewritten rows if you want them in your voice.** They are
+   merged and live, written to the copy rules and voice-passed by me under this
+   session's instruction. This is a taste review, not a correctness one.
 
 **Parked decisions.** Dated when FIRST raised, with who owes the answer.
 `invariants:check` shape 15 fails on an undated item and on one older than 14
