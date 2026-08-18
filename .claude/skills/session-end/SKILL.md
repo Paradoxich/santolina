@@ -1,9 +1,9 @@
 ---
 name: session-end
-description: End the work session — commit remaining work, ask merge-or-leave, clean up, write the handoff. Use when the user invokes /session-end or asks to wrap up the session.
+description: End the work session — commit remaining work, write the handoff, merge via PR, clean up. Use when the user invokes /session-end or asks to wrap up the session.
 ---
 
-You are ending this work session. Follow these steps in order. Never skip step 4's question, never delete a branch that has not been merged, and never remove a worktree before step 3 has accounted for what is inside it.
+You are ending this work session. Follow these steps in order. Never skip step 5's question, never delete a branch that has not been merged, and never remove a worktree before step 3 has accounted for what is inside it.
 
 ## 1. Sweep for uncommitted work
 
@@ -67,30 +67,12 @@ Never pass `--force` to `git worktree remove` to get past a complaint about
 untracked or modified files — that is the flag that destroyed the 2026-07-28
 backup. Investigate what it is complaining about instead.
 
-## 4. Ask: merge or leave (ALWAYS ask, never assume)
+## 4. Write the handoff
 
-Ask me explicitly, presenting the summary from step 2:
-**"Merge `session/<name>` into main, or leave the branch for review?"**
-
-- **If I say merge:** switch to the main checkout (the original repo directory, not this worktree), `git pull --ff-only`, then `git merge --no-ff session/<name>`. If the merge succeeds: remove the worktree (`git worktree remove <path>`), delete the branch (`git branch -d session/<name>`), and run `git worktree prune`.
-  **Then `git push origin main`, and watch the run it triggers.** Merging is not
-  shipping. A merge that stays on the laptop leaves the work in exactly one
-  place, which is the state this whole skill exists to get out of — and the
-  handoff written in step 5 will describe a main that nobody else can see. It is
-  also the only way the `(main only)` CI jobs ever run: they are skipped on every
-  pull request by design, so until the push they have never executed against
-  what you merged. Push, then `gh run list --branch main --limit 1` until it
-  completes, and report the result. A red run is this session's problem, not the
-  next one's.
-  **Merge, push and CI are one step, not three.** They were separated once, and
-  session-end reported a finished session over six unpushed commits and a CI job
-  that had never run.
-- **If I say leave:** keep the branch and the worktree untouched. Note in the handoff (step 5) that the branch exists, what's on it, and what review it's waiting for.
-- **If the build/tests failed in step 2:** recommend "leave" and say why, but the decision is mine.
-
-## 5. Write the handoff
-
-Update `.claude/handoff.md` at the repo root **on main** (edit it in the main checkout; if the session branch was left unmerged, commit only this file to main).
+Update `.claude/handoff.md` at the repo root. **Write and commit it on the
+session branch, before step 5 opens the PR** — it is part of the session's work
+and belongs in the same review as the rest. Only if the branch is being left
+unmerged does it go straight onto main as its own commit.
 
 **REPLACE the previous session's entry — do not prepend to it.** The file holds
 the current session only, and its own header states the format; follow that
@@ -135,13 +117,74 @@ Fold any still-open next step from the entry you are replacing into your own, so
 nothing is dropped. If the previous entry holds durable reasoning that never made
 it into the docs above, move it there rather than carrying it forward.
 
+## 5. Ship it: ask merge or leave (ALWAYS ask, never assume)
+
+The handoff from step 4 is committed on the session branch by now, so it travels
+through the PR with the rest of the work rather than as a direct push to `main`.
+
+Ask me explicitly, presenting the summary from step 2:
+**"Merge `session/<name>` into main, or leave the branch for review?"**
+
+- **If I say merge: open a PR. That is the default, and it is what this repo
+  actually does** — 21 of the 25 merges before 2026-08-18 came through one, and
+  the Session Log cites PR numbers as a session's durable record.
+
+  ```bash
+  git push -u origin session/<name>
+  gh pr create --fill                       # or --title/--body for a real summary
+  gh pr checks --watch                      # branch CI must be green BEFORE merging
+  gh pr merge --merge --delete-branch       # a merge commit, matching the history
+  ```
+
+  Then, in the main checkout: `git pull --ff-only`, `git worktree remove <path>`,
+  `git worktree prune`.
+
+  **Why a PR rather than a local merge, beyond review.** `gh pr merge` merges ON
+  THE REMOTE, so there is no merged-but-unpushed state to forget to leave. A
+  local `git merge` has exactly that state, and on 2026-08-18 session-end
+  reported a finished session sitting on six unpushed commits with a handoff
+  describing a `main` nobody else could see. The PR flow makes that
+  structurally impossible instead of something this file has to keep warning
+  about.
+
+  **Then watch the post-merge run on main and report it.** The three
+  `(main only)` jobs — catalog-state, migration drift, backup freshness — are
+  skipped on every pull request BY DESIGN (a PR-triggered job holding
+  `SUPABASE_SERVICE_ROLE_KEY` widens the blast radius of any workflow edit), so
+  a green PR has NOT run them. They execute for the first time on the merge
+  commit:
+
+  ```bash
+  gh run list --branch main --limit 1       # until it completes
+  gh run view <id> --json jobs -q '.jobs[] | "\(.conclusion)\t\(.name)"'
+  ```
+
+  A red run is this session's problem, not the next one's.
+
+- **If I ask for a local merge instead**, that is the exception and needs me to
+  say so: `git merge --no-ff` in the main checkout, then **`git push origin main`
+  in the same breath**, then the same post-merge run check above. Never stop at
+  the merge.
+
+- **If I say leave:** keep the branch and the worktree untouched. Push the branch
+  anyway (`git push -u origin session/<name>`) so the work is not only on this
+  laptop, and note in the handoff that the branch exists, what is on it, and what
+  review it is waiting for.
+
+- **If the build/tests failed in step 2:** recommend "leave" and say why, but the
+  decision is mine.
+
 ## 6. Final check
 
 Run `git worktree list` and `git branch --list 'session/*'` and report what remains, so I know the state I'm leaving the repo in.
 
 Then state, in one line each, **whether anything is left for me to handle**:
 
-- Whether `main` is pushed (`git status -sb` shows no `ahead`) and whether the run it triggered went green. Never report a session finished while either is outstanding — say which, and fix it rather than handing it over.
+- Whether the PR merged, whether `main` is level with `origin/main`
+  (`git status -sb` shows no `ahead`), and whether the post-merge run went green
+  — naming the three `(main only)` jobs, which a green PR never ran. Never report
+  a session finished while any of those is outstanding: say which, and fix it
+  rather than handing it over.
 - Open PRs this session created (`gh pr list --state open`) — and if there are none, say so.
 - Any file from step 3 that was moved into the main checkout rather than committed, by path. If nothing was, say "no loose artifacts".
 - Anything I have to decide before the next session can start.
