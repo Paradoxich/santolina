@@ -39,7 +39,7 @@ import { WorksWellWithSection } from './plant-detail/WorksWellWithSection'
 import { GoodForSection } from './plant-detail/GoodForSection'
 import { DetailsSection } from './plant-detail/DetailsSection'
 import { StorySection } from './plant-detail/StorySection'
-import { StoryComposer } from './plant-detail/StoryComposer'
+import { AddBackToGardenPrompt } from './plant-detail/AddBackToGardenPrompt'
 import { GardenPlantView } from './plant-detail/GardenPlantView'
 import { ReferenceDrawer } from './plant-detail/ReferenceDrawer'
 
@@ -220,7 +220,7 @@ export function PlantDetailPage({
    * (the `notes` prop), so — unlike the old drawer — there's no extra fetch
    * here: zero notes removes immediately, one or more opens the
    * confirmation dialog so removal never silently implies the notes are
-   * gone too (they aren't — see StorySection/StoryComposer's read-only
+   * gone too (they aren't — see StorySection/AddBackToGardenPrompt's read-only
    * "Add back to garden" state for a removed plant with history).
    */
   const handleRemoveClick = () => {
@@ -561,10 +561,8 @@ export function PlantDetailPage({
             on /plants/[id]/notes from the Diary card. */}
         {showStory && !isGrowing && (
           <div className="mt-section-break">
-            <StoryComposer
+            <AddBackToGardenPrompt
               plantId={plant.id}
-              paletteId={palette?.paletteId ?? null}
-              isGrowing={isGrowing}
               onAddedBackToGarden={({ paletteId }) =>
                 setPalette({ paletteId, status: 'planted' })
               }

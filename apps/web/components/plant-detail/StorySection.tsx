@@ -180,7 +180,8 @@ interface StorySectionProps {
 /**
  * The plant's story: a month-grouped notes timeline. One home for this
  * content across the app — see docs/architecture.md for the diary-to-plant
- * one-home principle. Composer lives separately (StoryComposer), pinned to
+ * one-home principle. The re-add prompt lives separately
+ * (AddBackToGardenPrompt), pinned to
  * the page rather than nested in this scrollable section.
  */
 export function StorySection({
