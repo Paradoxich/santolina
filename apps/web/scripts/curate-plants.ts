@@ -15,6 +15,21 @@
  * --new-only narrows to rows never drafted; it is a filter within the scope,
  * not a scope of its own.
  *
+ * A ROW WITH NOTHING MISSING IS SKIPPED BEFORE THE CALL (`missingFields`), so
+ * a re-run costs only the rows that still owe something. It is a skip rather
+ * than a narrower query on purpose: a PARTIALLY drafted row is drafted and
+ * still owes its gaps, so selecting on `ai_drafted_at` would strand them.
+ *
+ * ⚠ THAT SKIP IS NEARLY INERT TODAY, and the reason is worth knowing before
+ * trusting it. `foliage_color` is asked whenever it is NULL, and NULL is also
+ * its legitimate answer ("typical green" — see the field spec below). So 587
+ * of 780 drafted rows can never satisfy the check and are re-asked on every
+ * run; measured 2026-08-18, 538 of them uncurated and therefore selected.
+ * Round 13's retry re-billed all 33 rows for this reason, not merely for the
+ * want of a skip. The comment at the foliage_color patch line says null means
+ * "skip re-asking", and writing NULL into a NULL column cannot record that —
+ * it is trap 26's shape a third time, and it needs a stamp to close.
+ *
  * --only <field> fills ONE field on the rows that lack it and writes nothing
  * else, for a field added or re-specified after rows were already drafted:
  *   ... --all --only common_issues
@@ -160,20 +175,37 @@ const EDITORIAL_TRIGGER_COLUMNS = new Set([
   'image_pick_confidence',
 ])
 
-function buildPrompt(plant: DbPlant, only: string | null = null): string {
-  // plant_type gates hardiness: determine whether to ask for hardiness at all
+/**
+ * The fields this row still owes, in prompt order.
+ *
+ * EXTRACTED SO THE PASS CAN SKIP A ROW THAT OWES NOTHING. It was inline in
+ * `buildPrompt`, which meant the only way to learn a row had no gaps was to
+ * render its prompt and pay for the call — and nothing did that check, so
+ * every selected row was billed whether or not it had anything to fill. Round
+ * 13 paid for it directly: one bad row out of 33 failed the step, and the
+ * retry re-billed all 33.
+ *
+ * WHY EMPTINESS IS THE RIGHT SKIP, and `ai_drafted_at IS NOT NULL` is not.
+ * A drafted row can still owe fields — that is exactly what a partially
+ * drafted row is, and skipping on the stamp would strand those gaps silently,
+ * which is the failure this pipeline keeps finding. Emptiness is the precise
+ * condition: `buildPatch` is fill-only, so a row with nothing missing can
+ * only ever produce a patch of `ai_drafted_at`. The call cannot change a
+ * value. It buys a timestamp.
+ *
+ * That is also the answer to whether the re-draft default was covering "a
+ * field re-specified after the rows were drafted": it was not, and could not.
+ * Fill-only means a re-draft never overwrites a stored value, so
+ * re-specification was never something this pass could do — it needs a
+ * corrective pass (`apply-*-fixes.ts`), which is what the repo actually uses.
+ */
+export function missingFields(plant: DbPlant): string[] {
   const knownPlantType = plant.plant_type
   const isAnnual = knownPlantType === 'annual'
   const needsHardiness =
     !isAnnual && (!plant.hardiness_zone_min || !plant.hardiness_zone_max)
 
   const missing: string[] = []
-
-  // Field-scoped: ask for the one field and nothing else. Returning early
-  // rather than filtering the list afterwards keeps every gate below —
-  // needsHardiness, the sun pair, the style stamp — out of a run that has no
-  // business re-deciding them.
-  if (only) return renderPrompt(plant, [only], knownPlantType)
 
   // plant_type first — it gates other field decisions
   if (!knownPlantType) missing.push('plant_type')
@@ -221,7 +253,16 @@ function buildPrompt(plant: DbPlant, only: string | null = null): string {
   if (!plant.seasonal_rhythm) missing.push('seasonal_rhythm')
   if (!plant.native_to) missing.push('native_to')
 
-  return renderPrompt(plant, missing, knownPlantType)
+  return missing
+}
+
+function buildPrompt(plant: DbPlant, only: string | null = null): string {
+  // Field-scoped: ask for the one field and nothing else. Returning early
+  // rather than filtering the list afterwards keeps every gate in
+  // `missingFields` — needsHardiness, the sun pair, the style stamp — out of a
+  // run that has no business re-deciding them.
+  if (only) return renderPrompt(plant, [only], plant.plant_type)
+  return renderPrompt(plant, missingFields(plant), plant.plant_type)
 }
 
 function renderPrompt(
@@ -403,7 +444,18 @@ export function buildPatch(
     patch.garden_use_tags = response.garden_use_tags
   if (!plant.bloom_color?.length && response.bloom_color != null)
     patch.bloom_color = response.bloom_color
-  // foliage_color: null is a valid value (means "typical green" — skip re-asking)
+  // foliage_color: null is a valid value, meaning "typical green".
+  //
+  // ⚠ THE SKIP THIS LINE ONCE CLAIMED DOES NOT HAPPEN. The comment here read
+  // "skip re-asking", and writing NULL into a column that is already NULL
+  // records nothing a later run can read: the row still selects, and the
+  // question is asked again on every pass. Measured 2026-08-18 — 587 of 780
+  // drafted rows, 538 of them uncurated and therefore selected every time.
+  //
+  // Trap 26's shape a third time (after style_tags `[]` and is_greenery
+  // `false`): a legitimate answer that is indistinguishable from an unasked
+  // question, so only a stamp can tell them apart. Closing it is a schema
+  // change and is on standing rule 11's list, not fixed here.
   if (plant.foliage_color === null && 'foliage_color' in response)
     patch.foliage_color = response.foliage_color ?? null
   // Stamped as well as written, so round-status can tell "judged false" from
@@ -666,6 +718,7 @@ async function main() {
         succeeded: 0,
         lowConfidenceHardiness: [] as string[],
         nullPlantType: [] as string[],
+        complete: [] as string[],
       }
     }
 
@@ -674,11 +727,35 @@ async function main() {
     const failures: Array<{ name: string; error: string }> = []
     const lowConfidenceHardiness: string[] = []
     const nullPlantType: string[] = []
+    const complete: string[] = []
     let succeeded = 0
 
     for (const [i, plant] of plants.entries()) {
       const label = plant.scientific_name ?? plant.common_name
       const prefix = `[${pad(i + 1)}/${pad(plants.length)}]`
+
+      // A ROW THAT OWES NOTHING IS SKIPPED BEFORE THE CALL, not after.
+      //
+      // `buildPatch` is fill-only, so this row's call can only ever write
+      // `ai_drafted_at` — a paid request whose "missing fields" list is empty,
+      // answered, parsed, and then discarded field by field. Round 13's retry
+      // re-billed 33 rows to move 33 timestamps.
+      //
+      // It is a SKIP, not a selection filter, deliberately. Selection is
+      // `is_curated = false` and the caller's scope; narrowing the query on
+      // `ai_drafted_at` instead would strand a partially drafted row, which
+      // still owes its gaps. Here the row is fetched, asked what it owes, and
+      // passed over only when the honest answer is "nothing" — so a person
+      // running this by hand gets the same protection the runbook step does,
+      // which is the half a flag would have missed.
+      //
+      // `--only` never lands here: its selection is `.is(only, null)`, so the
+      // named field is missing by construction.
+      if (!only && missingFields(plant).length === 0) {
+        console.log(`${prefix} ${label} … · complete, skipped`)
+        complete.push(label)
+        continue
+      }
 
       try {
         process.stdout.write(`${prefix} ${label} … `)
@@ -737,15 +814,33 @@ async function main() {
     if (failures.length && !succeeded) {
       run.markFailed(`all ${failures.length} row(s) failed`)
     }
-    return { failures, succeeded, lowConfidenceHardiness, nullPlantType }
+    return {
+      failures,
+      succeeded,
+      lowConfidenceHardiness,
+      nullPlantType,
+      complete,
+    }
   })
 
-  const { failures, succeeded, lowConfidenceHardiness, nullPlantType } = outcome
+  const {
+    failures,
+    succeeded,
+    lowConfidenceHardiness,
+    nullPlantType,
+    complete,
+  } = outcome
 
   // Summary
   console.log('\n─────────────────────────────────────────────────────────────')
   console.log(
-    `Curation complete: ${succeeded} succeeded, ${failures.length} failed`
+    `Curation complete: ${succeeded} succeeded, ${failures.length} failed` +
+      // Printed rather than silent: a skip that saves money is still work that
+      // did not happen, and "33 selected, 0 called" must be readable as such
+      // rather than looking like a pass that quietly did nothing.
+      (complete.length
+        ? `, ${complete.length} already complete (not called)`
+        : '')
   )
 
   if (lowConfidenceHardiness.length) {
