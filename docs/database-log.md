@@ -957,6 +957,34 @@ is unchanged.
 
 <!-- Newest first. Append with: scripts/log-db-session.ts --round <label> -->
 
+### 2026-08-18 — `db-backup.yml` proven on the bumped actions, and one editorial re-judge (not a round)
+
+**Branch** `session/2026-08-18-db-backup`. No migration. No catalog backup.
+
+**Verified.** `db-backup.yml` dispatched manually (run 32126932071, 1m6s) — its
+first run since PR #191 bumped its actions, and it is schedule-only. Green on
+checkout v7 / action-setup v6 / setup-node v7, 1864696 bytes uploaded to the
+`db-backups` bucket, ANNOTATIONS empty.
+
+**Database.** `curate-editorial --ids c0866bf3` on `Malus spectabilis`, left
+unjudged by the previous session when its new hero tripped
+`invalidate_editorial_verdict`. APPROVE, `is_curated` false → true,
+`editorial_checked_at` `10:32:57+00`, confirmed by direct read. Run
+`curate-editorial-2026-08-18T1032-11f512f0`, dry run first, `usage_unobserved`
+(trap 37). `backup-catalog.ts` was skipped against the script header: the dry
+run showed 0 rewrites, so the before-state (`is_curated=false`,
+`editorial_checked_at=null`) was captured by query instead.
+
+**Found.** The 2026-08-03 backup failure was a `pg_dump` connection timeout to
+the pooler on all three IPs, not the workflow; the two runs since passed. That
+week has no backup and nothing reported it for 15 days. Alerting, and retrying
+a weekly cron that loses the week on one timeout, are open decisions.
+
+**Found.** `CLAUDE.md` claimed "Nothing can record `confirmed` today (trap 29)"
+after the 2026-08-17 entry recorded `stamp_locks` earning `confirming` back.
+The editorial run above recorded `confirmed`. Rewritten to state the condition.
+`docs:claims` cannot check an asserted negative and says so in its output.
+
 ### 2026-08-18 — Trap 37 closed, sun tolerance re-judged (not a round)
 
 **Branch** `session/2026-08-18-wikimedia-copy`. Rule-1 backups
