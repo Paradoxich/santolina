@@ -327,6 +327,15 @@ export const OPEN_FINDINGS: Record<string, OpenFinding> = {
   // PurgeResult.orphanedPhotos while the rows still exist, and both callers
   // print them. Pinned by lib/purge-demo-users.test.ts, which asserts the
   // record, the ordering against deleteUser, and that the account still goes.
+  'weekly-backup-has-no-freshness-check': {
+    what: 'db-backup.yml runs once a week and reports only by failing. A failure notification fires only when the job RUNS, so the silent cases are invisible: GitHub disables scheduled workflows after 60 days of repository inactivity, and a single pg_dump connection timeout costs the whole week because the cron is weekly and the script does not retry. The 2026-08-03 run failed on exactly that timeout and nobody noticed for 15 days.',
+    source:
+      'Read on 2026-08-18 from the run history: the 2026-08-03 failure log (pooler timeout on all three IPs, everything before the dump green) and the workflow file. The 60-day disablement is GitHub Actions documented behaviour, not inferred.',
+    file: '.github/workflows/db-backup.yml',
+    witness: /cron: '12 3 \* \* 1'/,
+    remedy:
+      'Three parts, in order. (a) A freshness check: assert the newest object in db-backups is younger than ~10 days, run from a job that already executes often, which catches failure, disablement and credential rot together. (b) Move the cron off single-shot weekly, which is what clears this witness. (c) A bounded retry in backup-database.ts. The witness reads the cron because that is the part whose change is mechanically visible; (a) is the more important fix and closing this entry without it would be premature.',
+  },
   'editorial-approval-never-withdrawn': {
     what: 'curate-editorial has no path that withdraws an approval. `if (approved) patch.is_curated = true` is its only is_curated write and the criterion stamps are set only on pass, so re-judging an approved row to hold prints "hold" while the database still records approval and keeps the old stamps. The trigger cannot cover it: it clears only when the criterion FIELD changes, and a hold changes no field.',
     source:

@@ -74,16 +74,12 @@ do it rather than routing copy back to her.
 
 **Next steps, in order.**
 
-1. **Harden the weekly backup, in three parts.** The workflow is proven green on
-   the bumped actions (run 32126932071) but two weaknesses are recorded and
-   undone. **(a)** A freshness check is the real fix: assert the newest object in
-   `db-backups` is younger than ~10 days, from a job that already runs often.
-   Failure email only fires when the job RUNS, and GitHub disables scheduled
-   workflows after 60 days of repo inactivity, so the silent case is the one an
-   alert-on-failure cannot see. **(b)** Move the cron to twice weekly; one bad
-   Monday currently costs the week. **(c)** A bounded retry in
-   `backup-database.ts`. Order matters: (a) catches every failure mode including
-   the ones (b) and (c) do not.
+1. **Harden the weekly backup.** The workflow is proven green on the bumped
+   actions (run 32126932071); its two remaining weaknesses are now the ratchet
+   entry `weekly-backup-has-no-freshness-check`, which carries the reasoning and
+   the three-part remedy. Take it from there, not from here — it is first because
+   a backup nobody is watching is the one failure that is only noticed at
+   restore.
 
 2. **`Lythrum salicaria` re-adds when round 14 opens.** Decision already made
    and recorded at `docs/curation.md#round-runbook`; nothing to do until there
