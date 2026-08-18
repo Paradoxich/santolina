@@ -34,6 +34,7 @@ import {
   mergeFindings,
   carryDescriptionProvenance,
   CLEARED_PREVIOUSLY,
+  buildEditorialPatch,
   type Finding,
 } from './editorial-report'
 
@@ -206,5 +207,115 @@ describe('carryDescriptionProvenance', () => {
     )
     expect(merged.description.rewritten).toBe(false)
     expect(merged.approved).toBe(true)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// buildEditorialPatch — the `editorial-approval-never-withdrawn` finding,
+// recorded 2026-08-14 by the schema design review and fixed 2026-08-18.
+//
+// PRE-FIX, EVERY CASE BELOW EXCEPT THE FIRST FAILS. The write was
+// `if (approved) patch.is_curated = true` with the stamps set only on pass, so
+// a hold could not withdraw an approval and could not clear the stamp that
+// approval rested on. The defect's own witness is the patch, which is why the
+// builder had to be extracted before it could be pinned.
+// ---------------------------------------------------------------------------
+
+const NOW = '2026-08-18T00:00:00.000Z'
+
+const finding = (over: Partial<Finding> = {}): Finding => ({
+  id: 'id-1',
+  common_name: 'Magnolia',
+  scientific_name: 'Magnolia liliiflora',
+  image: { verdict: 'pass', reason: 'ok' },
+  description: { verdict: 'pass', reason: 'ok', rewritten: false },
+  tags: { verdict: 'pass', reason: 'ok' },
+  approved: true,
+  blockers: [],
+  ...over,
+})
+
+describe('buildEditorialPatch (editorial-approval-never-withdrawn)', () => {
+  it('approves and stamps all three criteria', () => {
+    expect(buildEditorialPatch(finding(), NOW)).toEqual({
+      editorial_checked_at: NOW,
+      is_curated: true,
+      editorial_image_at: NOW,
+      editorial_description_at: NOW,
+      editorial_tags_at: NOW,
+    })
+  })
+
+  it('WITHDRAWS an approval when the row is re-judged to a hold', () => {
+    const patch = buildEditorialPatch(
+      finding({
+        approved: false,
+        description: { verdict: 'fail', reason: 'weak', rewritten: false },
+        blockers: ['description: weak'],
+      }),
+      NOW
+    )
+    // The old write left this true, and nothing downstream could tell.
+    expect(patch.is_curated).toBe(false)
+  })
+
+  it('nulls the stamp of the criterion that failed, and only that one', () => {
+    const patch = buildEditorialPatch(
+      finding({
+        approved: false,
+        tags: { verdict: 'fail', reason: 'cottage is not defensible here' },
+      }),
+      NOW
+    )
+    expect(patch.editorial_tags_at).toBeNull()
+    expect(patch.editorial_image_at).toBe(NOW)
+    expect(patch.editorial_description_at).toBe(NOW)
+  })
+
+  it('nulls an open criterion too — unresolved is not cleared', () => {
+    const patch = buildEditorialPatch(
+      finding({
+        approved: false,
+        image: { verdict: 'open', reason: 'no url' },
+      }),
+      NOW
+    )
+    expect(patch.editorial_image_at).toBeNull()
+  })
+
+  it('carries a rewrite in the same patch as the stamps', () => {
+    const patch = buildEditorialPatch(
+      finding({
+        description: {
+          verdict: 'pass',
+          reason: 'ok',
+          rewritten: true,
+          before: 'old',
+          after: 'new',
+        },
+      }),
+      NOW
+    )
+    // Same statement as the stamp on purpose: the trigger skips a criterion
+    // whose stamp this UPDATE changes, so the rewrite cannot invalidate the
+    // approval it is part of.
+    expect(patch.description).toBe('new')
+    expect(patch.editorial_description_at).toBe(NOW)
+  })
+
+  it('never writes a description key when nothing was rewritten', () => {
+    expect('description' in buildEditorialPatch(finding(), NOW)).toBe(false)
+  })
+
+  // A criterion this run did not examine is always `pass` with reason
+  // `cleared previously`, so nulling on fail can never touch one.
+  it('re-stamps a criterion carried forward as cleared previously', () => {
+    const patch = buildEditorialPatch(
+      finding({
+        tags: { verdict: 'pass', reason: CLEARED_PREVIOUSLY },
+      }),
+      NOW
+    )
+    expect(patch.editorial_tags_at).toBe(NOW)
   })
 })

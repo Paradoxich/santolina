@@ -957,6 +957,52 @@ is unchanged.
 
 <!-- Newest first. Append with: scripts/log-db-session.ts --round <label> -->
 
+### 2026-08-18 — A hold could not withdraw an approval (not a round)
+
+**Branch** `session/2026-08-18-backup-freshness`. No migration, no catalog
+write. Closes the `editorial-approval-never-withdrawn` finding, recorded
+2026-08-14 by the schema design review.
+
+**The defect.** `if (approved) patch.is_curated = true` was the pass's only
+`is_curated` write, and the three criterion stamps were only ever SET. So
+re-judging an approved row down to a hold printed "hold", wrote
+`editorial_checked_at`, and left `is_curated = true` standing over the old
+stamps. The trigger cannot cover it — it clears a stamp when the criterion
+FIELD changes, and a hold changes no field. The previous session hit the
+adjacent shape twice, re-judging `Malus spectabilis` and `Magnolia liliiflora`
+by hand.
+
+**The fix, behind a seam first.** `buildEditorialPatch` in
+`scripts/editorial-report.ts` now writes `is_curated: finding.approved`
+unconditionally and nulls the stamp of every non-pass criterion. It was extracted
+before it was fixed: the write was three lines inside a 90-line loop body that
+also calls two models, so nothing could assert on it, which is how it stayed
+wrong. Nulling is safe against criteria this run did not examine — one that was
+not re-judged is always `pass` with reason `cleared previously`, so a `fail` can
+only come from a judgment actually made.
+
+**FORWARD ONLY, and this is the part to keep.** The review recorded (section 6a)
+that the state this produced is indistinguishable by query from a genuine
+approval. No sweep can find the rows already out there. Whatever wrong
+approvals exist stay wrong until something re-judges the row.
+
+**The guard caught the guard.** Shape 2 reads the VALUE side of a stamp write to
+tell a write from a read-through, and it could not see
+`x: verdict === 'pass' ? now : null`. The first widening — any expression
+containing a timestamp token — made it report the TYPE ANNOTATION
+`native_to_reviewed_at: string | null` as a writer, and the stale-hatch check
+failed on the next run. The second branch now requires a `?`: comments are
+stripped before that scan, types are not, and a ternary is a value where a union
+is not.
+
+**Pinned.** `scripts/editorial-report.test.ts` — the withdraw, null-on-fail and
+null-on-open cases each fail against the pre-fix shape (verified by reverting
+the builder and re-running: 3 failed, 12 passed).
+
+**Verified.** `pnpm ci:check --no-db` green: 580 tests, typecheck,
+`tokens:check`, `runbook:check`, `docs:links`, `docs:claims`,
+`invariants:check`. Open findings 4 → 3.
+
 ### 2026-08-18 — The backup was watched only by the job that could fail to run (not a round)
 
 **Branch** `session/2026-08-18-backup-freshness`. No migration, no catalog

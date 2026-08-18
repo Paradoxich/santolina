@@ -338,15 +338,15 @@ export const OPEN_FINDINGS: Record<string, OpenFinding> = {
   // — the 2026-08-03 pooler timeout would have survived it. The pure half is
   // pinned by lib/backup-freshness.test.ts, whose stale case is that run's own
   // 15-day gap.
-  'editorial-approval-never-withdrawn': {
-    what: 'curate-editorial has no path that withdraws an approval. `if (approved) patch.is_curated = true` is its only is_curated write and the criterion stamps are set only on pass, so re-judging an approved row to hold prints "hold" while the database still records approval and keeps the old stamps. The trigger cannot cover it: it clears only when the criterion FIELD changes, and a hold changes no field.',
-    source:
-      'Schema design review 2026-08-14, section 6b — its single-analyst list, so the review is not the evidence. Confirmed 2026-08-16 by reading curate-editorial.ts: the write has moved since, its shape has not, and grep shows it is still the only is_curated write in the file. The review also records (section 6a) that the resulting state is undetectable by query, being indistinguishable from a genuine approval.',
-    file: 'apps/web/scripts/curate-editorial.ts',
-    witness: /if \(approved\) patch\.is_curated = true/,
-    remedy:
-      'The two one-line fixes the review names: write `patch.is_curated = approved` unconditionally, and null the stamp for each non-pass criterion. This closes forward only — because the state is query-undetectable, no sweep can find the rows it has already produced.',
-  },
+  // 'editorial-approval-never-withdrawn' CLOSED 2026-08-18 with the two
+  // one-line fixes the review named, moved into a callable seam first:
+  // buildEditorialPatch in scripts/editorial-report.ts writes
+  // `is_curated: finding.approved` unconditionally and nulls the stamp of every
+  // non-pass criterion. Pinned by scripts/editorial-report.test.ts, whose
+  // withdraw, null-on-fail and null-on-open cases all fail against the pre-fix
+  // shape. FORWARD ONLY, as the review recorded: the state it produced is
+  // indistinguishable by query from a genuine approval, so no sweep can find
+  // the rows already out there.
   'sun-audit-targets-a-derived-column': {
     what: 'cross-check-plants raises `disagree` flags on sun_requirements, a BEFORE-trigger-derived mirror of sun_thrives/sun_tolerates (migration 20260709220000). Nothing can act on them: a write to that column is recomputed away, and the only consumer that ever tried is apply-sun-widening, which is non-convergent for exactly that reason and is queued for archive.',
     source:
@@ -575,8 +575,19 @@ function checkStampWriters(): void {
     // suffixes, AND curate-editorial builds them onto a patch object by
     // assignment — so the scan had never seen them from either direction, and
     // reported a clean run for a column it was not looking at.
+    // The value may be a CONDITIONAL, widened 2026-08-18: the editorial
+    // criterion stamps are written as `x: verdict === 'pass' ? now : null`,
+    // which is a write by both halves and which the old anchored pattern could
+    // not see.
+    //
+    // THE SECOND BRANCH REQUIRES A `?`, and that is not cosmetic. Widening it
+    // to "any expression containing a timestamp token" made this scan report
+    // `native_to_reviewed_at: string | null` — a TYPE ANNOTATION — as a writer,
+    // and the stale-hatch check caught it immediately. Comments are stripped
+    // before this runs; types are not. A ternary is a value; a union is not.
+    const VALUE = String.raw`(?:new Date\(|null\b|[\w.]*(?:now|nowIso|timestamp|stampedAt|isoNow)\b)`
     const writeRe = new RegExp(
-      `${stamp}\\s*[:=]\\s*(?:new Date\\(|null\\b|[\\w.]*(?:now|nowIso|timestamp|stampedAt|isoNow)\\b)`,
+      `${stamp}\\s*[:=]\\s*(?:${VALUE}|[^,\\n]*?\\?\\s*${VALUE})`,
       'i'
     )
     const writers = SOURCE_TS.filter((f) =>
