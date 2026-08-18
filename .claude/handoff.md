@@ -95,7 +95,16 @@ number in a test file's LEADING comment (the pin ratchet reads only the header).
    and nothing else was recorded against it. `Iris pseudacorus` stays cut on a
    ground the rule allows. Reasoning in `docs/curation.md#round-runbook`.
 
-5. **The comment sweep stopped at this session's own work.** Older files carry
+5. **`db-backup.yml` has not run since its actions were bumped.** The workflow
+   actions moved off the deprecated Node 20 runtime (PR #191, merged): checkout
+   v7, setup-node v7, pnpm/action-setup v6, each verified against its own
+   `action.yml`. `ci.yml` is proven — the PR run is green with the deprecation
+   annotation gone — but `db-backup.yml` runs on a schedule and uses the same
+   three actions, so its next scheduled run is the first real test. Watch it, or
+   dispatch it early; a failure there means no backup ran, which is the kind of
+   thing that is only noticed when it is needed.
+
+6. **The comment sweep stopped at this session's own work.** Older files carry
    the same essays and about a dozen more `Ana`/`Ana's ruling` mentions I did
    not touch, because two other sessions were live. Worth a pass when the repo
    is quiet — and worth checking each attribution rather than assuming.
