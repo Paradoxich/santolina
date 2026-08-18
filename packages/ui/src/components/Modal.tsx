@@ -88,7 +88,10 @@ export function Modal({
     >
       {title && (
         <div
-          className={cn('flex items-center justify-between', 'px-6 pt-6 pb-3')}
+          className={cn(
+            'flex items-center justify-between',
+            'px-modal-padding pt-modal-padding pb-item-gap'
+          )}
         >
           <h2 id={titleId} className="text-heading font-semibold text-primary">
             {title}
@@ -96,7 +99,7 @@ export function Modal({
           <button
             onClick={onClose}
             className={cn(
-              'rounded-md p-1',
+              'rounded-md p-tight-gap',
               'text-primary',
               'hover:bg-surface-hover',
               'focus-visible:outline-none focus-visible:ring-2',
@@ -125,7 +128,11 @@ export function Modal({
       <div
         className={
           bodyClassName ??
-          cn('px-6', title ? 'pt-3' : 'pt-6', footer ? 'pb-3' : 'pb-6')
+          cn(
+            'px-modal-padding',
+            title ? 'pt-item-gap' : 'pt-modal-padding',
+            footer ? 'pb-item-gap' : 'pb-modal-padding'
+          )
         }
       >
         {children}
@@ -134,8 +141,8 @@ export function Modal({
       {footer && (
         <div
           className={cn(
-            'px-6 pt-3 pb-6',
-            'flex items-center justify-end gap-3'
+            'px-modal-padding pt-item-gap pb-modal-padding',
+            'flex items-center justify-end gap-item-gap'
           )}
         >
           {footer}

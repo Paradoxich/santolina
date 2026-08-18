@@ -24,7 +24,7 @@ export function SubpageHeader({
   children,
 }: SubpageHeaderProps) {
   return (
-    <header className="flex items-center justify-between gap-inline-gap border-b border-sage-200 py-4 md:ml-[calc(-1*var(--sidebar-offset))] md:mr-[calc(-1*var(--content-gutter))] md:pl-[var(--sidebar-offset)] md:pr-content-gutter">
+    <header className="flex items-center justify-between gap-inline-gap border-b border-sage-200 py-4 md:-ml-content-lead md:-mr-content-bleed md:pl-content-lead md:pr-content-bleed">
       <Link
         href={backHref}
         className="flex h-8 items-center gap-tight-gap text-body text-secondary transition-colors duration-normal hover:text-primary"

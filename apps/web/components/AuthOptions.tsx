@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Button, FormError, cn } from '@paradoxui/ui'
+import { Button, Input, cn } from '@paradoxui/ui'
 import { UserFacingError, failureMessage } from '@/lib/failure'
 
 // The two ways into an account — Google, or a link by email — as one set of
@@ -127,74 +127,62 @@ export function AuthOptions({
       </div>
 
       <form onSubmit={handleEmail} noValidate className="flex flex-col gap-2">
-        {/* The pill is white on a photographic background, so the error cannot
-            be a border — there is no border to tint. It is the ring instead,
-            which is also what focus uses, so the two never stack: in error the
-            ring stays critical THROUGH focus. Focusing a field to fix it must
-            not be what hides the reason it is wrong. */}
-        <div
-          className={cn(
-            'flex h-12 w-full items-center gap-2 rounded-md bg-white py-2 pl-3 pr-2',
-            fieldError
-              ? 'ring-2 ring-critical'
-              : 'focus-within:ring-2 focus-within:ring-focus'
-          )}
-        >
-          <label htmlFor="email" className="sr-only">
-            Email
-          </label>
-          <input
-            id="email"
-            type="email"
-            name="email"
-            autoComplete="email"
-            required
-            value={email}
-            onChange={(e) => {
-              setEmail(e.target.value)
-              // Cleared on edit, not re-checked on edit. Editing is the user
-              // acting on the message, so the message has done its job.
-              if (fieldError) setFieldError(null)
-            }}
-            placeholder="Enter your email"
-            aria-invalid={fieldError ? true : undefined}
-            aria-describedby={fieldError ? 'email-error' : undefined}
-            className="min-w-0 flex-1 bg-transparent text-body-small font-medium text-primary placeholder:text-faint focus:outline-none"
-          />
-          <button
-            type="submit"
-            disabled={!hasEmail || status === 'sending'}
-            aria-label={submitLabel}
-            className={cn(
-              'flex h-full shrink-0 items-center rounded-sm border border-login bg-accent px-2 text-body-small font-medium text-on-accent',
-              'transition-opacity duration-slow',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus',
-              hasEmail ? 'hover:bg-accent-hover' : 'opacity-10'
-            )}
-          >
-            <span
+        {/* On the shared field shell since 2026-08-18. It was hand-rolled and
+            borderless because the login card once sat on a photograph, where
+            an error could only be a ring — that background went with 058bb56,
+            and the card has been the same ground as every other field since.
+            The submit button inside the field is the part that was actually
+            load-bearing, and it is a trailing slot now rather than a reason to
+            rebuild the field. Error still holds THROUGH focus; that rule moved
+            into FieldShell and applies to every field now, not just this one. */}
+        <Input
+          id="email"
+          type="email"
+          name="email"
+          size="lg"
+          autoComplete="email"
+          required
+          value={email}
+          onChange={(e) => {
+            setEmail(e.target.value)
+            // Cleared on edit, not re-checked on edit. Editing is the user
+            // acting on the message, so the message has done its job.
+            if (fieldError) setFieldError(null)
+          }}
+          placeholder="Enter your email"
+          aria-label="Email"
+          errorMessage={fieldError ?? undefined}
+          trailing={
+            <button
+              type="submit"
+              disabled={!hasEmail || status === 'sending'}
+              aria-label={submitLabel}
               className={cn(
-                'overflow-hidden whitespace-nowrap transition-[max-width,margin] duration-slow ease-in-out',
-                hasEmail ? 'mr-2 max-w-[200px]' : 'mr-0 max-w-0'
+                'flex h-8 shrink-0 items-center rounded-sm border border-login bg-accent px-2 text-body-small font-medium text-on-accent',
+                'transition-opacity duration-slow',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus',
+                hasEmail ? 'hover:bg-accent-hover' : 'opacity-10'
               )}
             >
-              {submitLabel}
-            </span>
-            {status === 'sending' ? (
               <span
-                className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"
-                aria-hidden="true"
-              />
-            ) : (
-              <ArrowIcon />
-            )}
-          </button>
-        </div>
-
-        {/* Under the pill and left aligned, against the request-level slot's
-            centred line above the card: the indent says which one is about
-            this field. */}
-        {fieldError && <FormError id="email-error">{fieldError}</FormError>}
+                className={cn(
+                  'overflow-hidden whitespace-nowrap transition-[max-width,margin] duration-slow ease-in-out',
+                  hasEmail ? 'mr-2 max-w-[200px]' : 'mr-0 max-w-0'
+                )}
+              >
+                {submitLabel}
+              </span>
+              {status === 'sending' ? (
+                <span
+                  className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"
+                  aria-hidden="true"
+                />
+              ) : (
+                <ArrowIcon />
+              )}
+            </button>
+          }
+        />
       </form>
     </div>
   )

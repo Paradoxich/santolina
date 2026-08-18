@@ -1,7 +1,7 @@
 'use client'
 
 import { Icon, Menu } from '@paradoxui/ui'
-import type { MenuItem } from '@paradoxui/ui'
+import type { MenuChoice } from '@paradoxui/ui'
 import { icons } from '@/lib/icons'
 import { bloomStatusLabels } from '@/components/BloomStatusBadge'
 import type { DisplayBloomStatus } from '@/lib/bloom-status'
@@ -46,6 +46,12 @@ interface StatusFilterMenuProps {
  * A low-emphasis status filter: a small filter icon that opens a menu of
  * bloom statuses with their counts. Sits at the end of the list's description
  * line, so filtering is available without competing with the plants.
+ *
+ * A menu rather than a Select even though it picks a value: Select is
+ * field-shaped and would put a full-width control where the point is a 40px
+ * icon that does not compete with the plants. The value lives in the trigger's
+ * accessible name instead, and the items are `menuitemradio` — which is what
+ * ARIA provides for a menu that chooses one of a set.
  */
 export function StatusFilterMenu({
   value,
@@ -53,16 +59,21 @@ export function StatusFilterMenu({
   counts,
 }: StatusFilterMenuProps) {
   const active = value !== 'all'
-  const items: MenuItem[] = order.map((status) => ({
+  const items: MenuChoice[] = order.map((status) => ({
     label: `${labels[status]} (${counts[status]})`,
     icon: <Dot status={status} />,
     // A status with no plants can't be filtered to an empty list.
     disabled: status !== 'all' && counts[status] === 0,
+    // These are choices, not actions: exactly one is in effect. As plain
+    // menuitems they announced no state, so a screen reader user heard five
+    // options and never which one was filtering the list.
+    selected: status === value,
     onSelect: () => onChange(status),
   }))
 
   return (
     <Menu
+      intent="choices"
       label={active ? `Filter by status: ${labels[value]}` : 'Filter by status'}
       items={items}
       align="end"

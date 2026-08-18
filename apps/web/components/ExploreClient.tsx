@@ -115,7 +115,7 @@ export function ExploreClient({
         <div
           ref={searchRef}
           className={[
-            'sticky top-0 z-10 -mx-4 mt-4 bg-surface-page px-4 py-4 md:-ml-content-gutter md:-mr-content-gutter md:pl-content-gutter md:pr-content-gutter',
+            'sticky top-0 z-10 -mx-4 mt-4 bg-surface-page px-4 py-4 md:-ml-content-bleed md:-mr-content-bleed md:pl-content-bleed md:pr-content-bleed',
             'transition-transform duration-normal',
             searchHidden ? '-translate-y-full' : 'translate-y-0',
           ].join(' ')}
@@ -135,12 +135,9 @@ export function ExploreClient({
               searchPinned ? 'opacity-100' : 'opacity-0',
             ].join(' ')}
           />
-          {/* Search sits on the page ground with a sage-100 hairline and a 12px
-              radius, rather than the kit's translucent pill. The border reaches
-              for a primitive because no border token sits at sage-100 yet. The
-              filter toggle is its own bordered box to the right, matching the
-              search field's border treatment, rather than living inside the
-              search pill. */}
+          {/* The kit's own treatment now, so the eleven classes that used to
+              re-shape SearchField here are gone. They existed because the
+              component shipped a pill this call site did not want. */}
           <div className="flex items-center gap-inline-gap">
             <SearchField
               ref={searchInputRef}
@@ -149,7 +146,7 @@ export function ExploreClient({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               iconClassName="text-primary"
-              className="h-10 flex-1 rounded-md border bg-surface-card pl-item-gap pr-tight-gap !shadow-none [border-color:var(--color-sage-100)] hover:[border-color:var(--color-sage-50)] focus-within:!bg-surface-card focus-within:[border-color:var(--color-sage-50)] focus-within:![box-shadow:0_0_0_1px_var(--color-sage-50)]"
+              className="flex-1 pr-tight-gap"
               trailingAction={
                 query && (
                   <IconButton
@@ -167,7 +164,9 @@ export function ExploreClient({
                 )
               }
             />
-            <div className="flex h-10 shrink-0 items-center justify-center rounded-md border bg-surface-card px-tight-gap [border-color:var(--color-sage-100)] transition-colors duration-normal hover:[border-color:var(--color-sage-50)]">
+            {/* Moves with the search field by design — it was written to match
+                its border treatment, so it follows it onto the shell. */}
+            <div className="flex h-10 shrink-0 items-center justify-center rounded-md border border-card bg-surface-field px-tight-gap transition-colors duration-normal">
               <IconButton
                 variant={filtersOpen ? 'control' : 'ghost'}
                 size="sm"
@@ -201,7 +200,7 @@ export function ExploreClient({
                 content-gutter on both sides (px-4 on mobile) so the line
                 runs from the sidebar's hairline to the right edge of the
                 screen, in the sidebar hairline's own colour. */}
-            <hr className="-mx-4 border-[var(--sidebar-divider)] md:-ml-content-gutter md:-mr-content-gutter" />
+            <hr className="-mx-4 border-[var(--sidebar-divider)] md:-mx-content-bleed" />
             <div className="pt-12">
               <ExploreBrowse
                 onSelectStyle={(style) =>

@@ -13,7 +13,7 @@ import {
   Tooltip,
   useToast,
 } from '@paradoxui/ui'
-import type { MenuItem } from '@paradoxui/ui'
+import type { MenuAction } from '@paradoxui/ui'
 import { failureMessage } from '@/lib/failure'
 import { icons } from '@/lib/icons'
 import { DIARY_EVENT_LABELS } from '@/lib/diary-events'
@@ -72,7 +72,7 @@ function NoteCard({
 }) {
   const { toast } = useToast()
 
-  const menuItems: MenuItem[] = []
+  const menuItems: MenuAction[] = []
   if (note.text) {
     menuItems.push({
       label: 'Copy text',
@@ -141,6 +141,7 @@ function NoteCard({
       {menuItems.length > 0 && (
         <div className="absolute right-inline-gap top-inline-gap">
           <Menu
+            intent="actions"
             label="Note actions"
             items={menuItems}
             trigger={
@@ -180,7 +181,8 @@ interface StorySectionProps {
 /**
  * The plant's story: a month-grouped notes timeline. One home for this
  * content across the app — see docs/architecture.md for the diary-to-plant
- * one-home principle. Composer lives separately (StoryComposer), pinned to
+ * one-home principle. The re-add prompt lives separately
+ * (AddBackToGardenPrompt), pinned to
  * the page rather than nested in this scrollable section.
  */
 export function StorySection({

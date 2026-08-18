@@ -17,6 +17,11 @@ export const Default: Story = {
   },
 }
 
+/**
+ * With no CTA the message centres, because the row's `justify-between` exists
+ * to push a CTA to the far edge and there is nothing to push against. Compare
+ * `Default`, where the same row keeps the message left.
+ */
 export const NoAction: Story = {
   args: {
     message: 'Reflections are on their way.',

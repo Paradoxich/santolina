@@ -8,11 +8,12 @@ import {
   FormError,
   Icon,
   IconButton,
-  Menu,
   Modal,
+  Select,
+  Textarea,
   useToast,
 } from '@paradoxui/ui'
-import type { MenuItem } from '@paradoxui/ui'
+import type { SelectOption } from '@paradoxui/ui'
 import { failureMessage } from '@/lib/failure'
 import { icons } from '@/lib/icons'
 import {
@@ -128,20 +129,23 @@ export function AddNoteModal({
   const selectedPlant =
     plants.find((p) => p.plantId === selectedPlantId) ?? null
 
-  const scopeItems: MenuItem[] = [
-    {
-      label: 'Your garden',
-      onSelect: () => {
-        setSelectedPlantId(null)
-        // Care events are plant actions, so they don't survive the switch.
-        setSelectedEvents([])
-      },
-    },
-    ...plants.map((plant) => ({
-      label: plant.name,
-      onSelect: () => setSelectedPlantId(plant.plantId),
-    })),
+  /** Select carries string values, and "the garden itself" is the absence of a
+   *  plant id, so it travels as a sentinel and converts back on the way out. */
+  const GARDEN = '__garden__'
+  const scopeOptions: SelectOption[] = [
+    { value: GARDEN, label: 'Your garden' },
+    ...plants.map((plant) => ({ value: plant.plantId, label: plant.name })),
   ]
+
+  const handleScopeChange = (next: string) => {
+    if (next === GARDEN) {
+      setSelectedPlantId(null)
+      // Care events are plant actions, so they don't survive the switch.
+      setSelectedEvents([])
+      return
+    }
+    setSelectedPlantId(next)
+  }
 
   // Photos are downscaled and re-encoded in the browser before upload — see
   // lib/photo-processing.ts for why (size cap, HEIC, EXIF).
@@ -238,38 +242,17 @@ export function AddNoteModal({
           <span className="text-label font-medium uppercase tracking-label text-muted">
             What is this about
           </span>
-          <Menu
-            label="Choose what this note is about"
-            align="start"
-            className="w-full"
-            menuClassName="max-h-64 w-full overflow-y-auto"
-            triggerClassName="flex w-full items-center gap-inline-gap rounded-md border border-card bg-surface-overlay px-item-gap py-inline-gap text-left transition-colors duration-normal hover:bg-surface-nav-active focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
-            items={scopeItems}
-            trigger={
-              <>
-                <span className="flex-1 truncate text-body text-primary">
-                  {scopeLoad === 'loading'
-                    ? 'Loading…'
-                    : (selectedPlant?.name ?? 'Your garden')}
-                </span>
-                <svg
-                  aria-hidden="true"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 16 16"
-                  fill="none"
-                  className="shrink-0 text-secondary"
-                >
-                  <path
-                    d="M4 6l4 4 4-4"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </>
-            }
+          {/* A Select, not a Menu: this holds a value and has to announce it.
+              As a Menu the trigger was named by aria-label, so it said "Choose
+              what this note is about" and never which plant was chosen. */}
+          <Select
+            aria-label="What is this about"
+            options={scopeOptions}
+            value={selectedPlantId ?? GARDEN}
+            onChange={handleScopeChange}
+            disabled={scopeLoad === 'loading'}
+            placeholder={scopeLoad === 'loading' ? 'Loading…' : 'Your garden'}
+            listClassName="max-h-64 overflow-y-auto"
           />
           {/* Only when the list actually arrived and was empty. On a failure the
               error line above already says what happened, and a second line
@@ -304,7 +287,7 @@ export function AddNoteModal({
           </div>
         )}
 
-        <textarea
+        <Textarea
           value={noteText}
           onChange={(e) => setNoteText(e.target.value)}
           placeholder={
@@ -313,7 +296,6 @@ export function AddNoteModal({
               : 'What happened in your garden?'
           }
           rows={4}
-          className="w-full resize-none rounded-md border border-card bg-surface-overlay p-item-gap text-body text-primary placeholder:text-muted focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
         />
 
         {photoFiles.length > 0 && (

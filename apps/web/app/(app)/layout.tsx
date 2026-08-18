@@ -48,7 +48,7 @@ export default async function AppLayout({
             of body-small). Unset for a normal session, where the sidebar falls
             back to a 0 inset and nothing moves. */}
         <div
-          className="min-h-screen bg-surface-page"
+          className="min-h-screen overflow-x-clip bg-surface-page"
           style={
             ctx.isAnonymous
               ? ({ '--app-chrome-top': '2.75rem' } as React.CSSProperties)
@@ -57,7 +57,7 @@ export default async function AppLayout({
         >
           {ctx.isAnonymous && <DemoBanner />}
           <AppSidebar identity={identity} />
-          <main className="px-4 pb-20 md:ml-sidebar-offset md:mr-content-gutter md:px-0 md:pb-0">
+          <main className="px-4 pb-20 md:ml-content-lead md:mr-content-bleed md:px-0 md:pb-0">
             {children}
           </main>
           <MobileTabBar />

@@ -30,6 +30,7 @@ const chevron = (
 
 export const Default: Story = {
   args: {
+    intent: 'actions',
     label: 'Item actions',
     trigger: chevron,
     triggerClassName:
@@ -44,6 +45,7 @@ export const Default: Story = {
 
 export const WithDisabledItem: Story = {
   args: {
+    intent: 'actions',
     label: 'Item actions',
     trigger: chevron,
     triggerClassName:
@@ -59,6 +61,7 @@ export const WithDisabledItem: Story = {
 /** Left-aligned, stretched to a full-width row trigger with a matching panel. */
 export const FullWidthRow: Story = {
   args: {
+    intent: 'actions',
     label: 'Your account',
     align: 'start',
     className: 'w-[220px]',
@@ -82,6 +85,7 @@ export const FullWidthRow: Story = {
 
 export const OpensUpward: Story = {
   args: {
+    intent: 'actions',
     label: 'Item actions',
     trigger: chevron,
     position: 'top',
@@ -90,6 +94,27 @@ export const OpensUpward: Story = {
     items: [
       { label: 'Copy text', onSelect: () => {} },
       { label: 'Delete', onSelect: () => {}, tone: 'critical' },
+    ],
+  },
+}
+
+/**
+ * A menu that picks a value rather than performing an action. Items render as
+ * `menuitemradio` with `aria-checked`, and `intent` forces the author to say
+ * so — a plain menuitem announces no state. If the value should be visible at
+ * rest rather than only inside the panel, reach for Select instead.
+ */
+export const Choices: Story = {
+  args: {
+    intent: 'choices',
+    label: 'Filter by status: Blooming',
+    trigger: '⚑',
+    triggerClassName:
+      'flex size-8 items-center justify-center rounded-md border border-card bg-surface-field',
+    items: [
+      { label: 'All plants', onSelect: () => {}, selected: false },
+      { label: 'Blooming', onSelect: () => {}, selected: true },
+      { label: 'Resting', onSelect: () => {}, selected: false },
     ],
   },
 }

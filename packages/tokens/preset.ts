@@ -254,9 +254,13 @@ const preset = {
         'card-padding': 'var(--space-card-padding)',
         'section-break': 'var(--space-section-break)',
         /* component tier */
+        'modal-padding': 'var(--modal-padding)',
+        'button-padding-lg': 'var(--button-padding-lg)',
         sidebar: 'var(--sidebar-width)',
         'sidebar-offset': 'var(--sidebar-offset)',
         'content-gutter': 'var(--content-gutter)',
+        'content-lead': 'var(--content-lead)',
+        'content-bleed': 'var(--content-bleed)',
       },
       maxWidth: {
         content: 'var(--content-max)',
