@@ -1,7 +1,32 @@
+/**
+ * The shared WCVP lookup, and the two traps that live in it.
+ *
+ * Trap 11, pinned by `isExactSpeciesMatch` below: GBIF's `species/match` fails
+ * UPWARD, into a genus. Hand it a
+ * binomial it does not know and it climbs the taxonomy rather than returning
+ * nothing, so accepting the answer fetches an entire genus's distribution:
+ * `Pennisetum alopecuroides` came back as `Cenchrus` and was about to widen one
+ * grass from "Eastern Asia" to 41 regions. The seam is the decision itself:
+ * before 2026-08-18 it was three expressions inside a network call, and the
+ * only thing a test could reach was the message printed afterwards.
+ *
+ * Trap 15, pinned here for the half that is code: the cache stores GBIF's whole
+ * `distributions` payload, which aggregates many checklists, so a raw `NATIVE`
+ * marker is not Kew's opinion, and `wcvpRows` keeps only rows WCVP itself
+ * published. That is the whole of the code half. The trap stays OPEN by design
+ * for its other half — a person reading the raw cache to audit a finding, which
+ * no test can reach, and which nearly reversed three correct drops.
+ *
+ * A case below cites the rate-limit trap in passing. It does not close it: the
+ * assertion there is about naming an absence honestly, not about a throttled
+ * fetch refusing to degrade into confident-looking data.
+ */
+
 import { describe, expect, it } from 'vitest'
 
 import {
   GBIF_NAME_ALIASES,
+  isExactSpeciesMatch,
   WCVP_SOURCE,
   noEvidenceReason,
   wcvpNativeLocalities,
@@ -22,6 +47,76 @@ function row(
 ) {
   return { locality, source, establishmentMeans }
 }
+
+describe('isExactSpeciesMatch', () => {
+  const exact = {
+    matchType: 'EXACT',
+    rank: 'SPECIES',
+    canonicalName: 'Pennisetum alopecuroides',
+  }
+
+  it('accepts the species it was asked for', () => {
+    expect(isExactSpeciesMatch(exact, 'Pennisetum alopecuroides')).toBe(true)
+  })
+
+  it('refuses the genus GBIF climbed to', () => {
+    expect(
+      isExactSpeciesMatch(
+        { matchType: 'HIGHERRANK', rank: 'GENUS', canonicalName: 'Cenchrus' },
+        'Pennisetum alopecuroides'
+      )
+    ).toBe(false)
+  })
+
+  it('refuses a genus-rank answer even when GBIF calls it EXACT', () => {
+    expect(
+      isExactSpeciesMatch(
+        { matchType: 'EXACT', rank: 'GENUS', canonicalName: 'Cenchrus' },
+        'Cenchrus'
+      )
+    ).toBe(false)
+  })
+
+  it('refuses a species-rank answer for a DIFFERENT species', () => {
+    expect(
+      isExactSpeciesMatch(
+        { ...exact, canonicalName: 'Cenchrus americanus' },
+        'Pennisetum alopecuroides'
+      )
+    ).toBe(false)
+  })
+
+  it('refuses a fuzzy match on the right name', () => {
+    expect(
+      isExactSpeciesMatch(
+        { ...exact, matchType: 'FUZZY' },
+        'Pennisetum alopecuroides'
+      )
+    ).toBe(false)
+  })
+
+  it('still accepts a hybrid, whose × GBIF drops from canonicalName', () => {
+    expect(
+      isExactSpeciesMatch(
+        {
+          matchType: 'EXACT',
+          rank: 'SPECIES',
+          canonicalName: 'Mentha piperita',
+        },
+        'Mentha × piperita'
+      )
+    ).toBe(true)
+  })
+
+  it('refuses an answer with no rank at all', () => {
+    expect(
+      isExactSpeciesMatch(
+        { matchType: 'EXACT', canonicalName: 'Pennisetum alopecuroides' },
+        'Pennisetum alopecuroides'
+      )
+    ).toBe(false)
+  })
+})
 
 describe('wcvpRows', () => {
   it('keeps only rows WCVP itself published', () => {

@@ -91,7 +91,7 @@ type Row = Record<string, unknown>
 const isBookkeepingWrite = (column: string): boolean =>
   column === 'updated_at' || isStampColumn(column)
 
-interface Finding {
+export interface Finding {
   level: 'FAIL' | 'WARN' | 'ALLOWED'
   check: string
   plant: string
@@ -250,7 +250,7 @@ function readClearedAt(label: string): { at: string; why: string } | null {
  * This narrows what a check FAILS on. It does not hide anything: the findings
  * stay in the report under their own level, counted and labelled.
  */
-function applyClearedAt(
+export function applyClearedAt(
   findings: Finding[],
   cleared: { at: string; why: string } | null,
   afterPlants: Row[]
@@ -537,7 +537,11 @@ async function main() {
   if (fails.length) process.exit(1)
 }
 
-main().catch((err) => {
-  console.error(err)
-  process.exit(1)
-})
+// Guarded so the test file can import applyClearedAt without running the check
+// against a live database — same pattern as cross-check-native-to.ts.
+if (require.main === module) {
+  main().catch((err) => {
+    console.error(err)
+    process.exit(1)
+  })
+}

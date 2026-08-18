@@ -1,7 +1,7 @@
 /**
  * The botanical settlement path: what may be stamped, and when.
  *
- * TRAP 24 at a finer grain. `cross-check-plants` used to stamp
+ * The shape of trap 24 at a finer grain (that trap is pinned elsewhere). `cross-check-plants` used to stamp
  * `botanical_checked_at` on every row it walked, so a row it DISAGREED with
  * left the --new-only queue for good and round close read the stamp as
  * FAIL-level proof the step had settled it. `shouldStamp` withholds those rows;

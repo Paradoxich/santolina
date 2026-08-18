@@ -146,7 +146,31 @@ export const REPORT_ONLY_STAMPS: Record<string, string> = {
  * the rule allows a source scan as the alternative.
  */
 export const TRAPS_NOT_PINNED: Record<string, string> = {
-  '1': 'Rate-limit fallback. The fix removed the fallback; a test needs a fake fetch that 429s and an assertion that the error propagates. Cheap, and worth doing next.',
+  // 1, 11, 15 and 16 left on 2026-08-18, and only one of the four was the
+  // paperwork exercise this list said it was.
+  //
+  //   15 WAS. `wcvp-lookup.test.ts` already asserted that a NATIVE marker from
+  //      a non-WCVP checklist is discarded — the trap's own witness for the
+  //      half that is code. The header now says which half that is, because the
+  //      trap stays OPEN by design for the half no test can reach: a person
+  //      reading the raw cache, which nearly reversed three correct drops.
+  //   11 WAS NOT. The only assertion was a reason STRING on a hand-built
+  //      object; the decision itself was three expressions inside a network
+  //      call, so nothing could reach it. `isExactSpeciesMatch` is now exported
+  //      and 5 of its 7 cases fail against the unguarded shape.
+  //   16 WAS NOT, and this list was wrong about where its fix lived. It
+  //      credited `scope.test.ts`, which tests CLI flag parsing in `scope.ts`
+  //      and never touches pairings or `cleared_at`. The fix is `applyClearedAt`
+  //      in `check-round-scope.ts`, which had no test and was not exported.
+  //
+  //    1 needed a seam too, but not the one this list named. It asked for a
+  //      fake fetch that 429s; `lib/image-probe.test.ts` already had that. The
+  //      trap's own record says a third outcome is not enough on its own —
+  //      something has to ACT on it — so the witness is `partitionProbes`,
+  //      where a transient failure stays out of the rejection list.
+  //
+  // The reason field below is a dated claim, not a fact. Read the test before
+  // deleting an entry on the strength of what this says about it.
   '1b': 'Trigger semantics. Only observable against a live or replayed Postgres; pnpm trigger:contract is the existing home and would need to become a checked artifact.',
   '2': '--new-only scoping. Now state-based (*_checked_at IS NULL); the seam is each script argument parser, and the honest witness is a query, not a unit.',
   '4': 'Steps silently not running. round-rehearsal.test.ts covers the registry half; the remaining half is run-round.ts skip logic.',
@@ -155,10 +179,7 @@ export const TRAPS_NOT_PINNED: Record<string, string> = {
   '8': 'reports/ is gitignored. Environmental; a scan could assert no script treats a cache miss as an empty result.',
   '9': 'Trefle field names. Would be caught by generated API types, not by a scan.',
   '10': 'Trefle native[] includes introduced range. Open by design; the witness is WCVP disagreement counts, which is data, not code.',
-  '11': 'GBIF matches upward into a genus. Seam is lib/wcvp-lookup.ts; scripts/wcvp-lookup.test.ts exists but names no trap.',
   '12': 'Manifest records names before the name pass. Seam is round-manifest.ts plus the name pass order in RUNBOOK.',
-  '15': 'WCVP cache mixes GBIF checklists. Open by design. wcvp-lookup.test.ts names it inside a case, which is a useful comment and not a closure — moving that line into the header would pin it.',
-  '16': 'Pairing check rots without a timestamp. Premise was false and the entry records the correction; the fix is pinned by scripts/scope.test.ts, which names no trap.',
   '17': 'A written-down blocker outlives the blocker. This is a documentation-claim trap; the doc rules queued for handoff step 3 are its remedy, not a test.',
   '18': 'RLS block and empty table look identical. Needs a live anon client.',
   '19': 'A test that cannot fail. Meta; the closest mechanism is this file.',

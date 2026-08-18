@@ -332,6 +332,31 @@ async function measure(
     probeImage(c.url).then((r) => ({ candidate: c, probe: r as ProbeResult }))
   )
 
+  const { kept, rejected, unresolved } = partitionProbes(probes, incumbent)
+  const { kept: ranked, capped } = rankAndCap(kept)
+  return { kept: ranked, rejected, unresolved, capped }
+}
+
+/**
+ * Sort probed candidates into kept, rejected and unresolved.
+ *
+ * TRAP 1 lives in the first branch. A probe that FAILED transiently — a 429
+ * that was still a 429 after every retry — knows nothing about the photograph,
+ * and filing it with the dead links converts "we could not look" into "we
+ * looked and it was no good". That is not hypothetical: 9 of 14 hand-sourced
+ * Commons photographs were lost that way on 2026-07-30, judged against the
+ * inadequate Trefle images instead, and stamped so a re-run would never look
+ * again. A third outcome is not enough on its own — the CALLER has to defer the
+ * plant rather than stamp it, which is why `unresolved` is returned separately
+ * instead of being logged and dropped.
+ *
+ * Split out from the fetching in `measure` so the decision can be called: the
+ * network is plumbing, and this is the part that can be wrong.
+ */
+export function partitionProbes(
+  probes: { candidate: ImageCandidate; probe: ProbeResult }[],
+  incumbent: string | null
+): { kept: Measured[]; rejected: string[]; unresolved: string[] } {
   const kept: Measured[] = []
   const rejected: string[] = []
   const unresolved: string[] = []
@@ -370,9 +395,7 @@ async function measure(
       attribution: candidate.attribution,
     })
   }
-
-  const { kept: ranked, capped } = rankAndCap(kept)
-  return { kept: ranked, rejected, unresolved, capped }
+  return { kept, rejected, unresolved }
 }
 
 /**
