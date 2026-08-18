@@ -185,6 +185,25 @@ alter what the field means.
 
 **Still deferred to post-test:** surfacing the distinction in the UI ("thrives in full sun, tolerates part shade") and using it in matching (prefer thrive-matches, still surface tolerate-matches). The data is captured now; the presentation waits for the test to inform it.
 
+**The empty tolerance, and what re-judging 175 of them found (2026-08-18).**
+`sun_tolerates = []` is a real answer — "performs only in its thriving range" —
+and it was on 175 rows. `curate-plants --only` cannot reach them, because it
+selects `.is(field, null)` and these are `[]`; `curate-sun-tolerance.ts` is the
+repair pass that can. It widened 46% of them and left 94 alone, and the 94 are
+the interesting half: lavender, rosemary and cistus genuinely do not take
+shade, and woodland species genuinely do not take full sun. So an empty
+tolerance is often correct, not a gap — the expectation going in was that
+almost none of it would be. **A 25-row sample predicted 16%**, a third of the
+true rate, because the first rows by id were Mediterranean and woodland; the
+predicate correlated with id order, which is the one thing sampling by the
+predicate does not protect against.
+
+There is no `sun_checked_at`, so a row that keeps `[]` is selected again on
+every run. That is trap 26's family and it stays open: the 2026-08-18 session
+decided under delegation that the sun model adds no schema (not reviewed by
+Ana), and the pass is cheap enough (~$0.19 for 175 rows) that re-judging costs
+less than the migration. Worth re-asking if the pass becomes routine.
+
 <a id="native-region"></a>
 
 ## `native_region`: WGSRPD Level-2, and why the source needed a second opinion
@@ -476,6 +495,88 @@ low-priority pile beside genuine boundary calls. Three editorial rounds over the
 including the per-plant decisions and the two systematic checker biases they
 exposed, are recorded in [`database-log.md`](database-log.md).
 
+<a id="copy-rules"></a>
+
+## The copy rules, and why they only ever covered one field
+
+Three rulings govern the catalog's prose: no em or en dashes, _autumn_ and never
+the US _fall_, and _fertilize_ rather than _feed_ in an instruction. They live in
+`lib/copy-rules.ts` and are checked by `pnpm copy:check --round <label>`, which
+reads every reader-facing prose field and writes nothing.
+
+Until 2026-08-18 all three were enforced inside `curate-seasonal-care`'s own line
+validator, so they were rules about `seasonal_care` and nothing else. Every other
+prose field is written by `curate-plants`, which validated none of it. The
+measurement is the argument: **88 violations across 780 rows, and 6 of them
+introduced by round 13** — this is a live leak, not a legacy one. The same shape
+as trap 36: the rule exists, the enforcement covers one field, and nobody asked
+about the others.
+
+**A vocabulary ruling is not automatically portable, and that is the reusable
+part.** Lifting the fertilize-not-feed rule onto descriptive prose flags about 50
+correct sentences — "berries feed birds in autumn", "Japanese beetles may feed on
+foliage" — because the ruling is about the gardener's ACTION, not about the word.
+So each field is classified `prescriptive` or `descriptive`, and the rule binds
+only the first. `fall` needed the same care in miniature: a bare word match flags
+"as leaves fall", so the season is identified by its company (a preposition in
+front, a season noun behind) and an unaccompanied `fall` is deliberately left
+alone rather than guessed at.
+
+**Swept once, and what was left behind is the interesting half.** The season
+`fall` has a mechanical fix (`fixSeasonFall`, which rewrites exactly what the
+detector flags), so it was swept catalog-wide on 2026-08-18: 26 rows, 36
+occurrences, 88 violations down to 52. The remaining 52 are the 36 `feed`s and
+16 dashes, and they are deliberately not automated — removing an em dash is a
+wording decision (comma, semicolon, or a second sentence) and `feed` becomes
+_fertilize_ or _replenish_ depending on who is doing it. A substitution that
+picks for you is a silent editorial act on copy a reader sees.
+
+**Prevention and enforcement are separate, on purpose.** `COPY_RULES_PROMPT` is
+in the drafting prompt so the pass asks for correct copy; the guard is what
+fails, and `verify-round` reports a round's own violations at WARN so a round
+cannot close without anyone knowing they are there. Ana set that constraint on
+2026-08-18 (must not stop the round, must be known before it closes); WARN is
+this session's choice of level. The prompt lowers the rate and cannot be relied on — round 13 was drafted
+with no copy rule at all and produced the same "Minimal pruning required — ..."
+sentence five times.
+
+<a id="bloom-prose"></a>
+
+## Prose that contradicts `bloom_months`, and why the detector is worth more than the fix
+
+`pnpm bloom:prose --round <label>` flags a plant whose description or seasonal
+rhythm asserts flowering in a season `bloom_months` does not cover. It writes
+nothing.
+
+**Run it after a scalar correction, which is when it earns its keep.** Round
+13's `Rohdea japonica` had recorded the BERRY season as bloom, and that one
+wrong scalar had already propagated into the description, the rhythm and the
+care tips — fixing `bloom_months` alone would have left three fields quietly
+disagreeing with it, and nothing would have said so.
+
+**Tuning it was the whole cost, and the false positives are the reusable part.**
+A naive "flower word near a season word" flags **71%** of the catalog. Each
+narrowing below removed a measured class of real catalog prose:
+
+| Setting                                                        | Flags (of 780) |
+| -------------------------------------------------------------- | -------------- |
+| assertion of flowering required, aftermath excluded            | 38             |
+| buds, stalks, old flower heads and hedges excluded             | 23             |
+| "after/during flowering" read as a time reference, not a claim | 19             |
+| assertion gap widened to span "large, goblet-shaped"           | 20             |
+
+The last row is a correction, not a regression: the gap between the verb and
+the flower word was matching bare words only, so it missed real assertions
+carrying a hyphen or a comma.
+
+What survives is ~2.5% of the catalog, and reading them they are genuine
+one-month boundary disagreements — `Garden thyme` blooming to July while its
+rhythm says flowering runs into early autumn, `Crimean iris` at March while its
+prose says late winter. **In these the prose is the more accurate half**, which
+is the same finding round 13 recorded for `Cornus mas` and `Dicentra eximia`.
+That is why this ships as a guard and not as a sweep: it points at the scalar to
+correct, and a person decides.
+
 <a id="hero-images"></a>
 
 ## Hero images: a category-recovered shortlist, then an AI vision pick
@@ -549,6 +650,43 @@ shortlist force-includes and pins Wikimedia candidates, so a curated photograph
 always reaches the vision call no matter how many sharp Trefle snapshots a plant
 has. On the 56 review-flagged plants, 8 Wikimedia photos won, each a clear
 upgrade.
+
+**It runs in the round now, between the Trefle candidate fetch and the vision
+pass** ([the round runbook](round-runbook.md)), and the placement is the design:
+widening the pool before the pick means one paid call sees both sources, where
+feeding afterwards clears the stamp and buys the same judgement twice. Until
+2026-08-18 it fired only from a hand-written "needs a new photo" list, so
+"Trefle gave us nothing" never triggered it — round 13 had 3 such plants, and
+the only thing that said so was the placeholder on the page.
+
+**Its gate is what makes it safe to run every round**, because the step CLEARS
+`image_checked_at` and a book-end runs on every invocation: it selects a plant
+only when `shortlist()` — the vision pass's own selector, asked rather than
+reimplemented — returns nothing AND the plant carries no Wikimedia candidate
+yet, so a second run selects nothing. Pinned in
+`scripts/feed-wikimedia-candidates.test.ts`.
+
+**The species' own Commons category is the second look**, added 2026-08-18, and
+it is what makes a poor P18 recoverable. P18 is Wikidata's designated
+_identification_ image, not a garden hero: `Malus spectabilis` got a trunk and
+canopy with a person in shot, correctly rejected, and the catalog carried a
+placeholder for it. Its category held 20 files, 19 of them commercial-safe and
+five over 4000px. The feeder now gathers up to `MAX_WIKIMEDIA` candidates from
+P18, then the category, then the guarded search, so the vision pass has
+something to choose between rather than one photo to accept or refuse — and it
+picked a 5443x3628 blossom shot at high confidence. **No plant in the catalog
+is without an image now.**
+
+Category membership, not the filename, is the species evidence there: those
+files are named for their subject ("Xifuhaitang.jpg"), so
+`isStraightSpeciesFile` ranks them rather than filtering, and a cultivar photo
+can appear. The vision pass is what judges whether a photo shows the species.
+
+`--refresh` reopens the Wikimedia half of the gate for a plant already widened,
+which is how a rejected candidate gets a second chance; without it the gate
+skips that row forever. The gate is still free and deterministic, so a plant
+whose candidates are all too small passes it and is rejected later at probe
+time.
 
 **Attribution is the real product work, not the fetching.** CC-BY and CC-BY-SA
 oblige a visible credit, so `plants.image_attribution` is written whenever a
@@ -625,12 +763,26 @@ search resolves to sibling species silently, and woodland genera in particular
 have been widely re-segregated, so synonym groups belong in the dry run.
 
 **A plant is cut for being a poor citizen HERE, never for being one somewhere
-else** (Ana, 2026-08-18, delegated and decided). Invasiveness is a property of a
-plant in a place, not of the plant. This catalog is Euro/Med first, so the test
+else** (Ana, confirmed 2026-08-18). Invasiveness is a property of a plant in a
+place, not of the plant.
+
+**The bet underneath it is Euro/Med first, and it is the part to re-open if the
+product moves.** The rule is right for the reader Santolina has; it also means
+the catalog is not safe to ship to North America as it stands, because it will
+recommend species that are harmful and in places illegal to plant there. That
+is accepted deliberately, not overlooked. This catalog is Euro/Med first, so the test
 is whether a species is a bad recommendation for the reader we actually have: an
 uneradicable runner in their garden, dangerous, out of scope, too big. Those
 reasons are region-neutral and did all the work in round 13, including cutting
 `Citrus trifoliata` on thorns and size rather than on its North American status.
+
+**Round 14 candidate, re-judged 2026-08-18: `Lythrum salicaria`.** It was cut
+in round 12 on North American invasive status, which this rule rejects as a
+ground. In Europe it is a native wetland perennial and a well-behaved border
+plant, and no other reason was recorded against it, so the cut has nothing left
+holding it up. `Iris pseudacorus` was cut in the same pass and **stays cut** on
+a ground this rule allows: it self-seeds hard and wants a pond margin, so it is
+out of scope for a small ornamental garden whatever its status elsewhere.
 
 **Cutting on non-European invasive status amputates the local flora**, which is
 why the rule points the other way: `Lythrum salicaria` and `Iris pseudacorus`

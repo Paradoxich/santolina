@@ -27,14 +27,16 @@
  *       round-status, because Care Tips v2 is live and reads the field)
  *     · hardiness_rating null (track parked)
  *     · no image on either column (PlantImage placeholder covers it)
+ *     · copy-rule violations in any prose field (lib/copy-rules.ts)
  *
  * Read-only, no AI calls — cheap enough to run after every round.
  *
  *   ./node_modules/.bin/tsx --env-file=.env.local scripts/verify-round.ts
  *   ./node_modules/.bin/tsx --env-file=.env.local scripts/verify-round.ts --round 12
  *
- * `--round <label>` scopes the checks to one round's rows. Without it the
- * checks run against the whole catalog.
+ * `--round <label>` ADDS the per-step completeness checks for that round. It
+ * does NOT narrow the checks above — those always run against the whole
+ * catalog. Findings on rows the named round seeded are labelled `← THIS ROUND`.
  */
 
 import { IGNORED_BLOOM_COLORS, RAW_TO_BUCKET } from '../lib/bloom-colors'
@@ -50,6 +52,7 @@ import {
 import { getSupabaseAdmin } from '../lib/supabase-admin'
 import { fetchAllRows } from '../lib/paginate'
 import { readRoundManifest } from './round-manifest'
+import { checkCopy, proseOf } from '../lib/copy-rules'
 import {
   roundStatus,
   formatStatus,
@@ -104,6 +107,8 @@ interface PlantRow {
   soil_needs: string | null
   common_issues: string | null
   style_tags: string[] | null
+  // Read only by the copy check; not a required field.
+  environment_benefits: string | null
 }
 
 interface ComboRow {
@@ -200,17 +205,21 @@ function isEmpty(value: unknown): boolean {
   return false
 }
 
+/** The columns this check reads. Exported so a test can hold it to what the
+ * checks consume — a column read but not fetched reads `undefined` and passes. */
+export const VERIFY_PROJECTION =
+  'id, common_name, scientific_name, ai_drafted_at, native_region, ' +
+  'bloom_color, foliage_color, plant_type, plant_type_label, space_types, ' +
+  'description, care_level, seasonal_rhythm, seasonal_care, sun_thrives, ' +
+  'sun_tolerates, hardiness_rating, image_url, image_url_curated, ' +
+  'maintenance_notes, best_placement, water_needs, ' +
+  'water_needs_summary, light_needs, soil_needs, common_issues, style_tags, ' +
+  'environment_benefits'
+
 async function fetchAllPlants(): Promise<PlantRow[]> {
   const db = getSupabaseAdmin()
-  const columns =
-    'id, common_name, scientific_name, ai_drafted_at, native_region, ' +
-    'bloom_color, foliage_color, plant_type, plant_type_label, space_types, ' +
-    'description, care_level, seasonal_rhythm, seasonal_care, sun_thrives, ' +
-    'sun_tolerates, hardiness_rating, image_url, image_url_curated, ' +
-    'maintenance_notes, best_placement, water_needs, ' +
-    'water_needs_summary, light_needs, soil_needs, common_issues, style_tags'
   return fetchAllRows<PlantRow>((from, to) =>
-    db.from('plants').select(columns).order('id').range(from, to)
+    db.from('plants').select(VERIFY_PROJECTION).order('id').range(from, to)
   )
 }
 
@@ -225,7 +234,11 @@ async function fetchAllCombos(): Promise<ComboRow[]> {
   )
 }
 
-function checkPlants(plants: PlantRow[]): Finding[] {
+/** @param ownedByRound ids the named round seeded, used to label copy findings. */
+function checkPlants(
+  plants: PlantRow[],
+  ownedByRound: Set<string> = new Set()
+): Finding[] {
   const findings: Finding[] = []
 
   for (const p of plants) {
@@ -340,6 +353,21 @@ function checkPlants(plants: PlantRow[]): Finding[] {
         check: 'no image',
         detail: `${p.common_name} — no image at all, placeholder in use`,
       })
+    }
+    // Catalog-wide, like every check here. Rows the named round seeded are
+    // labelled, since the back catalog carries most of these.
+    for (const { field, kind, text } of proseOf(
+      p as unknown as Record<string, unknown>
+    )) {
+      for (const v of checkCopy(text, kind)) {
+        findings.push({
+          level: 'WARN',
+          check: `copy: ${v.rule}`,
+          detail:
+            `${p.common_name} [${field}] …${v.match.replace(/\n/g, ' ')}…` +
+            (ownedByRound.has(p.id) ? '  ← THIS ROUND' : ''),
+        })
+      }
     }
   }
 
@@ -584,7 +612,15 @@ async function main() {
   ])
   console.log(`${plants.length} plants, ${combos.length} combinations.`)
 
-  const findings = [...checkPlants(plants), ...checkCombos(plants, combos)]
+  // The round's own ids, for labelling copy findings.
+  const ownedByRound = new Set(
+    roundLabel ? (readRoundManifest(roundLabel)?.seeded_ids ?? []) : []
+  )
+
+  const findings = [
+    ...checkPlants(plants, ownedByRound),
+    ...checkCombos(plants, combos),
+  ]
   findings.push(...(await checkStepRegistry()))
   if (roundLabel) findings.push(...(await checkRoundCompleteness(roundLabel)))
   else
@@ -605,7 +641,10 @@ async function main() {
   if (fails.length) process.exit(1)
 }
 
-main().catch((err) => {
-  console.error(err)
-  process.exit(1)
-})
+// Guarded so the exports can be imported without running the check.
+if (require.main === module) {
+  main().catch((err) => {
+    console.error(err)
+    process.exit(1)
+  })
+}

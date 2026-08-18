@@ -56,6 +56,7 @@ The numbers **in this file are different and must stay written down**: a dated s
     **Deferred, added 2026-08-18 (round 13).**
     - **A cultivar tier.** `moon` and `gothic` cannot be filled by any seeding round at any batch size: their signature planting is cultivar selections of species the catalog already holds ('Queen of Night', 'Black Lace', black mondo, white roses). Measured by `pnpm probe:gap`, which reports the style as cultivar-bound so no future round re-derives it from a low tag count. Until the tier exists those two styles stay thin, and that is correct rather than neglected.
     - **"Poor citizen in region X".** A field beside `native_region`, so the app can warn the reader who needs warning instead of a seeding decision quietly deciding for everyone. Reasoning and the interim rule are in [why a round is shaped the way it is](curation.md#round-runbook) (Ana, 2026-08-18).
+    - **`foliage_checked_at` — APPLIED 2026-08-18 and verified.** Migration `20260818100000`. `curate-plants` asks for `foliage_color` whenever it is NULL, and NULL is also its legitimate answer ("typical green"), so the question can never be satisfied: 587 of 780 drafted rows carry NULL, 538 of them uncurated and therefore re-asked on every run (measured 2026-08-18). Trap 26's shape a third time, after `style_tags` `[]` and `is_greenery` `false`. Verified after the push: `migrations:check` OK at 44/44, all 780 rows stamped with `foliage_checked_at = ai_drafted_at`, 0 drafted-but-unstamped, `foliage_color` NULL unchanged at 587, and the skip it exists for now fires (rounds 13/12/11 go from 0/1/3 rows skipped to 5/24/20). **The first push applied nothing**: it ran from the main checkout, where the migration file does not exist, and still ended with a success-looking line — trap 34, caught by `migrations:check` rather than by the push output.
 
 12. **Every remediation carries a verification predicate, not just a command.** A trap that says "run `curate-styles --round 9`" tells you what to type; it does not tell you how to know it worked. Write both: the command, and the query whose result changes when the repair lands — the shape the 2026-08-15 repair used, "fixed when `style_checked_at = ai_drafted_at AND style_tags = '{}'` returns 0". Remediations are the most dangerous claims in this file. They are never falsified until the day someone follows one, they are trusted because they are in the traps file, and trap 26's was one session away from being run as written.
 
@@ -85,7 +86,7 @@ Seeded 33 of 39 absentees. Six cuts, reasoned in `seed-round13.ts`: two running 
 
 - **Trap 35.** `curate-common-names --apply` died having written 0 of 33 rows: `reviewed-mutation` rejected the stamp-only intent a `keep` verdict produces. First real `--apply` for that step, and six prior dry runs could not have caught it because `validate()` lives inside the `--apply` gate. Fixed and pinned.
 - **Trap 36.** The step then stamped all 33 correctly and still reported `0 already done` — `common_name_checked_at` was missing from `round-status`'s projection and had been for the step's whole life, so it could never be detected as complete and would have been re-billed every round. Fixed and pinned.
-- **Trap 37.** The cost report itself, above. NOT pinned; recorded in `TRAPS_NOT_PINNED` with what a pin needs.
+- **Trap 37.** The cost report itself, above. Pinned 2026-08-18 (`run-provenance.test.ts`, `report-run-costs.test.ts`).
 
 **Also fixed:** the seasonal-care validator discarded `Cloud-prune ...` as "not imperative" (hyphenated compound, head verb is `prune`) — the signature action of the pines this round seeded, so no earlier round had the vocabulary to hit it. `curate-seasonal-care` also resolved its scope at import, which made it untestable; now lazy, with its first tests.
 
@@ -807,7 +808,9 @@ Round 13 was the first round priced by `pnpm runs:cost` instead of estimated, an
 
 Round 13 therefore reported **$2.25** and actually cost **~$2.57**, and the whole gap is the step people most want the number for. Family A: a partial answer wearing a complete one's output. The `NOT MEASURED` footer is a real mitigation and the reason half of this was caught, but it lists steps that recorded nothing and cannot list a step that was never attributed to the round.
 
-**NOT PINNED, and recorded in `TRAPS_NOT_PINNED` rather than closed.** A source scan on "does `withRunRecord(` appear before `messages.create(`" was written and thrown away: it fires on `curate-seasonal-care`, `curate-styles`, `draft-hardiness` and `regenerate-native-region`, every one of which meters correctly, because the call sits in a helper DEFINED early and INVOKED from inside the record. **Textual order is not runtime order.** A real pin needs the metering seam exercised directly — a fake client, one call before the record opens and one inside it, asserting only the second is counted — plus a scope assertion that every run a round's steps write names that round. Neither exists yet.
+**PINNED 2026-08-18, both halves.** The meter: `scripts/run-provenance.test.ts`, "the token meter counts the window, not the process (trap 37)" — a fake client, one call before the record opens and one inside, asserting only the second is counted. The scope: `scripts/report-run-costs.test.ts`, "a round names its own runs (trap 37)", over `unattributedInWindow`. **Fixed** by moving `curate-common-names`' judging inside its run record, and by narrowing the report's unattributed count to the round's own window, where it names the suspects instead of counting the whole file.
+
+**A source scan was written for this and thrown away, so do not retry that shape.** "Does `withRunRecord(` appear before `messages.create(`" fires on `curate-seasonal-care`, `curate-styles`, `draft-hardiness` and `regenerate-native-region`, every one of which meters correctly, because the call sits in a helper DEFINED early and INVOKED from inside the record. **Textual order is not runtime order.** What replaced it asks the runtime instead: a run whose recipe names a model, that wrote rows, and that observed zero tokens now records `usage_unobserved: true` and says so on the console. It is a flag and not a failure, because a Batch API pass legitimately settles its tokens outside the process meter — the next instance announces itself rather than being absorbed.
 
 ---
 
@@ -953,6 +956,79 @@ is unchanged.
 ## Sessions
 
 <!-- Newest first. Append with: scripts/log-db-session.ts --round <label> -->
+
+### 2026-08-18 — Trap 37 closed, sun tolerance re-judged (not a round)
+
+**Branch** `session/2026-08-18-wikimedia-copy`. Rule-1 backups
+`backups/2026-08-18T08-56-44-341Z` and `T09-32-20-566Z`. No migration.
+
+**Changed.** Trap 37 fixed and pinned, both halves: `curate-common-names` now
+judges inside its run record, and `runs:cost --round N` names the runs started
+in that round's window that do not name it. A model-bearing run that wrote rows
+and observed no tokens records `usage_unobserved`. `TRAPS_NOT_PINNED` 22 → 21.
+
+**Database.** `curate-sun-tolerance --all --apply`: 175 rows with no tolerance
+re-judged, 81 widened, 75 written, 6 frozen as `is_curated`, 94 kept `[]`. Run
+`curate-sun-tolerance-2026-08-18T0856-64eb15de`, 7 calls, ~$0.19. Then
+`apply-description-fixes --file reference/description-fixes-2026-08-18-openers.json`,
+3 of 3, drift 0, all uncurated so no verdict retired.
+
+**Found.** The sun premise did not survive: "tolerates nothing is almost never
+true" predicted most of 175 would widen; the rate is 46%, and the 94 that kept
+`[]` are correct (lavender takes no shade, woodland species take no full sun).
+A 25-row sample predicted 16% because the first rows by id were Mediterranean
+and woodland — sampling by the predicate does not help when the predicate
+correlates with id order. Separately, 3 descriptions named a different species
+(`Sweet marjoram`, `Catnip`, `Chicory`), all drafted before step 1a's ordering.
+
+**Not done.** The 6 curated rows the sun pass would widen. No `sun_checked_at`,
+so a row keeping `[]` is re-judged every run; the pass costs ~$0.19 and the sun
+model adds no schema, so `--ids` narrows a repeat.
+
+**Verified.** `verify-round` 0 failures, 175 → 100 with no tolerance, the three
+rewritten descriptions pass `copy:check`. 532 tests green.
+
+### 2026-08-18 — Copy rules extended past seasonal_care, season "fall" swept (not a round)
+
+**Branch** `session/2026-08-18-wikimedia-copy`. Rule-1 backup
+`backups/2026-08-18T07-51-02-572Z` (780 plants, 1945 pairs). No migration.
+
+**Changed.** The three copy rulings moved to `lib/copy-rules.ts` and are now
+checked across every prose field (`pnpm copy:check`), not just `seasonal_care`.
+`verify-round` reports them at WARN; `curate-plants` carries them in its
+prompt. Runbook step 6a added for `feed-wikimedia-candidates`.
+
+**Database.** `apply-copy-fixes --all --apply` rewrote the season "fall" to
+"autumn": 26 rows, 36 occurrences (15 description, 13 seasonal_rhythm, 6
+maintenance_notes, 2 environment_benefits). Run
+`apply-copy-fixes-2026-08-18T0751-bc7db885`, recipe `c6088202acc1a731`, 0
+drift, 0 frozen. 0 of the 26 rows were `is_curated` (counted first), so no
+editorial verdict was retired.
+
+**Found.** 88 violations across 780 rows, 6 of them introduced by round 13 — a
+live leak, not a legacy one. Porting fertilize-not-feed to descriptive prose
+flags ~50 correct sentences ("berries feed birds"), so fields are classified
+prescriptive/descriptive; a bare `\bfall\b` flags "as leaves fall". Both
+false-positive sets pinned in `lib/copy-rules.test.ts`. Separately: 37
+descriptions open by naming another plant, including `Sweet marjoram`
+described as "Pot marjoram is...", which is a different row.
+
+**Also.** `curate-plants` now skips a row that owes no field, before the call
+rather than after (`missingFields`). Migration `20260818100000` adds
+`foliage_checked_at` so the skip can actually fire — backfilled from
+`ai_drafted_at`, which is derived rather than invented: the field has been in
+the prompt since the script's first commit (2026-07-06) and the earliest row
+was drafted 2026-07-09, so every existing row was genuinely asked. Replayed on
+the local stack, then applied to production and verified: 780/780 stamped,
+stamp equals draft time on every row, `verify-round --round 13` still 0
+failures. The skip now passes over 5 of round 13's 6 selected rows where it
+passed over 0.
+
+**Not done.** The remaining 52 violations (36 feed, 16 dashes) — neither has a
+safe substitution, so both are a person's.
+
+**Verified.** `copy:check --all` re-run independently after the sweep: 88 → 52.
+Six seasonal_rhythm stages intact on three spot-checked rows. 516 tests green.
 
 ### 2026-08-17 — Trap 6 fixed upstream, and two invariants nothing watched (not a round)
 

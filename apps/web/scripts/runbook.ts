@@ -12,16 +12,9 @@
  * you are about to write the order of the round into a document, don't; link to
  * the generated page instead.
  *
- * TEN STEPS PLUS SIX BOOK-ENDS, and the distinction is worth keeping straight
- * because both numbers are true and they get confused. The `alwaysRun` entries
- * are book-ends: free, and run whether or not the round has work. The other ten
- * do the work. "Thirteen steps became ten" on 2026-07-29 refers to the ten.
- *
- * Book-ends went from four to six in round 9, and both additions are the same
- * lesson: a step that costs nothing and produces what a later step needs must
- * be IN here, not in somebody's memory. The native-region plan and
- * recover-image-categories were each a prerequisite the runner did not know
- * about, and each one broke a round that looked like it was running fine.
+ * The `alwaysRun` entries are book-ends: free, and run whether or not the
+ * round has work. The rest do the work and cost money. Count either from the
+ * array rather than writing a number here.
  */
 
 export interface Step {
@@ -155,6 +148,21 @@ export const RUNBOOK: Step[] = [
     runbook: '6',
     script: 'recover-image-categories.ts',
     alwaysRun: true,
+  },
+  {
+    // Between the Trefle candidates and the vision pass, so one paid call sees
+    // both pools. Free and idempotent: the gate selects only rows with nothing
+    // to judge and no Wikimedia candidate yet, which is what makes alwaysRun
+    // safe for a step that clears image_checked_at.
+    step: 'feed-wikimedia-candidates',
+    runbook: '6a',
+    script: 'feed-wikimedia-candidates.ts',
+    args: ['--apply'],
+    alwaysRun: true,
+    onFail:
+      'The candidate pool was not widened, so 7a would judge only what Trefle ' +
+      'gave us. Re-run it BEFORE the vision pass rather than after — a pick ' +
+      'made now and re-made later is billed twice.',
   },
   {
     step: 'curate-seasonal-care',

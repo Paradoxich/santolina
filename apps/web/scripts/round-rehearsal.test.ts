@@ -66,6 +66,7 @@ function freshlySeededPlant(id = 'plant-1'): StatusRow {
     seasonal_care: null,
     style_checked_at: null,
     greenery_checked_at: null,
+    foliage_checked_at: null,
     image_checked_at: null,
     image_pick_confidence: null,
     image_verified_at: null,
@@ -273,6 +274,40 @@ describe('prerequisites are steps, not folklore', () => {
       'recover-image-categories is not in the runbook, so the vision pass has nothing to judge'
     ).toBeGreaterThanOrEqual(0)
     expect(recover).toBeLessThan(pick)
+  })
+
+  it('widens the candidate pool before the vision pass is billed', () => {
+    // Order is the assertion: run after the pick, the feed clears
+    // image_checked_at and the pass pays to judge the row a second time.
+    const recover = RUNBOOK.findIndex(
+      (s) => s.script === 'recover-image-categories.ts'
+    )
+    const feed = RUNBOOK.findIndex(
+      (s) => s.script === 'feed-wikimedia-candidates.ts'
+    )
+    const pick = RUNBOOK.findIndex((s) => s.script === 'pick-plant-images.ts')
+
+    expect(
+      feed,
+      'feed-wikimedia-candidates is in no runbook, so a plant Trefle has no photo for reaches production with a placeholder and nothing says so'
+    ).toBeGreaterThanOrEqual(0)
+    expect(
+      recover,
+      'the Wikimedia feed must run after Trefle candidates are in, or it cannot tell which plants have nothing'
+    ).toBeLessThan(feed)
+    expect(
+      feed,
+      'the vision pass would be billed once for Trefle and again for the widened pool'
+    ).toBeLessThan(pick)
+  })
+
+  it('runs the Wikimedia feed with --apply, not as a dry run', () => {
+    // Dry run by default, so without the flag the step succeeds and writes
+    // nothing while 7a judges the un-widened pool.
+    const feed = RUNBOOK.find(
+      (s) => s.script === 'feed-wikimedia-candidates.ts'
+    )!
+    expect(feed?.args ?? []).toContain('--apply')
   })
 
   it('signs off last', () => {

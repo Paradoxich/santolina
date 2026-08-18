@@ -9,6 +9,9 @@
  * resumable steps would punch a hole in provenance every time someone hit
  * Ctrl-C, which is precisely where intent cannot reconstruct the answer later.
  *
+ * TRAP 37 is pinned in the metering block near the foot: the meter is windowed
+ * from the instant a run opens, so only a call made inside it is counted.
+ *
  * TRAP 28 is pinned in both halves, in the last describe block: a stamp can only witness a
  * write that SET it, on every row counted. A cleared stamp matches no window and
  * a conditionally-set one covers a subset, so in both cases the default witness
@@ -42,6 +45,7 @@ import {
   readUsageMeter,
   recordUsage,
   resetUsageMeter,
+  type UsageMeter,
 } from '../lib/anthropic-client'
 import {
   beginRun,
@@ -1187,5 +1191,151 @@ describe('the client meters every path that bills', () => {
       input_tokens: 15_000,
       output_tokens: 350,
     })
+  })
+})
+
+describe('the token meter counts the window, not the process (trap 37)', () => {
+  /** A meter that only moves when the fake client is called. */
+  const fakeMeter = () => {
+    const meter: UsageMeter = {}
+    return {
+      read: (): UsageMeter => JSON.parse(JSON.stringify(meter)) as UsageMeter,
+      delta: (before: UsageMeter): UsageMeter => {
+        const out: UsageMeter = {}
+        for (const [key, now] of Object.entries(meter)) {
+          const was = before[key]
+          const calls = now.calls - (was?.calls ?? 0)
+          if (calls > 0)
+            out[key] = {
+              calls,
+              input_tokens: now.input_tokens - (was?.input_tokens ?? 0),
+              output_tokens: now.output_tokens - (was?.output_tokens ?? 0),
+              cache_creation_input_tokens: 0,
+              cache_read_input_tokens: 0,
+            }
+        }
+        return out
+      },
+      /** Stands in for `client.messages.create`. */
+      call: () => {
+        const key = 'claude-sonnet-4-5:sync'
+        const prev = meter[key] ?? {
+          calls: 0,
+          input_tokens: 0,
+          output_tokens: 0,
+          cache_creation_input_tokens: 0,
+          cache_read_input_tokens: 0,
+        }
+        meter[key] = {
+          ...prev,
+          calls: prev.calls + 1,
+          input_tokens: prev.input_tokens + 1000,
+          output_tokens: prev.output_tokens + 100,
+        }
+      },
+    }
+  }
+
+  it('does not count a call made before the run opened', async () => {
+    const client = fakeMeter()
+    const h = harness({ common_name_checked_at: 5 })
+
+    client.call() // before the run opens
+
+    const run = beginRun({
+      step: 'curate-common-names',
+      writeSet: ['common_name_checked_at'],
+      recipe: RECIPE,
+      ...h.opts,
+      readUsage: client.read,
+      usageDelta: client.delta,
+    })
+    wrote(run, 5)
+    await run.finish('completed')
+
+    const record = h.written[0]!
+    expect(
+      record.usage,
+      'a call before the run must not be counted'
+    ).toBeUndefined()
+    expect(record.usage_unobserved).toBe(true)
+  })
+
+  it('counts a call made inside the run', async () => {
+    const client = fakeMeter()
+    const h = harness({ common_name_checked_at: 5 })
+
+    const run = beginRun({
+      step: 'curate-common-names',
+      writeSet: ['common_name_checked_at'],
+      recipe: RECIPE,
+      ...h.opts,
+      readUsage: client.read,
+      usageDelta: client.delta,
+    })
+    client.call() // inside the window
+    wrote(run, 5)
+    await run.finish('completed')
+
+    const record = h.written[0]!
+    expect(record.usage?.['claude-sonnet-4-5:sync']).toMatchObject({
+      calls: 1,
+      input_tokens: 1000,
+      output_tokens: 100,
+    })
+    expect(record.usage_unobserved).toBeUndefined()
+  })
+
+  it('counts only the inside call when both happen', async () => {
+    const client = fakeMeter()
+    const h = harness({ common_name_checked_at: 5 })
+
+    client.call()
+    const run = beginRun({
+      step: 'curate-common-names',
+      writeSet: ['common_name_checked_at'],
+      recipe: RECIPE,
+      ...h.opts,
+      readUsage: client.read,
+      usageDelta: client.delta,
+    })
+    client.call()
+    wrote(run, 5)
+    await run.finish('completed')
+
+    expect(h.written[0]!.usage?.['claude-sonnet-4-5:sync']?.calls).toBe(1)
+  })
+
+  it('does not flag a run whose recipe names no model', async () => {
+    const client = fakeMeter()
+    const h = harness({ native_region_checked_at: 5 })
+    const run = beginRun({
+      step: 'cross-check-native-region',
+      writeSet: ['native_region_checked_at'],
+      recipe: { model: null, template: 'gbif + local geojson, no model' },
+      ...h.opts,
+      readUsage: client.read,
+      usageDelta: client.delta,
+    })
+    wrote(run, 5)
+    await run.finish('completed')
+
+    expect(h.written[0]!.usage_unobserved).toBeUndefined()
+  })
+
+  it('does not flag a model-bearing run that wrote nothing', async () => {
+    const client = fakeMeter()
+    const h = harness({})
+    const run = beginRun({
+      step: 'curate-common-names',
+      writeSet: ['common_name_checked_at'],
+      recipe: RECIPE,
+      ...h.opts,
+      readUsage: client.read,
+      usageDelta: client.delta,
+    })
+    await run.finish('completed')
+
+    expect(h.written[0]!.usage_unobserved).toBeUndefined()
   })
 })

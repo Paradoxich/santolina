@@ -2,6 +2,10 @@
  * The price table, pinned at the property that makes the report trustworthy:
  * an unpriced model returns NULL, never 0.
  *
+ * TRAP 37, the scope half, is pinned at the foot: a round is attributed by a
+ * string match on each run's scope, so a step scoped differently vanishes from
+ * the round's cost.
+ *
  * WHY THAT IS THE ONE TO PIN. `pnpm runs:cost` exists to answer "what did this
  * round cost" with a number somebody will budget against. Every way that number
  * can be wrong is a way of turning a missing measurement into a confident one —
@@ -18,7 +22,13 @@
  */
 import { describe, expect, it } from 'vitest'
 
-import { PRICES, priceOf } from './report-run-costs'
+import {
+  PRICES,
+  priceOf,
+  scopeNamesRound,
+  unattributedInWindow,
+} from './report-run-costs'
+import type { RunRecord } from './run-provenance'
 
 const totals = (over: Partial<Parameters<typeof priceOf>[1]> = {}) => ({
   calls: 1,
@@ -121,5 +131,50 @@ describe('the table shape', () => {
     // UNPRICED section instead of the total.
     expect(PRICES['claude-sonnet-4-5:sync']).toBeDefined()
     expect(PRICES['claude-sonnet-5:batch']).toBeDefined()
+  })
+})
+
+describe('a round names its own runs (trap 37)', () => {
+  const record = (over: Partial<RunRecord>): RunRecord =>
+    ({
+      step: 'pick-plant-images',
+      started_at: '2026-08-17T12:00:00.000Z',
+      scope: 'round 13',
+      ...over,
+    }) as RunRecord
+
+  const SEEDED = '2026-08-17T10:00:00.000Z'
+
+  it('matches a scope that names the round', () => {
+    expect(
+      scopeNamesRound(record({ scope: 'round 13 — 33 plant(s)' }), '13')
+    ).toBe(true)
+  })
+
+  it('does not let round 1 swallow rounds 10 to 13', () => {
+    expect(scopeNamesRound(record({ scope: 'round 13' }), '1')).toBe(false)
+  })
+
+  it('flags a run in the round window whose scope names something else', () => {
+    const runs = [
+      record({ scope: 'round 13 — 33 plant(s)' }),
+      record({ step: 'pick-plant-images', scope: 'batch msgbatch_01ABC' }),
+    ]
+    const suspects = unattributedInWindow(runs, '13', SEEDED)
+    expect(suspects.map((r) => r.scope)).toEqual(['batch msgbatch_01ABC'])
+  })
+
+  it('ignores runs that predate the round, however they are scoped', () => {
+    const runs = [
+      record({ started_at: '2026-08-01T00:00:00.000Z', scope: 'round 12' }),
+      record({ started_at: '2026-08-16T00:00:00.000Z', scope: 'round 12' }),
+    ]
+    expect(unattributedInWindow(runs, '13', SEEDED)).toEqual([])
+  })
+
+  it('says nothing when every run in the window names the round', () => {
+    expect(
+      unattributedInWindow([record({ scope: 'round 13' })], '13', SEEDED)
+    ).toEqual([])
   })
 })

@@ -201,6 +201,54 @@ export async function searchCommonsFileTitles(
     .filter((t): t is string => Boolean(t))
 }
 
+/** File titles in a species' own Commons category. Titles keep their prefix. */
+export async function fetchCategoryFileTitles(
+  scientificName: string,
+  limit = 100
+): Promise<string[]> {
+  const url =
+    'https://commons.wikimedia.org/w/api.php?action=query&format=json' +
+    `&list=categorymembers&cmtype=file&cmlimit=${limit}&cmtitle=` +
+    encodeURIComponent(`Category:${scientificName}`)
+  const r = await fetch(url, { headers: { 'User-Agent': UA } })
+  if (!r.ok) return []
+  const j = (await r.json()) as {
+    query?: { categorymembers?: { title?: string }[] }
+  }
+  return (j.query?.categorymembers ?? [])
+    .map((m) => m.title ?? '')
+    .filter((t): t is string => Boolean(t))
+}
+
+/**
+ * Photos from a species' own Commons category, best resolution first.
+ *
+ * Membership is the species evidence here, so `isStraightSpeciesFile` ranks
+ * rather than filters: category files are often named for the subject rather
+ * than the taxon ("Xifuhaitang.jpg"), and filtering on the binomial would
+ * discard most of a good category. A cultivar photo can therefore appear; the
+ * vision pass is what judges whether a photo shows the species.
+ */
+export async function fetchCategoryCandidates(
+  scientificName: string,
+  max = 4
+): Promise<WikimediaCandidate[]> {
+  const titles = await fetchCategoryFileTitles(scientificName)
+  const named = titles.filter((t) => isStraightSpeciesFile(t, scientificName))
+  const rest = titles.filter((t) => !named.includes(t))
+  const ordered = [...rankSpeciesFileTitles(named, scientificName), ...rest]
+
+  const found: WikimediaCandidate[] = []
+  // Bounded: a large category should not cost dozens of metadata calls.
+  for (const title of ordered.slice(0, Math.max(max * 3, 12))) {
+    const candidate = await fetchCommonsCandidate(title.replace(/^File:/i, ''))
+    if (candidate) found.push(candidate)
+  }
+  return found
+    .sort((a, b) => Math.min(b.width, b.height) - Math.min(a.width, a.height))
+    .slice(0, max)
+}
+
 /**
  * A species' best Commons photo: the designated one, or the best search hit.
  *

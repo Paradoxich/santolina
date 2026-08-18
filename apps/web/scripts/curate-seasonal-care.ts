@@ -51,6 +51,7 @@ import { fetchAllRows } from '../lib/paginate'
 import { getAnthropicClient, CURATION_MODEL } from '../lib/anthropic-client'
 import type { DbPlant, SeasonalCare, SeasonalRhythm } from '../lib/plants-db'
 import { withRunRecord } from './run-provenance'
+import { checkCopy } from '../lib/copy-rules'
 
 // ---------------------------------------------------------------------------
 // Config
@@ -384,25 +385,20 @@ export function imperativeVerb(line: string): string {
 function validateLine(stage: string, line: string): Violation | null {
   const trimmed = line.trim()
   if (!trimmed) return { stage, reason: 'empty string (use null, not "")' }
-  // Copy rule: no em/en dashes.
-  if (/[—–]/.test(trimmed)) return { stage, reason: 'contains em/en dash' }
-  // Vocabulary ruling: fertilize, never feed.
-  if (/\bfeed(s|ing)?\b/i.test(trimmed))
-    return { stage, reason: 'uses "feed" (must be "fertilize")' }
-  // Vocabulary ruling: autumn, never the US "fall".
-  if (/\bfall\b/i.test(trimmed))
-    return { stage, reason: 'uses "fall" (must be "autumn")' }
-  // "feed the bulb" metaphor misfire: foliage nourishing a bulb/rhizome/root is
-  // "replenish", not "fertilize" — the fertilize-not-feed rule over-applied.
-  if (
-    /\bfertiliz(e|es|ing)\b[^.]*\b(bulb|bulbs|corm|corms|rhizome|rhizomes|tuber|tubers|root|roots)\b/i.test(
-      trimmed
-    )
-  )
-    return {
-      stage,
-      reason: 'foliage "fertilize" a bulb/root — use "replenish"',
-    }
+  // THE CATALOG-WIDE COPY RULES — no dashes, autumn-not-fall,
+  // fertilize-not-feed, and the bulb "replenish" case — now live in
+  // lib/copy-rules.ts and are called, not restated.
+  //
+  // They were written here and enforced ONLY here, which is why every other
+  // prose field a reader sees carried violations of them: 88 across 780 rows
+  // when this was measured (2026-08-18), 6 of them introduced by round 13
+  // alone. A rule enforced in one field is a rule about that field.
+  //
+  // ONE BEHAVIOUR CHANGE, and it is a narrowing: the shared rule flags "fall"
+  // only where it is the SEASON. The blanket version rejected "as leaves
+  // fall", which is correct English, and every such rejection bought a retry.
+  const copy = checkCopy(trimmed, 'prescriptive')[0]
+  if (copy) return { stage, reason: copy.reason }
   // Busywork guard: an "as needed / as required" action is an anytime task with
   // an invented season attached — it should be null, not tied to a stage. The
   // retry names this so the model nulls the stage. Honest conditionals ("if

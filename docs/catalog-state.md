@@ -41,6 +41,7 @@ its data becomes something a reader can see.
 
 | step | column | owed by | judged | share |
 | --- | --- | --- | ---: | ---: |
+| `curate-plants` | `foliage_checked_at` | catalog | 780 / 780 | 100.0% |
 | `curate-common-names` | `common_name_checked_at` | catalog | 33 / 780 | 4.2% |
 | `cross-check-plants` | `botanical_checked_at` | catalog | 664 / 780 | 85.1% |
 | `cross-check-native-to` | `native_checked_at` | catalog | 780 / 780 | 100.0% |
@@ -49,7 +50,7 @@ its data becomes something a reader can see.
 | `curate-greenery` | `greenery_checked_at` | catalog | 780 / 780 | 100.0% |
 | `pick-plant-images` | `image_checked_at` | catalog | 780 / 780 | 100.0% |
 | `pick-plant-images --verify` | `image_verified_at` | catalog | 93 / 780 | 11.9% |
-| `curate-editorial` | `editorial_checked_at` | catalog | 61 / 780 | 7.8% |
+| `curate-editorial` | `editorial_checked_at` | catalog | 60 / 780 | 7.7% |
 
 1 of 14 steps is `forward`: `draft-hardiness`, which stamps no column and so is absent from the table above.
 
@@ -66,8 +67,8 @@ its data becomes something a reader can see.
 | `is_greenery` | true | 126 |
 | `hardiness_rating` | drafted | 594 |
 | `hardiness_verified` | human-verified | 266 |
-| images | no image at all | 1 |
-| images | have an editorial pick (`image_url_curated`) | 779 |
+| images | no image at all | 0 |
+| images | have an editorial pick (`image_url_curated`) | 780 |
 
 ## Style tag distribution
 

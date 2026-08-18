@@ -142,6 +142,9 @@ export interface RunRecord {
    * parallel work here means parallel worktrees, which are separate meters.
    */
   usage?: UsageMeter
+  /** The recipe named a model, rows were written, and the meter saw nothing,
+   * so the spend happened outside this run's window. Absent on a healthy run. */
+  usage_unobserved?: true
   /** Present only when outcome is 'failed'. */
   error?: string
 }
@@ -902,6 +905,12 @@ export function beginRun(opts: BeginRunOptions): RunHandle {
         notes,
       },
       ...(Object.keys(spent).length ? { usage: spent } : {}),
+      // A model-bearing run that wrote rows and observed no tokens spent them
+      // outside the meter's window. Flagged, not thrown: a Batch API pass
+      // legitimately settles its tokens elsewhere.
+      ...(recipe.model && rowCount > 0 && !Object.keys(spent).length
+        ? { usage_unobserved: true as const }
+        : {}),
       ...(extra.error ? { error: extra.error } : {}),
     }
 
@@ -930,6 +939,12 @@ export function beginRun(opts: BeginRunOptions): RunHandle {
           .join('') +
         `\n  recorded in ${path.replace(`${REPO_ROOT}/`, '')}`
     )
+    if (record.usage_unobserved)
+      log(
+        `  ⚠ recipe names ${recipe.model} and ${rowCount} row(s) were written, ` +
+          `but NO tokens were observed — the spend happened outside this run's ` +
+          `window (trap 37). runs:cost will under-report this step.`
+      )
     if (substantiation === 'contradicted')
       for (const n of notes) log(`  ⚠ ${n}`)
     return record

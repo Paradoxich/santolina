@@ -48,6 +48,25 @@ import { readdirSync } from 'node:fs'
 import { basename } from 'node:path'
 import type { UsageTotals } from '../lib/anthropic-client'
 import { RUNS_DIR, readRunRecords, type RunRecord } from './run-provenance'
+import { readRoundManifest } from './round-manifest'
+
+/** Does this run's scope name that round? Scope is prose, so this is a match
+ * rather than a lookup, bounded to a word so `1` cannot match `13`. */
+export function scopeNamesRound(record: RunRecord, label: string): boolean {
+  return new RegExp(`\\bround ${label}\\b`).test(record.scope ?? '')
+}
+
+/** Runs that started after the round was seeded and do not name it, so their
+ * cost is missing from the round's figure. A prompt to look, not a failure. */
+export function unattributedInWindow(
+  records: RunRecord[],
+  label: string,
+  seededAt: string
+): RunRecord[] {
+  return records.filter(
+    (r) => r.started_at >= seededAt && !scopeNamesRound(r, label)
+  )
+}
 
 // ---------------------------------------------------------------------------
 // The price table
@@ -165,12 +184,8 @@ function main(): void {
   const selectedMonths = month ? [month] : months()
   const all = selectedMonths.flatMap(readRunRecords)
 
-  /**
-   * Scope is prose, so this is a match rather than a lookup — see the header.
-   * Bounded to a word so `--round 1` cannot swallow rounds 10 through 12.
-   */
   const namesRound = (record: RunRecord, label: string): boolean =>
-    new RegExp(`\\bround ${label}\\b`).test(record.scope ?? '')
+    scopeNamesRound(record, label)
 
   const records = all.filter(
     (r) => (!round || namesRound(r, round)) && (!step || r.step === step)
@@ -350,6 +365,21 @@ function main(): void {
       `\n  Round attribution is a scope string match, not the manifest: ` +
         `${records.length} run(s) name round ${round}, ${unattributed} do not.`
     )
+
+    // Narrowed to the round's own window: catalog-wide the count is mostly
+    // other rounds.
+    const manifest = readRoundManifest(round)
+    if (manifest) {
+      const suspects = unattributedInWindow(all, round, manifest.started_at)
+      if (suspects.length)
+        console.log(
+          `\n  ⚠ ${suspects.length} run(s) started after round ${round} was seeded ` +
+            `and do NOT name it, so their cost is not in the figure above:\n` +
+            suspects
+              .map((r) => `      ${r.step} — scope "${r.scope ?? 'none'}"`)
+              .join('\n')
+        )
+    }
   }
 
   console.log()

@@ -15,6 +15,9 @@
  * --new-only narrows to rows never drafted; it is a filter within the scope,
  * not a scope of its own.
  *
+ * A row with nothing missing is skipped before the call (`missingFields`), so
+ * a re-run costs only the rows that still owe something.
+ *
  * --only <field> fills ONE field on the rows that lack it and writes nothing
  * else, for a field added or re-specified after rows were already drafted:
  *   ... --all --only common_issues
@@ -37,6 +40,7 @@ import { getAnthropicClient, CURATION_MODEL } from '../lib/anthropic-client'
 import type { DbPlant, PlantType, SeasonalRhythm } from '../lib/plants-db'
 import { STYLE_TAG_PROMPT, type StyleTag } from '../lib/style-tags'
 import { GREENERY_PROMPT } from '../lib/greenery'
+import { COPY_RULES_PROMPT } from '../lib/copy-rules'
 import { requireScope, scopeIds, describeScope } from './scope'
 import { withRunRecord, type Witness } from './run-provenance'
 
@@ -122,6 +126,8 @@ type PlantPatch = Omit<CurationResponse, 'hardiness_confidence'> & {
   // Written alongside style_tags, for the same reason — see the note at the
   // assignment for why this pass owns a stamp named after another script.
   style_checked_at?: string
+  // Written alongside foliage_color (migration 20260818100000).
+  foliage_checked_at?: string
 }
 
 // ---------------------------------------------------------------------------
@@ -159,20 +165,15 @@ const EDITORIAL_TRIGGER_COLUMNS = new Set([
   'image_pick_confidence',
 ])
 
-function buildPrompt(plant: DbPlant, only: string | null = null): string {
-  // plant_type gates hardiness: determine whether to ask for hardiness at all
+/** The fields this row still owes, in prompt order. Empty means a call could
+ * only write `ai_drafted_at`, since `buildPatch` is fill-only. */
+export function missingFields(plant: DbPlant): string[] {
   const knownPlantType = plant.plant_type
   const isAnnual = knownPlantType === 'annual'
   const needsHardiness =
     !isAnnual && (!plant.hardiness_zone_min || !plant.hardiness_zone_max)
 
   const missing: string[] = []
-
-  // Field-scoped: ask for the one field and nothing else. Returning early
-  // rather than filtering the list afterwards keeps every gate below —
-  // needsHardiness, the sun pair, the style stamp — out of a run that has no
-  // business re-deciding them.
-  if (only) return renderPrompt(plant, [only], knownPlantType)
 
   // plant_type first — it gates other field decisions
   if (!knownPlantType) missing.push('plant_type')
@@ -200,7 +201,11 @@ function buildPrompt(plant: DbPlant, only: string | null = null): string {
   if (!plant.space_types?.length) missing.push('space_types')
   if (!plant.garden_use_tags?.length) missing.push('garden_use_tags')
   if (!plant.bloom_color?.length) missing.push('bloom_color')
-  if (plant.foliage_color === null) missing.push('foliage_color')
+  // The STAMP, never the value — migration 20260818100000. NULL foliage_color
+  // is a real answer ("typical green"), so asking on the value re-asked 587 of
+  // 780 rows on every run. Same reasoning as style_tags `[]` and is_greenery
+  // `false` above; this was the third instance and the last one left.
+  if (!plant.foliage_checked_at) missing.push('foliage_color')
   // Folded in from curate-greenery (2026-07-29). It is one boolean on a call
   // we are already making for this plant, so asking it here removes a whole
   // per-round pass for free. curate-greenery survives as the repair tool for
@@ -220,7 +225,16 @@ function buildPrompt(plant: DbPlant, only: string | null = null): string {
   if (!plant.seasonal_rhythm) missing.push('seasonal_rhythm')
   if (!plant.native_to) missing.push('native_to')
 
-  return renderPrompt(plant, missing, knownPlantType)
+  return missing
+}
+
+function buildPrompt(plant: DbPlant, only: string | null = null): string {
+  // Field-scoped: ask for the one field and nothing else. Returning early
+  // rather than filtering the list afterwards keeps every gate in
+  // `missingFields` — needsHardiness, the sun pair, the style stamp — out of a
+  // run that has no business re-deciding them.
+  if (only) return renderPrompt(plant, [only], plant.plant_type)
+  return renderPrompt(plant, missingFields(plant), plant.plant_type)
 }
 
 function renderPrompt(
@@ -285,6 +299,8 @@ ${STYLE_TAG_PROMPT}
 - environment_benefits: 1 short sentence on ecological value (pollinators, birds, etc.). null if not notably beneficial.
 - seasonal_rhythm: Object with ALL 6 required keys — each a 1-2 sentence description of what is happening with this plant at that time. Keys: ${JSON.stringify(SEASONAL_KEYS)}. Must be consistent with bloom_months if known.
 - native_to: Native geographic range as a short phrase (2-7 words), present-day geography, not a sentence. Lowercase directional words (central, southern, eastern, western, northern) and connectors; capitalize only proper place names (Europe, Asia, North Africa, the Mediterranean, the Balkans, Turkey, China). Use "the Mediterranean" or "the Mediterranean region" with the article. No parenthetical asides and no "particularly/including X". Avoid climate-zone jargon like "temperate Northern Hemisphere" — name the continents plainly instead. E.g. "the western Mediterranean", "central and southern Europe", "Europe and western Asia", "eastern Asia", "Europe, Asia, and North America".
+
+${COPY_RULES_PROMPT}
 
 Only include fields listed under "missing fields" above. Do not include fields already in "Known data".`
 }
@@ -400,9 +416,13 @@ export function buildPatch(
     patch.garden_use_tags = response.garden_use_tags
   if (!plant.bloom_color?.length && response.bloom_color != null)
     patch.bloom_color = response.bloom_color
-  // foliage_color: null is a valid value (means "typical green" — skip re-asking)
-  if (plant.foliage_color === null && 'foliage_color' in response)
+  // foliage_color: null is a valid value, meaning "typical green", so the
+  // stamp rather than the value says whether the question was asked.
+  // Stamped whenever asked, including when the answer is null.
+  if (!plant.foliage_checked_at && 'foliage_color' in response) {
     patch.foliage_color = response.foliage_color ?? null
+    patch.foliage_checked_at = new Date().toISOString()
+  }
   // Stamped as well as written, so round-status can tell "judged false" from
   // "never asked" — false is the column default, so the value alone says
   // nothing (the same trap greenery_checked_at was added for).
@@ -595,7 +615,12 @@ async function main() {
     // then observe zero against a claim of N on both.
     writeSet: only
       ? [only, 'ai_drafted_at']
-      : ['ai_drafted_at', 'style_checked_at', 'greenery_checked_at'],
+      : [
+          'ai_drafted_at',
+          'style_checked_at',
+          'greenery_checked_at',
+          'foliage_checked_at',
+        ],
     // TRAP 28, and this file is where it was found — by writing the test, a day
     // after this run was called correct.
     //
@@ -639,6 +664,14 @@ async function main() {
             table: 'plants',
             column: 'updated_at',
           },
+          // Conditional like the two above (`if (!plant.foliage_checked_at)`),
+          // so it bounds the run rather than confirming it — trap 28.
+          {
+            kind: 'row-touched',
+            covers: 'foliage_checked_at',
+            table: 'plants',
+            column: 'updated_at',
+          },
         ]) as Witness[],
     scope: describeScope(scope, ids),
     recipe: {
@@ -663,6 +696,7 @@ async function main() {
         succeeded: 0,
         lowConfidenceHardiness: [] as string[],
         nullPlantType: [] as string[],
+        complete: [] as string[],
       }
     }
 
@@ -671,11 +705,21 @@ async function main() {
     const failures: Array<{ name: string; error: string }> = []
     const lowConfidenceHardiness: string[] = []
     const nullPlantType: string[] = []
+    const complete: string[] = []
     let succeeded = 0
 
     for (const [i, plant] of plants.entries()) {
       const label = plant.scientific_name ?? plant.common_name
       const prefix = `[${pad(i + 1)}/${pad(plants.length)}]`
+
+      // A skip, not a selection filter: a partially drafted row still owes
+      // its gaps. `--only` never lands here — its selection is `.is(only,
+      // null)`, so the named field is missing by construction.
+      if (!only && missingFields(plant).length === 0) {
+        console.log(`${prefix} ${label} … · complete, skipped`)
+        complete.push(label)
+        continue
+      }
 
       try {
         process.stdout.write(`${prefix} ${label} … `)
@@ -734,15 +778,30 @@ async function main() {
     if (failures.length && !succeeded) {
       run.markFailed(`all ${failures.length} row(s) failed`)
     }
-    return { failures, succeeded, lowConfidenceHardiness, nullPlantType }
+    return {
+      failures,
+      succeeded,
+      lowConfidenceHardiness,
+      nullPlantType,
+      complete,
+    }
   })
 
-  const { failures, succeeded, lowConfidenceHardiness, nullPlantType } = outcome
+  const {
+    failures,
+    succeeded,
+    lowConfidenceHardiness,
+    nullPlantType,
+    complete,
+  } = outcome
 
   // Summary
   console.log('\n─────────────────────────────────────────────────────────────')
   console.log(
-    `Curation complete: ${succeeded} succeeded, ${failures.length} failed`
+    `Curation complete: ${succeeded} succeeded, ${failures.length} failed` +
+      (complete.length
+        ? `, ${complete.length} already complete (not called)`
+        : '')
   )
 
   if (lowConfidenceHardiness.length) {
