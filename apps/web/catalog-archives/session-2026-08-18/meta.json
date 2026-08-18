@@ -1,0 +1,20 @@
+{
+  "label": "session-2026-08-18",
+  "not_a_round": true,
+  "what": "Every catalog write of the 2026-08-18 session: the season-fall copy sweep (26 rows), migration 20260818100000's foliage_checked_at backfill (780), the sun_tolerates re-judgement (75), three description fixes, and the Malus spectabilis hero.",
+  "before_taken_at": "2026-08-18T07:51:04.369Z",
+  "before_source": "backups/2026-08-18T07-51-02-572Z",
+  "after_taken_at": "2026-08-18T09:53:10.082Z",
+  "restore": "tsx --env-file=.env.local scripts/restore-catalog.ts catalog-archives/session-2026-08-18 --phase before",
+  "counts": {
+    "before": {
+      "plants": 780,
+      "plant_combinations": 1945
+    },
+    "after": {
+      "plants": 780,
+      "plant_combinations": 1945
+    }
+  },
+  "why_not_under_rounds": "These were mutations, not a round. rounds/ holds per-round membership provenance; a catalog-wide change that is not a round belongs here (CLAUDE.md)."
+}
