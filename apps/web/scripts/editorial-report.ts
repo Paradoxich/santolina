@@ -122,3 +122,56 @@ export function carryDescriptionProvenance(
     },
   }
 }
+
+/**
+ * The row patch a finding writes: the verdict, its three criterion stamps, and
+ * the rewrite when there is one.
+ *
+ * WHY IT IS HERE AND NOT INLINE. It was inline, and that is how it stayed wrong
+ * — the write is three lines in the middle of a 90-line loop body that also
+ * calls two models, so nothing could assert on it. Same reasoning as
+ * `mergeFindings` above: the pure half of a script is the half worth asserting.
+ *
+ * WHAT WAS WRONG. `if (approved) patch.is_curated = true` was the only
+ * `is_curated` write in the pass, and the criterion stamps were only ever SET,
+ * never cleared. So re-judging an approved row down to a hold printed "hold",
+ * wrote `editorial_checked_at`, and left `is_curated = true` standing over the
+ * old stamps. The trigger cannot cover it: it clears a stamp when the criterion
+ * FIELD changes, and a hold changes no field.
+ *
+ * The resulting state is indistinguishable by query from a genuine approval, so
+ * this closes FORWARD ONLY. No sweep can find the rows already produced.
+ *
+ * A FAILED CRITERION IS NULLED, NOT LEFT ALONE. Null is what makes the next run
+ * re-judge exactly that criterion and nothing else, and leaving a stale stamp
+ * on a failed criterion is the same defect one level down. This is safe against
+ * the criteria this run did not examine, because a criterion that was not
+ * re-judged is always `pass` with reason `cleared previously` — a `fail` can
+ * only come from a judgment this run actually made.
+ */
+export function buildEditorialPatch(
+  finding: Finding,
+  now: string
+): Record<string, unknown> {
+  const patch: Record<string, unknown> = {
+    editorial_checked_at: now,
+    // Unconditional. A hold must be able to WITHDRAW an approval, which is the
+    // whole defect: the old `if (approved)` could only ever add one.
+    is_curated: finding.approved,
+    // Written out three times rather than through a `stamp()` helper so that
+    // both halves — the timestamp and the clearing null — are visible on the
+    // line. `check-pipeline-invariants.ts` shape 2 reads the VALUE side to tell
+    // a write from a read-through, and a stamp whose writer it cannot see is a
+    // stamp it reports as having none.
+    editorial_image_at: finding.image.verdict === 'pass' ? now : null,
+    editorial_description_at:
+      finding.description.verdict === 'pass' ? now : null,
+    editorial_tags_at: finding.tags.verdict === 'pass' ? now : null,
+  }
+  // Written in the same statement as the stamps on purpose: the trigger skips a
+  // criterion whose stamp this UPDATE changes, so the rewrite cannot invalidate
+  // the approval it is part of.
+  if (finding.description.rewritten)
+    patch.description = finding.description.after
+  return patch
+}

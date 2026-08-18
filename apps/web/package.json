@@ -15,6 +15,7 @@
     "tokens:check": "tsx scripts/check-tokens.ts && tsx scripts/scan-token-usage.ts && git diff --exit-code components/design-system/token-consumers.generated.ts",
     "db:backup": "tsx --env-file=.env.local scripts/backup-database.ts",
     "migrations:check": "tsx --env-file=.env.local scripts/check-migration-drift.ts",
+    "backup:freshness": "tsx --env-file=.env.local scripts/check-backup-freshness.ts",
     "catalog:state": "tsx --env-file=.env.local scripts/catalog-state.ts",
     "catalog:status": "tsx --env-file=.env.local scripts/catalog-status.ts",
     "catalog:state:check": "tsx --env-file=.env.local scripts/catalog-state.ts && git diff --exit-code ../../docs/catalog-state.md lib/style-availability.generated.ts",

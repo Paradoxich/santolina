@@ -10,14 +10,24 @@ name: Database backup
 # The script prunes bucket copies older than 90 days after each upload, so
 # this never walks into the Free plan's storage cap.
 #
-# Weekly is calibrated to the test phase (mostly demo accounts, ~1.6MB a
+# Twice weekly is calibrated to the test phase (mostly demo accounts, ~1.6MB a
 # dump). Bump the cron to daily when the app has real users.
+#
+# IT WAS WEEKLY UNTIL 2026-08-18, AND SINGLE-SHOT IS THE DEFECT. The cron was
+# the only retry this job had, so one transient minute cost the whole week: the
+# 2026-08-03 run died on a session-pooler connection timeout and the gap went
+# unnoticed for 15 days. Two independent days is the cheap half of the fix. The
+# other two halves are a bounded retry inside backup-database.ts and, because a
+# job that never runs sends nothing, a freshness check that asks the BUCKET
+# rather than this workflow — scripts/check-backup-freshness.ts, run from CI on
+# every push to main.
 
 on:
   schedule:
-    # Mondays 03:12 UTC. Off the top of the hour on purpose — GitHub delays or
-    # drops :00 cron runs under load.
-    - cron: '12 3 * * 1'
+    # Mondays and Thursdays, 03:12 UTC. Off the top of the hour on purpose —
+    # GitHub delays or drops :00 cron runs under load. Two days rather than one
+    # so a single failed run is not a missing week; see above.
+    - cron: '12 3 * * 1,4'
   workflow_dispatch:
 
 jobs:

@@ -957,6 +957,167 @@ is unchanged.
 
 <!-- Newest first. Append with: scripts/log-db-session.ts --round <label> -->
 
+### 2026-08-18 — Three columns written every round and read by nothing (not a round)
+
+**Branch** `session/2026-08-18-backup-freshness`. No migration, no catalog
+write. Closes the last two open findings; adds invariant shape 19.
+
+**Found.** `combo-fields-unchecked` claimed a null `combination_type`,
+`strength` or `notes` leaves the companion card with nothing to render. The card
+renders thumbnails — `lib/plant-detail.ts` selects `plant_id_a, plant_id_b`, and
+nothing under `app/`, `components/` or `lib/` reads the three. Its remedy would
+have gated round close on data the product does not consume. Live nulls:
+`combination_type` 0, `strength` 0, `notes` 13 of 1945.
+
+**Changed.** Shape 19, `a catalog column the product never reads` — the mirror
+of shape 2. "Read" is the `.select()` projection the product asks for, not a
+word search, which would clear `notes` against a diary variable; `select('*')`
+skips the table. The three columns are in `COLUMNS_NO_PRODUCT_READS`, waiting on
+a Notion decision about whether the card says WHY two plants pair. Not dropped:
+`strength` orders and `combination_type` groups, and re-deriving either costs a
+model call per pair. The scan now sits behind `require.main`, so importing it no
+longer runs every check and exits.
+
+`common-name-never-judged-at-seed` closed as already built:
+`curate-common-names.ts` is runbook step 1a and ran for round 13
+(`curate-common-names-2026-08-17T2124-9f73646e`); no `fix-round13-names.ts`
+exists.
+
+**Not done.** The 13 null `notes`. Backfilling a column nothing reads is the
+cost this shape exists to name.
+
+**Verified.** `ci:check --no-db` green, 597 tests. Shape 19 proven to fire by
+removing one entry. Open findings 2 → 0.
+
+### 2026-08-18 — The sun audit flagged a column the trigger recomputes (not a round)
+
+**Branch** `session/2026-08-18-backup-freshness`. No migration, no catalog
+write, no model calls — the prompt and the recipe are untouched, so this changes
+where a flag points and nothing about what is asked.
+
+**The defect.** `cross-check-plants` raised `disagree` flags on
+`sun_requirements`, which migration 20260709220000 made a BEFORE-trigger-derived
+mirror of `sun_thrives ∪ sun_tolerates`. A write to it is recomputed away, so
+the flags addressed a column no reader could act on; the one consumer that ever
+tried, `apply-sun-widening`, was non-convergent for exactly that reason.
+
+**The comparison was sound. Only the address was wrong.** The model is asked for
+the exposures the species accepts, which IS the union — so the fix is not a new
+question, it is reporting the answer against the two fields a person edits.
+Flags now name `sun_tolerates` when the species accepts more than is recorded
+(under-reported tolerance by the migration's own definition, and
+`curate-sun-tolerance` is the pass that writes it) and `sun_thrives+sun_tolerates`
+when the exposures are contradicted or merely shifted, since nothing can tell
+which of the two carries that error. Stored values are now the two source
+fields. A row predating the split says so in its own detail — it has to be split
+before either flag means anything.
+
+**Pinned.** `scripts/cross-check-plants.test.ts`, new. `comparePlant` and
+`storedSunExposures` are exported and `main()` is behind `require.main`, the
+run-ci-checks pattern — the finding had no callable seam, which is why it sat
+open. 5 of the 10 cases fail against the pre-fix address, the first of them
+asserting the finding's own witness: no flag names `sun_requirements`.
+
+**The entry outlived one of its own claims.** It said `apply-sun-widening` was
+"queued for archive"; it had already been archived some sessions earlier and
+nobody updated the sentence. Recorded because it is the shape standing rule 14
+exists for, in a ratchet entry rather than a doc.
+
+**Not this.** The `sun_tolerates` DATA pass is separate and already done
+(2026-08-18, `session/2026-08-18-wikimedia-copy`: 175 rows re-judged, 81 widened,
+75 written). Nothing here re-judges a row.
+
+**Verified.** `pnpm ci:check --no-db` green: 590 tests, typecheck,
+`tokens:check`, `runbook:check`, `docs:links`, `docs:claims`,
+`invariants:check`. Open findings 3 → 2.
+
+### 2026-08-18 — A hold could not withdraw an approval (not a round)
+
+**Branch** `session/2026-08-18-backup-freshness`. No migration, no catalog
+write. Closes the `editorial-approval-never-withdrawn` finding, recorded
+2026-08-14 by the schema design review.
+
+**The defect.** `if (approved) patch.is_curated = true` was the pass's only
+`is_curated` write, and the three criterion stamps were only ever SET. So
+re-judging an approved row down to a hold printed "hold", wrote
+`editorial_checked_at`, and left `is_curated = true` standing over the old
+stamps. The trigger cannot cover it — it clears a stamp when the criterion
+FIELD changes, and a hold changes no field. The previous session hit the
+adjacent shape twice, re-judging `Malus spectabilis` and `Magnolia liliiflora`
+by hand.
+
+**The fix, behind a seam first.** `buildEditorialPatch` in
+`scripts/editorial-report.ts` now writes `is_curated: finding.approved`
+unconditionally and nulls the stamp of every non-pass criterion. It was extracted
+before it was fixed: the write was three lines inside a 90-line loop body that
+also calls two models, so nothing could assert on it, which is how it stayed
+wrong. Nulling is safe against criteria this run did not examine — one that was
+not re-judged is always `pass` with reason `cleared previously`, so a `fail` can
+only come from a judgment actually made.
+
+**FORWARD ONLY, and this is the part to keep.** The review recorded (section 6a)
+that the state this produced is indistinguishable by query from a genuine
+approval. No sweep can find the rows already out there. Whatever wrong
+approvals exist stay wrong until something re-judges the row.
+
+**The guard caught the guard.** Shape 2 reads the VALUE side of a stamp write to
+tell a write from a read-through, and it could not see
+`x: verdict === 'pass' ? now : null`. The first widening — any expression
+containing a timestamp token — made it report the TYPE ANNOTATION
+`native_to_reviewed_at: string | null` as a writer, and the stale-hatch check
+failed on the next run. The second branch now requires a `?`: comments are
+stripped before that scan, types are not, and a ternary is a value where a union
+is not.
+
+**Pinned.** `scripts/editorial-report.test.ts` — the withdraw, null-on-fail and
+null-on-open cases each fail against the pre-fix shape (verified by reverting
+the builder and re-running: 3 failed, 12 passed).
+
+**Verified.** `pnpm ci:check --no-db` green: 580 tests, typecheck,
+`tokens:check`, `runbook:check`, `docs:links`, `docs:claims`,
+`invariants:check`. Open findings 4 → 3.
+
+### 2026-08-18 — The backup was watched only by the job that could fail to run (not a round)
+
+**Branch** `session/2026-08-18-backup-freshness`. No migration, no catalog
+write. Closes the `weekly-backup-has-no-freshness-check` ratchet entry with all
+three parts of its remedy.
+
+**The defect was the reporting channel, not the backup.** `db-backup.yml`
+reports by failing, and a failure notification fires only when the job RUNS.
+Three failure modes produce no run at all — GitHub disables a scheduled
+workflow after 60 days of repository inactivity, a secret is removed, a database
+password is rotated — and from inside the repo all three look like a quiet week.
+A fourth is a run that fails and is not read: the 2026-08-03 run died on a
+session-pooler connection timeout and the gap went unnoticed for 15 days.
+
+**(a) The check asks the bucket, not the workflow.**
+`scripts/check-backup-freshness.ts` (`pnpm backup:freshness`) fails when the
+newest object in `db-backups` is over 10 days old, when there is none, or when
+one landed on time carrying zero bytes — an on-time empty dump being worse than
+a missing one, because it reads as covered. All four failure modes above have
+that same single witness. It runs from CI's new `backup freshness (main only)`
+job, on pushes to main, because that is a heartbeat the backup's own schedule
+cannot provide.
+
+**(b) The cron is Mondays and Thursdays.** Single-shot weekly meant the cron
+_was_ the retry and it was days wide, so one transient minute cost the week.
+This is the change that cleared the ratchet's witness.
+
+**(c) `pg_dump` retries three times, 30s apart, then rethrows.** Bounded, same
+command each time, partial archive discarded between attempts. It does not
+degrade: a run that cannot dump still exits non-zero. The 2026-08-03 timeout
+would have survived it.
+
+**Pinned.** `lib/backup-freshness.test.ts` holds the pure verdict, and its stale
+case is that run's own 15-day gap. `run-ci-checks.test.ts` failed on the new job
+before it was taught about it, which is the derivation working.
+
+**Verified.** `pnpm ci:check --no-db` green (573 tests, typecheck,
+`tokens:check`, `runbook:check`, `docs:links`, `docs:claims`,
+`invariants:check`), and `pnpm backup:freshness` run against the live bucket:
+newest backup 0d old, 1,864,696 bytes. Open findings 5 → 4.
+
 ### 2026-08-18 — Both prose guards to zero, and the name sweep (not a round)
 
 **Branch** `session/2026-08-18-db-backup`. No migration. Rollback

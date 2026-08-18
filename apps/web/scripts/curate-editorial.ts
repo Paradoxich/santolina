@@ -82,6 +82,7 @@ import {
 } from '../lib/editorial-standard'
 import { requireScope, scopeIds, describeScope } from './scope'
 import {
+  buildEditorialPatch,
   CLEARED_PREVIOUSLY,
   mergeFindings,
   type CriterionVerdict,
@@ -708,7 +709,7 @@ async function main() {
 
           const approved = blockers.length === 0
 
-          findings.push({
+          const finding: Finding = {
             id: p.id,
             common_name: p.common_name,
             scientific_name: p.scientific_name,
@@ -717,7 +718,8 @@ async function main() {
             tags,
             approved,
             blockers,
-          })
+          }
+          findings.push(finding)
 
           console.log(
             `  ${tag}: ${approved ? 'APPROVE' : 'hold'}${
@@ -727,23 +729,10 @@ async function main() {
 
           if (!DRY_RUN) {
             const now = new Date().toISOString()
-            const patch: Record<string, unknown> = {
-              editorial_checked_at: now,
-            }
-            if (description.rewritten) patch.description = description.after
-
-            // Each criterion that PASSED gets its stamp. A criterion that failed
-            // is left NULL, which is what makes the next run re-judge exactly it
-            // and nothing else.
-            //
-            // These are written in the same statement as the description rewrite
-            // on purpose: the trigger skips a criterion whose stamp this UPDATE
-            // changes, so the rewrite cannot invalidate the approval it is part of.
-            if (image.verdict === 'pass') patch.editorial_image_at = now
-            if (description.verdict === 'pass')
-              patch.editorial_description_at = now
-            if (tags.verdict === 'pass') patch.editorial_tags_at = now
-            if (approved) patch.is_curated = true
+            // The patch is built in editorial-report.ts, where it can be
+            // asserted. It was inline until 2026-08-18 and that is how it stayed
+            // wrong for as long as it did.
+            const patch = buildEditorialPatch(finding, now)
 
             const { error } = await db
               .from('plants')

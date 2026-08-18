@@ -180,3 +180,54 @@ jobs:
           printf 'NEXT_PUBLIC_SUPABASE_URL=%s\nSUPABASE_SERVICE_ROLE_KEY=%s\n' \
             "$SUPABASE_URL" "$SERVICE_ROLE" > apps/web/.env.local
           pnpm --filter santolina-web migrations:check
+
+  backup-freshness:
+    # SAME "(main only)" CONVENTION AS THE TWO JOBS ABOVE — a bare SKIPPED in a
+    # PR's check list is what sent four sessions hunting for a cause. Do not
+    # shorten this name.
+    #
+    # A SEPARATE JOB, not a step, for the same reason as migration drift: a
+    # failure named "catalog-state staleness" when the real defect is a missing
+    # database backup is a misleading status line.
+    name: backup freshness (main only)
+    # Asks the db-backups bucket whether a recent, non-empty dump exists.
+    #
+    # WHY IT LIVES HERE RATHER THAN IN db-backup.yml. That workflow reports by
+    # failing, and a failure notification fires only when the job RUNS. The
+    # cases that produce no run — a schedule GitHub disabled after 60 days of
+    # repository inactivity, a removed secret, a rotated password — are
+    # invisible from there by construction. Pushes to main are the heartbeat
+    # this needs, and they are frequent.
+    #
+    # Reads the service role key, so never on pull_request: same trade as the
+    # two jobs above.
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Check db-backups for a recent, non-empty dump
+        env:
+          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SERVICE_ROLE: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        # Fails rather than exiting 0 on a missing key, for the reason spelled
+        # out on both jobs above — and hardest here, because a silently skipped
+        # backup check is precisely the shape this job exists to detect.
+        run: |
+          if [ -z "$SERVICE_ROLE" ]; then
+            echo "::error::SUPABASE_SERVICE_ROLE_KEY is not set, so the" \
+                 "db-backups bucket cannot be checked and NOTHING is watching" \
+                 "the weekly backup. Both secrets have existed since" \
+                 "2026-07-28, so this means one was removed — restore it with" \
+                 "'gh secret set SUPABASE_SERVICE_ROLE_KEY'. Run 'gh secret" \
+                 "list' before reporting this as CI never having had secrets."
+            exit 1
+          fi
+          printf 'NEXT_PUBLIC_SUPABASE_URL=%s\nSUPABASE_SERVICE_ROLE_KEY=%s\n' \
+            "$SUPABASE_URL" "$SERVICE_ROLE" > apps/web/.env.local
+          pnpm --filter santolina-web backup:freshness

@@ -69,6 +69,7 @@ describe('the verification set (trap 32)', () => {
       { key: 'check', mainOnly: false },
       { key: 'catalog-state', mainOnly: true },
       { key: 'migration-drift', mainOnly: true },
+      { key: 'backup-freshness', mainOnly: true },
     ])
   })
 
@@ -77,7 +78,7 @@ describe('the verification set (trap 32)', () => {
     // job names. If somebody shortens a name, this fails — which is the
     // workflow's own comment about that name, made executable.
     const dbJobs = jobsOf(WORKFLOW).filter((j) => j.mainOnly)
-    expect(dbJobs).toHaveLength(2)
+    expect(dbJobs).toHaveLength(3)
     for (const job of dbJobs) expect(job.name).toMatch(/\(main only\)/)
   })
 
