@@ -8,7 +8,7 @@ import { icons, type IconName } from '@/lib/icons'
 import { LocationPickerModal } from '@/components/dashboard/LocationPickerModal'
 import { resetGarden, deleteAccount } from '@/server/account-actions'
 
-// NOTE: functional copy + layout, not yet through Ana's voice/design pass.
+// NOTE: functional copy and layout, pending an editorial voice and design pass.
 type SectionId = 'garden' | 'account'
 
 const sections: { id: SectionId; label: string; icon: IconName }[] = [

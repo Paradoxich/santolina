@@ -43,13 +43,19 @@ const MONTH_WORDS: Record<string, number> = {
 // "the blooms are followed by seedheads" is about the aftermath, and matching
 // it flags most of the catalog.
 const ASSERTS_FLOWERING =
-  /\b(?:flowers?|blooms?|blossoms?|flowering|blooming)\b\s*(?:\S+\s+){0,3}?(?:appear|appears|open|opens|emerge|emerges|arrive|arrives|begin|begins|start|starts|continue|continues|persist|persists|last|lasts|carry|carries|bloom|blooms|borne|produced)\b|\b(?:produces|bears|carries|opens)\s+(?:\S+\s+){0,3}?(?:flowers?|blooms?|blossoms?)\b|\bin\s+(?:full\s+)?(?:bloom|flower)\b|\b(?:flowering|blooming)\s+(?:begins|continues|persists|starts|peaks)\b/i
+  /\b(?:flowers?|blooms?|blossoms?|flowering|blooming)\b\s*(?:\S+\s+){0,3}?(?:appear|appears|open|opens|emerge|emerges|arrive|arrives|begin|begins|start|starts|continue|continues|last|lasts|carry|carries|bloom|blooms|borne|produced)\b|\b(?:produces|bears|carries|opens)\s+(?:\S+\s+){0,3}?(?:flowers?|blooms?|blossoms?)\b|\bin\s+(?:full\s+)?(?:bloom|flower)\b|\b(?:flowering|blooming)\s+(?:begins|continues|starts|peaks)\b/i
 
 // Aftermath, anticipation and hedging: the flowers are over, not yet, or only
 // conditional. Either way the season named nearby is not a flowering season.
 // Every alternative here was added because it flagged real catalog prose.
+//
+// Persistence belongs here rather than in ASSERTS_FLOWERING: a plume that
+// persists through winter is a standing seedhead, not a plant in flower. It
+// suppresses the whole sentence, which also drops the flowering season the
+// same sentence names — acceptable, because this detector under-reports by
+// design and the scalar already covers that season in every observed case.
 const NOT_FLOWERING =
-  /(?:\b(?:after|during|before|until|since|post)\s+flowering\b)|\b(?:followed by|fade|fades|faded|fading|over|finished|spent|seed ?heads?|seedpods?|hips|berries|fruit|fruits|foliage turns|buds?|stalks?|flower heads?|dies? back|dormant|cut back|deadhead|may|might|can|could|occasional|occasionally|milder|sheltered|some areas|marks the start|signal|signals|signalling|signaling|heralding|heralds|upcoming)\b/i
+  /(?:\b(?:after|during|before|until|since|post)\s+flowering\b)|\b(?:followed by|fade|fades|faded|fading|over|finished|spent|seed ?heads?|seedpods?|hips|berries|fruit|fruits|foliage turns|buds?|stalks?|stems?|spikes?|persist|persists|persisting|flower heads?|dies? back|dormant|cut back|deadhead|may|might|can|could|occasional|occasionally|milder|sheltered|some areas|marks the start|signal|signals|signalling|signaling|heralding|heralds|upcoming)\b/i
 
 const SENTENCE = /[^.;!?]+[.;!?]?/g
 

@@ -1299,39 +1299,13 @@ function checkOpenFindings(): number {
 // ---------------------------------------------------------------------------
 // Shape 15. A decision parked on a person must be dated, owned, and must rot
 //
-// WHAT WENT WRONG. `.claude/handoff.md` carried a paragraph beginning
-// "**Waiting on Ana:**" that was copied WORD FOR WORD through six consecutive
-// handoffs (4006b7e → a5301e2). On 2026-08-17 it was read back to her and
-// three of its six items turned out never to have been hers: the `Cenolophium`
-// region correction is a botanical fact question answerable against WCVP, and
-// the rounds 1-6 editorial pass and the `modern` re-tag both contradict
-// standing rule 6, which records HER OWN 2026-07-28 ruling that an agent owns
-// the editorial pass. A fourth item, two round-12 photo holds, described rows
-// that already had photographs. Nobody re-derived ownership because the
-// paragraph read as settled: it had been there last time.
+// Fails on an undated parked item and on one older than PARKED_DECISION_MAX_DAYS.
+// There is deliberately no escape hatch: a hatch would be a way to park an item
+// permanently, which is the state this exists to prevent. Expiry routes the item
+// to its real home (Notion Build Backlog for a product decision, standing rule
+// 11's list for a deferred schema change), which removes it from this file.
 //
-// WHY THE PROSE PARAGRAPH IS THE DEFECT, not the deferring. A comma-separated
-// sentence has no items, so nothing can count them, date them, or ask who owes
-// the answer. It is the same failure standing rule 14 names — a claim with no
-// command behind it — applied to work instead of to numbers, and it is exactly
-// what CLAUDE.md means by work remaining living in a document. The list form
-// below is the whole fix: an item that must name its date and its owner is an
-// item somebody has to think about again.
-//
-// THIS CHECK IS DESIGNED TO GO RED WITH NO CODE CHANGE. That is normally a
-// smell and here it is the mechanism. A parked decision has a shelf life; when
-// it expires CI stops the next PR and forces one of two things, both good — get
-// the ruling, or route the item to its real home (the Notion Build Backlog for
-// a product decision, standing rule 11's list for a deferred schema change).
-// Routing removes it from this file, which is why there is deliberately NO
-// escape hatch: a hatch here would be a way to park an item permanently, and
-// permanently parked is the state this exists to prevent.
-//
-// THE THRESHOLD IS A ROUND, NOT A SPRINT. Rounds run every few days, so 14 days
-// is long enough that a genuine deferral survives one and short enough that
-// nothing survives two in silence. Ana's rule, 2026-08-17: raise it in the
-// round that found it, especially the small things, rather than closing the
-// round and leaving maintenance for a future session.
+// Standing rule 15 and the six-handoff incident behind it: docs/database-log.md.
 // ---------------------------------------------------------------------------
 const HANDOFF = '.claude/handoff.md'
 const PARKED_DECISION_MAX_DAYS = 14

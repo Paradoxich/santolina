@@ -1,7 +1,6 @@
 // The one colour surface for Explore. Client-safe.
 //
-// "Colour" in the filter means plant colour, not bloom colour (Ana, July 24
-// 2026). A plant matches a bucket when it BRINGS that colour — through blooms
+// "Colour" in the filter means plant colour, not bloom colour. A plant matches a bucket when it BRINGS that colour — through blooms
 // (lib/bloom-colors.ts) or through distinctive standing foliage
 // (lib/foliage-colors.ts). Multi-membership is a feature: santolina matches
 // Silver (foliage, most of the year) AND Yellow (blooms, briefly), and both

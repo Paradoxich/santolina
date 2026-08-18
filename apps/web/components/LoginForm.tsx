@@ -8,7 +8,7 @@ import { AuthOptions } from '@/components/AuthOptions'
 import { createSupabaseBrowserClient } from '@/lib/supabase-client'
 
 // Layout matches the Figma sign up screen (node 636:1811). The log in variant
-// and sent state copy are drafts awaiting Ana's voice pass. The Google and
+// and sent state copy are drafts awaiting the editorial voice pass. The Google and
 // email controls live in AuthOptions, shared with the demo conversion modal.
 
 function callbackUrl(next: string) {

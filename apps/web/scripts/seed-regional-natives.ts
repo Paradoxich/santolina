@@ -50,7 +50,7 @@ interface Candidate {
 //   croatia       = occurs natively in Croatia
 // A species carries every tag that genuinely applies. The continent-level
 // accuracy is later checked by cross-check-native-to.ts; finer accuracy is
-// Ana's editorial pass + in-app user flagging (per the native_to QA cadence).
+// the editorial pass + in-app user flagging (per the native_to QA cadence).
 // ---------------------------------------------------------------------------
 const CANDIDATES: Candidate[] = [
   // --- bulbs & geophytes (the Balkans/Med are a global hotspot) ---

@@ -19,7 +19,7 @@
  * FLAGGED and NOT written — copy is never silently truncated or rewritten.
  *
  * Usage (from apps/web):
- *   # Reviewable sample (no DB writes) — dumps JSON to reports/ for Ana:
+ *   # Reviewable sample (no DB writes) — dumps JSON to reports/ for review:
  *   ./node_modules/.bin/tsx --env-file=.env.local scripts/curate-seasonal-care.ts --sample 20
  *   # Full run (fill-only writes):
  *   ./node_modules/.bin/tsx --env-file=.env.local scripts/curate-seasonal-care.ts
@@ -90,7 +90,7 @@ const STAGE_MONTHS = `- early_spring: March, April
 // Imperative allow-set: the action verbs care tips actually issue. A non-null
 // line must START with one of these — this is what rejects descriptive
 // `seasonal_rhythm`-style sentences ("Foliage yellows in autumn") that leaked
-// into the wrong field. Flagged, not dropped, so Ana sees any false positives.
+// into the wrong field. Flagged, not dropped, so the reviewer sees any false positives.
 // Note: "feed"/"feeding" is deliberately absent — the vocabulary ruling is
 // "fertilize", never "feed" (checked separately for a clearer flag reason).
 const ACTION_VERBS = new Set([
@@ -224,7 +224,7 @@ Rules (strict):
 - No em dashes or en dashes anywhere. Plain sentences only.
 - Vocabulary: use "fertilize" for applying fertilizer, NEVER "feed" or "feeding". BUT do NOT call the natural process of foliage nourishing a bulb, corm, rhizome, or roots "fertilize" — that is "replenish" (e.g. "Allow foliage to die back to replenish the bulb", never "fertilize the bulb").
 - Keep it plant-agnostic in phrasing (the plant name is shown separately) — say "Prune after flowering.", not "Prune the rose after flowering."
-- A mulch line earns a stage only when it states a real trigger: protection ahead of cold (autumn/winter), a named seasonal ritual ("spring mulch"), or an explicit bloom or heat window. Generic "to retain moisture" / "to keep roots cool" / "to maintain fertility" with no named trigger is anytime maintenance — use null. (Ana's catalog-wide ruling, July 15 2026: of 16 mulch lines only 5 stated a trigger.)
+- A mulch line earns a stage only when it states a real trigger: protection ahead of cold (autumn/winter), a named seasonal ritual ("spring mulch"), or an explicit bloom or heat window. Generic "to retain moisture" / "to keep roots cool" / "to maintain fertility" with no named trigger is anytime maintenance — use null.
 ${strictReminder ? `\nYour previous attempt failed validation. Fix ONLY these problems and resend the full object:\n${strictReminder}\n` : ''}
 Respond with ONLY the JSON object, no markdown, no code fences, no preamble.`
 }

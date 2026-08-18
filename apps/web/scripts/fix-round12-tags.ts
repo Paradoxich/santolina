@@ -15,7 +15,7 @@
  *   1. JUNCUS EFFUSUS — `plant_type_label` read "Ornamental grass" for a
  *      plant that is a rush. Its `plant_type` stays `grass`, and that is the
  *      DOCUMENTED split rather than a judgement made here:
- *      docs/architecture.md#plant-type-label (Ana's ruling, July 10 2026) says
+ *      docs/architecture.md#plant-type-label says
  *      `plant_type` is "a gardener-facing 'what kind of plant is this' label —
  *      how you buy, place, and care for it — not a botanical growth-form
  *      classification", and that "the descriptive `plant_type_label` may carry
@@ -38,8 +38,7 @@
  *      Same class as the ignore rules in `lib/bloom-colors.ts` for
  *      underside-only and plain-green-plus-a-detail values.
  *
- * THREE OLDER ROWS CARRY THE SAME DEFECT AND ARE FIXED HERE TOO (Ana, this
- * session). Carex comans and Carex testacea read "ornamental grass", Luzula
+ * THREE OLDER ROWS CARRY THE SAME DEFECT AND ARE FIXED HERE TOO. Carex comans and Carex testacea read "ornamental grass", Luzula
  * sylvatica reads "Evergreen perennial grass" — found by the same query that
  * caught the Juncus row, and wrong for the same reason. They belong to earlier
  * rounds, so `check-round-scope` reports them as out-of-scope writes for round

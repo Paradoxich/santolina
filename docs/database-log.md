@@ -957,6 +957,137 @@ is unchanged.
 
 <!-- Newest first. Append with: scripts/log-db-session.ts --round <label> -->
 
+### 2026-08-18 — Both prose guards to zero, and the name sweep (not a round)
+
+**Branch** `session/2026-08-18-db-backup`. No migration. Rollback
+`catalog-archives/session-2026-08-18-copy` (restore rehearsed: 56 rows differ,
+reconciling as 35 feed + 14 dash plants + 9 bloom rows, less 2 plants in both).
+
+**Database.** The 16 `no-dash` violations fixed across 14 plants, each by
+clause: a comma pair for the wisteria parenthetical, a sentence split for the
+twelve `Minimal pruning required` cases, a rewrite for the two that hedged.
+`copy:check` 16 → **0**, the whole catalog clean for the first time.
+
+Bloom prose reconciled, 9 rows. Three where the scalar was the wrong half:
+`Pulmonaria officinalis` [4,5,6] → [3,4,5], `Viola odorata` [3,4,5] → [2,3,4],
+`Chimonanthus praecox` [12,1,2] → [12,1,2,3]. Seven prose fields where the
+hedge was: "from late winter" on `Primula veris`, `Asarum europaeum`,
+`Iris lutescens` and `Magnolia liliiflora`, all of which open in March at the
+earliest; "into early autumn" on `Thymus vulgaris`; `Osmanthus heterophyllus`
+re-pointed at autumn, where it actually flowers. `bloom:prose` 9 → **0**.
+
+**The editorial voice pass was done here, not deferred.** Ana's instruction
+this session: perform it rather than routing copy back to her.
+
+**Comment sweep, the tail the previous session could not reach.** 66 `Ana`
+mentions across 29 files, not the dozen the handoff estimated. Every
+attribution removed and the rule kept as a statement of what the code does;
+`check-pipeline-invariants.ts` shape 15 lost a 26-line incident essay that
+`docs/database-log.md` already carries. Four things deliberately untouched:
+`scripts/archive/` (frozen), prompt strings (their text is hashed into the
+recipe a run records), a story fixture's display name, and `Anaphalis
+triplinervis`. **No attribution was verified before removal, and none needed
+to be** — the name does not belong in the comment whether or not the ruling
+was hers, which is what made the sweep safe to do without her.
+
+**Verified.** 564 tests, clean typecheck, `invariants:check`, `docs:claims`,
+`copy:check` and `bloom:prose` all green.
+
+### 2026-08-18 — The copy guard told the reader to write "fertilize the bulb" (not a round)
+
+**Branch** `session/2026-08-18-db-backup`. No migration. Rollback
+`catalog-archives/session-2026-08-18-copy` (restore rehearsed: 35 rows differ,
+matching the write count).
+
+**Found.** `copy:check` reported all 36 `feed` hits as "must be 'fertilize'".
+The rule's own text says foliage dying back into a bulb is "replenish", and the
+sibling rule `replenish-not-fertilize` flags "fertilize the bulb" — so **the
+message sent the reader into a violation of the next rule down**. 22 of the 36
+were the bulb case. The handoff had called these undecidable ("feed becomes
+fertilize or replenish depending on who is doing it"); the discriminator was
+already implemented one rule below.
+
+**Found.** `kind` is assigned per COLUMN, so a descriptive clause inside a
+prescriptive field is read as an instruction. Foxglove's "allow some seed heads
+to remain for self-sowing and to feed birds" was flagged, and the mechanical
+fix turned it into "fertilize birds". Wildlife feeding is now exempt in both
+kinds, pinned with that sentence.
+
+**Fixed.** `lib/copy-rules.ts` splits the rule by replacement word:
+`replenish-not-feed` when a storage organ is fed, `fertilize-not-feed`
+otherwise. Four cases pinned in `lib/copy-rules.test.ts`; three fail against
+the pre-fix file.
+
+**Database.** 35 rows rewritten across `maintenance_notes` and `seasonal_care`.
+22 mechanical (`feed the bulb` → `replenish the bulb`). 13 hand-written,
+because substitution gives "fertilize regularly with balanced fertilizer" —
+those took the noun instead ("Apply a balanced fertilizer regularly through the
+growing season"). Foxglove untouched. `copy:check` 52 → 16.
+
+**Not done.** The 16 `no-dash` violations. Each needs a comma, a semicolon or a
+sentence split depending on the clause. Ana voice-passes copy before merge, so
+these and the 35 above want her pass.
+
+### 2026-08-18 — The bloom-prose detector read persistence as flowering (not a round)
+
+**Branch** `session/2026-08-18-db-backup`. No migration.
+
+**Found.** `bloom:prose --all` reported 20 disagreements, and its closing line
+advised correcting the scalar because "the prose is usually the more accurate
+half". Read in full, the 20 split three ways: 5 scalar too narrow, 5 prose
+over-claiming a shoulder season, 6 the detector misread, 4 shoulder-month
+questions. **Following the advice would have been a regression on 6 rows** —
+one puts winter into the bloom months of a summer-flowering grass.
+
+**Fixed.** Two defects in `lib/bloom-prose.ts`. `persist|persists` sat in
+`ASSERTS_FLOWERING`, so "flower plumes … persist through winter" read as a
+claim of winter flowering; persistence moved to `NOT_FLOWERING`, with
+`stems?|spikes?` added beside the existing `buds?|stalks?`. Season attribution
+is also sentence-level, so "leaves emerge in spring before the flower spikes
+appear" reported spring — suppressed by the same change. Six cases pinned in
+`lib/bloom-prose.test.ts` with the real catalog prose; they fail 6/25 against
+the pre-fix file. The closing advice line now says either half can be wrong.
+Guard output 20 → 14, no true positive lost.
+
+**Database.** Five `bloom_months` widened, direct writes guarded on exact
+current values, each confirmed by read: `Cornus mas` [3] → [2,3];
+`Fragaria vesca` [4,5,6] → [4,5,6,7,8,9]; `Chrysanthemum × morifolium`
+[9,10,11] → [8,9,10,11]; `Clematis flammula` and `Agapanthus africanus`
+[6,7,8] → [6,7,8,9]. Guard 14 → 9. `invalidate_editorial_verdict` does not
+watch `bloom_months`: two `is_curated = true` rows kept their verdict.
+
+**Not done.** The remaining 9 need prose edits, not scalars — 5 hedged
+over-claims ("from late winter", "into early autumn") and 4 shoulder-month
+questions. Editorial, so an agent's.
+
+### 2026-08-18 — `db-backup.yml` proven on the bumped actions, and one editorial re-judge (not a round)
+
+**Branch** `session/2026-08-18-db-backup`. No migration. No catalog backup.
+
+**Verified.** `db-backup.yml` dispatched manually (run 32126932071, 1m6s) — its
+first run since PR #191 bumped its actions, and it is schedule-only. Green on
+checkout v7 / action-setup v6 / setup-node v7, 1864696 bytes uploaded to the
+`db-backups` bucket, ANNOTATIONS empty.
+
+**Database.** `curate-editorial --ids c0866bf3` on `Malus spectabilis`, left
+unjudged by the previous session when its new hero tripped
+`invalidate_editorial_verdict`. APPROVE, `is_curated` false → true,
+`editorial_checked_at` `10:32:57+00`, confirmed by direct read. Run
+`curate-editorial-2026-08-18T1032-11f512f0`, dry run first, `usage_unobserved`
+(trap 37). `backup-catalog.ts` was skipped against the script header: the dry
+run showed 0 rewrites, so the before-state (`is_curated=false`,
+`editorial_checked_at=null`) was captured by query instead.
+
+**Found.** The 2026-08-03 backup failure was a `pg_dump` connection timeout to
+the pooler on all three IPs, not the workflow; the two runs since passed. That
+week has no backup and nothing reported it for 15 days. Alerting, and retrying
+a weekly cron that loses the week on one timeout, are open decisions.
+
+**Found.** `CLAUDE.md` claimed "Nothing can record `confirmed` today (trap 29)"
+after the 2026-08-17 entry recorded `stamp_locks` earning `confirming` back.
+The editorial run above recorded `confirmed`. Rewritten to state the condition.
+`docs:claims` cannot check an asserted negative and says so in its output.
+
 ### 2026-08-18 — Trap 37 closed, sun tolerance re-judged (not a round)
 
 **Branch** `session/2026-08-18-wikimedia-copy`. Rule-1 backups

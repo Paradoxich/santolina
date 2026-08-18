@@ -62,7 +62,7 @@
  *   · Cymbidium goeringii — an orchid, not a garden plant outside its range.
  *   · Citrus trifoliata — a 3-6m barrier hedge armed with 5cm thorns. CUT ON
  *     SIZE AND SAFETY IN A SMALL GARDEN, deliberately NOT on its North American
- *     invasive status. Ana, 2026-08-17: ruling that way would bind round 12's
+ *     invasive status. The ruling: ruling that way would bind round 12's
  *     Lythrum and Iris pseudacorus calls retroactively, and whether a Euro/Med
  *     catalog should be governed by US invasive status is still open.
  *
@@ -70,7 +70,7 @@
  * they were cut was bad. Camellia sinensis, Cryptomeria japonica, Ziziphus
  * jujuba and Styphnolobium japonicum were trimmed to hit a round number of 30,
  * which is not an argument — "around 30" was a sense of size, not a budget the
- * cuts had to satisfy. Ana, 2026-08-17. They are large or crop-adjacent and
+ * cuts had to satisfy. They are large or crop-adjacent and
  * that is a curation judgment for `curate-plants`, not a reason to withhold
  * them from the catalog.
  *

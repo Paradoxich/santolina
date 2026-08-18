@@ -2,7 +2,7 @@
  * AI curation pass — the greenery judgment behind the Green colour bucket,
  * plus a foliage-colour re-ask for rows where foliage_color is null.
  *
- * Part of the plant-colour revision (Ana, July 24 2026): "Colour" in Explore
+ * Part of the plant-colour revision: "Colour" in Explore
  * means plant colour, not bloom colour. Every other bucket derives
  * mechanically from bloom_color + foliage_color, but Green cannot — every
  * plant has green foliage, so Green membership needs an editorial judgment:

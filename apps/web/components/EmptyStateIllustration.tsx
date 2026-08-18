@@ -1,7 +1,7 @@
 import Image from 'next/image'
 
 /**
- * Ana's dithered botanical engravings for the page-level empty states
+ * The dithered botanical engravings for the page-level empty states
  * (Growing, Planned, Reflections). Each asset is a full tile canvas
  * (726x557, 2x) with the art bottom-anchored inside it, so it fills the kit
  * EmptyState's tile — which supplies the surface-subtle background and

@@ -95,8 +95,12 @@ async function main() {
   console.log(
     flagged === 0
       ? '\n✓ no prose asserts flowering outside its bloom_months.'
-      : `\n${flagged} plant(s) where prose and bloom_months disagree. The prose is ` +
-          `usually the more accurate half; correct the scalar, then re-run.`
+      : `\n${flagged} plant(s) where prose and bloom_months disagree. Read each ` +
+          `one before writing anything: either half can be wrong, and on ` +
+          `2026-08-18 the set of 20 split three ways — scalar too narrow, ` +
+          `prose over-claiming a shoulder season, and prose the detector ` +
+          `misread. Correcting the scalar on sight would have been a ` +
+          `regression on 6 of them.`
   )
   if (flagged > 0) process.exit(1)
 }

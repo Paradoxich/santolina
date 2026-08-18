@@ -1,5 +1,5 @@
 /**
- * Apply Ana's editorial decisions from the cross-check queue back into
+ * Apply the editorial decisions from the cross-check queue back into
  * `seasonal_care`. Reads the reviewed CSV (see cross-check-seasonal-care.ts and
  * the `seasonal-care-editorial-queue.csv` it feeds) and applies one guarded
  * edit per row.
@@ -131,8 +131,7 @@ function loadDecisions(file: string): Decision[] {
   }))
 }
 
-// Light copy-rule warnings on new/edited text (Ana's edits are authoritative —
-// we warn, never block).
+// Light copy-rule warnings on new/edited text.
 function copyWarnings(text: string): string[] {
   const w: string[] = []
   if (text.split(/\s+/).length > 12) w.push('over 12 words')

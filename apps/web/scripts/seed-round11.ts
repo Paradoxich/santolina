@@ -25,9 +25,8 @@
  *
  * So the honest read is the one the July 29 ruling already made: at 695
  * species the catalog is inside its 500–700 target band and has no large
- * species gap left. This round exists because Ana asked for one end-to-end
- * exercise of the pipeline built over the past fortnight, and it is sized and
- * scoped accordingly.
+ * species gap left. This round exists to exercise the pipeline end to end, and
+ * it is sized and scoped accordingly.
  *
  * WHAT THE LIST IS. Every entry below is a verified absentee — the residue of
  * the three probes above, each checked directly against the live table by

@@ -501,8 +501,8 @@ function reportCalibration(judgments: { name: string; tags: StyleTag[] }[]) {
   // The bar counts tags per exclusive axis. TWO is legitimate — a peony anchors
   // both the cottage tradition and the classic one — and THREE is a judgment
   // that answered "which of these" with "all of them". See
-  // MAX_TAGS_PER_EXCLUSIVE_AXIS for Ana's 2026-08-17 ruling and, more
-  // importantly, for what did NOT change: a tag still means SIGNATURE OF.
+  // MAX_TAGS_PER_EXCLUSIVE_AXIS for the bar, and for what did NOT change: a
+  // tag still means SIGNATURE OF.
   const violations: string[] = []
   for (const axis of EXCLUSIVE_STYLE_AXES) {
     const members: StyleTag[] = STYLE_AXES[axis]

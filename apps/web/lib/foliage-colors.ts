@@ -1,7 +1,6 @@
 // Foliage color → bucket mapping for the Explore color filter. Client-safe.
 //
-// Companion to lib/bloom-colors.ts, covering the second colour axis (Ana,
-// July 24 2026: "Colour" means plant colour, not just bloom colour). Curation
+// Companion to lib/bloom-colors.ts, covering the second colour axis. Curation
 // writes free descriptive values into plants.foliage_color ("silvery-grey",
 // "marbled silver-green") ONLY when the foliage is notably distinctive —
 // null is the deliberate encoding for "typical green" (see the foliage_color
@@ -15,7 +14,7 @@
 // when young") describe an event, not the plant's standing colour, and are
 // ignored for the same reason.
 //
-// Blue-green / glaucous foliage folds into silver (Ana, July 24 2026): in a
+// Blue-green / glaucous foliage folds into silver: in a
 // bed the eye groups blue fescue, rue and eucalyptus with the true silvers —
 // one cool metallic family against the greens.
 //
@@ -75,7 +74,7 @@ export const FOLIAGE_RAW_TO_BUCKET: Record<string, string> = {
   // turn, which is the distinction this file exists to keep.
   'coppery-bronze': 'orange',
   'bronze-brown': 'orange',
-  // Glaucous blue-green folds into silver (Ana, July 24 2026) — the purple
+  // Glaucous blue-green folds into silver — the purple
   // cast does not move it out of the cool metallic family.
   'blue-green with purple tones': 'silver',
   // Round 10 — pot succulents. Grey/blue-green base with an accent tip or
