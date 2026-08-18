@@ -57,7 +57,7 @@
  *   · Iris pseudacorus — same shape as Lythrum: European native, vigorous
  *     self-seeder, invasive in North America.
  * The last two are the judgment calls, not the obvious ones, and they are the
- * two most likely to be overruled: both are native to Ana's own region, and if
+ * two most likely to be overruled: both are native to the target region, and if
  * the catalog's audience is Euro/Med first then the North American status may
  * not be the deciding fact. Recorded here so the decision is reversible by
  * reading rather than by re-deriving.

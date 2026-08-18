@@ -3,7 +3,7 @@
  *
  * `is_curated = true` is the catalog's only claim that a human-grade judgment
  * was made about a plant (docs/architecture.md#curation-layer). Every other pass drafts or fact-checks; this
- * one signs off. Ana's standing ruling (July 28 2026) is that an agent owns
+ * one signs off. The standing ruling is that an agent owns
  * this pass, including flipping the flag, so it is automated here rather than
  * left as a queue nobody works.
  *

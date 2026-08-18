@@ -25,8 +25,8 @@
  * satisfy every invariant and have had four steps never run on it.
  *
  * IT REPORTS, IT DOES NOT FAIL. Exit code is 0 with gaps present, deliberately.
- * The catalog-wide gap is a known quantity being worked down on a schedule Ana
- * set, and a check that goes red for months teaches people to ignore it. Round
+ * The catalog-wide gap is a known quantity being worked down on a schedule, and
+ * a check that goes red for months teaches people to ignore it. Round
  * close still FAILs through `verify-round`, which is where a REGRESSION shows up.
  * The one thing that does exit 1 is the ordering guard below.
  *

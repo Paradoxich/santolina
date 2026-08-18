@@ -33,7 +33,7 @@
  * defensible regional name is left alone ("Deer fern", "Bird-in-a-bush",
  * "Checkerberry" was changed only because "Wintergreen" is what the plant is
  * sold as). It does not flip `is_curated`: this is a mechanical correction of
- * names that are absent, wrong, or ambiguous, NOT Ana's editorial voice pass
+ * names that are absent, wrong, or ambiguous, NOT the editorial voice pass
  * (docs/architecture.md#curation-layer). Every row here still needs her read before `is_curated` goes true.
  *
  * SAFETY IS NOT HERE ANY MORE, and that is the improvement: `scripts/name-fixes.ts`

@@ -957,6 +957,42 @@ is unchanged.
 
 <!-- Newest first. Append with: scripts/log-db-session.ts --round <label> -->
 
+### 2026-08-18 — Both prose guards to zero, and the name sweep (not a round)
+
+**Branch** `session/2026-08-18-db-backup`. No migration. Rollback
+`catalog-archives/session-2026-08-18-copy` (restore rehearsed: 56 rows differ,
+reconciling as 35 feed + 14 dash plants + 9 bloom rows, less 2 plants in both).
+
+**Database.** The 16 `no-dash` violations fixed across 14 plants, each by
+clause: a comma pair for the wisteria parenthetical, a sentence split for the
+twelve `Minimal pruning required` cases, a rewrite for the two that hedged.
+`copy:check` 16 → **0**, the whole catalog clean for the first time.
+
+Bloom prose reconciled, 9 rows. Three where the scalar was the wrong half:
+`Pulmonaria officinalis` [4,5,6] → [3,4,5], `Viola odorata` [3,4,5] → [2,3,4],
+`Chimonanthus praecox` [12,1,2] → [12,1,2,3]. Seven prose fields where the
+hedge was: "from late winter" on `Primula veris`, `Asarum europaeum`,
+`Iris lutescens` and `Magnolia liliiflora`, all of which open in March at the
+earliest; "into early autumn" on `Thymus vulgaris`; `Osmanthus heterophyllus`
+re-pointed at autumn, where it actually flowers. `bloom:prose` 9 → **0**.
+
+**The editorial voice pass was done here, not deferred.** Ana's instruction
+this session: perform it rather than routing copy back to her.
+
+**Comment sweep, the tail the previous session could not reach.** 66 `Ana`
+mentions across 29 files, not the dozen the handoff estimated. Every
+attribution removed and the rule kept as a statement of what the code does;
+`check-pipeline-invariants.ts` shape 15 lost a 26-line incident essay that
+`docs/database-log.md` already carries. Four things deliberately untouched:
+`scripts/archive/` (frozen), prompt strings (their text is hashed into the
+recipe a run records), a story fixture's display name, and `Anaphalis
+triplinervis`. **No attribution was verified before removal, and none needed
+to be** — the name does not belong in the comment whether or not the ruling
+was hers, which is what made the sweep safe to do without her.
+
+**Verified.** 564 tests, clean typecheck, `invariants:check`, `docs:claims`,
+`copy:check` and `bloom:prose` all green.
+
 ### 2026-08-18 — The copy guard told the reader to write "fertilize the bulb" (not a round)
 
 **Branch** `session/2026-08-18-db-backup`. No migration. Rollback

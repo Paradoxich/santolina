@@ -29,7 +29,7 @@
  * "Chinese trumpet-creeper", "Clustered mountain-mint", "Asian-jasmine" and
  * "Heavenly-blue morning-glory" are USDA-style compounds that read a little
  * stiffly and are not wrong, so they stay. Changing them would be taste, and
- * taste is Ana's voice pass, not a mechanical name fix. It does not flip
+ * taste is the editorial voice pass, not a mechanical name fix. It does not flip
  * `is_curated` for the same reason.
  *
  * ONE PLANNED FIX WAS DROPPED BY THE PRE-CHECK, and it is the reason this
@@ -49,7 +49,7 @@
  * "Hydrangea anomala subsp. petiolaris" among its synonyms, and the plant
  * sold in Europe as "climbing hydrangea" is that subspecies. So the catalog
  * now offers a beginner two very similar climbing hydrangeas. Whether it
- * should is a species-list judgment, which is Ana's, so nothing was deleted:
+ * should is a species-list judgment, which is editorial, so nothing was deleted:
  * overriding the source's taxonomy on our own read is not a mechanical fix.
  *
  * SAFETY — the same discipline as fix-round8-names.ts:

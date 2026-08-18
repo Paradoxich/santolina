@@ -3,7 +3,7 @@ import Link from 'next/link'
 
 /**
  * The 404 as an uncatalogued herbarium specimen (Figma node 641:118):
- * Ana's plate (Genus incognitum, "Pagina perdita" concept) rendered as a
+ * The plate (Genus incognitum, "Pagina perdita" concept) rendered as a
  * taped-in sheet — rotated 5.25deg with two torn washi-tape strips over
  * the corners. The sheet + tape composition is sized in percentages of
  * the rotation bounds (572x561 at full size) so it scales as one piece.
@@ -16,9 +16,9 @@ export default function NotFound() {
   return (
     <main className="flex min-h-dvh flex-col items-center justify-center overflow-x-clip bg-surface-page px-card-padding pb-12 text-center">
       <div className="relative aspect-[572/561] w-full max-w-[572px]">
-        {/* The paper sheet. Ana's export is transparent; the comp's sheet
+        {/* The paper sheet. The source export is transparent; the comp's sheet
             color (#ecf1ed) is close enough to sage-100 that it was snapped
-            to the token (Ana's ruling, July 2026). */}
+            to the token. */}
         <div className="absolute left-1/2 top-1/2 w-[92.15%] -translate-x-1/2 -translate-y-1/2 rotate-[5.25deg] bg-sage-100">
           <Image
             src="/illustrations/pagina-perdita.png"

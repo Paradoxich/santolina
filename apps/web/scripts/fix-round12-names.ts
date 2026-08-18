@@ -37,7 +37,7 @@
  * NOT touch hyphenation or dialect preference. "Creeping-jenny",
  * "Hemp-agrimony", "Grassleaf sweet flag", "Aconite-leaf buttercup" and
  * "Przewalski's leopardplant" are USDA-style compounds that read stiffly and
- * are not wrong, so they stay. Changing them is taste, and taste is Ana's
+ * are not wrong, so they stay. Changing them is taste, and taste is editorial
  * voice pass. It does not flip `is_curated`, for the same reason.
  *
  * SAFETY — the same discipline as fix-round8-names.ts and fix-round11-names.ts:

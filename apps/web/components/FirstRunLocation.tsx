@@ -8,7 +8,7 @@ import { failureMessage } from '@/lib/failure'
 import { type GeocodingResult } from '@/lib/open-meteo'
 import { setGardenLocation } from '@/server/garden-actions'
 
-// NOTE: functional copy + layout, not yet through Ana's voice/design pass.
+// NOTE: functional copy and layout, pending an editorial voice and design pass.
 export function FirstRunLocation() {
   const router = useRouter()
   const [selectingId, setSelectingId] = useState<number | null>(null)

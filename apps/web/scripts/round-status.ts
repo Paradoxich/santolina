@@ -166,7 +166,7 @@ interface StepDef {
   /** FAIL once the feature the step feeds is shipped; WARN while it is parked. */
   level: 'FAIL' | 'WARN'
   /**
-   * WHO OWES THIS ROW — the second axis, added 2026-08-17 (Ana's ruling).
+   * WHO OWES THIS ROW — the second axis, added 2026-08-17.
    *
    * `level` answers "how loudly does a MISSING stamp read", and it is about the
    * feature. This answers a different question the registry could not previously

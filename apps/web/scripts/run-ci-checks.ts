@@ -22,7 +22,7 @@
  * generate the copy or delete it.
  *
  * ─────────────────────────────────────────────────────────────────────────
- * IT RUNS THE DATABASE JOBS TOO, WHICH IS THE POINT (Ana, 2026-08-17)
+ * IT RUNS THE DATABASE JOBS TOO, WHICH IS THE POINT
  *
  * `catalog-state` and `migration drift` read the live catalog, so CI runs them
  * only on the push to main — a PR-triggered job that can read

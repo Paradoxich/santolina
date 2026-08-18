@@ -27,7 +27,7 @@
  * when the script parsed argv itself.
  *
  * WHAT IT DOES NOT DO. It does not flip `is_curated`. A name correction is
- * mechanical, not Ana's editorial voice pass (docs/architecture.md#curation-layer),
+ * mechanical, not the editorial voice pass (docs/architecture.md#curation-layer),
  * and `onCurated: 'skip'` means a finalised row's name is frozen rather than
  * overruled.
  */

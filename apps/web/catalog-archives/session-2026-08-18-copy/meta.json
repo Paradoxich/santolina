@@ -1,15 +1,21 @@
 {
   "label": "session-2026-08-18-copy",
   "not_a_round": true,
-  "what": "The feed copy sweep: 35 rows whose prescriptive prose used \"feed\", rewritten to \"replenish\" (foliage into a storage organ) or a fertilizer noun (the gardener applying something). Foxglove was left alone, its \"feed birds\" clause being descriptive.",
+  "what": "Every copy and bloom write of the 2026-08-18 session after the archive's before snapshot: the feed sweep (35 rows, feed -> replenish or a fertilizer noun), the 16 em/en dash removals across 14 plants, and the bloom-prose reconciliation (3 bloom_months widened, 7 prose fields corrected where the prose over-claimed a shoulder season).",
   "scope_note": "before was taken AFTER this session's two earlier writes (the Malus spectabilis editorial verdict and five bloom_months corrections), whose before-state was captured by direct query and recorded in docs/database-log.md. This archive rolls back the copy sweep only.",
   "before_taken_at": "2026-08-18T10:53:08.973Z",
   "before_source": "backups/2026-08-18T10-53-08-973Z",
-  "after_taken_at": "2026-08-18T10:54:08.187Z",
+  "after_taken_at": "2026-08-18T11:05:10.683Z",
   "restore": "tsx --env-file=.env.local scripts/restore-catalog.ts catalog-archives/session-2026-08-18-copy --phase before",
   "counts": {
-    "before": { "plants": 780, "plant_combinations": 1945 },
-    "after": { "plants": 780, "plant_combinations": 1945 }
+    "before": {
+      "plants": 780,
+      "plant_combinations": 1945
+    },
+    "after": {
+      "plants": 780,
+      "plant_combinations": 1945
+    }
   },
   "why_not_under_rounds": "A copy sweep is a mutation, not a round. rounds/ holds per-round membership provenance; a catalog-wide change that is not a round belongs here (CLAUDE.md)."
 }

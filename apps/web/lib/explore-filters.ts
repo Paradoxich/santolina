@@ -1,13 +1,13 @@
 // Pure logic + vocabularies for the Explore filter row. Client-safe.
 //
-// Semantics (Ana, July 13 2026): multi-select within an axis is OR, axes
+// Semantics: multi-select within an axis is OR, axes
 // combine with AND. Sun matches `sun_thrives` only — a filter promises
 // "thrives here", not "survives here"; the richer thrives-vs-tolerates
 // presentation is a post-test item. Bloom season derives from `bloom_months`
 // (never `peak_season`, which is only ~22% filled). Native-to-my-region is
 // an optional discovery lens per the Region Data Model decision — the chip
 // only renders when the garden's region resolves (see lib/native-to-me.ts).
-// Colour semantics (Ana, July 24 2026): the colour axis matches plant colour
+// Colour semantics: the colour axis matches plant colour
 // across both axes — blooms OR distinctive foliage — via colorBucketsForPlant;
 // Green additionally means curated greenery. See lib/plant-colors.ts.
 import { BLOOM_COLOR_BUCKETS } from '@/lib/bloom-colors'
@@ -73,7 +73,7 @@ export const SEASON_OPTIONS: FilterOption[] = [
 
 /**
  * A style needs this many plants before it is worth offering as a filter.
- * Ana's call: under about ten, tapping the tile returns a page that reads as
+ * the ruling: under about ten, tapping the tile returns a page that reads as
  * broken rather than as a small collection.
  */
 export const STYLE_FILTER_FLOOR = 10

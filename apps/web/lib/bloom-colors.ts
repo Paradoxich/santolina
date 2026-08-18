@@ -2,11 +2,10 @@
 //
 // Curation writes free descriptive values into plants.bloom_color ("lavender-
 // blue", "rusty copper") — charming on a plant card, useless as filter chips.
-// This maps every raw value to one of 12 canonical buckets (Ana, July 13
-// 2026: magenta stays its own bucket). Raw values stay untouched in the DB;
+// This maps every raw value to one of 12 canonical buckets. Raw values stay untouched in the DB;
 // the bucketing is presentation-tier only.
 //
-// Colour model revision (Ana, July 24 2026): cream folds into white — the
+// Colour model revision: cream folds into white — the
 // cream-bucket plants read as white to human eyes, and a filter where users
 // can't predict which of two twin tiles a plant falls under isn't a taxonomy.
 // Silver returns as a bucket, now carried almost entirely by foliage (72+
@@ -50,7 +49,7 @@ export const BLOOM_COLOR_BUCKETS: BloomColorBucket[] = [
  * here or in IGNORED_BLOOM_COLORS — the check script enforces it.
  */
 export const RAW_TO_BUCKET: Record<string, string> = {
-  // white (incl. cream, folded per Ana July 2026 — reads as white to the eye)
+  // white (incl. cream, which folds in: it reads as white to the eye)
   white: 'white',
   'green-white': 'white',
   'greenish-white': 'white',

@@ -149,7 +149,7 @@ const REQUIRED_DRAFTED_FIELDS: Array<keyof PlantRow> = [
   'water_needs_summary',
   'light_needs',
   'soil_needs',
-  // Added 2026-08-17, Ana's ruling, and only AFTER the 27 blank rows were
+  // Added 2026-08-17, the ruling, and only AFTER the 27 blank rows were
   // filled: `count(*) filter (where common_issues is null)` = 27 before the
   // pass and 0 after, so this cannot fail rounds 7, 11 or 12 retroactively.
   // Adding it first would have — the same reason the six above waited.
@@ -165,7 +165,7 @@ const REQUIRED_DRAFTED_FIELDS: Array<keyof PlantRow> = [
 
 // DELIBERATELY NOT IN THE LIST ABOVE:
 //
-//   · environment_benefits stays optional, Ana's ruling 2026-08-17, decided
+//   · environment_benefits stays optional, the ruling 2026-08-17, decided
 //     against the rows rather than in the abstract. Its 4 blanks are three
 //     houseplants (Kalanchoe blossfeldiana, Cyclamen persicum, Schlumbergera
 //     truncata) and a noxious invasive whose common_issues opens "Highly
@@ -271,7 +271,7 @@ function checkPlants(
 
     // The same-axis bar, read against the catalog rather than against a run's
     // own output. `curate-styles` already warns about this, but only for the
-    // rows the run in front of it just judged — so when Ana moved the bar 1 → 2
+    // rows the run in front of it just judged — so when the bar moved from 1 to 2
     // on 2026-08-17 nobody re-read the 748 rows against the new value, and one
     // row sat over it. A bar with a constant behind it is a FAIL, like the
     // companion cap: the value is not a judgment call once the constant is set.

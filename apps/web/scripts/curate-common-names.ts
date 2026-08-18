@@ -45,7 +45,7 @@
  * WHAT IT WILL NOT DO. It does not touch hyphenation or dialect preference —
  * "Creeping-jenny", "Hemp-agrimony" and "Przewalski's leopardplant" are
  * USDA-style compounds that read stiffly and are not wrong. That is taste, and
- * taste is Ana's voice pass. It does not flip `is_curated`, and it does not
+ * taste is the editorial voice pass. It does not flip `is_curated`, and it does not
  * write to a curated row at all (`onCurated: 'skip'`) — a finalised name is
  * frozen, not overruled.
  *

@@ -2,7 +2,7 @@ import Image from 'next/image'
 import { cn } from '@/lib/utils'
 
 /**
- * Ana's dithered botanical engravings for the dashboard empty states, plus the
+ * The dithered botanical engravings for the dashboard empty states, plus the
  * permanent hummingbird on the Garden impact card. Each asset is a full-card
  * canvas exported at 2x with the art baked into the bottom-right corner, so it
  * renders at half its intrinsic size, pinned to the corner, and is clipped by

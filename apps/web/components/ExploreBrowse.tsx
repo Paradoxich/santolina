@@ -112,11 +112,11 @@ const COLOR_HERO: Record<string, string> = {
   // Asian bleeding-heart
   white:
     'https://bs.plantnet.org/image/o/fe29eabfdd58dd98be18210d3ed4a89f91fb8286',
-  // Lavender cotton (santolina, the namesake) — Ana's pick: frosted silver
+  // Lavender cotton (santolina, the namesake) — chosen: frosted silver
   // foliage on a dark ground, reads unmistakably silver against the tint
   silver:
     'https://d2seqvvyy3b8p2.cloudfront.net/ea6d31a8af6019ef11632e876947fbf3.jpg',
-  // Amur adonis (Ana's pick over a falling stars shot that cropped badly)
+  // Amur adonis
   yellow:
     'https://d2seqvvyy3b8p2.cloudfront.net/12ba5c2912abeb046e038ccfe89fd6be.jpg',
   // California poppy

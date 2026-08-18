@@ -73,7 +73,7 @@ export type StyleTag = (typeof STYLE_TAGS)[number]
  * proper nouns lowercase — "chinese", "japanese" — which is what the tiles
  * made obvious. Names carry no em or en dashes, per the UI copy rule.
  *
- * Voice-passed by Ana 2026-08-17. The draft had "English cottage" for the
+ * The draft had "English cottage" for the
  * cottage slug; she dropped the qualifier.
  */
 export const STYLE_DISPLAY_NAMES: Record<StyleTag, string> = {
@@ -185,7 +185,7 @@ export const EXCLUSIVE_STYLE_AXES: StyleAxis[] = ['aesthetic', 'place']
  * the bar; three same-axis tags is still a judgment that answered "which of
  * these" with "all of them".
  *
- * THE PRIMARY IS NOT RECORDED, deliberately (Ana, same ruling). Nothing in the
+ * THE PRIMARY IS NOT RECORDED, deliberately. Nothing in the
  * UI ranks or badges a main style today, and a column no reader consumes is
  * the shelf-ware this repo already refuses to build. When Explore wants to lead
  * with one, that is when it gets a home — and the Backlog is where that lives.

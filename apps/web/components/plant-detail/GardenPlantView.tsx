@@ -7,13 +7,13 @@
  * cards) because a plant you own is a dashboard for that plant, and inventing
  * a second visual language beside the one we shipped would be a mistake.
  *
- * Growing plants only. A planned plant has no diary (Ana, 21 July 2026), so
+ * Growing plants only. A planned plant has no diary, so
  * three of these five cards would be permanently empty — it keeps the linear
  * layout in PlantDetailPage instead.
  *
  * Every value here comes from data that already exists. Two things it cannot
  * source were once shown as "not recorded" placeholders and are now simply
- * absent, on Ana's call: a planting date (palette_plants has no planted_at,
+ * absent, on the ruling: a planting date (palette_plants has no planted_at,
  * so age is inferred from a 'planted' diary event) and a placement. Both gaps
  * are real and live in the backlog rather than on the page.
  */

@@ -45,7 +45,7 @@ export type ImageConfidence = 'high' | 'medium' | 'low'
  */
 export const IMAGE_CONFIDENCE_REQUIRED: ImageConfidence = 'high'
 
-/** Em and en dashes: banned in anything a user reads. Ana's standing rule. */
+/** Em and en dashes: banned in anything a user reads. a standing rule. */
 export const BANNED_PUNCTUATION = /[—–]/
 
 /**
