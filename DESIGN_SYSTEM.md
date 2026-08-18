@@ -225,6 +225,38 @@ duplicate. Create a new component when the behavior differs, not just the skin.
 The current primitives are whatever `packages/ui/src/index.ts` exports. That
 list is not copied here; a copied list goes stale and this one had.
 
+### A shared look belongs in a shared shell, not a shared intention
+
+Every text-entry surface renders one internal `FieldShell` — `Input`,
+`Textarea`, `SearchField`, `Select`. They agree on fill, edge, radius, text
+size and focus because they are the same code, not because anyone keeps them in
+step. Before this they were four hand-rolled treatments with four focus
+mechanisms, five text sizes and four heights, and the busiest call site carried
+eleven classes overriding the kit back into what it wanted.
+
+**`FieldShell` is deliberately not exported**, and the package's closed
+`exports` map makes that a resolution error rather than a convention. It is the
+look of a field with none of the things that make one usable — no label
+association, no error message, no `aria-invalid` — so anything reaching for it
+directly would be building a field that looks right and reads wrong. A fifth
+control adds a component beside the other four rather than exporting the shell.
+
+### A control that holds a value is not a menu
+
+`Menu` is for actions. A control that holds a VALUE, displays it and announces
+it is a `Select` — field-shaped, value in the trigger. This went wrong twice,
+both times silently: a plain `menuitem` announces no state, so a screen reader
+user heard the options and never which one was in effect, and `Menu` names its
+trigger with `aria-label`, which REPLACES the name and hid the chosen value
+entirely.
+
+A menu may still choose — ARIA has `menuitemradio` for one-of-a-set, and it is
+the right answer when the trigger is compact (an icon) and a field would be too
+loud. That is what `intent` decides, and it is required: `choices` forces every
+item to carry `selected`, `actions` forbids it. The prop exists because both
+failures had the same cause — nobody was asked which kind of control they were
+building.
+
 ---
 
 ## 5. App-layer conventions (`apps/web`)
