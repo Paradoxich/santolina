@@ -52,6 +52,7 @@ import {
   existsSync,
   mkdirSync,
   readFileSync,
+  rmSync,
   statSync,
   writeFileSync,
 } from 'node:fs'
@@ -135,6 +136,50 @@ function dump(dbUrl: string, outFile: string, pgDump: string) {
     throw new Error(`pg_dump exited with status ${result.status}`)
 }
 
+/** A failed attempt leaves a partial archive; pg_dump refuses to overwrite it. */
+function discardPartial(outFile: string) {
+  if (existsSync(outFile)) rmSync(outFile)
+}
+
+/**
+ * Attempts before the run is called failed. Three, spaced by SLEEP.
+ *
+ * NOT PACING, NOT A FALLBACK. The 2026-08-03 run died because the session
+ * pooler refused the connection on all three of its IPs, and the whole week's
+ * backup was lost to one transient minute — the cron is the retry today, and it
+ * is days wide. So the retry is bounded, it re-runs the identical command, and
+ * the last failure is rethrown: a run that cannot dump must still exit non-zero
+ * (see lib/failure.ts, and the rule that a fallback must never make a failed
+ * fetch look like a result).
+ */
+const DUMP_ATTEMPTS = 3
+const DUMP_RETRY_MS = 30_000
+
+function dumpWithRetry(dbUrl: string, outFile: string, pgDump: string) {
+  for (let attempt = 1; ; attempt++) {
+    discardPartial(outFile)
+    try {
+      dump(dbUrl, outFile, pgDump)
+      return
+    } catch (err) {
+      if (attempt >= DUMP_ATTEMPTS) throw err
+      console.log(
+        `  pg_dump attempt ${attempt}/${DUMP_ATTEMPTS} failed (${
+          err instanceof Error ? err.message : String(err)
+        }); retrying in ${DUMP_RETRY_MS / 1000}s`
+      )
+      // Synchronous on purpose: nothing else may run between attempts, and
+      // this is a one-shot script, not a server.
+      Atomics.wait(
+        new Int32Array(new SharedArrayBuffer(4)),
+        0,
+        0,
+        DUMP_RETRY_MS
+      )
+    }
+  }
+}
+
 async function upload(localFile: string, objectPath: string) {
   const db = getSupabaseAdmin()
 
@@ -206,7 +251,7 @@ async function main() {
   const localFile = join(dir, fileName)
 
   console.log(`\nDumping ${SCHEMAS.join(', ')}...`)
-  dump(dbUrl, localFile, pgDump)
+  dumpWithRetry(dbUrl, localFile, pgDump)
   if (!existsSync(localFile) || statSync(localFile).size === 0)
     throw new Error('pg_dump produced no output')
   const bytes = statSync(localFile).size

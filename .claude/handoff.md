@@ -85,10 +85,6 @@ do it rather than routing copy back to her.
    and recorded at `docs/curation.md#round-runbook`; nothing to do until there
    is a round to put it in. `Iris pseudacorus` stays cut.
 
-3. **Read the 57 rewritten rows if you want them in your voice.** They are
-   merged and live, written to the copy rules and voice-passed by me under this
-   session's instruction. This is a taste review, not a correctness one.
-
 **Parked decisions.** Dated when FIRST raised, with who owes the answer.
 `invariants:check` shape 15 fails on an undated item and on one older than 14
 days.

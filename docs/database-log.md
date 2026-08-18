@@ -957,6 +957,47 @@ is unchanged.
 
 <!-- Newest first. Append with: scripts/log-db-session.ts --round <label> -->
 
+### 2026-08-18 — The backup was watched only by the job that could fail to run (not a round)
+
+**Branch** `session/2026-08-18-backup-freshness`. No migration, no catalog
+write. Closes the `weekly-backup-has-no-freshness-check` ratchet entry with all
+three parts of its remedy.
+
+**The defect was the reporting channel, not the backup.** `db-backup.yml`
+reports by failing, and a failure notification fires only when the job RUNS.
+Three failure modes produce no run at all — GitHub disables a scheduled
+workflow after 60 days of repository inactivity, a secret is removed, a database
+password is rotated — and from inside the repo all three look like a quiet week.
+A fourth is a run that fails and is not read: the 2026-08-03 run died on a
+session-pooler connection timeout and the gap went unnoticed for 15 days.
+
+**(a) The check asks the bucket, not the workflow.**
+`scripts/check-backup-freshness.ts` (`pnpm backup:freshness`) fails when the
+newest object in `db-backups` is over 10 days old, when there is none, or when
+one landed on time carrying zero bytes — an on-time empty dump being worse than
+a missing one, because it reads as covered. All four failure modes above have
+that same single witness. It runs from CI's new `backup freshness (main only)`
+job, on pushes to main, because that is a heartbeat the backup's own schedule
+cannot provide.
+
+**(b) The cron is Mondays and Thursdays.** Single-shot weekly meant the cron
+_was_ the retry and it was days wide, so one transient minute cost the week.
+This is the change that cleared the ratchet's witness.
+
+**(c) `pg_dump` retries three times, 30s apart, then rethrows.** Bounded, same
+command each time, partial archive discarded between attempts. It does not
+degrade: a run that cannot dump still exits non-zero. The 2026-08-03 timeout
+would have survived it.
+
+**Pinned.** `lib/backup-freshness.test.ts` holds the pure verdict, and its stale
+case is that run's own 15-day gap. `run-ci-checks.test.ts` failed on the new job
+before it was taught about it, which is the derivation working.
+
+**Verified.** `pnpm ci:check --no-db` green (573 tests, typecheck,
+`tokens:check`, `runbook:check`, `docs:links`, `docs:claims`,
+`invariants:check`), and `pnpm backup:freshness` run against the live bucket:
+newest backup 0d old, 1,864,696 bytes. Open findings 5 → 4.
+
 ### 2026-08-18 — Both prose guards to zero, and the name sweep (not a round)
 
 **Branch** `session/2026-08-18-db-backup`. No migration. Rollback
