@@ -136,9 +136,27 @@ any environment that never had the bad values. What the one such pass actually
 changed is in [`database-log.md`](database-log.md). A botanical correction never
 flips `is_curated` — it is not the editorial pass.
 
-**Output:** terminal report grouped disagreements-first, plus a timestamped JSON report in `apps/web/reports/` (gitignored) recording every flag with stored vs checked values — the artifact for Ana's spot-check sweep and the source of record for any bulk correction. `--limit N` for testing.
+**Output:** terminal report grouped disagreements-first, plus a timestamped JSON report in `apps/web/reports/` (gitignored) recording every flag with stored vs checked values, and — since 2026-08-18 — a COMMITTED queue at `reference/botanical-flags-<date>.json` holding the `disagree` rows. The gitignored report is the full picture and dies with its worktree; the queue is the half that has to survive it. `--limit N` for testing.
 
-**Checked-at stamp — guard scoping (July 2026, migration `20260716120000`).** The guard stamps `plants.botanical_checked_at` on each row the moment it finishes checking it (flagged or clean — the stamp records that the check _ran_, not its verdict). This is operational metadata, not catalog content, so the flags-only rule holds — it never touches a botanical or editorial field. The stamp makes `--new-only` state-based (`WHERE botanical_checked_at IS NULL`): exact (no UTC-midnight batch split), and resumable — a killed run leaves the rest unstamped for the next pass, replacing the earlier newest-calendar-day heuristic. It's a timestamp, not a boolean, so a prompt revision can re-scope by date (`... OR botanical_checked_at < '<date>'`). **Cascade rule:** any script that _mutates_ a checked field must null the matching stamp so the guard re-checks — e.g. `scripts/archive/regenerate-native-to.ts` nulls `native_checked_at` in the same write that rewrites `native_to`. The sibling `native_to` guard (`cross-check-native-to.ts`) carries its own `native_checked_at` stamp, but **since 2026-08-16 not on the identical model**: there the stamp means the row was SETTLED, not that the check ran, so a `gross` or `contradicts` verdict whose rewrite is still pending is left unstamped and stays in the queue (`shouldStamp`, trap 24). The two guards' rules differ in three places and deliberately share no code — the reasoning is in that function's header. `check-bloom-colors.ts` has none by design (a free local validator with no Claude call, it always runs over the whole catalog).
+**A disagreement is not settled by being reported (2026-08-18).** The guard now
+withholds `botanical_checked_at` from any row carrying a `disagree` flag
+(`shouldStamp`), because that stamp is FAIL-level evidence at round close that
+the step ran AND settled the row, and `--new-only` selects on it — so stamping a
+contradiction certified a correction nobody made and hid the row from every
+later sweep (trap 24). `minor` flags do not withhold: those are the tolerance
+bands the table above exists to define, and treating them as unsettled would
+park roughly a fifth of the catalog on drift the check itself calls acceptable.
+
+Withheld rows settle through `scripts/apply-botanical-fixes.ts`, which reads the
+committed queue once a person has ruled on each flag — `correct` writes the
+checked value, `keep` leaves the stored one standing — and stamps the row in the
+same statement, through the shared drift guard in `scripts/reviewed-mutation.ts`.
+A row settles only when every one of its flags carries a verdict, and a curated
+row is frozen: a mechanical correction does not overrule a human sign-off. No
+runbook step runs this script; a person runs it when step 5 has queued
+something.
+
+**Checked-at stamp — guard scoping (July 2026, migration `20260716120000`).** The guard stamps `plants.botanical_checked_at` on each row it finishes checking and SETTLES — clean, or flagged `minor` only (see above; until 2026-08-18 it stamped every row it walked, verdict or not). This is operational metadata, not catalog content, so the flags-only rule holds — it never touches a botanical or editorial field. The stamp makes `--new-only` state-based (`WHERE botanical_checked_at IS NULL`): exact (no UTC-midnight batch split), and resumable — a killed run leaves the rest unstamped for the next pass, replacing the earlier newest-calendar-day heuristic. It's a timestamp, not a boolean, so a prompt revision can re-scope by date (`... OR botanical_checked_at < '<date>'`). **Cascade rule:** any script that _mutates_ a checked field must null the matching stamp so the guard re-checks — e.g. `scripts/archive/regenerate-native-to.ts` nulls `native_checked_at` in the same write that rewrites `native_to`. The sibling `native_to` guard (`cross-check-native-to.ts`) carries its own `native_checked_at` stamp, but **since 2026-08-16 not on the identical model**: there the stamp means the row was SETTLED, not that the check ran, so a `gross` or `contradicts` verdict whose rewrite is still pending is left unstamped and stays in the queue (`shouldStamp`, trap 24). The two guards' rules differ in three places and deliberately share no code — the reasoning is in that function's header, and `cross-check-plants` now carries a third variant of the same idea for the same reason. `check-bloom-colors.ts` has none by design (a free local validator with no Claude call, it always runs over the whole catalog).
 
 <a id="sun-model"></a>
 
@@ -362,6 +380,17 @@ decision file, never by the guard: it asserts the stored phrase still matches
 what was reviewed, refuses a replacement carrying a dash or semicolon, and nulls
 `native_checked_at` so the rewritten phrase is re-read rather than inheriting a
 stamp earned by different words.
+
+**A keep is a decision too, and the same script records it.**
+`apply-native-to-fixes.ts --review-keep` reads the committed review file
+(`reference/native-to-review-<date>.json`) and stamps `native_to_reviewed_at` on
+every row whose verdict was `keep` and whose phrase still reads exactly as the
+reviewer read it; a drifted row is reported, never stamped. That stamp is what
+lets the guard settle a `gross` or `contradicts` row without rewriting copy that
+is right (`shouldStamp`), and a trigger withdraws it the moment the phrase is
+edited. It is dated to the review, not to the run. Before 2026-08-18 the column
+had no writer at all outside migration `20260813110500`'s backfill, so a newly
+kept row could not be recorded.
 
 **Hand-authored descriptions use the same shape.**
 `scripts/apply-description-fixes.ts` (added 2026-08-17) applies `description`

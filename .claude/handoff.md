@@ -38,36 +38,36 @@ supabase start -x studio,realtime,storage-api,imgproxy,edge-runtime,inbucket,vec
 
 ---
 
-## 2026-08-18 — The last five open findings, and the guard that watches the backup
+## 2026-08-18 — The two stamp ratchets, and four traps the backlog had wrong
 
-**Nothing in flight. Nothing uncommitted. The branch is merged and gone.** No
-migration, no catalog write, no model calls — this session changed only code and
-guards. `pnpm ci:check` passes in full, database jobs included. What each commit
-did is in `git log`; what it found is in `docs/database-log.md`.
+**Nothing in flight. Nothing uncommitted. No migration, no prod catalog write,
+no model calls.** `pnpm ci:check` passes in full on the committed tree, database
+jobs included. What each commit did is in `git log`; what it found is in
+`docs/database-log.md`.
 
-**`OPEN_FINDINGS` is empty for the first time.** All five closed: the backup
-freshness gap, editorial approvals that could not be withdrawn, the sun audit
-aimed at a derived column, the combo fields nothing reads, and the common-name
-finding that had already been fixed and nobody noticed.
+**`STAMPS_WITHOUT_WRITERS` and `REPORT_ONLY_STAMPS` are both empty, and traps
+unpinned went 21 → 17.** Every ratchet that is not zero is recorded with a
+reason and `pnpm backlog` prints it.
 
-**⚠ The pattern of the session: three of the five findings were wrong about
-something.** `combo-fields-unchecked` claimed a broken companion card — the card
-renders thumbnails and reads none of the three columns, so no user ever saw it,
-and its prescribed remedy would have gated round close on data the product does
-not consume. `common-name-never-judged-at-seed` outlived its own remedy by a day
-and a whole round. `sun-audit`'s prose still called an archived script "queued
-for archive". **A recorded finding is a claim with a date on it, not a fact** —
-check its consumer before acting on its remedy. Two of the three needed only a
-look at who reads the column.
+**⚠ The pattern of the session, and it is the same one as the last: a recorded
+reason is a dated claim, not a fact.** Three of the four "attribution only" trap
+entries were wrong about their own remedy — trap 16's named `scope.test.ts`,
+which tests CLI flag parsing and never touches pairings or `cleared_at`. And the
+plan for `cross-check-plants` would have parked ~55 rows on a FAIL-level round
+close with nothing able to settle them, because it prescribed a selector copied
+from a guard that has an `--apply` to earn it back. **Read the consumer, and read
+the test, before acting on what a list says about them.**
 
-**Two guards caught me mid-session, and both were right.** The stale-hatch check
-rejected a widening of shape 2 that read a TYPE ANNOTATION as a stamp writer;
-the pre-commit hook rejected a database-log entry at 50 lines against a 25-line
-target. Neither would have been caught by review.
+**Three guards caught me and all three were right.** The stale-hatch check
+noticed that a header sentence reading "Trap 1 is NOT pinned here" had _pinned_
+trap 1. `trap-pins.test.ts` failed because it asserted another file's current
+contents rather than the rule. And a local-stack run recorded `evidence
+CONTRADICTED` because I minted a stamp before `beginRun`, so it landed outside
+the run window — invisible to typecheck and to all 635 unit tests.
 
-**Backlog items are 2-4 sentences.** Ana's instruction this session, after an
-item of mine ran to a paragraph of reasoning: what could be built, what it rests
-on, the one blocker. The reasoning goes in the commit and the log.
+**Two new settlement paths exist and neither has run against prod, because there
+is nothing yet to settle.** `apply-native-to-fixes --review-keep` and
+`apply-botanical-fixes.ts` were both exercised end to end on the local stack.
 
 ---
 
@@ -75,23 +75,31 @@ on, the one blocker. The reasoning goes in the commit and the log.
 
 1. **`Lythrum salicaria` re-adds when round 14 opens.** Decision already made and
    recorded at `docs/curation.md#round-runbook`; nothing to do until there is a
-   round to put it in. `Iris pseudacorus` stays cut. Carried forward from the
-   previous entry, still the only open item there.
+   round to put it in. `Iris pseudacorus` stays cut. Carried forward, still the
+   only open item there.
 
-2. **Watch the first Thursday backup run.** The cron is now Mondays and
-   Thursdays and has only ever run on Mondays. `backup:freshness` fails the day
-   it stops landing, so this is a read of `gh run list --workflow db-backup.yml`,
-   not a task — first Thursday is 2026-08-20.
+2. **Round 14 is the first real test of both new paths.** Step 5 will now leave
+   its disagreements unstamped and write `reference/botanical-flags-<date>.json`;
+   that file needs a person's verdicts and a run of `apply-botanical-fixes.ts`
+   before round close will pass. This is the intended behaviour, not a snag — but
+   it is the first round where skipping the queue blocks the close.
 
-Everything else mechanical is in a ratchet and `pnpm backlog` prints it. The
-three unread combo columns are recorded in `COLUMNS_NO_PRODUCT_READS`, waiting on
-a Notion decision about whether the companion card says why two plants pair.
+3. **Watch the first Thursday backup run.** Cron is Mondays and Thursdays and has
+   only ever run on Mondays; 2026-08-17's scheduled run succeeded. `backup:freshness`
+   fails the day it stops landing, so this is a read of
+   `gh run list --workflow db-backup.yml`, not a task — first Thursday is 2026-08-20.
+
+Everything else mechanical is in a ratchet. The three unread combo columns sit in
+`COLUMNS_NO_PRODUCT_READS`, waiting on a Notion decision about whether the
+companion card says why two plants pair. Hand-rolled paging in `backup-catalog`
+and `restore-catalog` stays at 2 deliberately: both page correctly, and the
+duplication is not worth touching the backup and restore scripts to remove.
 
 **Parked decisions.** Dated when FIRST raised, with who owes the answer.
-`invariants:check` shape 15 fails on an undated item and on one older than 14
-days.
+`invariants:check` shape 15 fails on an undated item and on one older than 14 days.
 
-_Empty._ Everything raised this session was decided in it.
+_Empty._ The one fork raised this session — where the `--review-keep` writer
+should live — was decided in it.
 
 **Standing:** the next audit is round 14's close or 2026-09-14, whichever first.
 Fresh session.

@@ -128,6 +128,47 @@ export const GBIF_NAME_ALIASES: Record<string, string> = {
   'Andropogon gerardii': 'Andropogon gerardi',
 }
 
+/** Hybrid marker and spacing removed, so "Mentha × piperita" compares equal. */
+function normaliseName(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/\s*[×x]\s+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+/**
+ * Whether a GBIF `species/match` response is the species we asked for.
+ *
+ * TRAP 11. GBIF answers an unknown binomial by walking UP the taxonomy rather
+ * than failing: `Pennisetum alopecuroides` comes back as the genus `Cenchrus`
+ * with `matchType: HIGHERRANK`. Accepting that fetches an entire GENUS's
+ * distribution and reads as a species native to forty-one regions, Brazil
+ * included — it was about to widen one grass from "Eastern Asia" to all of
+ * them. The same trap the seed scripts guard by never taking the top
+ * name-search hit.
+ *
+ * ALL THREE CONDITIONS ARE LOAD-BEARING and each one alone is insufficient:
+ * `EXACT` can still come back at genus rank, a species-rank answer can still be
+ * a different species, and a name check alone would accept a fuzzy match. The
+ * version of this that shipped in `cross-check-native-to` had none of them and
+ * stayed live until 2026-07-30, where it reached a prompt.
+ *
+ * Exported as its own function because a trap you cannot call is a trap you
+ * cannot pin: the decision used to be three expressions inside a network call,
+ * so the only thing a test could reach was the message it produced afterwards.
+ */
+export function isExactSpeciesMatch(
+  match: { matchType?: string; rank?: string; canonicalName?: string },
+  queryName: string
+): boolean {
+  return (
+    match.matchType === 'EXACT' &&
+    SPECIES_RANKS.has(match.rank ?? '') &&
+    normaliseName(match.canonicalName ?? '') === normaliseName(queryName)
+  )
+}
+
 /** Uncached lookup. Prefer `lookupSpecies` — this is what it calls on a miss. */
 export async function fetchSpecies(
   scientificName: string
@@ -145,26 +186,7 @@ export async function fetchSpecies(
     `https://api.gbif.org/v1/species/match?strict=true&name=${encodeURIComponent(queryName)}`
   )
 
-  // GBIF answers an unknown binomial by walking UP the taxonomy rather than
-  // failing: "Pennisetum alopecuroides" comes back as the genus Cenchrus with
-  // matchType HIGHERRANK. Accepting that fetches the distribution of an entire
-  // genus and reads as a species native to forty regions. Same trap the seed
-  // scripts already guard (docs/curation.md#round-runbook: never the top name-search hit) — so only an
-  // EXACT match at species rank, on the name we actually asked for, counts.
-  // GBIF drops the hybrid marker from canonicalName ("Mentha × piperita" comes
-  // back as "Mentha piperita"), so compare with it normalised away rather than
-  // rejecting every hybrid in the catalog as unmatched.
-  const normalise = (name: string) =>
-    name
-      .toLowerCase()
-      .replace(/\s*[×x]\s+/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim()
-  const exact =
-    match.matchType === 'EXACT' &&
-    SPECIES_RANKS.has(match.rank ?? '') &&
-    normalise(match.canonicalName ?? '') === normalise(queryName)
-  if (!exact)
+  if (!isExactSpeciesMatch(match, queryName))
     return {
       lookupKey: null,
       matchType: `${match.matchType ?? 'NONE'} → ${match.canonicalName ?? '?'} (${match.rank ?? '?'})`,

@@ -1,12 +1,38 @@
-import { describe, expect, it } from 'vitest'
-import { describeBatchFailure, mapVerdict } from './pick-plant-images'
-
 /**
- * The promotion rule is the whole argument that --verify is a second question
- * rather than a second attempt at the same one, so it is pinned here rather
- * than left to a prompt. If someone later makes `unsure` clear the bar, this
- * is the test that should stop them.
+ * `pick-plant-images`: which candidate clears the bar, and which failure is an
+ * answer about the photograph rather than about the network.
+ *
+ * Trap 1, pinned by `partitionProbes` below: a failed fetch must never look
+ * like a negative result. A probe that kept failing transiently — a 429 that
+ * was still a 429 after every retry — learned NOTHING about the photograph, so
+ * filing it with the dead links converts "we could not look" into "we looked
+ * and it was no good", and the caller then stamps the row so nothing ever looks
+ * again. That is how 9 of 14 hand-sourced Commons photographs were lost on
+ * 2026-07-30, judged against the inadequate Trefle images instead.
+ *
+ * THE THIRD OUTCOME IS THE ASSERTION, and the trap's own record is explicit
+ * that having one is not enough on its own: `probeImage` already had a backoff,
+ * and the caller still printed the drop and carried on. So what the cases pin
+ * down is that `unresolved` stays a SEPARATE list and is never folded into
+ * `rejected`. `lib/image-probe.test.ts` covers the layer below — a 429 is
+ * retried, it waits seconds rather than milliseconds, and a 404 is not retried
+ * at all.
+ *
+ * The promotion rule is the other argument here: `--verify` is a second
+ * QUESTION rather than a second attempt at the same one, which is why it is
+ * asserted rather than left to a prompt. If someone later makes `unsure` clear
+ * the bar, `mapVerdict`'s cases are what should stop them.
  */
+
+import { describe, expect, it } from 'vitest'
+import {
+  describeBatchFailure,
+  mapVerdict,
+  partitionProbes,
+} from './pick-plant-images'
+import type { ImageCandidate } from '../lib/image-shortlist'
+import type { ProbeResult } from '../lib/image-probe'
+
 describe('mapVerdict', () => {
   it('clears only a confirmed species', () => {
     expect(
@@ -119,5 +145,68 @@ describe('describeBatchFailure', () => {
   it('leaves canceled and expired alone — they carry no detail to add', () => {
     expect(describeBatchFailure({ type: 'canceled' })).toBe('canceled')
     expect(describeBatchFailure({ type: 'expired' })).toBe('expired')
+  })
+})
+
+describe('partitionProbes', () => {
+  const candidate = (category: string): ImageCandidate =>
+    ({
+      url: `https://example.test/${category}.jpg`,
+      category,
+    }) as unknown as ImageCandidate
+
+  const good = { ok: true, width: 1600, height: 1200 } as ProbeResult
+  const rateLimited = {
+    ok: false,
+    reason: 'HTTP 429',
+    transient: true,
+  } as unknown as ProbeResult
+  const deadLink = {
+    ok: false,
+    reason: 'HTTP 404',
+    transient: false,
+  } as unknown as ProbeResult
+
+  it('never files a rate-limited probe as a rejection', () => {
+    const out = partitionProbes(
+      [{ candidate: candidate('wikimedia'), probe: rateLimited }],
+      null
+    )
+    expect(out.unresolved).toEqual(['wikimedia: HTTP 429'])
+    expect(out.rejected).toEqual([])
+    expect(out.kept).toEqual([])
+  })
+
+  it('files a dead link as a rejection, because that IS an answer', () => {
+    const out = partitionProbes(
+      [{ candidate: candidate('trefle'), probe: deadLink }],
+      null
+    )
+    expect(out.rejected).toEqual(['trefle: HTTP 404'])
+    expect(out.unresolved).toEqual([])
+  })
+
+  it('keeps the two apart in one batch, which is the whole point', () => {
+    const out = partitionProbes(
+      [
+        { candidate: candidate('wikimedia'), probe: rateLimited },
+        { candidate: candidate('trefle'), probe: deadLink },
+        { candidate: candidate('curated'), probe: good },
+      ],
+      null
+    )
+    expect(out.unresolved).toHaveLength(1)
+    expect(out.rejected).toHaveLength(1)
+    expect(out.kept).toHaveLength(1)
+  })
+
+  it('rejects a photo it COULD measure and found too small', () => {
+    const tiny = { ok: true, width: 200, height: 150 } as ProbeResult
+    const out = partitionProbes(
+      [{ candidate: candidate('trefle'), probe: tiny }],
+      null
+    )
+    expect(out.rejected[0]).toMatch(/too small/)
+    expect(out.unresolved).toEqual([])
   })
 })

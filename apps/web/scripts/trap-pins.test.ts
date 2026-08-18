@@ -137,13 +137,24 @@ it('does a thing', () => {
     expect(pinnedTraps(['/**\n * Pins TRAP 24 and stops\n'])).toEqual(new Set())
   })
 
-  it('pins nothing from wcvp-lookup.test.ts, which names a trap only in a case', () => {
-    // Read from disk and never named here: writing the number into this
-    // header would pin it, which is the defect this file exists to hold shut.
+  it('pins from a real header only what that header claims, not what the file mentions', () => {
+    // A LIVE FILE, because the rule is worth checking against something that
+    // moves. wcvp-lookup.test.ts is the useful case: its header claims 11 and
+    // 15, and its body cites 11 again inside a case comment — so the count is
+    // what proves the body citation added nothing.
+    //
+    // This assertion used to read "pins NOTHING from wcvp-lookup.test.ts",
+    // which was true on the day it was written and became false on
+    // 2026-08-18 the moment that file earned a header. An assertion about
+    // another file's current content is a second home for that file's facts;
+    // asserting the RULE against it survives the file changing.
     const wcvp = readFileSync(join(__dirname, 'wcvp-lookup.test.ts'), 'utf8')
-    const cited = [...wcvp.matchAll(/\btraps?\s+(\d+b?)/gi)].map((m) => m[1]!)
-    expect(cited.length).toBeGreaterThan(0)
-    expect(pinnedTraps([wcvp])).toEqual(new Set())
+    const header = wcvp.slice(0, wcvp.indexOf('*/'))
+    const bodyCitations = [
+      ...wcvp.slice(wcvp.indexOf('*/')).matchAll(/\btraps?\s+\d+b?/gi),
+    ]
+    expect(bodyCitations.length).toBeGreaterThan(0)
+    expect(pinnedTraps([wcvp])).toEqual(pinnedTraps([`${header}*/\n`]))
   })
 })
 

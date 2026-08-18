@@ -343,6 +343,8 @@ Nine entries, one idea. If you are about to trust a two-way answer about anythin
 
 **It recurred four times in one sitting** (2026-07-29, sourcing nine photographs): a rate-limited probe read as "bad photo", a truncated header as "corrupt file", an oversized file as "unusable candidate" — and the fix for the third returned "this hero is fine" whenever its own size check failed, written by someone who had spent the previous hour fixing exactly this. **Any function returning a two-way answer about a remote resource is one network failure away from lying.** `displayUrlFor` returns `unchanged | rescaled | unmeasured` for that reason.
 
+Pinned 2026-08-18 by `apps/web/scripts/pick-plant-images.test.ts` (`partitionProbes`, extracted from `measure` so the decision could be called) and by `apps/web/lib/image-probe.test.ts` for the layer below — retry, backoff seconds, no retry on a 404. The backlog had asked only for the second of those, which already existed.
+
 **A fifth instance proved a third outcome is not enough on its own — something has to act on it.** `probeImage` had a backoff, but at 400/800ms against Wikimedia Commons all three attempts fit inside 1.2s; 9 of 14 hand-sourced Commons photos were lost to 429s, judged against the inadequate Trefle photos instead, and stamped so a re-run would never look again. The caller _did_ handle the failure — it printed the drop and carried on. `pick-plant-images` now splits `rejected` (judged) from `unresolved` (could not look), defers unresolved plants without stamping, and exits non-zero.
 
 #### 1b. A trigger that silently rewrites rows is only as good as the test you ran against it — ADDED 2026-07-29
@@ -381,11 +383,15 @@ Require `EXACT` at species rank **and** that the canonical name returned is the 
 
 **It stayed live in a second script until 2026-07-30, where it reached a prompt** — `cross-check-native-to.ts` had its own unguarded lookup, so that grass was handed to Claude as native to 66 regions, presented as the independent authority. **The guard belongs in the shared lookup, not in whichever script the trap was found in:** both native guards now go through `scripts/wcvp-lookup.ts`.
 
+Pinned 2026-08-18 by `apps/web/scripts/wcvp-lookup.test.ts`, once the decision was exported as `isExactSpeciesMatch`. It was reported as pinned for two days before that on the strength of a test asserting the reason STRING an unmatched lookup produces — a downstream symptom, with the decision itself unreachable inside a network call. 5 of its 7 cases fail against the unguarded shape.
+
 #### 15. The WCVP cache mixes GBIF checklists, so a raw `NATIVE` marker is not WCVP — OPEN by design
 
 `reference/wcvp-native-cache.json.gz` stores GBIF's whole `distributions` payload, which aggregates **many** checklists. The scripts filter on `r.source === WCVP_SOURCE` and are correct. **A human reading the cache to audit a finding usually does not** — `Rudbeckia fulgida` carries `Texas — NATIVE` from the **World Register of Marine Species**, which reads as proof the script wrongly narrowed a range. Three correct drops were nearly reversed on that evidence.
 
 **Filter the cache by `source` before believing anything in it.** This is trap 11's sibling — both are GBIF answering a narrower question than it appears to, and both are caught only by reading the field that says which answer you got (`matchType`, `source`). Left unfixed deliberately: the full payload is what makes an upstream disagreement visible at all. The script half was closed 2026-07-30 via the shared lookup; the reviewer is the remaining exposure.
+
+The script half is pinned by `apps/web/scripts/wcvp-lookup.test.ts` (a `NATIVE` marker from a non-WCVP checklist is discarded). The reviewer half has no witness a test can reach and is not claimed by one — which is why the entry still reads OPEN.
 
 #### 18. An RLS block and an empty table look identical — ADDED 2026-07-30
 
@@ -501,6 +507,8 @@ Every guard here checks whether a value is _wrong_. Until round 8 nothing checke
 `check-round-scope --round 9` returned 120 failures, all "out-of-scope pairing added", all "both plants predate the round" — they are round 10's `curate-combinations` output. `cleared_at` works for **plant** writes because a plant row carries `updated_at`; ~~a `plant_combinations` row carries no timestamp~~ — corrected 2026-08-13: **`plant_combinations` has carried `created_at` since the initial schema** (`20260706093045`, second line of its DDL), with real write times on every prod row. The claim was never checked against the migrations — "docs are not evidence", ignored inside the document that preaches it — and the queued schema change died on its first local replay with "column already exists".
 
 The real fix was code-only: an added-pairing finding now carries its row's `created_at` and `applyClearedAt` demotes it past `cleared_at` exactly like a plant write. Round 9 exits 0 FAIL with all 120 demoted on their true timestamps. A REMOVED pairing still has no timestamp to judge — the row is gone — so **do not read a removed-pairing failure on a closed round as a regression; waive it by name**.
+
+Pinned 2026-08-18 by `apps/web/scripts/check-round-scope.test.ts`, which asserts both halves: the demotion, and that a removed pairing stays FAIL. `applyClearedAt` had to be exported first. The backlog had credited `scope.test.ts` with pinning this; that file tests CLI flag parsing in `scope.ts` and never touches pairings, `cleared_at` or `created_at` — a reason nobody had read against the test it named.
 
 #### 25. The replayed schema was not the production schema: table grants lived outside the repo — FIXED 2026-08-13, expect the shape
 
@@ -956,6 +964,106 @@ is unchanged.
 ## Sessions
 
 <!-- Newest first. Append with: scripts/log-db-session.ts --round <label> -->
+
+### 2026-08-18 — Four trap pins, three of which the backlog had wrong (not a round)
+
+**Branch** `session/2026-08-18-stamp-writers`. No migration, no catalog write.
+Traps unpinned 21 → 17.
+
+**The backlog called all four cheap and one of them was.** Trap 15 was: the
+test asserting that a `NATIVE` marker from a non-WCVP checklist is discarded
+already existed and is the trap's own witness for the half that is code. The
+header now says which half, because the reviewer half stays open by design.
+
+**The other three needed a seam.** Trap 11's only assertion was the reason
+STRING an unmatched lookup produces — a downstream symptom, with the decision
+itself three expressions inside a network call. `isExactSpeciesMatch` is now
+exported; 5 of its 7 cases fail against the unguarded shape. Trap 1's entry
+asked for a fake fetch that 429s, which `image-probe.test.ts` already had; the
+trap's own record says a third outcome is not enough unless something ACTS on
+it, so the witness is `partitionProbes`, extracted from `measure`.
+
+**Trap 16's entry named the wrong file.** It credited `scope.test.ts`, which
+tests CLI flag parsing and never touches pairings, `cleared_at` or `created_at`.
+The fix is `applyClearedAt` in `check-round-scope.ts` — unexported, untested.
+Nobody had read the reason against the test it named.
+
+**Two guards caught me, both correctly.** A header sentence reading "Trap 1 is
+NOT pinned here" pinned trap 1, because the marker word and the number shared a
+sentence; the ratchet reported it as a stale hatch immediately. And
+`trap-pins.test.ts` asserted that `wcvp-lookup.test.ts` pins NOTHING — true when
+written, false the moment that file earned a header. It now asserts the rule
+against that file rather than its contents.
+
+**Also.** `check-round-scope.ts` ran `main()` on import, so importing it in a
+test called `process.exit(1)` mid-suite. Guarded like its siblings.
+
+### 2026-08-18 — The botanical check stamped what it disagreed with (not a round)
+
+**Branch** `session/2026-08-18-stamp-writers`. No migration, no prod catalog
+write. Empties `REPORT_ONLY_STAMPS`.
+
+**Found.** `cross-check-plants` stamped `botanical_checked_at` on every row it
+walked. A row it CONTRADICTED therefore left the `--new-only` queue for good and
+round close read the stamp as FAIL-level proof the step had settled it, while
+the disagreement itself lived only in gitignored `reports/` — 51 files there,
+none in git. The certification was durable and the doubt was not.
+
+**The handoff's fix would not have worked.** It said to copy `rowsToStamp` from
+`cross-check-native-region`. That guard can withhold a stamp because its own
+`--apply` later earns it; this one has no `--apply` and never will. Withholding
+alone would have parked every disagreeing row on a FAIL-level step with nothing
+able to settle it, and re-billed each to Claude on every `--new-only` run. Scale,
+from the 2026-07-09 run over 201 rows: 40 flagged, 14 holding a `disagree` — so
+roughly 55 of 780 catalog-wide, or ~200 if `minor` withheld too.
+
+**Changed.** Three parts, in the order they had to happen. `shouldStamp` (per
+row, not the batch selector — this guard has no flags to key on) withholds only
+on `disagree`; `minor` is the tolerance band the check exists to define.
+`buildQueue` writes the withheld rows to a committed
+`reference/botanical-flags-<date>.json` with every verdict empty. And
+`apply-botanical-fixes.ts` turns a person's ruling into a correction or a keep,
+stamping in the same statement via `reviewed-mutation.ts`, freezing curated rows.
+
+**Verified.** Local stack (rule 11): a correction writes and stamps, a curated
+row is frozen, the run records `evidence confirmed`. The first cut recorded
+CONTRADICTED instead — it minted the stamp before `beginRun`, so the value
+landed before the window opened. The clock is now read inside the run. That bug
+was invisible to typecheck and to every unit test.
+
+**Open.** A `model: 'human'` run warns that no tokens were observed (trap 37).
+Pre-existing, shared with the other apply scripts.
+
+### 2026-08-18 — The keep that could not be recorded (not a round)
+
+**Branch** `session/2026-08-18-stamp-writers`. No migration, no prod catalog
+write. Empties `STAMPS_WITHOUT_WRITERS`.
+
+**Found.** `native_to_reviewed_at` had one writer in repo history — migration
+`20260813110500`'s 151-row backfill — and a trigger that withdraws the stamp on
+any phrase edit, so it could only drain. Since 2026-08-16 `shouldStamp()` reads
+it as the only way a `gross`/`contradicts` row settles without a rewrite, which
+made a new keep unrecordable and would have failed round close on the first one.
+
+**Changed.** `apply-native-to-fixes.ts --review-keep` stamps the kept rows of a
+committed review file. It lives beside the rewrite path because a keep and a
+rewrite are two verdicts from one review; the audit's alternative, coupling the
+stamp into the three `native_to` writers, was withdrawn by the schema review.
+The match is on `scientific_name` AND the exact reviewed phrase, so a drifted
+row is reported and never inherits a verdict about other words. The stamp is
+dated to the review, not the run — which is why `updated_at` witnesses the run
+and the stamp cannot: a backdated value lands outside the window and would file
+the run CONTRADICTED for doing what it promised.
+
+**Verified.** Local stack (rule 11): the write lands at the review date, the
+drifted row is refused, and editing the phrase withdraws the stamp. Against
+prod, `--dry-run` reports 151 already stamped, 0 stale, 0 missing — the same
+151/151 the backfill matched, which also proves the timestamp literal is
+identical. The write path itself has not run against prod; there is nothing to
+write until a review happens.
+
+**Open.** A `model: 'human'` run warns that no tokens were observed (trap 37).
+Pre-existing, shared with the rewrite path.
 
 ### 2026-08-18 — Three columns written every round and read by nothing (not a round)
 

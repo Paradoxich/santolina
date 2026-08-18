@@ -98,14 +98,36 @@ export const COLUMNS_NO_PRODUCT_READS: Record<string, string> = {
 
 /** Shape 2. Stamp columns that exist in the schema with no TypeScript writer. */
 export const STAMPS_WITHOUT_WRITERS: Record<string, string> = {
-  native_to_reviewed_at:
-    'Written only by migration 20260813110500, backfilling 151 reviewed-and-kept rows from reference/native-to-review-2026-07-30.json. NOW LOAD-BEARING: since 2026-08-16 shouldStamp() in cross-check-native-to.ts treats this column as the record that a person read a phrase and kept it, which is the only way a gross/contradicts row settles without a rewrite. With no writer, a NEW kept row cannot be recorded and will fail round close until the phrase is rewritten instead. The --review-keep writer (audit F5) is what deletes this entry.',
+  // EMPTY as of 2026-08-18. `native_to_reviewed_at` was the only entry and it
+  // got its writer: `apply-native-to-fixes.ts --review-keep`, which stamps the
+  // rows a review read and kept. It lives beside the rewrite path because a
+  // keep and a rewrite are two verdicts from one review, and splitting them
+  // would have been a second home for one fact.
+  //
+  // An entry here is a column a migration declares and no script can ever set.
+  // That is only honest for a column nothing READS as state; the moment one
+  // does, the entry describes a column that drains monotonically, which is what
+  // this one did for a month.
 }
 
 /** Shape 3. `stampChecked` callers with no finding-aware selector (trap 24). */
 export const REPORT_ONLY_STAMPS: Record<string, string> = {
-  'cross-check-plants.ts':
-    'Stamps botanical_checked_at per row as the pass walks the catalog, so the stamp records that the check ran, not that a disagreement was acted on. Report-only by design today: it never edits catalog data. Fix is the rowsToStamp shape from cross-check-native-region.ts.',
+  // EMPTY as of 2026-08-18. `cross-check-plants` was the last entry and it now
+  // has `shouldStamp`, a per-row predicate that withholds the stamp on any row
+  // carrying a `disagree` flag.
+  //
+  // THE SELECTOR WAS NEVER THE HARD HALF, and the entry's own remedy line said
+  // otherwise for two days. Copying `rowsToStamp` alone would have parked ~7% of
+  // the catalog (14 of 201 rows on the 2026-07-09 run) on a FAIL-level round
+  // close with nothing in existence able to settle them, because unlike
+  // cross-check-native-region this guard has no `--apply` and never will. The
+  // fix needed a settlement path first: a committed queue instead of a report
+  // that dies in gitignored reports/, and `apply-botanical-fixes.ts` to turn a
+  // person's verdict into a correction or a keep, stamping either way.
+  //
+  // An entry here is a stamp written per row walked rather than per row
+  // settled. Before adding one, check whether the guard has any way to settle
+  // what it found — if it does not, the selector is not the fix.
 }
 
 /**
@@ -124,7 +146,31 @@ export const REPORT_ONLY_STAMPS: Record<string, string> = {
  * the rule allows a source scan as the alternative.
  */
 export const TRAPS_NOT_PINNED: Record<string, string> = {
-  '1': 'Rate-limit fallback. The fix removed the fallback; a test needs a fake fetch that 429s and an assertion that the error propagates. Cheap, and worth doing next.',
+  // 1, 11, 15 and 16 left on 2026-08-18, and only one of the four was the
+  // paperwork exercise this list said it was.
+  //
+  //   15 WAS. `wcvp-lookup.test.ts` already asserted that a NATIVE marker from
+  //      a non-WCVP checklist is discarded — the trap's own witness for the
+  //      half that is code. The header now says which half that is, because the
+  //      trap stays OPEN by design for the half no test can reach: a person
+  //      reading the raw cache, which nearly reversed three correct drops.
+  //   11 WAS NOT. The only assertion was a reason STRING on a hand-built
+  //      object; the decision itself was three expressions inside a network
+  //      call, so nothing could reach it. `isExactSpeciesMatch` is now exported
+  //      and 5 of its 7 cases fail against the unguarded shape.
+  //   16 WAS NOT, and this list was wrong about where its fix lived. It
+  //      credited `scope.test.ts`, which tests CLI flag parsing in `scope.ts`
+  //      and never touches pairings or `cleared_at`. The fix is `applyClearedAt`
+  //      in `check-round-scope.ts`, which had no test and was not exported.
+  //
+  //    1 needed a seam too, but not the one this list named. It asked for a
+  //      fake fetch that 429s; `lib/image-probe.test.ts` already had that. The
+  //      trap's own record says a third outcome is not enough on its own —
+  //      something has to ACT on it — so the witness is `partitionProbes`,
+  //      where a transient failure stays out of the rejection list.
+  //
+  // The reason field below is a dated claim, not a fact. Read the test before
+  // deleting an entry on the strength of what this says about it.
   '1b': 'Trigger semantics. Only observable against a live or replayed Postgres; pnpm trigger:contract is the existing home and would need to become a checked artifact.',
   '2': '--new-only scoping. Now state-based (*_checked_at IS NULL); the seam is each script argument parser, and the honest witness is a query, not a unit.',
   '4': 'Steps silently not running. round-rehearsal.test.ts covers the registry half; the remaining half is run-round.ts skip logic.',
@@ -133,10 +179,7 @@ export const TRAPS_NOT_PINNED: Record<string, string> = {
   '8': 'reports/ is gitignored. Environmental; a scan could assert no script treats a cache miss as an empty result.',
   '9': 'Trefle field names. Would be caught by generated API types, not by a scan.',
   '10': 'Trefle native[] includes introduced range. Open by design; the witness is WCVP disagreement counts, which is data, not code.',
-  '11': 'GBIF matches upward into a genus. Seam is lib/wcvp-lookup.ts; scripts/wcvp-lookup.test.ts exists but names no trap.',
   '12': 'Manifest records names before the name pass. Seam is round-manifest.ts plus the name pass order in RUNBOOK.',
-  '15': 'WCVP cache mixes GBIF checklists. Open by design. wcvp-lookup.test.ts names it inside a case, which is a useful comment and not a closure — moving that line into the header would pin it.',
-  '16': 'Pairing check rots without a timestamp. Premise was false and the entry records the correction; the fix is pinned by scripts/scope.test.ts, which names no trap.',
   '17': 'A written-down blocker outlives the blocker. This is a documentation-claim trap; the doc rules queued for handoff step 3 are its remedy, not a test.',
   '18': 'RLS block and empty table look identical. Needs a live anon client.',
   '19': 'A test that cannot fail. Meta; the closest mechanism is this file.',
