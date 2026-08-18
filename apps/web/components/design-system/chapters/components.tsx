@@ -20,11 +20,13 @@ import {
   Spinner,
   StatCard,
   Tabs,
+  Textarea,
   Toast,
   Tooltip,
 } from '@paradoxui/ui'
 import { icons } from '@/lib/icons'
 import { Label, Section, type Chapter } from '../chapter-helpers'
+import { SelectDemo } from '../SelectDemo'
 
 const placeholderImage = <div className="size-full bg-sage-300" aria-hidden />
 
@@ -297,10 +299,10 @@ function Forms() {
   return (
     <Section
       title="Forms"
-      intro="Text entry and search — label, helper text, and error states share one visual language."
+      intro="Four controls on one shell. Input, Textarea, SearchField and Select share a single fill, edge, radius, text size and focus treatment because they render the same internal FieldShell — not because anyone keeps them in step. The shell itself is not exported: it is the look of a field without the label, error or aria wiring that makes one usable."
     >
       <div className="grid max-w-[480px] grid-cols-1 gap-item-gap">
-        <Label>Input · SearchField</Label>
+        <Label>Input</Label>
         <Input
           label="Garden name"
           placeholder="e.g. Balcony south"
@@ -311,7 +313,23 @@ function Forms() {
           defaultValue="Opatija"
           errorMessage="We couldn't find this city."
         />
+
+        <Label>Select</Label>
+        {/* Not a field-styled Menu. A menu lists actions; a select holds a
+            value and has to announce it, so this is a real listbox and its
+            trigger is named "<label> <value>". */}
+        <SelectDemo />
+
+        <Label>Textarea</Label>
+        <Textarea placeholder="What happened in your garden?" />
+
+        <Label>SearchField</Label>
         <SearchField placeholder="Search plants" />
+
+        <Label>Sizes</Label>
+        <Input size="sm" placeholder="Small · 36px" />
+        <Input placeholder="Medium · 40px — the default" />
+        <Input size="lg" placeholder="Large · 48px" />
       </div>
     </Section>
   )

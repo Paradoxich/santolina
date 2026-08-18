@@ -3,8 +3,16 @@ export type { ButtonProps } from './components/Button'
 export { IconButton } from './components/IconButton'
 export type { IconButtonProps } from './components/IconButton'
 
+/* FieldShell is deliberately absent: it is the look of a field without the
+ * label, error or aria wiring that makes one usable, and the package's closed
+ * `exports` map means omitting it here is enforced by resolution rather than
+ * by convention. Every control that needs the look has a component below. */
 export { Input } from './components/Input'
 export type { InputProps } from './components/Input'
+export { Textarea } from './components/Textarea'
+export type { TextareaProps } from './components/Textarea'
+export { Select } from './components/Select'
+export type { SelectProps, SelectOption } from './components/Select'
 
 export { FormError } from './components/FormError'
 export type { FormErrorProps } from './components/FormError'

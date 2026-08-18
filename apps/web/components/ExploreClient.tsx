@@ -135,13 +135,9 @@ export function ExploreClient({
               searchPinned ? 'opacity-100' : 'opacity-0',
             ].join(' ')}
           />
-          {/* PREVIEW — the unified field shell, for Ana to rule on before it
-              becomes the real Input. Fill is surface-field (translucent, so
-              one token holds on both the page and a modal), edge is white and
-              brighter than the fill, focus is a 2px accent outline. This
-              replaces a sage-100 hairline over an opaque card, which was the
-              same relationship hardcoded for this one ground.
-              Revert target: see /design-system/field-lab. */}
+          {/* The kit's own treatment now, so the eleven classes that used to
+              re-shape SearchField here are gone. They existed because the
+              component shipped a pill this call site did not want. */}
           <div className="flex items-center gap-inline-gap">
             <SearchField
               ref={searchInputRef}
@@ -150,8 +146,7 @@ export function ExploreClient({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               iconClassName="text-primary"
-              className="h-10 flex-1 gap-inline-gap rounded-md border border-card bg-surface-field pl-item-gap pr-tight-gap !shadow-none focus-within:!bg-surface-field focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-focus"
-              inputClassName="text-body placeholder:text-muted"
+              className="flex-1 pr-tight-gap"
               trailingAction={
                 query && (
                   <IconButton
