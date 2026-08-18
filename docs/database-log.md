@@ -56,7 +56,7 @@ The numbers **in this file are different and must stay written down**: a dated s
     **Deferred, added 2026-08-18 (round 13).**
     - **A cultivar tier.** `moon` and `gothic` cannot be filled by any seeding round at any batch size: their signature planting is cultivar selections of species the catalog already holds ('Queen of Night', 'Black Lace', black mondo, white roses). Measured by `pnpm probe:gap`, which reports the style as cultivar-bound so no future round re-derives it from a low tag count. Until the tier exists those two styles stay thin, and that is correct rather than neglected.
     - **"Poor citizen in region X".** A field beside `native_region`, so the app can warn the reader who needs warning instead of a seeding decision quietly deciding for everyone. Reasoning and the interim rule are in [why a round is shaped the way it is](curation.md#round-runbook) (Ana, 2026-08-18).
-    - **`foliage_checked_at` — WRITTEN AND REPLAYED LOCALLY, NOT YET PUSHED.** Migration `20260818100000`. `curate-plants` asks for `foliage_color` whenever it is NULL, and NULL is also its legitimate answer ("typical green"), so the question can never be satisfied: 587 of 780 drafted rows carry NULL, 538 of them uncurated and therefore re-asked on every run (measured 2026-08-18). Trap 26's shape a third time, after `style_tags` `[]` and `is_greenery` `false`. **The branch's code READS the column** (`STATUS_PROJECTION`, `missingFields`, `buildPatch`), so every catalog script on it fails against production until the push lands — PostgREST errors on a column that does not exist. `supabase db push` then `pnpm migrations:check`; do not merge before that.
+    - **`foliage_checked_at` — APPLIED 2026-08-18 and verified.** Migration `20260818100000`. `curate-plants` asks for `foliage_color` whenever it is NULL, and NULL is also its legitimate answer ("typical green"), so the question can never be satisfied: 587 of 780 drafted rows carry NULL, 538 of them uncurated and therefore re-asked on every run (measured 2026-08-18). Trap 26's shape a third time, after `style_tags` `[]` and `is_greenery` `false`. Verified after the push: `migrations:check` OK at 44/44, all 780 rows stamped with `foliage_checked_at = ai_drafted_at`, 0 drafted-but-unstamped, `foliage_color` NULL unchanged at 587, and the skip it exists for now fires (rounds 13/12/11 go from 0/1/3 rows skipped to 5/24/20). **The first push applied nothing**: it ran from the main checkout, where the migration file does not exist, and still ended with a success-looking line — trap 34, caught by `migrations:check` rather than by the push output.
 
 12. **Every remediation carries a verification predicate, not just a command.** A trap that says "run `curate-styles --round 9`" tells you what to type; it does not tell you how to know it worked. Write both: the command, and the query whose result changes when the repair lands — the shape the 2026-08-15 repair used, "fixed when `style_checked_at = ai_drafted_at AND style_tags = '{}'` returns 0". Remediations are the most dangerous claims in this file. They are never falsified until the day someone follows one, they are trusted because they are in the traps file, and trap 26's was one session away from being run as written.
 
@@ -986,13 +986,13 @@ rather than after (`missingFields`). Migration `20260818100000` adds
 `ai_drafted_at`, which is derived rather than invented: the field has been in
 the prompt since the script's first commit (2026-07-06) and the earliest row
 was drafted 2026-07-09, so every existing row was genuinely asked. Replayed on
-the local stack and the backfill statement exercised there. **NOT pushed to
-production** — the push was not run in this session, and the branch's code
-reads the column, so it must not merge first.
+the local stack, then applied to production and verified: 780/780 stamped,
+stamp equals draft time on every row, `verify-round --round 13` still 0
+failures. The skip now passes over 5 of round 13's 6 selected rows where it
+passed over 0.
 
 **Not done.** The remaining 52 violations (36 feed, 16 dashes) — neither has a
-safe substitution, so both are a person's. The 37 stale-name descriptions. The
-`foliage_checked_at` migration.
+safe substitution, so both are a person's. The 37 stale-name descriptions.
 
 **Verified.** `copy:check --all` re-run independently after the sweep: 88 → 52.
 Six seasonal_rhythm stages intact on three spot-checked rows. 516 tests green.

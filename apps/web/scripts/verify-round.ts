@@ -36,8 +36,11 @@
  *   ./node_modules/.bin/tsx --env-file=.env.local scripts/verify-round.ts
  *   ./node_modules/.bin/tsx --env-file=.env.local scripts/verify-round.ts --round 12
  *
- * `--round <label>` scopes the checks to one round's rows. Without it the
- * checks run against the whole catalog.
+ * `--round <label>` ADDS the per-step completeness checks for that round. It
+ * does NOT narrow the checks above — those always run against the whole
+ * catalog, which is what makes them catalog invariants. (This paragraph said
+ * the opposite until 2026-08-18; the code has always read this way.) Findings
+ * on rows the named round seeded are labelled `← THIS ROUND`.
  */
 
 import { IGNORED_BLOOM_COLORS, RAW_TO_BUCKET } from '../lib/bloom-colors'
@@ -243,7 +246,16 @@ async function fetchAllCombos(): Promise<ComboRow[]> {
   )
 }
 
-function checkPlants(plants: PlantRow[]): Finding[] {
+/**
+ * @param ownedByRound ids the round being verified seeded, when one was named.
+ *   Used ONLY to label copy findings, so a round can tell its own five dashes
+ *   from the catalog's sixteen. Every check here runs catalog-wide — `--round`
+ *   ADDS the completeness checks, it does not narrow these.
+ */
+function checkPlants(
+  plants: PlantRow[],
+  ownedByRound: Set<string> = new Set()
+): Finding[] {
   const findings: Finding[] = []
 
   for (const p of plants) {
@@ -364,9 +376,12 @@ function checkPlants(plants: PlantRow[]): Finding[] {
     // it must not be closeable without anyone knowing either. WARN is exactly
     // that pair — visible at step 8, exit 0.
     //
-    // It reports the round's OWN rows because verify-round already scopes its
-    // findings that way; the back catalog is `pnpm copy:check --all`'s job.
-    // Round 13 closed green with 6 of these, which is what this check ends.
+    // CATALOG-WIDE, LIKE EVERY OTHER CHECK IN THIS FUNCTION. `--round` adds the
+    // completeness checks; it does not narrow these, whatever the header used
+    // to say. That matters here more than for the other warnings, because the
+    // back catalog carries 52 of these and a round's own handful would vanish
+    // into them — so a finding on a row this round seeded is LABELLED. For the
+    // round's rows alone: `pnpm copy:check --round <label>`.
     for (const { field, kind, text } of proseOf(
       p as unknown as Record<string, unknown>
     )) {
@@ -374,7 +389,9 @@ function checkPlants(plants: PlantRow[]): Finding[] {
         findings.push({
           level: 'WARN',
           check: `copy: ${v.rule}`,
-          detail: `${p.common_name} [${field}] …${v.match.replace(/\n/g, ' ')}…`,
+          detail:
+            `${p.common_name} [${field}] …${v.match.replace(/\n/g, ' ')}…` +
+            (ownedByRound.has(p.id) ? '  ← THIS ROUND' : ''),
         })
       }
     }
@@ -621,7 +638,17 @@ async function main() {
   ])
   console.log(`${plants.length} plants, ${combos.length} combinations.`)
 
-  const findings = [...checkPlants(plants), ...checkCombos(plants, combos)]
+  // The round's own ids, for labelling copy findings. Read here rather than
+  // inside checkPlants so the catalog-wide checks stay independent of whether
+  // a round was named.
+  const ownedByRound = new Set(
+    roundLabel ? (readRoundManifest(roundLabel)?.seeded_ids ?? []) : []
+  )
+
+  const findings = [
+    ...checkPlants(plants, ownedByRound),
+    ...checkCombos(plants, combos),
+  ]
   findings.push(...(await checkStepRegistry()))
   if (roundLabel) findings.push(...(await checkRoundCompleteness(roundLabel)))
   else
