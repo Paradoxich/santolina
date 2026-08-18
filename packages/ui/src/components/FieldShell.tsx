@@ -1,7 +1,7 @@
 import React from 'react'
 import { cn } from '../utils/cn'
 
-export type FieldSize = 'sm' | 'md' | 'lg'
+export type FieldSize = 'md' | 'lg'
 
 /**
  * INTERNAL. Deliberately not exported from the package index, and the package
@@ -18,8 +18,13 @@ export type FieldSize = 'sm' | 'md' | 'lg'
  * reopens the question, and it shows up in a diff.
  */
 
+/**
+ * Two steps, not three. A 36px `sm` shipped with the first version and had no
+ * consumer the day it landed — the note scope picker, the only candidate, was
+ * ruled up to 40. Reintroduce it when something asks for it, rather than
+ * carrying a size whose only proof of usefulness is a Storybook row.
+ */
 const HEIGHTS: Record<FieldSize, string> = {
-  sm: 'h-9',
   md: 'h-10',
   lg: 'h-12',
 }

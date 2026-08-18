@@ -67,7 +67,6 @@ export const Disabled: Story = { render: () => <Demo disabled /> }
 export const Sizes: Story = {
   render: () => (
     <div className="flex w-[320px] flex-col gap-4">
-      <Demo label="Small" size="sm" />
       <Demo label="Medium — the default" size="md" />
       <Demo label="Large" size="lg" />
     </div>

@@ -327,7 +327,6 @@ function Forms() {
         <SearchField placeholder="Search plants" />
 
         <Label>Sizes</Label>
-        <Input size="sm" placeholder="Small · 36px" />
         <Input placeholder="Medium · 40px — the default" />
         <Input size="lg" placeholder="Large · 48px" />
       </div>
