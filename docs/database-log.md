@@ -957,6 +957,38 @@ is unchanged.
 
 <!-- Newest first. Append with: scripts/log-db-session.ts --round <label> -->
 
+### 2026-08-18 — The bloom-prose detector read persistence as flowering (not a round)
+
+**Branch** `session/2026-08-18-db-backup`. No migration.
+
+**Found.** `bloom:prose --all` reported 20 disagreements, and its closing line
+advised correcting the scalar because "the prose is usually the more accurate
+half". Read in full, the 20 split three ways: 5 scalar too narrow, 5 prose
+over-claiming a shoulder season, 6 the detector misread, 4 shoulder-month
+questions. **Following the advice would have been a regression on 6 rows** —
+one puts winter into the bloom months of a summer-flowering grass.
+
+**Fixed.** Two defects in `lib/bloom-prose.ts`. `persist|persists` sat in
+`ASSERTS_FLOWERING`, so "flower plumes … persist through winter" read as a
+claim of winter flowering; persistence moved to `NOT_FLOWERING`, with
+`stems?|spikes?` added beside the existing `buds?|stalks?`. Season attribution
+is also sentence-level, so "leaves emerge in spring before the flower spikes
+appear" reported spring — suppressed by the same change. Six cases pinned in
+`lib/bloom-prose.test.ts` with the real catalog prose; they fail 6/25 against
+the pre-fix file. The closing advice line now says either half can be wrong.
+Guard output 20 → 14, no true positive lost.
+
+**Database.** Five `bloom_months` widened, direct writes guarded on exact
+current values, each confirmed by read: `Cornus mas` [3] → [2,3];
+`Fragaria vesca` [4,5,6] → [4,5,6,7,8,9]; `Chrysanthemum × morifolium`
+[9,10,11] → [8,9,10,11]; `Clematis flammula` and `Agapanthus africanus`
+[6,7,8] → [6,7,8,9]. Guard 14 → 9. `invalidate_editorial_verdict` does not
+watch `bloom_months`: two `is_curated = true` rows kept their verdict.
+
+**Not done.** The remaining 9 need prose edits, not scalars — 5 hedged
+over-claims ("from late winter", "into early autumn") and 4 shoulder-month
+questions. Editorial, so an agent's.
+
 ### 2026-08-18 — `db-backup.yml` proven on the bumped actions, and one editorial re-judge (not a round)
 
 **Branch** `session/2026-08-18-db-backup`. No migration. No catalog backup.

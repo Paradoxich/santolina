@@ -36,6 +36,17 @@ describe('prose that names a season without claiming flowering', () => {
     // A time reference, not a claim: the subject is the foliage.
     'The grassy foliage emerges during or after flowering and persists through winter into spring.',
     'The strap-like foliage emerges after flowering and persists through winter before dying back in late spring.',
+    // Persistence: the plume is still standing, the plant is not flowering.
+    // All six were reported by --all on 2026-08-18; correcting the scalar as
+    // the guard advised would have put winter in a summer grass's bloom.
+    'Bears airy, feathery flower plumes in summer that catch the light beautifully and persist into winter.',
+    'In summer, it produces feathery flower plumes that rise well above the foliage and persist through winter, turning golden as they age.',
+    'A rounded, bushy shrub grown for its dramatic smoke-like flower plumes that appear in summer and persist into autumn.',
+    'Cone-shaped white flower clusters appear in early summer, aging to pink and tan and persisting through winter.',
+    // The season belongs to a clause about the leaves, not the flowers.
+    'The rosettes of fresh green leaves emerge in spring before the impressive flower spikes appear.',
+    // A stem developing is not a flower opening.
+    'Green clumps remain attractive with fine-textured foliage. Flower stems begin to develop in late summer.',
     // Hedged: conditional on a mild year or a sheltered spot.
     'In milder areas, early flowers may begin to open in winter.',
     'Occasional flowers may appear through winter.',
