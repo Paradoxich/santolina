@@ -360,6 +360,8 @@ export const allTokens: TokenTier[] = [
       {
         title: 'Layout measures',
         entries: sp(
+          '--modal-padding',
+          '--button-padding-lg',
           '--sidebar-width',
           '--sidebar-offset',
           '--content-gutter',

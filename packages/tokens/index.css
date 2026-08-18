@@ -330,6 +330,15 @@
   --sidebar-divider: var(
     --color-sage-200
   ); /* soft hairline separating the flush sidebar from content — was white, too harsh against surface-page (sage-300) */
+  /* Control and surface padding at 24px. The semantic scale is built for
+   * layout gaps and steps 20 → 40, so there is no role at spacing-6, and both
+   * of these are padding inside a component rather than a gap between things.
+   * Tier 3 by rule 3: a component-specific measured value, added at the moment
+   * of need. --space-card-padding is the same shape one tier up. */
+  --modal-padding: var(
+    --spacing-6
+  ); /* 24px — dialog header/body/footer inset */
+  --button-padding-lg: var(--spacing-6); /* 24px — horizontal inset, lg only */
   --sidebar-width: 14.5rem; /* 232px — app sidebar */
   /* Gutter between page content and the shell's edges, on both sides.
    * Full-bleed elements (tab headers, the Explore search bar) escape the

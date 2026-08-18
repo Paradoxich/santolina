@@ -66,9 +66,11 @@ const variantStyles: Record<NonNullable<ButtonProps['variant']>, string> = {
 // every size — nothing in the app currently scales button text with height.
 // Radius: 32 -> 8px, 40 & 48 -> 12px (lg does not step up to rounded-lg).
 const sizeStyles: Record<NonNullable<ButtonProps['size']>, string> = {
-  sm: 'h-8 px-3 text-body-small rounded-sm',
-  md: 'h-10 px-4 text-body-small rounded-md',
-  lg: 'h-12 px-6 text-body-small rounded-md',
+  sm: 'h-8 px-item-gap text-body-small rounded-sm',
+  md: 'h-10 px-row-gap text-body-small rounded-md',
+  /* 24px has no semantic step — the scale goes 20 → 40 — and this is padding
+   * inside a control rather than a gap, so it is a tier 3 measured value. */
+  lg: 'h-12 px-button-padding-lg text-body-small rounded-md',
 }
 
 export function Button({
@@ -82,7 +84,7 @@ export function Button({
   ...props
 }: ButtonProps) {
   const baseStyles = [
-    'inline-flex items-center justify-center gap-2',
+    'inline-flex items-center justify-center gap-inline-gap',
     'font-medium border',
     'transition-colors duration-normal',
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
