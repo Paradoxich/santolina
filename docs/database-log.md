@@ -957,6 +957,38 @@ is unchanged.
 
 <!-- Newest first. Append with: scripts/log-db-session.ts --round <label> -->
 
+### 2026-08-18 — Three columns written every round and read by nothing (not a round)
+
+**Branch** `session/2026-08-18-backup-freshness`. No migration, no catalog
+write. Closes the last two open findings; adds invariant shape 19.
+
+**Found.** `combo-fields-unchecked` claimed a null `combination_type`,
+`strength` or `notes` leaves the companion card with nothing to render. The card
+renders thumbnails — `lib/plant-detail.ts` selects `plant_id_a, plant_id_b`, and
+nothing under `app/`, `components/` or `lib/` reads the three. Its remedy would
+have gated round close on data the product does not consume. Live nulls:
+`combination_type` 0, `strength` 0, `notes` 13 of 1945.
+
+**Changed.** Shape 19, `a catalog column the product never reads` — the mirror
+of shape 2. "Read" is the `.select()` projection the product asks for, not a
+word search, which would clear `notes` against a diary variable; `select('*')`
+skips the table. The three columns are in `COLUMNS_NO_PRODUCT_READS`, waiting on
+a Notion decision about whether the card says WHY two plants pair. Not dropped:
+`strength` orders and `combination_type` groups, and re-deriving either costs a
+model call per pair. The scan now sits behind `require.main`, so importing it no
+longer runs every check and exits.
+
+`common-name-never-judged-at-seed` closed as already built:
+`curate-common-names.ts` is runbook step 1a and ran for round 13
+(`curate-common-names-2026-08-17T2124-9f73646e`); no `fix-round13-names.ts`
+exists.
+
+**Not done.** The 13 null `notes`. Backfilling a column nothing reads is the
+cost this shape exists to name.
+
+**Verified.** `ci:check --no-db` green, 597 tests. Shape 19 proven to fire by
+removing one entry. Open findings 2 → 0.
+
 ### 2026-08-18 — The sun audit flagged a column the trigger recomputes (not a round)
 
 **Branch** `session/2026-08-18-backup-freshness`. No migration, no catalog

@@ -76,6 +76,26 @@ import {
 // Deleting an entry is the goal. Adding one needs a reason a reviewer can read.
 // ---------------------------------------------------------------------------
 
+/** Public-read catalog tables. User-owned tables are not this shape's business. */
+const CATALOG_TABLES = ['plants', 'plant_combinations'] as const
+
+/**
+ * Shape 19. Catalog columns the pipeline writes and the product never reads.
+ *
+ * Each entry says what the column is waiting on and who owes the decision,
+ * because "unread" is only a defect once somebody has decided it should not be.
+ * An entry that gains a reader fails as a stale hatch — which is the point: the
+ * day the companion card renders one of these, this list shrinks by itself.
+ */
+export const COLUMNS_NO_PRODUCT_READS: Record<string, string> = {
+  'plant_combinations.combination_type':
+    'Written by curate-combinations since 2026-07-06 (visual/ecological/seasonal), read by nothing: lib/plant-detail.ts selects the two id columns and renders thumbnails. Kept rather than dropped because it is the axis a companion card would group by, and re-deriving it costs a model call per pair. PRODUCT DECISION, Notion Build Backlog: does the card say WHY two plants pair? 0 nulls in 1945 rows as of 2026-08-18.',
+  'plant_combinations.strength':
+    'Same run, same reader (none). It is the ordering key a card would use to show the best pairing first, which is why it is not dropped with the notes. Same product decision. 0 nulls in 1945 rows as of 2026-08-18.',
+  'plant_combinations.notes':
+    'The one-line reason a pair works. Same product decision, and the weakest of the three: 13 of 1945 rows are null, all from the original 2026-07-06 run, so it cannot be rendered without a backfill anyway. Backfill only if the card ships — filling a column nothing reads is the cost this shape exists to name.',
+}
+
 /** Shape 2. Stamp columns that exist in the schema with no TypeScript writer. */
 export const STAMPS_WITHOUT_WRITERS: Record<string, string> = {
   native_to_reviewed_at:
@@ -360,25 +380,32 @@ export const OPEN_FINDINGS: Record<string, OpenFinding> = {
   // 10 cases fail against the pre-fix address. The entry's prose also outlived
   // one of its own claims: apply-sun-widening was "queued for archive" and had
   // in fact already been archived.
-  'common-name-never-judged-at-seed': {
-    what: 'Nothing between Trefle and the catalog judges common_name. lib/trefle.ts falls back to the scientific name when Trefle has no English one, so a row lands in Explore reading "Rodgersia pinnata"; nothing anywhere catches a flora name nobody uses ("Cowflock", "Premorse") or a name already held by a different species. curate-plants reads common_name and never writes it. So the whole of trap 6 is paid downstream, once per round, by hand.',
-    source:
-      'Trap 6 in docs/database-log.md, which documents the defect class as recurring and prescribes the DOWNSTREAM fix. The count is what makes it a finding rather than a known cost: scripts/fix-round8-names.ts, fix-round11-names.ts and fix-round12-names.ts, three corrective passes in three consecutive seeding rounds, each one a hand-written per-row table. Round 7 needed the same step before the pattern was named. Confirmed 2026-08-17 by grep: common_name appears in curate-plants.ts only in selects and log labels.',
-    file: 'apps/web/lib/trefle.ts',
-    witness:
-      /const commonName = detail\.common_name \?\? detail\.scientific_name/,
-    remedy:
-      'DECIDE BEFORE ROUND 13, because the alternative is a fourth instance. The fallback line is only defect 1; defects 2 and 3 need a judgment, so the upstream fix is a naming step inside the round (an AI pass proposing a garden name, checked against the catalog for collisions — which verify-round already FAILs on) rather than a one-line change. Deciding to keep paying it downstream is a valid answer and closes this entry by deleting it with the reason recorded.',
-  },
-  'combo-fields-unchecked': {
-    what: 'verify-round checkCombos selects only the two plant ids, so a plant_combinations row with a null combination_type, strength or notes passes round close while the companion card has nothing to render.',
-    source:
-      'Pipeline audit 2026-08-14, section 5 (pass-through, confirmed 2026-08-16 against scripts/verify-round.ts:77 and :169).',
-    file: 'apps/web/scripts/verify-round.ts',
-    witness: /\.select\('plant_id_a, plant_id_b'\)/,
-    remedy:
-      'Add combination_type, strength and notes to ComboRow and its select, and FAIL on a null in any of them.',
-  },
+  // 'common-name-never-judged-at-seed' CLOSED 2026-08-18 — the remedy it asked
+  // for was built and this entry outlived it. scripts/curate-common-names.ts is
+  // runbook step 1a, registered in round-status.ts, and it ran for round 13
+  // (run curate-common-names-2026-08-17T2124-9f73646e, completed). It is what
+  // the remedy specified: one call for the whole batch proposing garden names,
+  // checked for collisions against the catalog AND within the batch, the
+  // intra-batch case being round 12's "Japanese iris" for two species. There is
+  // no fix-round13-names.ts; the fourth hand-written correction table this was
+  // written to prevent never happened.
+  //
+  // Its witness was also the wrong witness by then — it watched the trefle.ts
+  // fallback line, which is deliberate and is now the INPUT the step-1a pass
+  // judges rather than the defect.
+  // 'combo-fields-unchecked' CLOSED 2026-08-18, and its premise did not
+  // survive being checked. It said a null combination_type, strength or notes
+  // leaves "the companion card with nothing to render". The card renders
+  // THUMBNAILS: lib/plant-detail.ts selects plant_id_a and plant_id_b and
+  // nothing else, and no file under app/, components/ or lib/ reads any of the
+  // three columns. So no user has ever seen this, and the prescribed remedy —
+  // FAIL round close on a null — would have gated a round on data the product
+  // does not consume, on 13 legacy rows from 2026-07-06.
+  //
+  // The real defect was one level up and is now shape 19, `a catalog column the
+  // product never reads`, with all three columns recorded in
+  // COLUMNS_NO_PRODUCT_READS. Written for the class rather than the instance:
+  // nobody had looked at the consumer, and that is what a scan can do every run.
 }
 
 // ---------------------------------------------------------------------------
@@ -1506,77 +1533,239 @@ function checkForwardStepsStayInvisible(): number {
 // ---------------------------------------------------------------------------
 // Run
 // ---------------------------------------------------------------------------
+// Shape 19. A catalog column the product never reads
+//
+// The mirror of shape 2. A stamp with no writer drains silently; a column with
+// no READER accumulates silently — every round spends model calls filling it,
+// every backup carries it, and nothing has ever rendered it. It is invisible
+// from both ends: the pipeline sees a column it writes successfully, and the
+// app sees a page that works.
+//
+// FOUND BY ONE, WRITTEN FOR THE CLASS. `plant_combinations.combination_type`,
+// `strength` and `notes` were written every round since 2026-07-06 and read by
+// nothing — `lib/plant-detail.ts` selects the two id columns and renders
+// thumbnails. The finding that surfaced them (`combo-fields-unchecked`) claimed
+// the companion card had "nothing to render", which was never true; nobody had
+// looked at the consumer. That is the part worth catching automatically.
+//
+// HOW "READ" IS MEASURED, AND WHY IT IS NOT A WORD SEARCH. A grep for the
+// column name across the product is wrong in both directions: `notes` matches a
+// diary variable that has nothing to do with this table, which would have
+// cleared the very column that prompted this. So the read set comes from the
+// PROJECTIONS the product actually asks for — the `.select(...)` on that table.
+// A `select('*')` means the whole row is read and the table is skipped
+// entirely, which is why `plants` is not policed here.
+// ---------------------------------------------------------------------------
 
-checkUnreachablePredicates()
-checkStampWriters()
-checkStampSelectors()
-const traps = checkTrapsPinned()
-const pendingArchive = checkScriptReachability()
-checkNoForkedSynonymTables()
-const unwiredProvenance = checkWriteProvenance()
-const undocumentedFlags = checkFlagsDocumented()
-const handRolledPaging = checkPagination()
-const handRolledMutation = checkReviewedMutation()
-const openFindings = checkOpenFindings()
-const parkedDecisions = checkParkedDecisions()
-const forwardSteps = checkForwardStepsStayInvisible()
-// Shape 7, runbook / registry drift, is round-rehearsal.test.ts. It imports
-// RUNBOOK and the step registry, so it is a test, not a scan. Do not add it here.
+/** Bookkeeping every table has and no page names explicitly. */
+const INFRA_COLUMNS = new Set(['id', 'created_at', 'updated_at'])
 
-for (const { list, key } of staleHatches) {
-  fail({
-    shape: 'stale escape hatch',
-    subject: `${list}["${key}"]`,
-    detail:
-      'This entry no longer describes a violation, so it is now a licence nobody needs.',
-    remedy: `Delete it from ${list} in ${basename(__filename)}. The lists are ratchets; they only shrink.`,
-  })
-}
+/** Product code — what a user can actually reach. Scripts are not readers. */
+const PRODUCT_TS = SOURCE_TS.filter((f) =>
+  /^apps\/web\/(app|components|lib)\//.test(f)
+)
 
-if (failures.length > 0) {
-  console.error(`\n✗ ${failures.length} pipeline invariant violation(s):\n`)
-  for (const f of failures) {
-    console.error(`  [${f.shape}]  ${f.subject}`)
-    console.error(`    ${f.detail}`)
-    console.error(`    → ${f.remedy}\n`)
+/** Columns a migration declares for one table, by CREATE and by ALTER. */
+export function declaredColumns(
+  table: string,
+  sqlFiles: string[]
+): Set<string> {
+  const found = new Set<string>()
+  for (const rel of sqlFiles) {
+    const sql = read(rel).toLowerCase()
+    for (const m of sql.matchAll(
+      new RegExp(`alter table (?:public\\.)?${table}\\b([\\s\\S]*?);`, 'g')
+    ))
+      for (const c of m[1]!.matchAll(
+        /add column\s+(?:if not exists\s+)?(\w+)/g
+      ))
+        found.add(c[1]!)
+    for (const m of sql.matchAll(
+      new RegExp(
+        `create table (?:if not exists )?(?:public\\.)?${table}\\s*\\(([\\s\\S]*?)\\n\\);`,
+        'g'
+      )
+    ))
+      for (const line of m[1]!.split('\n')) {
+        const c =
+          /^\s*(\w+)\s+(?:text|uuid|int|integer|boolean|numeric|timestamptz|jsonb|date)\b/.exec(
+            line
+          )
+        if (c && !/^\s*(constraint|primary|foreign|unique|check)\b/.test(line))
+          found.add(c[1]!)
+      }
   }
-  process.exit(1)
+  return found
 }
 
-console.log('✓ pipeline invariants hold. Remaining, all recorded with reasons:')
-const row = (label: string, count: string, list: string) =>
-  console.log(`    ${label.padEnd(24)}${count.padStart(8)}   (${list})`)
-row('traps unpinned', `${traps.unpinned} of ${traps.total}`, 'TRAPS_NOT_PINNED')
-row(
-  'stamps with no writer',
-  String(Object.keys(STAMPS_WITHOUT_WRITERS).length),
-  'STAMPS_WITHOUT_WRITERS'
-)
-row(
-  'report-only stamps',
-  String(Object.keys(REPORT_ONLY_STAMPS).length),
-  'REPORT_ONLY_STAMPS'
-)
-row(
-  'scripts pending archive',
-  String(pendingArchive),
-  'SCRIPTS_PENDING_ARCHIVE'
-)
-row(
-  'steps without provenance',
-  String(unwiredProvenance),
-  'RUNS_WITHOUT_PROVENANCE'
-)
-row('undocumented flags', String(undocumentedFlags), 'FLAGS_NOT_DOCUMENTED')
-row('hand-rolled paging', String(handRolledPaging), 'HAND_ROLLED_PAGINATION')
-row(
-  'hand-rolled mutation',
-  String(handRolledMutation),
-  'HAND_ROLLED_REVIEWED_MUTATION'
-)
-row('open findings', String(openFindings), 'OPEN_FINDINGS')
-row('parked decisions', String(parkedDecisions), HANDOFF)
-row('forward-obligation steps', String(forwardSteps), 'FORWARD_STEP_WITNESSES')
-console.log(
-  '  Runbook and registry drift is checked by round-rehearsal.test.ts, not here.\n'
-)
+/**
+ * The columns the product asks for from one table.
+ *
+ * `null` means "reads the whole row" (`select('*')`) or "does not query this
+ * table at all" — either way there is nothing for this shape to say.
+ */
+export function productReadSet(
+  table: string,
+  sources: Array<{ file: string; text: string }>
+): Set<string> | null {
+  const selects: string[] = []
+  for (const { text } of sources)
+    for (const m of text.matchAll(
+      new RegExp(
+        `from\\(\\s*['"\`]${table}['"\`]\\s*\\)[\\s\\S]{0,200}?\\.select\\(\\s*['"\`]([^'"\`]*)['"\`]`,
+        'g'
+      )
+    ))
+      selects.push(m[1]!)
+  if (!selects.length) return null
+  if (selects.some((p) => p.includes('*'))) return null
+  const read = new Set<string>()
+  for (const proj of selects)
+    for (const col of proj.split(','))
+      // A projection may name a join or an alias; the bare identifier is the
+      // column, and anything else is not this shape's business.
+      if (/^\s*\w+\s*$/.test(col)) read.add(col.trim())
+  return read
+}
+
+function checkColumnsHaveReaders(): number {
+  const sources = PRODUCT_TS.map((file) => ({ file, text: read(file) }))
+  const unread: string[] = []
+
+  for (const table of CATALOG_TABLES) {
+    const readSet = productReadSet(table, sources)
+    if (!readSet) continue
+    for (const column of [...declaredColumns(table, MIGRATIONS)].sort()) {
+      if (readSet.has(column)) continue
+      if (INFRA_COLUMNS.has(column)) continue
+      // A stamp is pipeline bookkeeping by definition and shape 2 owns it.
+      if (STAMP_RE.test(column)) continue
+      const key = `${table}.${column}`
+      if (COLUMNS_NO_PRODUCT_READS[key]) {
+        unread.push(key)
+        continue
+      }
+      fail({
+        shape: 'catalog column the product never reads',
+        subject: key,
+        detail:
+          `Declared by a migration and written by the pipeline, but no .select() under ` +
+          `app/, components/ or lib/ asks for it. Every round pays to fill it and nothing renders it.`,
+        remedy:
+          `Give it a reader, drop the column in a migration, or record it in ` +
+          `COLUMNS_NO_PRODUCT_READS in ${basename(__filename)} with what it is waiting on and who owes the decision.`,
+      })
+    }
+  }
+
+  for (const key of Object.keys(COLUMNS_NO_PRODUCT_READS))
+    if (!unread.includes(key))
+      staleHatches.push({ list: 'COLUMNS_NO_PRODUCT_READS', key })
+
+  return unread.length
+}
+
+// ---------------------------------------------------------------------------
+// The run.
+//
+// BEHIND `require.main` since 2026-08-18, so the file can be imported without
+// scanning the repo and calling process.exit. Shape 19's measurement is pinned
+// by check-pipeline-invariants.test.ts, and a test that has to run the whole
+// scan to import one function is a test that fails for somebody else's reason.
+// This file is still a SCAN, not a test — see the header. Only the two pure
+// seams are asserted; nothing here moved into vitest.
+// ---------------------------------------------------------------------------
+
+function run() {
+  checkUnreachablePredicates()
+  checkStampWriters()
+  checkStampSelectors()
+  const traps = checkTrapsPinned()
+  const pendingArchive = checkScriptReachability()
+  checkNoForkedSynonymTables()
+  const unwiredProvenance = checkWriteProvenance()
+  const undocumentedFlags = checkFlagsDocumented()
+  const handRolledPaging = checkPagination()
+  const handRolledMutation = checkReviewedMutation()
+  const openFindings = checkOpenFindings()
+  const parkedDecisions = checkParkedDecisions()
+  const forwardSteps = checkForwardStepsStayInvisible()
+  const unreadColumns = checkColumnsHaveReaders()
+  // Shape 7, runbook / registry drift, is round-rehearsal.test.ts. It imports
+  // RUNBOOK and the step registry, so it is a test, not a scan. Do not add it here.
+
+  for (const { list, key } of staleHatches) {
+    fail({
+      shape: 'stale escape hatch',
+      subject: `${list}["${key}"]`,
+      detail:
+        'This entry no longer describes a violation, so it is now a licence nobody needs.',
+      remedy: `Delete it from ${list} in ${basename(__filename)}. The lists are ratchets; they only shrink.`,
+    })
+  }
+
+  if (failures.length > 0) {
+    console.error(`\n✗ ${failures.length} pipeline invariant violation(s):\n`)
+    for (const f of failures) {
+      console.error(`  [${f.shape}]  ${f.subject}`)
+      console.error(`    ${f.detail}`)
+      console.error(`    → ${f.remedy}\n`)
+    }
+    process.exit(1)
+  }
+
+  console.log(
+    '✓ pipeline invariants hold. Remaining, all recorded with reasons:'
+  )
+  const row = (label: string, count: string, list: string) =>
+    console.log(`    ${label.padEnd(24)}${count.padStart(8)}   (${list})`)
+  row(
+    'traps unpinned',
+    `${traps.unpinned} of ${traps.total}`,
+    'TRAPS_NOT_PINNED'
+  )
+  row(
+    'stamps with no writer',
+    String(Object.keys(STAMPS_WITHOUT_WRITERS).length),
+    'STAMPS_WITHOUT_WRITERS'
+  )
+  row(
+    'report-only stamps',
+    String(Object.keys(REPORT_ONLY_STAMPS).length),
+    'REPORT_ONLY_STAMPS'
+  )
+  row(
+    'scripts pending archive',
+    String(pendingArchive),
+    'SCRIPTS_PENDING_ARCHIVE'
+  )
+  row(
+    'steps without provenance',
+    String(unwiredProvenance),
+    'RUNS_WITHOUT_PROVENANCE'
+  )
+  row('undocumented flags', String(undocumentedFlags), 'FLAGS_NOT_DOCUMENTED')
+  row('hand-rolled paging', String(handRolledPaging), 'HAND_ROLLED_PAGINATION')
+  row(
+    'hand-rolled mutation',
+    String(handRolledMutation),
+    'HAND_ROLLED_REVIEWED_MUTATION'
+  )
+  row('open findings', String(openFindings), 'OPEN_FINDINGS')
+  row('parked decisions', String(parkedDecisions), HANDOFF)
+  row(
+    'forward-obligation steps',
+    String(forwardSteps),
+    'FORWARD_STEP_WITNESSES'
+  )
+  row(
+    'columns with no reader',
+    String(unreadColumns),
+    'COLUMNS_NO_PRODUCT_READS'
+  )
+  console.log(
+    '  Runbook and registry drift is checked by round-rehearsal.test.ts, not here.\n'
+  )
+}
+
+if (require.main === module) run()
