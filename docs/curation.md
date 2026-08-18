@@ -540,6 +540,43 @@ this session's choice of level. The prompt lowers the rate and cannot be relied 
 with no copy rule at all and produced the same "Minimal pruning required — ..."
 sentence five times.
 
+<a id="bloom-prose"></a>
+
+## Prose that contradicts `bloom_months`, and why the detector is worth more than the fix
+
+`pnpm bloom:prose --round <label>` flags a plant whose description or seasonal
+rhythm asserts flowering in a season `bloom_months` does not cover. It writes
+nothing.
+
+**Run it after a scalar correction, which is when it earns its keep.** Round
+13's `Rohdea japonica` had recorded the BERRY season as bloom, and that one
+wrong scalar had already propagated into the description, the rhythm and the
+care tips — fixing `bloom_months` alone would have left three fields quietly
+disagreeing with it, and nothing would have said so.
+
+**Tuning it was the whole cost, and the false positives are the reusable part.**
+A naive "flower word near a season word" flags **71%** of the catalog. Each
+narrowing below removed a measured class of real catalog prose:
+
+| Setting                                                        | Flags (of 780) |
+| -------------------------------------------------------------- | -------------- |
+| assertion of flowering required, aftermath excluded            | 38             |
+| buds, stalks, old flower heads and hedges excluded             | 23             |
+| "after/during flowering" read as a time reference, not a claim | 19             |
+| assertion gap widened to span "large, goblet-shaped"           | 20             |
+
+The last row is a correction, not a regression: the gap between the verb and
+the flower word was matching bare words only, so it missed real assertions
+carrying a hyphen or a comma.
+
+What survives is ~2.5% of the catalog, and reading them they are genuine
+one-month boundary disagreements — `Garden thyme` blooming to July while its
+rhythm says flowering runs into early autumn, `Crimean iris` at March while its
+prose says late winter. **In these the prose is the more accurate half**, which
+is the same finding round 13 recorded for `Cornus mas` and `Dicentra eximia`.
+That is why this ships as a guard and not as a sweep: it points at the scalar to
+correct, and a person decides.
+
 <a id="hero-images"></a>
 
 ## Hero images: a category-recovered shortlist, then an AI vision pick
