@@ -63,7 +63,7 @@ function UnifiedField({
   const isError = state === 'error'
   const isFocus = state === 'focus'
 
-  const heights = { sm: 'h-9', md: 'h-11', lg: 'h-12' }
+  const heights = { sm: 'h-9', md: 'h-10', lg: 'h-12' }
 
   return (
     <div className="flex flex-col gap-inline-gap">
@@ -78,15 +78,18 @@ function UnifiedField({
           'rounded-md border bg-surface-field px-item-gap',
           'transition-colors duration-normal',
           multiline ? 'min-h-[88px] items-start py-item-gap' : heights[size],
-          // One focus mechanism: border tints to accent, 2px ring in the
-          // focus token. In error the ring stays critical THROUGH focus —
-          // focusing a field to fix it must not hide the reason it is wrong.
-          // (That rule is the login pill's, generalised.)
+          // The note pair's treatment, which is the one Ana picked twice:
+          // an edge BRIGHTER than the fill it borders (white over a
+          // translucent white field) reads as a soft inset rather than a
+          // drawn line. It survives both grounds because the fill is
+          // translucent — the same relationship, not the same two colours.
+          isError ? 'border-critical' : 'border-card',
+          // One focus mechanism, also the note pair's. In error the outline
+          // stays critical THROUGH focus — focusing a field to fix it must
+          // not hide the reason it is wrong. (The login pill's rule.)
           isError
-            ? 'border-critical ring-2 ring-critical'
-            : isFocus
-              ? 'border-accent ring-2 ring-focus'
-              : 'border-divider'
+            ? 'outline outline-2 outline-offset-2 outline-critical'
+            : isFocus && 'outline outline-2 outline-offset-2 outline-focus'
         )}
       >
         {leading}
@@ -94,7 +97,7 @@ function UnifiedField({
           <span
             className={cn(
               'w-full flex-1 text-body',
-              value ? 'text-primary' : 'text-faint'
+              value ? 'text-primary' : 'text-muted'
             )}
           >
             {value || placeholder}
@@ -103,7 +106,7 @@ function UnifiedField({
           <span
             className={cn(
               'min-w-0 flex-1 truncate text-body',
-              value ? 'text-primary' : 'text-faint'
+              value ? 'text-primary' : 'text-muted'
             )}
           >
             {value || placeholder}
@@ -329,6 +332,108 @@ export default function FieldLabPage() {
 
       {/* ---------------------------------------------------------- */}
 
+      <div className="flex flex-col gap-section-gap">
+        <h2 className="text-title font-semibold text-primary">
+          The three that already work
+        </h2>
+        <p className="max-w-[62ch] text-body text-secondary">
+          Plant search, note scope and note body are the surfaces worth keeping.
+          Two of them already agree on everything except height. The third is
+          the same idea at different absolute values, because its fill is opaque
+          and cannot adapt to the ground it sits on.
+        </p>
+
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[620px] border-collapse text-body-small">
+            <thead>
+              <tr className="border-b border-divider text-left">
+                {['', 'Plant search', 'Note scope', 'Note body'].map((h) => (
+                  <th
+                    key={h}
+                    className="py-inline-gap pr-item-gap font-medium text-muted"
+                  >
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="text-secondary">
+              {[
+                ['Radius', '12px', '12px', '12px', true],
+                ['Height', '40', '36', '88 · 3 rows', false],
+                ['Edge', 'sage-100', 'white', 'white', false],
+                ['Fill', 'opaque card', 'white 50%', 'white 50%', false],
+                ['Text', '13px', '14px', '14px', false],
+                [
+                  'Focus',
+                  '1px sage-50 ring',
+                  'outline +2',
+                  'outline +2',
+                  false,
+                ],
+              ].map(([axis, a, b, c, agree]) => (
+                <tr
+                  key={axis as string}
+                  className="border-b border-divider-subtle"
+                >
+                  <td className="py-inline-gap pr-item-gap font-medium text-primary">
+                    {axis}
+                  </td>
+                  {[a, b, c].map((v, i) => (
+                    <td
+                      key={i}
+                      className={cn(
+                        'py-inline-gap pr-item-gap',
+                        agree && 'text-muted'
+                      )}
+                    >
+                      {v}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <p className="max-w-[62ch] border-l-2 border-divider pl-item-gap text-body-small text-secondary">
+          The one swap you cannot judge from a table: plant search sits on the
+          page, not on a modal, and the note pair&apos;s edge is white. Below is
+          that exact treatment on the page ground, beside what ships today.
+        </p>
+
+        <div className="grid gap-item-gap md:grid-cols-2">
+          <div className="flex flex-col gap-inline-gap">
+            <span className="text-label uppercase tracking-label text-muted">
+              Today · sage-100 on opaque card
+            </span>
+            <div className="rounded-md border border-card-translucent bg-surface-page p-card-padding">
+              <div className="flex h-10 w-full items-center gap-item-gap rounded-md border bg-surface-card pl-item-gap pr-tight-gap [border-color:var(--color-sage-100)]">
+                <Magnifier className="text-primary" />
+                <span className="min-w-0 flex-1 text-body-small text-secondary">
+                  Search plants
+                </span>
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-col gap-inline-gap">
+            <span className="text-label uppercase tracking-label text-muted">
+              Note pair&apos;s treatment, on the page ground
+            </span>
+            <div className="rounded-md border border-card-translucent bg-surface-page p-card-padding">
+              <div className="flex h-10 w-full items-center gap-inline-gap rounded-md border border-card bg-surface-field px-item-gap">
+                <Magnifier className="text-primary" />
+                <span className="min-w-0 flex-1 text-body text-muted">
+                  Search plants
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ---------------------------------------------------------- */}
+
       <div className="flex flex-col gap-section-break">
         <h2 className="text-title font-semibold text-primary">
           Surface by surface
@@ -340,7 +445,7 @@ export default function FieldLabPage() {
           ground="card"
           metrics={{
             today: '48px · 13px · no edge · ring on focus',
-            unified: '48px · 14px · hairline · ring on focus',
+            unified: '48px · 14px · white edge · outline on focus',
           }}
           note="The comment above this field says the pill has no border because it sits on a photographic background. That background was dropped in 058bb56 — it is a plain card now, the same ground as every other field. The inline submit button is real and worth keeping; the borderlessness is left over."
           today={
@@ -382,7 +487,7 @@ export default function FieldLabPage() {
           ground="card"
           metrics={{
             today: '48px · 13px · pill · fill swap only',
-            unified: '48px · 14px · hairline · ring on focus',
+            unified: '48px · 14px · white edge · outline on focus',
           }}
           note="The only place the kit's pill still renders. Its focus affordance is a fill change from 60% to 100% white — on this near-white modal that is invisible, which is the one finding here I would call a defect rather than a difference."
           today={
@@ -418,7 +523,7 @@ export default function FieldLabPage() {
           ground="page"
           metrics={{
             today: '40px · 13px · sage-100 · sage-50 ring',
-            unified: '44px · 14px · hairline · ring on focus',
+            unified: '40px · 14px · white edge · outline on focus',
           }}
           note="The same SearchField as above, overridden back into a bordered rounded rect by eleven classes at the call site. The override is the honest signal: the product already rejected the pill here."
           today={
@@ -451,8 +556,8 @@ export default function FieldLabPage() {
           where="AddNoteModal.tsx — the 'what is this about' selector"
           ground="overlay"
           metrics={{
-            today: '36px · 16px · white edge · outline+offset',
-            unified: '36px · 14px · hairline · ring on focus',
+            today: '36px · 14px · white edge · outline+offset',
+            unified: '36px · 14px · white edge · outline on focus',
           }}
           note="A menu trigger dressed as a field. Its edge is border-card, which resolves to pure white — a lift, not a hairline. The sidebar hairline was moved off white in July for exactly this reason: too harsh against the sage ground."
           today={
@@ -486,7 +591,7 @@ export default function FieldLabPage() {
           ground="overlay"
           metrics={{
             today: '3 rows · 14px · white edge · outline+offset',
-            unified: '3 rows · 14px · hairline · ring on focus',
+            unified: '3 rows · 14px · white edge · outline on focus',
           }}
           note="Closest to the proposal already, and the only pair on this page that agrees with each other — except that it runs 14px directly beneath a 16px selector."
           today={
@@ -520,7 +625,7 @@ export default function FieldLabPage() {
           ground="page"
           metrics={{
             today: '42px · 16px · sage-300 · ring on focus',
-            unified: '44px · 14px · hairline · ring on focus',
+            unified: '40px · 14px · white edge · outline on focus',
           }}
           note="No product surface imports this. Its focus treatment is the strongest of the six and is what the proposal adopts; its height and text size are accidents of px/py plus line-height rather than chosen numbers."
           today={
@@ -572,23 +677,23 @@ export default function FieldLabPage() {
           <UnifiedField state={state} size="sm" placeholder="Small · 36px" />
           <UnifiedField
             state={state}
-            placeholder="Medium · 44px — the default"
+            placeholder="Medium · 40px — the default"
           />
           <UnifiedField state={state} size="lg" placeholder="Large · 48px" />
         </div>
         <dl className="grid gap-inline-gap text-body-small md:grid-cols-2">
           {[
             ['Fill', 'surface-field — white at 60%'],
-            ['Edge', '1px border-divider (sage-300)'],
+            ['Edge', '1px border-card (white) — brighter than the fill'],
             ['Radius', 'rounded-md — 12px'],
             ['Text', 'text-body — 14px'],
-            ['Focus', 'border-accent + 2px ring-focus'],
+            ['Focus', '2px accent outline, 2px offset'],
             [
               'Error',
               'border-critical + 2px ring-critical, held through focus',
             ],
             ['Padding', 'px-item-gap · gap-inline-gap'],
-            ['Heights', '36 / 44 / 48'],
+            ['Heights', '36 / 40 / 48'],
           ].map(([k, v]) => (
             <div key={k} className="flex gap-inline-gap">
               <dt className="w-[72px] shrink-0 font-medium text-muted">{k}</dt>
